@@ -4,10 +4,8 @@
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
-            [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.roolit :as roolit]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
             [clojure.string :as str]))
 
@@ -87,7 +85,8 @@
                                                #{2 5 6}
                                                (if urakoittain?
                                                #{4}
-                                               #{}))}
+                                               #{}))
+                 :sheet-nimi raportin-nimi}
       (flatten (keep identity [(when urakoittain?
                                  {:leveys 25 :otsikko "Urakka"})
                                {:leveys 25 :otsikko "Tehtävä"}

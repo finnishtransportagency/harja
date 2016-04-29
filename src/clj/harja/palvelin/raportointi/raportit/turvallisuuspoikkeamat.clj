@@ -9,8 +9,6 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [clojure.string :as str]
             [clj-time.core :as t]
-            [clj-time.coerce :as tc]
-            [clj-time.format :as tf]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
 
@@ -68,7 +66,8 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
+     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi raportin-nimi}
       (into []
             (concat (when urakoittain?
                       [{:otsikko "Urakka"}])
