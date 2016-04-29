@@ -48,6 +48,7 @@
                             {:hae #(get % i)
                              :leveys (:leveys sarake)
                              :otsikko (:otsikko sarake)
+                             :reunus (:reunus sarake)
                              :pakota-rivitys? (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
                                                       (case (:tasaa-otsikko sarake)
@@ -63,7 +64,9 @@
                              :tyyppi (if (:tyyppi sarake)
                                        :komponentti
                                        :string)
-                             :tasaa (when (oikealle-tasattavat-kentat i) :oikea)}
+                             :tasaa (if (oikealle-tasattavat-kentat i)
+                                      :oikea
+                                      (:tasaa sarake))}
                             (when (:tyyppi sarake)
                               {:komponentti (fn [rivi]
                                               (let [elementti (get rivi i)]

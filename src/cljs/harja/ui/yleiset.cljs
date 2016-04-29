@@ -7,7 +7,8 @@
             [goog.events :as events]
             [goog.events.EventType :as EventType]
             [harja.ui.dom :as dom]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [clojure.string :as str])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -263,7 +264,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
       [:div.col-md-8.tietoarvo arvo]])])
 
 (defn tietoja
-  "Tekee geneerisen tietonäkymän. 
+  "Tekee geneerisen tietonäkymän.
 Optiot on mäppi, joka tukee seuraavia optioita:
   :class   asetetaan lisäluokaksi containerille
   :otsikot-omalla-rivilla?  jos true, otsikot ovat blockeja (oletus false)"
@@ -326,7 +327,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   [:span [:h4 otsikko]
    komp])
 
-;; Lasipaneelin tyyli, huom: parentin on oltava position: relative 
+;; Lasipaneelin tyyli, huom: parentin on oltava position: relative
 (def lasipaneeli-tyyli {:display          "block"
                         :position         "absolute"
                         :top              0
@@ -459,7 +460,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
 (defn pitka-teksti
-  "Näyttää pitkän tekstin, josta näytetään oletuksena vain ensimmäinen rivi. Käyttäjä voi näyttää/piilottaa 
+  "Näyttää pitkän tekstin, josta näytetään oletuksena vain ensimmäinen rivi. Käyttäjä voi näyttää/piilottaa
 jatkon."
   ([teksti] (pitka-teksti teksti true))
   ([teksti piilotettu?]
@@ -485,3 +486,21 @@ jatkon."
   [:span
    ikoni
    [:span (str " " teksti)]])
+
+(defn tasaus-luokka
+  "Palauttaa CSS-luokan, jolla teksti tasataan.
+  Mahdolliset arvot ovat :oikea (teksti tasataan oikealle) tai
+  :keskita (teksti keskitetään)."
+  [tasaus]
+  (when tasaus
+    (case tasaus
+      :oikea "tasaa-oikealle"
+      :keskita "tasaa-keskita")))
+
+(defn luokat
+  "Yhdistää monta luokkaa yhdeksi class attribuutiksi. Poistaa nil arvot ja yhdistää
+  loput arvot välilyönnillä. Jos kaikki arvot ovat nil, palauttaa nil."
+  [& luokat]
+  (let [luokat (remove nil? luokat)]
+    (when-not (empty? luokat)
+      (str/join " " luokat))))

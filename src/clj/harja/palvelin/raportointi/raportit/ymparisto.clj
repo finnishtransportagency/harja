@@ -4,11 +4,8 @@
              [hallintayksikot :as hallintayksikot-q]
              [konversio :as konv]
              [urakat :as urakat-q]]
-            [harja.palvelin.raportointi.raportit.yleinen
-             :as
-             yleinen
-             :refer
-             [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen
+             :refer [raportin-otsikko talvihoitoluokka]]
             [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"

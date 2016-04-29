@@ -4,7 +4,6 @@
              [core :as t]
              [format :as tf]
              [local :as l]]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.pvm :as pvm]))
 
 (defn raportin-otsikko
@@ -147,8 +146,9 @@
   (count otsikot))
 
 (def talvihoitoluokat ["Is" "I" "Ib" "TIb" "II" "III" "K1" "K2"])
+(def talvihoitoluokat-numerot (range 1 9))
 
-(defn- talvihoitoluokka
+(defn talvihoitoluokka
   [luokka]
   (case luokka
     1 "Is"
@@ -159,3 +159,14 @@
     6 "III"
     7 "K1"
     8 "K2"))
+
+(defn talvihoitoluokan-numero [luokka]
+  (case luokka
+    "Is"  1
+    "I"   2
+    "Ib"  3
+    "TIb" 4
+    "II"  5
+    "III" 6
+    "K1"  7
+    "K2"  8))

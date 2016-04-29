@@ -2,7 +2,7 @@
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as y]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
@@ -14,9 +14,9 @@
             [clojure.string :as str]
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]
-            [harja.ui.yleiset :as y])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.ui.dom :as dom])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.makrot :refer [fnc]]))
 
 (def gridia-muokataan? (atom false))
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
@@ -284,13 +284,20 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                             (when rivi-valinta-peruttu
                               (rivi-valinta-peruttu rivi)))
                         (reset! valittu-rivi rivi))))}
-   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia pakota-rivitys?]} skeema]
+   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti nayta-max-merkkia
+                 pakota-rivitys? reunus]} skeema]
      (if (= :vetolaatikon-tila tyyppi)
        ^{:key (str "vetolaatikontila" id)}
        [vetolaatikon-tila ohjaus vetolaatikot id]
        ^{:key (str nimi)}
-       [:td {:class (str (when (= tasaa :oikea) "tasaa-oikealle ")
-                         (when pakota-rivitys? "grid-pakota-rivitys"))}
+       [:td {:class (y/luokat
+                     (y/tasaus-luokka tasaa)
+                     (when pakota-rivitys? "grid-pakota-rivitys")
+                     (case reunus
+                       :ei "grid-reunus-ei"
+                       :vasen "grid-reunus-vasen"
+                       :oikea "grid-reunus-oikea"
+                       nil))}
         (if (= tyyppi :komponentti)
           (komponentti rivi)
           (let [haettu-arvo (if hae
@@ -325,9 +332,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   :ohjaus                               gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
-  :tasaa                                voit antaa :oikea jos haluat tasata kentän oikealle (esim. rahasummat)
+  :tasaa                                voit antaa :oikea, :keskita jos haluat tasata kentän
+                                        oikealle (esim. rahasummat) tai keskelle
   :max-rivimaara                        montako riviä grid suostuu näyttämään ennen \"liikaa rivejä\"-ilmoitusta
   :max-rivimaaran-ylitys-viesti         custom viesti :max-rivimaara -optiolle
+  :reunus                               määrittää sarakkeen solujen reunuksen, oletuksena kaikki
+                                        :ei       ei kumpaakaan reunusta
+                                        :vasen    vain vasemman puolen reunus
+                                        :oikea    vain oikean puolen reunus
 
   Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
@@ -593,7 +605,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       :component-will-unmount
       (fn []
         (nollaa-muokkaustiedot!))}
-     (fn [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
+     (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                   muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
                   korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
        (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -669,10 +681,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               [:thead
                (when-let [rivi-ennen (:rivi-ennen opts)]
                  [:tr
-                  (for [{:keys [teksti sarakkeita keskita?]} rivi-ennen]
+                  (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
                     ^{:key teksti}
                     [:th {:colSpan (or sarakkeita 1)
-                          :style (when keskita? {:text-align "center"})}
+                          :class (y/tasaus-luokka tasaa)}
                      teksti])])
                [:tr
                 (for [{:keys [otsikko leveys nimi otsikkorivi-luokka]} skeema]
