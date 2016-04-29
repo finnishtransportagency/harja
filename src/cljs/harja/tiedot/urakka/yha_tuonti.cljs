@@ -5,10 +5,7 @@
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.grid :refer [grid]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.modal :as modal]
-            [cljs-time.core :as t]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -17,18 +14,12 @@
 (def hakutulokset-data (atom []))
 (def sidonta-kaynnissa? (atom false))
 
-(defn hae-yha-urakat [{:keys [yhatunniste sampotunniste vuosi] :as hakuparametrit}]
+(defn hae-yha-urakat [{:keys [yhatunniste sampotunniste vuosi]}]
   (log "[YHA] Hae YHA-urakat...")
   (reset! hakutulokset-data nil)
   (k/post! :hae-urakat-yhasta {:yhatunniste yhatunniste
                                :sampotunniste sampotunniste
-                               :vuosi vuosi})
-  ;; FIXME Hae YHA-urakat, toistaiseksi palauta vain testidata
-  #_(go (do
-          (<! (timeout 2000))
-          [{:yhatunnus "YHA1" :yhaid 5 :yhanimi "YHA-urakka 1" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012]}
-           {:yhatunnus "YHA2" :yhaid 4 :yhanimi "YHA-urakka 2" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012]}
-           {:yhatunnus "YHA3" :yhaid 6 :yhanimi "YHA-urakka 3" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012] :sidottu-urakkaan "Olematon urakka"}])))
+                               :vuosi vuosi}))
 
 
 (defn- sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]

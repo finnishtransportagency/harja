@@ -7,7 +7,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.yha :as yha-q]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]))
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [harja.kyselyt.konversio :as konversio]))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/debug "Lisätään YHA-tiedot urakalle " urakka-id)
@@ -42,13 +43,25 @@
                    (map #(konv/array->vec % :elyt)))
                  (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
+(defn lisaa-sidontatiedot-urakalle [urakka]
+  (dissoc
+    (if (:sidottu_urakkaan urakka)
+      (assoc urakka :sidottu-urakkaan (:sidottu_urakkaan urakka))
+      urakka)
+    :sidottu_urakkaan))
+
 (defn hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi]}]
 
   ;; fixme: tee oikeustarkistukset!
   ;; fixme: tee poikkeuskäsittely!
 
-  (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)]
-    ;; todo: lisää tieto onko urakkaa sidottu jo johonkin harjan urakkaan (hae urakan nimi, johon sidottu)
+  (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
+        yhaidt (mapv :yhaid urakat)
+        sidontatiedot (yha-q/hae-urakoiden-sidontatiedot db {:yhaidt yhaidt})
+        urakat (mapv #(lisaa-sidontatiedot-urakalle (second %))
+                     (merge-with merge
+                                 (into {} (map (juxt :yhaid identity) urakat))
+                                 (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
 
 (defrecord Yha []

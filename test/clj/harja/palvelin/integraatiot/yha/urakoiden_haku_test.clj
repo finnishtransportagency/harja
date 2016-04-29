@@ -19,11 +19,31 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-urakoiden-haku
-  (let [odotettu-vastaus [{:yha-id 3,
-                           :elyt ["POP"],
-                           :tunnus "YHATUNNUS",
-                           :vuodet [2016],
-                           :sampotunnus "SAMPOTUNNUS"}]
+  (let [odotettu-vastaus [{:elyt ["Pohjois-Pohjanmaa"]
+                           :sampotunnus "SAMPOTUNNUS1"
+                           :vuodet [2016]
+                           :yhaid 1
+                           :yhatunnus "YHATUNNUS1"}
+                          {:elyt ["Pohjois-Pohjanmaa"
+                                  "Pohjois-Savo"]
+                           :sampotunnus "SAMPOTUNNUS2"
+                           :vuodet [2016
+                                    2017]
+                           :yhaid 2
+                           :yhatunnus "YHATUNNUS2"}
+                          {:elyt ["Pohjois-Pohjanmaa"
+                                  "Pohjois-Savo"]
+                           :sampotunnus "SAMPOTUNNUS3"
+                           :vuodet [2016]
+                           :yhaid 3
+                           :yhatunnus "YHATUNNUS3"}]
+
+        ;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
+        #_{:yha-id 3,
+           :elyt ["POP"],
+           :tunnus "YHATUNNUS",
+           :vuodet [2016],
+           :sampotunnus "SAMPOTUNNUS"}
         url (str +yha-url+ "/urakkahaku")]
     (with-fake-http [url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)]

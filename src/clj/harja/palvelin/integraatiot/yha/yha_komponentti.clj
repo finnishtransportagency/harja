@@ -69,7 +69,6 @@
       urakat)))
 
 (defn hae-urakat-yhasta [integraatioloki db url yhatunniste sampotunniste vuosi]
-  ;; todo: hae vain, jos URL on annettu
   (let [url (str url "/urakkahaku")]
     (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s)" yhatunniste sampotunniste vuosi))
     ;; todo: poista kun saadaan oikea yhteys YHA:n
