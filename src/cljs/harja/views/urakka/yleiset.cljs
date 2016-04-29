@@ -162,13 +162,13 @@
            [yleiset/tietoja {}
             "Urakan nimi:" (:nimi ur)
             "Urakan tunnus:" (:sampoid ur)
-            "YHA-tunnus:"
+            "YHA:n urakkatunnus:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (get-in ur [:yhatiedot :yhatunnus]))
-            "YHA-ELYt:"
+            "YHA:n ELYt:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (str/join ", " (get-in ur [:yhatiedot :elyt])))
-            "YHA-vuodet:"
+            "YHA:n vuodet:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (str/join ", " (get-in ur [:yhatiedot :vuodet])))
             "YHA-sidonta:"
