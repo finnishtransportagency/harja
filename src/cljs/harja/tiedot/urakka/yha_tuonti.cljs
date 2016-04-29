@@ -27,9 +27,8 @@
   ;; FIXME Hae YHA-urakat, toistaiseksi palauta vain testidata
   (go (do
         (<! (timeout 2000))
-        [{:yhatunnus "YHA1" :yhaid 5 :yhanimi "YHA-urakka 1" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012] :sidottu? false}
-         {:yhatunnus "YHA2" :yhaid 6 :yhanimi "YHA-urakka 2" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012] :sidottu? true}])))
-
+        [{:yhatunnus "YHA1" :yhaid 5 :yhanimi "YHA-urakka 1" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012]}
+         {:yhatunnus "YHA2" :yhaid 6 :yhanimi "YHA-urakka 2" :elyt ["Pohjois-Pohjanmaa"] :vuodet [2010 2012] :sidottu-urakkaan "Olematon urakka"}])))
 
 
 (defn- sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]
