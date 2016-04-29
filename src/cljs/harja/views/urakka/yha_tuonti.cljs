@@ -67,10 +67,6 @@
        :nimi :valitse
        :tyyppi :komponentti
        :komponentti (fn [rivi]
-                      #_[:button.nappi-ensisijainen.nappi-grid
-                         {:on-click #(yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi)
-                          :disabled sidonta-kaynnissa?}
-                         "Sido"]
                       [harja.ui.napit/palvelinkutsu-nappi
                        "Sido"
                        #(do
