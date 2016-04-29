@@ -60,6 +60,12 @@
                                      :nimi (:urakoitsija_nimi %)
                                      :ytunnus (:urakoitsija_ytunnus %)}))
 
+        (map #(assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
+                                   :yhaid (:yha_yhaid %)
+                                   :yhanimi (:yha_yhanimi %)
+                                   :elyt (:yha_elyt %)
+                                   :vuodet (:yha_vuodet %)}))
+
         (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
 
         ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja
@@ -77,8 +83,10 @@
                 :tyyppi (keyword (:tyyppi %))
                 :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
 
-        (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
-                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))))
+        (map #(dissoc %
+                      :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
+                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
+                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet))))
 
 (defn hallintayksikon-urakat [db user hallintayksikko-id]
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
@@ -126,7 +134,7 @@
   (hae-urakan-tyyppi db user urakka-id))
 
 (defn hae-yksittainen-urakka [db user urakka-id]
-  (log/debug "Haetaan urakoita urakka-id:llä: " urakka-id)
+  (log/debug "Hae yksittäinen urakka id:llä: " urakka-id)
   (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (first (into []
                urakka-xf
