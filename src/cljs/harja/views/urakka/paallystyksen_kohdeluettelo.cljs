@@ -4,7 +4,7 @@
             [harja.ui.bootstrap :as bs]
             [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
                                       livi-pudotusvalikko vihje] :as yleiset]
-            [harja.views.urakka.paallystyskohteet :as paallystyskohteet-yhteenveto]
+            [harja.views.urakka.paallystyskohteet :as paallystyskohteet]
             [harja.views.urakka.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.popupit :as popupit]
@@ -60,7 +60,7 @@
 
           "Päällystyskohteet"
           :paallystyskohteet
-          [paallystyskohteet-yhteenveto/paallystyskohteet]
+          [paallystyskohteet/paallystyskohteet]
 
           "Päällystysilmoitukset"
           :paallystysilmoitukset
