@@ -92,7 +92,7 @@
      :kohdeluettelo-paikkaus
      (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
        ^{:key "kohdeluettelo"}
-       [paikkauksen-kohdeluettelo/kohdeluettelo])
+       [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
      "Laadunseuranta"
      :laadunseuranta

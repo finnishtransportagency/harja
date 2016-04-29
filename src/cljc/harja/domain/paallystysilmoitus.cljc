@@ -45,13 +45,13 @@
   (apply s/enum (map :koodi +alustamenetelmat+)))
 
 (def +kuulamyllyt+
-  [{:nimi "AN5" :lyhenne "AN5" :koodi 1}
-   {:nimi "AN7" :lyhenne "AN7" :koodi 2}
-   {:nimi "N10" :lyhenne "N10" :koodi 3}
-   {:nimi "N14" :lyhenne "N14" :koodi 4}
-   {:nimi "N19" :lyhenne "N19" :koodi 5}
-   {:nimi "N30" :lyhenne "N30" :koodi 6}
-   {:nimi "N22" :lyhenne "N22" :koodi 7}])
+  [{:nimi "AN5" :koodi 1}
+   {:nimi "AN7" :koodi 2}
+   {:nimi "N10" :koodi 3}
+   {:nimi "N14" :koodi 4}
+   {:nimi "N19" :koodi 5}
+   {:nimi "N30" :koodi 6}
+   {:nimi "N22" :koodi 7}])
 
 (def +kuulamylly+ "Kuulamylly annetulla koodilla"
   (apply s/enum (map :koodi +kuulamyllyt+)))
@@ -103,6 +103,29 @@
 (def +kaista+
   "Kaistavalinta koodilla"
   (apply s/enum (map :koodi +kaistat+)))
+
+(def +verkon-tarkoitukset+
+  [{:nimi "Pituushalkeamien ehkäisy" :koodi 1}
+   {:nimi "Muiden routavaurioiden ehkäisy" :koodi 2}
+   {:nimi "Levennyksen tukeminen" :koodi 3}
+   {:nimi "Painumien ehkäisy" :koodi 4}
+   {:nimi "Moniongelmaisen tukeminen" :koodi 5}
+   {:nimi "Muu tarkoitus" :koodi 9}])
+
+(def +verkon-tarkoitus+
+  "Verkon tarkoituksen valinta koodilla"
+  (apply s/enum (map :koodi +verkon-tarkoitukset+)))
+
+(def +verkon-sijainnit+
+  [{:nimi "Päällysteessä" :koodi 1}
+   {:nimi "Kantavan kerroksen yläpinnassa" :koodi 2}
+   {:nimi "Kantavassa kerroksessa" :koodi 3}
+   {:nimi "Kantavan kerroksen alapinnassa" :koodi 4}
+   {:nimi "Muu sijainti" :koodi 9}])
+
+(def +verkon-sijainti+
+  "Verkon sijainnin valinta koodilla"
+  (apply s/enum (map :koodi +verkon-sijainnit+)))
 
 (def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
@@ -161,6 +184,8 @@
      :kasittelymenetelma +alustamenetelma+                  ;; +alustamenetelma+ skeemasta
      :paksuus s/Num                                         ;; cm
      :verkkotyyppi +verkkotyyppi+                           ;; +verkkotyyppi+ skeemasta
+     :verkon-tarkoitus +verkon-tarkoitus+
+     :verkon-sijainti +verkon-sijainti+
      :tekninen-toimenpide +tekninen-toimenpide+             ;; +tekninen-toimenpide+ skeemasta
      (s/optional-key :poistettu) s/Bool}]
 

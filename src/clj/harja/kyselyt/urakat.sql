@@ -50,6 +50,7 @@ SELECT
   elyt::TEXT[]             AS yha_elyt,
   vuodet::INTEGER[]        AS yha_vuodet,
   (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paallystysilmoituksia,
+  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paikkausilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -310,6 +311,7 @@ SELECT
   elyt::TEXT[]             AS yha_elyt,
   vuodet::INTEGER[]        AS yha_vuodet,
   (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paallystysilmoituksia,
+  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paikkausilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
