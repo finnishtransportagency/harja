@@ -338,7 +338,7 @@ SELECT exists(
 -- name: hae-urakan-id-sampo-idlla
 -- single?: true
 -- Hae urakan id Sampo ID:llä, sähke oikeuksien hakua varten
-SELECT id FROM urakka WHERE hanke_sampoid = :sampoid
+SELECT id FROM urakka WHERE sampoid = :sampoid
 
 -- name: hae-urakoitsijan-id-ytunnuksella
 -- single?: true
