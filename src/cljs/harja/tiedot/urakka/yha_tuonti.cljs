@@ -32,12 +32,5 @@
 
 
 (defn- sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]
-  (log "[YHA] Sidotaan Harja-urakka " harja-urakka-id " yha-urakkaan: " (pr-str yha-tiedot))
-  (reset! sidonta-kaynnissa? true)
-  (go
-    (let [vastaus (<! (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
-                                                                :yha-tiedot yha-tiedot}))]
-      (log "[YHA] Sidonta suoritettu")
-      (reset! sidonta-kaynnissa? false)
-      (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
-      (modal/piilota!))))
+  (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
+                                            :yha-tiedot yha-tiedot}))

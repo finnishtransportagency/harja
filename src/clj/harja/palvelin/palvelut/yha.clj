@@ -15,7 +15,7 @@
                                          :yhaid yhaid
                                          :yhanimi yhanimi
                                          :elyt (konv/seq->array elyt)
-                                         ;:vuodet (konv/seq->array vuodet) ; FIXME Ei toimi, en tiedä miksi
+                                         :vuodet (konv/seq->array (map str vuodet))
                                          :kayttaja (:id user)}))
 
 (defn- poista-urakan-yha-tiedot [db urakka-id]

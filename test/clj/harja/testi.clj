@@ -312,7 +312,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 (defn oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
-   :roolit #{"Vastuuhenkilo"}, :id 17, :etunimi "Yitin",
+   :roolit #{"vastuuhenkilo"}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :urakkaroolit [{:urakka {:id @oulun-alueurakan-2005-2010-id,
                             :nimi "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},

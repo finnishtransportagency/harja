@@ -29,7 +29,6 @@ WHERE o.id = :hy;
 
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
--- PENDING: joinataan mukaan ylläpidon urakat eri taulusta?
 SELECT
   u.id,
   u.nimi,
@@ -45,6 +44,11 @@ SELECT
   urk.id                   AS urakoitsija_id,
   urk.nimi                 AS urakoitsija_nimi,
   urk.ytunnus              AS urakoitsija_ytunnus,
+  yhatunnus                AS yha_yhatunnus,
+  yhaid                    AS yha_yhaid,
+  yhanimi                  AS yha_yhanimi,
+  -- elyt                     AS yha_elyt, TODO Palauta myös nämä
+  -- vuodet                   AS yha_vuodet,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -54,6 +58,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
+  LEFT JOIN yhatiedot ON u.id = yhatiedot.urakka
 WHERE hallintayksikko = :hallintayksikko
       AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
@@ -298,6 +303,11 @@ SELECT
   urk.id                   AS urakoitsija_id,
   urk.nimi                 AS urakoitsija_nimi,
   urk.ytunnus              AS urakoitsija_ytunnus,
+  yhatunnus                AS yha_yhatunnus,
+  yhaid                    AS yha_yhaid,
+  yhanimi                  AS yha_yhanimi,
+  -- elyt                     AS yha_elyt, TODO Palauta myös nämä
+  -- vuodet                   AS yha_vuodet,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -307,6 +317,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
+  LEFT JOIN yhatiedot ON u.id = yhatiedot.urakka
 WHERE u.id = :urakka_id;
 
 -- name: hae-urakan-urakoitsija
