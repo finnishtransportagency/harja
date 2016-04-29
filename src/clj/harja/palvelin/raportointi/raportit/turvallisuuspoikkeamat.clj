@@ -65,7 +65,7 @@
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
-    [:raportti {:nimi raportin-nimi :sheet-nimi raportin-nimi}
+    [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true}
       (into []
             (concat (when urakoittain?

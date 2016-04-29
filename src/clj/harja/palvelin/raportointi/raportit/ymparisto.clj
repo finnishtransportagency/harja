@@ -98,7 +98,7 @@
                              materiaalit)
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)]
 
-    [:raportti {:nimi raportin-nimi :sheet-nimi raportin-nimi
+    [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))}

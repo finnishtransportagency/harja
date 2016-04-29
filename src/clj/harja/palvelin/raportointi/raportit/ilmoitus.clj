@@ -106,7 +106,7 @@
                                 (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm)))
                            (and (> (count ilmoitukset-hoitokaudella) 0)
                                 kyseessa-kk-vali?))]
-    [:raportti {:nimi raportin-nimi :sheet-nimi raportin-nimi}
+    [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []

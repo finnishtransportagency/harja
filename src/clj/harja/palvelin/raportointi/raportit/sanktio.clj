@@ -268,7 +268,7 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
 
-    [:raportti {:nimi raportin-nimi :sheet-nimi raportin-nimi
+    [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))}

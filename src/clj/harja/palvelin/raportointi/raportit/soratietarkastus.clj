@@ -247,7 +247,7 @@
                                                         index))
                                                     ryhmittellyt-rivit)))]
     [:raportti {:orientaatio :landscape
-                :nimi        raportin-nimi :sheet-nimi raportin-nimi}
+                :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja (when (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :korosta-rivit (kylla-loppuiset-rivi-indeksit ryhmittellyt-rivit)

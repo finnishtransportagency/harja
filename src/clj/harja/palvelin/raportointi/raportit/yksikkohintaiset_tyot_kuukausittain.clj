@@ -152,7 +152,7 @@
                   raportin-nimi alkupvm loppupvm)
         oikealle-tasattavat (set (range 2 (+ 5 (count listattavat-pvmt))))]
     [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi :sheet-nimi raportin-nimi}
+                :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat oikealle-tasattavat
                  :tyhja (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")}

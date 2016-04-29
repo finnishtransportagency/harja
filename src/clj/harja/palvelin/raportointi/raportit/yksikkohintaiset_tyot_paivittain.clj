@@ -36,7 +36,7 @@
                     :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id))))
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi :sheet-nimi raportin-nimi}
+                :nimi raportin-nimi}
      [:taulukko {:otsikko                    otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :tyhja                      (if (empty? naytettavat-rivit) "Ei raportoitavia tehtäviä.")

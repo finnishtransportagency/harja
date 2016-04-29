@@ -69,7 +69,7 @@
         #_ erilliskustannukset-hyn-mukaan #_(sort-by #(or (:id (first %)) 100000)
                                                 (seq (group-by :hallintayksikko
                                                                erilliskustannukset)))]
-    [:raportti {:nimi raportin-nimi :sheet-nimi raportin-nimi}
+    [:raportti {:nimi raportin-nimi}
      [:taulukko {:oikealle-tasattavat-kentat (if (not= konteksti :urakka)
                                                #{5 6}
                                                #{4 5})
