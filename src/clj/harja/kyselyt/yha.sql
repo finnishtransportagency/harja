@@ -33,6 +33,6 @@ WHERE yllapitokohde IN
 -- name: hae-urakoiden-sidontatiedot
 SELECT
   yt.yhaid,
-  u.nimi as sidottu_urakkaan
+  u.nimi as "sidottu-urakkaan"
 FROM yhatiedot yt JOIN urakka u on yt.urakka = u.id
 where yt.yhaid in (:yhaidt);

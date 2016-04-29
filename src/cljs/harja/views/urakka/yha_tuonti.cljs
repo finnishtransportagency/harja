@@ -109,4 +109,4 @@
                                                       (modal/piilota!))}
               "Sulje"]
      :sulje #(reset! yha/hakutulokset-data [])}
-    (tuontidialogi urakka {:sitomaton-urakka? (nil? (:yhatiedot urakka))})))
+    [tuontidialogi urakka {:sitomaton-urakka? (nil? (:yhatiedot urakka))}]))

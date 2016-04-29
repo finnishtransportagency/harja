@@ -55,7 +55,7 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id])
-  (laheta-kohde [this kohde-id]))
+  (laheta-kohde! [this kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
   (log/debug format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
@@ -107,6 +107,6 @@
     (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url (:yha asetukset)) yhatunniste sampotunniste vuosi))
   (hae-kohteet [this urakka-id]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url (:yha asetukset)) urakka-id))
-  (laheta-kohde [this kohde-id]
+  (laheta-kohde! [this kohde-id]
     (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url (:yha asetukset)) kohde-id)))
 

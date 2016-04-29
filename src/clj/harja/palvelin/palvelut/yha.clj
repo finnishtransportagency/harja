@@ -43,22 +43,13 @@
                    (map #(konv/array->vec % :elyt)))
                  (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
-(defn lisaa-sidontatiedot-urakalle [urakka]
-  (dissoc
-    (if (:sidottu_urakkaan urakka)
-      (assoc urakka :sidottu-urakkaan (:sidottu_urakkaan urakka))
-      urakka)
-    :sidottu_urakkaan))
 
 (defn hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi]}]
-
   ;; fixme: tee oikeustarkistukset!
-  ;; fixme: tee poikkeuskäsittely!
-
   (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
         yhaidt (mapv :yhaid urakat)
         sidontatiedot (yha-q/hae-urakoiden-sidontatiedot db {:yhaidt yhaidt})
-        urakat (mapv #(lisaa-sidontatiedot-urakalle (second %))
+        urakat (mapv second
                      (merge-with merge
                                  (into {} (map (juxt :yhaid identity) urakat))
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
