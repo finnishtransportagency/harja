@@ -54,11 +54,12 @@
   (try
     (let [nimi (:otsikko optiot)
           aiempi-sheet (last (excel/sheet-seq workbook))
-          [sheet nolla] (if (and (nil? nimi) aiempi-sheet)
+          sheet-nimi  (:sheet-nimi optiot)
+          [sheet nolla] (if (and (nil? nimi) (nil? sheet-nimi) aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
-                                              (or (:sheet-nimi optiot) nimi))) 0])
+                                              (or sheet-nimi nimi))) 0])
           sarake-tyyli (excel/create-cell-style! workbook {:background :blue
                                                            :font {:color :white}})
           otsikko-rivi (.createRow sheet nolla)]

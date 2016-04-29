@@ -81,7 +81,7 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
-                :nimi        raportin-nimi}
+                :nimi        raportin-nimi :sheet-nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
       [{:leveys 10 :otsikko "Päivämäärä"}

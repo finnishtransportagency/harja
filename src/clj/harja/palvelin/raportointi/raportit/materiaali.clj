@@ -90,7 +90,7 @@
         materiaalit (sort-by materiaalidomain/materiaalien-jarjestys (distinct (map :materiaali_nimi toteumat)))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
 
-    [:raportti {:nimi raportin-nimi}
+    [:raportti {:nimi raportin-nimi :sheet-nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true}
       (into []
