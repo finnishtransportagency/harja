@@ -98,7 +98,7 @@
    [hakulomake]
    [hakutulokset urakka]
    (when @yha/sidonta-kaynnissa?
-     [sidonta-kaynnissa])]) ;; FIXME Miksi tämä ei näy jos sidonta vaihdetaan???
+     [sidonta-kaynnissa])])
 
 (defn nayta-tuontidialogi [urakka]
   (modal/nayta!
