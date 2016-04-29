@@ -52,8 +52,7 @@ hakutiheys-historiakuva 1200000)
          :tarkastukset    {tk/tarkastus-tiesto     false
                            tk/tarkastus-talvihoito false
                            tk/tarkastus-soratie    false
-                           tk/tarkastus-laatu      false
-                           tk/tarkastus-pistokoe   false}
+                           tk/tarkastus-laatu      false}
          ;; Näiden pitää osua työkoneen enumeihin
          ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
          ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
