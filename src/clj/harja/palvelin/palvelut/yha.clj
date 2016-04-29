@@ -10,6 +10,7 @@
             [harja.kyselyt.konversio :as konv]))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
+  (log/debug "Lisätään YHA-tiedot")
   (yha-q/lisaa-urakalle-yha-tiedot<! db {:urakka urakka-id
                                          :yhatunnus yhatunnus
                                          :yhaid yhaid
@@ -19,15 +20,14 @@
                                          :kayttaja (:id user)}))
 
 (defn- poista-urakan-yha-tiedot [db urakka-id]
+  (log/debug "Poistetaan urakan vanhat YHA-tiedot")
   (yha-q/poista-urakan-yha-tiedot! db {:urakka urakka-id}))
 
 (defn sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
   ; FIXME Oikeustarkistus!
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
   (jdbc/with-db-transaction [db db]
-    (log/debug "Poistetaan urakan vanhat YHA-tiedot")
     (poista-urakan-yha-tiedot db harja-urakka-id)
-    (log/debug "Lisätään YHA-tiedot")
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
     (log/debug "YHA-tiedot sidottu, palautetaan urakan tiedot")
     (first (into []
