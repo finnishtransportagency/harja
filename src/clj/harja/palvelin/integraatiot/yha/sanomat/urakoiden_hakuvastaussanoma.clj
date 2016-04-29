@@ -8,8 +8,8 @@
 (defn lue-urakat [data]
   (mapv (fn [urakka]
           (hash-map :yha-id (xml/parsi-kokonaisluku (z/xml1-> urakka :yha:yha-id z/text))
-                    :elyt (mapv #(z/xml1-> % :yha:ely z/text) (z/xml-> urakka :yha:elyt))
-                    :vuodet (mapv #(xml/parsi-kokonaisluku (z/xml1-> % :yha:vuosi z/text)) (z/xml-> urakka :yha:vuodet))
+                    :elyt (vec (mapcat #(z/xml-> % :yha:ely z/text) (z/xml-> urakka :yha:elyt)))
+                    :vuodet (vec (mapcat #(z/xml-> % :yha:vuosi z/text xml/parsi-kokonaisluku) (z/xml-> urakka :yha:vuodet)))
                     :tunnus (z/xml1-> urakka :yha:tunnus z/text)
                     :sampotunnus (z/xml1-> urakka :yha:sampotunnus z/text)))
         (z/xml-> data :yha:urakat :yha:urakka)))
