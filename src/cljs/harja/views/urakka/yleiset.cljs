@@ -147,7 +147,8 @@
              yha-tuontioikeus? true ; FIXME Oikeustarkistus
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
-             paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))]
+             paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
+             paallystysilmoituksia-vihje "Urakalle on kirjattu päällystysilmoituksia, sidontaa ei voi muuttaa."]
          (when (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
            (yha/nayta-tuontidialogi ur))
          [:div
@@ -168,12 +169,16 @@
             "YHA-sidonta:"
             (cond
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
-              [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)}
-               "Sido YHA-urakkaan"]
+              [:span (when (> (:paallystysilmoituksia ur) 0) {:title paallystysilmoituksia-vihje})
+               [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
+                                           :disabled (> (:paallystysilmoituksia ur) 0)}
+               "Sido YHA-urakkaan"]]
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               ; FIXME Tarkista myös, ettei ole ilmoituksia
-              [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)}
-               "Vaihda sidottu urakka"]
+              [:span (when (> (:paallystysilmoituksia ur) 0) {:title paallystysilmoituksia-vihje})
+               [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
+                                           :disabled (> (:paallystysilmoituksia ur) 0)}
+               "Vaihda sidottu urakka"]]
               :default nil)
             "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
             "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]

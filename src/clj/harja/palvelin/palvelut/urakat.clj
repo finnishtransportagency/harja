@@ -60,17 +60,6 @@
                                      :nimi (:urakoitsija_nimi %)
                                      :ytunnus (:urakoitsija_ytunnus %)}))
 
-        (map #(konv/array->vec % :yha_elyt))
-        (map #(konv/array->vec % :yha_vuodet))
-
-        (map #(if (:yha_yhatunnus %)
-               (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
-                                     :yhaid (:yha_yhaid %)
-                                     :yhanimi (:yha_yhanimi %)
-                                     :elyt (:yha_elyt %)
-                                     :vuodet (:yha_vuodet %)})
-               %))
-
         (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
 
         ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja
@@ -87,6 +76,21 @@
         (map #(assoc %
                 :tyyppi (keyword (:tyyppi %))
                 :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
+
+        ;; Käsitellään päällystysurakan tiedot
+
+        (map #(konv/array->vec % :yha_elyt))
+        (map #(konv/array->vec % :yha_vuodet))
+
+        (map #(if (:yha_yhatunnus %)
+               (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
+                                    :yhaid (:yha_yhaid %)
+                                    :yhanimi (:yha_yhanimi %)
+                                    :elyt (:yha_elyt %)
+                                    :vuodet (:yha_vuodet %)})
+               %))
+
+        ;; Poista käsitellyt avaimet
 
         (map #(dissoc %
                       :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
