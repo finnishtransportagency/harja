@@ -165,7 +165,7 @@
             "YHA:n urakkatunnus:"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (get-in ur [:yhatiedot :yhatunnus]))
-            "YHA:n ELYt:"
+            "YHA:n ELY:t"
             (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
               (str/join ", " (get-in ur [:yhatiedot :elyt])))
             "YHA:n vuodet:"
