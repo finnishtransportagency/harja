@@ -68,7 +68,7 @@
        :tyyppi :komponentti
        :komponentti (fn [rivi]
                       (if (:sidottu-urakkaan rivi)
-                        [:span (str "Sidottu Harja-urakkaan " (:sidottu-urakkaan rivi))]
+                        [:span (str "Sidottu jo Harjan urakkaan: " (:sidottu-urakkaan rivi))]
                         [harja.ui.napit/palvelinkutsu-nappi
                          "Sido"
                          #(do

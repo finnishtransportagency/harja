@@ -9,7 +9,7 @@
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
 
-
+;; todo: poista kun saadaan oikea yhteys YHA:n
 (def +testiurakka-haun-vastaus+
   "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
    <yha:urakat>
@@ -63,9 +63,11 @@
         urakat (:urakat vastaus)
         virhe (:virhe vastaus)]
     (if virhe
-      (throw+
-        {:type +virhe-urakoiden-haussa+
-         :virheet {:virhe virhe}})
+      (do
+        (log/error (format "Urakoiden haussa YHA:sta tapahtui virhe: %s" virhe))
+        (throw+
+         {:type +virhe-urakoiden-haussa+
+          :virheet {:virhe virhe}}))
       urakat)))
 
 (defn hae-urakat-yhasta [integraatioloki db url yhatunniste sampotunniste vuosi]
