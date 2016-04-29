@@ -36,7 +36,10 @@
   (fmap- [this f]
     (comp f this))
 
-  )
+  #?@(:clj
+      [java.util.concurrent.Future
+       (fmap- [this f]
+              (future (f @this)))]))
 
 (defn fmap
   "Map f over the items in the given container. Returns a container of the same type as the input."
