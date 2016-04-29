@@ -67,12 +67,14 @@
        :nimi :valitse
        :tyyppi :komponentti
        :komponentti (fn [rivi]
-                      [harja.ui.napit/palvelinkutsu-nappi
-                       "Sido"
-                       #(do
-                         (log "[YHA] Sidotaan Harja-urakka " (:id urakka) " yha-urakkaan: " (pr-str rivi))
-                         (reset! yha/sidonta-kaynnissa? true)
-                         (yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi))
+                      (if (:sidottu-urakkaan rivi)
+                        [:span (str "Sidottu Harja-urakkaan " (:sidottu-urakkaan rivi))]
+                        [harja.ui.napit/palvelinkutsu-nappi
+                         "Sido"
+                         #(do
+                           (log "[YHA] Sidotaan Harja-urakka " (:id urakka) " yha-urakkaan: " (pr-str rivi))
+                           (reset! yha/sidonta-kaynnissa? true)
+                           (yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi))
                          {:luokka "nappi-ensisijainen"
                           :disabled sidonta-kaynnissa?
                           :kun-valmis (fn [vastaus]
@@ -80,7 +82,7 @@
                                         (reset! yha/sidonta-kaynnissa? false))
                           :kun-onnistuu (fn [vastaus]
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
-                                          (modal/piilota!))}])}]
+                                          (modal/piilota!))}]))}]
      @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []
