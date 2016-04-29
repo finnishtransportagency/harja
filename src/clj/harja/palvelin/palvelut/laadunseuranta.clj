@@ -58,7 +58,6 @@
              :soratie (dissoc tarkastus :talvihoitomittaus)
              :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
              :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-             :pistokoe (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
              tarkastus)))))
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
