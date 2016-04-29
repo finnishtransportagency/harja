@@ -22,6 +22,7 @@
                            #(yha/hae-yha-urakat yha/hakulomake-data)
                            {:luokka "nappi-ensisijainen"
                             :disabled @yha/sidonta-kaynnissa?
+                            :virheviesti "Urakoiden haku YHA:sta epäonnistui."
                             :kun-onnistuu (fn [vastaus]
                                             (log "YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
                                             (reset! yha/hakutulokset-data vastaus))}]}
@@ -80,6 +81,7 @@
                           :kun-valmis (fn [vastaus]
                                         (log "[YHA] Sidonta suoritettu, vastaus: " (pr-str vastaus))
                                         (reset! yha/sidonta-kaynnissa? false))
+                          :virheviesti "Urakan sidonta epäonnistui."
                           :kun-onnistuu (fn [vastaus]
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
                                           (modal/piilota!))}]))}]
