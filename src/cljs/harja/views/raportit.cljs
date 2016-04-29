@@ -304,29 +304,13 @@
 ;; Oletuksena voi suorittaa, jos ei raporttikohtaista sääntöä ole
 (defmethod raportin-voi-suorittaa? :default [_ _] true)
 
-(def parametrien-jarjestys
-  ;; Koska parametreillä ei ole mitään järjestysnumeroa
-  ;; annetaan osalle sellainen, että esim. kuukauden hoitokausi
-  ;; ei tule hoitokausivalinnan yläpuolelle.
-  {"aikavali" 1
-   "urakan-toimenpide" 3})
-
-(def tyomaakokousraportin-parametrien-jarjestys
-  {"Aikaväli"          1
-   "Erilliskustannukset" 3
-   "Ilmoitukset" 5
-   "Kelitarkastusraportti" 7
-   "Laatupoikkeamat" 9
-   "Laskutusyhteenveto" 11
-   "Materiaaliraportti" 13
-   "Sanktioiden yhteenveto" 15
-   "Soratietarkastukset" 17
-   "Tiestötarkastukset" 19
-   "Turvallisuusraportti" 21
-   "Yksikköhintaiset työt kuukausittain" 23
-   "Yksikköhintaiset työt päivittäin" 25
-   "Yksikköhintaiset työt tehtävittäin" 27
-   "Ympäristöraportti" 29})
+(defn- parametrin-sort-avain
+  "Parametrin sort avain."
+  [{nimi :nimi}]
+  (cond
+    (= nimi "Aikaväli") "1"
+    (= nimi "Toimenpide") "3"
+    :default nimi))
 
 (def parametri-omalle-riville? #{"aikavali" "urakoittain"})
 
@@ -368,14 +352,10 @@
          ikoni " " teksti]])]))
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [raportin-nimi (:nimi @valittu-raporttityyppi)
-        parametrit (sort-by #(if (= :tyomaakokous raportin-nimi)
-                              (tyomaakokousraportin-parametrien-jarjestys (:nimi %))
-                              (or (parametrien-jarjestys (:tyyppi %))
-                                  100))
+  (let [parametrit (sort-by parametrin-sort-avain
                             (filter #(let [k (:konteksti %)]
-                                       (or (nil? k)
-                                           (= k konteksti)))
+                                      (or (nil? k)
+                                          (= k konteksti)))
                                     (:parametrit raporttityyppi)))
 
         nakyvat-parametrit (into #{} (map :nimi) parametrit)
