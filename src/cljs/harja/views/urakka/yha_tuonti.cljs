@@ -49,8 +49,8 @@
        :nimi :yhatunnus
        :tyyppi :string
        :muokattava? (constantly false)}
-      {:otsikko "Nimi"
-       :nimi :yhanimi
+      {:otsikko "Sampo-tunnus"
+       :nimi :sampotunnus
        :tyyppi :string
        :muokattava? (constantly false)}
       {:otsikko "ELY:t"
