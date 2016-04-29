@@ -63,12 +63,13 @@
         (map #(konv/array->vec % :yha_elyt))
         (map #(konv/array->vec % :yha_vuodet))
 
-        (map #(assoc % :yhatiedot (when (:yha_yhatunnus %)
-                                    {:yhatunnus (:yha_yhatunnus %)
+        (map #(if (:yha_yhatunnus %)
+               (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
                                      :yhaid (:yha_yhaid %)
                                      :yhanimi (:yha_yhanimi %)
                                      :elyt (:yha_elyt %)
-                                     :vuodet (:yha_vuodet %)})))
+                                     :vuodet (:yha_vuodet %)})
+               %))
 
         (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
 
