@@ -103,5 +103,6 @@
      :footer [:button.nappi-toissijainen {:on-click (fn [e]
                                                       (.preventDefault e)
                                                       (modal/piilota!))}
-              "Sulje"]}
+              "Sulje"]
+     :sulje #(reset! yha/hakutulokset-data [])}
     (tuontidialogi urakka {:sitomaton-urakka? (nil? (:yhatiedot urakka))})))
