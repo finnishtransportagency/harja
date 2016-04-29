@@ -90,7 +90,6 @@
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
      :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
-  (:import [java.util Locale])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
@@ -355,7 +354,6 @@
 (defonce harja-jarjestelma nil)
 
 (defn kaynnista-jarjestelma [asetusfile]
-  (Locale/setDefault (Locale. "fi" "FI"))
   (alter-var-root #'harja-jarjestelma
                   (constantly
                     (-> (lue-asetukset asetusfile)
