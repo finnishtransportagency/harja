@@ -76,7 +76,7 @@
                          {:luokka "nappi-ensisijainen"
                           :disabled sidonta-kaynnissa?
                           :kun-valmis (fn [vastaus]
-                                        (log "[YHA] Sidonta suoritettu, vastaus: " vastaus)
+                                        (log "[YHA] Sidonta suoritettu, vastaus: " (pr-str vastaus))
                                         (reset! yha/sidonta-kaynnissa? false))
                           :kun-onnistuu (fn [vastaus]
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
