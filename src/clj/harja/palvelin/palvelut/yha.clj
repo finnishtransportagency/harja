@@ -49,7 +49,7 @@
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
         yhaidt (mapv :yhaid urakat)
-        sidontatiedot (yha-q/hae-urakoiden-sidontatiedot db {:yhaidt yhaidt})
+        sidontatiedot (when (not-empty yhaidt) (yha-q/hae-urakoiden-sidontatiedot db {:yhaidt yhaidt}))
         urakat (mapv second
                      (merge-with merge
                                  (into {} (map (juxt :yhaid identity) urakat))
