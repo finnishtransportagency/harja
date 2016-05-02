@@ -26,10 +26,7 @@
                             :virheviesti "Urakoiden haku YHA:sta epäonnistui."
                             :kun-onnistuu (fn [vastaus]
                                             (log "[YHA] YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
-                                            (reset! yha/hakutulokset-data vastaus)
-                                            (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
-                                            ;; TODO Mitä sopimusta tässä käsitellään?
-                                            (yha/hae-ja-kasittele-yha-kohteet (:id urakka) (first @u/valittu-sopimusnumero)))}]}
+                                            (reset! yha/hakutulokset-data vastaus))}]}
    [{:otsikko "YHA-tunniste"
      :nimi :yhatunniste
      :pituus-max 512
@@ -88,7 +85,10 @@
                           :virheviesti "Urakan sidonta epäonnistui."
                           :kun-onnistuu (fn [vastaus]
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
-                                          (modal/piilota!))}]))}]
+                                          (modal/piilota!)
+                                          (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
+                                          ;; TODO Mitä sopimusta tässä käsitellään?
+                                          (yha/hae-ja-kasittele-yha-kohteet (:id urakka) (first @u/valittu-sopimusnumero)))}]))}]
      @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []
