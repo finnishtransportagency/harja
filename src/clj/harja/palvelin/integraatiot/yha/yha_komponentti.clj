@@ -55,6 +55,54 @@
    </yha:urakat>
  </yha:urakoiden-hakuvastaus>")
 
+(def +testi-urakan-kohdehakuvastaus+
+  "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <yha:kohteet>
+      <yha:kohde>
+        <yha:yha-id>3</yha:yha-id>
+        <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
+        <yha:tunnus>string</yha:tunnus>
+        <yha:yllapitoluokka>1</yha:yllapitoluokka>
+        <yha:keskimaarainen-vuorokausiilikenne>1000</yha:keskimaarainen-vuorokausiilikenne>
+        <yha:nykyinen-paallyste>1</yha:nykyinen-paallyste>
+        <yha:tierekisteriosoitevali>
+          <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
+          <yha:tienumero>3</yha:tienumero>
+          <yha:ajorata>0</yha:ajorata>
+          <yha:kaista>11</yha:kaista>
+          <yha:aosa>3</yha:aosa>
+          <yha:aet>3</yha:aet>
+          <yha:losa>3</yha:losa>
+          <yha:let>3</yha:let>
+        </yha:tierekisteriosoitevali>
+        <yha:alikohteet>
+          <yha:alikohde>
+            <yha:yha-id>3</yha:yha-id>
+            <yha:tierekisteriosoitevali>
+              <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
+              <yha:tienumero>3</yha:tienumero>
+              <yha:ajorata>0</yha:ajorata>
+              <yha:kaista>11</yha:kaista>
+              <yha:aosa>3</yha:aosa>
+              <yha:aet>3</yha:aet>
+              <yha:losa>3</yha:losa>
+              <yha:let>3</yha:let>
+            </yha:tierekisteriosoitevali>
+            <yha:tunnus>A</yha:tunnus>
+            <yha:paallystystoimenpide>
+              <yha:uusi-paallyste>11</yha:uusi-paallyste>
+              <yha:raekoko>12</yha:raekoko>
+              <yha:kokonaismassamaara>124</yha:kokonaismassamaara>
+              <yha:rc-prosentti>14</yha:rc-prosentti>
+              <yha:kuulamylly>4</yha:kuulamylly>
+             <yha:paallystetyomenetelma>22</yha:paallystetyomenetelma>
+          </yha:paallystystoimenpide>
+        </yha:alikohde>
+        </yha:alikohteet>
+      </yha:kohde>
+    </yha:kohteet>
+  </yha:urakan-kohdehakuvastaus>")
+
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id])
@@ -109,13 +157,14 @@
   (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "/urakat/%s/kohteet" yha-id)) ]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
-      (integraatiotapahtuma/suorita-integraatio
-                db integraatioloki "yha" "kohteiden-haku"
-                (fn [konteksti]
-                  (let [http-asetukset {:metodi :GET :url url}
-                        {body :body headers :headers}
-                        (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-                    (kasittele-urakan-kohdehakuvastaus body headers)))))
+      (with-fake-http [url +testi-urakan-kohdehakuvastaus+]
+        (integraatiotapahtuma/suorita-integraatio
+         db integraatioloki "yha" "kohteiden-haku"
+         (fn [konteksti]
+           (let [http-asetukset {:metodi :GET :url url}
+                 {body :body headers :headers}
+                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+             (kasittele-urakan-kohdehakuvastaus body headers))))))
     (do
       (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
         (log/error virhe
