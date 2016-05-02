@@ -62,14 +62,14 @@
 (defn- tallenna-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
-  [db user {:keys [harja-urakka-id kohteet] :as tiedot}]
+  [db user {:keys [urakka-id kohteet] :as tiedot}]
   (jdbc/with-db-transaction [db db]
-    (for [{:keys [urakka-id sopimus-id kohdenumero nimi
-                  tierekisteriosoitevali
+    (for [{:keys [tierekisteriosoitevali
                   tunnus yha-id alikohteet kohdetyyppi] :as kohde} kohteet]
-      (let [kohde (yha-q/luo-yllapitokohde<! db
+      (let [paasopimus (yha-q/hae-urakan-paasopimus db urakka-id)
+            kohde (yha-q/luo-yllapitokohde<! db
                                       {:urakka urakka-id
-                                       :sopimus sopimus-id
+                                       :sopimus (:id paasopimus)
                                        :tr_numero (:tienumero tierekisteriosoitevali)
                                        :tr_alkuosa (:aosa tierekisteriosoitevali)
                                        :tr_alkuetaisyys (:aet tierekisteriosoitevali)

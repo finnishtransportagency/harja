@@ -28,9 +28,8 @@
   (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                             :yha-tiedot yha-tiedot}))
 
-(defn- tallenna-yha-kohteet [harja-urakka-id harja-sopimus-id kohteet]
+(defn- tallenna-yha-kohteet [harja-urakka-id kohteet]
   (k/post! :tallenna-yha-kohteet {:urakka-id harja-urakka-id
-                                  :sopimus-id harja-sopimus-id
                                   :kohteet kohteet}))
 
 (defn- hae-yha-kohteet [harja-urakka-id]
@@ -40,8 +39,8 @@
 (defn hae-ja-kasittele-yha-kohteet
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
    Suoritus tapahtuu asynkronisesti"
-  [harja-urakka-id harja-sopimus-id]
+  [harja-urakka-id]
   (go (let [yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
             yha-kohteet (vkm/muunna-yha-kohteet yha-kohteet)]
         (log "[YHA] Tallennetaan kohteet kantaan")
-        (tallenna-yha-kohteet harja-urakka-id harja-sopimus-id yha-kohteet))))
+        (tallenna-yha-kohteet harja-urakka-id yha-kohteet))))
