@@ -60,4 +60,5 @@ VALUES (:urakka,
         :tr_loppuosa,
         :tr_loppuetaisyys,
         :yhatunnus,
-        :yhaid);
+        :yhaid)
+ON CONFLICT ON CONSTRAINT yllapitokohde_uniikki_yhaid DO NOTHING;

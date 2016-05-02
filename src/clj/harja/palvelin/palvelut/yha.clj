@@ -59,27 +59,26 @@
 (defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
   (yha/hae-kohteet yha urakka-id))
 
-(defn- tallenna-kohteet [db user {:keys [urakka-id sopimus-id kohteet] :as tiedot}]
-  (for [{:keys [urakka-id sopimus-id kohdenumero nimi
-                tr-numero tr-alkuosa tr-alkuetaisyys
-                tr-loppuosa tr-loppuetaisyys
-                yhatunnus yhaid] :as kohde} kohteet]
-    (yha-q/luo-yllapitokohde<! db {:urakka urakka-id
-                                   :sopimus sopimus-id
-                                   :kohdenumero kohdenumero
-                                   :nimi nimi
-                                   :tr_numero tr-numero
-                                   :tr_alkuosa tr-alkuosa
-                                   :tr_alkuetaisyys tr-alkuetaisyys
-                                   :tr_loppuosa tr-loppuosa
-                                   :tr_loppuetaisyys tr-loppuetaisyys
-                                   :yhatunnus yhatunnus
-                                   :yhaid yhaid})))
-
-(defn- tallenna-yha-kohteet [db user {:keys [harja-urakka-id] :as tiedot}]
+(defn- tallenna-yha-kohteet
+  "Tallentaa YHA:sta tulleet ylläpitokohteet.
+  Kohde tallennetaan vain jos sen yhatunnisteella ei jo ole olemassa kohdetta"
+  [db user {:keys [harja-urakka-id kohteet] :as tiedot}]
   (jdbc/with-db-transaction [db db]
-    (poista-urakan-yllapitokohteet db harja-urakka-id) ; FIXME Älä poista vaan käsittele taskin mukaisesti
-    (tallenna-kohteet db user tiedot)))
+    (for [{:keys [urakka-id sopimus-id kohdenumero nimi
+                  tr-numero tr-alkuosa tr-alkuetaisyys
+                  tr-loppuosa tr-loppuetaisyys
+                  yhatunnus yhaid] :as kohde} kohteet]
+      (yha-q/luo-yllapitokohde<! db {:urakka urakka-id
+                                     :sopimus sopimus-id
+                                     :kohdenumero kohdenumero
+                                     :nimi nimi
+                                     :tr_numero tr-numero
+                                     :tr_alkuosa tr-alkuosa
+                                     :tr_alkuetaisyys tr-alkuetaisyys
+                                     :tr_loppuosa tr-loppuosa
+                                     :tr_loppuetaisyys tr-loppuetaisyys
+                                     :yhatunnus yhatunnus
+                                     :yhaid yhaid}))))
 
 (defrecord Yha []
   component/Lifecycle
