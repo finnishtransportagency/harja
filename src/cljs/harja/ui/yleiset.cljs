@@ -166,7 +166,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (fn [this]
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
-      (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
+      (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title li-luokka-fn]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)]
           [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
@@ -228,7 +228,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             (doall
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
-                [:li.harja-alasvetolistaitemi
+
+                [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
                  (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                      (reset! auki false)
                                                      nil))]))]])))))

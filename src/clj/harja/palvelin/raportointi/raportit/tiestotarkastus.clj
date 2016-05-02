@@ -85,7 +85,8 @@
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")}
+                 :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
+                 :sheet-nimi raportin-nimi}
       (flatten (keep identity [{:leveys "10%" :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
                                {:leveys "5%" :otsikko "Klo"}
                                {:leveys "6%" :otsikko "Tie"}

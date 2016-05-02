@@ -263,10 +263,20 @@
      [:kaikki :urakoitsija :tilaaja :konsultti]]))
 
 (def tyomaakokousraportit
-  {"Laskutusyhteenveto" :laskutusyhteenveto
-   "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
-   "Ilmoitusraportti" :ilmoitusraportti
+  {"Erilliskustannukset" :erilliskustannukset
+   "Ilmoitukset" :ilmoitusraportti
+   "Kelitarkastusraportti" :kelitarkastusraportti
+   "Laatupoikkeamat" :laatupoikkeamaraportti
+   "Laskutusyhteenveto" :laskutusyhteenveto
+   "Materiaaliraportti" :materiaaliraportti
+   "Sanktioiden yhteenveto" :sanktioraportti
+   "Soratietarkastukset" :soratietarkastusraportti
+   "Tiestötarkastukset" :tiestotarkastusraportti
    "Turvallisuusraportti" :turvallisuus
+   "Yksikköhintaiset työt kuukausittain" :yks-hint-kuukausiraportti
+   "Yksikköhintaiset työt päivittäin" :yksikkohintaiset-tyot
+   "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
+   "Yksikköhintaiset työt tehtävittäin" :yks-hint-tehtavien-summat
    "Ympäristöraportti" :ymparisto})
 
 (defmethod raportin-parametri "checkbox" [p arvo]
@@ -294,14 +304,15 @@
 ;; Oletuksena voi suorittaa, jos ei raporttikohtaista sääntöä ole
 (defmethod raportin-voi-suorittaa? :default [_ _] true)
 
-(def parametrien-jarjestys
-  ;; Koska parametreillä ei ole mitään järjestysnumeroa
-  ;; annetaan osalle sellainen, että esim. kuukauden hoitokausi
-  ;; ei tule hoitokausivalinnan yläpuolelle.
-  {"aikavali" 1
-   "urakan-toimenpide" 3})
+(defn- parametrin-sort-avain
+  "Parametrin sort avain."
+  [{nimi :nimi}]
+  (cond
+    (= nimi "Aikaväli") "1"
+    (= nimi "Toimenpide") "3"
+    :default nimi))
 
-(def parametri-omalle-riville? #{"checkbox" "aikavali" "urakoittain"})
+(def parametri-omalle-riville? #{"aikavali" "urakoittain"})
 
 (def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
   +vientimuodot+
@@ -341,11 +352,10 @@
          ikoni " " teksti]])]))
 
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
-  (let [parametrit (sort-by #(or (parametrien-jarjestys (:tyyppi %))
-                                 100)
+  (let [parametrit (sort-by parametrin-sort-avain
                             (filter #(let [k (:konteksti %)]
-                                       (or (nil? k)
-                                           (= k konteksti)))
+                                      (or (nil? k)
+                                          (= k konteksti)))
                                     (:parametrit raporttityyppi)))
 
         nakyvat-parametrit (into #{} (map :nimi) parametrit)
@@ -492,7 +502,10 @@
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn  #(if % (:kuvaus %) "Valitse")
                                                 :valitse-fn #(valitse-raporttityyppi! (:nimi %))
-                                                :class      "raportti-alasveto"}
+                                                :class      "raportti-alasveto"
+                                                :li-luokka-fn #(if (= "Työmaakokousraportti" (:kuvaus %))
+                                                                "tyomaakokous"
+                                                                "")}
                            @mahdolliset-raporttityypit])]])
 
          (when @valittu-raporttityyppi

@@ -32,11 +32,11 @@
 
 
 
-(def +tarkastustyyppi+ [:tiesto :talvihoito :soratie :laatu :pistokoe])
+(def +tarkastustyyppi+ [:tiesto :talvihoito :soratie :laatu])
 
 (defn tarkastustyypit-tekijalle [tekija]
   (case tekija
-    :tilaaja [:laatu :pistokoe]
+    :tilaaja [:laatu]
     :urakoitsija [:tiesto :talvihoito :soratie]
     +tarkastustyyppi+))
 
@@ -70,8 +70,7 @@
                                        :tiesto "Tiestötarkastukset"
                                        :talvihoito "Kelitarkastukset"
                                        :soratie "Soratien tarkastukset"
-                                       :laatu "Laaduntarkastus"
-                                       :pistokoe "Pistokoe")}
+                                       :laatu "Laaduntarkastus")}
           tarkastukset/tarkastustyyppi]]]
        [valinnat/tienumero tarkastukset/tienumero]
 
@@ -234,7 +233,6 @@
                          :talvihoito "Kelitarkastus"
                          :soratie "Soratien tarkastus"
                          :laatu "Laaduntarkastus"
-                         :pistokoe "Pistokoe"
                          "- valitse -")
         :palstoja 1}
 

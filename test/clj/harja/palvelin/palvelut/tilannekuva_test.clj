@@ -55,8 +55,7 @@
    :tarkastukset    {tk/tarkastus-tiesto     true
                      tk/tarkastus-talvihoito true
                      tk/tarkastus-soratie    true
-                     tk/tarkastus-laatu      true
-                     tk/tarkastus-pistokoe   true}
+                     tk/tarkastus-laatu      true}
    :talvi           {tk/auraus-ja-sohjonpoisto          true
                      tk/suolaus                         true
                      tk/pistehiekoitus                  true

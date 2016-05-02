@@ -22,7 +22,6 @@
  [tarkastus-talvihoito :talvihoito                       "Talvihoito"]
  [tarkastus-soratie :soratie                          "Soratie"]
  [tarkastus-laatu :laatu                            "Laatu"]
- [tarkastus-pistokoe :pistokoe                         "Pistokoe"]
  [turvallisuuspoikkeamat :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"]
 
  [tpp :toimenpidepyynto                 "TPP"]
