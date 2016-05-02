@@ -96,7 +96,7 @@
       (julkaise-palvelu http :hae-yha-kohteet
                         (fn [user tiedot]
                           (hae-yha-kohteet db yha user tiedot)))
-      (julkaise-palvelu http :tallenna-kohteet
+      (julkaise-palvelu http :tallenna-yha-kohteet
                         (fn [user tiedot]
                           (tallenna-yha-kohteet db user tiedot)))))
 

@@ -8,7 +8,8 @@
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
             [harja.tiedot.navigaatio :as nav]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -24,8 +25,11 @@
                             :disabled @yha/sidonta-kaynnissa?
                             :virheviesti "Urakoiden haku YHA:sta epäonnistui."
                             :kun-onnistuu (fn [vastaus]
-                                            (log "YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
-                                            (reset! yha/hakutulokset-data vastaus))}]}
+                                            (log "[YHA] YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
+                                            (reset! yha/hakutulokset-data vastaus)
+                                            (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
+                                            ;; TODO Mitä sopimusta tässä käsitellään?
+                                            (yha/hae-ja-kasittele-yha-kohteet (:id urakka) (first @u/valittu-sopimusnumero)))}]}
    [{:otsikko "YHA-tunniste"
      :nimi :yhatunniste
      :pituus-max 512

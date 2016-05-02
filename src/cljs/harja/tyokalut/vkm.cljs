@@ -121,4 +121,6 @@ Palautettavassa datassa:
 
 (def pisteelle-ei-loydy-tieta "Pisteelle ei löydy tietä.")
 (def vihje-zoomaa-lahemmas "Yritä zoomata lähemmäs.")
-  
+
+(defn muunna-yha-kohteet [kohteet]
+  kohteet) ;; TODO Tee muunnos
