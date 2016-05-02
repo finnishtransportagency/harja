@@ -19,7 +19,7 @@
                               (reset! yha/hakulomake-data uusi-data))
                   :footer [harja.ui.napit/palvelinkutsu-nappi
                            "Hae"
-                           #(yha/hae-yha-urakat (merge {:harja-urakka-id (:id urakka)} yha/hakulomake-data))
+                           #(yha/hae-yha-urakat (merge {:harja-urakka-id (:id urakka)} @yha/hakulomake-data))
                            {:luokka "nappi-ensisijainen"
                             :disabled @yha/sidonta-kaynnissa?
                             :virheviesti "Urakoiden haku YHA:sta epäonnistui."
