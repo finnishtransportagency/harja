@@ -486,11 +486,6 @@ jatkon."
                                                              (swap! piilossa? not))}
               "Piilota"]])])))))
 
-(defn ikoni-ja-teksti [ikoni teksti]
-  [:span
-   ikoni
-   [:span (str " " teksti)]])
-
 (defn tasaus-luokka
   "Palauttaa CSS-luokan, jolla teksti tasataan.
   Mahdolliset arvot ovat :oikea (teksti tasataan oikealle) tai
