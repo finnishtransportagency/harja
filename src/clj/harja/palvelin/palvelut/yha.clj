@@ -60,9 +60,14 @@
   ;; TODO
   )
 
-(defn- tallenna-kohteet [db user tiedot]
+(defn- tallenna-kohteet [db user kohteet]
   ;; TODO
   )
+
+(defn- tallenna-yha-kohteet [db user {:keys [harja-urakka-id kohteet] :as tiedot}]
+  ;; TODO
+  (poista-urakan-yllapitokohteet db harja-urakka-id)
+  (tallenna-kohteet db user kohteet))
 
 (defrecord Yha []
   component/Lifecycle
@@ -81,7 +86,7 @@
                           (hae-yha-kohteet db yha user tiedot)))
       (julkaise-palvelu http :tallenna-kohteet
                         (fn [user tiedot]
-                          (tallenna-kohteet db user tiedot)))))
+                          (tallenna-yha-kohteet db user tiedot)))))
 
   (stop [this]
     (poista-palvelut
