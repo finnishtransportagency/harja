@@ -53,7 +53,7 @@
    (s/optional-key :uusi-kommentti)    s/Any
    (s/optional-key :liitteet)          s/Any})
 
-(def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie :laatu :pistokoe))
+(def Tarkastustyyppi (s/enum :tiesto :talvihoito :soratie :laatu))
 
 (def Talvihoitomittaus
   {:lampotila                    s/Num

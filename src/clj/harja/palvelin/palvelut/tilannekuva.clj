@@ -162,9 +162,7 @@
                        :talvihoito (dissoc tarkastus :soratiemittaus)
                        :soratie (dissoc tarkastus :talvihoitomittaus)
                        :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                       :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                       :pistokoe (dissoc tarkastus :soratiemittaus
-                                         :talvihoitomittaus)))))
+                       :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
             (q/hae-tarkastukset db
                                 toleranssi
                                 urakat

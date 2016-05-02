@@ -6,7 +6,12 @@
             #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
             #?(:cljs [goog.i18n.NumberFormat])
             [clojure.string :as str])
-  #?(:clj (:import (java.text NumberFormat))))
+  #?(:clj
+     (:import (java.text NumberFormat)
+              (java.util Locale))))
+
+#?(:clj
+   (Locale/setDefault (Locale. "fi" "FI")))
 
 #?(:cljs
    (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI))
@@ -126,10 +131,13 @@
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
    #?(:cljs
-      (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
-        (if-not ryhmitelty?
-          (str/replace formatoitu #" " "")
-          formatoitu))
+      ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
+      (if (= tarkkuus 0)
+        (.toFixed luku 0)
+        (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+         (if-not ryhmitelty?
+           (str/replace formatoitu #" " "")
+           formatoitu)))
       :clj
       (.format (doto (java.text.DecimalFormat.)
                  (.setDecimalFormatSymbols desimaali-symbolit)

@@ -108,7 +108,8 @@
                                 kyseessa-kk-vali?))]
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :viimeinen-rivi-yhteenveto? true}
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi raportin-nimi}
       (into []
             (concat
               [{:otsikko "Urakka" :leveys 31}]
