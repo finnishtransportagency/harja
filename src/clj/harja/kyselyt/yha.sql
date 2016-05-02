@@ -98,3 +98,6 @@ SELECT * FROM sopimus WHERE paasopimus IS NULL AND urakka = :urakka;
 -- name: hae-urakan-yha-id
 -- single?: true
 SELECT yhaid FROM yhatiedot WHERE urakka = :urakkaid;
+
+-- name: hae-urakan-kohteiden-yha-idt
+SELECT yhaid FROM yllapitokohde WHERE urakka = :urakkaid;

@@ -56,9 +56,13 @@
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
 
+(defn- suodata-olemassaolevat-kohteet [db urakka-id kohteet]
+  (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))]
+    (filter #(not (yha-idt (:yhaid %))) kohteet)))
+
 (defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
-  (yha/hae-kohteet yha urakka-id))
+  (suodata-olemassaolevat-kohteet db urakka-id (yha/hae-kohteet yha urakka-id)))
 
 (defn- tallenna-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
