@@ -17,7 +17,7 @@
 (deftest tarkista-usean-urakan-hakuvastaus
   (let [vastaus (hakuvastaussanoma/lue-sanoma +usean-urakan-hakuvastaus+)]
     (is (= 2 (count (:urakat vastaus))))
-    (is (= 3 (:yha-id (first (:urakat vastaus)))))
+    (is (= 3 (:yhaid (first (:urakat vastaus)))))
     (is (= 1 (count (:elyt (first (:urakat vastaus))))))
     (is (= "POP" (first (:elyt (first (:urakat vastaus))))))
     (is (= 1 (count (:vuodet (first (:urakat vastaus))))))
