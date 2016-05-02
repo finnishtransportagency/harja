@@ -40,7 +40,8 @@
                     :hallintayksikko hallintayksikko-id
                     :alkupvm alkupvm
                     :loppupvm loppupvm}
-        toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)]
+        toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
+        talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)]
     [:raportti {:otsikko "Toimenpiteiden ajoittuminen"
                 :orientaatio :landscape}
      [:taulukko {:otsikko "Toimenpiteiden ajoittuminen"
@@ -48,7 +49,7 @@
                               [{:teksti "Hoitoluokka" :sarakkeita 1}]
                               (map (fn [{nimi :nimi}]
                                      {:teksti nimi :sarakkeita 6 :tasaa :keskita})
-                                   hoitoluokat/talvihoitoluokat)
+                                   talvihoitoluokat)
                               [{:teksti "" :sarakkeita 1}])}
       (into []
             (concat
@@ -57,14 +58,14 @@
 
              [{:otsikko "Tehtävä" :leveys "18%"}]
 
-             (mapcat (fn [luokka]
+             (mapcat (fn [_]
                        [{:otsikko "< 6" :tasaa :keskita :reunus :vasen :leveys "1.5%"}
                         {:otsikko "6 - 10" :tasaa :keskita  :reunus :ei :leveys "1.5%"}
                         {:otsikko "10 - 14" :tasaa :keskita :reunus :ei :leveys "1.5%"}
                         {:otsikko "14 - 18" :tasaa :keskita :reunus :ei :leveys "1.5%"}
                         {:otsikko "18 - 22" :tasaa :keskita :reunus :ei :leveys "1.5%"}
                         {:otsikko "22 - 02" :tasaa :keskita :reunus :oikea :leveys "1.5%"}])
-                     yleinen/talvihoitoluokat)
+                     talvihoitoluokat)
 
              [{:otsikko "Yht" :leveys "10%"}]))
 
@@ -76,9 +77,9 @@
                                              (fmap (partial group-by :jarjestys)))]]
          (concat [tehtava]
                  (mapcat (fn [hoitoluokka]
-                           (let [ajat (get ajat-luokan-mukaan hoitoluokka)]
+                           (let [ajat (get ajat-luokan-mukaan (:numero hoitoluokka))]
                              (for [aika (range 6)
                                    :let [rivit (get ajat aika)]]
                                (reduce + 0 (keep :lkm rivit)))))
-                         yleinen/talvihoitoluokat-numerot)
+                         talvihoitoluokat)
                  [(reduce + (keep :lkm rivit))])))]]))

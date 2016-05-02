@@ -24,7 +24,7 @@
             [alandipert.storage-atom :refer [local-storage]]
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
-
+            [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.tiedot.hallintayksikot :as hy])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
@@ -290,7 +290,28 @@
     [:div
      [yleiset/raksiboksi (:nimi p) (get-in @muistetut-parametrit avaimet) paivita! nil false]]))
 
-
+(defmethod raportin-parametri "hoitoluokat" [p arvo]
+  []
+  [:div.hoitoluokat
+   [yleiset/otsikolla "Hoitoluokat"
+    (let [arvo-nyt (or @arvo {:hoitoluokat (into #{}
+                                                 (map :numero hoitoluokat/talvihoitoluokat))})
+          _ (log "ARVO-NYT: " (pr-str arvo-nyt))
+          valitut (:hoitoluokat arvo-nyt)
+          [vasen oikea] (partition 4 hoitoluokat/talvihoitoluokat)]
+      (vec (concat
+            [yleiset/rivi {:koko  "col-sm-2"}]
+            (for [sarake (partition 4 hoitoluokat/talvihoitoluokat)]
+              ^{:key (:numero (first sarake))}
+              [:div.inline
+               (for [{:keys [nimi numero]} sarake
+                     :let [valittu? (valitut numero)]]
+                 ^{:key numero}
+                 [yleiset/raksiboksi
+                  nimi valittu?
+                  #(reset! arvo {:hoitoluokat
+                                 ((if valittu? disj conj) valitut numero)})
+                  nil nil])]))))]])
 
 (defmethod raportin-parametri :default [p arvo]
   [:span (pr-str p)])
