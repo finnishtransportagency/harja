@@ -85,10 +85,10 @@
                                        :yhaid yha-id
                                        :tyyppi (name kohdetyyppi)})]
           (for [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
-            ;; FIXME Miten tallennetaan toimenpide?
+            ;; TODO Tee myös uusi päällystysilmoitus johon alustatoimenpiteet valmiiksi syötetty
             (yha-q/luo-yllapitokohdeosa<! db
                                           {:yllapitokohde (:id kohde)
-                                           :nimi tunnus ; FIXME Onko tämä oikea?
+                                           :nimi tunnus
                                            :sijainti sijainti
                                            :tr_numero (:tienumero tierekisteriosoitevali)
                                            :tr_alkuosa (:aosa tierekisteriosoitevali)
