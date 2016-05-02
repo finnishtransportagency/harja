@@ -40,6 +40,6 @@
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
    Suoritus tapahtuu asynkronisesti"
   [harja-urakka-id harja-sopimus-id]
-  (go (let [yha-kohteet (hae-yha-kohteet harja-urakka-id)
+  (go (let [yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
             yha-kohteet (vkm/muunna-yha-kohteet yha-kohteet)]
         (tallenna-yha-kohteet harja-urakka-id harja-sopimus-id yha-kohteet))))
