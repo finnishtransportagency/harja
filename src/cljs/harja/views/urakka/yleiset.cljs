@@ -148,8 +148,7 @@
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
              paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
-             sisaltaa-ilmoituksia? (or (> (:paallystysilmoituksia ur) 0)
-                                       (> (:paikkausilmoituksia ur) 0))
+             sisaltaa-ilmoituksia? (:sisaltaa-ilmoituksia? ur)
              sisaltaa-ilmoituksia-vihje "Urakalle on kirjattu ilmoituksia, sidontaa ei voi muuttaa."]
          (when (and yha-tuontioikeus?
                     paallystys-tai-paikkausurakka?

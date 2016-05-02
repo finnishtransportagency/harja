@@ -49,8 +49,17 @@ SELECT
   yhanimi                  AS yha_yhanimi,
   elyt::TEXT[]             AS yha_elyt,
   vuodet::INTEGER[]        AS yha_vuodet,
-  (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paallystysilmoituksia,
-  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paikkausilmoituksia,
+  (SELECT EXISTS(SELECT id
+                     FROM paallystysilmoitus
+                     WHERE paallystyskohde IN (SELECT id
+                                               FROM yllapitokohde
+                                               WHERE urakka = u.id)))
+  OR
+  (SELECT EXISTS(SELECT id
+                     FROM paikkausilmoitus
+                     WHERE paikkauskohde IN (SELECT id
+                                             FROM yllapitokohde
+                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -310,8 +319,17 @@ SELECT
   yhanimi                  AS yha_yhanimi,
   elyt::TEXT[]             AS yha_elyt,
   vuodet::INTEGER[]        AS yha_vuodet,
-  (SELECT COUNT(*) FROM paallystysilmoitus WHERE paallystyskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paallystysilmoituksia,
-  (SELECT COUNT(*) FROM paikkausilmoitus WHERE paikkauskohde IN (SELECT id FROM yllapitokohde WHERE urakka = u.id)) AS paikkausilmoituksia,
+  (SELECT EXISTS(SELECT id
+                     FROM paallystysilmoitus
+                     WHERE paallystyskohde IN (SELECT id
+                                               FROM yllapitokohde
+                                               WHERE urakka = u.id)))
+  OR
+  (SELECT EXISTS(SELECT id
+                     FROM paikkausilmoitus
+                     WHERE paikkauskohde IN (SELECT id
+                                             FROM yllapitokohde
+                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -328,7 +346,7 @@ WHERE u.id = :urakka_id;
 -- Hakee valitun urakan urakoitsijan id:n
 SELECT urakoitsija
 FROM urakka
-WHERE id = :urakka_id
+WHERE id = :urakka_id;
 
 -- name: paivita-urakka-alueiden-nakyma
 -- Päivittää urakka-alueiden materialisoidun näkymän
