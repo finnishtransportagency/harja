@@ -7,7 +7,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- vkm-base-url []	
-  "https://testportal.tiehallinto.fi/vkm/")
+  "/vkm")
 
 (defn koordinaatti->trosoite-kahdella [[x1 y1] [x2 y2]]
   (k/post! :hae-tr-pisteilla {:x1 x1 :y1 y1 :x2 x2 :y2 y2} nil true))
@@ -125,4 +125,10 @@
 
 (defn muunna-yha-kohteet [kohteet]
   (log "[YHA] Muunnetaan YHA-kohteet, joita on " (count kohteet))
+  #_(vkm-kutsu "muunnos" {:in "tieosoite"
+                        :out "tieosoite"
+                        :callback
+                        :json {:tunniste "test"}
+                        :tilannepvm 5
+                        :kohdepvm 6}) ; FIXME Selvitä miksi ei toimi ja että voiko kutsua ilman JSONP:tä
   kohteet) ;; TODO Tee muunnos
