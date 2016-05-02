@@ -164,6 +164,7 @@
                                :output-to     "dev-resources/js/harja.js"
                                :output-dir    "dev-resources/js/out"
                                :libs ["src/js/kuvataso.js"]
+                               :closure-output-charset "US-ASCII"
                                }}
                {:id             "test"
                 :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
@@ -171,7 +172,8 @@
                                  :output-dir    "target/cljs/test"
                                  :optimizations :none
                                  :pretty-print  true
-                                 :source-map    "target/cljs/test/test.js.map"}
+                                 :source-map    "target/cljs/test/test.js.map"
+                                 :closure-output-charset "US-ASCII"}
                 :notify-command ["./run-karma.sh"]}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
@@ -191,6 +193,7 @@
 
                                :parallel-build true
                                :libs ["src/js/kuvataso.js"]
+                               :closure-output-charset "US-ASCII"
                                }}
 
                ]}
