@@ -34,6 +34,7 @@
                                   :kohteet kohteet}))
 
 (defn- hae-yha-kohteet [harja-urakka-id]
+  (log "[YHA] Haetaan YHA-kohteet urakalle " harja-urakka-id)
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
 (defn hae-ja-kasittele-yha-kohteet
@@ -42,4 +43,5 @@
   [harja-urakka-id harja-sopimus-id]
   (go (let [yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
             yha-kohteet (vkm/muunna-yha-kohteet yha-kohteet)]
+        (log "[YHA] Tallennetaan kohteet kantaan")
         (tallenna-yha-kohteet harja-urakka-id harja-sopimus-id yha-kohteet))))

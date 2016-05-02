@@ -123,4 +123,5 @@ Palautettavassa datassa:
 (def vihje-zoomaa-lahemmas "Yritä zoomata lähemmäs.")
 
 (defn muunna-yha-kohteet [kohteet]
+  (log "[YHA] Muunnetaan YHA-kohteet, joita on " (count kohteet))
   kohteet) ;; TODO Tee muunnos
