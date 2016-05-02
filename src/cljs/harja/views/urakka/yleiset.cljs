@@ -173,14 +173,16 @@
               (str/join ", " (get-in ur [:yhatiedot :vuodet])))
             "YHA-sidonta:"
             (cond
-              (and (not yha-tuontioikeus?) paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+              (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?)  (not paallystys-tai-paikkausurakka-sidottu?))
               [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
-              (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+              (and paallystys-tai-paikkausurakka? yha-tuontioikeus? (not paallystys-tai-paikkausurakka-sidottu?))
               [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
                                            :disabled sisaltaa-ilmoituksia?}
                "Sido YHA-urakkaan"]]
-              (and yha-tuontioikeus? paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
+              (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) paallystys-tai-paikkausurakka-sidottu?)
+              [:span "Sidottu YHA-urakkaan. Vain urakanvalvoja voi muuttaa sidontaa."]
+              (and paallystys-tai-paikkausurakka? yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
               [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
                                            :disabled sisaltaa-ilmoituksia?}
