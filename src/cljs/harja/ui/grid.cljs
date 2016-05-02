@@ -687,9 +687,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                           :class (y/tasaus-luokka tasaa)}
                      teksti])])
                [:tr
-                (for [{:keys [otsikko leveys nimi otsikkorivi-luokka]} skeema]
+                (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
                   ^{:key (str nimi)}
-                  [:th {:class otsikkorivi-luokka :width (or leveys "5%")} otsikko])
+                  [:th {:class (y/luokat otsikkorivi-luokka
+                                         (y/tasaus-luokka tasaa))
+                        :width (or leveys "5%")} otsikko])
                 (when (and (not piilota-toiminnot?)
                            tallenna)
                   [:th.toiminnot {:width "40px"} " "])]]

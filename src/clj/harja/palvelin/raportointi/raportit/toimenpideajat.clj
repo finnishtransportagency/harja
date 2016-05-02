@@ -48,7 +48,7 @@
                  :rivi-ennen (concat
                               [{:teksti "Hoitoluokka" :sarakkeita 1}]
                               (map (fn [luokka]
-                                     {:teksti luokka :sarakkeita 6 :keskita? true})
+                                     {:teksti luokka :sarakkeita 6 :tasaa :keskita})
                                    yleinen/talvihoitoluokat)
                               [{:teksti "" :sarakkeita 1}])}
       (into []
