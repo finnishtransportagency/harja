@@ -4,10 +4,13 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.yha.sanomat.urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
-            [org.httpkit.fake :refer [with-fake-http]])
+            [harja.palvelin.integraatiot.yha.sanomat.urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
+            [org.httpkit.fake :refer [with-fake-http]]
+            [harja.kyselyt.yha :as yha-tiedot])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
+(def +virhe-urakan-kohdehaussa+ ::yha-virhe-urakan-kohdehaussa)
 
 ;; todo: poista kun saadaan oikea yhteys YHA:n
 (def +testiurakka-haun-vastaus+
@@ -59,6 +62,19 @@
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
   (log/debug format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (let [vastaus (urakan-kohdehakuvastaus/lue-sanoma sisalto)
+        kohteet (:kohteet vastaus)
+        virhe (:virhe vastaus)]
+    (if virhe
+      (do
+        (log/error (format "Urakan kohteiden haussa YHA:sta tapahtui virhe: %s" virhe))
+        (throw+
+          {:type +virhe-urakoiden-haussa+
+           :virheet {:virhe virhe}}))
+      kohteet)))
+
+(defn kasittele-urakan-kohdehakuvastaus [sisalto otsikot]
+  (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (let [vastaus (urakoiden-hakuvastaus/lue-sanoma sisalto)
         urakat (:urakat vastaus)
         virhe (:virhe vastaus)]
@@ -66,13 +82,14 @@
       (do
         (log/error (format "Urakoiden haussa YHA:sta tapahtui virhe: %s" virhe))
         (throw+
-         {:type +virhe-urakoiden-haussa+
-          :virheet {:virhe virhe}}))
+          {:type +virhe-urakoiden-haussa+
+           :virheet {:virhe virhe}}))
       urakat)))
 
 (defn hae-urakat-yhasta [integraatioloki db url yhatunniste sampotunniste vuosi]
   (let [url (str url "/urakkahaku")]
-    (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s)" yhatunniste sampotunniste vuosi))
+    (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
+                       yhatunniste sampotunniste vuosi url))
     ;; todo: poista kun saadaan oikea yhteys YHA:n
     (with-fake-http [url +testiurakka-haun-vastaus+]
       (integraatiotapahtuma/suorita-integraatio
@@ -89,17 +106,28 @@
             (kasittele-urakoiden-hakuvastaus body headers)))))))
 
 (defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id]
-  (log/debug (format "Haetaan urakan (id: %s) kohteet YHA:sta"))
-  (if-let [yha-id (hae-urakan-yha-id db urakka-id)]
-
+  (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db urakka-id)]
+    (let [url (str url (format "/urakat/%s/kohteet" yha-id)) ]
+      (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
+      (integraatiotapahtuma/suorita-integraatio
+                db integraatioloki "yha" "kohteiden-haku"
+                (fn [konteksti]
+                  (let [http-asetukset {:metodi :GET :url url}
+                        {body :body headers :headers}
+                        (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+                    (kasittele-urakan-kohdehakuvastaus body headers)))))
     (do
-      (log/error (format "Urakan (id: ")))
-    )
-  )
+      (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea.")]
+        (log/error virhe
+                   (throw+
+                     {:type +virhe-urakan-kohdehaussa+
+                      :virheet {:virhe virhe}}))))))
 
-(defn laheta-kohde-yhan [integraatioloki db url kohde-id]
+
+
+(defn laheta-kohde-yhan [integraatioloki db url kohde-id])
   ;; todo: toteuta
-  )
+
 
 (defrecord Yha [asetukset]
   component/Lifecycle

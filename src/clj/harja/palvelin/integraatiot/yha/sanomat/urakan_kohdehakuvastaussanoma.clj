@@ -41,8 +41,7 @@
             :yha-id (z/xml1-> alikohde :yha:yha-id z/text xml/parsi-kokonaisluku)
             :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :yha:tierekisteriosoitevali))
             :tunnus (z/xml1-> alikohde :yha:tunnus z/text)
-            :paallystystoimenpide (z/xml1-> alikohde :yha:paallystystoimenpide lue-paallystystoimenpide)
-            ))
+            :paallystystoimenpide (z/xml1-> alikohde :yha:paallystystoimenpide lue-paallystystoimenpide)))
         (z/xml-> alikohteet :yha:alikohde)))
 
 (defn lue-kohteet [data]
