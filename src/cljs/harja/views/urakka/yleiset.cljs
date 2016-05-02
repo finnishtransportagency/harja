@@ -144,7 +144,11 @@
         yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
         sopimustyyppi (:sopimustyyppi ur)]
        (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-             yha-tuontioikeus? (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
+             yha-tuontioikeus? (cond (= (:tyyppi ur) :paallystys)
+                                     (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
+                                     (= (:tyyppi ur) :paikkaus)
+                                     (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
+                                     :default false)
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
              paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
