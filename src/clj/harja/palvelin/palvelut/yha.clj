@@ -60,7 +60,7 @@
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (yha/hae-kohteet yha urakka-id))
 
-(defn- tallenna-yha-kohteet
+(defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]
@@ -84,7 +84,7 @@
             ;; FIXME Miten tallennetaan toimenpide?
             (yha-q/luo-yllapitokohdeosa<! db
                                           {:yllapitokohde (:id kohde)
-                                           :nimi tunnus
+                                           :nimi tunnus ; FIXME Onko tämä oikea?
                                            :sijainti sijainti
                                            :tr_numero (:tienumero tierekisteriosoitevali)
                                            :tr_alkuosa (:aosa tierekisteriosoitevali)
@@ -108,9 +108,9 @@
       (julkaise-palvelu http :hae-yha-kohteet
                         (fn [user tiedot]
                           (hae-yha-kohteet db yha user tiedot)))
-      (julkaise-palvelu http :tallenna-yha-kohteet
+      (julkaise-palvelu http :tallenna-uudet-yha-kohteet
                         (fn [user tiedot]
-                          (tallenna-yha-kohteet db user tiedot)))))
+                          (tallenna-uudet-yha-kohteet db user tiedot)))))
 
   (stop [this]
     (poista-palvelut
