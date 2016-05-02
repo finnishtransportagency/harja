@@ -29,7 +29,6 @@ WHERE o.id = :hy;
 
 -- name: listaa-urakat-hallintayksikolle
 -- Palauttaa listan annetun hallintayksikön (id) urakoista. Sisältää perustiedot ja geometriat.
--- PENDING: joinataan mukaan ylläpidon urakat eri taulusta?
 SELECT
   u.id,
   u.nimi,
@@ -45,6 +44,22 @@ SELECT
   urk.id                   AS urakoitsija_id,
   urk.nimi                 AS urakoitsija_nimi,
   urk.ytunnus              AS urakoitsija_ytunnus,
+  yhatunnus                AS yha_yhatunnus,
+  yhaid                    AS yha_yhaid,
+  yhanimi                  AS yha_yhanimi,
+  elyt::TEXT[]             AS yha_elyt,
+  vuodet::INTEGER[]        AS yha_vuodet,
+  (SELECT EXISTS(SELECT id
+                     FROM paallystysilmoitus
+                     WHERE paallystyskohde IN (SELECT id
+                                               FROM yllapitokohde
+                                               WHERE urakka = u.id)))
+  OR
+  (SELECT EXISTS(SELECT id
+                     FROM paikkausilmoitus
+                     WHERE paikkauskohde IN (SELECT id
+                                             FROM yllapitokohde
+                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -54,6 +69,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
+  LEFT JOIN yhatiedot ON u.id = yhatiedot.urakka
 WHERE hallintayksikko = :hallintayksikko
       AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
@@ -298,6 +314,22 @@ SELECT
   urk.id                   AS urakoitsija_id,
   urk.nimi                 AS urakoitsija_nimi,
   urk.ytunnus              AS urakoitsija_ytunnus,
+  yhatunnus                AS yha_yhatunnus,
+  yhaid                    AS yha_yhaid,
+  yhanimi                  AS yha_yhanimi,
+  elyt::TEXT[]             AS yha_elyt,
+  vuodet::INTEGER[]        AS yha_vuodet,
+  (SELECT EXISTS(SELECT id
+                     FROM paallystysilmoitus
+                     WHERE paallystyskohde IN (SELECT id
+                                               FROM yllapitokohde
+                                               WHERE urakka = u.id)))
+  OR
+  (SELECT EXISTS(SELECT id
+                     FROM paikkausilmoitus
+                     WHERE paikkauskohde IN (SELECT id
+                                             FROM yllapitokohde
+                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -307,13 +339,14 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
+  LEFT JOIN yhatiedot ON u.id = yhatiedot.urakka
 WHERE u.id = :urakka_id;
 
 -- name: hae-urakan-urakoitsija
 -- Hakee valitun urakan urakoitsijan id:n
 SELECT urakoitsija
 FROM urakka
-WHERE id = :urakka_id
+WHERE id = :urakka_id;
 
 -- name: paivita-urakka-alueiden-nakyma
 -- Päivittää urakka-alueiden materialisoidun näkymän
