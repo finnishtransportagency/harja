@@ -56,18 +56,18 @@
              (when urakoittain?
                [{:otsikko "Urakka" :leveys "10%"}])
 
-             [{:otsikko "Tehtävä"}]
+             [{:otsikko "Tehtävä" :leveys "18%"}]
 
              (mapcat (fn [luokka]
-                       [{:otsikko "< 6" :tasaa :keskita :reunus :vasen}
-                        {:otsikko "6 - 10" :tasaa :keskita  :reunus :ei}
-                        {:otsikko "10 - 14" :tasaa :keskita :reunus :ei}
-                        {:otsikko "14 - 18" :tasaa :keskita :reunus :ei}
-                        {:otsikko "18 - 22" :tasaa :keskita :reunus :ei}
-                        {:otsikko "22 - 02" :tasaa :keskita :reunus :oikea}])
+                       [{:otsikko "< 6" :tasaa :keskita :reunus :vasen :leveys "1.5%"}
+                        {:otsikko "6 - 10" :tasaa :keskita  :reunus :ei :leveys "1.5%"}
+                        {:otsikko "10 - 14" :tasaa :keskita :reunus :ei :leveys "1.5%"}
+                        {:otsikko "14 - 18" :tasaa :keskita :reunus :ei :leveys "1.5%"}
+                        {:otsikko "18 - 22" :tasaa :keskita :reunus :ei :leveys "1.5%"}
+                        {:otsikko "22 - 02" :tasaa :keskita :reunus :oikea :leveys "1.5%"}])
                      yleinen/talvihoitoluokat)
 
-             [{:otsikko "Yhteensä"}]))
+             [{:otsikko "Yht" :leveys "10%"}]))
 
       ;; varsinaiset rivit
       (vec
