@@ -56,9 +56,8 @@
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
 
-(defn- hae-yha-kohteet [db yha user tiedot]
-  ;; TODO
-  )
+(defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
+  (yha/hae-kohteet yha urakka-id))
 
 (defn- tallenna-kohteet [db user {:keys [urakka-id sopimus-id kohteet] :as tiedot}]
   (for [{:keys [urakka-id sopimus-id kohdenumero nimi
@@ -78,7 +77,6 @@
                                    :yhaid yhaid})))
 
 (defn- tallenna-yha-kohteet [db user {:keys [harja-urakka-id] :as tiedot}]
-  ;; TODO
   (jdbc/with-db-transaction [db db]
     (poista-urakan-yllapitokohteet db harja-urakka-id)
     (tallenna-kohteet db user tiedot)))
