@@ -31,8 +31,23 @@
   [arvo]
   (str "<![CDATA[" arvo "]]>"))
 
-(defn taulukko-header [sarakkeet]
+(defn tasaus [tasaa]
+  (case tasaa
+    :oikea "right"
+    :keskita "center"
+    "left"))
+
+(defn taulukko-header [optiot sarakkeet]
   [:fo:table-header
+   (when-let [rivi-ennen (:rivi-ennen optiot)]
+     [:fo:table-row
+      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
+                         :color "#ffffff"
+                         :number-columns-spanned (or sarakkeita 1)
+                         :text-align (tasaus tasaa)}
+         [:fo:block teksti]])])
+
    [:fo:table-row
     (for [otsikko (map :otsikko sarakkeet)]
       [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
@@ -140,10 +155,7 @@
                                 :font-weight "normal"
                                 :text-align (if (oikealle-tasattavat-kentat i)
                                               "right"
-                                              (case (:tasaa sarake)
-                                                :oikea "right"
-                                                :keskita "center"
-                                                "left"))}
+                                              (tasaus (:tasaa sarake)))}
                                yhteenveto?
                                korosta?
                                lihavoi?)
@@ -168,7 +180,7 @@
      [:fo:table
       (for [{:keys [leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
-      (taulukko-header sarakkeet)
+      (taulukko-header optiot sarakkeet)
       (taulukko-body sarakkeet data optiot)]
      [:fo:block {:space-after "1em"}]]))
 
