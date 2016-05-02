@@ -50,15 +50,41 @@ WHERE yt.yhaid IN (:yhaidt);
 INSERT INTO yllapitokohde
 (urakka, sopimus, kohdenumero, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  yhatunnus, yhaid)
-VALUES (:urakka,
-        :sopimus,
-        :kohdenumero,
-        :nimi,
-        :tr_numero,
-        :tr_alkuosa,
-        :tr_alkuetaisyys,
-        :tr_loppuosa,
-        :tr_loppuetaisyys,
-        :yhatunnus,
-        :yhaid)
-ON CONFLICT ON CONSTRAINT yllapitokohde_uniikki_yhaid DO NOTHING;
+VALUES (
+  :urakka,
+  :sopimus,
+  :kohdenumero,
+  :nimi,
+  :tr_numero,
+  :tr_alkuosa,
+  :tr_alkuetaisyys,
+  :tr_loppuosa,
+  :tr_loppuetaisyys,
+  :yhatunnus,
+  :yhaid
+  :tyyppi);
+
+-- name: luo-yllapitokohdeosa<!
+-- Luo uuden yllapitokohdeosan
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+                              tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste,
+                              toimenpide, yhaid)
+VALUES (
+  :yllapitokohde,
+  :nimi,
+  :tr_numero,
+  :tr_alkuosa,
+  :tr_alkuetaisyys,
+  :tr_loppuosa,
+  :tr_loppuetaisyys,
+  :sijainti,
+  :kvl,
+  :nykyinen_paallyste,
+  :toimenpide,
+  :yhaid);
+
+-- name: hae-yllapitokohde-idlla
+-- single?: true
+SELECT *
+FROM yllapitokohde
+WHERE yhatunnus = :yhatunnus;

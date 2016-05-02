@@ -65,20 +65,37 @@
   [db user {:keys [harja-urakka-id kohteet] :as tiedot}]
   (jdbc/with-db-transaction [db db]
     (for [{:keys [urakka-id sopimus-id kohdenumero nimi
-                  tr-numero tr-alkuosa tr-alkuetaisyys
-                  tr-loppuosa tr-loppuetaisyys
-                  yhatunnus yhaid] :as kohde} kohteet]
-      (yha-q/luo-yllapitokohde<! db {:urakka urakka-id
-                                     :sopimus sopimus-id
-                                     :kohdenumero kohdenumero
-                                     :nimi nimi
-                                     :tr_numero tr-numero
-                                     :tr_alkuosa tr-alkuosa
-                                     :tr_alkuetaisyys tr-alkuetaisyys
-                                     :tr_loppuosa tr-loppuosa
-                                     :tr_loppuetaisyys tr-loppuetaisyys
-                                     :yhatunnus yhatunnus
-                                     :yhaid yhaid}))))
+                  tierekisteriosoitevali
+                  yhatunnus yha-id alikohteet tyyppi] :as kohde} kohteet]
+      (let [yllapitokohde-kannassa (yha-q/hae-yllapitokohde-yhatunnuksella db {:yhatunnus yhatunnus})]
+        (when-not yllapitokohde-kannassa
+          (yha-q/luo-yllapitokohde<! db
+                                     {:urakka urakka-id
+                                      :sopimus sopimus-id
+                                      :kohdenumero kohdenumero
+                                      :nimi nimi
+                                      :tr_numero (:tienumero tierekisteriosoitevali)
+                                      :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                      :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                      :tr_loppuosa (:losa tierekisteriosoitevali)
+                                      :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                      :yhatunnus yhatunnus
+                                      :yhaid yha-id
+                                      :tyyppi (name tyyppi)})
+          (for [{:keys [nimi sijainti kvl nykyinen-paallyste toimenpide
+                        tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
+            (yha-q/luo-yllapitokohdeosa<! db
+                                          {:nimi nimi
+                                           :sijainti sijainti
+                                           :kvl kvl
+                                           :nykyinen_paallyste nykyinen-paallyste
+                                           :toimenpide toimenpide
+                                           :tr_numero (:tienumero tierekisteriosoitevali)
+                                           :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                           :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                           :tr_loppuosa (:losa tierekisteriosoitevali)
+                                           :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                           :yhaid yha-id})))))))
 
 (defrecord Yha []
   component/Lifecycle
