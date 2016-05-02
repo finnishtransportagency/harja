@@ -36,3 +36,9 @@ SELECT
   u.nimi as "sidottu-urakkaan"
 FROM yhatiedot yt JOIN urakka u on yt.urakka = u.id
 where yt.yhaid in (:yhaidt);
+
+-- name: hae-urakan-yha-id
+-- single?: true
+SELECT yhaid
+FROM yhatiedot
+WHERE urakka = :urakkaid;
