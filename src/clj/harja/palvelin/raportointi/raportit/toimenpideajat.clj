@@ -47,7 +47,7 @@
         yhteensa-leveys 5
         aika-leveys (/ (- 100 tehtava-leveys yhteensa-leveys)
                        (* 6 (count hoitoluokat)))]
-    [:raportti {:otsikko "Toimenpiteiden ajoittuminen"
+    [:raportti {:nimi "Toimenpiteiden ajoittuminen"
                 :orientaatio :landscape}
      (for [urakka (if urakoittain?
                     (distinct (keep second (keys toimenpideajat)))
