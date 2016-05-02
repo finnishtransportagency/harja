@@ -21,32 +21,29 @@
   "Tämä komponentti sisältää modaalin ja on tarkoitus laittaa päätason sivuun"
   []
   (let [{:keys [otsikko sisalto footer nakyvissa? luokka leveys]} @modal-sisalto]
-    ;;[ctg {:transitionName "modal-fade"
-    ;;      }
-     
-     (if nakyvissa?
-       ^{:key "modaali"}
-       [:div.modal.fade.in.harja-modal {:style {:display "block"}
-                                        :on-click piilota!}
-        [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
-        [:div.modal-dialog.modal-sm {:style {:width "90%"
-                                             :max-width (or leveys "600px")}}
-         [:div {:class (str "modal-content " (or luokka "")) :style {:width "100%"}
-                :on-click #(do
-                            (.preventDefault %)
-                            (.stopPropagation %)
-                            piilota!)}
-          (when otsikko
-            [:div.modal-header
-             [:button.close {:on-click piilota!
-                             :type "button" :data-dismiss "modal" :aria-label "Sulje"}
-              [:span {:aria-hidden "true"} "×"]]
-             [:h4.modal-title otsikko]])
-          [:div.modal-body sisalto]
-          (when footer [:div.modal-footer footer])]]]
-       
-       ^{:key "ei-modaalia"}
-       [:span.modaali-ei-nakyvissa])))
+    (if nakyvissa?
+      ^{:key "modaali"}
+      [:div.modal.fade.in.harja-modal {:style {:display "block"}
+                                       :on-click piilota!}
+       [:div.modal-backdrop.fade.in {:style {:height @dom/korkeus :z-index -1}}]
+       [:div (merge {:class (str "modal-dialog modal-sm " (or luokka ""))}
+                    (when leveys
+                      {:style {:max-width leveys}}))
+        [:div.modal-content {:on-click #(do
+                                         (.preventDefault %)
+                                         (.stopPropagation %)
+                                         piilota!)}
+         (when otsikko
+           [:div.modal-header
+            [:button.close {:on-click piilota!
+                            :type "button" :data-dismiss "modal" :aria-label "Sulje"}
+             [:span {:aria-hidden "true"} "×"]]
+            [:h4.modal-title otsikko]])
+         [:div.modal-body sisalto]
+         (when footer [:div.modal-footer footer])]]]
+
+      ^{:key "ei-modaalia"}
+      [:span.modaali-ei-nakyvissa])))
 
 
 

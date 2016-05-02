@@ -68,8 +68,8 @@
                                            (if (nil? jdbc-array)
                                              {}
                                              (into {} (map (fn [s](let [[id sampoid] (str/split s #"=")]
-                                                                    [(Long/parseLong id) sampoid]
-                                                                    )) (.getArray jdbc-array)))))))
+                                                                    [(Long/parseLong id) sampoid]))
+                                                           (.getArray jdbc-array)))))))
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
@@ -77,8 +77,27 @@
                 :tyyppi (keyword (:tyyppi %))
                 :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
 
-        (map #(dissoc % :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
-                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne))))
+        ;; Käsitellään päällystysurakan tiedot
+
+        (map #(assoc % :sisaltaa-ilmoituksia? (:sisaltaa_ilmoituksia %)))
+
+        (map #(konv/array->vec % :yha_elyt))
+        (map #(konv/array->vec % :yha_vuodet))
+
+        (map #(if (:yha_yhatunnus %)
+               (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
+                                    :yhaid (:yha_yhaid %)
+                                    :yhanimi (:yha_yhanimi %)
+                                    :elyt (:yha_elyt %)
+                                    :vuodet (:yha_vuodet %)})
+               %))
+
+        ;; Poista käsitellyt avaimet
+
+        (map #(dissoc %
+                      :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
+                      :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
+                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet :sisaltaa_ilmoituksia))))
 
 (defn hallintayksikon-urakat [db user hallintayksikko-id]
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
@@ -126,11 +145,11 @@
   (hae-urakan-tyyppi db user urakka-id))
 
 (defn hae-yksittainen-urakka [db user urakka-id]
-  (log/debug "Haetaan urakoita urakka-id:llä: " urakka-id)
+  (log/debug "Hae yksittäinen urakka id:llä: " urakka-id)
   (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
   (first (into []
-               urakka-xf
-               (q/hae-yksittainen-urakka db urakka-id))))
+                urakka-xf
+                (q/hae-yksittainen-urakka db urakka-id))))
 
 (defrecord Urakat []
   component/Lifecycle

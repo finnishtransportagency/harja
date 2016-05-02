@@ -6,7 +6,12 @@
             #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
             #?(:cljs [goog.i18n.NumberFormat])
             [clojure.string :as str])
-  #?(:clj (:import (java.text NumberFormat))))
+  #?(:clj
+     (:import (java.text NumberFormat)
+              (java.util Locale))))
+
+#?(:clj
+   (Locale/setDefault (Locale. "fi" "FI")))
 
 #?(:cljs
    (set! goog.i18n.NumberFormatSymbols goog.i18n.NumberFormatSymbols_fi_FI))

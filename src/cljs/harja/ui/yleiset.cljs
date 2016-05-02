@@ -166,7 +166,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (fn [this]
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
-      (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title]} vaihtoehdot]
+      (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title li-luokka-fn]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)]
           [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
@@ -228,11 +228,16 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             (doall
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
-                [:li.harja-alasvetolistaitemi
+
+                [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
                  (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                      (reset! auki false)
                                                      nil))]))]])))))
 
+(defn ikoni-ja-teksti [ikoni teksti]
+  [:span
+   ikoni
+   [:span (str " " teksti)]])
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
@@ -453,8 +458,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "lomake-vihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (harja.ui.ikonit/livicon-info-sign)
-     (str " " teksti)]]))
+     (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
@@ -481,7 +485,3 @@ jatkon."
                                                              (swap! piilossa? not))}
               "Piilota"]])])))))
 
-(defn ikoni-ja-teksti [ikoni teksti]
-  [:span
-   ikoni
-   [:span (str " " teksti)]])

@@ -38,6 +38,18 @@
     (.replace data "\u00AD" "")
     data))
 
+(defmulti erikoiskentta
+  (fn [elementti]
+    (assert (and (vector? elementti)
+                 (> (count elementti) 1)
+                 (keyword? (first elementti)))
+            (str "Erikoiskentän on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
+                 (pr-str elementti)))
+    (first elementti)))
+
+(defmethod erikoiskentta :liitteet [liitteet]
+  (count (second liitteet)))
+
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
     (let [nimi (:otsikko optiot)
@@ -73,11 +85,15 @@
                 (let [cell (.createCell row sarake-nro)
                       lihavoi? (:lihavoi? optiot)
                       tyyli (excel/create-cell-style! workbook
-                                                      {:font {:bold lihavoi?}})]
+                                                      {:font {:bold lihavoi?}})
+                      arvo-datassa (nth data sarake-nro)
+                      naytettava-arvo (if (vector? arvo-datassa)
+                                        (erikoiskentta arvo-datassa)
+                                        arvo-datassa)]
 
                   (if-let [kaava (:excel sarake)]
                     (aseta-kaava! kaava cell rivi-nro sarake-nro)
-                    (excel/set-cell! cell (ilman-soft-hyphenia (nth data sarake-nro))))
+                    (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
                   (excel/set-cell-style! cell tyyli)))
               sarakkeet))))
         data))

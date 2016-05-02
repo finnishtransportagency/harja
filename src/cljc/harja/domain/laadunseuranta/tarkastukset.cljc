@@ -3,5 +3,4 @@
 (def +tarkastustyyppi->nimi+ {:tiesto "Tiestötarkastus"
                               :talvihoito "Kelitarkastus"
                               :soratie "Soratien tarkastus"
-                              :laatu "Laaduntarkastus"
-                              :pistokoe "Pistokoe"})
+                              :laatu "Laaduntarkastus"})

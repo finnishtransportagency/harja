@@ -1,27 +1,20 @@
-UPDATE laatupoikkeama
-  SET paatos = 'ei_sanktiota'::laatupoikkeaman_paatostyyppi
-WHERE paatos IS NULL AND
-      (kasittelyaika IS NOT NULL OR
-      perustelu IS NOT NULL OR
-      kasittelytapa IS NOT NULL);
+-- Päivitä työmaakokousraporttien valikoima
+UPDATE raportti
+   SET parametrit = ARRAY[('Aikaväli','aikavali',true,NULL)::raporttiparametri,
+   ('Erilliskustannukset','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Ilmoitukset','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Kelitarkastusraportti','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Laatupoikkeamat','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Laskutusyhteenveto','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Materiaaliraportti','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Sanktioiden yhteenveto','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Soratietarkastukset', 'checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Tiestötarkastukset', 'checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Turvallisuusraportti','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Yksikköhintaiset työt kuukausittain', 'checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Yksikköhintaiset työt päivittäin','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Yksikköhintaiset työt tehtävittäin','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri,
+   ('Ympäristöraportti','checkbox', true, 'urakka'::raporttikonteksti)::raporttiparametri]
 
-UPDATE laatupoikkeama
-  SET kasittelyaika = muokattu
-WHERE kasittelyaika IS NULL
-      AND paatos IS NOT NULL;
 
-UPDATE laatupoikkeama
-SET perustelu = 'Tämä laatupoikkeama on tallennettu virheellisesti ilman perustelua. Tämä on koneellisesti asetettu perusteluteksti.'
-WHERE perustelu IS NULL
-      AND paatos IS NOT NULL;
-
-UPDATE laatupoikkeama
-SET kasittelytapa = 'muu'::laatupoikkeaman_kasittelytapa,
-    muu_kasittelytapa = 'Puuttuvat tiedot täydennetty koneellisesti'
-WHERE kasittelytapa IS NULL
-      AND paatos IS NOT NULL;
-
-ALTER TABLE laatupoikkeama
-    ADD CONSTRAINT kaikki_sanktiotiedot CHECK
-((paatos IS NULL AND kasittelyaika IS NULL AND perustelu IS NULL AND kasittelytapa IS NULL) OR
- (paatos IS NOT NULL AND kasittelyaika IS NOT NULL AND perustelu IS NOT NULL AND kasittelytapa IS NOT NULL));
+WHERE nimi = 'tyomaakokous';
