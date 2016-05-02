@@ -128,6 +128,12 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
 
+(deftest paivystajatietojen-poisto-test
+  (let [vastaus (api-tyokalut/delete-kutsu ["/api/urakat/4/paivystajatiedot"] kayttaja-yit portti "")
+        encodattu-body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (= (:viesti encodattu-body) "Päivystäjätiedot poistettu"))))
+
 (deftest hae-tarkista-paivamaarakasittelyt
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?paattyen=2016-09-30"] kayttaja-yit portti)]
     (is (= 400 (:status vastaus)))

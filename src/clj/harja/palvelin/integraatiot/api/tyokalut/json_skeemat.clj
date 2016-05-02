@@ -37,7 +37,9 @@
 
 (def +paivystajatietojen-kirjaus+ "api/schemas/paivystajatietojen-kirjaus-request.schema.json")
 (def +paivystajatietojen-haku-vastaus+ "api/schemas/paivystajatietojen-haku-response.schema.json")
+(def +paivystajatietojen-poistovastaus+ "api/schemas/paivystajatietojen-poisto-response.schema.json")
 
 (def +tyokoneenseuranta-kirjaus+ "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json")
 
 (def +turvallisuuspoikkeama-kirjaus+ "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json")
+
