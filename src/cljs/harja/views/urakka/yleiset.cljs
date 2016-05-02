@@ -144,7 +144,7 @@
         yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
         sopimustyyppi (:sopimustyyppi ur)]
        (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-             yha-tuontioikeus? true ; FIXME Oikeustarkistus
+             yha-tuontioikeus? (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
              paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
@@ -173,6 +173,8 @@
               (str/join ", " (get-in ur [:yhatiedot :vuodet])))
             "YHA-sidonta:"
             (cond
+              (and (not yha-tuontioikeus?) paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
+              [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
               (and yha-tuontioikeus? paallystys-tai-paikkausurakka? (not paallystys-tai-paikkausurakka-sidottu?))
               [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)

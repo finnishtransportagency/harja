@@ -8,7 +8,8 @@
             [harja.kyselyt.yha :as yha-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/debug "Lisätään YHA-tiedot urakalle " urakka-id)
@@ -30,7 +31,7 @@
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
 
 (defn sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
-  ; FIXME Oikeustarkistus!
+  (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
   (jdbc/with-db-transaction [db db]
     (poista-urakan-yha-tiedot db harja-urakka-id)
@@ -45,7 +46,7 @@
 
 
 (defn hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi]}]
-  ;; fixme: tee oikeustarkistukset!
+  (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
         yhaidt (mapv :yhaid urakat)
         sidontatiedot (yha-q/hae-urakoiden-sidontatiedot db {:yhaidt yhaidt})
