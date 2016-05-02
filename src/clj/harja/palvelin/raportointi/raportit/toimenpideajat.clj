@@ -28,6 +28,12 @@
        (fmap #(fmap (fn [rivi]
                       (assoc rivi :jarjestys (tunnin-jarjestys (:tunti rivi)))) %))))
 
+(defn- toimenpideajat-urakalle [toimenpideajat urakka]
+  (reduce-kv (fn [m [tehtava ur] v]
+               (if (= urakka ur)
+                 (assoc m tehtava v)
+                 m)) {} toimenpideajat))
+
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
                                hallintayksikko-id urakoittain?] :as parametrit}]
   (let [parametrit {:urakka urakka-id
@@ -36,45 +42,58 @@
                     :loppupvm loppupvm
                     :hoitoluokat hoitoluokat}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
-        talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)]
+        talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)
+        tehtava-leveys 12
+        yhteensa-leveys 5
+        aika-leveys (/ (- 100 tehtava-leveys yhteensa-leveys)
+                       (* 6 (count hoitoluokat)))]
     [:raportti {:otsikko "Toimenpiteiden ajoittuminen"
                 :orientaatio :landscape}
-     [:taulukko {:otsikko "Toimenpiteiden ajoittuminen"
-                 :rivi-ennen (concat
-                              [{:teksti "Hoitoluokka" :sarakkeita 1}]
-                              (map (fn [{nimi :nimi}]
-                                     {:teksti nimi :sarakkeita 6 :tasaa :keskita})
-                                   talvihoitoluokat)
-                              [{:teksti "" :sarakkeita 1}])}
-      (into []
-            (concat
-             (when urakoittain?
-               [{:otsikko "Urakka" :leveys "10%"}])
+     (for [urakka (if urakoittain?
+                    (distinct (keep second (keys toimenpideajat)))
+                    [:kaikki])
+           :let [otsikko (str "Toimenpiteiden ajoittuminen"
+                              (when-not (= :kaikki urakka)
+                                (str ": " urakka)))
+                 toimenpideajat (if (= :kaikki urakka)
+                                  toimenpideajat
+                                  (toimenpideajat-urakalle toimenpideajat urakka))]]
 
-             [{:otsikko "Tehtävä" :leveys "18%"}]
+       [:taulukko {:otsikko otsikko
+                   :rivi-ennen (concat
+                                [{:teksti "Hoitoluokka" :sarakkeita 1}]
+                                (map (fn [{nimi :nimi}]
+                                       {:teksti nimi :sarakkeita 6 :tasaa :keskita})
+                                     talvihoitoluokat)
+                                [{:teksti "" :sarakkeita 1}])}
 
-             (mapcat (fn [_]
-                       [{:otsikko "< 6" :tasaa :keskita :reunus :vasen :leveys "1.5%"}
-                        {:otsikko "6 - 10" :tasaa :keskita  :reunus :ei :leveys "1.5%"}
-                        {:otsikko "10 - 14" :tasaa :keskita :reunus :ei :leveys "1.5%"}
-                        {:otsikko "14 - 18" :tasaa :keskita :reunus :ei :leveys "1.5%"}
-                        {:otsikko "18 - 22" :tasaa :keskita :reunus :ei :leveys "1.5%"}
-                        {:otsikko "22 - 02" :tasaa :keskita :reunus :oikea :leveys "1.5%"}])
-                     talvihoitoluokat)
+        (into []
+              (concat
 
-             [{:otsikko "Yht" :leveys "10%"}]))
+               [{:otsikko "Tehtävä" :leveys tehtava-leveys}]
 
-      ;; varsinaiset rivit
-      (vec
-       (for [[tehtava rivit] toimenpideajat
-             :let [ajat-luokan-mukaan (->> rivit
+               (mapcat (fn [_]
+                         [{:otsikko "< 6" :tasaa :keskita :reunus :vasen :leveys aika-leveys}
+                          {:otsikko "6 - 10" :tasaa :keskita  :reunus :ei :leveys aika-leveys}
+                          {:otsikko "10 - 14" :tasaa :keskita :reunus :ei :leveys aika-leveys}
+                          {:otsikko "14 - 18" :tasaa :keskita :reunus :ei :leveys aika-leveys}
+                          {:otsikko "18 - 22" :tasaa :keskita :reunus :ei :leveys aika-leveys}
+                          {:otsikko "22 - 02" :tasaa :keskita :reunus :oikea :leveys aika-leveys}])
+                       talvihoitoluokat)
+
+               [{:otsikko "Yht" :tasaa :oikea :leveys yhteensa-leveys}]))
+
+        ;; varsinaiset rivit
+        (vec
+         (for [[tehtava rivit] (sort-by first toimenpideajat)
+               :let [ajat-luokan-mukaan (->> rivit
                                              (group-by :luokka)
                                              (fmap (partial group-by :jarjestys)))]]
-         (concat [tehtava]
-                 (mapcat (fn [hoitoluokka]
-                           (let [ajat (get ajat-luokan-mukaan (:numero hoitoluokka))]
-                             (for [aika (range 6)
-                                   :let [rivit (get ajat aika)]]
-                               (reduce + 0 (keep :lkm rivit)))))
-                         talvihoitoluokat)
-                 [(reduce + (keep :lkm rivit))])))]]))
+           (concat [tehtava]
+                   (mapcat (fn [hoitoluokka]
+                             (let [ajat (get ajat-luokan-mukaan (:numero hoitoluokka))]
+                               (for [aika (range 6)
+                                     :let [rivit (get ajat aika)]]
+                                 (reduce + 0 (keep :lkm rivit)))))
+                           talvihoitoluokat)
+                   [(reduce + (keep :lkm rivit))])))])]))
