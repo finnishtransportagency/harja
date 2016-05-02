@@ -90,6 +90,8 @@
                                     :kasittelymenetelma  1
                                     :paksuus             1234
                                     :verkkotyyppi        1
+                                    :verkon-sijainti     1
+                                    :verkon-tarkoitus    1
                                     :tekninen-toimenpide 1
                                     }]
 
@@ -98,8 +100,7 @@
                                     :tilattu-maara    100
                                     :toteutunut-maara 200
                                     :yksikko          "km"
-                                    :yksikkohinta     5}]
-                    }})
+                                    :yksikkohinta     5}]}})
 
 (def paallystyskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "
                                                            SELECT yllapitokohde.id as paallystyskohde_id

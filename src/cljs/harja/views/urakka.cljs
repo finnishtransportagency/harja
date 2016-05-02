@@ -86,13 +86,13 @@
      :kohdeluettelo-paallystys
      (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
        ^{:key "kohdeluettelo"}
-       [paallystyksen-kohdeluettelo/kohdeluettelo])
+       [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
      "Kohdeluettelo"
      :kohdeluettelo-paikkaus
      (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
        ^{:key "kohdeluettelo"}
-       [paikkauksen-kohdeluettelo/kohdeluettelo])
+       [paikkauksen-kohdeluettelo/kohdeluettelo ur])
 
      "Laadunseuranta"
      :laadunseuranta

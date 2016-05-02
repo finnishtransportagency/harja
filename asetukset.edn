@@ -105,7 +105,7 @@
                         :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
                         }
 
- :yha                  {:url                                       "https://devtest.liikennevirasto.fi/yha/rest/"}
+ :yha                  {:url                                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  ;; :labyrintti           {:url            "http://localhost:28080/sendsms"
