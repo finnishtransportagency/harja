@@ -51,7 +51,7 @@
                  [org.geotools/gt-swing "12.2"]             ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.2"]
+                 [org.clojure/data.zip "0.1.1"]
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
