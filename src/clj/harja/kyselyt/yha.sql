@@ -41,17 +41,6 @@ WHERE yllapitokohde IN
 -- name: hae-urakoiden-sidontatiedot
 SELECT
   yt.yhaid,
-<<<<<<< HEAD
-  u.nimi as "sidottu-urakkaan"
-FROM yhatiedot yt JOIN urakka u on yt.urakka = u.id
-where yt.yhaid in (:yhaidt);
-
--- name: hae-urakan-yha-id
--- single?: true
-SELECT yhaid
-FROM yhatiedot
-WHERE urakka = :urakkaid;
-=======
   u.nimi AS "sidottu-urakkaan"
 FROM yhatiedot yt
   JOIN urakka u ON yt.urakka = u.id
@@ -99,4 +88,3 @@ VALUES (
 SELECT *
 FROM yllapitokohde
 WHERE yhatunnus = :yhatunnus;
->>>>>>> origin/YHA
