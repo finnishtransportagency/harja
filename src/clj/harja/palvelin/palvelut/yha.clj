@@ -60,16 +60,14 @@
   (yha/hae-kohteet yha urakka-id))
 
 (defn- tallenna-yha-kohteet
-  "Tallentaa YHA:sta tulleet ylläpitokohteet.
-  Kohde tallennetaan vain jos sen yhatunnisteella ei jo ole olemassa kohdetta"
+  "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
+  uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [harja-urakka-id kohteet] :as tiedot}]
   (jdbc/with-db-transaction [db db]
     (for [{:keys [urakka-id sopimus-id kohdenumero nimi
                   tierekisteriosoitevali
                   tunnus yha-id alikohteet kohdetyyppi] :as kohde} kohteet]
-      (let [yllapitokohde-kannassa (yha-q/hae-yllapitokohde-yhatunnuksella db {:yhatunnus yhatunnus})]
-        (when-not yllapitokohde-kannassa
-          (let [kohde (yha-q/luo-yllapitokohde<! db
+      (let [kohde (yha-q/luo-yllapitokohde<! db
                                       {:urakka urakka-id
                                        :sopimus sopimus-id
                                        :tr_numero (:tienumero tierekisteriosoitevali)
@@ -91,7 +89,7 @@
                                            :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                            :tr_loppuosa (:losa tierekisteriosoitevali)
                                            :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                           :yhaid yha-id}))))))))
+                                           :yhaid yha-id}))))))
 
 (defrecord Yha []
   component/Lifecycle
