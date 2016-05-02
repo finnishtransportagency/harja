@@ -165,7 +165,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 (defn lisaa-sanktion-validointi [tietoja-annettu-fn? kentta viesti]
   (merge kentta
          (if (tietoja-annettu-fn?)
-           {:validoi [[:ei-tyhja viesti]]}
+           {:validoi [[:ei-tyhja viesti]]
+            :pakollinen? true}
            {})))
 
 (defn laatupoikkeamalomake [asetukset laatupoikkeama]
@@ -278,7 +279,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
                  (sanktion-validointi
                    {:otsikko     "Käsittelyn pvm"
-                   :pakollinen? true
                    :nimi        :paatos-pvm
                    :hae         (comp :kasittelyaika :paatos)
                    :aseta       #(assoc-in %1 [:paatos :kasittelyaika] %2)
@@ -288,7 +288,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
                  (sanktion-validointi
                    {:otsikko       "Käsitelty"
-                   :pakollinen?   true
                    :nimi          :kasittelytapa
                    :hae           (comp :kasittelytapa :paatos)
                    :aseta         #(assoc-in %1 [:paatos :kasittelytapa] %2)
@@ -312,7 +311,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
                  (sanktion-validointi
                    {:otsikko       "Päätös"
-                   :pakollinen?   true
                    :nimi          :paatos-paatos
                    :tyyppi        :valinta
                    :valinnat      [:sanktio :ei_sanktiota :hylatty]
