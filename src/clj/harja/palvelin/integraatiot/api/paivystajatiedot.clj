@@ -143,8 +143,12 @@
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
-(defn poista-paivystajatiedot [db parametrit kayttaja]
-  {:viesti "Päivystäjätiedot poistettu"})
+(defn poista-paivystajatiedot [db data parametrit kayttaja]
+  (let [{:keys [ulkoiset_idt]} data
+        urakka-id (Integer/parseInt (:id parametrit))]
+    (log/debug "Poistettavat ulkoiset idt: " (pr-str ulkoiset_idt) " urakka " (:id parametrit))
+    (yhteyshenkilot/poista-urakan-paivystajatiedot! db urakka-id ulkoiset_idt)
+    {:viesti "Päivystäjätiedot poistettu"}))
 
 (defn hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]
   (log/debug "Haetaan päivystäjätiedot sijainnilla parametreillä: " parametrit)
@@ -194,9 +198,10 @@
    {:palvelu        :poista-paivystajatiedot
     :polku          "/api/urakat/:id/paivystajatiedot"
     :tyyppi         :DELETE
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-poisto+
     :vastaus-skeema json-skeemat/+paivystajatietojen-poistovastaus+
-    :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (poista-paivystajatiedot db parametrit kayttaja-id))}])
+    :kasittely-fn   (fn [parametrit data kayttaja-id db]
+                      (poista-paivystajatiedot db data parametrit kayttaja-id))}])
 
 (defrecord Paivystajatiedot []
   component/Lifecycle
