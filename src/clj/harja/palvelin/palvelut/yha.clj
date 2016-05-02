@@ -57,12 +57,14 @@
     urakat))
 
 (defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
+  (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (yha/hae-kohteet yha urakka-id))
 
 (defn- tallenna-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]
+  (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (jdbc/with-db-transaction [db db]
     (for [{:keys [tierekisteriosoitevali
                   tunnus yha-id alikohteet kohdetyyppi] :as kohde} kohteet]
