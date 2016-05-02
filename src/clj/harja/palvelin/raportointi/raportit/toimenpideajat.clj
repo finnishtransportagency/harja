@@ -28,12 +28,6 @@
        (fmap #(fmap (fn [rivi]
                       (assoc rivi :jarjestys (tunnin-jarjestys (:tunti rivi)))) %))))
 
-#_(take 1 (hae-toimenpideajat-luokiteltuna (:db harja.palvelin.main/harja-jarjestelma)
-                                       {:urakka nil :hallintayksikko 9
-                                        :alkupvm (pvm/luo-pvm 2015 8 30)
-                                        :loppupvm (pvm/luo-pvm 2016 9 1)}
-                                       false))
-
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
                                hallintayksikko-id urakoittain?] :as parametrit}]
   (let [parametrit {:urakka urakka-id
