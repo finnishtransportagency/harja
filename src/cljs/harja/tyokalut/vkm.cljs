@@ -125,10 +125,10 @@
 
 (defn muunna-yha-kohteet [kohteet]
   (log "[YHA] Muunnetaan YHA-kohteet, joita on " (count kohteet))
-  #_(vkm-kutsu "muunnos" {:in "tieosoite"
-                        :out "tieosoite"
-                        :callback
-                        :json {:tunniste "test"}
-                        :tilannepvm 5
-                        :kohdepvm 6}) ; FIXME Selvitä miksi ei toimi ja että voiko kutsua ilman JSONP:tä
-  kohteet) ;; TODO Tee muunnos
+  ;;  (vkm-kutsu "muunnos" {:in "tieosoite"
+  ;;                    :out "tieosoite"
+  ;;                    :callback
+  ;;                    :json {:tunniste "test"}
+  ;;                    :tilannepvm 5
+  ;;                    :kohdepvm 6})                       ; FIXME Selvitä miksi ei toimi ja että voiko kutsua ilman JSONP:tä
+  kohteet)                                                  ;; TODO Tee muunnos

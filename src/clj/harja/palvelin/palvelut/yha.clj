@@ -72,7 +72,7 @@
   (jdbc/with-db-transaction [db db]
     (for [{:keys [tierekisteriosoitevali
                   tunnus yha-id alikohteet kohdetyyppi] :as kohde} kohteet]
-      (let [paasopimus (yha-q/hae-urakan-paasopimus db urakka-id)
+      (let [paasopimus (yha-q/hae-urakan-paasopimus db {:urakka urakka-id})
             kohde (yha-q/luo-yllapitokohde<! db
                                       {:urakka urakka-id
                                        :sopimus (:id paasopimus)

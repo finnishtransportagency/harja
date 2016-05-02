@@ -109,19 +109,6 @@
   (laheta-kohde! [this kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
-  (log/debug format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
-  (let [vastaus (urakan-kohdehakuvastaus/lue-sanoma sisalto)
-        kohteet (:kohteet vastaus)
-        virhe (:virhe vastaus)]
-    (if virhe
-      (do
-        (log/error (format "Urakan kohteiden haussa YHA:sta tapahtui virhe: %s" virhe))
-        (throw+
-          {:type +virhe-urakoiden-haussa+
-           :virheet {:virhe virhe}}))
-      kohteet)))
-
-(defn kasittele-urakan-kohdehakuvastaus [sisalto otsikot]
   (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (let [vastaus (urakoiden-hakuvastaus/lue-sanoma sisalto)
         urakat (:urakat vastaus)
@@ -134,8 +121,21 @@
            :virheet {:virhe virhe}}))
       urakat)))
 
+(defn kasittele-urakan-kohdehakuvastaus [sisalto otsikot]
+  (log/debug format "YHA palautti urakoiden haulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (let [vastaus (urakan-kohdehakuvastaus/lue-sanoma sisalto)
+        kohteet (:kohteet vastaus)
+        virhe (:virhe vastaus)]
+    (if virhe
+      (do
+        (log/error (format "Urakan kohteiden haussa YHA:sta tapahtui virhe: %s" virhe))
+        (throw+
+          {:type +virhe-urakan-kohdehaussa+
+           :virheet {:virhe virhe}}))
+      kohteet)))
+
 (defn hae-urakat-yhasta [integraatioloki db url yhatunniste sampotunniste vuosi]
-  (let [url (str url "/urakkahaku")]
+  (let [url (str url "urakkahaku")]
     (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
                        yhatunniste sampotunniste vuosi url))
     ;; todo: poista kun saadaan oikea yhteys YHA:n
@@ -155,16 +155,17 @@
 
 (defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id]
   (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
-    (let [url (str url (format "/urakat/%s/kohteet" yha-id)) ]
+    (let [url (str url (format "urakat/%s/kohteet" yha-id))]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
+      ;; todo: poista kun saadaan oikea yhteys YHA:n
       (with-fake-http [url +testi-urakan-kohdehakuvastaus+]
         (integraatiotapahtuma/suorita-integraatio
-         db integraatioloki "yha" "kohteiden-haku"
-         (fn [konteksti]
-           (let [http-asetukset {:metodi :GET :url url}
-                 {body :body headers :headers}
-                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-             (kasittele-urakan-kohdehakuvastaus body headers))))))
+          db integraatioloki "yha" "kohteiden-haku"
+          (fn [konteksti]
+            (let [http-asetukset {:metodi :GET :url url}
+                  {body :body headers :headers}
+                  (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+              (kasittele-urakan-kohdehakuvastaus body headers))))))
     (do
       (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
         (log/error virhe
@@ -173,7 +174,7 @@
                       :virheet {:virhe virhe}}))))))
 
 (defn laheta-kohde-yhan [integraatioloki db url kohde-id])
-  ;; todo: toteuta
+;; todo: toteuta
 
 (defrecord Yha [asetukset]
   component/Lifecycle
@@ -183,9 +184,9 @@
   YllapidonUrakoidenHallinta
 
   (hae-urakat [this yhatunniste sampotunniste vuosi]
-    (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url (:yha asetukset)) yhatunniste sampotunniste vuosi))
+    (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yhatunniste sampotunniste vuosi))
   (hae-kohteet [this urakka-id]
-    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url (:yha asetukset)) urakka-id))
+    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id))
   (laheta-kohde! [this kohde-id]
-    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url (:yha asetukset)) kohde-id)))
+    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) kohde-id)))
 
