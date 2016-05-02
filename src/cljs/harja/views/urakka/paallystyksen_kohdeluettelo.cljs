@@ -60,7 +60,7 @@
 
           "Päällystyskohteet"
           :paallystyskohteet
-          [paallystyskohteet/paallystyskohteet]
+          [paallystyskohteet/paallystyskohteet ur]
 
           "Päällystysilmoitukset"
           :paallystysilmoitukset

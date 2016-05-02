@@ -11,13 +11,15 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
 
-(defn paikkauskohteet []
+(defn paikkauskohteet [ur]
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
@@ -33,4 +35,11 @@
                                                                                              vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
                                                                                          (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                                                                                          (reset! paikkaus/paikkauskohteet vastaus))))}]
-       [yllapitokohteet-view/yllapitokohteet-yhteensa paikkaus/paikkauskohteet {:paikkausnakyma? true}]])))
+       [yllapitokohteet-view/yllapitokohteet-yhteensa paikkaus/paikkauskohteet {:paikkausnakyma? true}]
+
+       [:div.kohdeluettelon-paivitys
+        [:button.nappi-ensisijainen {:on-click #()
+                                     :disabled (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur) @istunto/kayttaja)}
+         "Päivitä kohdeluettelo"]
+        ; FIXME Milloin päivitetty
+        [:div "Kohdeluettelo päivitetty: Ei koskaan"]]])))

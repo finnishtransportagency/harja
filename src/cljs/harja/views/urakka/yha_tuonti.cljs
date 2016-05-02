@@ -8,7 +8,8 @@
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
             [harja.tiedot.navigaatio :as nav]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -19,12 +20,12 @@
                               (reset! yha/hakulomake-data uusi-data))
                   :footer [harja.ui.napit/palvelinkutsu-nappi
                            "Hae"
-                           #(yha/hae-yha-urakat (merge {:harja-urakka-id (:id urakka)} yha/hakulomake-data))
+                           #(yha/hae-yha-urakat (merge {:harja-urakka-id (:id urakka)} @yha/hakulomake-data))
                            {:luokka "nappi-ensisijainen"
                             :disabled @yha/sidonta-kaynnissa?
                             :virheviesti "Urakoiden haku YHA:sta epäonnistui."
                             :kun-onnistuu (fn [vastaus]
-                                            (log "YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
+                                            (log "[YHA] YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
                                             (reset! yha/hakutulokset-data vastaus))}]}
    [{:otsikko "YHA-tunniste"
      :nimi :yhatunniste
@@ -84,7 +85,10 @@
                           :virheviesti "Urakan sidonta epäonnistui."
                           :kun-onnistuu (fn [vastaus]
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
-                                          (modal/piilota!))}]))}]
+                                          (modal/piilota!)
+                                          (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
+                                          ;; TODO Mitä sopimusta tässä käsitellään?
+                                          (yha/hae-ja-kasittele-yha-kohteet (:id urakka) (first @u/valittu-sopimusnumero)))}]))}]
      @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []

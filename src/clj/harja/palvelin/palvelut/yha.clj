@@ -30,16 +30,14 @@
   (yha-q/poista-urakan-yllapitokohdeosat! db {:urakka urakka-id})
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
 
-(defn sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
+(defn- sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
   (jdbc/with-db-transaction [db db]
     (poista-urakan-yha-tiedot db harja-urakka-id)
     (poista-urakan-yllapitokohteet db harja-urakka-id)
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
-    (log/debug "YHA-tiedot sidottu")
-    ;; TODO Hae ja käsittele YHA:n kohdeluettelo
-    (log/debug "Palautetaan urakan YHA-tiedot")
+    (log/debug "YHA-tiedot sidottu. Palautetaan urakan YHA-tiedot")
     (first (into []
                  (comp
                    (map #(konv/array->vec % :vuodet))
@@ -47,7 +45,7 @@
                  (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
 
-(defn hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
+(defn- hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
         yhaidt (mapv :yhaid urakat)
@@ -57,6 +55,47 @@
                                  (into {} (map (juxt :yhaid identity) urakat))
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
+
+(defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
+  (yha/hae-kohteet yha urakka-id))
+
+(defn- tallenna-yha-kohteet
+  "Tallentaa YHA:sta tulleet ylläpitokohteet.
+  Kohde tallennetaan vain jos sen yhatunnisteella ei jo ole olemassa kohdetta"
+  [db user {:keys [harja-urakka-id kohteet] :as tiedot}]
+  (jdbc/with-db-transaction [db db]
+    (for [{:keys [urakka-id sopimus-id kohdenumero nimi
+                  tierekisteriosoitevali
+                  yhatunnus yha-id alikohteet tyyppi] :as kohde} kohteet]
+      (let [yllapitokohde-kannassa (yha-q/hae-yllapitokohde-yhatunnuksella db {:yhatunnus yhatunnus})]
+        (when-not yllapitokohde-kannassa
+          (yha-q/luo-yllapitokohde<! db
+                                     {:urakka urakka-id
+                                      :sopimus sopimus-id
+                                      :kohdenumero kohdenumero
+                                      :nimi nimi
+                                      :tr_numero (:tienumero tierekisteriosoitevali)
+                                      :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                      :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                      :tr_loppuosa (:losa tierekisteriosoitevali)
+                                      :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                      :yhatunnus yhatunnus
+                                      :yhaid yha-id
+                                      :tyyppi (name tyyppi)})
+          (for [{:keys [nimi sijainti kvl nykyinen-paallyste toimenpide
+                        tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
+            (yha-q/luo-yllapitokohdeosa<! db
+                                          {:nimi nimi
+                                           :sijainti sijainti
+                                           :kvl kvl
+                                           :nykyinen_paallyste nykyinen-paallyste
+                                           :toimenpide toimenpide
+                                           :tr_numero (:tienumero tierekisteriosoitevali)
+                                           :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                           :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                           :tr_loppuosa (:losa tierekisteriosoitevali)
+                                           :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                           :yhaid yha-id})))))))
 
 (defrecord Yha []
   component/Lifecycle
@@ -69,7 +108,13 @@
                           (sido-yha-urakka-harja-urakkaan db user tiedot)))
       (julkaise-palvelu http :hae-urakat-yhasta
                         (fn [user tiedot]
-                          (hae-urakat-yhasta db yha user tiedot)))))
+                          (hae-urakat-yhasta db yha user tiedot)))
+      (julkaise-palvelu http :hae-yha-kohteet
+                        (fn [user tiedot]
+                          (hae-yha-kohteet db yha user tiedot)))
+      (julkaise-palvelu http :tallenna-yha-kohteet
+                        (fn [user tiedot]
+                          (tallenna-yha-kohteet db user tiedot)))))
 
   (stop [this]
     (poista-palvelut

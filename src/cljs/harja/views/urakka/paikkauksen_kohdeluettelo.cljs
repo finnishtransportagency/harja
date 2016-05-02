@@ -57,7 +57,7 @@
 
           "Paikkauskohteet"
           :paikkauskohteet
-          [paikkauskohteet/paikkauskohteet]
+          [paikkauskohteet/paikkauskohteet ur]
 
           "Paikkausilmoitukset"
           :paikkausilmoitukset
