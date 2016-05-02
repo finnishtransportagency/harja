@@ -1,11 +1,12 @@
 (ns harja.palvelin.raportointi.raportit.toimenpideajat
   "Toimenpiteiden ajoittuminen -raportti. Näyttää eri urakoissa tapahtuvien toimenpiteiden jakauman
   eri kellonaikoina."
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.pvm :as pvm]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.tyokalut.functor :refer [fmap]]
+            [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.tyokalut.functor :refer [fmap]]))
+            [harja.domain.hoitoluokat :as hoitoluokat]))
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpideajat.sql")
 
@@ -33,23 +34,21 @@
                                         :loppupvm (pvm/luo-pvm 2016 9 1)}
                                        false))
 
-(defn suorita [db user {:keys [alkupvm loppupvm
-                               urakka-id hallintayksikko-id
-                               urakoittain?] :as parametrit}]
+(defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
+                               hallintayksikko-id urakoittain?] :as parametrit}]
   (let [parametrit {:urakka urakka-id
                     :hallintayksikko hallintayksikko-id
                     :alkupvm alkupvm
                     :loppupvm loppupvm}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)]
-    (log/info "TOIMENPIDEAJAT: " toimenpideajat)
     [:raportti {:otsikko "Toimenpiteiden ajoittuminen"
                 :orientaatio :landscape}
      [:taulukko {:otsikko "Toimenpiteiden ajoittuminen"
                  :rivi-ennen (concat
                               [{:teksti "Hoitoluokka" :sarakkeita 1}]
-                              (map (fn [luokka]
-                                     {:teksti luokka :sarakkeita 6 :tasaa :keskita})
-                                   yleinen/talvihoitoluokat)
+                              (map (fn [{nimi :nimi}]
+                                     {:teksti nimi :sarakkeita 6 :tasaa :keskita})
+                                   hoitoluokat/talvihoitoluokat)
                               [{:teksti "" :sarakkeita 1}])}
       (into []
             (concat
