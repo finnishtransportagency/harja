@@ -37,7 +37,9 @@
     (poista-urakan-yha-tiedot db harja-urakka-id)
     (poista-urakan-yllapitokohteet db harja-urakka-id)
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
-    (log/debug "YHA-tiedot sidottu, palautetaan urakan tiedot")
+    (log/debug "YHA-tiedot sidottu")
+    ;; TODO Hae ja käsittele YHA:n kohdeluettelo
+    (log/debug "Palautetaan urakan YHA-tiedot")
     (first (into []
                  (comp
                    (map #(konv/array->vec % :vuodet))
