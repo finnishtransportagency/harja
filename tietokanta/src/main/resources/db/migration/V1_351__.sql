@@ -1,9 +1,9 @@
 UPDATE laatupoikkeama
   SET paatos = 'ei_sanktiota'::laatupoikkeaman_paatostyyppi
 WHERE paatos IS NULL AND
-      kasittelyaika IS NOT NULL OR
+      (kasittelyaika IS NOT NULL OR
       perustelu IS NOT NULL OR
-      kasittelytapa IS NOT NULL;
+      kasittelytapa IS NOT NULL);
 
 UPDATE laatupoikkeama
   SET kasittelyaika = muokattu
