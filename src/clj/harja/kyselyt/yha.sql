@@ -60,7 +60,7 @@ VALUES (
   :tr_loppuetaisyys,
   :yhatunnus,
   :yhaid,
-  :tyyppi,
+  :tyyppi::yllapitokohdetyyppi,
   :yllapitoluokka,
   :keskimaarainen_vuorokausiliikenne,
   :nykyinen_paallyste);

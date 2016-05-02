@@ -70,20 +70,26 @@
   [db user {:keys [urakka-id kohteet] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (jdbc/with-db-transaction [db db]
-    (for [{:keys [tierekisteriosoitevali
-                  tunnus yha-id alikohteet kohdetyyppi] :as kohde} kohteet]
-      (let [paasopimus (yha-q/hae-urakan-paasopimus db {:urakka urakka-id})
-            kohde (yha-q/luo-yllapitokohde<! db
-                                      {:urakka urakka-id
-                                       :sopimus (:id paasopimus)
-                                       :tr_numero (:tienumero tierekisteriosoitevali)
-                                       :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                       :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                       :tr_loppuosa (:losa tierekisteriosoitevali)
-                                       :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                       :yhatunnus tunnus
-                                       :yhaid yha-id
-                                       :tyyppi (name kohdetyyppi)})]
+    (let [paasopimus (yha-q/hae-urakan-paasopimus db {:urakka urakka-id})]
+      (for [{:keys [tierekisteriosoitevali
+                    tunnus yha-id alikohteet kohdetyyppi
+                    yllapitoluokka
+                    keskimaarainen_vuorokausiliikenne
+                    nykyinen-paallyste] :as kohde} kohteet]
+        (let [kohde (yha-q/luo-yllapitokohde<! db
+                                               {:urakka urakka-id
+                                                :sopimus (:id paasopimus)
+                                                :tr_numero (:tienumero tierekisteriosoitevali)
+                                                :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                                :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                                :tr_loppuosa (:losa tierekisteriosoitevali)
+                                                :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                                :yhatunnus tunnus
+                                                :yhaid yha-id
+                                                :tyyppi (name kohdetyyppi)
+                                                :yllapitoluokka yllapitoluokka
+                                                :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
+                                                :nykyinen_paallyste nykyinen-paallyste})]
           (for [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
             ;; TODO Tee myös uusi päällystysilmoitus johon alustatoimenpiteet valmiiksi syötetty
             (yha-q/luo-yllapitokohdeosa<! db
@@ -95,7 +101,7 @@
                                            :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                            :tr_loppuosa (:losa tierekisteriosoitevali)
                                            :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                           :yhaid yha-id}))))))
+                                           :yhaid yha-id})))))))
 
 (defrecord Yha []
   component/Lifecycle
