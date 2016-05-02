@@ -78,7 +78,7 @@
 
 (defn- tallenna-yha-kohteet [db user {:keys [harja-urakka-id] :as tiedot}]
   (jdbc/with-db-transaction [db db]
-    (poista-urakan-yllapitokohteet db harja-urakka-id)
+    (poista-urakan-yllapitokohteet db harja-urakka-id) ; FIXME Älä poista vaan käsittele taskin mukaisesti
     (tallenna-kohteet db user tiedot)))
 
 (defrecord Yha []
