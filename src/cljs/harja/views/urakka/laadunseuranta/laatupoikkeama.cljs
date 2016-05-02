@@ -157,12 +157,25 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
     false
     (not (lomake/voi-tallentaa-ja-muokattu? laatupoikkeama))))
 
+(defn sanktiotietoja-annettu? [laatupoikkeama]
+  (or (get-in laatupoikkeama [:paatos :kasittelyaika])
+      (get-in laatupoikkeama [:paatos :kasittelytapa])
+      (get-in laatupoikkeama [:paatos :paatos])))
+
+(defn lisaa-sanktion-validointi [tietoja-annettu-fn? kentta viesti]
+  (merge kentta
+         (if (tietoja-annettu-fn?)
+           {:validoi [[:ei-tyhja viesti]]}
+           {})))
+
 (defn laatupoikkeamalomake [asetukset laatupoikkeama]
-  (let [sanktio-virheet (atom {})]
+  (let [sanktio-virheet (atom {})
+        muokattava? (constantly (not (paatos? @laatupoikkeama)))]
     (komp/luo
       (fn [asetukset laatupoikkeama]
-        (let [muokattava? (constantly (not (paatos? @laatupoikkeama)))
-              uusi? (not (:id @laatupoikkeama))]
+        (let [uusi? (not (:id @laatupoikkeama))
+              sanktion-validointi (partial lisaa-sanktion-validointi
+                                           #(sanktiotietoja-annettu? @laatupoikkeama))]
 
           [:div.laatupoikkeama
            [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
@@ -218,7 +231,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
              {:tyyppi :tierekisteriosoite
               :nimi :tr
               :muokattava? muokattava?
-              :pakollinen? true
               :sijainti (r/wrap (:sijainti @laatupoikkeama)
                                 #(swap! laatupoikkeama assoc :sijainti %))}
 
@@ -264,24 +276,28 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                (lomake/ryhma
                  "Käsittely ja päätös"
 
-                 {:otsikko "Käsittelyn pvm"
-                  :pakollinen? true
-                  :nimi :paatos-pvm
-                  :hae (comp :kasittelyaika :paatos)
-                  :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
-                  :tyyppi :pvm-aika
-                  :muokattava? muokattava?}
+                 (sanktion-validointi
+                   {:otsikko     "Käsittelyn pvm"
+                   :pakollinen? true
+                   :nimi        :paatos-pvm
+                   :hae         (comp :kasittelyaika :paatos)
+                   :aseta       #(assoc-in %1 [:paatos :kasittelyaika] %2)
+                   :tyyppi      :pvm-aika
+                   :muokattava? muokattava?}
+                   "Anna käsittelyn päivämäärä ja aika")
 
-                 {:otsikko "Käsitelty"
-                  :pakollinen? true
-                  :nimi :kasittelytapa
-                  :hae (comp :kasittelytapa :paatos)
-                  :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
-                  :tyyppi :valinta
-                  :valinnat [:tyomaakokous :puhelin :kommentit :muu]
-                  :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
-                  :palstoja 2
-                  :muokattava? muokattava?}
+                 (sanktion-validointi
+                   {:otsikko       "Käsitelty"
+                   :pakollinen?   true
+                   :nimi          :kasittelytapa
+                   :hae           (comp :kasittelytapa :paatos)
+                   :aseta         #(assoc-in %1 [:paatos :kasittelytapa] %2)
+                   :tyyppi        :valinta
+                   :valinnat      [:tyomaakokous :puhelin :kommentit :muu]
+                   :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
+                   :palstoja      2
+                   :muokattava?   muokattava?}
+                   "Anna käsittelytapa")
 
                  (when (= :muu (:kasittelytapa (:paatos @laatupoikkeama)))
                    {:otsikko "Muu käsittelytapa"
@@ -294,20 +310,23 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :muokattava? muokattava?})
 
 
-                 {:otsikko "Päätös"
-                  :pakollinen? true
-                  :nimi :paatos-paatos
-                  :tyyppi :valinta
-                  :valinnat [:sanktio :ei_sanktiota :hylatty]
-                  :hae (comp :paatos :paatos)
-                  :aseta #(assoc-in %1 [:paatos :paatos] %2)
-                  :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %) "- valitse päätös -")
-                  :palstoja 2
-                  :muokattava? muokattava?}
+                 (sanktion-validointi
+                   {:otsikko       "Päätös"
+                   :pakollinen?   true
+                   :nimi          :paatos-paatos
+                   :tyyppi        :valinta
+                   :valinnat      [:sanktio :ei_sanktiota :hylatty]
+                   :hae           (comp :paatos :paatos)
+                   :aseta         #(assoc-in %1 [:paatos :paatos] %2)
+                   :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %) "- valitse päätös -")
+                   :palstoja      2
+                   :muokattava?   muokattava?}
+                   "Anna päätös")
 
                  (when (:paatos (:paatos @laatupoikkeama))
                    {:otsikko "Päätöksen selitys"
                     :nimi :paatoksen-selitys
+                    :pakollinen? true
                     :tyyppi :text
                     :hae (comp :perustelu :paatos)
                     :koko [80 :auto]
