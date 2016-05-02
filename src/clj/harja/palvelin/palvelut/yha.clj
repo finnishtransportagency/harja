@@ -30,16 +30,14 @@
   (yha-q/poista-urakan-yllapitokohdeosat! db {:urakka urakka-id})
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
 
-(defn sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
+(defn- sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
   (jdbc/with-db-transaction [db db]
     (poista-urakan-yha-tiedot db harja-urakka-id)
     (poista-urakan-yllapitokohteet db harja-urakka-id)
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
-    (log/debug "YHA-tiedot sidottu")
-    ;; TODO Hae ja käsittele YHA:n kohdeluettelo
-    (log/debug "Palautetaan urakan YHA-tiedot")
+    (log/debug "YHA-tiedot sidottu. Palautetaan urakan YHA-tiedot")
     (first (into []
                  (comp
                    (map #(konv/array->vec % :vuodet))
@@ -47,7 +45,7 @@
                  (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
 
-(defn hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
+(defn- hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
         yhaidt (mapv :yhaid urakat)
@@ -57,6 +55,14 @@
                                  (into {} (map (juxt :yhaid identity) urakat))
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
+
+(defn- hae-yha-kohteet [db yha user tiedot]
+  ;; TODO
+  )
+
+(defn- tallenna-kohteet [db user tiedot]
+  ;; TODO
+  )
 
 (defrecord Yha []
   component/Lifecycle
@@ -69,7 +75,13 @@
                           (sido-yha-urakka-harja-urakkaan db user tiedot)))
       (julkaise-palvelu http :hae-urakat-yhasta
                         (fn [user tiedot]
-                          (hae-urakat-yhasta db yha user tiedot)))))
+                          (hae-urakat-yhasta db yha user tiedot)))
+      (julkaise-palvelu http :hae-yha-kohteet
+                        (fn [user tiedot]
+                          (hae-yha-kohteet db yha user tiedot)))
+      (julkaise-palvelu http :tallenna-kohteet
+                        (fn [user tiedot]
+                          (tallenna-kohteet db user tiedot)))))
 
   (stop [this]
     (poista-palvelut
