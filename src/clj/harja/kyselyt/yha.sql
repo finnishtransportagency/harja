@@ -90,3 +90,11 @@ WHERE yhatunnus = :yhatunnus;
 -- name: hae-urakan-paasopimus
 -- single?: true
 SELECT * FROM sopimus WHERE paasopimus IS NULL AND urakka = :urakka;
+
+-- name: hae-urakan-paasopimus
+-- single?: true
+SELECT * FROM sopimus WHERE paasopimus IS NULL AND urakka = :urakka;
+
+-- name: hae-urakan-yha-id
+-- single?: true
+SELECT yhaid FROM yhatiedot WHERE urakka = :urakkaid;

@@ -106,7 +106,7 @@
             (kasittele-urakoiden-hakuvastaus body headers)))))))
 
 (defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id]
-  (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db urakka-id)]
+  (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "/urakat/%s/kohteet" yha-id)) ]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
       (integraatiotapahtuma/suorita-integraatio
@@ -117,13 +117,11 @@
                         (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
                     (kasittele-urakan-kohdehakuvastaus body headers)))))
     (do
-      (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea.")]
+      (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
         (log/error virhe
                    (throw+
                      {:type +virhe-urakan-kohdehaussa+
                       :virheet {:virhe virhe}}))))))
-
-
 
 (defn laheta-kohde-yhan [integraatioloki db url kohde-id])
   ;; todo: toteuta

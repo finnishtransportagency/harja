@@ -70,7 +70,6 @@
 (def +onnistunut-urakan-kohdehakuvastaus+
   "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
     <yha:kohteet>
-    <!--Zero or more repetitions:-->
       <yha:kohde>
         <yha:yha-id>3</yha:yha-id>
         <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>

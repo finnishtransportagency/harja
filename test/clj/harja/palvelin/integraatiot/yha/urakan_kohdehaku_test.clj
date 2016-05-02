@@ -20,6 +20,7 @@
 
 (deftest tarkista-urakoiden-haku
   (let [urakka-id (first (first (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka (sidottu)';")))
+        yha-id (first (first (q (format "SELECT yhaid\nFROM yhatiedot\nWHERE urakka = %s;" urakka-id))))
         odotettu-vastaus [{:elyt ["Pohjois-Pohjanmaa"]
                            :sampotunnus "SAMPOTUNNUS1"
                            :vuodet [2016]
@@ -39,23 +40,7 @@
                            :yhaid 3
                            :yhatunnus "YHATUNNUS3"}]
 
-        url (str +yha-url+ (format "/urakat/%s/kohteet" urakka-id))]
-    (with-fake-http [url +onnistunut-urakoiden-hakuvastaus+]
-      (let [vastaus (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)]
+        url (str +yha-url+ (format "/urakat/%s/kohteet" yha-id))]
+    (with-fake-http [url +onnistunut-urakan-kohdehakuvastaus+]
+      (let [vastaus (yha/hae-kohteet (:yha jarjestelma) urakka-id)]
         (is (= odotettu-vastaus vastaus))))))
-
-;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
-#_(deftest tarkista-epaonnistunut-kutsu)
-  (with-fake-http [{:url (str +yha-url+ "/urakkahaku") :method :get} 500]
-    (is (thrown? Exception (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016))
-        "Poikkeusta ei heitetty epäonnistuneesta kutsusta."))
-
-;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
-#_ (deftest tarkista-virhevastaus)
-  (let [url (str +yha-url+ "/urakkahaku")]
-    (with-fake-http [url +urakkahaun-virhevastaus+]
-      (try+
-        (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)
-        (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
-        (catch [:type yha/+virhe-urakoiden-haussa+] {:keys [virheet]}
-          (is true "Poikkeus heitettiin epäonnistuneesta kutsusta.")))))
