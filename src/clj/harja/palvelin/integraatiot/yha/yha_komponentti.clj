@@ -89,7 +89,12 @@
             (kasittele-urakoiden-hakuvastaus body headers)))))))
 
 (defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id]
-  ;; todo: toteuta
+  (log/debug (format "Haetaan urakan (id: %s) kohteet YHA:sta"))
+  (if-let [yha-id (hae-urakan-yha-id db urakka-id)]
+
+    (do
+      (log/error (format "Urakan (id: ")))
+    )
   )
 
 (defn laheta-kohde-yhan [integraatioloki db url kohde-id]
