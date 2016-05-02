@@ -37,6 +37,8 @@
     :keskita "center"
     "left"))
 
+(def reunan-tyyli (str "solid 0.1mm " raportin-tehostevari))
+
 (defn taulukko-header [optiot sarakkeet]
   [:fo:table-header
    (when-let [rivi-ennen (:rivi-ennen optiot)]
@@ -65,7 +67,6 @@
      [:fo:inline " "]
      [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " (:osuus tiedot) "%)")]]))
 
-(def reunan-tyyli (str "solid 0.1mm " raportin-tehostevari))
 (def alareuna
   {:border-bottom reunan-tyyli})
 
