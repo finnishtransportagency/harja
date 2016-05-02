@@ -45,7 +45,7 @@
                  (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
 
 
-(defn hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi]}]
+(defn hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
         yhaidt (mapv :yhaid urakat)

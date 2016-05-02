@@ -13,13 +13,13 @@
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
-(defn- hakulomake []
+(defn- hakulomake [urakka]
   [lomake/lomake {:otsikko "Urakan tiedot"
                   :muokkaa! (fn [uusi-data]
                               (reset! yha/hakulomake-data uusi-data))
                   :footer [harja.ui.napit/palvelinkutsu-nappi
                            "Hae"
-                           #(yha/hae-yha-urakat yha/hakulomake-data)
+                           #(yha/hae-yha-urakat (merge {:harja-urakka-id (:id urakka)} yha/hakulomake-data)
                            {:luokka "nappi-ensisijainen"
                             :disabled @yha/sidonta-kaynnissa?
                             :virheviesti "Urakoiden haku YHA:sta epäonnistui."
@@ -95,7 +95,7 @@
    (if (:sitomaton-urakka? optiot)
      [vihje (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta.")]
      [lomake/yleinen-varoitus (str (:nimi urakka) " on jo sidottu YHA-urakkaan " (get-in urakka [:yhatiedot :yhatunnus]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan.")])
-   [hakulomake]
+   [hakulomake urakka]
    [hakutulokset urakka]
    (when @yha/sidonta-kaynnissa?
      [sidonta-kaynnissa])])

@@ -14,10 +14,11 @@
 (def hakutulokset-data (atom []))
 (def sidonta-kaynnissa? (atom false))
 
-(defn hae-yha-urakat [{:keys [yhatunniste sampotunniste vuosi]}]
+(defn hae-yha-urakat [{:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
   (log "[YHA] Hae YHA-urakat...")
   (reset! hakutulokset-data nil)
-  (k/post! :hae-urakat-yhasta {:yhatunniste yhatunniste
+  (k/post! :hae-urakat-yhasta {:harja-urakka-id harja-urakka-id
+                               :yhatunniste yhatunniste
                                :sampotunniste sampotunniste
                                :vuosi vuosi}))
 
