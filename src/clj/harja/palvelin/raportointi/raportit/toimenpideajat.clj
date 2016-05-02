@@ -39,7 +39,8 @@
   (let [parametrit {:urakka urakka-id
                     :hallintayksikko hallintayksikko-id
                     :alkupvm alkupvm
-                    :loppupvm loppupvm}
+                    :loppupvm loppupvm
+                    :hoitoluokat hoitoluokat}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
         talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)]
     [:raportti {:otsikko "Toimenpiteiden ajoittuminen"

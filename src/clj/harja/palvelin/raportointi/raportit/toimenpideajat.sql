@@ -12,7 +12,7 @@ SELECT
        JOIN toimenpidekoodi tpk ON rt.toimenpidekoodi = tpk.id
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
-   AND rp.talvihoitoluokka IS NOT NULL
+   AND rp.talvihoitoluokka IN (:hoitoluokat)
    AND (:urakka::integer IS NULL OR u.id = :urakka)
    AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
 GROUP BY u.nimi, tpk.nimi, tunti, rp.talvihoitoluokka
