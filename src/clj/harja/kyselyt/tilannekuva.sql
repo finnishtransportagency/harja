@@ -224,25 +224,25 @@ SELECT
   ypk.kohdenumero,
   ypk.nimi AS kohde_nimi,
   ypk.nimi AS kohdeosa_nimi,
-  ST_Simplify(ypk.sijainti, :toleranssi) AS sijainti,
-  ypk.tr_numero,
-  ypk.tr_alkuosa,
-  ypk.tr_alkuetaisyys,
-  ypk.tr_loppuosa,
-  ypk.tr_loppuetaisyys,
-  ypk.nykyinen_paallyste,
-  ypk.toimenpide,
+  ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti,
+  ypko.tr_numero,
+  ypko.tr_alkuosa,
+  ypko.tr_alkuetaisyys,
+  ypko.tr_loppuosa,
+  ypko.tr_loppuetaisyys,
+  ypko.nykyinen_paallyste,
+  ypko.toimenpide,
   pi.id   AS paikkausilmoitus_id,
   pi.tila AS paikkausilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paikkaus AS paikkausvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
   pi.tila
-FROM yllapitokohdeosa ypk
-  LEFT JOIN yllapitokohde ypk ON ypk.yllapitokohde = ypk.id
+FROM yllapitokohdeosa ypko
+  LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
-  AND (pi.tila :: TEXT != 'valmis' OR
-             (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
+                                   AND (pi.tila :: TEXT != 'valmis' OR
+                                        (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
 WHERE ypk.poistettu IS NOT TRUE;
 
 -- name: hae-paikkaukset-historiakuvaan
