@@ -78,23 +78,29 @@
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
 
-(defn- luo-paallystysilmoitus [db user kohde {:keys [tierekisteriosoitevali paallystystoimenpide] :as kohdeosa}]
-  (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde kohde
-                                      :ilmoitustiedot (cheshire/encode
-                                                        {:osoitteet
-                                                         [{:tie (:tienumero tierekisteriosoitevali)
-                                                           :aosa (:aosa tierekisteriosoitevali)
-                                                           :aet (:aet tierekisteriosoitevali)
-                                                           :losa (:losa tierekisteriosoitevali)
-                                                           :let (:let tierekisteriosoitevali)
-                                                           :rc% (:rc-prosentti paallystystoimenpide)
-                                                           ; FIXME Onko tämä nyt "massa" vai "massamäärä"? Tarvitaanko ilmoituksessa molempia?
-                                                           :massa (:kokonaismassa paallystystoimenpide)
-                                                           :raekoko (:raekoko paallystystoimenpide)
-                                                           :kuulamylly (:kuulamylly paallystystoimenpide)
-                                                           :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
-                                                           :paallystetyyppi (:uusi-paallyste paallystystoimenpide)}]})
-                                      (:id user)}))
+(defn- luo-paallystysilmoitus [db user kohde kohdeosat]
+  (log/debug "Tehdään kohdeosista esitäytetty päällystysilmoitus")
+  (let [ilmoitustiedot {:osoitteet
+                        (mapv
+                          (fn [{:keys [tierekisteriosoitevali paallystystoimenpide] :as kohdeosa}]
+                            [{:tie (:tienumero tierekisteriosoitevali)
+                              :aosa (:aosa tierekisteriosoitevali)
+                              :aet (:aet tierekisteriosoitevali)
+                              :losa (:losa tierekisteriosoitevali)
+                              :let (:let tierekisteriosoitevali)
+                              :rc% (:rc-prosentti paallystystoimenpide)
+                              ; FIXME Onko tämä nyt "massa" vai "massamäärä"? Onko toinen turha?
+                              :massa (:kokonaismassa paallystystoimenpide)
+                              :raekoko (:raekoko paallystystoimenpide)
+                              :kuulamylly (:kuulamylly paallystystoimenpide)
+                              :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
+                              :paallystetyyppi (:uusi-paallyste paallystystoimenpide)}])
+                          kohdeosat)}
+        ilmoitustiedot-json (cheshire/encode ilmoitustiedot)]
+    (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde kohde
+                                        :ilmoitustiedot ilmoitustiedot-json
+                                        :luoja (:id user)})
+    (log/debug "Esitäytetty päällystysilmoitus tehty")))
 
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
@@ -138,7 +144,8 @@
                                            :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                            :tr_loppuosa (:losa tierekisteriosoitevali)
                                            :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                           :yhaid yha-id})))))
+                                           :yhaid yha-id}))
+          (luo-paallystysilmoitus c user kohde alikohteet))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu")
     (hae-urakan-yha-tiedot c urakka-id)))
