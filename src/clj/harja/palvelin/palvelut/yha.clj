@@ -30,6 +30,13 @@
   (yha-q/poista-urakan-yllapitokohdeosat! db {:urakka urakka-id})
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
 
+(defn- hae-urakan-yha-tiedot [db urakka-id]
+  (first (into []
+               (comp
+                 (map #(konv/array->vec % :vuodet))
+                 (map #(konv/array->vec % :elyt)))
+               (yha-q/hae-urakan-yhatiedot db {:urakka urakka-id}))))
+
 (defn- sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
@@ -38,11 +45,7 @@
     (poista-urakan-yllapitokohteet db harja-urakka-id)
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
     (log/debug "YHA-tiedot sidottu. Palautetaan urakan YHA-tiedot")
-    (first (into []
-                 (comp
-                   (map #(konv/array->vec % :vuodet))
-                   (map #(konv/array->vec % :elyt)))
-                 (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
+    (hae-urakan-yha-tiedot db harja-urakka-id)))
 
 
 (defn- hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
@@ -117,8 +120,9 @@
                                            :tr_loppuosa (:losa tierekisteriosoitevali)
                                            :tr_loppuetaisyys (:let tierekisteriosoitevali)
                                            :yhaid yha-id})))))
-    (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id))
-  (log/debug "YHA-kohteet tallennettu"))
+    (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
+    (log/debug "YHA-kohteet tallennettu")
+    (hae-urakan-yha-tiedot c urakka-id)))
 
 (defrecord Yha []
   component/Lifecycle

@@ -10,7 +10,8 @@
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -45,9 +46,11 @@
    Suoritus tapahtuu asynkronisesti"
   [harja-urakka-id]
   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-            vkm-kohteet (vkm/muunna-yha-kohteet uudet-yha-kohteet)]
-        (log "[YHA] Tallennetaan kohteet kantaan")
-        (tallenna-uudet-yha-kohteet harja-urakka-id vkm-kohteet))))
+            vkm-kohteet (vkm/muunna-yha-kohteet uudet-yha-kohteet)
+            _ (log "[YHA] Tallennetaan kohteet kantaan")
+            yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id vkm-kohteet))]
+        (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
+        (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot))))
 
 (defn paivita-kohdeluettelo [urakka oikeus]
   [harja.ui.napit/palvelinkutsu-nappi
@@ -61,3 +64,9 @@
     :kun-onnistuu (fn [_]
                     (log "[YHA] Kohdeluettelo päivitetty")
                     (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty] (t/now)))}])
+
+(defn kohdeluettelo-paivitetty [urakka]
+  [:div (str "Kohdeluettelo päivitetty: "
+             (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
+               (pvm/pvm-aika kohdeluettelo-paivitetty)
+               "ei koskaan"))])

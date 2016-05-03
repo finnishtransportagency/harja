@@ -41,4 +41,4 @@
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paikkauskohteet]
-        [:div (str "Kohdeluettelo päivitetty: " (pvm/pvm-aika (get-in ur [:yhatiedot :kohdeluettelo-paivitetty])))]]])))
+        [yha/kohdeluettelo-paivitetty ur]]])))

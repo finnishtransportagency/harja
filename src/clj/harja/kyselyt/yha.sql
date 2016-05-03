@@ -23,7 +23,8 @@ SELECT
   yhaid,
   yhanimi,
   elyt,
-  vuodet
+  vuodet,
+  kohdeluettelo_paivitetty as "kohdeluettelo-paivitetty"
 FROM yhatiedot
 WHERE urakka = :urakka;
 
