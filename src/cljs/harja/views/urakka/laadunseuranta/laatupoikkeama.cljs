@@ -178,10 +178,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 (defn lisaa-sanktion-validointi [tietoja-annettu-fn? kentta viesti]
   (merge kentta
-         (if (tietoja-annettu-fn?)
+         (when (tietoja-annettu-fn?)
            {:validoi [[:ei-tyhja viesti]]
-            :pakollinen? true}
-           {})))
+            :pakollinen? true})))
 
 (defn laatupoikkeamalomake [asetukset laatupoikkeama]
   (let [sanktio-virheet (atom {})
