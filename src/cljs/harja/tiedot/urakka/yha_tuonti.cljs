@@ -64,7 +64,8 @@
     :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
     :kun-onnistuu (fn [_]
                     (log "[YHA] Kohdeluettelo päivitetty")
-                    (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty] (t/now)))}])
+                    (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
+                           (cljs-time.core/to-default-time-zone (t/now))))}])
 
 (defn kohdeluettelo-paivitetty [urakka]
   [:div (str "Kohdeluettelo päivitetty: "
