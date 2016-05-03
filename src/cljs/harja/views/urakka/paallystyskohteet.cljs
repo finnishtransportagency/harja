@@ -41,6 +41,6 @@
 
        [:div.kohdeluettelon-paivitys
         [:button.nappi-ensisijainen {:on-click #()
-                                    :disabled (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur) @istunto/kayttaja)}
+                                    :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur) @istunto/kayttaja))}
         "Päivitä kohdeluettelo"]
        [:div (str "Kohdeluettelo päivitetty: " (fmt/pvm-opt (get-in ur [:yhatiedot :kohdeluettelo-paivitetty])))]]])))
