@@ -16,7 +16,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.fmt :as fmt])
+            [harja.tiedot.urakka.yhatuonti :as yha]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -40,7 +41,5 @@
        [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}]
 
        [:div.kohdeluettelon-paivitys
-        [:button.nappi-ensisijainen {:on-click #()
-                                    :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur) @istunto/kayttaja))}
-        "Päivitä kohdeluettelo"]
-       [:div (str "Kohdeluettelo päivitetty: " (fmt/pvm-opt (get-in ur [:yhatiedot :kohdeluettelo-paivitetty])))]]])))
+        [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
+       [:div (str "Kohdeluettelo päivitetty: " (pvm/pvm-aika (get-in ur [:yhatiedot :kohdeluettelo-paivitetty])))]]])))

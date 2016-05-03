@@ -6,7 +6,11 @@
             [harja.ui.lomake :refer [lomake]]
             [harja.ui.grid :refer [grid]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tyokalut.vkm :as vkm])
+            [harja.tyokalut.vkm :as vkm]
+            [harja.tiedot.navigaatio :as nav]
+            [cljs-time.core :as t]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -44,3 +48,16 @@
             vkm-kohteet (vkm/muunna-yha-kohteet uudet-yha-kohteet)]
         (log "[YHA] Tallennetaan kohteet kantaan")
         (tallenna-uudet-yha-kohteet harja-urakka-id vkm-kohteet))))
+
+(defn paivita-kohdeluettelo [urakka oikeus]
+  [harja.ui.napit/palvelinkutsu-nappi
+   "Päivitä kohdeluettelo"
+   #(do
+     (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
+     (hae-ja-kasittele-yha-kohteet (:id urakka)))
+   {:luokka "nappi-ensisijainen"
+    :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
+    :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
+    :kun-onnistuu (fn [_]
+                    (log "[YHA] Kohdeluettelo päivitetty")
+                    (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty] (t/now)))}])
