@@ -187,7 +187,8 @@
                           (hae-urakan-aikataulu db user tiedot)))
       (julkaise-palvelu http :tallenna-yllapitokohteiden-aikataulu
                         (fn [user tiedot]
-                          (tallenna-yllapitokohteiden-aikataulu db user tiedot)))))
+                          (tallenna-yllapitokohteiden-aikataulu db user tiedot)))
+      this))
 
   (stop [this]
     (poista-palvelut
@@ -197,5 +198,5 @@
       :tallenna-yllapitokohteet
       :tallenna-yllapitokohdeosat
       :hae-aikataulut
-      :tallenna-yllapitokohteiden-aikataulu
-      this)))
+      :tallenna-yllapitokohteiden-aikataulu)
+    this))
