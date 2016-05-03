@@ -53,7 +53,7 @@
                     :keskimaarainen-vuorokausiilikenne (z/xml1-> kohde :yha:keskimaarainen-vuorokausiilikenne z/text xml/parsi-kokonaisluku)
                     :nykyinen-paallyste (z/xml1-> kohde :yha:nykyinen-paallyste z/text xml/parsi-kokonaisluku)
                     :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> kohde :yha:tierekisteriosoitevali))
-                    :alikohteet (z/xml1-> kohde :yha:alikohteet lue-alikohteet)))
+                    :alikohteet (lue-alikohteet (z/xml1-> kohde :yha:alikohteet))))
         (z/xml-> data :yha:kohteet :yha:kohde)))
 
 (defn lue-sanoma [viesti]

@@ -107,10 +107,44 @@
               <yha:kokonaismassamaara>124</yha:kokonaismassamaara>
               <yha:rc-prosentti>14</yha:rc-prosentti>
               <yha:kuulamylly>4</yha:kuulamylly>
-             <yha:paallystetyomenetelma>22</yha:paallystetyomenetelma>
-          </yha:paallystystoimenpide>
-        </yha:alikohde>
+              <yha:paallystetyomenetelma>22</yha:paallystetyomenetelma>
+            </yha:paallystystoimenpide>
+          </yha:alikohde>
+          <yha:alikohde>
+            <yha:yha-id>4</yha:yha-id>
+            <yha:tierekisteriosoitevali>
+              <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
+              <yha:tienumero>3</yha:tienumero>
+              <yha:ajorata>0</yha:ajorata>
+              <yha:kaista>11</yha:kaista>
+              <yha:aosa>3</yha:aosa>
+              <yha:aet>3</yha:aet>
+              <yha:losa>3</yha:losa>
+              <yha:let>3</yha:let>
+            </yha:tierekisteriosoitevali>
+            <yha:tunnus>B</yha:tunnus>
+            <yha:paallystystoimenpide>
+              <yha:uusi-paallyste>11</yha:uusi-paallyste>
+              <yha:raekoko>12</yha:raekoko>
+              <yha:kokonaismassamaara>124</yha:kokonaismassamaara>
+              <yha:rc-prosentti>14</yha:rc-prosentti>
+              <yha:kuulamylly>4</yha:kuulamylly>
+              <yha:paallystetyomenetelma>22</yha:paallystetyomenetelma>
+            </yha:paallystystoimenpide>
+          </yha:alikohde>
         </yha:alikohteet>
       </yha:kohde>
     </yha:kohteet>
+  </yha:urakan-kohdehakuvastaus>")
+
+(def +invalidi-urakan-kohdehakuvastaus+
+  "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <yha:tagi-jonka-ei-kuulunut-elaa/>
+    <yha:kohteet/>
+    <yha:virhe>Tapahtui virhe</yha:virhe>
+  </yha:urakan-kohdehakuvastaus>")
+
+(def +tyhja-urakan-kohteidenhakuvastaus+
+  "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <yha:kohteet/>
   </yha:urakan-kohdehakuvastaus>")
