@@ -127,13 +127,12 @@
                                                 :tr_loppuosa (:losa tierekisteriosoitevali)
                                                 :tr_loppuetaisyys (:let tierekisteriosoitevali)
                                                 :yhatunnus tunnus
-                                                :yhaid yha-id ; FIXME Miksi tämä on yhaid eikä yha-id??
+                                                :yhaid yha-id
                                                 :tyyppi (name kohdetyyppi)
                                                 :yllapitoluokka yllapitoluokka
                                                 :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                                                 :nykyinen_paallyste nykyinen-paallyste})]
           (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
-            ;; TODO Tee myös uusi päällystysilmoitus johon alustatoimenpiteet valmiiksi syötetty
             (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
             (yha-q/luo-yllapitokohdeosa<! c
                                           {:yllapitokohde (:id kohde)
