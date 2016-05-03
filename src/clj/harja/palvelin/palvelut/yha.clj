@@ -78,7 +78,7 @@
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
 
-(defn- luo-paallystysilmoitus [db user kohde kohdeosat]
+(defn- luo-esitaytetty-paallystysilmoitus [db user kohde kohdeosat]
   (log/debug "Tehdään kohdeosista esitäytetty päällystysilmoitus")
   (let [ilmoitustiedot {:osoitteet
                         (mapv
@@ -141,7 +141,7 @@
                                          :tr_loppuosa (:losa tierekisteriosoitevali)
                                          :tr_loppuetaisyys (:let tierekisteriosoitevali)
                                          :yhaid yha-id}))
-        #_(luo-paallystysilmoitus c user kohde alikohteet))) ; FIXME No hstore extension installed wtf
+        #_(luo-esitaytetty-paallystysilmoitus c user kohde alikohteet))) ; FIXME No hstore extension installed wtf
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu")
     (hae-urakan-yha-tiedot c urakka-id)))
