@@ -7,9 +7,11 @@
             [harja.asiakas.kommunikaatio :as k]
             [clojure.string :as str]
             [harja.loki :refer [log]]
-            [harja.tiedot.urakoitsijat :refer [urakoitsijat]])
+            [harja.tiedot.urakoitsijat :refer [urakoitsijat]]
+            [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<!]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
 
@@ -20,6 +22,12 @@
 (defn- urakoitsijavalinnat []
   (distinct (map #(select-keys % [:id :nimi]) @urakoitsijat)))
 
+(defn- tallenna [muuttuneet-tunnukset]
+  (go (let [uudet-tunnukset (<! (k/post! :tallenna-jarjestelmatunnukset
+                                         muuttuneet-tunnukset))]
+        (log "SAIN: " (pr-str uudet-tunnukset))
+        (reset! jarjestelmatunnukset uudet-tunnukset))))
+
 (defn api-jarjestelmatunnukset []
 
   (komp/luo
@@ -27,7 +35,7 @@
    (fn []
      (let [ei-muokattava (constantly false)]
        [grid/grid {:otsikko "API järjestelmätunnukset"
-                   :tallenna #(log "TALLENNA: " (pr-str %))}
+                   :tallenna tallenna}
         [{:otsikko "Käyttäjänimi"
           :nimi :kayttajanimi
           :tyyppi :string}
@@ -38,8 +46,7 @@
           :fmt :nimi
           :tyyppi :valinta
           :valinnat (urakoitsijavalinnat)
-          :valinta-nayta :nimi
-          }
+          :valinta-nayta :nimi}
          {:otsikko "Käynnissä olevat urakat"
           :nimi :urakat
           :fmt #(str/join ", " %)
