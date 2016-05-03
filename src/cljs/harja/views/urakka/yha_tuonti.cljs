@@ -47,7 +47,7 @@
      {:otsikko "Löytyneet urakat"
       :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
       :tunniste :yhatunnus}
-     [{:otsikko "Tunnus"
+     [{:otsikko "YHA-tunnus"
        :nimi :yhatunnus
        :tyyppi :string
        :muokattava? (constantly false)}
