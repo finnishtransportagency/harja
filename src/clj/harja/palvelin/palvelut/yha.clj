@@ -69,14 +69,14 @@
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
-  (jdbc/with-db-transaction [db db]
-    (let [paasopimus (yha-q/hae-urakan-paasopimus db {:urakka urakka-id})]
-      (for [{:keys [tierekisteriosoitevali
+  (jdbc/with-db-transaction [c db]
+    (let [paasopimus (yha-q/hae-urakan-paasopimus c {:urakka urakka-id})]
+      (doseq [{:keys [tierekisteriosoitevali
                     tunnus yha-id alikohteet kohdetyyppi
                     yllapitoluokka
                     keskimaarainen_vuorokausiliikenne
                     nykyinen-paallyste] :as kohde} kohteet]
-        (let [kohde (yha-q/luo-yllapitokohde<! db
+        (let [kohde (yha-q/luo-yllapitokohde<! c
                                                {:urakka urakka-id
                                                 :sopimus (:id paasopimus)
                                                 :tr_numero (:tienumero tierekisteriosoitevali)
@@ -90,9 +90,9 @@
                                                 :yllapitoluokka yllapitoluokka
                                                 :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                                                 :nykyinen_paallyste nykyinen-paallyste})]
-          (for [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
+          (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
             ;; TODO Tee myös uusi päällystysilmoitus johon alustatoimenpiteet valmiiksi syötetty
-            (yha-q/luo-yllapitokohdeosa<! db
+            (yha-q/luo-yllapitokohdeosa<! c
                                           {:yllapitokohde (:id kohde)
                                            :nimi tunnus
                                            :sijainti sijainti
