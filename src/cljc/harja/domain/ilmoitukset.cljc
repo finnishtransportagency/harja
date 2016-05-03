@@ -33,6 +33,7 @@
     :toimenpidepyynto "TPP"
     :tiedoitus "TUR"))
 
+;; Jos muutat näitä, päivitä myös kuittausvaatimukset-str!
 (def kuittausvaatimukset
   {:kysely           {:kuittaustyyppi :lopetus
                       :kuittausaika   (t/hours 72)}
