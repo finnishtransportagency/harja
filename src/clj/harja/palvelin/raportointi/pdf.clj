@@ -31,8 +31,25 @@
   [arvo]
   (str "<![CDATA[" arvo "]]>"))
 
-(defn taulukko-header [sarakkeet]
+(defn tasaus [tasaa]
+  (case tasaa
+    :oikea "right"
+    :keskita "center"
+    "left"))
+
+(def reunan-tyyli (str "solid 0.1mm " raportin-tehostevari))
+
+(defn taulukko-header [optiot sarakkeet]
   [:fo:table-header
+   (when-let [rivi-ennen (:rivi-ennen optiot)]
+     [:fo:table-row
+      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
+                         :color "#ffffff"
+                         :number-columns-spanned (or sarakkeita 1)
+                         :text-align (tasaus tasaa)}
+         [:fo:block teksti]])])
+
    [:fo:table-row
     (for [otsikko (map :otsikko sarakkeet)]
       [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
@@ -49,6 +66,34 @@
      [:fo:inline (:arvo tiedot)]
      [:fo:inline " "]
      [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " (:osuus tiedot) "%)")]]))
+
+(def alareuna
+  {:border-bottom reunan-tyyli})
+
+(def oikea-reuna
+  {:border-right reunan-tyyli})
+
+(def vasen-reuna
+  {:border-left reunan-tyyli})
+
+(def ei-yla-tai-ala-reunoja
+  {:border-top "none"
+   :border-bottom "none"})
+
+(defn- border-tyyli [{reunus :reunus}]
+  (merge alareuna
+         (case reunus
+           ;; Reunus vain oikealle
+           :oikea oikea-reuna
+
+           ;; Reunus vain vasemmalle
+           :vasen vasen-reuna
+
+           ;; Ei lainkaan vaseanta eikä oikeaa reunusta
+           :ei {}
+
+           ;; Ei reunusmäärittelyä, tehdään oletus
+           (merge oikea-reuna vasen-reuna))))
 
 (defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
                                             oikealle-tasattavat-kentat] :as optiot}]
@@ -96,7 +141,8 @@
            [:fo:table-row
             (for [i (range (count sarakkeet))
                   :let [arvo-datassa (nth rivi i)
-                        fmt (case (:fmt (nth sarakkeet i))
+                        sarake (nth sarakkeet i)
+                        fmt (case (:fmt sarake)
                               :numero #(fmt/desimaaliluku-opt % 1 true)
                               :prosentti #(fmt/prosentti-opt %)
                               str)
@@ -104,14 +150,16 @@
                                               (muodosta-pdf arvo-datassa)
                                               (fmt arvo-datassa))
                                             "")]]
-              [:fo:table-cell (merge {:border     (str "solid 0.1mm " raportin-tehostevari) :padding "1mm"
-                                      :font-weight "normal"
-                                      :text-align (if (oikealle-tasattavat-kentat i)
-                                                    "right"
-                                                    "left")}
-                                     yhteenveto?
-                                     korosta?
-                                     lihavoi?)
+              [:fo:table-cell (merge
+                               (border-tyyli sarake)
+                               {:padding "1mm"
+                                :font-weight "normal"
+                                :text-align (if (oikealle-tasattavat-kentat i)
+                                              "right"
+                                              (tasaus (:tasaa sarake)))}
+                               yhteenveto?
+                               korosta?
+                               lihavoi?)
                (when korosta?
                  [:fo:block {:space-after "0.2em"}])
                [:fo:block (if (string? naytettava-arvo)
@@ -130,10 +178,10 @@
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
     [:fo:block {:space-before "1em" :font-size (str taulukon-fonttikoko taulukon-fonttikoko-yksikko) :font-weight "bold"} otsikko
-     [:fo:table {:border (str "solid 0.2mm " raportin-tehostevari)}
+     [:fo:table
       (for [{:keys [leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
-      (taulukko-header sarakkeet)
+      (taulukko-header optiot sarakkeet)
       (taulukko-body sarakkeet data optiot)]
      [:fo:block {:space-after "1em"}]]))
 

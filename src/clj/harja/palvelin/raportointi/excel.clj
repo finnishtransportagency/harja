@@ -3,7 +3,8 @@
   (:require [taoensso.timbre :as log]
             [dk.ative.docjure.spreadsheet :as excel]
             [clojure.string :as str])
-  (:import (org.apache.poi.ss.util CellReference WorkbookUtil)))
+  (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
+           (org.apache.poi.ss.usermodel CellStyle)))
 
 (defmulti muodosta-excel
   "Muodostaa Excel data annetulle raporttielementille.
@@ -61,7 +62,31 @@
                                               (or (:sheet-nimi optiot) nimi))) 0])
           sarake-tyyli (excel/create-cell-style! workbook {:background :blue
                                                            :font {:color :white}})
+          rivi-ennen (:rivi-ennen optiot)
+          rivi-ennen-nro nolla
+          rivi-ennen-rivi (when rivi-ennen (.createRow sheet nolla))
+
+          nolla (if rivi-ennen (inc nolla) nolla)
           otsikko-rivi (.createRow sheet nolla)]
+
+      ;; Luodaan mahdollinen rivi-ennen
+      (when rivi-ennen
+        (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
+                  (let [solu (.createCell rivi-ennen-rivi sarake-nro)]
+                    (excel/set-cell! solu teksti)
+                    (excel/set-cell-style! solu sarake-tyyli)
+                    (CellUtil/setAlignment solu workbook
+                                           (case tasaa
+                                             :keskita CellStyle/ALIGN_CENTER
+                                             :oikea CellStyle/ALIGN_RIGHT
+                                             CellStyle/ALIGN_LEFT))
+                    (when (> sarakkeita 1)
+                      (.addMergedRegion sheet (CellRangeAddress. rivi-ennen-nro rivi-ennen-nro
+                                                                 sarake-nro
+                                                                 (+ sarake-nro sarakkeita -1))))
+                    (+ sarake-nro sarakkeita)))
+                0 rivi-ennen))
+
       ;; Luodaan otsikot saraketyylillä
       (dorun
        (map-indexed

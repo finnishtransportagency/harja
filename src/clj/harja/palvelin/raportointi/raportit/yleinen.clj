@@ -1,13 +1,11 @@
 (ns harja.palvelin.raportointi.raportit.yleinen
-  (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
+  (:require [clj-time
+             [coerce :as c]
+             [core :as t]
+             [format :as tf]
+             [local :as l]]
             [harja.pvm :as pvm]
-            [clj-time.local :as l]
-            [clj-time.format :as tf]
-            [clj-time.coerce :as tc]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]))
-
+            [harja.kyselyt.hoitoluokat :as hoitoluokat]))
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
