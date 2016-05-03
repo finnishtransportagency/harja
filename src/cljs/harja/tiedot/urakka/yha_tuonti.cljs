@@ -41,7 +41,6 @@
    Suoritus tapahtuu asynkronisesti"
   [harja-urakka-id]
   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-            _ (log "[YHA] Saatiin kohteet: " (pr-str uudet-yha-kohteet))
             vkm-kohteet (vkm/muunna-yha-kohteet uudet-yha-kohteet)]
         (log "[YHA] Tallennetaan kohteet kantaan")
         (tallenna-uudet-yha-kohteet harja-urakka-id vkm-kohteet))))

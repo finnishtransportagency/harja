@@ -160,18 +160,18 @@
       ;; todo: poista kun saadaan oikea yhteys YHA:n
       (with-fake-http [url +testi-urakan-kohdehakuvastaus+]
         (integraatiotapahtuma/suorita-integraatio
-          db integraatioloki "yha" "kohteiden-haku"
-          (fn [konteksti]
-            (let [http-asetukset {:metodi :GET :url url}
-                  {body :body headers :headers}
-                  (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-              (kasittele-urakan-kohdehakuvastaus body headers))))))
+         db integraatioloki "yha" "kohteiden-haku"
+         (fn [konteksti]
+           (let [http-asetukset {:metodi :GET :url url}
+                 {body :body headers :headers}
+                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+             (kasittele-urakan-kohdehakuvastaus body headers))))))
     (do
       (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
-        (log/error virhe
-                   (throw+
-                     {:type +virhe-urakan-kohdehaussa+
-                      :virheet {:virhe virhe}}))))))
+        (log/error virhe)
+        (throw+
+          {:type +virhe-urakan-kohdehaussa+
+           :virheet {:virhe virhe}})))))
 
 (defn laheta-kohde-yhan [integraatioloki db url kohde-id])
 ;; todo: toteuta

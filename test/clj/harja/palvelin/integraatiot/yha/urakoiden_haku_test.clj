@@ -44,21 +44,21 @@
            :tunnus "YHATUNNUS",
            :vuodet [2016],
            :sampotunnus "SAMPOTUNNUS"}
-        url (str +yha-url+ "/urakkahaku")]
+        url (str +yha-url+ "urakkahaku")]
     (with-fake-http [url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)]
         (is (= odotettu-vastaus vastaus))))))
 
 ;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
 #_(deftest tarkista-epaonnistunut-kutsu
-  (with-fake-http [{:url (str +yha-url+ "/urakkahaku") :method :get} 500]
+  (with-fake-http [{:url (str +yha-url+ "urakkahaku") :method :get} 500]
     (is (thrown? Exception (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016))
         "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")))
 
 ;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
 #_ (deftest tarkista-virhevastaus
-  (let [url (str +yha-url+ "/urakkahaku")]
-    (with-fake-http [url +urakkahaun-virhevastaus+]
+  (let [url (str +yha-url+ "urakkahaku")]
+    (with-fake-http [url +virhevastaus+]
       (try+
         (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)
         (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")

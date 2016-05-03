@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.yha.tyokalut)
 
-(def +yha-url+ "http://localhost:1234")
+(def +yha-url+ "http://localhost:1234/")
 
 (def +onnistunut-urakoiden-hakuvastaus+
   "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
@@ -19,7 +19,7 @@
     </yha:urakat>
   </yha:urakoiden-hakuvastaus>")
 
-(def +urakkahaun-virhevastaus+
+(def +virhevastaus+
   "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
     <yha:urakat/>
     <yha:virhe>Tapahtui virhe</yha:virhe>
