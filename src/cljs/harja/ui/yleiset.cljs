@@ -228,7 +228,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                            @max-korkeus @avautumissuunta)}
             (doall
               (for [vaihtoehto vaihtoehdot]
-                ^{:key (or (:id vaihtoehto) (hash vaihtoehto))}
+                ^{:key (hash vaihtoehto)}
 
                 [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
                  (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
