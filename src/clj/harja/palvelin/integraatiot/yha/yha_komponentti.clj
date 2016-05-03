@@ -63,7 +63,7 @@
         <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
         <yha:tunnus>string</yha:tunnus>
         <yha:yllapitoluokka>1</yha:yllapitoluokka>
-        <yha:keskimaarainen-vuorokausiilikenne>1000</yha:keskimaarainen-vuorokausiilikenne>
+        <yha:keskimaarainen-vuorokausiliikenne>1000</yha:keskimaarainen-vuorokausiliikenne>
         <yha:nykyinen-paallyste>1</yha:nykyinen-paallyste>
         <yha:tierekisteriosoitevali>
           <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>

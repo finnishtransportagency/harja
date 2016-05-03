@@ -46,11 +46,11 @@
 
 (defn lue-kohteet [data]
   (mapv (fn [kohde]
-          (hash-map :yhaid (z/xml1-> kohde :yha:yha-id z/text xml/parsi-kokonaisluku)
+          (hash-map :yha-id (z/xml1-> kohde :yha:yha-id z/text xml/parsi-kokonaisluku)
                     :kohdetyyppi (z/xml1-> kohde :yha:kohdetyyppi z/text keyword)
                     :tunnus (z/xml1-> kohde :yha:tunnus z/text)
                     :yllapitoluokka (z/xml1-> kohde :yha:yllapitoluokka z/text xml/parsi-kokonaisluku)
-                    :keskimaarainen-vuorokausiilikenne (z/xml1-> kohde :yha:keskimaarainen-vuorokausiilikenne z/text xml/parsi-kokonaisluku)
+                    :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :yha:keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
                     :nykyinen-paallyste (z/xml1-> kohde :yha:nykyinen-paallyste z/text xml/parsi-kokonaisluku)
                     :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> kohde :yha:tierekisteriosoitevali))
                     :alikohteet (lue-alikohteet (z/xml1-> kohde :yha:alikohteet))))
