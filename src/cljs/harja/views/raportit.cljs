@@ -291,27 +291,31 @@
      [yleiset/raksiboksi (:nimi p) (get-in @muistetut-parametrit avaimet) paivita! nil false]]))
 
 (defmethod raportin-parametri "hoitoluokat" [p arvo]
-  []
-  [:div.hoitoluokat
-   [yleiset/otsikolla "Hoitoluokat"
-    (let [arvo-nyt (or @arvo {:hoitoluokat (into #{}
-                                                 (map :numero hoitoluokat/talvihoitoluokat))})
-          _ (log "ARVO-NYT: " (pr-str arvo-nyt))
-          valitut (:hoitoluokat arvo-nyt)
-          [vasen oikea] (partition 4 hoitoluokat/talvihoitoluokat)]
-      (vec (concat
-            [yleiset/rivi {:koko  "col-sm-2"}]
-            (for [sarake (partition 4 hoitoluokat/talvihoitoluokat)]
-              ^{:key (:numero (first sarake))}
-              [:div.inline
-               (for [{:keys [nimi numero]} sarake
-                     :let [valittu? (valitut numero)]]
-                 ^{:key numero}
-                 [yleiset/raksiboksi
-                  nimi valittu?
-                  #(reset! arvo {:hoitoluokat
-                                 ((if valittu? disj conj) valitut numero)})
-                  nil nil])]))))]])
+  (komp/luo
+   (komp/sisaan #(reset! arvo {:hoitoluokat (or (get @muistetut-parametrit :hoitoluokat)
+                                                (into #{}
+                                                      (map :numero hoitoluokat/talvihoitoluokat)))}))
+   (fn [p arvo]
+     [:div.hoitoluokat
+      [yleiset/otsikolla "Hoitoluokat"
+       (let [arvo-nyt @arvo
+             valitut (:hoitoluokat arvo-nyt)
+             [vasen oikea] (partition 4 hoitoluokat/talvihoitoluokat)]
+         (vec (concat
+               [yleiset/rivi {:koko  "col-sm-2"}]
+               (for [sarake (partition 4 hoitoluokat/talvihoitoluokat)]
+                 ^{:key (:numero (first sarake))}
+                 [:div.inline
+                  (for [{:keys [nimi numero]} sarake
+                        :let [valittu? (valitut numero)]]
+                    ^{:key numero}
+                    [yleiset/raksiboksi
+                     nimi valittu?
+                     #(let [uusi-arvo {:hoitoluokat
+                                       ((if valittu? disj conj) valitut numero)}]
+                        (reset! arvo uusi-arvo)
+                        (swap! muistetut-parametrit merge uusi-arvo))
+                     nil nil])]))))]])))
 
 (defmethod raportin-parametri :default [p arvo]
   [:span (pr-str p)])
@@ -393,7 +397,7 @@
         raportissa? (some? @raportit/suoritettu-raportti)]
 
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
-
+    (log "RAPORTIN-PARAMETRIT NYT: " (pr-str arvot-nyt))
     [:span
      (when-not raportissa?
        (map-indexed
