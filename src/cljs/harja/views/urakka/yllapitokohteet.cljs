@@ -78,6 +78,7 @@
                             (when-let [viiva (some-> rivi :sijainti)]
                               (nav/vaihda-kartan-koko! :L)
                               (kartta/keskita-kartta-alueeseen! (geo/extent viiva))))
+           ; FIXME Varmista, että alikohde on parentin sisällä
            :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
                                 [sopimus-id _] @u/valittu-sopimusnumero
                                 sijainnit @tr-sijainnit

@@ -49,6 +49,7 @@ SELECT
   yhanimi                  AS yha_yhanimi,
   elyt::TEXT[]             AS yha_elyt,
   vuodet::INTEGER[]        AS yha_vuodet,
+  kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   (SELECT EXISTS(SELECT id
                      FROM paallystysilmoitus
                      WHERE paallystyskohde IN (SELECT id
@@ -319,6 +320,7 @@ SELECT
   yhanimi                  AS yha_yhanimi,
   elyt::TEXT[]             AS yha_elyt,
   vuodet::INTEGER[]        AS yha_vuodet,
+  kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   (SELECT EXISTS(SELECT id
                      FROM paallystysilmoitus
                      WHERE paallystyskohde IN (SELECT id
