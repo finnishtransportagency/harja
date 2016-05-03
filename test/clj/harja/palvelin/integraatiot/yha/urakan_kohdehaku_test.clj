@@ -46,7 +46,7 @@
                                                                   :tienumero 3}
                                          :tunnus "A"
                                          :yha-id 3}]
-                           :keskimaarainen-vuorokausiilikenne 1000
+                           :keskimaarainen-vuorokausiliikenne 1000
                            :kohdetyyppi :paikkaus
                            :nykyinen-paallyste 1
                            :tierekisteriosoitevali {:aet 3
@@ -58,7 +58,7 @@
                                                     :losa 3
                                                     :tienumero 3}
                            :tunnus "string"
-                           :yhaid 3
+                           :yha-id 5
                            :yllapitoluokka 1}]
 
         url (tee-url yha-id)]
