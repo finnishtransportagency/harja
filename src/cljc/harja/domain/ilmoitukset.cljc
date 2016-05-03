@@ -2,6 +2,8 @@
   "Selain- ja palvelinpuolen yhteisiä ilmoituksiin liittyviä asioita"
   (:require
     #?(:cljs [harja.loki :refer [log]])
+    #?(:cljs [cljs-time.core :as t])
+    #?(:clj [clj-time.core :as t])
     [clojure.string :as string]))
 
 (def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
@@ -30,6 +32,20 @@
     :kysely "URK"
     :toimenpidepyynto "TPP"
     :tiedoitus "TUR"))
+
+(def kuittausvaatimukset
+  {:kysely           {:kuittaustyyppi :lopetus
+                      :kuittausaika   (t/hours 72)}
+   :toimenpidepyynto {:kuittaustyyppi :vastaanotto
+                      :kuittausaika   (t/minutes 10)}
+   :tiedoitus        {:kuittaustyyppi :vastaanotto
+                      :kuittausaika   (t/hours 1)}})
+
+(def kuittausvaatimukset-str
+  ["URK lopetus 72h sisällä."
+   "TPP vastaanotto 10min sisällä."
+   "TUR vastaanotto 1h sisällä."])
+
 
 (defn ilmoitustyypin-lyhenne-ja-nimi
   [tyyppi]

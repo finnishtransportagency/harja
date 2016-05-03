@@ -153,11 +153,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-vihje [{vihje :vihje}]
   (when vihje
-    [:div {:class
-           (str "inline-block lomake-vihje")}
-     [:div.vihjeen-sisalto
-      (harja.ui.ikonit/livicon-info-sign)
-      (str " " vihje)]]))
+    (let [vihjeet (if (vector? vihje) vihje [vihje])]
+      [:div {:class
+            (str "inline-block lomake-vihje")}
+      [:div.vihjeen-sisalto
+       (harja.ui.ikonit/livicon-info-sign)
+       [:span (str " " (first vihjeet))]
+       (for [vihje (rest vihjeet)]
+         [:div.vihjeen-lisarivi (str "  " vihje)])]])))
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"

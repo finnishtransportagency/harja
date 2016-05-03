@@ -4,7 +4,7 @@
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
+            [harja.domain.ilmoitukset :refer [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                                  +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
                                                  +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
                                                  kuittaustyypin-selite nayta-tierekisteriosoite]]
@@ -116,10 +116,11 @@
             :tyyppi           :checkbox-group
             :vaihtoehdot      [:toimenpidepyynto :tiedoitus :kysely]
             :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
-           {:nimi             :vain-myohassa?
-            :otsikko          "Kuittaukset"
-            :tyyppi           :checkbox
-            :teksti           "Näytä ainoastaan myöhästyneet"}
+           {:nimi    :vain-myohassa?
+            :otsikko "Kuittaukset"
+            :tyyppi  :checkbox
+            :teksti  "Näytä ainoastaan myöhästyneet"
+            :vihje   kuittausvaatimukset-str}
            {:nimi             :aloituskuittauksen-ajankohta
             :otsikko          "Aloituskuittaus annettu"
             :tyyppi           :radio-group
@@ -130,7 +131,6 @@
                                   :myohemmin  "Yli tunnin päästä"}
                                   arvo))})]
         @tiedot/valinnat]
-
        [:div
         (pollauksen-merkki)
         [grid

@@ -29,18 +29,10 @@
          (str mista " " (pr-str mille))
          (str ilman))))
 
-(def kuittausvaatimukset
-  {:kysely           {:kuittaustyyppi :lopetus
-                      :kuittausaika   (t/hours 72)}
-   :toimenpidepyynto {:kuittaustyyppi :vastaanotto
-                      :kuittausaika   (t/minutes 10)}
-   :tiedoitus        {:kuittaustyyppi :vastaanotto
-                      :kuittausaika   (t/hours 1)}})
-
 (defn ilmoitus-myohassa? [{:keys [ilmoitustyyppi kuittaukset ilmoitettu]}]
   (let [ilmoitusaika (c/from-sql-time ilmoitettu)
-        vaadittu-kuittaustyyppi (get-in kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
-        vaadittu-kuittausaika (get-in kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
+        vaadittu-kuittaustyyppi (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittaustyyppi])
+        vaadittu-kuittausaika (get-in ilmoitukset-domain/kuittausvaatimukset [ilmoitustyyppi :kuittausaika])
         vaadittu-aika-kulunut? (t/after? (t/now) (t/plus ilmoitusaika vaadittu-kuittausaika))
         vaaditut-kuittaukset (filter
                                (fn [kuittaus]
