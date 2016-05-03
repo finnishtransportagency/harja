@@ -114,7 +114,7 @@
                                              (grid/poista-virhe! g id kentta))
                                            (log "sain sijainnin " (clj->js sijainti))
                                            (swap! tr-sijainnit assoc osoite sijainti))))))))))))}
-          [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna nimi"]]}
+          [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys 20 :validoi [[:ei-tyhja "Anna nimi"]]}
            {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
            {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuosa"]]}
            {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
@@ -125,7 +125,7 @@
                    (str (tierekisteri/laske-tien-pituus {:aet (:tr_alkuetaisyys rivi)
                                                          :let (:tr_loppuetaisyys rivi)})))
             :leveys tr-leveys}
-           {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys "20%" :validoi [[:ei-tyhja "Anna toimenpide"]]}]
+           {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 20 :validoi [[:ei-tyhja "Anna toimenpide"]]}]
           kohdeosat]
          [yllapitokohdeosa-virheet tr-virheet]]))))
 
