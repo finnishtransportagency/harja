@@ -7,8 +7,13 @@
 
 (defn hae-jarjestelmatunnukset [db user]
   (oikeudet/lue oikeudet/hallinta-api-jarjestelmatunnukset user)
-  (q/hae-jarjestelmatunnukset db))
+  (into []
+        (comp (map konv/alaviiva->rakenne)
+              (map #(konv/array->vec % :urakat)))
+        (q/hae-jarjestelmatunnukset db)))
 
+(defn tallenna-jarjestelmatunnukset [db user tunnukset]
+  )
 (defrecord APIJarjestelmatunnukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
