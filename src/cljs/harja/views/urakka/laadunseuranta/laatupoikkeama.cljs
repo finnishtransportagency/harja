@@ -151,16 +151,30 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :tarkastukset))
 
+(defn- tarkasta-sanktiotiedot [vertailu-fn laatupoikkeama]
+  (vertailu-fn #(not (nil? %)) (map #(get-in laatupoikkeama %)
+                                    [[:paatos :kasittelyaika]
+                                     [:paatos :kasittelytapa]
+                                     [:paatos :paatos]])))
+
+(defn kaikki-sanktiotiedot-annettu? [laatupoikkeama]
+  (tarkasta-sanktiotiedot every? laatupoikkeama))
+
+(defn sanktiotietoja-annettu? [laatupoikkeama]
+  (tarkasta-sanktiotiedot some laatupoikkeama))
+
+(defn validoi-sanktiotiedot [laatupoikkeama]
+  ;; Joko ei mitään sanktiotietoja, tai kaikki
+  (log "Validoi-sanktiotiedot: " (pr-str laatupoikkeama))
+  (or (not (sanktiotietoja-annettu? laatupoikkeama))
+      (kaikki-sanktiotiedot-annettu? laatupoikkeama)))
+
 (defn validoi-laatupoikkeama [laatupoikkeama]
   (if (and (not (lomake/muokattu? laatupoikkeama))
            (:id laatupoikkeama))
     false
-    (not (lomake/voi-tallentaa-ja-muokattu? laatupoikkeama))))
-
-(defn sanktiotietoja-annettu? [laatupoikkeama]
-  (or (get-in laatupoikkeama [:paatos :kasittelyaika])
-      (get-in laatupoikkeama [:paatos :kasittelytapa])
-      (get-in laatupoikkeama [:paatos :paatos])))
+    (not (and (lomake/voi-tallentaa-ja-muokattu? laatupoikkeama)
+              (validoi-sanktiotiedot laatupoikkeama)))))
 
 (defn lisaa-sanktion-validointi [tietoja-annettu-fn? kentta viesti]
   (merge kentta
