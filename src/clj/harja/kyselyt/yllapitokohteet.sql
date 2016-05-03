@@ -2,10 +2,10 @@
 -- Hakee urakan kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
   ypk.id,
-  pi.id as paallystysilmoitus_id,
-  pi.tila as paallystysilmoitus_tila,
-  pai.id as paikkausilmoitus_id,
-  pai.tila as paikkausilmoitus_tila,
+  pi.id    AS paallystysilmoitus_id,
+  pi.tila  AS paallystysilmoitus_tila,
+  pai.id   AS paikkausilmoitus_id,
+  pai.tila AS paikkausilmoitus_tila,
   pai.toteutunut_hinta,
   kohdenumero,
   ypk.nimi,
@@ -13,7 +13,14 @@ SELECT
   arvonvahennykset,
   bitumi_indeksi,
   kaasuindeksi,
-  muutoshinta
+  muutoshinta,
+  nykyinen_paallyste,
+  keskimaarainen_vuorokausiliikenne,
+  tr_numero,
+  tr_alkuosa,
+  tr_alkuetaisyys,
+  tr_loppuosa,
+  tr_loppuetaisyys
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -26,8 +33,14 @@ WHERE
 
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
-SELECT id, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset,
-  bitumi_indeksi, kaasuindeksi
+SELECT
+  id,
+  kohdenumero,
+  nimi,
+  sopimuksen_mukaiset_tyot,
+  arvonvahennykset,
+  bitumi_indeksi,
+  kaasuindeksi
 FROM yllapitokohde
 WHERE urakka = :urakka AND id = :id;
 
@@ -42,8 +55,6 @@ SELECT
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
   sijainti,
-  kvl,
-  nykyinen_paallyste,
   toimenpide
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
@@ -55,7 +66,9 @@ WHERE yllapitokohde = :yllapitokohde
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
-INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot,
+                           arvonvahennykset, bitumi_indeksi, kaasuindeksi,
+                           keskimaarainen_vuorokausiliikenne, nykyinen_paallyste)
 VALUES (:urakka,
         :sopimus,
         :kohdenumero,
@@ -63,65 +76,65 @@ VALUES (:urakka,
         :sopimuksen_mukaiset_tyot,
         :arvonvahennykset,
         :bitumi_indeksi,
-        :kaasuindeksi);
+        :kaasuindeksi,
+        :keskimaarainen_vuorokausiliikenne,
+        :nykyinen_paallyste);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
 UPDATE yllapitokohde
 SET
-  kohdenumero                 = :kohdenumero,
-  nimi                        = :nimi,
-  sopimuksen_mukaiset_tyot    = :sopimuksen_mukaiset_tyot,
-  arvonvahennykset            = :arvonvanhennykset,
-  bitumi_indeksi              = :bitumi_indeksi,
-  kaasuindeksi                = :kaasuindeksi
+  kohdenumero                       = :kohdenumero,
+  nimi                              = :nimi,
+  sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
+  arvonvahennykset                  = :arvonvanhennykset,
+  bitumi_indeksi                    = :bitumi_indeksi,
+  kaasuindeksi                      = :kaasuindeksi,
+  keskimaarainen_vuorokausiliikenne = :keskimaarainen_vuorokausiliikenne,
+  nykyinen_paallyste                = :nykyinen_paallyste
 WHERE id = :id;
 
 -- name: poista-yllapitokohde!
 -- Poistaa ylläpitokohteen
 UPDATE yllapitokohde
-SET poistettu = true
+SET poistettu = TRUE
 WHERE id = :id;
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
-INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, kvl, nykyinen_paallyste, toimenpide)
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, toimenpide)
 VALUES (:yllapitokohde,
-  :nimi,
-  :tr_numero,
-  :tr_alkuosa,
-  :tr_alkuetaisyys,
-  :tr_loppuosa,
-  :tr_loppuetaisyys,
-  :sijainti,
-  :kvl,
-  :nykyinen_paallyste,
-  :toimenpide);
+        :nimi,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :sijainti,
+        :toimenpide);
 
 -- name: paivita-yllapitokohdeosa!
 -- Päivittää yllapitokohdeosan
 UPDATE yllapitokohdeosa
 SET
-  nimi                  = :nimi,
-  tr_numero             = :tr_numero,
-  tr_alkuosa            = :tr_alkuosa,
-  tr_alkuetaisyys       = :tr_alkuetaisyys,
-  tr_loppuosa           = :tr_loppuosa,
-  tr_loppuetaisyys      = :tr_loppuetaisyys,
-  sijainti              = :sijainti,
-  kvl                   = :kvl,
-  nykyinen_paallyste    = :nykyinen_paallyste,
-  toimenpide            = :toimenpide
+  nimi             = :nimi,
+  tr_numero        = :tr_numero,
+  tr_alkuosa       = :tr_alkuosa,
+  tr_alkuetaisyys  = :tr_alkuetaisyys,
+  tr_loppuosa      = :tr_loppuosa,
+  tr_loppuetaisyys = :tr_loppuetaisyys,
+  sijainti         = :sijainti,
+  toimenpide       = :toimenpide
 WHERE id = :id;
 
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan
 UPDATE yllapitokohdeosa
-SET poistettu = true
+SET poistettu = TRUE
 WHERE id = :id;
 
 -- name: paivita-paallystys-tai-paikkausurakan-geometria
-SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka::INTEGER);
+SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 
 -- name: hae-urakan-aikataulu
 -- Hakee urakan kohteiden aikataulutiedot
@@ -149,16 +162,20 @@ WHERE
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET
-  aikataulu_paallystys_alku = :aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu = :aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku = :aikataulu_tiemerkinta_alku,
+  aikataulu_paallystys_alku   = :aikataulu_paallystys_alku,
+  aikataulu_paallystys_loppu  = :aikataulu_paallystys_loppu,
+  aikataulu_tiemerkinta_alku  = :aikataulu_tiemerkinta_alku,
   aikataulu_tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
-  aikataulu_kohde_valmis = :aikataulu_kohde_valmis,
-  aikataulu_muokattu = NOW(),
-  aikataulu_muokkaaja = :aikataulu_muokattu
+  aikataulu_kohde_valmis      = :aikataulu_kohde_valmis,
+  aikataulu_muokattu          = NOW(),
+  aikataulu_muokkaaja         = :aikataulu_muokattu
 WHERE id = :id;
 
 -- name: yllapitokohteella-paallystysilmoitus
-SELECT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = :yllapitokohde) as sisaltaa_paallystysilmoituksen;
+SELECT EXISTS(SELECT id
+              FROM paallystysilmoitus
+              WHERE paallystyskohde = :yllapitokohde) AS sisaltaa_paallystysilmoituksen;
 -- name: yllapitokohteella-paikkausilmoitus
-SELECT EXISTS(SELECT id FROM paikkausilmoitus WHERE paikkauskohde = :yllapitokohde) as sisaltaa_paikkausilmoituksen;
+SELECT EXISTS(SELECT id
+              FROM paikkausilmoitus
+              WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;

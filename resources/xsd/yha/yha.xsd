@@ -175,7 +175,7 @@
                 </xs:simpleType>
             </xs:element>
             <xs:element name="yllapitoluokka" type="xs:int" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="keskimaarainen-vuorokausiilikenne" type="xs:int" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="keskimaarainen-vuorokausiliikenne" type="xs:int" minOccurs="0" maxOccurs="1"/>
             <xs:element name="nykyinen-paallyste" type="paallyste" minOccurs="0" maxOccurs="1"/>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="alikohteet" nillable="false" minOccurs="1" maxOccurs="1">

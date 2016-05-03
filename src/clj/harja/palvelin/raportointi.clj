@@ -27,6 +27,7 @@
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
+            [harja.palvelin.raportointi.raportit.toimenpideajat]
             [harja.domain.oikeudet :as oikeudet]))
 
 (def ^:dynamic *raportin-suoritus*
@@ -124,7 +125,8 @@
       (oikeudet/lue (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
                     kayttaja (when (= "urakka" konteksti)
                                (:urakka-id suorituksen-tiedot)))
-      (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit)
+      (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
+                 " parametreilla " parametrit)
       (binding [*raportin-suoritus* this]
         ((:suorita suoritettava-raportti) db kayttaja
          (condp = konteksti

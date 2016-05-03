@@ -12,7 +12,12 @@
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.tiedot.urakka.yhatuonti :as yha]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -21,17 +26,20 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystyskohteet-nakymassa?)
-    (fn []
-      [:div
+    (fn [ur]
+      [:div.paallystyskohteet
        [kartta/kartan-paikka]
        [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:otsikko "Päällystyskohteet"
                                                                            :paallystysnakyma? true
-                                                                           :tallenna :ei-mahdollinen}]
+                                                                           :tallenna (fn [kohteet]
+                                                                                       (go (let [urakka-id (:id @nav/valittu-urakka)
+                                                                                                 [sopimus-id _] @u/valittu-sopimusnumero
+                                                                                                 _ (log "PÄÄ Tallennetaan päällystyskohteet: " (pr-str kohteet))
+                                                                                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
+                                                                                             (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                                                                                             (reset! paallystys/paallystyskohteet vastaus))))}]
        [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}]
 
        [:div.kohdeluettelon-paivitys
-        [:button.nappi-ensisijainen {:on-click #()
-                                    :disabled (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur) @istunto/kayttaja)}
-        "Päivitä kohdeluettelo"]
-        ; FIXME Milloin päivitetty
-       [:div "Kohdeluettelo päivitetty: Ei koskaan"]]])))
+        [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
+        [yha/kohdeluettelo-paivitetty ur]]])))

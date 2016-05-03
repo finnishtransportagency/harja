@@ -30,6 +30,13 @@
   (yha-q/poista-urakan-yllapitokohdeosat! db {:urakka urakka-id})
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
 
+(defn- hae-urakan-yha-tiedot [db urakka-id]
+  (first (into []
+               (comp
+                 (map #(konv/array->vec % :vuodet))
+                 (map #(konv/array->vec % :elyt)))
+               (yha-q/hae-urakan-yhatiedot db {:urakka urakka-id}))))
+
 (defn- sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
@@ -38,11 +45,7 @@
     (poista-urakan-yllapitokohteet db harja-urakka-id)
     (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
     (log/debug "YHA-tiedot sidottu. Palautetaan urakan YHA-tiedot")
-    (first (into []
-                 (comp
-                   (map #(konv/array->vec % :vuodet))
-                   (map #(konv/array->vec % :elyt)))
-                 (yha-q/hae-urakan-yhatiedot db {:urakka harja-urakka-id})))))
+    (hae-urakan-yha-tiedot db harja-urakka-id)))
 
 
 (defn- hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
@@ -57,42 +60,57 @@
     urakat))
 
 (defn- suodata-olemassaolevat-kohteet [db urakka-id kohteet]
-  (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))]
+  (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))
+        _ (log/debug "Urakan " urakka-id " kohteiden yha:idt: " (pr-str yha-idt))]
     (filter #(not (yha-idt (:yhaid %))) kohteet)))
 
 (defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
-  (suodata-olemassaolevat-kohteet db urakka-id (yha/hae-kohteet yha urakka-id)))
+  (log/debug "Haetaan kohteet yhasta")
+  (let [yha-kohteet (yha/hae-kohteet yha urakka-id)
+        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
+        uudet-kohteet (suodata-olemassaolevat-kohteet db urakka-id yha-kohteet)
+        _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
+    uudet-kohteet))
+
+(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db harja-urakka-id]
+  (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
+  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
 
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
-  (jdbc/with-db-transaction [db db]
-    (let [paasopimus (yha-q/hae-urakan-paasopimus db {:urakka urakka-id})]
-      (for [{:keys [tierekisteriosoitevali
-                    tunnus yha-id alikohteet kohdetyyppi
-                    yllapitoluokka
-                    keskimaarainen_vuorokausiliikenne
-                    nykyinen-paallyste] :as kohde} kohteet]
-        (let [kohde (yha-q/luo-yllapitokohde<! db
+  (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
+  (jdbc/with-db-transaction [c db]
+    (let [paasopimus-id (yha-q/hae-urakan-paasopimus c {:urakka urakka-id})]
+      (log/debug "Urakan pääsopimus: " (pr-str paasopimus-id))
+      (doseq [{:keys [tierekisteriosoitevali
+                      tunnus yha-id alikohteet kohdetyyppi
+                      yllapitoluokka
+                      keskimaarainen_vuorokausiliikenne
+                      nykyinen-paallyste] :as kohde} kohteet]
+        (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
+        (log/debug "Tallennetaan kohde " (pr-str kohde))
+        (let [kohde (yha-q/luo-yllapitokohde<! c
                                                {:urakka urakka-id
-                                                :sopimus (:id paasopimus)
+                                                :sopimus paasopimus-id
                                                 :tr_numero (:tienumero tierekisteriosoitevali)
                                                 :tr_alkuosa (:aosa tierekisteriosoitevali)
                                                 :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                                 :tr_loppuosa (:losa tierekisteriosoitevali)
                                                 :tr_loppuetaisyys (:let tierekisteriosoitevali)
                                                 :yhatunnus tunnus
-                                                :yhaid yha-id
+                                                :yhaid yha-id ; FIXME Miksi tämä on yhaid eikä yha-id??
                                                 :tyyppi (name kohdetyyppi)
                                                 :yllapitoluokka yllapitoluokka
                                                 :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                                                 :nykyinen_paallyste nykyinen-paallyste})]
-          (for [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
+          (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
             ;; TODO Tee myös uusi päällystysilmoitus johon alustatoimenpiteet valmiiksi syötetty
-            (yha-q/luo-yllapitokohdeosa<! db
+            (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
+            (yha-q/luo-yllapitokohdeosa<! c
                                           {:yllapitokohde (:id kohde)
                                            :nimi tunnus
                                            :sijainti sijainti
@@ -101,7 +119,10 @@
                                            :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                            :tr_loppuosa (:losa tierekisteriosoitevali)
                                            :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                           :yhaid yha-id})))))))
+                                           :yhaid yha-id})))))
+    (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
+    (log/debug "YHA-kohteet tallennettu")
+    (hae-urakan-yha-tiedot c urakka-id)))
 
 (defrecord Yha []
   component/Lifecycle

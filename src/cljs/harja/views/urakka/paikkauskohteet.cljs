@@ -13,7 +13,9 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.yhatuonti :as yha]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -23,8 +25,8 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
-    (fn []
-      [:div
+    (fn [ur]
+      [:div.paikkauskohteet
        [kartta/kartan-paikka]
        [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:otsikko "Paikkauskohteet"
                                                                        :paikkausnakyma? true
@@ -33,13 +35,10 @@
                                                                                              [sopimus-id _] @u/valittu-sopimusnumero
                                                                                              _ (log "PÄÄ Tallennetaan paikkauskohteet: " (pr-str kohteet))
                                                                                              vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
-                                                                                         (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                                                                                         (log "PÄÄ paikkaustyskohteet tallennettu: " (pr-str vastaus))
                                                                                          (reset! paikkaus/paikkauskohteet vastaus))))}]
        [yllapitokohteet-view/yllapitokohteet-yhteensa paikkaus/paikkauskohteet {:paikkausnakyma? true}]
 
        [:div.kohdeluettelon-paivitys
-        [:button.nappi-ensisijainen {:on-click #()
-                                     :disabled (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur) @istunto/kayttaja)}
-         "Päivitä kohdeluettelo"]
-        ; FIXME Milloin päivitetty
-        [:div "Kohdeluettelo päivitetty: Ei koskaan"]]])))
+        [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paikkauskohteet]
+        [yha/kohdeluettelo-paivitetty ur]]])))

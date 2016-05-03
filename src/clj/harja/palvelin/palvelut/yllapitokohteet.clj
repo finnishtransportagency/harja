@@ -63,7 +63,8 @@
 
 (defn luo-uusi-yllapitokohde [db user urakka-id sopimus-id
                               {:keys [kohdenumero nimi sopimuksen_mukaiset_tyot
-                                      arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
+                                      arvonvahennykset bitumi_indeksi kaasuindeksi poistettu
+                                      nykyinen_paallyste keskimaarainen_vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde")
   (when-not poistettu
     (q/luo-yllapitokohde<! db
@@ -74,11 +75,14 @@
                            (or sopimuksen_mukaiset_tyot 0)
                            (or arvonvahennykset 0)
                            (or bitumi_indeksi 0)
-                           (or kaasuindeksi 0))))
+                           (or kaasuindeksi 0)
+                           (or keskimaarainen_vuorokausiliikenne 0)
+                           nykyinen_paallyste)))
 
 (defn paivita-yllapitokohde [db user urakka-id sopimus-id
                              {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot
-                                     arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
+                                     arvonvahennykset bitumi_indeksi kaasuindeksi
+                                     nykyinen_paallyste keskimaarainen_vuorokausiliikenne poistettu]}]
   (if poistettu
     (do (log/debug "Tarkistetaan onko ylläpitokohteella ilmoituksia")
         (let [paallystysilmoitus (q/onko-olemassa-paallystysilmoitus? db id)
@@ -99,6 +103,8 @@
                                   (or arvonvahennykset 0)
                                   (or bitumi_indeksi 0)
                                   (or kaasuindeksi 0)
+                                  (or keskimaarainen_vuorokausiliikenne 0)
+                                  nykyinen_paallyste
                                   id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
@@ -114,7 +120,7 @@
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
-(defn luo-uusi-yllapitokohdeosa [db user yllapitokohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
+(defn luo-uusi-yllapitokohdeosa [db user yllapitokohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys toimenpide poistettu sijainti]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -126,11 +132,9 @@
                               (or tr_loppuosa 0)
                               (or tr_loppuetaisyys 0)
                               (geo/geometry (geo/clj->pg sijainti))
-                              (or kvl 0)
-                              nykyinen_paallyste
                               toimenpide)))
 
-(defn paivita-yllapitokohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
+(defn paivita-yllapitokohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys toimenpide poistettu sijainti]}]
   (if poistettu
     (do (log/debug "Poistetaan ylläpitokohdeosa")
         (q/poista-yllapitokohdeosa! db id))
@@ -144,8 +148,6 @@
                                      (or tr_loppuetaisyys 0)
                                      (when-not (empty? sijainti)
                                        (geo/geometry (geo/clj->pg sijainti)))
-                                     (or kvl 0)
-                                     nykyinen_paallyste
                                      toimenpide
                                      id))))
 

@@ -129,9 +129,9 @@ Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
 ### STG
 
-Yksinkertainen tapa ottaa dumppi:
+Yksinkertainen tapa ottaa pakattu dumppi:
 
-> ssh harja-db1-stg "sudo -u postgres pg_dump harja" > tietokanta/harja-stg-dump.sql
+> ssh harja-db1-stg "sudo -u postgres pg_dump -v -Fc -T integraatioviesti -T liite harja" > tietokanta/harja-stg-dump
 
 Tämä saattaa kuitenkin mystisesti kaatua kesken siirron.
 Vaihtoehtoinen tapa SCP:llä:
@@ -139,10 +139,10 @@ Vaihtoehtoinen tapa SCP:llä:
 Huom. voit olla välittämättä virheilmoituksesta: could not change directory to "/home/mikkoro": Permission denied. Kopiointi tehdään silti.
 
 > ssh harja-db1-stg
-> sudo -u postgres pg_dump harja > /tmp/harja-stg-dump.sql
-> mv /tmp/harja-stg-dump.sql /home/<omatunnus>/harja-stg-dump.sql
+> sudo -u postgres pg_dump -v -Fc harja > /tmp/harja-stg-dump
+> mv /tmp/harja-stg-dump /home/<omatunnus>/harja-stg-dump
 > exit
-> scp <omatunnus>@harja-db1-stg:/home/<omatunnus>/harja-stg-dump.sql /Users/<omatunnus>/Desktop/harja-stg-dump.sql
+> scp <omatunnus>@harja-db1-stg:/home/<omatunnus>/harja-stg-dump /Users/<omatunnus>/Desktop/harja-stg-dump
 
 Dumppi on nyt siirretty työpöydällesi. Siirrä se haluamaasi paikkaan.
 
@@ -168,7 +168,7 @@ Mene vagrant-kansioon ja aja komennot:
 > drop database harja;
 > create database harja;
 > poistu <ctrl-d>
-> sudo -u postgres psql harja -f /harja-tietokanta/harja-stg-dump.sql
+> pg_restore -Fc -C /harja-tietokanta/harja-stg-dump | sudo -u postgres psql
 
 Valmis!
 
