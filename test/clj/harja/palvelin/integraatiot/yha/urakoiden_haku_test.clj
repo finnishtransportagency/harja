@@ -13,7 +13,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :yha (component/using
-           (yha/->Yha {:yha {:url +yha-url+}})
+           (yha/->Yha {:url +yha-url+})
            [:db :http-palvelin :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -37,13 +37,13 @@
                            :vuodet [2016]
                            :yhaid 3
                            :yhatunnus "YHATUNNUS3"}]
-
         ;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
-        #_{:yha-id 3,
-           :elyt ["POP"],
-           :tunnus "YHATUNNUS",
-           :vuodet [2016],
-           :sampotunnus "SAMPOTUNNUS"}
+        #_{:elyt ["POP"]
+           :sampotunnus "SAMPOTUNNUS"
+           :vuodet [2016]
+           :yhaid 3
+           :yhatunnus "YHATUNNUS"}
+
         url (str +yha-url+ "urakkahaku")]
     (with-fake-http [url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)]
@@ -51,16 +51,16 @@
 
 ;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
 #_(deftest tarkista-epaonnistunut-kutsu
-  (with-fake-http [{:url (str +yha-url+ "urakkahaku") :method :get} 500]
-    (is (thrown? Exception (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016))
-        "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")))
+    (with-fake-http [{:url (str +yha-url+ "urakkahaku") :method :get} 500]
+      (is (thrown? Exception (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016))
+          "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")))
 
 ;; todo: palauta tämä vastaus, kun oikea YHA-yhteys otetaan käyttöön
-#_ (deftest tarkista-virhevastaus
-  (let [url (str +yha-url+ "urakkahaku")]
-    (with-fake-http [url +virhevastaus+]
-      (try+
-        (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)
-        (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
-        (catch [:type yha/+virhe-urakoiden-haussa+] {:keys [virheet]}
-          (is true "Poikkeus heitettiin epäonnistuneesta kutsusta."))))))
+#_(deftest tarkista-virhevastaus
+    (let [url (str +yha-url+ "urakkahaku")]
+      (with-fake-http [url +virhevastaus+]
+        (try+
+          (yha/hae-urakat (:yha jarjestelma) "tunniste" "sampoid" 2016)
+          (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
+          (catch [:type yha/+virhe-urakoiden-haussa+] {:keys [virheet]}
+            (is true "Poikkeus heitettiin epäonnistuneesta kutsusta."))))))
