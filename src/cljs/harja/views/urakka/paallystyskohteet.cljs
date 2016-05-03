@@ -26,7 +26,7 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paallystys/paallystyskohteet-nakymassa?)
-    (fn []
+    (fn [ur]
       [:div.paallystyskohteet
        [kartta/kartan-paikka]
        [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:otsikko "Päällystyskohteet"

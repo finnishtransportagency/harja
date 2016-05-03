@@ -25,7 +25,7 @@
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
-    (fn []
+    (fn [ur]
       [:div.paikkauskohteet
        [kartta/kartan-paikka]
        [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:otsikko "Paikkauskohteet"

@@ -53,7 +53,6 @@
     (komp/kuuntelija :paallystys-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paallystys/karttataso-paallystyskohteet)
     (fn [ur]
-      (log "[YHA] Render kohdeluettelo päällystys")
       (if (:yhatiedot ur)
         [:span.kohdeluettelo
          [bs/tabs {:style :tabs :classes "tabs-taso2"
