@@ -134,8 +134,8 @@
   (let [parametrit {:in "tieosoite"
                     :out "tieosoite"
                     :callback "jsonp"
-                    :tilannepvm (str (pvm/fi-pvm tilannepvm))
-                    :kohdepvm (str (pvm/fi-pvm kohdepvm))
+                    :tilannepvm (pvm/pvm tilannepvm)
+                    :kohdepvm (pvm/pvm kohdepvm)
                     :alueetpois nil
                     :json (.stringify js/JSON (clj->js tieosoitteet))}]
     (vkm-kutsu "muunnos" parametrit)))

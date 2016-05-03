@@ -42,15 +42,44 @@
   (log "[YHA] Haetaan YHA-kohteet urakalle id:llä" harja-urakka-id)
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
+(defn rakenna-tieosoitteet [kohteet]
+  (flatten
+    (mapv (fn [kohde]
+            (let [tr (:tierekisteriosoitevali kohde)]
+              [{:tunniste (str "alku-" (:tunnus kohde))
+                :tie (:tienumero tr)
+                :osa (:aosa tr)
+                :etaisyys (:aet tr)
+                :ajorata (:ajorata tr)}
+               {:tunniste (str "loppu-" (:tunnus kohde))
+                :tie (:tienumero tr)
+                :osa (:losa tr)
+                :etaisyys (:let tr)
+                :ajorata (:ajorata tr)}
+               (mapv (fn [alikohde]
+                       (let [tr (:tierekisteriosoitevali alikohde)]
+                         [{:tunniste (str "alku-" (:tunnus kohde) "-" (:tunnus alikohde))
+                           :tie (:tienumero tr)
+                           :osa (:aosa tr)
+                           :etaisyys (:aet tr)
+                           :ajorata (:ajorata tr)}
+                          {:tunniste (str "loppu-" (:tunnus kohde) "-" (:tunnus alikohde))
+                           :tie (:tienumero tr)
+                           :osa (:losa tr)
+                           :etaisyys (:let tr)
+                           :ajorata (:ajorata tr)}]))
+                     (:alikohteet kohde))]))
+          kohteet)))
+
 (defn paivita-yha-kohteet
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
    Suoritus tapahtuu asynkronisesti"
   [harja-urakka-id]
   ; FIXME Lisää virhekäsittely (k/virhe? ja näytä harja.ui.viesti jos jokin kohta menee pieleen)
   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-            vkm-kohteet (vkm/muunna-yha-kohteet uudet-yha-kohteet)
-            _ (log "[YHA] Tallennetaan kohteet kantaan")
-            yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id vkm-kohteet))]
+            ;; tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
+            ;; vkm-kohteet (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle uudet-yha-kohteet)
+            yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id uudet-yha-kohteet))]
         (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
         (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot))))
 
