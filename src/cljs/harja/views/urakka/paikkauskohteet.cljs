@@ -24,7 +24,7 @@
     (komp/ulos #(kartta/poista-popup!))
     (komp/lippu paikkaus/paikkauskohteet-nakymassa?)
     (fn []
-      [:div
+      [:div.paikkauskohteet
        [kartta/kartan-paikka]
        [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:otsikko "Paikkauskohteet"
                                                                        :paikkausnakyma? true
@@ -33,7 +33,7 @@
                                                                                              [sopimus-id _] @u/valittu-sopimusnumero
                                                                                              _ (log "PÄÄ Tallennetaan paikkauskohteet: " (pr-str kohteet))
                                                                                              vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
-                                                                                         (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                                                                                         (log "PÄÄ paikkaustyskohteet tallennettu: " (pr-str vastaus))
                                                                                          (reset! paikkaus/paikkauskohteet vastaus))))}]
        [yllapitokohteet-view/yllapitokohteet-yhteensa paikkaus/paikkauskohteet {:paikkausnakyma? true}]
 
