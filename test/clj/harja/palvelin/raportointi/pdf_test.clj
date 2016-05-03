@@ -45,72 +45,68 @@
     ;; visuaalista rakennetta oikein assertoida.
     (println "Palautus: " fo)
     (is (= fo `[:fo:block
-                {:space-before "1em" :font-size "8pt" :font-weight "bold"}
+                {:space-before "1em", :font-size "8pt", :font-weight "bold"}
                 "Taulukko"
                 [:fo:table
-                 {:border ~(str "solid 0.2mm " pdf/raportin-tehostevari)}
-                 ([:fo:table-column
-                   {:column-width "10%"}]
-                   [:fo:table-column
-                    {:column-width "60%"}]
-                   [:fo:table-column
-                    {:column-width "30%"}])
+                 ([:fo:table-column {:column-width "10%"}]
+                  [:fo:table-column {:column-width "60%"}]
+                  [:fo:table-column {:column-width "30%"}])
                  [:fo:table-header
+                  nil
                   [:fo:table-row
                    ([:fo:table-cell
-                     {:background-color ~pdf/raportin-tehostevari
-                      :border           "solid 0.1mm black"
-                      :color "#ffffff"
-                      :font-weight      "normal"
-                      :padding          "1mm"}
-                     [:fo:block
-                      "<![CDATA[Eka]]>"]]
-                     [:fo:table-cell
-                      {:background-color ~pdf/raportin-tehostevari
-                       :border           "solid 0.1mm black"
-                       :color "#ffffff"
-                       :font-weight      "normal"
-                       :padding          "1mm"}
-                      [:fo:block
-                       "<![CDATA[Toka]]>"]]
-                     [:fo:table-cell
-                      {:background-color ~pdf/raportin-tehostevari
-                       :border           "solid 0.1mm black"
-                       :color "#ffffff"
-                       :font-weight      "normal"
-                       :padding          "1mm"}
-                      [:fo:block
-                       "<![CDATA[Kolmas]]>"]])]]
+                     {:border "solid 0.1mm black",
+                      :background-color "#0066cc",
+                      :color "#ffffff",
+                      :font-weight "normal",
+                      :padding "1mm"}
+                     [:fo:block "<![CDATA[Eka]]>"]]
+                    [:fo:table-cell
+                     {:border "solid 0.1mm black",
+                      :background-color "#0066cc",
+                      :color "#ffffff",
+                      :font-weight "normal",
+                      :padding "1mm"}
+                     [:fo:block "<![CDATA[Toka]]>"]]
+                    [:fo:table-cell
+                     {:border "solid 0.1mm black",
+                      :background-color "#0066cc",
+                      :color "#ffffff",
+                      :font-weight "normal",
+                      :padding "1mm"}
+                     [:fo:block "<![CDATA[Kolmas]]>"]])]]
                  [:fo:table-body
                   nil
                   ([:fo:table-row
                     ([:fo:table-cell
-                      {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
-                       :font-weight      "normal"
-                       :padding    "1mm"
+                      {:border-bottom "solid 0.1mm #0066cc",
+                       :border-right "solid 0.1mm #0066cc",
+                       :border-left "solid 0.1mm #0066cc",
+                       :padding "1mm",
+                       :font-weight "normal",
                        :text-align "left"}
                       nil
-                      [:fo:block
-                       "<![CDATA[eka]]>"]]
-                      [:fo:table-cell
-                       {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
-                        :font-weight      "normal"
-                        :padding    "1mm"
-                        :text-align "left"}
-                       nil
-                       [:fo:block
-                        "<![CDATA[toka]]>"]]
-                      [:fo:table-cell
-                       {:border     ~(str "solid 0.1mm " pdf/raportin-tehostevari)
-                        :font-weight      "normal"
-                        :padding    "1mm"
-                        :text-align "left"}
-                       nil
-                       [:fo:block
-                        "<![CDATA[kolmas]]>"]])])
+                      [:fo:block "<![CDATA[eka]]>"]]
+                     [:fo:table-cell
+                      {:border-bottom "solid 0.1mm #0066cc",
+                       :border-right "solid 0.1mm #0066cc",
+                       :border-left "solid 0.1mm #0066cc",
+                       :padding "1mm",
+                       :font-weight "normal",
+                       :text-align "left"}
+                      nil
+                      [:fo:block "<![CDATA[toka]]>"]]
+                     [:fo:table-cell
+                      {:border-bottom "solid 0.1mm #0066cc",
+                       :border-right "solid 0.1mm #0066cc",
+                       :border-left "solid 0.1mm #0066cc",
+                       :padding "1mm",
+                       :font-weight "normal",
+                       :text-align "left"}
+                      nil
+                      [:fo:block "<![CDATA[kolmas]]>"]])])
                   nil]]
-                [:fo:block
-                 {:space-after "1em"}]]))))
+                [:fo:block {:space-after "1em"}]]))))
 
 (deftest pylvaat
   (let [fo (muodosta-pdf [:pylvaat {:otsikko "Mun pylväät"}
