@@ -15,7 +15,12 @@ SELECT
   kaasuindeksi,
   muutoshinta,
   nykyinen_paallyste,
-  keskimaarainen_vuorokausiliikenne
+  keskimaarainen_vuorokausiliikenne,
+  tr_numero,
+  tr_alkuosa,
+  tr_alkuetaisyys,
+  tr_loppuosa,
+  tr_loppuetaisyys
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
