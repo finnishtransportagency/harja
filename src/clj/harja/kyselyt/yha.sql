@@ -103,3 +103,8 @@ SELECT yhaid FROM yllapitokohde WHERE urakka = :urakkaid;
 UPDATE yhatiedot SET
   kohdeluettelo_paivitetty = NOW()
 WHERE urakka = :urakka;
+
+-- name: luo-paallystysilmoitus<!
+INSERT INTO paallystysilmoitus
+(paallystyskohde, ilmoitustiedot, luotu, luoja)
+    VALUES (:paallystyskohde, :ilmoitustiedot, NOW(), :luoja);

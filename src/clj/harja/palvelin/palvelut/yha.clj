@@ -9,7 +9,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.kyselyt.konversio :as konversio]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [cheshire.core :as cheshire]))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/debug "Lisätään YHA-tiedot urakalle " urakka-id)
@@ -76,6 +77,24 @@
 (defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db harja-urakka-id]
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
+
+(defn- luo-paallystysilmoitus [db user kohde {:keys [tierekisteriosoitevali paallystystoimenpide] :as kohdeosa}]
+  (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde kohde
+                                      :ilmoitustiedot (cheshire/encode
+                                                        {:osoitteet
+                                                         [{:tie (:tienumero tierekisteriosoitevali)
+                                                           :aosa (:aosa tierekisteriosoitevali)
+                                                           :aet (:aet tierekisteriosoitevali)
+                                                           :losa (:losa tierekisteriosoitevali)
+                                                           :let (:let tierekisteriosoitevali)
+                                                           :rc% (:rc-prosentti paallystystoimenpide)
+                                                           ; FIXME Onko tämä nyt "massa" vai "massamäärä"? Tarvitaanko ilmoituksessa molempia?
+                                                           :massa (:kokonaismassa paallystystoimenpide)
+                                                           :raekoko (:raekoko paallystystoimenpide)
+                                                           :kuulamylly (:kuulamylly paallystystoimenpide)
+                                                           :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
+                                                           :paallystetyyppi (:uusi-paallyste paallystystoimenpide)}]})
+                                      (:id user)}))
 
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
