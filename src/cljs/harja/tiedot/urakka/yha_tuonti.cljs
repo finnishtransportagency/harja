@@ -45,6 +45,7 @@
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
    Suoritus tapahtuu asynkronisesti"
   [harja-urakka-id]
+  ; FIXME Lisää virhekäsittely (k/virhe? jne.)
   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
             vkm-kohteet (vkm/muunna-yha-kohteet uudet-yha-kohteet)
             _ (log "[YHA] Tallennetaan kohteet kantaan")
