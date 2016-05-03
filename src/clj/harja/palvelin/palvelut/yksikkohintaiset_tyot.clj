@@ -56,8 +56,9 @@
                    urakka-id sopimusnumero (:tehtava tyo)
                    (java.sql.Date. (.getTime (:alkupvm tyo)))
                    (java.sql.Date. (.getTime (:loppupvm tyo)))))))
-          (log/debug "Merkitään kustannussuunnitelmat likaiseksi tehtäville: " uniikit-tehtavat)
-          (q/merkitse-kustannussuunnitelmat-likaisiksi! c urakka-id uniikit-tehtavat))
+          (when-not (empty? uniikit-tehtavat)
+            (log/debug "Merkitään kustannussuunnitelmat likaiseksi tehtäville: " uniikit-tehtavat)
+            (q/merkitse-kustannussuunnitelmat-likaisiksi! c urakka-id uniikit-tehtavat)))
       (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
 
 (defrecord Yksikkohintaiset-tyot []
