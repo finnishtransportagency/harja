@@ -64,6 +64,9 @@
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (suodata-olemassaolevat-kohteet db urakka-id (yha/hae-kohteet yha urakka-id)))
 
+(defn- merkitse-urakan-kohdeluettelo-paivitetyksi [harja-urakka-id]
+  (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi db {:urakka harja-urakka-id}))
+
 (defn- tallenna-uudet-yha-kohteet
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
@@ -72,10 +75,10 @@
   (jdbc/with-db-transaction [c db]
     (let [paasopimus (yha-q/hae-urakan-paasopimus c {:urakka urakka-id})]
       (doseq [{:keys [tierekisteriosoitevali
-                    tunnus yha-id alikohteet kohdetyyppi
-                    yllapitoluokka
-                    keskimaarainen_vuorokausiliikenne
-                    nykyinen-paallyste] :as kohde} kohteet]
+                      tunnus yha-id alikohteet kohdetyyppi
+                      yllapitoluokka
+                      keskimaarainen_vuorokausiliikenne
+                      nykyinen-paallyste] :as kohde} kohteet]
         (let [kohde (yha-q/luo-yllapitokohde<! c
                                                {:urakka urakka-id
                                                 :sopimus (:id paasopimus)
@@ -101,7 +104,8 @@
                                            :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                            :tr_loppuosa (:losa tierekisteriosoitevali)
                                            :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                           :yhaid yha-id})))))))
+                                           :yhaid yha-id})))))
+    (merkitse-urakan-kohdeluettelo-paivitetyksi urakka-id)))
 
 (defrecord Yha []
   component/Lifecycle

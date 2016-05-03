@@ -97,3 +97,8 @@ SELECT yhaid FROM yhatiedot WHERE urakka = :urakkaid;
 
 -- name: hae-urakan-kohteiden-yha-idt
 SELECT yhaid FROM yllapitokohde WHERE urakka = :urakkaid;
+
+-- name: merkitse-urakan-yllapitokohteet-paivitetyksi
+UPDATE yhatiedot SET
+  kohdeluettelo_paivitetty = NOW()
+WHERE urakka = :urakka;
