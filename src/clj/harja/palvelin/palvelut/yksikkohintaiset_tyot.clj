@@ -11,25 +11,6 @@
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.domain.oikeudet :as oikeudet]))
 
-(declare hae-urakan-yksikkohintaiset-tyot tallenna-urakan-yksikkohintaiset-tyot)
-
-(defrecord Yksikkohintaiset-tyot []
-  component/Lifecycle
-  (start [this]
-   (doto (:http-palvelin this)
-     (julkaise-palvelu
-       :yksikkohintaiset-tyot (fn [user urakka-id]
-         (hae-urakan-yksikkohintaiset-tyot (:db this) user urakka-id)))
-     (julkaise-palvelu
-       :tallenna-urakan-yksikkohintaiset-tyot (fn [user tiedot]
-         (tallenna-urakan-yksikkohintaiset-tyot (:db this) user tiedot))))
-   this)
-
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :yksikkohintaiset-tyot)
-    (poista-palvelu (:http-palvelin this) :tallenna-urakan-yksikkohintaiset-tyot)
-    this))
-
 
 (defn hae-urakan-yksikkohintaiset-tyot
   "Palvelu, joka palauttaa urakan yksikkohintaiset työt."
@@ -78,3 +59,20 @@
           (log/debug "Merkitään kustannussuunnitelmat likaiseksi tehtäville: " uniikit-tehtavat)
           (q/merkitse-kustannussuunnitelmat-likaisiksi! c urakka-id uniikit-tehtavat))
       (hae-urakan-yksikkohintaiset-tyot c user urakka-id)))
+
+(defrecord Yksikkohintaiset-tyot []
+  component/Lifecycle
+  (start [this]
+    (doto (:http-palvelin this)
+      (julkaise-palvelu
+        :yksikkohintaiset-tyot (fn [user urakka-id]
+                                 (hae-urakan-yksikkohintaiset-tyot (:db this) user urakka-id)))
+      (julkaise-palvelu
+        :tallenna-urakan-yksikkohintaiset-tyot (fn [user tiedot]
+                                                 (tallenna-urakan-yksikkohintaiset-tyot (:db this) user tiedot))))
+    this)
+
+  (stop [this]
+    (poista-palvelu (:http-palvelin this) :yksikkohintaiset-tyot)
+    (poista-palvelu (:http-palvelin this) :tallenna-urakan-yksikkohintaiset-tyot)
+    this))
