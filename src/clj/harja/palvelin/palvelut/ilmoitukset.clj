@@ -151,7 +151,6 @@
                       (suodata-myohastyneet ilmoitukset)
                       ilmoitukset)
         ilmoitukset (case aloituskuittauksen-ajankohta
-                      :alle-10-min (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/minutes 10)) ilmoitukset)
                       :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
                       :myohemmin (filter #(and
                                            (sisaltaa-aloituskuittauksen? %)
