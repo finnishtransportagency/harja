@@ -97,9 +97,7 @@ SELECT
 FROM laatupoikkeama l
   JOIN kayttaja k ON l.luoja = k.id
 WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
-      AND (l.luotu BETWEEN :alku AND :loppu OR
-           l.muokattu BETWEEN :alku AND :loppu OR
-           l.aika BETWEEN :alku AND :loppu OR
+      AND (l.aika BETWEEN :alku AND :loppu OR
            l.kasittelyaika BETWEEN :alku AND :loppu) AND
            l.tekija :: TEXT IN (:tekijat)
       AND l.poistettu IS NOT TRUE;
@@ -123,9 +121,7 @@ SELECT
 FROM tarkastus t
 WHERE sijainti IS NOT NULL
   AND (t.urakka IN (:urakat) OR t.urakka IS NULL)
-  AND (t.luotu BETWEEN :alku AND :loppu OR
-       t.muokattu BETWEEN :alku AND :loppu OR
-       t.aika BETWEEN :alku AND :loppu) AND
+  AND (t.aika BETWEEN :alku AND :loppu) AND
        t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
@@ -161,9 +157,7 @@ WHERE
   (t.urakka IS NULL OR t.urakka IN (:urakat)) AND
   (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
    t.paattynyt BETWEEN :alku AND :loppu OR
-   t.kasitelty BETWEEN :alku AND :loppu OR
-   t.luotu BETWEEN :alku AND :loppu OR
-   t.muokattu BETWEEN :alku AND :loppu);
+   t.kasitelty BETWEEN :alku AND :loppu);
 
 -- name: hae-paallystykset-nykytilanteeseen
 SELECT
