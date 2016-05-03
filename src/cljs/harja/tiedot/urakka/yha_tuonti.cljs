@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.yhatuonti
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.yleiset :refer [ajax-loader vihje]]
+            [harja.ui.viesti :as viesti]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<! >! chan timeout]]
             [harja.ui.lomake :refer [lomake]]
@@ -41,7 +42,7 @@
   (log "[YHA] Haetaan YHA-kohteet urakalle id:llä" harja-urakka-id)
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
-(defn hae-ja-kasittele-yha-kohteet
+(defn paivita-yha-kohteet
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
    Suoritus tapahtuu asynkronisesti"
   [harja-urakka-id]
@@ -58,7 +59,7 @@
    "Päivitä kohdeluettelo"
    #(do
      (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
-     (hae-ja-kasittele-yha-kohteet (:id urakka)))
+     (paivita-yha-kohteet (:id urakka)))
    {:luokka "nappi-ensisijainen"
     :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
     :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
