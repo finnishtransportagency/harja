@@ -27,25 +27,25 @@
 (defn tee-url [yha-id]
   (str +yha-url+ (format "urakat/%s/kohteet" yha-id)))
 
-(deftest tarkista-urakoiden-haku
+(deftest tarkista-urakan-kohteiden-haku
   (let [urakka-id (hae-urakka-id)
         yha-id (hae-yha-id urakka-id)
-        odotettu-vastaus [{:alikohteet {:paallystystoimenpide {:kokonaismassamaara 124
-                                                               :kuulamylly 4
-                                                               :paallystetyomenetelma 22
-                                                               :raekoko 12
-                                                               :rc-prosentti 14
-                                                               :uusi-paallyste 11}
-                                        :tierekisteriosoitevali {:aet 3
-                                                                 :ajorata 0
-                                                                 :aosa 3
-                                                                 :kaista 11
-                                                                 :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                                 :let 3
-                                                                 :losa 3
-                                                                 :tienumero 3}
-                                        :tunnus "A"
-                                        :yha-id 3}
+        odotettu-vastaus [{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124
+                                                                :kuulamylly 4
+                                                                :paallystetyomenetelma 22
+                                                                :raekoko 12
+                                                                :rc-prosentti 14
+                                                                :uusi-paallyste 11}
+                                         :tierekisteriosoitevali {:aet 3
+                                                                  :ajorata 0
+                                                                  :aosa 3
+                                                                  :kaista 11
+                                                                  :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                                  :let 3
+                                                                  :losa 3
+                                                                  :tienumero 3}
+                                         :tunnus "A"
+                                         :yha-id 3}]
                            :keskimaarainen-vuorokausiilikenne 1000
                            :kohdetyyppi :paikkaus
                            :nykyinen-paallyste 1
@@ -74,12 +74,12 @@
           "Poikkeusta ei heitetty epäonnistuneesta kutsusta."))))
 
 ;; todo: palauta, kun oikea YHA-yhteys on saatu
-#_ (deftest tarkista-virhevastaus
-  (let [urakka-id (hae-urakka-id)
-        yha-id (hae-yha-id urakka-id)]
-    (with-fake-http [(tee-url yha-id) +virhevastaus+]
-      (try+
-        (yha/hae-kohteet (:yha jarjestelma) urakka-id)
-        (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
-        (catch [:type yha/+virhe-urakan-kohdehaussa+] {:keys [virheet]}
-          (is true "Poikkeus heitettiin epäonnistuneesta kutsusta."))))))
+#_(deftest tarkista-virhevastaus
+    (let [urakka-id (hae-urakka-id)
+          yha-id (hae-yha-id urakka-id)]
+      (with-fake-http [(tee-url yha-id) +virhevastaus+]
+        (try+
+          (yha/hae-kohteet (:yha jarjestelma) urakka-id)
+          (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
+          (catch [:type yha/+virhe-urakan-kohdehaussa+] {:keys [virheet]}
+            (is true "Poikkeus heitettiin epäonnistuneesta kutsusta."))))))
