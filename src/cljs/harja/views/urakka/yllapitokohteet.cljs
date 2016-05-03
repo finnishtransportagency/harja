@@ -115,11 +115,16 @@
                                            (log "sain sijainnin " (clj->js sijainti))
                                            (swap! tr-sijainnit assoc osoite sijainti))))))))))))}
           [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys 20 :validoi [[:ei-tyhja "Anna nimi"]]}
-           {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
-           {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuosa"]]}
-           {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
-           {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
-           {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
+           {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :positiivinen-numero
+            :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
+           {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :positiivinen-numero
+            :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuosa"]]}
+           {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :positiivinen-numero
+            :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
+           {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :positiivinen-numero
+            :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
+           {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :positiivinen-numero
+            :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
            {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
             :hae (fn [rivi]
                    (str (tierekisteri/laske-tien-pituus {:aet (:tr_alkuetaisyys rivi)
@@ -143,21 +148,27 @@
       :esta-poistaminen-tooltip (fn [_] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
      [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
       {:otsikko "Kohdenumero" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
-       :validoi [[:ei-tyhja "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]
-       :muokattava? (fn [rivi] (true? (and (:id rivi) (neg? (:id rivi)))))}
-      {:otsikko "Kohde" :nimi :nimi :tyyppi :string :leveys kohde-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
-      {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuosa"]]}
-      {:otsikko "Aet" :nimi :tr_alkuetaisyys :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
-      {:otsikko "Losa" :nimi :tr_loppuosa :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
-      {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
+       :validoi [[:ei-tyhja "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+      {:otsikko "Kohde" :nimi :nimi
+       :tyyppi :string :leveys kohde-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "Tienumero" :nimi :tr_numero :muokattava? (constantly (not (:paallystysnakyma? optiot)))
+       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
+      {:otsikko "Aosa" :nimi :tr_alkuosa :muokattava? (constantly (not (:paallystysnakyma? optiot)))
+       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuosa"]]}
+      {:otsikko "Aet" :nimi :tr_alkuetaisyys :muokattava? (constantly (not (:paallystysnakyma? optiot)))
+       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
+      {:otsikko "Losa" :nimi :tr_loppuosa :muokattava? (constantly (not (:paallystysnakyma? optiot)))
+       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
+      {:otsikko "Let" :nimi :tr_loppuetaisyys :muokattava? (constantly (not (:paallystysnakyma? optiot)))
+       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
       {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
        :hae (fn [rivi]
               (str (tierekisteri/laske-tien-pituus {:aet (:tr_alkuetaisyys rivi)
                                                     :let (:tr_loppuetaisyys rivi)})))
        :leveys tr-leveys}
       {:otsikko "KVL"
-       :nimi :keskimaarainen_vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys}
+       :nimi :keskimaarainen_vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
+       :muokattava? (constantly (not (:paallystysnakyma? optiot)))}
       {:otsikko "Nykyinen päällyste"
        :nimi :nykyinen_paallyste
        :fmt #(paallystys-ja-paikkaus/hae-paallyste-koodilla %)
@@ -166,17 +177,25 @@
        :valinnat paallystys-ja-paikkaus/+paallystetyypit+
        :validoi [[:ei-tyhja "Anna päällystetyyppi"]]
        :valinta-nayta :nimi
-       :leveys nykyinen-paallyste-leveys}
+       :leveys nykyinen-paallyste-leveys
+       :muokattava? (constantly (not (:paallystysnakyma? optiot)))}
       (when (:paallystysnakyma? optiot)
-        {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :validoi [[:ei-tyhja "Anna arvo"]]})
+        {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot
+         :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :validoi [[:ei-tyhja "Anna arvo"]]})
       (when (:paallystysnakyma? optiot)
-        {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
+        {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false)
+         :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
       (when (:paikkausnakyma? optiot)
-        {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :muokattava? (constantly false) :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
-      {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Bitumi-indeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false) :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
+        {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :muokattava? (constantly false)
+         :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
+      {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt
+       :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "Bitumi-indeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt
+       :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
+       :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+      {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false)
+       :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
        :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                           (:muutoshinta rivi)
                           (:toteutunut_hinta rivi)
