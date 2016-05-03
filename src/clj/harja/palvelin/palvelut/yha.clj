@@ -57,12 +57,18 @@
     urakat))
 
 (defn- suodata-olemassaolevat-kohteet [db urakka-id kohteet]
-  (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))]
+  (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))
+        _ (log/debug "Urakan " urakka-id " kohteiden yha:idt: " (pr-str yha-idt))]
     (filter #(not (yha-idt (:yhaid %))) kohteet)))
 
 (defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
-  (suodata-olemassaolevat-kohteet db urakka-id (yha/hae-kohteet yha urakka-id)))
+  (log/debug "Haetaan kohteet yhasta")
+  (let [yha-kohteet (yha/hae-kohteet yha urakka-id)
+        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
+        uudet-kohteet (suodata-olemassaolevat-kohteet db urakka-id yha-kohteet)
+        _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
+    uudet-kohteet))
 
 (defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db harja-urakka-id]
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
@@ -82,7 +88,8 @@
                       yllapitoluokka
                       keskimaarainen_vuorokausiliikenne
                       nykyinen-paallyste] :as kohde} kohteet]
-        (log/debug "Tallennetaan kohde")
+        (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
+        (log/debug "Tallennetaan kohde " (pr-str kohde))
         (let [kohde (yha-q/luo-yllapitokohde<! c
                                                {:urakka urakka-id
                                                 :sopimus paasopimus-id
@@ -92,14 +99,14 @@
                                                 :tr_loppuosa (:losa tierekisteriosoitevali)
                                                 :tr_loppuetaisyys (:let tierekisteriosoitevali)
                                                 :yhatunnus tunnus
-                                                :yhaid yha-id
+                                                :yhaid yha-id ; FIXME Miksi tämä on yhaid eikä yha-id??
                                                 :tyyppi (name kohdetyyppi)
                                                 :yllapitoluokka yllapitoluokka
                                                 :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                                                 :nykyinen_paallyste nykyinen-paallyste})]
           (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
             ;; TODO Tee myös uusi päällystysilmoitus johon alustatoimenpiteet valmiiksi syötetty
-            (log/debug "Tallennetaan kohteen osa")
+            (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
             (yha-q/luo-yllapitokohdeosa<! c
                                           {:yllapitokohde (:id kohde)
                                            :nimi tunnus

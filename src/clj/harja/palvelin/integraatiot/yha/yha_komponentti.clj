@@ -59,7 +59,7 @@
   "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
     <yha:kohteet>
       <yha:kohde>
-        <yha:yha-id>3</yha:yha-id>
+        <yha:yha-id>5</yha:yha-id>
         <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
         <yha:tunnus>string</yha:tunnus>
         <yha:yllapitoluokka>1</yha:yllapitoluokka>
