@@ -28,7 +28,7 @@
                                :vuosi vuosi}))
 
 
-(defn- sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]
+(defn sido-yha-urakka-harja-urakkaan [harja-urakka-id yha-tiedot]
   (k/post! :sido-yha-urakka-harja-urakkaan {:harja-urakka-id harja-urakka-id
                                             :yha-tiedot yha-tiedot}))
 

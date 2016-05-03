@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+-- Ylläpitokohteelle keskimääräinen vuorokausiliikenne ja nykyinen päällyste (YHA-integraatio)
+
+ALTER TABLE yllapitokohde ADD COLUMN keskimaarainen_vuorokausiliikenne INTEGER;
+ALTER TABLE yllapitokohde ADD COLUMN nykyinen_paallyste INTEGER;
+
+ALTER TABLE yllapitokohdeosa DROP COLUMN kvl;
+ALTER TABLE yllapitokohdeosa DROP COLUMN nykyinen_paallyste;
+=======
 -- Lisää toimenpiteiden ajoittuminen -raportti
 INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi)
   VALUES ('toimenpideajat','Toimenpiteiden ajoittuminen',
@@ -10,3 +19,4 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi)
                ('Hoitoluokat', 'hoitoluokat', true, NULL)::raporttiparametri],
           '#''harja.palvelin.raportointi.raportit.toimenpideajat/suorita',
           'hoito');
+>>>>>>> develop
