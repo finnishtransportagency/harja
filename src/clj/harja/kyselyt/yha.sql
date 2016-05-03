@@ -53,7 +53,7 @@ INSERT INTO yllapitokohde
  yhatunnus, yhaid, tyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne, nykyinen_paallyste)
 VALUES (
   :urakka,
-  :sopimus,
+  (SELECT id FROM sopimus WHERE paasopimus IS NULL AND urakka = :urakka),
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
@@ -87,10 +87,6 @@ VALUES (
 SELECT *
 FROM yllapitokohde
 WHERE yhatunnus = :yhatunnus;
-
--- name: hae-urakan-paasopimus
--- single?: true
-SELECT id FROM sopimus WHERE paasopimus IS NULL AND urakka = :urakka;
 
 -- name: hae-urakan-yha-id
 -- single?: true

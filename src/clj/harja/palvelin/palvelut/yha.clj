@@ -109,42 +109,39 @@
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [c db]
-    (let [paasopimus-id (yha-q/hae-urakan-paasopimus c {:urakka urakka-id})]
-      (log/debug "Urakan pääsopimus: " (pr-str paasopimus-id))
-      (doseq [{:keys [tierekisteriosoitevali
-                      tunnus yha-id alikohteet kohdetyyppi
-                      yllapitoluokka
-                      keskimaarainen_vuorokausiliikenne
-                      nykyinen-paallyste] :as kohde} kohteet]
-        (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
-        (log/debug "Tallennetaan kohde " (pr-str kohde))
-        (let [kohde (yha-q/luo-yllapitokohde<! c
-                                               {:urakka urakka-id
-                                                :sopimus paasopimus-id
-                                                :tr_numero (:tienumero tierekisteriosoitevali)
-                                                :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                                :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                                :tr_loppuosa (:losa tierekisteriosoitevali)
-                                                :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                                :yhatunnus tunnus
-                                                :yhaid yha-id
-                                                :tyyppi (name kohdetyyppi)
-                                                :yllapitoluokka yllapitoluokka
-                                                :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
-                                                :nykyinen_paallyste nykyinen-paallyste})]
-          (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
-            (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
-            (yha-q/luo-yllapitokohdeosa<! c
-                                          {:yllapitokohde (:id kohde)
-                                           :nimi tunnus
-                                           :sijainti sijainti
-                                           :tr_numero (:tienumero tierekisteriosoitevali)
-                                           :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                           :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                           :tr_loppuosa (:losa tierekisteriosoitevali)
-                                           :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                           :yhaid yha-id}))
-          (luo-paallystysilmoitus c user kohde alikohteet))))
+    (doseq [{:keys [tierekisteriosoitevali
+                    tunnus yha-id alikohteet kohdetyyppi
+                    yllapitoluokka
+                    keskimaarainen_vuorokausiliikenne
+                    nykyinen-paallyste] :as kohde} kohteet]
+      (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
+      (log/debug "Tallennetaan kohde " (pr-str kohde))
+      (let [kohde (yha-q/luo-yllapitokohde<! c
+                                             {:urakka urakka-id
+                                              :tr_numero (:tienumero tierekisteriosoitevali)
+                                              :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                              :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                              :tr_loppuosa (:losa tierekisteriosoitevali)
+                                              :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                              :yhatunnus tunnus
+                                              :yhaid yha-id
+                                              :tyyppi (name kohdetyyppi)
+                                              :yllapitoluokka yllapitoluokka
+                                              :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
+                                              :nykyinen_paallyste nykyinen-paallyste})]
+        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
+          (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
+          (yha-q/luo-yllapitokohdeosa<! c
+                                        {:yllapitokohde (:id kohde)
+                                         :nimi tunnus
+                                         :sijainti sijainti
+                                         :tr_numero (:tienumero tierekisteriosoitevali)
+                                         :tr_alkuosa (:aosa tierekisteriosoitevali)
+                                         :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                                         :tr_loppuosa (:losa tierekisteriosoitevali)
+                                         :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                         :yhaid yha-id}))
+        (luo-paallystysilmoitus c user kohde alikohteet)))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu")
     (hae-urakan-yha-tiedot c urakka-id)))
