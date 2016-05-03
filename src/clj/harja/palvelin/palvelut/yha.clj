@@ -75,5 +75,5 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :sido-yha-urakka-harja-urakkaan
-      this)))
+      :sido-yha-urakka-harja-urakkaan)
+    this))
