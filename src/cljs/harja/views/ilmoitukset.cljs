@@ -126,7 +126,7 @@
             :tyyppi           :radio-group
             :vaihtoehdot      [:kaikki :alle-tunti :myohemmin]
             :vaihtoehto-nayta (fn [arvo]
-                                ({:kaikki     "Kaikki"
+                                ({:kaikki     "Älä rajoita aloituskuittauksella"
                                   :alle-tunti "Alle tunnin kuluessa"
                                   :myohemmin  "Yli tunnin päästä"}
                                   arvo))})]
