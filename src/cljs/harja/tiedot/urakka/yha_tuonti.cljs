@@ -43,33 +43,35 @@
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
 (defn rakenna-tieosoitteet [kohteet]
-  (flatten
-    (mapv (fn [kohde]
-            (let [tr (:tierekisteriosoitevali kohde)]
-              [{:tunniste (str "alku-" (:tunnus kohde))
-                :tie (:tienumero tr)
-                :osa (:aosa tr)
-                :etaisyys (:aet tr)
-                :ajorata (:ajorata tr)}
-               {:tunniste (str "loppu-" (:tunnus kohde))
-                :tie (:tienumero tr)
-                :osa (:losa tr)
-                :etaisyys (:let tr)
-                :ajorata (:ajorata tr)}
-               (mapv (fn [alikohde]
-                       (let [tr (:tierekisteriosoitevali alikohde)]
-                         [{:tunniste (str "alku-" (:tunnus kohde) "-" (:tunnus alikohde))
-                           :tie (:tienumero tr)
-                           :osa (:aosa tr)
-                           :etaisyys (:aet tr)
-                           :ajorata (:ajorata tr)}
-                          {:tunniste (str "loppu-" (:tunnus kohde) "-" (:tunnus alikohde))
-                           :tie (:tienumero tr)
-                           :osa (:losa tr)
-                           :etaisyys (:let tr)
-                           :ajorata (:ajorata tr)}]))
-                     (:alikohteet kohde))]))
-          kohteet)))
+  {:tieosoitteet
+   (into []
+         (flatten
+           (mapv (fn [kohde]
+                   (let [tr (:tierekisteriosoitevali kohde)]
+                     [{:tunniste (str "alku-" (:tunnus kohde))
+                       :tie (:tienumero tr)
+                       :osa (:aosa tr)
+                       :etaisyys (:aet tr)
+                       :ajorata (:ajorata tr)}
+                      {:tunniste (str "loppu-" (:tunnus kohde))
+                       :tie (:tienumero tr)
+                       :osa (:losa tr)
+                       :etaisyys (:let tr)
+                       :ajorata (:ajorata tr)}
+                      (mapv (fn [alikohde]
+                              (let [tr (:tierekisteriosoitevali alikohde)]
+                                [{:tunniste (str "alku-" (:tunnus kohde) "-" (:tunnus alikohde))
+                                  :tie (:tienumero tr)
+                                  :osa (:aosa tr)
+                                  :etaisyys (:aet tr)
+                                  :ajorata (:ajorata tr)}
+                                 {:tunniste (str "loppu-" (:tunnus kohde) "-" (:tunnus alikohde))
+                                  :tie (:tienumero tr)
+                                  :osa (:losa tr)
+                                  :etaisyys (:let tr)
+                                  :ajorata (:ajorata tr)}]))
+                            (:alikohteet kohde))]))
+                 kohteet)))})
 
 (defn paivita-yha-kohteet
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
@@ -82,8 +84,7 @@
             _ (log "---->" (pr-str tieosoitteet))
             tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
             ;; todo: yhdistä VKM:sta palautuneet osoitteet YHA:n kohteille
-            vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle uudet-yha-kohteet tilanne-pvm (pvm/nyt)))
-            ;; todo: selivtä miksi palauttaa too many channels <-- Ei varmaan kannata ajaa vmk-hakua vielä erillisessä go-blockissa?
+            vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))
             _ (log "----> VKM:n kohteet" (pr-str vkm-kohteet))
             yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id uudet-yha-kohteet))]
         (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
