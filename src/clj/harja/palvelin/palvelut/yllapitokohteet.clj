@@ -25,7 +25,7 @@
                                                    (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                      db urakka-id sopimus-id (:id %))))))
                         (q/hae-urakan-yllapitokohteet db urakka-id sopimus-id))]
-      (log/debug "Päällystyskohteet saatu: " (pr-str (map :nimi vastaus)))
+      (log/debug "Ylläpitokohteet saatu: " (pr-str (map :nimi vastaus)))
       vastaus)))
 
 (defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
@@ -34,7 +34,7 @@
   (let [vastaus (into []
                       kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id yllapitokohde-id))]
-    (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
+    (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
