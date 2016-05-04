@@ -79,9 +79,7 @@
   [harja-urakka-id]
   ; FIXME Lisää virhekäsittely (k/virhe? ja näytä harja.ui.viesti jos jokin kohta menee pieleen)
   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-            _ (log "---->" (pr-str uudet-yha-kohteet))
             tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
-            _ (log "---->" (pr-str tieosoitteet))
             tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
             ;; todo: yhdistä VKM:sta palautuneet osoitteet YHA:n kohteille
             vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))
