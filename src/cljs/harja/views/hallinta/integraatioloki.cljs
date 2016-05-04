@@ -14,8 +14,7 @@
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.dom :as dom])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.ui.yleiset :refer [deftk]]))
+                   [reagent.ratom :refer [reaction run!]]))
 
 (defn kartta-merkkijonoksi [kartta]
   (when kartta
@@ -243,5 +242,3 @@
     (fn []
       [:div.integraatioloki
        [tapahtumien-paanakyma]])))
-
-
