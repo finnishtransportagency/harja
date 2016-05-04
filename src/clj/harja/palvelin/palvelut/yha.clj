@@ -62,7 +62,7 @@
 
 (defn- suodata-olemassaolevat-kohteet [db urakka-id kohteet]
   (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))]
-    (filter #(not (yha-idt (:yha-id %))) kohteet)))
+    (filterv #(not (yha-idt (:yha-id %))) kohteet)))
 
 (defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
