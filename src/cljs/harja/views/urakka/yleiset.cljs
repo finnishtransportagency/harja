@@ -162,20 +162,20 @@
                    (assoc yht :nimi arvo))
 
 
-          :tyyppi :string :leveys "20%"
+          :tyyppi :string :leveys 15
           :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
-         {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
+         {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
           :tyyppi :valinta :muokattava? (constantly false)
           :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
 
-         {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"
+         {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
           :pituus 16}
-         {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"
+         {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
           :pituus 16}
-         {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"
+         {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
           :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
-         {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
+         {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys 10
           :validoi [[:ei-tyhja "Aseta alkupvm"]
                     (fn [alku rivi]
                       (let [loppu (:loppu rivi)]
@@ -183,7 +183,7 @@
                                    (t/before? loppu alku))
                           "Alkupvm ei voi olla lopun jälkeen.")))
                     ]}
-         {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
+         {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys 10
           :validoi [[:ei-tyhja "Aseta loppupvm"]
                     (fn [loppu rivi]
                       (let [alku (:alku rivi)]
@@ -191,6 +191,7 @@
                                    (t/before? loppu alku))
                           "Loppupvm ei voi olla alkua ennen.")))]}
          {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
+          :leveys 10
           :fmt fmt/totuus :tasaa :keskita}]
         @paivystajat]))))
 
@@ -284,7 +285,7 @@
         {:otsikko "Yhteyshenkilöt"
          :tyhja "Ei yhteyshenkilöitä."
          :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
-        [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys "17%"
+        [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
           :hae #(do (when (:rooli %)
                       (str/capitalize (:rooli %))))
           :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
@@ -295,7 +296,7 @@
          {:otsikko "Organisaatio"
           :nimi :organisaatio
           :fmt :nimi
-          :leveys "17%"
+          :leveys 17
           :tyyppi :valinta
           :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
@@ -308,11 +309,11 @@
           :pituus-max 64
           :aseta (fn [yht arvo]
                    (assoc yht :nimi arvo))
-          :tyyppi :string :leveys "15%"
+          :tyyppi :string :leveys 15
           :validoi [[:ei-tyhja "Anna yhteyshenkilön nimi"]]}
-         {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
-         {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
-         {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "22%"}]
+         {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
+         {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
+         {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
         @yhteyshenkilot]))))
 
 (defn- nayta-yha-tuontidialogi
