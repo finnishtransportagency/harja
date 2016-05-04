@@ -207,7 +207,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               kentan-virheet (get rivin-virheet nimi)
               kentan-varoitukset (get rivin-varoitukset nimi)
               kentan-huomautukset (get rivin-huomautukset nimi)
-              tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")
+              tasaus-luokka (y/tasaus-luokka tasaa)
               fokus-id [id nimi]]
 
           (if (or (nil? muokattava?) (muokattava? rivi))
