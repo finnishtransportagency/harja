@@ -56,11 +56,11 @@
        (catch UnsupportedFormatException _ nil)))
 
 (defprotocol LiitteidenHallinta
-  (luo-liite [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus])
+  (luo-liite [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma])
   (lataa-liite [this liitteen-id])
   (lataa-pikkukuva [this liitteen-id]))
 
-(defn- tallenna-liite [db luoja urakka tiedostonimi tyyppi koko lahde kuvaus]
+(defn- tallenna-liite [db luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko: " (pr-str koko))
@@ -68,7 +68,7 @@
     (if (:hyvaksytty liitetarkistus)
       (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
             oid (tallenna-lob db (io/input-stream lahde))
-            liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko oid pikkukuva luoja urakka kuvaus)]
+            liite (liitteet/tallenna-liite<! db tiedostonimi tyyppi koko oid pikkukuva luoja urakka kuvaus lahde-jarjestelma)]
         (log/debug "Liite tallennettu.")
         liite)
       (do
@@ -92,8 +92,8 @@
     this)
 
   LiitteidenHallinta
-  (luo-liite [{db :db} luoja urakka tiedostonimi tyyppi koko lahde kuvaus]
-    (tallenna-liite db luoja urakka tiedostonimi tyyppi koko lahde kuvaus))
+  (luo-liite [{db :db} luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
+    (tallenna-liite db luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
   (lataa-liite [{db :db} liitteen-id]
     (hae-liite db liitteen-id))
   (lataa-pikkukuva [{db :db} liitteen-id]
