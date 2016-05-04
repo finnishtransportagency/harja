@@ -192,11 +192,11 @@
          :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt
        :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Bitumi-indeksi" :nimi :bitumi_indeksi :fmt fmt/euro-opt
+      {:otsikko "Bitumi-in\u00ADdek\u00ADsi" :nimi :bitumi_indeksi :fmt fmt/euro-opt
        :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
        :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-      {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :muokattava? (constantly false)
+      {:otsikko "Kokonais\u00ADhinta (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)" :muokattava? (constantly false)
        :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
        :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                           (:muutoshinta rivi)
