@@ -22,7 +22,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -142,7 +143,8 @@
         hae! (fn [urakka-id]
                (reset! paivystajat nil)
                (go (reset! paivystajat
-                           (reverse (sort-by :loppu (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
+                           (reverse (sort-by :loppu
+                                             (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
     (hae! (:id ur))
     (komp/luo
      (komp/kun-muuttuu (comp hae! :id))
@@ -187,7 +189,9 @@
                       (let [alku (:alku rivi)]
                         (when (and alku loppu
                                    (t/before? loppu alku))
-                          "Loppupvm ei voi olla alkua ennen.")))]}]
+                          "Loppupvm ei voi olla alkua ennen.")))]}
+         {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
+          :fmt fmt/totuus :tasaa :keskita}]
         @paivystajat]))))
 
 (defn yleiset-tiedot [ur]
