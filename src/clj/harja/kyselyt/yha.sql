@@ -103,4 +103,4 @@ WHERE urakka = :urakka;
 -- name: luo-paallystysilmoitus<!
 INSERT INTO paallystysilmoitus
 (paallystyskohde, ilmoitustiedot, luotu, luoja)
-    VALUES (:paallystyskohde, :ilmoitustiedot, NOW(), :luoja);
+    VALUES (:paallystyskohde, :ilmoitustiedot::JSONB, NOW(), :luoja);
