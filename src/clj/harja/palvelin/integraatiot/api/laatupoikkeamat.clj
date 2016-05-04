@@ -38,6 +38,7 @@
              (:id tunniste)
              (:id kirjaaja)))
       (:id (laatupoikkeamat/luo-laatupoikkeama<!
+             "harja-api"
              db
              urakka-id
              (aika-string->java-sql-date aika)
