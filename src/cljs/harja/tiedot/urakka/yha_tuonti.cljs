@@ -103,7 +103,7 @@
                            (cljs-time.core/to-default-time-zone (t/now))))}])
 
 (defn kohdeluettelo-paivitetty [urakka]
-  [:div (str "Kohdeluettelo päivitetty: "
+  [:div (str "Kohteet haettu viimeksi: "
              (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
                (pvm/pvm-aika kohdeluettelo-paivitetty)
                "ei koskaan"))])
