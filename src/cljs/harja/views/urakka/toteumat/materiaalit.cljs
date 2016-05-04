@@ -7,7 +7,6 @@
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
-            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as u]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
