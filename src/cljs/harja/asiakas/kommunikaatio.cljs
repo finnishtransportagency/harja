@@ -31,10 +31,10 @@
 
 (defn csrf-token []
   (go-loop [token (get-csrf-token)]
-    (if token
-      token
-      (do (<! (timeout 100))
-          (recur (get-csrf-token))))))
+           (if token
+             token
+             (do (<! (timeout 100))
+                 (recur (get-csrf-token))))))
 
 (defn virhe?
   "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, statuksen 500 tai on EiOikeutta viesti"
@@ -76,17 +76,17 @@
     (go
       (if (testmode palvelu)
         (>! chan (testmode palvelu))
-        (ajax-request {:uri             (str (polku) (name palvelu))
-                       :method          metodi
-                       :params          parametrit
-                       :headers         {"X-CSRF-Token" (<! (csrf-token))}
-                       :format          (transit-request-format transit/write-optiot)
+        (ajax-request {:uri (str (polku) (name palvelu))
+                       :method metodi
+                       :params parametrit
+                       :headers {"X-CSRF-Token" (<! (csrf-token))}
+                       :format (transit-request-format transit/write-optiot)
                        :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                                  :raw    true})
-                       :handler         cb
-                       :error-handler   (fn [[resp error]]
-                                          (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                                          (close! chan))})))
+                                                                  :raw true})
+                       :handler cb
+                       :error-handler (fn [[resp error]]
+                                        (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                                        (close! chan))})))
     chan))
 
 (defn post!
@@ -130,7 +130,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                       (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                       (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
                 500 (do
-                      (log "Liitelähetys epäonnistui: "  (pr-str  (.-responseText request)))
+                      (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                       (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "tiedostotyyppi ei ole sallittu"}))
                 (do
                   (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
@@ -212,14 +212,14 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
              (when @yhteys-palautui-hetki-sitten
                (<! (timeout 5000))
                (reset! yhteys-palautui-hetki-sitten false))
-      (<! (timeout @nykyinen-pingausvali-millisekunteina))
-      (let [pingauskanava (pingaa-palvelinta)
-            sallittu-viive (timeout 10000)]
-        (alt!
-          pingauskanava ([vastaus] (when (= vastaus :pong)
-                                     (kasittele-onnistunut-pingaus)))
-          sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
-        (recur)))))
+             (<! (timeout @nykyinen-pingausvali-millisekunteina))
+             (let [pingauskanava (pingaa-palvelinta)
+                   sallittu-viive (timeout 10000)]
+               (alt!
+                 pingauskanava ([vastaus] (when (= vastaus :pong)
+                                            (kasittele-onnistunut-pingaus)))
+                 sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
+               (recur)))))
 
 (defn url-parametri
   "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
@@ -234,3 +234,10 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))
+
+
+(defn kehitysymparistossa? []
+  "Tarkistaa ollaanko kehitysympäristössä"
+  (let [host (.-host js/location)]
+    (or (gstr/startsWith host "10.10.")
+        (#{"localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host))))

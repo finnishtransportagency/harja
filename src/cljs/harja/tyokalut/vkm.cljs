@@ -8,8 +8,9 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- vkm-base-url []
-  ;; todo: selvitä saako tämän vaihtaa?
-  "https://testiextranet.liikennevirasto.fi/vkm/")
+  (if (k/kehitysymparistossa?)
+    "https://testiextranet.liikennevirasto.fi/vkm/"
+    "/vkm"))
 
 (defn koordinaatti->trosoite-kahdella [[x1 y1] [x2 y2]]
   (k/post! :hae-tr-pisteilla {:x1 x1 :y1 y1 :x2 x2 :y2 y2} nil true))
@@ -132,6 +133,7 @@
                   {:tunniste \"**2**\" :tie 50 :osa 5 :etaisyys 100 :ajorata 0}]}
   Palauttaa kanavan, josta vastaus voidaan lukea."
   [tieosoitteet tilannepvm kohdepvm]
+  (log "----> VKM:n base URL" (pr-str vkm-base-url))
   (let [parametrit {:in "tieosoite"
                     :out "tieosoite"
                     :callback "jsonp"
