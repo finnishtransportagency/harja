@@ -150,11 +150,11 @@
                                         (not (nil? (:paikkausilmoitus_id rivi)))))
       :esta-poistaminen-tooltip (fn [_] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
      [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
-      {:otsikko "Kohdenumero" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
+      {:otsikko "Kohde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
        :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
       {:otsikko "Kohde" :nimi :nimi
        :tyyppi :string :leveys kohde-leveys}
-      {:otsikko "Tienumero" :nimi :tr_numero :muokattava? (constantly (not (:paallystysnakyma? optiot)))
+      {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr_numero :muokattava? (constantly (not (:paallystysnakyma? optiot)))
        :tyyppi :positiivinen-numero :leveys tr-leveys}
       {:otsikko "Aosa" :nimi :tr_alkuosa :muokattava? (constantly (not (:paallystysnakyma? optiot)))
        :tyyppi :positiivinen-numero :leveys tr-leveys}
