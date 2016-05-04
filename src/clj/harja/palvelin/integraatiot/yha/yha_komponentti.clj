@@ -60,7 +60,7 @@
     <yha:kohteet>
       <yha:kohde>
         <yha:yha-id>5</yha:yha-id>
-        <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
+        <yha:kohdetyyppi>paallystys</yha:kohdetyyppi>
         <yha:tunnus>string</yha:tunnus>
         <yha:yllapitoluokka>1</yha:yllapitoluokka>
         <yha:keskimaarainen-vuorokausiliikenne>1000</yha:keskimaarainen-vuorokausiliikenne>

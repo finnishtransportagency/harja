@@ -140,7 +140,8 @@
                                          :tr_loppuosa (:losa tierekisteriosoitevali)
                                          :tr_loppuetaisyys (:let tierekisteriosoitevali)
                                          :yhaid yha-id}))
-        #_(luo-esitaytetty-paallystysilmoitus c user kohde alikohteet))) ;; FIXME no extension hstore wtf
+        (when (= kohdetyyppi :paallystys)
+          #_(luo-esitaytetty-paallystysilmoitus c user kohde alikohteet)))) ;; FIXME no extension hstore wtf
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu")
     (hae-urakan-yha-tiedot c urakka-id)))
