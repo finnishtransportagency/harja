@@ -56,6 +56,8 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
+(tarkkaile! "[YHA] Päällystyskohteet: " paallystyskohteet)
+
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
                          kohderivit @paallystyskohteet

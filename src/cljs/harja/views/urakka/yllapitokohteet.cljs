@@ -145,6 +145,7 @@
                                           [yllapitokohdeosat rivi kohteet-atom]))
                                   @kohteet-atom))
       :tallenna (:tallenna optiot)
+      :voi-lisata? false
       :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus_id rivi)))
                                         (not (nil? (:paikkausilmoitus_id rivi)))))
       :esta-poistaminen-tooltip (fn [_] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
