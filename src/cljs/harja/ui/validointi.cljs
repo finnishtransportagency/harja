@@ -109,8 +109,9 @@
 
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
-    (log "rivit-arvoittain:" (pr-str rivit-arvoittain) " JA DATA: " data)
-    (when (> (count (get rivit-arvoittain data)) 1)
+    ;; Data on uniikkia jos sama arvo esiintyy taulukossa vain kerran
+    (when (and (not (empty? data))
+               (> (count (get rivit-arvoittain data)) 1))
       viesti)))
 
 (defmethod validoi-saanto :pvm-kentan-jalkeen [_ _ data rivi _ & [avain viesti]]
