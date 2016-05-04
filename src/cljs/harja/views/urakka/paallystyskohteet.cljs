@@ -25,20 +25,23 @@
 (defn paallystyskohteet [ur]
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
-    (komp/lippu paallystys/paallystyskohteet-nakymassa?)
+    (komp/lippu paallystys/paallystyskohteetnakymassa?)
     (fn [ur]
       [:div.paallystyskohteet
        [kartta/kartan-paikka]
-       [yllapitokohteet-view/yllapitokohteet paallystys/paallystyskohteet {:otsikko "Päällystyskohteet"
-                                                                           :paallystysnakyma? true
-                                                                           :tallenna (fn [kohteet]
-                                                                                       (go (let [urakka-id (:id @nav/valittu-urakka)
-                                                                                                 [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                                 _ (log "PÄÄ Tallennetaan päällystyskohteet: " (pr-str kohteet))
-                                                                                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
-                                                                                             (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                                                                                             (reset! paallystys/paallystyskohteet vastaus))))}]
-       [yllapitokohteet-view/yllapitokohteet-yhteensa paallystys/paallystyskohteet {:paallystysnakyma? true}]
+       [yllapitokohteet-view/yllapitokohteet
+        paallystys/paallystyskohteet
+        {:otsikko "Päällystyskohteet"
+         :paallystysnakyma? true
+         :tallenna (fn [kohteet]
+                     (go (let [urakka-id (:id @nav/valittu-urakka)
+                               [sopimus-id _] @u/valittu-sopimusnumero
+                               _ (log "PÄÄ Tallennetaan päällystyskohteet: " (pr-str kohteet))
+                               vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
+                           (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                           (reset! paallystys/paallystyskohteet vastaus))))}]
+       [yllapitokohteet-view/yllapitokohteet-yhteensa
+        paallystys/paallystyskohteet {:paallystysnakyma? true}]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]

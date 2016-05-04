@@ -28,16 +28,18 @@
     (fn [ur]
       [:div.paikkauskohteet
        [kartta/kartan-paikka]
-       [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet {:otsikko "Paikkauskohteet"
-                                                                       :paikkausnakyma? true
-                                                                       :tallenna (fn [kohteet]
-                                                                                   (go (let [urakka-id (:id @nav/valittu-urakka)
-                                                                                             [sopimus-id _] @u/valittu-sopimusnumero
-                                                                                             _ (log "PÄÄ Tallennetaan paikkauskohteet: " (pr-str kohteet))
-                                                                                             vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
-                                                                                         (log "PÄÄ paikkaustyskohteet tallennettu: " (pr-str vastaus))
-                                                                                         (reset! paikkaus/paikkauskohteet vastaus))))}]
-       [yllapitokohteet-view/yllapitokohteet-yhteensa paikkaus/paikkauskohteet {:paikkausnakyma? true}]
+       [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet
+        {:otsikko "Paikkauskohteet"
+         :paikkausnakyma? true
+         :tallenna (fn [kohteet]
+                     (go (let [urakka-id (:id @nav/valittu-urakka)
+                               [sopimus-id _] @u/valittu-sopimusnumero
+                               _ (log "PÄÄ Tallennetaan paikkauskohteet: " (pr-str kohteet))
+                               vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
+                           (log "PÄÄ paikkaustyskohteet tallennettu: " (pr-str vastaus))
+                           (reset! paikkaus/paikkauskohteet vastaus))))}]
+       [yllapitokohteet-view/yllapitokohteet-yhteensa
+        paikkaus/paikkauskohteet {:paikkausnakyma? true}]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paikkauskohteet]
