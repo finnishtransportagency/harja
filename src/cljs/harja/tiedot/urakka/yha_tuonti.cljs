@@ -76,17 +76,28 @@
 (defn paivita-yha-kohteet
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
    Suoritus tapahtuu asynkronisesti"
-  [harja-urakka-id]
-  ; FIXME Lisää virhekäsittely (k/virhe? ja näytä harja.ui.viesti jos jokin kohta menee pieleen)
-  (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-            tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
-            tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
-            ;; todo: yhdistä VKM:sta palautuneet osoitteet YHA:n kohteille
-            vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))
-            _ (log "----> VKM:n kohteet" (pr-str vkm-kohteet))
-            yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id uudet-yha-kohteet))]
-        (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
-        (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot))))
+  ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
+  ([harja-urakka-id optiot]
+    ; FIXME Melkoinen If-hirviö, miten tätä siistisi?
+   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
+             _ (log "[YHA] Uudet YHA-kohteet: " (pr-str uudet-yha-kohteet))]
+         (if (k/virhe? uudet-yha-kohteet)
+           (viesti/nayta! "Kohteiden haku YHA:sta epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+           (if (> (count uudet-yha-kohteet) 0)
+             (let [tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
+                   tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
+                   ;; todo: yhdistä VKM:sta palautuneet osoitteet YHA:n kohteille
+                   vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
+               (if (k/virhe? vkm-kohteet)
+                 (viesti/nayta! "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
+                 (let [yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id uudet-yha-kohteet))]
+                   (if (k/virhe? yhatiedot)
+                     (viesti/nayta! "YHA:n kohteiden tallentaminen epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
+                     (do
+                       (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
+                       (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot))))))
+             (when-not (:sidontahaku? optiot)
+               (viesti/nayta! "Uusia kohteita ei löytynyt." :success viesti/viestin-nayttoaika-lyhyt))))))))
 
 (defn paivita-kohdeluettelo [urakka oikeus]
   [harja.ui.napit/palvelinkutsu-nappi

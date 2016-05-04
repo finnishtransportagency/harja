@@ -75,7 +75,7 @@
            :virheviesti "Lämpötilojen haku epäonnistui. Yritä myöhemmin uudelleen."
            :kun-onnistuu (fn [urakat]
                            (reset! lampotilarivit (merge-with merge @lampotilarivit urakat))
-                           (viesti/nayta! "Lämpötilat haettu ja päivitetty taulukkoon - tarkista tiedot ja tallenna." :success 5000))}]
+                           (viesti/nayta! "Lämpötilat haettu ja päivitetty taulukkoon - tarkista tiedot ja tallenna." :success viesti/viestin-nayttoaika-keskipitka))}]
 
          [napit/palvelinkutsu-nappi
           "Tallenna"
