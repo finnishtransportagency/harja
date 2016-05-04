@@ -82,7 +82,7 @@
             _ (log "---->" (pr-str tieosoitteet))
             tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
             ;; todo: yhdistä VKM:sta palautuneet osoitteet YHA:n kohteille
-            vkm-kohteet (go (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle uudet-yha-kohteet tilanne-pvm (pvm/nyt))))
+            vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle uudet-yha-kohteet tilanne-pvm (pvm/nyt)))
             ;; todo: selivtä miksi palauttaa too many channels <-- Ei varmaan kannata ajaa vmk-hakua vielä erillisessä go-blockissa?
             _ (log "----> VKM:n kohteet" (pr-str vkm-kohteet))
             yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id uudet-yha-kohteet))]
