@@ -347,12 +347,12 @@ documentation:
                   schema: virhe-response
       delete:
         is: [secured]
-	    description: Päivystäjätietojen poisto.
-	    body:
-	        application/json:
-	        example: !include examples/paivystajatietojen-poisto-request.json
-	        schema: paivystajatietojen-poisto-request
-	    responses:
+        description: Päivystäjätietojen poisto.
+        body:
+          application/json:
+                  example: !include examples/paivystajatietojen-poisto-request.json
+                  schema: paivystajatietojen-poisto-request
+        responses:
              200:
               body:
                 application/json:
