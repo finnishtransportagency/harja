@@ -215,7 +215,7 @@ INSERT
 INTO siltatarkastus
 (silta, urakka, tarkastusaika, tarkastaja, luotu, luoja, poistettu, ulkoinen_id, lahde)
 VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, FALSE,
-        :ulkoinen_id, lahde::lahde);
+        :ulkoinen_id, :lahde::lahde);
 
 -- name: paivita-siltatarkastus<!
 -- Päivittää siltatarkastuksen
