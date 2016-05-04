@@ -160,34 +160,37 @@
     (doseq [id poistettu]
       (q/poista-paivystaja! c id urakka-id))
 
-    (doseq [p paivystajat]
+    (doseq [p paivystajat
+            :let [yhteyshenkilo {:etunimi (:etunimi p)
+                                 :sukunimi (:sukunimi p)
+                                 :tyopuhelin (:tyopuhelin p)
+                                 :matkapuhelin (:matkapuhelin p)
+                                 :sahkoposti (:sahkoposti p)
+                                 :organisaatio (:id (:organisaatio p))
+                                 :sampoid nil
+                                 :kayttajatunnus nil
+                                 :ulkoinen_id nil}
+                  paivystys {:alku (java.sql.Date. (.getTime (:alku p)))
+                             :loppu (java.sql.Date. (.getTime (:loppu p)))
+                             :urakka urakka-id
+                             :varahenkilo (not (:vastuuhenkilo p))
+                             :vastuuhenkilo (:vastuuhenkilo p)}]]
       (if (< (:id p) 0)
         ;; Luodaan uusi yhteyshenkilö
-        (let [yht (q/luo-yhteyshenkilo c
-                                       (:etunimi p) (:sukunimi p)
-                                       (:tyopuhelin p) (:matkapuhelin p)
-                                       (:sahkoposti p) (:id (:organisaatio p))
-                                       nil
-                                       nil
-                                       nil)]
+        (let [yht (q/luo-yhteyshenkilo<! c yhteyshenkilo)]
           (q/luo-paivystys<! c
-                             (java.sql.Date. (.getTime (:alku p)))
-                             (java.sql.Date. (.getTime (:loppu p)))
-                             urakka-id (:id yht) true false))
+                             (assoc paivystys
+                                    :yhteyshenkilo (:id yht))))
 
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
         (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p)
                                                                                  urakka-id)))]
           (log/debug "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
-          (q/paivita-yhteyshenkilo c
-                                   (:etunimi p) (:sukunimi p)
-                                   (:tyopuhelin p) (:matkapuhelin p)
-                                   (:sahkoposti p) (:id (:organisaatio p))
-                                   yht-id)
-          (q/paivita-paivystys! c
-                                (java.sql.Date. (.getTime (:alku p)))
-                                (java.sql.Date. (.getTime (:loppu p)))
-                                (:id p) urakka-id))))
+          (q/paivita-yhteyshenkilo<! c (assoc yhteyshenkilo
+                                              :id yht-id))
+          (q/paivita-paivystys! c (assoc paivystys
+                                         :id (:id p)
+                                         :yhteyshenkilo yht-id)))))
 
     ;; Haetaan lopuksi uuden päivystäjät
     (hae-urakan-paivystajat c user urakka-id)))
