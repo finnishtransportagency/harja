@@ -166,9 +166,10 @@
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
   (log/debug "Luetaan kutsua")
-  (when (or (= :post (:request-method request))
-            (= :put (:request-method request))
-            (= :delete (:request-method request)))
+  (when (and body
+             (or (= :post (:request-method request))
+                 (= :put (:request-method request))
+                 (= :delete (:request-method request))))
     (json/validoi skeema body)
     (cheshire/decode body true)))
 
@@ -273,12 +274,12 @@
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (with-channel request channel
-    (go
-      (let [vastaus (<! (thread (kasittele-kutsu db
-                                                 integraatioloki
-                                                 resurssi
-                                                 request
-                                                 kutsun-skeema
-                                                 vastauksen-skeema
-                                                 kasittele-kutsu-fn)))]
-        (send! channel vastaus)))))
+                (go
+                  (let [vastaus (<! (thread (kasittele-kutsu db
+                                                             integraatioloki
+                                                             resurssi
+                                                             request
+                                                             kutsun-skeema
+                                                             vastauksen-skeema
+                                                             kasittele-kutsu-fn)))]
+                    (send! channel vastaus)))))

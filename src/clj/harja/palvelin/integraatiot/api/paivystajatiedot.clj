@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.paivystajatiedot
   "Päivystäjätietojen kirjaaminen urakalle"
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST GET]]
+            [compojure.core :refer [POST GET DELETE]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
@@ -143,6 +143,16 @@
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
+(defn poista-paivystajatiedot [db data parametrit kayttaja]
+  (let [{:keys [paivystaja-idt]} data
+        urakka-id (Integer/parseInt (:id parametrit))
+        paivystaja-idt (mapv str paivystaja-idt)]
+    (validointi/tarkista-urakka db urakka-id)
+    (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
+    (log/debug "Poistettavat ulkoiset idt: " (pr-str paivystaja-idt) " urakka " (:id parametrit))
+    (yhteyshenkilot/poista-urakan-paivystajatiedot! db urakka-id paivystaja-idt)
+    {:viesti "Päivystäjätiedot poistettu"}))
+
 (defn hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]
   (log/debug "Haetaan päivystäjätiedot sijainnilla parametreillä: " parametrit)
   (tarkista-parametrit parametrit)
@@ -187,22 +197,35 @@
     :kutsu-skeema   json-skeemat/+paivystajatietojen-kirjaus+
     :vastaus-skeema json-skeemat/+kirjausvastaus+
     :kasittely-fn   (fn [parametrit data kayttaja db]
-                      (kirjaa-paivystajatiedot db parametrit data kayttaja))}])
+                      (kirjaa-paivystajatiedot db parametrit data kayttaja))}
+   {:palvelu        :poista-paivystajatiedot
+    :polku          "/api/urakat/:id/paivystajatiedot"
+    :tyyppi         :DELETE
+    :kutsu-skeema   json-skeemat/+paivystajatietojen-poisto+
+    :vastaus-skeema json-skeemat/+paivystajatietojen-poistovastaus+
+    :kasittely-fn   (fn [parametrit data kayttaja-id db]
+                      (poista-paivystajatiedot db data parametrit kayttaja-id))}])
 
 (defrecord Paivystajatiedot []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :GET)]
       (julkaise-reitti
-        http palvelu
-        (GET polku request
-          (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
+       http palvelu
+       (GET polku request
+            (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
 
     (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :POST)]
       (julkaise-reitti
-        http palvelu
-        (POST polku request
-          (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
+       http palvelu
+       (POST polku request
+             (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
+
+    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :DELETE)]
+      (julkaise-reitti
+       http palvelu
+       (DELETE polku request
+               (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
 
     this)
   (stop [{http :http-palvelin :as this}]
