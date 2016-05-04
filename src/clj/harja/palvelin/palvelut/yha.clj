@@ -88,6 +88,8 @@
                              :aet (:aet tierekisteriosoitevali)
                              :losa (:losa tierekisteriosoitevali)
                              :let (:let tierekisteriosoitevali)
+                             :ajorata (:ajorata tierekisteriosoitevali)
+                             :kaista (:kaista tierekisteriosoitevali)
                              :rc% (:rc-prosentti paallystystoimenpide)
                              ; FIXME Onko tämä nyt "massa" vai "massamäärä"? Onko toinen turha?
                              :massa (:kokonaismassa paallystystoimenpide)

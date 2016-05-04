@@ -94,7 +94,7 @@
   "Suuntavalinta koodilla"
   (apply s/enum (map :koodi +suunnat+)))
 
-(def +kaistat+
+(def +kaistat+ ; FIXME Ei mitä ilmeisemmin vastaa YHA:n tietomallia tämä?
   "Kaistavalinnat"
   [{:nimi "Pääkaista" :koodi 1}
    {:nimi "Ohituskaista" :koodi 2}
