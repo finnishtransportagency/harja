@@ -130,11 +130,11 @@
            (if (> (count uudet-yha-kohteet) 0)
              (let [tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
                    tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
-                   vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))
-                   kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)]
+                   vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
                (if (k/virhe? vkm-kohteet)
                  (viesti/nayta! "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
-                 (let [yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
+                 (let [kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                       yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
                    (if (k/virhe? yhatiedot)
                      (viesti/nayta! "YHA:n kohteiden tallentaminen epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
                      (do
