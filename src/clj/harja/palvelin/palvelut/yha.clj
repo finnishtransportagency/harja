@@ -85,6 +85,7 @@
 (defn- luo-esitaytetty-paallystysilmoitus [db user kohde kohdeosat]
   (log/debug "Tehdään kohdeosista esitäytetty päällystysilmoitus")
   (let [ilmoitustiedot {:osoitteet
+                        ;; FIXME ASPA 4.5.2016: Esitäytetään vain tie ja päällyste, urakoitsija täyttää kaikki muut
                         (mapv
                           (fn [{:keys [tierekisteriosoitevali paallystystoimenpide] :as kohdeosa}]
                             {:tie (:tienumero tierekisteriosoitevali)
