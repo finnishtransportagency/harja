@@ -90,7 +90,7 @@
 
 (defn paivita-kohdeluettelo [urakka oikeus]
   [harja.ui.napit/palvelinkutsu-nappi
-   "Päivitä kohdeluettelo"
+   "Hae uudet YHA-kohteet"
    #(do
      (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
      (paivita-yha-kohteet (:id urakka)))
