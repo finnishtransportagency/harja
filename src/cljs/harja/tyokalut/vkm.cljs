@@ -8,7 +8,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn- vkm-base-url []
-  "/vkm")
+  ;; todo: selvitä saako tämän vaihtaa?
+  "https://testiextranet.liikennevirasto.fi/vkm/muunnos/vkm")
 
 (defn koordinaatti->trosoite-kahdella [[x1 y1] [x2 y2]]
   (k/post! :hae-tr-pisteilla {:x1 x1 :y1 y1 :x2 x2 :y2 y2} nil true))
@@ -124,7 +125,7 @@
 (def pisteelle-ei-loydy-tieta "Pisteelle ei löydy tietä.")
 (def vihje-zoomaa-lahemmas "Yritä zoomata lähemmäs.")
 
-(defn muunna-tierekisteriosoitteet-eri-paivan-verkolle 
+(defn muunna-tierekisteriosoitteet-eri-paivan-verkolle
   "Muuntaa annetut tieosoitteet tilannepäivän mukaiselta verkolta kohdepäivän verkolle.
   Osoitteet annetaan mappina esim. muodossa:
   {:tieosoitteet: [{:tunniste \"**1**\" :tie 50 :osa 5 :etaisyys 0 :ajorata 1}

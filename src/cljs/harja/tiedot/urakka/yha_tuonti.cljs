@@ -77,8 +77,14 @@
   [harja-urakka-id]
   ; FIXME Lisää virhekäsittely (k/virhe? ja näytä harja.ui.viesti jos jokin kohta menee pieleen)
   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-            ;; tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
-            ;; vkm-kohteet (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle uudet-yha-kohteet)
+            _ (log "---->" (pr-str uudet-yha-kohteet))
+            tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
+            _ (log "---->" (pr-str tieosoitteet))
+            tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
+            ;; todo: yhdistä VKM:sta palautuneet osoitteet YHA:n kohteille
+            vkm-kohteet (go (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle uudet-yha-kohteet tilanne-pvm (pvm/nyt))))
+            ;; todo: selivtä miksi palauttaa too many channels
+            _ (log "----> VKM:n kohteet" (pr-str vkm-kohteet))
             yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id uudet-yha-kohteet))]
         (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
         (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot))))
