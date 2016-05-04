@@ -134,7 +134,7 @@
 (deftest paivystajatietojen-poisto-test
   (tee-urakalle-paivystaja-ulkoisella-idlla 4 1337)
   (tee-urakalle-paivystaja-ulkoisella-idlla 1 1337)
-  (let [msg (cheshire/encode {:ulkoiset_idt [2 1337 4]})
+  (let [msg (cheshire/encode {:paivystaja-idt [2 1337 4]})
         vastaus (api-tyokalut/delete-kutsu ["/api/urakat/4/paivystajatiedot"] kayttaja-yit portti msg)
         encodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
