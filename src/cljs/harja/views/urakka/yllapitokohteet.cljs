@@ -136,6 +136,7 @@
          [yllapitokohdeosa-virheet tr-virheet]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
+  (log "[YHA] Render ylläpitokohteet datalla: " (pr-str @kohteet-atom))
   [grid/grid
      {:otsikko (:otsikko optiot)
       :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
@@ -149,9 +150,9 @@
       :esta-poistaminen-tooltip (fn [_] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
      [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
       {:otsikko "Kohdenumero" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
-       :validoi [[:ei-tyhja "Anna kohdenumero"] [:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
+       :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
       {:otsikko "Kohde" :nimi :nimi
-       :tyyppi :string :leveys kohde-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+       :tyyppi :string :leveys kohde-leveys}
       {:otsikko "Tienumero" :nimi :tr_numero :muokattava? (constantly (not (:paallystysnakyma? optiot)))
        :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
       {:otsikko "Aosa" :nimi :tr_alkuosa :muokattava? (constantly (not (:paallystysnakyma? optiot)))
