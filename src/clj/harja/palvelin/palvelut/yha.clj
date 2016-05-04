@@ -95,7 +95,7 @@
                              :ajorata (:ajorata tierekisteriosoitevali)
                              :kaista (:kaista tierekisteriosoitevali)
                              :rc% (:rc-prosentti paallystystoimenpide)
-                             ; FIXME Onko tämä nyt "massa" vai "massamäärä"? Onko toinen turha?
+                             ; FIXME POT-lomakkeen oikeanpuoleinen massa on massamäärä (ja toisellekin oli joku tarkempi nimi). Pitäisi tehdä UI:lle tarkennus tjsp.
                              :massa (:kokonaismassa paallystystoimenpide)
                              :raekoko (:raekoko paallystystoimenpide)
                              :kuulamylly (:kuulamylly paallystystoimenpide)
