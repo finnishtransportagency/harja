@@ -133,7 +133,6 @@
                   {:tunniste \"**2**\" :tie 50 :osa 5 :etaisyys 100 :ajorata 0}]}
   Palauttaa kanavan, josta vastaus voidaan lukea."
   [tieosoitteet tilannepvm kohdepvm]
-  (log "----> VKM:n base URL" (pr-str vkm-base-url))
   (let [parametrit {:in "tieosoite"
                     :out "tieosoite"
                     :callback "jsonp"
