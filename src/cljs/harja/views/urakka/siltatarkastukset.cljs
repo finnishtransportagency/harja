@@ -399,7 +399,7 @@
                                       (reset! tallennus-kaynnissa false)
                                       (reset! uuden-syottaminen false))
                                   ;; Epäonnistui jostain syystä
-                                  (viesti/nayta! "Tallentaminen epäonnistui" ::danger 1500)
+                                  (viesti/nayta! "Tallentaminen epäonnistui" ::danger viesti/viestin-nayttoaika-lyhyt)
                                   (reset! tallennus-kaynnissa false)))))}
            (ikonit/tallenna) " Tallenna tarkastus"]
          (when (not @voi-tallentaa?)
