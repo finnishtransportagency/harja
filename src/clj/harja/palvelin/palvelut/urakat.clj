@@ -84,13 +84,14 @@
         (map #(konv/array->vec % :yha_elyt))
         (map #(konv/array->vec % :yha_vuodet))
 
-        (map #(if (:yha_yhatunnus %)
+        (map #(if (:yha_yhaid %)
                (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
                                     :yhaid (:yha_yhaid %)
                                     :yhanimi (:yha_yhanimi %)
                                     :elyt (:yha_elyt %)
                                     :vuodet (:yha_vuodet %)
-                                    :kohdeluettelo-paivitetty (:yha_kohdeluettelo_paivitetty %)})
+                                    :kohdeluettelo-paivitetty (:yha_kohdeluettelo_paivitetty %)
+                                    :sidonta-lukittu? (:yha_sidonta_lukittu %)})
                %))
 
         ;; Poista käsitellyt avaimet
@@ -99,7 +100,7 @@
                       :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
                       :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
                       :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet :sisaltaa_ilmoituksia
-                      :yha_kohdeluettelo_paivitetty))))
+                      :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu))))
 
 (defn hallintayksikon-urakat [db user hallintayksikko-id]
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
