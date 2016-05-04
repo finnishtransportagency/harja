@@ -145,7 +145,8 @@
 
 (defn poista-paivystajatiedot [db data parametrit kayttaja]
   (let [{:keys [paivystaja-idt]} data
-        urakka-id (Integer/parseInt (:id parametrit))]
+        urakka-id (Integer/parseInt (:id parametrit))
+        paivystaja-idt (mapv str paivystaja-idt)]
     (validointi/tarkista-urakka db urakka-id)
     (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
     (log/debug "Poistettavat ulkoiset idt: " (pr-str paivystaja-idt) " urakka " (:id parametrit))

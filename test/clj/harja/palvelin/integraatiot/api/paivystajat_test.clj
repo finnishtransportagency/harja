@@ -128,19 +128,24 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 3))))
 
-(defn- tee-urakalle-paivystaja-ulkoisella-idlla [urakka ulkoinen-id]
-  (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo, ulkoinen_id) VALUES ('true','false',now(),now()," urakka ",103, " ulkoinen-id ")"))
+(defn- tee-testiyhteyshenkilo [ulkoinen-id]
+  (u "INSERT INTO yhteyshenkilo (etunimi, sukunimi, ulkoinen_id)\nVALUES ('Pertti', 'Päivystäjä', '" ulkoinen-id "');"))
+
+(defn- tee-urakalle-paivystys [urakka ulkoinen-id]
+  (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES ('true','false',now(),now()," urakka ", (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" ulkoinen-id"'))"))
 
 (deftest paivystajatietojen-poisto-test
-  (tee-urakalle-paivystaja-ulkoisella-idlla 4 1337)
-  (tee-urakalle-paivystaja-ulkoisella-idlla 1 1337)
-  (let [msg (cheshire/encode {:paivystaja-idt [2 1337 4]})
+  (tee-testiyhteyshenkilo 9876543456)
+  (tee-urakalle-paivystys 4 9876543456)
+  (tee-urakalle-paivystys 1 9876543456)
+  (is (= 2 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")
+  (let [msg (cheshire/encode {:paivystaja-idt [2 9876543456 4]})
         vastaus (api-tyokalut/delete-kutsu ["/api/urakat/4/paivystajatiedot"] kayttaja-yit portti msg)
         encodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (:viesti encodattu-body) "Päivystäjätiedot poistettu"))
-    (is (= [] (q "SELECT * FROM paivystys WHERE urakka=4 AND ulkoinen_id=1337")) "urakalta poistunut annettu paivystaja")
-    (is (= 1 (count (q "SELECT * FROM paivystys WHERE ulkoinen_id=1337"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")))
+    (is (= [] (q "SELECT * FROM paivystys WHERE urakka=4 AND yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')")) "urakalta poistunut annettu paivystaja")
+    (is (= 1 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")))
 
 (deftest hae-tarkista-paivamaarakasittelyt
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?paattyen=2016-09-30"] kayttaja-yit portti)]

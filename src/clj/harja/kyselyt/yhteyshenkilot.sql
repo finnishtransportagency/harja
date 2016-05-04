@@ -21,7 +21,12 @@ WHERE yu.urakka = :urakka;
 
 -- name: poista-urakan-paivystajatiedot!
 -- Poistaa annetun urakan päivystäjätiedot
-DELETE FROM paivystys WHERE urakka=:urakka AND ulkoinen_id IN (:ulkoiset_idt);
+DELETE FROM paivystys
+WHERE urakka = :urakka AND
+      yhteyshenkilo IN
+      (SELECT id
+       FROM yhteyshenkilo
+       WHERE ulkoinen_id IN (:ulkoiset_idt));
 
 -- name: hae-urakan-paivystajat
 -- Hakee urakan päivystykset
