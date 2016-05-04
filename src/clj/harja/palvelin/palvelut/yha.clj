@@ -97,7 +97,7 @@
                              :paallystetyyppi (:uusi-paallyste paallystystoimenpide)})
                           kohdeosat)}
         ilmoitustiedot-json (cheshire/encode ilmoitustiedot)]
-    (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde kohde
+    (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde (:id kohde)
                                         :ilmoitustiedot ilmoitustiedot-json
                                         :luoja (:id user)})
     (log/debug "Esitäytetty päällystysilmoitus tehty")))
@@ -141,7 +141,7 @@
                                          :tr_loppuetaisyys (:let tierekisteriosoitevali)
                                          :yhaid yha-id}))
         (when (= kohdetyyppi :paallystys)
-          #_(luo-esitaytetty-paallystysilmoitus c user kohde alikohteet)))) ;; FIXME no extension hstore wtf
+          (luo-esitaytetty-paallystysilmoitus c user kohde alikohteet))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu")
     (hae-urakan-yha-tiedot c urakka-id)))
