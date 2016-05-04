@@ -64,7 +64,9 @@
   (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))]
     (filterv #(not (yha-idt (:yha-id %))) kohteet)))
 
-(defn- hae-yha-kohteet [db yha user {:keys [urakka-id] :as tiedot}]
+(defn- hae-yha-kohteet
+  "Hakee kohteet YHA:sta ja palauttaa vain uudet, Harjasta puuttuvat kohteet."
+  [db yha user {:keys [urakka-id] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (log/debug "Haetaan kohteet yhasta")
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id)
