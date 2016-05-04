@@ -25,14 +25,14 @@
         yhteyshenkilot (q "SELECT id, etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti FROM yhteyshenkilo LIMIT 3;")]
 
     (tee-paivystys true false (first (first yhteyshenkilot)) urakka)
-    (let [paivystaja (yhteyshenkilot/hae-urakan-tamanhetkinen-paivystaja db urakka)
+    (let [paivystaja (first (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka))
           oletettu-paivystaja (first yhteyshenkilot)]
       (is (ovatko-sama-paivystaja? oletettu-paivystaja paivystaja) "Päivystäjä valittu, kun kannassa vain yksi päivystäjä")
       (poista-paivystykset urakka))
 
     (tee-paivystys false false (first (first yhteyshenkilot)) urakka)
     (tee-paivystys true false (first (second yhteyshenkilot)) urakka)
-    (let [paivystaja (yhteyshenkilot/hae-urakan-tamanhetkinen-paivystaja db urakka)
+    (let [paivystaja (first (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka))
           oletettu-paivystaja (second yhteyshenkilot)]
       (is (ovatko-sama-paivystaja? oletettu-paivystaja paivystaja) "Vastuuhenkilö valittu varahenkilön sijasta.")
       (poista-paivystykset urakka))
@@ -40,7 +40,7 @@
     (tee-paivystys false false (first (first yhteyshenkilot)) urakka)
     (tee-paivystys true false (first (second yhteyshenkilot)) urakka)
     (tee-paivystys true false (first (nth yhteyshenkilot 2)) urakka)
-    (let [paivystaja (yhteyshenkilot/hae-urakan-tamanhetkinen-paivystaja db urakka)
+    (let [paivystaja (first (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka))
           oletettu-paivystaja (second yhteyshenkilot)]
       (is (ovatko-sama-paivystaja? oletettu-paivystaja paivystaja) "Ensimmäinen useammasta vastuuhenkilöstä valittu.")
       (poista-paivystykset urakka))))

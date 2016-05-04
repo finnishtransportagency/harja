@@ -21,15 +21,14 @@
      [:nimi (:urakoitsija_nimi urakka)]
      [:ytunnus (:urakoitsija_ytunnus urakka)]]))
 
-(defn rakenna-paivystaja [paivystaja]
-  (when paivystaja
-    [:paivystaja
-     [:etunimi (:etunimi paivystaja)]
-     [:sukunimi (:sukunimi paivystaja)]
-     [:matkapuhelin (:matkapuhelin paivystaja)]
-     [:sahkoposti (:sahkoposti paivystaja)]]))
+(defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin sahkoposti]}]
+  [:paivystaja
+   [:etunimi etunimi]
+   [:sukunimi sukunimi]
+   [:matkapuhelin matkapuhelin]
+   [:sahkoposti sahkoposti]])
 
-(defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystaja virhe]
+(defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
   [:harja:harja-kuittaus
    {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
    [:aika aika]
@@ -42,10 +41,11 @@
       [:ilmoitusId ilmoitus-id]
       (rakenna-urakka urakka)
       (rakenna-urakoitsija urakka)
-      (when paivystaja (rakenna-paivystaja paivystaja))])])
+      (for [p paivystajat]
+        (rakenna-paivystaja p))])])
 
-(defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystaja virhe]
-  (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystaja virhe)
+(defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
+  (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe)
         xml (tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
       xml
