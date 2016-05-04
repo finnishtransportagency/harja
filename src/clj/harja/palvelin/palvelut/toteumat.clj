@@ -59,7 +59,8 @@
             :ytunnus (:suorittajan-ytunnus toteuma)
             :lisatieto (:lisatieto toteuma)
             :ulkoinen_id nil
-            :reitti (geometriaksi (:reitti toteuma))})))
+            :reitti (geometriaksi (:reitti toteuma))
+            :lahde "harja-ui"})))
 
 (defn toteumatehtavan-parametrit [toteuma kayttaja]
   [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
@@ -429,7 +430,8 @@
                         (:suorittajan-ytunnus t)
                         (:lisatieto t)
                         nil
-                        nil nil nil nil nil nil)))]
+                        nil nil nil nil nil nil
+                        "harja-ui")))]
       (log/debug "Toteuman tallentamisen tulos:" (pr-str toteuma))
 
       (doseq [tm toteumamateriaalit]
