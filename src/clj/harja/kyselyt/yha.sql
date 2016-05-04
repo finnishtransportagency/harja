@@ -109,3 +109,6 @@ WHERE urakka = :urakka;
 INSERT INTO paallystysilmoitus
 (paallystyskohde, ilmoitustiedot, luotu, luoja)
     VALUES (:paallystyskohde, :ilmoitustiedot::JSONB, NOW(), :luoja);
+
+-- name: lukitse-urakan-yha-sidonta<!
+UPDATE yhatiedot SET sidonta_lukittu = true WHERE urakka = :urakka;

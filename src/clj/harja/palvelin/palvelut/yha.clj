@@ -12,6 +12,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [cheshire.core :as cheshire]))
 
+(defn lukitse-urakan-yha-sidonta [db urakka-id]
+  (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
+
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/debug "Lisätään YHA-tiedot urakalle " urakka-id)
   (yha-q/lisaa-urakalle-yha-tiedot<! db {:urakka urakka-id

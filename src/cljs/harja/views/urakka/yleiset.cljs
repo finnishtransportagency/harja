@@ -152,12 +152,12 @@
              paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                                 (= (:tyyppi ur) :paikkaus))
              paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
-             sisaltaa-ilmoituksia? (:sisaltaa-ilmoituksia? ur)
+             sidonta-lukittu? (get-in ur [:yhatiedot :sidonta-lukittu?])
              sisaltaa-ilmoituksia-vihje "Urakalle on kirjattu ilmoituksia, sidontaa ei voi muuttaa."]
          (when (and yha-tuontioikeus?
                     paallystys-tai-paikkausurakka?
                     (not paallystys-tai-paikkausurakka-sidottu?)
-                    (not sisaltaa-ilmoituksia?))
+                    (not sidonta-lukittu?))
            (yha/nayta-tuontidialogi ur))
          [:div
           [bs/panel {}
@@ -179,16 +179,16 @@
               (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?)  (not paallystys-tai-paikkausurakka-sidottu?))
               [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
               (and paallystys-tai-paikkausurakka? yha-tuontioikeus? (not paallystys-tai-paikkausurakka-sidottu?))
-              [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
+              [:span (when sidonta-lukittu? {:title sisaltaa-ilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                           :disabled sisaltaa-ilmoituksia?}
+                                           :disabled sidonta-lukittu?}
                "Sido YHA-urakkaan"]]
               (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) paallystys-tai-paikkausurakka-sidottu?)
               [:span "Sidottu YHA-urakkaan. Vain urakanvalvoja voi muuttaa sidontaa."]
               (and paallystys-tai-paikkausurakka? yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
-              [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
+              [:span (when sidonta-lukittu? {:title sisaltaa-ilmoituksia-vihje})
                [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                           :disabled sisaltaa-ilmoituksia?}
+                                           :disabled sidonta-lukittu?}
                "Vaihda sidottu urakka"]]
               :default nil)
             "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))

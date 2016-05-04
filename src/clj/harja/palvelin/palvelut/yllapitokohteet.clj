@@ -6,6 +6,7 @@
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.palvelut.yha :as yha]
             [harja.kyselyt.yllapitokohteet :as q]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]))
@@ -25,7 +26,7 @@
                                                    (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                      db urakka-id sopimus-id (:id %))))))
                         (q/hae-urakan-yllapitokohteet db urakka-id sopimus-id))]
-      (log/debug "Ylläpitokohteet saatu: " (pr-str (map :nimi vastaus)))
+      (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
 (defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
@@ -108,6 +109,7 @@
                                   id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
+  (yha/lukitse-urakan-yha-sidonta db urakka-id)
   (jdbc/with-db-transaction [c db]
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
     (doseq [kohde kohteet]
@@ -152,6 +154,7 @@
                                      id))))
 
 (defn tallenna-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
+  (yha/lukitse-urakan-yha-sidonta db urakka-id)
   (jdbc/with-db-transaction [c db]
     (log/debug "Tallennetaan ylläpitokohdeosat. Ylläpitokohde-id: " yllapitokohde-id)
     (doseq [osa osat]
