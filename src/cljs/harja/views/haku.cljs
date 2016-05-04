@@ -84,21 +84,7 @@
                   "Käyttäjänimi:" (get k :kayttajanimi)
                   "Puhelin:" (get k :puhelin)
                   "Sähköposti:" [:a {:href (str "mailto:" (get k :sahkoposti))}
-                                 (get k :sahkoposti)]
-
-                  "Roolit:" (if (not-empty (get k :roolit))
-                              (str/join ", " (get k :roolit))
-                              "Ei rooleja")]
-                 (when-let [urakkaroolit (get k :urakka-roolit)]
-                   [:span
-                    [:span.tietokentta "Mukana urakoissa:"]
-                    [:div.mukana-urakoissa
-                     (if (empty? urakkaroolit)
-                       "Ei urakkarooleja"
-                       (for [urakkarooli urakkaroolit]
-                         ^{:key (get-in urakkarooli [:urakka :id])}
-                         [:div.tietorivi [:div.tietokentta (str (get-in urakkarooli [:urakka :nimi]))]
-                          [:span.tietoarvo.rooli (get urakkarooli :rooli)]]))]])]))
+                                 (get k :sahkoposti)]]]))
 
 (defn valitse-hakutulos
   [tulos]
