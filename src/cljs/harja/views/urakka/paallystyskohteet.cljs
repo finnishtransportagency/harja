@@ -25,7 +25,7 @@
 (defn paallystyskohteet [ur]
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
-    (komp/lippu paallystys/paallystyskohteetnakymassa?)
+    (komp/lippu paallystys/paallystyskohteet-nakymassa?)
     (fn [ur]
       [:div.paallystyskohteet
        [kartta/kartan-paikka]
