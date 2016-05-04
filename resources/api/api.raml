@@ -350,24 +350,24 @@ documentation:
         description: Päivystäjätietojen poisto.
         body:
           application/json:
-                  example: !include examples/paivystajatietojen-poisto-request.json
-                  schema: paivystajatietojen-poisto-request
+            example: !include examples/paivystajatietojen-poisto-request.json
+            schema: paivystajatietojen-poisto-request
         responses:
              200:
               body:
                 application/json:
-                example: !include examples/paivystajatietojen-poisto-response.json
-                schema: paivystajatietojen-poisto-response
+                  example: !include examples/paivystajatietojen-poisto-response.json
+                  schema: paivystajatietojen-poisto-response
              400:
               body:
                 application/json:
-                example: !include examples/virhe-response.json
-                schema: virhe-response
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
              500:
               body:
                 application/json:
-                example: !include examples/virhe-response.json
-                schema: virhe-response
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
       get:
         is: [secured]
         description: Päivystäjätietojen haku.
