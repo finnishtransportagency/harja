@@ -197,3 +197,8 @@
   (if summa
     (euro false summa)
     "Indeksi puuttuu"))
+
+(defn totuus [arvo]
+  (if arvo
+    "Kyllä"
+    "Ei"))
