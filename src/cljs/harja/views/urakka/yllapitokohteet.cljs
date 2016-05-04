@@ -155,15 +155,15 @@
       {:otsikko "Kohde" :nimi :nimi
        :tyyppi :string :leveys kohde-leveys}
       {:otsikko "Tienumero" :nimi :tr_numero :muokattava? (constantly (not (:paallystysnakyma? optiot)))
-       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
+       :tyyppi :positiivinen-numero :leveys tr-leveys}
       {:otsikko "Aosa" :nimi :tr_alkuosa :muokattava? (constantly (not (:paallystysnakyma? optiot)))
-       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuosa"]]}
+       :tyyppi :positiivinen-numero :leveys tr-leveys}
       {:otsikko "Aet" :nimi :tr_alkuetaisyys :muokattava? (constantly (not (:paallystysnakyma? optiot)))
-       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
+       :tyyppi :positiivinen-numero :leveys tr-leveys}
       {:otsikko "Losa" :nimi :tr_loppuosa :muokattava? (constantly (not (:paallystysnakyma? optiot)))
-       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
+       :tyyppi :positiivinen-numero :leveys tr-leveys}
       {:otsikko "Let" :nimi :tr_loppuetaisyys :muokattava? (constantly (not (:paallystysnakyma? optiot)))
-       :tyyppi :positiivinen-numero :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
+       :tyyppi :positiivinen-numero :leveys tr-leveys}
       {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
        :hae (fn [rivi]
               (str (tierekisteri/laske-tien-pituus {:aet (:tr_alkuetaisyys rivi)
@@ -172,13 +172,12 @@
       {:otsikko "KVL"
        :nimi :keskimaarainen_vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
        :muokattava? (constantly (not (:paallystysnakyma? optiot)))}
-      {:otsikko "Nykyinen päällyste"
+      {:otsikko "Ny\u00ADkyi\u00ADnen pääl\u00ADlys\u00ADte"
        :nimi :nykyinen_paallyste
        :fmt #(paallystys-ja-paikkaus/hae-paallyste-koodilla %)
        :tyyppi :valinta
        :valinta-arvo :koodi
        :valinnat paallystys-ja-paikkaus/+paallystetyypit+
-       :validoi [[:ei-tyhja "Anna päällystetyyppi"]]
        :valinta-nayta :nimi
        :leveys nykyinen-paallyste-leveys
        :muokattava? (constantly (not (:paallystysnakyma? optiot)))}
