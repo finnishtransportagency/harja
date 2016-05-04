@@ -100,7 +100,7 @@
     ;; käyttäjän oikeudet urakkaan
 
     (doseq [id poistettu]
-      (log/info "POISTAN yhteyshenkilön " id " urakasta " urakka-id)
+      (log/debug "POISTAN yhteyshenkilön " id " urakasta " urakka-id)
       (q/poista-yhteyshenkilo! c id urakka-id))
 
     ;; ketä yhteyshenkilöitä tässä urakassa on
@@ -109,7 +109,7 @@
 
       ;; tallenna jokainen yhteyshenkilö
       (doseq [{:keys [id rooli] :as yht} yhteyshenkilot]
-        (log/info "Tallennetaan yhteyshenkilö " yht " urakkaan " urakka-id)
+        (log/debug "Tallennetaan yhteyshenkilö " yht " urakkaan " urakka-id)
         (if (> id 0)
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
