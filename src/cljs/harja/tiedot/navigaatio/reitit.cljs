@@ -11,7 +11,7 @@
          :suunnittelu :kokonaishintaiset
          :toteumat :kokonaishintaiset-tyot
          :laskutus :laskutusyhteenveto
-         :hallinta :kayttajat
+         :hallinta :indeksit
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaus :paikkauskohteet
@@ -46,8 +46,9 @@
   [url-navigaatio polku]
   (loop [url-navigaatio url-navigaatio
          sijainti :sivu
-         [osa & osat] (map keyword
-                           (str/split polku #"/"))]
+         [osa & osat] (keep #(when-not (str/blank? %)
+                               (keyword %))
+                            (str/split polku #"/"))]
     (if-not osa
       url-navigaatio
       (recur (assoc url-navigaatio sijainti osa)

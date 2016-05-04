@@ -69,10 +69,11 @@
                           (sido-yha-urakka-harja-urakkaan db user tiedot)))
       (julkaise-palvelu http :hae-urakat-yhasta
                         (fn [user tiedot]
-                          (hae-urakat-yhasta db yha user tiedot)))))
+                          (hae-urakat-yhasta db yha user tiedot)))
+      this))
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :sido-yha-urakka-harja-urakkaan
-      this)))
+      :sido-yha-urakka-harja-urakkaan)
+    this))

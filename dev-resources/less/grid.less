@@ -50,6 +50,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
   table {
     font-size: @fontin-koko-taulukko;
+    word-break: break-all;
     td {
       input:not([type="checkbox"]), select {
         width: 100%;
@@ -81,6 +82,11 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       }
     }
 
+    thead {
+      background-color: @harmaa8;
+      word-break: normal;
+    }
+
     td:hover {
       .varoitukset,
       .virheet,
@@ -92,9 +98,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-  }
-  thead {
-    background-color: @harmaa9;
   }
   table.grid tr.vetolaatikko-auki {
     display: table-row;
@@ -166,6 +169,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   td.toiminnot span {
     display: inline-block;
     .livicon-trash {
+      margin-left: 2px;
       line-height: @livitaulukon-input-korkeus;
     }
   }
@@ -178,7 +182,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     position: relative;
   }
   tr.parillinen {
-    background-color: @harmaa11;
+    background-color: @harmaa9;
   }
   tr.pariton {
     background-color: @harmaa10;
@@ -207,6 +211,12 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   tr.muokataan {
     height: @livitaulukon-rivi-korkeus;
     padding: @livi-taulukon-padding-muokatessa;
+    &.parillinen {
+      background-color: @harmaa9;
+    }
+    &.pariton {
+      background-color: @harmaa11;
+    }
     td {
       &.ei-muokattava {
         padding-left: @livi-taulukon-padding;
@@ -269,6 +279,12 @@ tr.otsikko {
 
 // Apuluokkia gridin hallintaan
 
+.grid-header-keskita {
+  text-align: center;
+}
+.grid-header-oikea {
+  text-align: right;
+}
 
 .grid-kk-sarake {
   word-spacing: -3px; // Välilyönnit hoitavat rivinvaihdot luomatta tavutusmerkkiä, mutta niitä ei haluta nähdä
@@ -285,3 +301,13 @@ tr.otsikko {
   }
 }
 
+.grid-reunus-ei {
+  border-left: none !important;
+  border-right: none !important;
+}
+.grid-reunus-vasen {
+  border-right: none !important;
+}
+.grid-reunus-oikea {
+  border-left: none !important;
+}

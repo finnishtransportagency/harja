@@ -191,7 +191,8 @@
                                   (map (fn [rivi]
                                          [(:kohdenro rivi) [(:tulos rivi) (:lisatieto rivi)]])
                                        taulukon-rivit))
-            tallennettava-tarkastus (assoc @st/valittu-tarkastus :kohteet kohteet-mapissa)
+            tallennettava-tarkastus (assoc @st/valittu-tarkastus :kohteet kohteet-mapissa
+                                                                 :urakka-id (:id @nav/valittu-urakka))
             res (<! (st/tallenna-siltatarkastus! tallennettava-tarkastus))
             muut-tarkastukset (filter (fn [tarkastus]
                                         (not (= (:id tarkastus) (:id res))))
