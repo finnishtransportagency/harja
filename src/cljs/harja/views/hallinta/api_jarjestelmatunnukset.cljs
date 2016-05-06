@@ -38,24 +38,29 @@
                    :tallenna tallenna}
         [{:otsikko "Käyttäjänimi"
           :nimi :kayttajanimi
-          :tyyppi :string}
-         {:otsikko "Kuvaus"
-          :nimi :kuvaus :tyyppi :string}
+          :tyyppi :string
+          :leveys 5}
          {:otsikko "Urakoitsija"
           :nimi :organisaatio
           :fmt :nimi
           :tyyppi :valinta
           :valinnat (urakoitsijavalinnat)
-          :valinta-nayta :nimi}
+          :valinta-nayta :nimi
+          :leveys 5}
          {:otsikko "Käynnissä olevat urakat"
           :nimi :urakat
           :fmt #(str/join ", " %)
-          :muokattava? ei-muokattava}
+          :muokattava? ei-muokattava
+          :leveys 15}
          {:otsikko "Luotu"
           :nimi :luotu
           :tyyppi :pvm
           :fmt pvm/pvm-aika-opt
-          :muokattava? ei-muokattava}
+          :muokattava? ei-muokattava
+          :leveys 5}
+         {:otsikko "Kuvaus"
+          :nimi :kuvaus :tyyppi :string
+          :leveys 5}
          ]
 
         @jarjestelmatunnukset

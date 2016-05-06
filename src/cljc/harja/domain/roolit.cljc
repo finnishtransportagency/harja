@@ -155,6 +155,13 @@ rooleista."
       (and (organisaation-urakka? kayttaja urakka-id)
            (some roolit (organisaatioroolit kayttaja)))))))
 
+(defn rooli-jossain-urakassa?
+  "Tarkistaa onko käyttäjällä tietty rooli jossain urakassa (ei väliä missä)."
+  #?(:cljs ([rooli] (rooli-jossain-urakassa? @istunto/kayttaja rooli)))
+  ([kayttaja rooli]
+   (some (partial rooli-urakassa? kayttaja rooli)
+         (keys (:urakkaroolit kayttaja)))))
+
 ;; VAIN BACKILLÄ
 
 #?(:clj
