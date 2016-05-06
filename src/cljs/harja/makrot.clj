@@ -81,3 +81,31 @@
 
     ;; Ei metodissa, konstruktorikutsu
     `(goog/base (cljs.core/js* "this") ~@args)))
+
+
+;;; Async threading makrot, kommentoitu... ehkä fmap on parempi
+
+#_(defn- expand-operation [first? error? value-sym [operation & operations]]
+  (let [next-op-form (if first?
+                       (if (list? operation)
+                         operation
+                         (list operation))
+                       (if (list? operation)
+                         (concat (list (first operation)
+                                       value-sym)
+                                 (rest operation))
+                         (list operation value-sym)))]
+    (if (empty? operations)
+      next-op-form
+      (let [~value-sym (cljs.core.async/<! ~next-op-form)]
+        (if (~error? ~value-sym)
+          ~value-sym
+          ~(if (empty? operations)
+             value-sym
+             (expand-operation false error? value-sym operations)))))))
+
+#_(defmacro go-> [opts & operations]
+  (let [error? (or (:error? opts) nil?)
+        value-sym (gensym "ASYNC")]
+    `(cljs.core.async.macros/go
+       ~(expand-operation true error? value-sym operations))))
