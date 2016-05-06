@@ -51,8 +51,8 @@
 (defn- sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
-  (let [yha-tiedot (hae-urakan-yha-tiedot db harja-urakka-id)]
-    (if (:sidonta-lukittu? yha-tiedot)
+  (let [sidonta-lukittu? (:sidonta-lukittu? (hae-urakan-yha-tiedot db harja-urakka-id))]
+    (if sidonta-lukittu?
       (throw (RuntimeException. "Sidonta lukittu!"))
       (jdbc/with-db-transaction [db db]
         (poista-urakan-yha-tiedot db harja-urakka-id)
