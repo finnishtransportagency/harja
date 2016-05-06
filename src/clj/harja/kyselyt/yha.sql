@@ -25,7 +25,7 @@ SELECT
   elyt,
   vuodet,
   kohdeluettelo_paivitetty as "kohdeluettelo-paivitetty",
-  sidonta_lukittu as "sidonta-lukittu?"
+  sidonta_lukittu as "sidonta-lukittu"
 FROM yhatiedot
 WHERE urakka = :urakka;
 

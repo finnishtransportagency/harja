@@ -16,7 +16,7 @@
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
-  (log/debug "Lisätään YHA-tiedot urakalle " urakka-id)
+  (log/debug "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
   (yha-q/lisaa-urakalle-yha-tiedot<! db {:urakka urakka-id
                                          :yhatunnus yhatunnus
                                          :yhaid yhaid
@@ -44,7 +44,8 @@
   (first (into []
                (comp
                  (map #(konv/array->vec % :vuodet))
-                 (map #(konv/array->vec % :elyt)))
+                 (map #(konv/array->vec % :elyt))
+                 (map #(clojure.set/rename-keys % {:sidonta-lukittu :sidonta-lukittu?})))
                (yha-q/hae-urakan-yhatiedot db {:urakka urakka-id}))))
 
 (defn- sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
