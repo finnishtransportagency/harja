@@ -37,7 +37,7 @@
                      (go (let [urakka-id (:id @nav/valittu-urakka)
                                [sopimus-id _] @u/valittu-sopimusnumero
                                _ (log "PÄÄ Tallennetaan päällystyskohteet: " (pr-str kohteet))
-                               vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet urakka-id sopimus-id kohteet))]
+                               vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet! urakka-id sopimus-id kohteet))]
                            (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                            (reset! paallystys/paallystyskohteet vastaus))))}]
        [yllapitokohteet-view/yllapitokohteet-yhteensa

@@ -86,7 +86,7 @@
                                            (map (fn [osa]
                                                   (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                            %)
-                                vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat urakka-id sopimus-id (:id rivi) osat))]
+                                vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat! urakka-id sopimus-id (:id rivi) osat))]
                             (log "[PAAL] ylläpitokohdeosat tallennettu: " (pr-str vastaus))
                             (resetoi-tr-tiedot)
                             (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))
