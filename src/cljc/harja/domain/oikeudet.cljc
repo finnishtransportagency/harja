@@ -31,8 +31,12 @@
   [tyyppi oikeus urakka-id kayttaja]
   (let [sallitut (tyyppi oikeus)]
     (or (roolit/roolissa? kayttaja sallitut)
-        (and urakka-id
-             (roolit/rooli-urakassa? kayttaja sallitut urakka-id)))))
+        (if urakka-id
+          ;; Jos urakka annettu, tarkista onko tähän urakkaan kyseinen oikeus
+          (roolit/rooli-urakassa? kayttaja sallitut urakka-id)
+
+          ;; Jos ei urakkaa, katso onko missään urakassa oikeus
+          (roolit/rooli-jossain-urakassa? kayttaja sallitut)))))
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
