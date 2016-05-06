@@ -48,14 +48,17 @@
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+  (is (= 1 (count (hae-ilmoitus)))
+      "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+  (is (= 1 (count (hae-ilmoitus)))
+      "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus))) "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
+  (is (= 1 (count (hae-ilmoitus)))
+      "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-urakan-paattely
@@ -71,7 +74,6 @@
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-ilmoitus))
 
-;; fixme: poistettu flaky testi, feilaili oudosti
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
@@ -112,9 +114,11 @@
     (let [xml (first @viestit)
           data (xml/lue xml)]
       (is (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
-      (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
+      (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
+          "Kuittauksen on tehty oikeaan viestiin.")
       (is (= "virhe" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
-      (is (= "Tiedoilla ei voitu päätellä urakkaa." (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
+      (is (= "Tiedoilla ei voitu päätellä urakkaa." (z/xml1-> data :virhe z/text))
+          "Virheitä ei ole raportoitu."))
 
     (is (= 0 (count (hae-ilmoitus))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
