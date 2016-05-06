@@ -119,3 +119,6 @@ DELETE FROM paallystysilmoitus WHERE paallystyskohde IN (SELECT id FROM yllapito
 
 -- name: poista-urakan-paikkausilmoitukset!
 DELETE FROM paikkausilmoitus WHERE paikkauskohde IN (SELECT id FROM yllapitokohde WHERE urakka = :urakka);
+
+-- name: paivita-paallystys-tai-paikkausurakan-geometria
+SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);

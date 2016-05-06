@@ -133,9 +133,6 @@ UPDATE yllapitokohdeosa
 SET poistettu = TRUE
 WHERE id = :id;
 
--- name: paivita-paallystys-tai-paikkausurakan-geometria
-SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
-
 -- name: hae-urakan-aikataulu
 -- Hakee urakan kohteiden aikataulutiedot
 SELECT

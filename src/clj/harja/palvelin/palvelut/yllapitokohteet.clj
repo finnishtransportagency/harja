@@ -162,7 +162,7 @@
       (if (and (:id osa) (not (neg? (:id osa))))
         (paivita-yllapitokohdeosa c user osa)
         (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-    (q/paivita-paallystys-tai-paikkausurakan-geometria c urakka-id)
+    (yha/paivita-yllapitourakan-geometriat c urakka-id)
     (let [yllapitokohdeosat (hae-urakan-yllapitokohdeosat c user {:urakka-id urakka-id
                                                                   :sopimus-id sopimus-id
                                                                   :yllapitokohde-id yllapitokohde-id})]

@@ -12,6 +12,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [cheshire.core :as cheshire]))
 
+(defn paivita-yllapitourakan-geometriat [db urakka-id]
+  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
+
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
 
@@ -154,7 +157,9 @@
         (when (= kohdetyyppi :paallystys)
           (luo-esitaytetty-paallystysilmoitus c user kohde alikohteet))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
-    (log/debug "YHA-kohteet tallennettu")
+    (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
+    (paivita-yllapitourakan-geometriat c urakka-id)
+    (log/debug "Geometria päivitetty.")
     (hae-urakan-yha-tiedot c urakka-id)))
 
 (defrecord Yha []
