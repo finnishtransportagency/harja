@@ -282,7 +282,7 @@
                  "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
                  "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
         :komponentti [napit/palvelinkutsu-nappi
-                      (if (:laatupoikkeamaid tarkastus) "Avaa laatupoikkeama" "Lisää laatupoikkeama")
+                      (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
                       (fn []
                         (go
                           (let [tarkastus (<! (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))

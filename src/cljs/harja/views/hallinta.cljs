@@ -11,6 +11,7 @@
             [harja.views.indeksit :as i]
             [harja.views.hallinta.lampotilat :as lampotilat]
             [harja.views.hallinta.integraatioloki :as integraatioloki]
+            [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.ui.grid :as g]
             ))
 
@@ -42,4 +43,10 @@
    :integraatioloki
    (when (oikeudet/hallinta-lampotilat)
      ^{:key "integraatioloki"}
-     [integraatioloki/integraatioloki])])
+     [integraatioloki/integraatioloki])
+
+   "API järjestelmätunnukset"
+   :api-jarjestelmatunnukset
+   (when (oikeudet/hallinta-api-jarjestelmatunnukset)
+     ^{:key "jarjestelmatunnukset"}
+     [api-jarjestelmatunnukset/api-jarjestelmatunnukset])])
