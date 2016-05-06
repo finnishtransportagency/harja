@@ -34,7 +34,13 @@
   (yha-q/poista-urakan-yllapitokohdeosat! db {:urakka urakka-id})
   (yha-q/poista-urakan-yllapitokohteet! db {:urakka urakka-id}))
 
+(defn- poista-urakan-yllapito-ilmoitukset [db urakka-id]
+  (log/debug "Poistetaan urakan " urakka-id " ylläpito-ilmoitukset")
+  (yha-q/poista-urakan-paallystysilmoitukset! db {:urakka urakka-id})
+  (yha-q/poista-urakan-paikkausilmoitukset! db {:urakka urakka-id}))
+
 (defn- hae-urakan-yha-tiedot [db urakka-id]
+  (log/debug "Haetaan urakan " urakka-id " yha-tiedot")
   (first (into []
                (comp
                  (map #(konv/array->vec % :vuodet))
@@ -49,6 +55,7 @@
       (throw (RuntimeException. "Sidonta lukittu!"))
       (jdbc/with-db-transaction [db db]
         (poista-urakan-yha-tiedot db harja-urakka-id)
+        (poista-urakan-yllapito-ilmoitukset db harja-urakka-id)
         (poista-urakan-yllapitokohteet db harja-urakka-id)
         (lisaa-urakalle-yha-tiedot db user harja-urakka-id yha-tiedot)
         (log/debug "YHA-tiedot sidottu. Palautetaan urakan YHA-tiedot")

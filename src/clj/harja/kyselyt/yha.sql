@@ -113,3 +113,9 @@ INSERT INTO paallystysilmoitus
 
 -- name: lukitse-urakan-yha-sidonta<!
 UPDATE yhatiedot SET sidonta_lukittu = true WHERE urakka = :urakka;
+
+-- name: poista-urakan-paallystysilmoitukset!
+DELETE FROM paallystysilmoitus WHERE paallystyskohde IN (SELECT id FROM yllapitokohde WHERE urakka = :urakka);
+
+-- name: poista-urakan-paikkausilmoitukset!
+DELETE FROM paikkausilmoitus WHERE paikkauskohde IN (SELECT id FROM yllapitokohde WHERE urakka = :urakka);
