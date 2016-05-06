@@ -11,7 +11,8 @@
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka :as u])
+    [harja.tiedot.urakka :as u]
+    [harja.tiedot.urakka :as urakka])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -19,6 +20,7 @@
 
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
+
 (defn hae-paallystystoteumat [urakka-id sopimus-id]
   (k/post! :urakan-paallystystoteumat {:urakka-id  urakka-id
                                        :sopimus-id sopimus-id}))
@@ -28,7 +30,8 @@
                                                            :sopimus-id         sopimus-id
                                                            :paallystyskohde-id paallystyskohde-id}))
 
-(defn tallenna-paallystysilmoitus [urakka-id sopimus-id lomakedata]
+(defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
+  (urakka/lukitse-valitun-urakan-yha-sidonta!)
   (k/post! :tallenna-paallystysilmoitus {:urakka-id          urakka-id
                                          :sopimus-id         sopimus-id
                                          :paallystysilmoitus lomakedata}))

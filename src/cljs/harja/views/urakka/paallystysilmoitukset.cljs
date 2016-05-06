@@ -175,7 +175,7 @@
                                   (grid/poista-idt [:ilmoitustiedot :tyot]))]
         (log "PÄÄ Lomake-data: " (pr-str @paallystys/paallystysilmoitus-lomakedata))
         (log "PÄÄ Lähetetään data " (pr-str lahetettava-data))
-        (paallystys/tallenna-paallystysilmoitus urakka-id sopimus-id lahetettava-data))
+        (paallystys/tallenna-paallystysilmoitus! urakka-id sopimus-id lahetettava-data))
       {:luokka "nappi-ensisijainen"
        :disabled (false? @valmis-tallennettavaksi?)
        :ikoni (ikonit/tallenna)
