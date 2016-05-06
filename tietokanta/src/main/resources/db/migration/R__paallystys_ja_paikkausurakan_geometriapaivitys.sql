@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION paivita_paallystys_ja_paikkausurakoiden_geometriat() RETURNS VOID AS $$
 BEGIN
   UPDATE urakka
-  SET alue = uusi_alue
+  SET alue = ST_BUFFER(uusi_alue, 1000)
   FROM (SELECT u.id, u.nimi, ST_ConvexHull(ST_UNION(sijainti)) AS uusi_alue
         FROM yllapitokohdeosa osa
           JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id
@@ -16,7 +16,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION paivita_paallystys_tai_paikkausurakan_geometria(urakkaid INTEGER) RETURNS VOID AS $$
 BEGIN
   UPDATE urakka
-  SET alue = uusi_alue
+  SET alue = ST_BUFFER(uusi_alue, 1000)
   FROM (SELECT u.id, u.nimi, ST_ConvexHull(ST_UNION(sijainti)) AS uusi_alue
         FROM yllapitokohdeosa osa
           JOIN yllapitokohde ypk ON osa.yllapitokohde = ypk.id
@@ -26,3 +26,5 @@ BEGIN
   RETURN;
 END;
 $$ LANGUAGE plpgsql;
+
+SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
