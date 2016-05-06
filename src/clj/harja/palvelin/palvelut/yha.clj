@@ -95,7 +95,6 @@
 (defn- luo-esitaytetty-paallystysilmoitus [db user kohde kohdeosat]
   (log/debug "Tehdään kohdeosista esitäytetty päällystysilmoitus")
   (let [ilmoitustiedot {:osoitteet
-                        ;; FIXME ASPA 4.5.2016: Esitäytetään vain tie ja päällyste, urakoitsija täyttää kaikki muut
                         (mapv
                           (fn [{:keys [tierekisteriosoitevali paallystystoimenpide] :as kohdeosa}]
                             {:tie (:tienumero tierekisteriosoitevali)
@@ -105,11 +104,6 @@
                              :let (:let tierekisteriosoitevali)
                              :ajorata (:ajorata tierekisteriosoitevali)
                              :kaista (:kaista tierekisteriosoitevali)
-                             :rc% (:rc-prosentti paallystystoimenpide)
-                             ; FIXME POT-lomakkeen oikeanpuoleinen massa on massamäärä (ja toisellekin oli joku tarkempi nimi). Pitäisi tehdä UI:lle tarkennus tjsp.
-                             :massa (:kokonaismassa paallystystoimenpide)
-                             :raekoko (:raekoko paallystystoimenpide)
-                             :kuulamylly (:kuulamylly paallystystoimenpide)
                              :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
                              :paallystetyyppi (:uusi-paallyste paallystystoimenpide)})
                           kohdeosat)}
