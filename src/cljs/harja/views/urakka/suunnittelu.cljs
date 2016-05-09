@@ -29,7 +29,8 @@
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
-    :materiaalit (not= tyyppi :tiemerkinta)
+    :materiaalit (and (not= tyyppi :tiemerkinta)
+                      (not= tyyppi :paallystys))
     :suola (= tyyppi :hoito)))
 
 (defn suunnittelu [ur]
