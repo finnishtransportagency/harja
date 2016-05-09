@@ -56,7 +56,7 @@
                            (reset! paallystys/harjan-paallystyskohteet (filter (comp not yllapitokohteet/yha-kohde?) vastaus)))))}]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
-        paallystys/harjan-paallystyskohteet {:paallystysnakyma? true}]
+        paallystys/kohteet-yhteensa {:paallystysnakyma? true}]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]

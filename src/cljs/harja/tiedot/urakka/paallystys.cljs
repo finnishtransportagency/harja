@@ -70,6 +70,10 @@
     (filter (comp not yllapitokohteet/yha-kohde?)
             @paallystyskohteet)))
 
+(def kohteet-yhteensa
+  (reaction
+    (concat @yhan-paallystyskohteet @harjan-paallystyskohteet)))
+
 (tarkkaile! "[YHA] Päällystyskohteet: " yhan-paallystyskohteet)
 
 (defonce paallystyskohteet-kartalla
