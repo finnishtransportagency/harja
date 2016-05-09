@@ -122,7 +122,6 @@
    Suoritus tapahtuu asynkronisesti"
   ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
   ([harja-urakka-id optiot]
-    ; FIXME Melkoinen If-hirviö, miten tätä siistisi?
    (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
              _ (log "[YHA] Uudet YHA-kohteet: " (pr-str uudet-yha-kohteet))]
          (if (k/virhe? uudet-yha-kohteet)
