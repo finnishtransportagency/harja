@@ -87,7 +87,11 @@
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        materiaalit (sort-by materiaalidomain/materiaalien-jarjestys (distinct (map :materiaali_nimi toteumat)))
+        materiaalit (sort-by materiaalidomain/materiaalien-jarjestys (distinct
+                                                                       (map
+                                                                         #(str (:materiaali_nimi %)
+                                                                               " (" (:materiaali_yksikko %) ")")
+                                                                         toteumat)))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
 
     [:raportti {:nimi raportin-nimi}

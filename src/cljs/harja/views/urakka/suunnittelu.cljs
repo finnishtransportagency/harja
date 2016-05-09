@@ -27,6 +27,11 @@
                                                                 @u/urakan-yks-hint-tyot)
                                                           (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
 
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
+  (case valilehti
+    :materiaalit (not= tyyppi :tiemerkinta)
+    :suola (= tyyppi :hoito)))
+
 (defn suunnittelu [ur]
   ;; suunnittelu-välilehtien yhteiset valinnat hoitokaudelle ja sopimusnumerolle
   (let [valitun-hoitokauden-yks-hint-kustannukset (valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -59,11 +64,13 @@
              [muut-tyot/muut-tyot ur])
 
            "Suola" :suola
-           (when (and (oikeudet/urakat-suunnittelu-suola id) (= :hoito (:tyyppi ur)))
+           (when (and (oikeudet/urakat-suunnittelu-suola id)
+                      (valilehti-mahdollinen? :suola ur))
              [suola/suola])
 
            "Materiaalit"
            :materiaalit
-           (when (oikeudet/urakat-suunnittelu-materiaalit id)
+           (when (and (oikeudet/urakat-suunnittelu-materiaalit id)
+                      (valilehti-mahdollinen? :materiaalit ur))
              ^{:key "materiaalit"}
              [mat/materiaalit ur])]])})))
