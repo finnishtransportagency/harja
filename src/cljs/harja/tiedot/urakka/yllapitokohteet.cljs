@@ -45,3 +45,6 @@
                           (apply funktio kohderivi argumentit)
                           kohderivi)))
                  kohderivit))))
+
+(defn yha-kohde? [kohde]
+  (some? (:yhaid kohde)))

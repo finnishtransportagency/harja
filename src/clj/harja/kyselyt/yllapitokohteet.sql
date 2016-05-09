@@ -20,7 +20,8 @@ SELECT
   tr_alkuosa,
   tr_alkuetaisyys,
   tr_loppuosa,
-  tr_loppuetaisyys
+  tr_loppuetaisyys,
+  yhaid
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
