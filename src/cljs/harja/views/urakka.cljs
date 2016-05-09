@@ -25,7 +25,6 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
-  ;; FIXME: siirrä navigaatioon
   (case valilehti
     :yleiset true
     ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
@@ -38,8 +37,8 @@
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
     :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= tyyppi :hoito))
     :laskutus (and (oikeudet/urakat-laskutus id)
-                   (not (= tyyppi :paallystys))
-                   (not (= tyyppi :tiemerkinta)))))
+                   (not= tyyppi :paallystys)
+                   (not= tyyppi :tiemerkinta))))
 
 (defn urakka
   "Urakkanäkymä"
