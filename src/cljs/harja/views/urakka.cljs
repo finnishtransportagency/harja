@@ -37,7 +37,9 @@
     :laadunseuranta (oikeudet/urakat-laadunseuranta id)
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
     :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= tyyppi :hoito))
-    :laskutus (oikeudet/urakat-laskutus id)))
+    :laskutus (and (oikeudet/urakat-laskutus id)
+                   (not (= tyyppi :paallystys))
+                   (not (= tyyppi :tiemerkinta)))))
 
 (defn urakka
   "Urakkanäkymä"
