@@ -582,14 +582,15 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
         kasittele-otsikkorivin-kiinnitys (fn [this]
-                                           (if (and (neg? (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
-                                                    (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
+                                           (if (and
+                                                 (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
+                                                 (neg? (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
+                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false))
                                            (let [sijainti-y (- (dom/scroll-sijainti-ylareunaan)
                                                                (dom/elementin-etaisyys-sivun-ylareunaan (r/dom-node this))
-                                                               20) ;; FIXME Selvitä thead korkeus, älä hardcoodaa
-                                                 ]
+                                                               20.0)]
                                              (reset! otsikkorivi-sijainti-y sijainti-y)))
         kasittele-scroll-event (fn [this _]
                                  (maarita-rendattavien-rivien-maara this)
