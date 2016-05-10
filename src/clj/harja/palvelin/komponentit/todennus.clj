@@ -130,7 +130,8 @@ ja palauttaa käyttäjätiedot"
        etunimi "oam_user_first_name"
        sukunimi "oam_user_last_name"
        sahkoposti "oam_user_mail"
-       puhelin "oam_user_mobile"}]
+       puhelin "oam_user_mobile"
+       :as headerit}]
 
   (let [organisaatio (hae-kayttajalle-organisaatio ely db organisaatio)
 
@@ -144,7 +145,9 @@ ja palauttaa käyttäjätiedot"
                      db
                      (assoc kayttaja
                             :organisaatio (:id organisaatio)))]
-
+    (log/info "SÄHKE HEADERIT: " headerit
+              "; KÄYTTÄJÄ ID: " kayttaja-id
+              "; ORGANISAATIO: " organisaatio)
     (merge (assoc kayttaja
                   :organisaatio organisaatio
                   :organisaation-urakat (into #{}

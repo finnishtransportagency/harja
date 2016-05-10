@@ -177,8 +177,7 @@ SELECT
   u.hallintayksikko,
   u.sampoid
 FROM urakka u
-  JOIN organisaatio hal ON u.hallintayksikko = hal.id
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE (u.nimi ILIKE :teksti
        OR u.sampoid ILIKE :teksti)
       AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR

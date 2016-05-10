@@ -96,17 +96,17 @@
         [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
     [(- x1 x2) (- y1 y2) w1 h1]))
 
-(defn elementin-etaisyys-alareunaan [solmu]
+(defn elementin-etaisyys-viewportin-alareunaan [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (- @korkeus (.-bottom r))]
     etaisyys))
 
-(defn elementin-etaisyys-ylareunaan [solmu]
+(defn elementin-etaisyys-viewportin-ylareunaan [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (.-top r)]
     etaisyys))
 
-(defn elementin-etaisyys-oikeaan-reunaan [solmu]
+(defn elementin-etaisyys-viewportin-oikeaan-reunaan [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (- @leveys (.-right r))]
     etaisyys))

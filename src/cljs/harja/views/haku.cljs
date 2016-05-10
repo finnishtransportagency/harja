@@ -74,31 +74,22 @@
                                                         :on-click #(do (.preventDefault %)
                                                                        (modal/piilota!))}
                             "Sulje"]]}
-                [:div.kayttajan-tiedot
-                 [kaksi-palstaa-otsikkoja-ja-arvoja {}
-                  "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
-                                                                 (modal/piilota!)
-                                                                 (valitse-organisaatio (:organisaatio k)))}
-                                   (name (get-in k [:organisaatio :nimi]))]
-                  "Org. tyyppi:" (name (get-in k [:organisaatio :tyyppi]))
-                  "Käyttäjänimi:" (get k :kayttajanimi)
-                  "Puhelin:" (get k :puhelin)
-                  "Sähköposti:" [:a {:href (str "mailto:" (get k :sahkoposti))}
-                                 (get k :sahkoposti)]
-
-                  "Roolit:" (if (not-empty (get k :roolit))
-                              (str/join ", " (get k :roolit))
-                              "Ei rooleja")]
-                 (when-let [urakkaroolit (get k :urakka-roolit)]
-                   [:span
-                    [:span.tietokentta "Mukana urakoissa:"]
-                    [:div.mukana-urakoissa
-                     (if (empty? urakkaroolit)
-                       "Ei urakkarooleja"
-                       (for [urakkarooli urakkaroolit]
-                         ^{:key (get-in urakkarooli [:urakka :id])}
-                         [:div.tietorivi [:div.tietokentta (str (get-in urakkarooli [:urakka :nimi]))]
-                          [:span.tietoarvo.rooli (get urakkarooli :rooli)]]))]])]))
+                (let [org (:organisaatio k)
+                      org-nimi (:nimi org)
+                      org-tyyppi (:tyyppi org)
+                      email (get k :sahkoposti)]
+                  [:div.kayttajan-tiedot
+                  [kaksi-palstaa-otsikkoja-ja-arvoja {}
+                   "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
+                                                                  (modal/piilota!)
+                                                                  (valitse-organisaatio org))}
+                                    (when org-nimi org-nimi)]
+                   "Org. tyyppi:" (when org-tyyppi (name org-tyyppi))
+                   "Käyttäjänimi:" (get k :kayttajanimi)
+                   "Puhelin:" (get k :puhelin)
+                   "Sähköposti:" (when email
+                                   [:a {:href (str "mailto:" email)}
+                                    email])]])))
 
 (defn valitse-hakutulos
   [tulos]

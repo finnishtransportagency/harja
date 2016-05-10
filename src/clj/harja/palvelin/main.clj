@@ -60,6 +60,7 @@
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
+    [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -312,6 +313,10 @@
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
+
+      :api-jarjestelmatunnukset (component/using
+                                 (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
+                                 [:http-palvelin :db])
 
       ;; Harja API
       :api-urakat (component/using

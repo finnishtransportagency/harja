@@ -61,7 +61,7 @@
 
        [:taulukko {:otsikko otsikko
                    :rivi-ennen (concat
-                                [{:teksti "Hoitoluokka" :sarakkeita 1}]
+                                [{:teksti "Hoi\u00ADto\u00ADluok\u00ADka" :sarakkeita 1}]
                                 (map (fn [{nimi :nimi}]
                                        {:teksti nimi :sarakkeita 6 :tasaa :keskita})
                                      talvihoitoluokat)
@@ -70,7 +70,7 @@
         (into []
               (concat
 
-               [{:otsikko "Tehtävä" :leveys tehtava-leveys}]
+               [{:otsikko "Teh\u00ADtä\u00ADvä" :leveys tehtava-leveys}]
 
                (mapcat (fn [_]
                          [{:otsikko "< 6" :tasaa :keskita :reunus :vasen :leveys aika-leveys}

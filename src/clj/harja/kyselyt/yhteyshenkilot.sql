@@ -19,6 +19,15 @@ FROM yhteyshenkilo y
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE yu.urakka = :urakka;
 
+-- name: poista-urakan-paivystajatiedot!
+-- Poistaa annetun urakan päivystäjätiedot
+DELETE FROM paivystys
+WHERE urakka = :urakka AND
+      yhteyshenkilo IN
+      (SELECT id
+       FROM yhteyshenkilo
+       WHERE ulkoinen_id IN (:ulkoiset_idt));
+
 -- name: hae-urakan-paivystajat
 -- Hakee urakan päivystykset
 SELECT
@@ -45,7 +54,7 @@ SELECT
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON u.id = :urakka
-  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
+  LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE p.urakka = :urakka AND
       (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);

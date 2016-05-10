@@ -2,6 +2,8 @@
 <b>Julkaistu: 11.2.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.1.4. Julkaistu 4.5.2016:
+    - Mahdollisuus poistaa urakan haluttujen päivystäjien päivystykset.
 - Versionumero: 0.1.3. Julkaistu 18.4.2016
     - Tuki gzipatuille payloadeille.
 - Versionumero: 0.1.2. Julkaistu 29.3.2016

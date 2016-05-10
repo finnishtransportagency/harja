@@ -28,6 +28,8 @@ schemas:
  - ilmoitustoimenpiteen-kirjaaminen-request: !include schemas/ilmoitustoimenpiteen-kirjaaminen-request.schema.json
  - paivystajatietojen-kirjaus-request: !include schemas/paivystajatietojen-kirjaus-request.schema.json
  - paivystajatietojen-haku-response: !include schemas/paivystajatietojen-haku-response.schema.json
+ - paivystajatietojen-poisto-response: !include schemas/paivystajatietojen-poisto-response.schema.json
+ - paivystajatietojen-poisto-request: !include schemas/paivystajatietojen-poisto-request.schema.json
  - tietolajien-haku-response: !include schemas/tietolajien-haku-response.schema.json
  - virhe-response: !include schemas/virhe-response.schema.json
  - tielupien-haku-request: !include schemas/tielupien-haku-request.schema.json
@@ -333,6 +335,29 @@ documentation:
                 application/json:
                   example: !include examples/onnistunut-kirjaus-response.json
                   schema: kirjaus-response
+             400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+             500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+      delete:
+        is: [secured]
+        description: Päivystäjätietojen poisto.
+        body:
+          application/json:
+            example: !include examples/paivystajatietojen-poisto-request.json
+            schema: paivystajatietojen-poisto-request
+        responses:
+             200:
+              body:
+                application/json:
+                  example: !include examples/paivystajatietojen-poisto-response.json
+                  schema: paivystajatietojen-poisto-response
              400:
               body:
                 application/json:

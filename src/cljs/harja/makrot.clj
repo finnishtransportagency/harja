@@ -81,3 +81,6 @@
 
     ;; Ei metodissa, konstruktorikutsu
     `(goog/base (cljs.core/js* "this") ~@args)))
+
+
+;;; Async threading makrot, kommentoitu... ehkä fmap on parempi
