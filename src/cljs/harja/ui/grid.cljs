@@ -589,7 +589,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                            (let [sijainti-y (- (dom/scroll-sijainti-ylareunaan)
                                                                @alkuperainen-etaisyys-ylareunaan)
                                                  _ (log "Otsikkorivi sijainti y: " sijainti-y)]
-                                             (reset! otsikkorivi-sijainti-y)))
+                                             (reset! otsikkorivi-sijainti-y sijainti-y)))
         kasittele-scroll-event (fn [this _]
                                  (maarita-rendattavien-rivien-maara this)
                                  (kasittele-otsikkorivin-kiinnitys this))]
