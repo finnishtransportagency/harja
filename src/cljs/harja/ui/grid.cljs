@@ -15,7 +15,6 @@
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [cljs-time.core :as t]
             [cljs-time.core :as time]
             [cljs-time.coerce :as tc])
   (:require-macros [cljs.core.async.macros :refer [go]]
