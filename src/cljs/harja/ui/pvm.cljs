@@ -16,9 +16,9 @@
                   "Syys" "Loka" "Marras" "Joulu"])
 
 (defn selvita-kalenterin-suunta [komponentti sijainti-atom]
-  (let [etaisyys-alareunaan (dom/elementin-etaisyys-alareunaan
+  (let [etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan
                               (.-parentNode (r/dom-node komponentti)))
-        etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-oikeaan-reunaan
+        etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan
                                    (.-parentNode (r/dom-node komponentti)))
         uusi-suunta (if (< etaisyys-alareunaan 250)
                       (if (< etaisyys-oikeaan-reunaan 200)

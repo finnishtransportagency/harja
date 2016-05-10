@@ -50,6 +50,9 @@
                                        :valitse-fn istunto/aseta-testikayttaja!}
           (concat [nil] @istunto/testikayttajat)]]))))
 
+(defn- onko-mobiiliselain? []
+  (re-matches #".*android.*" (clojure.string/lower-case js/window.navigator.userAgent)))
+
 (defn header [s]
   [bs/navbar {}
    [:img#harja-brand-icon {:alt      "HARJA"
@@ -79,7 +82,8 @@
       [:li {:role "presentation" :class (when (= s :hallinta) "active")}
        [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
 
-    (when (oikeudet/laadunseuranta)
+    (when (and (onko-mobiiliselain?)
+               (oikeudet/laadunseuranta))
       [:li {:role "presentation"}
        [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu" (str k/+polku+ "laadunseuranta/")]])]
     
