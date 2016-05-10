@@ -602,7 +602,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and
                                                  (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
-                                                 (neg? (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
+                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
                                                  (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false)))
