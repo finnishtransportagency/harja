@@ -41,8 +41,7 @@
       [:ilmoitusId ilmoitus-id]
       (rakenna-urakka urakka)
       (rakenna-urakoitsija urakka)
-      (for [p paivystajat]
-        (rakenna-paivystaja p))])])
+      [:paivystajat (for [p paivystajat] (rakenna-paivystaja p))]])])
 
 (defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
   (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe)

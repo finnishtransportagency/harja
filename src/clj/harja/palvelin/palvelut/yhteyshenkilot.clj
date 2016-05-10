@@ -12,7 +12,9 @@
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.komponentit.fim :as fim]))
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.domain.puhelinnumero :as puhelinnumero])
+  (:import (java.sql Date)))
 
 (declare hae-urakan-yhteyshenkilot
          hae-yhteyshenkilotyypit
@@ -163,15 +165,15 @@
     (doseq [p paivystajat
             :let [yhteyshenkilo {:etunimi (:etunimi p)
                                  :sukunimi (:sukunimi p)
-                                 :tyopuhelin (:tyopuhelin p)
-                                 :matkapuhelin (:matkapuhelin p)
+                                 :tyopuhelin (puhelinnumero/kanonisoi (:tyopuhelin p))
+                                 :matkapuhelin (puhelinnumero/kanonisoi(:matkapuhelin p))
                                  :sahkoposti (:sahkoposti p)
                                  :organisaatio (:id (:organisaatio p))
                                  :sampoid nil
                                  :kayttajatunnus nil
                                  :ulkoinen_id nil}
-                  paivystys {:alku (java.sql.Date. (.getTime (:alku p)))
-                             :loppu (java.sql.Date. (.getTime (:loppu p)))
+                  paivystys {:alku (Date. (.getTime (:alku p)))
+                             :loppu (Date. (.getTime (:loppu p)))
                              :urakka urakka-id
                              :varahenkilo (not (:vastuuhenkilo p))
                              :vastuuhenkilo (:vastuuhenkilo p)}]]
