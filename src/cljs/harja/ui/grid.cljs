@@ -595,6 +595,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           rivit)))))
                            nil)
         kiinnita-otsikkorivi? (atom false)
+        kiinnitetyn-otsikkorivin-keveys (atom 0)
+        maarita-kiinnitetyn-otsikkorivin-leveys (fn []
+                                                  (reset! kiinnitetyn-otsikkorivin-keveys (dom/elementin-leveys
+                                                                                            (.getElementById js/document taulukko-id))))
         maarita-rendattavien-rivien-maara (fn [this]
                                             (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
@@ -610,6 +614,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  (maarita-rendattavien-rivien-maara this)
                                  (kasittele-otsikkorivin-kiinnitys this))
         kasittele-resize-event (fn [this _]
+                                 (maarita-kiinnitetyn-otsikkorivin-leveys)
                                  (kasittele-otsikkorivin-kiinnitys this))
         thead (fn []
                 [:thead
@@ -652,6 +657,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
        :component-did-mount
        (fn [this _]
+         (maarita-kiinnitetyn-otsikkorivin-leveys)
          (maarita-rendattavien-rivien-maara this))
 
        :component-will-unmount
@@ -734,8 +740,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                   (when @kiinnita-otsikkorivi?
                     [:table.grid {:style {:position "fixed"
                                           :top 0
-                                          :width (dom/elementin-leveys
-                                                   (.getElementById js/document taulukko-id))}}
+                                          :width @kiinnitetyn-otsikkorivin-keveys}}
                      [thead]])
                   [:tbody
                    (if muokataan
