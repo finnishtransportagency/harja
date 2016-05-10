@@ -14,9 +14,7 @@
             [clojure.string :as str]
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]
-            [cljs-time.core :as time]
-            [cljs-time.coerce :as tc])
+            [harja.ui.dom :as dom])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [fnc]]))
 
@@ -189,9 +187,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:div.vetolaatikko-sisalto
          (when auki
            vetolaatikko)]]])))
-
-
-
 
 (defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                               esta-poistaminen-tooltip piilota-toiminnot?
@@ -395,7 +390,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  tallenna-vain-muokatut)
 
         fokus (atom nil)                                    ;; nyt fokusoitu item [id :sarake]
-        taulukko-id (str (tc/to-long (time/now)) otsikko)
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
@@ -579,9 +573,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                            nil)
         kiinnita-otsikkorivi? (atom false)
         kiinnitetyn-otsikkorivin-keveys (atom 0)
-        maarita-kiinnitetyn-otsikkorivin-leveys (fn []
-                                                  (reset! kiinnitetyn-otsikkorivin-keveys (dom/elementin-leveys
-                                                                                            (.getElementById js/document taulukko-id))))
+        maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
+                                                  (reset! kiinnitetyn-otsikkorivin-keveys (dom/elementin-leveys (r/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
                                             (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
@@ -597,7 +590,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  (maarita-rendattavien-rivien-maara this)
                                  (kasittele-otsikkorivin-kiinnitys this))
         kasittele-resize-event (fn [this _]
-                                 (maarita-kiinnitetyn-otsikkorivin-leveys)
+                                 (maarita-kiinnitetyn-otsikkorivin-leveys this)
                                  (kasittele-otsikkorivin-kiinnitys this))
         thead (fn []
                 [:thead
@@ -640,7 +633,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
        :component-did-mount
        (fn [this _]
-         (maarita-kiinnitetyn-otsikkorivin-leveys)
+         (maarita-kiinnitetyn-otsikkorivin-leveys this)
          (maarita-rendattavien-rivien-maara this))
 
        :component-will-unmount
@@ -718,7 +711,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               [:div.panel-body
                (if (nil? tiedot)
                  (ajax-loader)
-                 [:table.grid {:id taulukko-id}
+                 [:table.grid
                   [thead]
                   (when @kiinnita-otsikkorivi?
                     [:table.grid {:style {:position "fixed"
