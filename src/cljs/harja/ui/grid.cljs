@@ -376,24 +376,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip] :as opts} skeema tiedot]
-  (let [thead [:thead
-               (when-let [rivi-ennen (:rivi-ennen opts)]
-                 [:tr
-                  (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-                    ^{:key teksti}
-                    [:th {:colSpan (or sarakkeita 1)
-                          :class (y/tasaus-luokka tasaa)}
-                     teksti])])
-               [:tr
-                (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
-                  ^{:key (str nimi)}
-                  [:th {:class (y/luokat otsikkorivi-luokka
-                                         (y/tasaus-luokka tasaa))
-                        :width (or leveys "5%")} otsikko])
-                (when (and (not piilota-toiminnot?)
-                           tallenna)
-                  [:th.toiminnot {:width "40px"} " "])]]
-        muokatut (atom nil)                                 ;; muokattu datajoukko
+  (let [muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
