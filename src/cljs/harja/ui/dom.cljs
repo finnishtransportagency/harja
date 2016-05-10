@@ -94,6 +94,9 @@
         [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
     [(- x1 x2) (- y1 y2) w1 h1]))
 
+(defn scroll-sijainti-ylareunaan []
+  (-> js/window .-window .-scrollY))
+
 (defn elementin-etaisyys-viewportin-alareunaan [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (- @korkeus (.-bottom r))]
@@ -117,5 +120,9 @@
         etaisyys (- @leveys (.-right r))]
     etaisyys))
 
-(defn scroll-sijainti-ylareunaan []
-  (-> js/window .-window .-scrollY))
+(defn elementin-etaisyys-sivun-ylareunaan
+  [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (+ (scroll-sijainti-ylareunaan)
+                    (elementin-etaisyys-viewportin-ylareunaan solmu))]
+    etaisyys))

@@ -575,7 +575,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           (conj jarj id)
                                           rivit)))))
                            nil)
-        alkuperainen-etaisyys-ylareunaan (atom 0)
         kiinnita-otsikkorivi? (atom false)
         otsikkorivi-sijainti-y (atom 0)
         maarita-rendattavien-rivien-maara (fn [this]
@@ -588,8 +587,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false))
                                            (let [sijainti-y (- (dom/scroll-sijainti-ylareunaan)
-                                                               @alkuperainen-etaisyys-ylareunaan
-                                                               22) ;; FIXME Selvitä thead korkeus, älä hardcoodaa
+                                                               (dom/elementin-etaisyys-sivun-ylareunaan (r/dom-node this))
+                                                               20) ;; FIXME Selvitä thead korkeus, älä hardcoodaa
                                                  ]
                                              (reset! otsikkorivi-sijainti-y sijainti-y)))
         kasittele-scroll-event (fn [this _]
@@ -616,7 +615,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
        :component-did-mount
        (fn [this _]
-         (reset! alkuperainen-etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
          (maarita-rendattavien-rivien-maara this))
 
        :component-will-unmount
