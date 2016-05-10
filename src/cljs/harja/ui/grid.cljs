@@ -584,7 +584,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and (neg? (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
-                                                    (pos? (dom/elementin-etaisyys-ylareunaan-alareunasta (r/dom-node this))))
+                                                    (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false))
                                            (let [sijainti-y (- (dom/scroll-sijainti-ylareunaan)
