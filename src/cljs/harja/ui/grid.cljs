@@ -385,7 +385,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         viimeisin-muokattu-id (atom nil)
         tallennus-kaynnissa (atom false)
         valittu-rivi (atom nil)
-        kiinnita-otsikkorivi? (atom false)
         rivien-maara (atom (count tiedot))
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
@@ -576,18 +575,24 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           (conj jarj id)
                                           rivit)))))
                            nil)
-        otsikkorivin-alkuperainen-etaisyys-ylareunaan (atom 0)
+        alkuperainen-etaisyys-ylareunaan (atom 0)
+        kiinnita-otsikkorivi? (atom false)
+        otsikkorivi-sijainti-y (atom 0)
         maarita-rendattavien-rivien-maara (fn [this]
                                             (when (and (pos? (dom/elementin-etaisyys-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
-        kiinnita-tarvittaessa (fn [this]
-                                (if (pos? (dom/elementin-etaisyys-ylareunaan (r/dom-node this)))
-                                  (reset! kiinnita-otsikkorivi? false)
-                                  (reset! kiinnita-otsikkorivi? true)))
+        kasittele-otsikkorivin-kiinnitys (fn [this]
+                                           (if (pos? (dom/elementin-etaisyys-ylareunaan (r/dom-node this)))
+                                             (reset! kiinnita-otsikkorivi? false)
+                                             (reset! kiinnita-otsikkorivi? true))
+                                           (let [sijainti-y (- (dom/scroll-sijainti-ylareunaan)
+                                                               @alkuperainen-etaisyys-ylareunaan)
+                                                 _ (log "Otsikkorivi sijainti y: " sijainti-y)]
+                                             (reset! otsikkorivi-sijainti-y)))
         kasittele-scroll-event (fn [this _]
                                  (maarita-rendattavien-rivien-maara this)
-                                 (kiinnita-tarvittaessa this))]
+                                 (kasittele-otsikkorivin-kiinnitys this))]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
@@ -609,7 +614,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
        :component-did-mount
        (fn [this _]
-         (reset! otsikkorivin-alkuperainen-etaisyys-ylareunaan (dom/elementin-etaisyys-ylareunaan (r/dom-node this)))
+         (reset! alkuperainen-etaisyys-ylareunaan (dom/elementin-etaisyys-ylareunaan (r/dom-node this)))
          (maarita-rendattavien-rivien-maara this))
 
        :component-will-unmount
@@ -688,12 +693,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                (if (nil? tiedot)
                  (ajax-loader)
                  [:table.grid
-                  [:thead (when @kiinnita-otsikkorivi? {:style {:transform (let [sijainti-y (- (dom/scroll-sijainti-ylareunaan)
-                                                                                               @otsikkorivin-alkuperainen-etaisyys-ylareunaan)
-                                                                                 _ (log "scroll y " (pr-str (dom/scroll-sijainti-ylareunaan)))
-                                                                                 _ (log "Sijainti alkup. y: " (pr-str @otsikkorivin-alkuperainen-etaisyys-ylareunaan))
-                                                                                 _ (log "Sijainti y: " (pr-str sijainti-y))]
-                                                                             (str "translateY(" sijainti-y "px)"))}})
+                  [:thead (when @kiinnita-otsikkorivi? {:style {:transform (str "translateY(" @otsikkorivi-sijainti-y "px)")}})
                    (when-let [rivi-ennen (:rivi-ennen opts)]
                      [:tr
                       (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
