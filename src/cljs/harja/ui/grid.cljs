@@ -579,11 +579,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         kiinnita-otsikkorivi? (atom false)
         otsikkorivi-sijainti-y (atom 0)
         maarita-rendattavien-rivien-maara (fn [this]
-                                            (when (and (pos? (dom/elementin-etaisyys-alareunaan (r/dom-node this)))
+                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
         kasittele-otsikkorivin-kiinnitys (fn [this]
-                                           (if (and (neg? (dom/elementin-etaisyys-ylareunaan (r/dom-node this)))
+                                           (if (and (neg? (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
                                                     (pos? (dom/elementin-etaisyys-ylareunaan-alareunasta (r/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
                                              (reset! kiinnita-otsikkorivi? false))
@@ -616,7 +616,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
        :component-did-mount
        (fn [this _]
-         (reset! alkuperainen-etaisyys-ylareunaan (dom/elementin-etaisyys-ylareunaan (r/dom-node this)))
+         (reset! alkuperainen-etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
          (maarita-rendattavien-rivien-maara this))
 
        :component-will-unmount
