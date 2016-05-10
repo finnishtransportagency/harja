@@ -14,7 +14,10 @@
             [clojure.string :as str]
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom])
+            [harja.ui.dom :as dom]
+            [cljs-time.core :as t]
+            [cljs-time.core :as time]
+            [cljs-time.coerce :as tc])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [fnc]]))
 
@@ -374,7 +377,24 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip
            muokkaa-footer muokkaa-aina muutos rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta max-rivimaara max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip] :as opts} skeema tiedot]
-  (let [muokatut (atom nil)                                 ;; muokattu datajoukko
+  (let [thead [:thead
+               (when-let [rivi-ennen (:rivi-ennen opts)]
+                 [:tr
+                  (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+                    ^{:key teksti}
+                    [:th {:colSpan (or sarakkeita 1)
+                          :class (y/tasaus-luokka tasaa)}
+                     teksti])])
+               [:tr
+                (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
+                  ^{:key (str nimi)}
+                  [:th {:class (y/luokat otsikkorivi-luokka
+                                         (y/tasaus-luokka tasaa))
+                        :width (or leveys "5%")} otsikko])
+                (when (and (not piilota-toiminnot?)
+                           tallenna)
+                  [:th.toiminnot {:width "40px"} " "])]]
+        muokatut (atom nil)                                 ;; muokattu datajoukko
         jarjestys (atom nil)                                ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -393,7 +413,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  tallenna-vain-muokatut)
 
         fokus (atom nil)                                    ;; nyt fokusoitu item [id :sarake]
-
+        taulukko-id (str (tc/to-long (time/now)) otsikko)
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
@@ -587,11 +607,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                  (neg? (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)))
                                                  (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
                                              (reset! kiinnita-otsikkorivi? true)
-                                             (reset! kiinnita-otsikkorivi? false))
-                                           (let [sijainti-y (- (dom/scroll-sijainti-ylareunaan)
-                                                               (dom/elementin-etaisyys-sivun-ylareunaan (r/dom-node this))
-                                                               20.0)]
-                                             (reset! otsikkorivi-sijainti-y sijainti-y)))
+                                             (reset! kiinnita-otsikkorivi? false)))
         kasittele-scroll-event (fn [this _]
                                  (maarita-rendattavien-rivien-maara this)
                                  (kasittele-otsikkorivin-kiinnitys this))]
@@ -693,8 +709,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               [:div.panel-body
                (if (nil? tiedot)
                  (ajax-loader)
-                 [:table.grid
-                  [:thead (when @kiinnita-otsikkorivi? {:style {:transform (str "translateY(" @otsikkorivi-sijainti-y "px)")}})
+                 [:table.grid {:id taulukko-id}
+                  [:thead
                    (when-let [rivi-ennen (:rivi-ennen opts)]
                      [:tr
                       (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
@@ -711,6 +727,29 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     (when (and (not piilota-toiminnot?)
                                tallenna)
                       [:th.toiminnot {:width "40px"} " "])]]
+                  (when @kiinnita-otsikkorivi?
+                    [:table.grid {:style {:position "fixed"
+                                          :top 0
+                                          :width (dom/elementin-leveys
+                                                   (.getElementById js/document taulukko-id))}}
+                     [:thead
+                      (when-let [rivi-ennen (:rivi-ennen opts)]
+                        [:tr
+                         (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+                           ^{:key teksti}
+                           [:th {:colSpan (or sarakkeita 1)
+                                 :class (y/tasaus-luokka tasaa)}
+                            teksti])])
+                      [:tr
+                       (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
+                         ^{:key (str nimi)}
+                         [:th {:class (y/luokat otsikkorivi-luokka
+                                                (y/tasaus-luokka tasaa))
+                               :width (or leveys "5%")}
+                          otsikko])
+                       (when (and (not piilota-toiminnot?)
+                                  tallenna)
+                         [:th.toiminnot {:width "40px"} " "])]]])
                   [:tbody
                    (if muokataan
                      ;; Muokkauskäyttöliittymä

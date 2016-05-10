@@ -132,3 +132,9 @@
   (let [r (.getBoundingClientRect solmu)
         korkeus (.-height r)]
     korkeus))
+
+(defn elementin-leveys
+  [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        korkeus (.-width r)]
+    korkeus))
