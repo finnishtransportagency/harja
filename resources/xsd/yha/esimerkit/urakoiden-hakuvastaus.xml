@@ -1,17 +1,18 @@
-<yha:urakoiden-hakuvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
-    <yha:urakat>
-        <yha:urakka>
-            <yha:yha-id>3</yha:yha-id>
-            <yha:elyt>
-                <yha:ely>POP</yha:ely>
-            </yha:elyt>
-            <yha:vuodet>
-                <yha:vuosi>2016</yha:vuosi>
-            </yha:vuodet>
-            <yha:sampotunnus>SAMPOTUNNUS</yha:sampotunnus>
-            <yha:tunnus>YHATUNNUS</yha:tunnus>
-        </yha:urakka>
-    </yha:urakat>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<urakoiden-hakuvastaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
+    <urakat>
+        <urakka>
+            <yha-id>3</yha-id>
+            <elyt>
+                <ely>POP</ely>
+            </elyt>
+            <vuodet>
+                <vuosi>2016</vuosi>
+            </vuodet>
+            <sampotunnus>SAMPOTUNNUS</sampotunnus>
+            <tunnus>YHATUNNUS</tunnus>
+        </urakka>
+    </urakat>
     <!--Optional:-->
-    <yha:virhe>string</yha:virhe>
-</yha:urakoiden-hakuvastaus>
+    <virhe>string</virhe>
+</urakoiden-hakuvastaus>

@@ -3,27 +3,29 @@
 (def +yha-url+ "http://localhost:1234/")
 
 (def +onnistunut-urakoiden-hakuvastaus+
-  "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:urakat>
-      <yha:urakka>
-       <yha:yha-id>3</yha:yha-id>
-       <yha:elyt>
-         <yha:ely>POP</yha:ely>
-       </yha:elyt>
-       <yha:vuodet>
-         <yha:vuosi>2016</yha:vuosi>
-       </yha:vuodet>
-       <yha:sampotunnus>SAMPOTUNNUS</yha:sampotunnus>
-       <yha:tunnus>YHATUNNUS</yha:tunnus>
-      </yha:urakka>
-    </yha:urakat>
-  </yha:urakoiden-hakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+   <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <urakat>
+      <urakka>
+       <yha-id>3</yha-id>
+       <elyt>
+         <ely>POP</ely>
+       </elyt>
+       <vuodet>
+         <vuosi>2016</vuosi>
+       </vuodet>
+       <sampotunnus>SAMPOTUNNUS</sampotunnus>
+       <tunnus>YHATUNNUS</tunnus>
+      </urakka>
+    </urakat>
+  </urakoiden-hakuvastaus>")
 
 (def +virhevastaus+
-  "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:urakat/>
-    <yha:virhe>Tapahtui virhe</yha:virhe>
-  </yha:urakoiden-hakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <urakat/>
+    <virhe>Tapahtui virhe</virhe>
+  </urakoiden-hakuvastaus>")
 
 (def +urakoiden-tyhja-hakuvastaus+
   "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">

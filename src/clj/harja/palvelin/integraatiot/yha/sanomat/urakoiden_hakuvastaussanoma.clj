@@ -7,15 +7,15 @@
 
 (defn lue-urakat [data]
   (mapv (fn [urakka]
-          (hash-map :yhaid (xml/parsi-kokonaisluku (z/xml1-> urakka :yha:yha-id z/text))
-                    :elyt (vec (mapcat #(z/xml-> % :yha:ely z/text) (z/xml-> urakka :yha:elyt)))
-                    :vuodet (vec (mapcat #(z/xml-> % :yha:vuosi z/text xml/parsi-kokonaisluku) (z/xml-> urakka :yha:vuodet)))
-                    :yhatunnus (z/xml1-> urakka :yha:tunnus z/text)
-                    :sampotunnus (z/xml1-> urakka :yha:sampotunnus z/text)))
-        (z/xml-> data :yha:urakat :yha:urakka)))
+          (hash-map :yhaid (xml/parsi-kokonaisluku (z/xml1-> urakka :yha-id z/text))
+                    :elyt (vec (mapcat #(z/xml-> % :ely z/text) (z/xml-> urakka :elyt)))
+                    :vuodet (vec (mapcat #(z/xml-> % :vuosi z/text xml/parsi-kokonaisluku) (z/xml-> urakka :vuodet)))
+                    :yhatunnus (z/xml1-> urakka :tunnus z/text)
+                    :sampotunnus (z/xml1-> urakka :sampotunnus z/text)))
+        (z/xml-> data :urakat :urakka)))
 
 (defn lue-virhe [data]
-  (z/xml1-> data :yha:virhe z/text))
+  (z/xml1-> data :virhe z/text))
 
 (defn lue-sanoma [viesti]
   (when (not (xml/validoi +xsd-polku+ "yha.xsd" viesti))
