@@ -611,6 +611,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         kasittele-scroll-event (fn [this _]
                                  (maarita-rendattavien-rivien-maara this)
                                  (kasittele-otsikkorivin-kiinnitys this))
+        kasittele-resize-event (fn [this _]
+                                 (kasittele-otsikkorivin-kiinnitys this))
         thead (fn []
                 [:thead
                  (when-let [rivi-ennen (:rivi-ennen opts)]
@@ -639,7 +641,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
     (komp/luo
       (komp/dom-kuuntelija js/window
-                           EventType/SCROLL kasittele-scroll-event)
+                           EventType/SCROLL kasittele-scroll-event
+                           EventType/RESIZE kasittele-resize-event)
       {:component-will-receive-props
        (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
