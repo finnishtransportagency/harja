@@ -99,6 +99,12 @@
         etaisyys (- @korkeus (.-bottom r))]
     etaisyys))
 
+(defn elementin-etaisyys-ylareunaan-alareunasta
+  [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (.-bottom r)]
+    etaisyys))
+
 (defn elementin-etaisyys-ylareunaan
   [solmu]
   (let [r (.getBoundingClientRect solmu)
