@@ -610,7 +610,26 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                              (reset! kiinnita-otsikkorivi? false)))
         kasittele-scroll-event (fn [this _]
                                  (maarita-rendattavien-rivien-maara this)
-                                 (kasittele-otsikkorivin-kiinnitys this))]
+                                 (kasittele-otsikkorivin-kiinnitys this))
+        thead (fn []
+                [:thead
+                 (when-let [rivi-ennen (:rivi-ennen opts)]
+                   [:tr
+                    (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+                      ^{:key teksti}
+                      [:th {:colSpan (or sarakkeita 1)
+                            :class (y/tasaus-luokka tasaa)}
+                       teksti])])
+                 [:tr
+                  (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
+                    ^{:key (str nimi)}
+                    [:th {:class (y/luokat otsikkorivi-luokka
+                                           (y/tasaus-luokka tasaa))
+                          :width (or leveys "5%")}
+                     otsikko])
+                  (when (and (not piilota-toiminnot?)
+                             tallenna)
+                    [:th.toiminnot {:width "40px"} " "])]])]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
@@ -710,46 +729,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                (if (nil? tiedot)
                  (ajax-loader)
                  [:table.grid {:id taulukko-id}
-                  [:thead
-                   (when-let [rivi-ennen (:rivi-ennen opts)]
-                     [:tr
-                      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-                        ^{:key teksti}
-                        [:th {:colSpan (or sarakkeita 1)
-                              :class (y/tasaus-luokka tasaa)}
-                         teksti])])
-                   [:tr
-                    (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
-                      ^{:key (str nimi)}
-                      [:th {:class (y/luokat otsikkorivi-luokka
-                                             (y/tasaus-luokka tasaa))
-                            :width (or leveys "5%")} otsikko])
-                    (when (and (not piilota-toiminnot?)
-                               tallenna)
-                      [:th.toiminnot {:width "40px"} " "])]]
+                  [thead]
                   (when @kiinnita-otsikkorivi?
                     [:table.grid {:style {:position "fixed"
                                           :top 0
                                           :width (dom/elementin-leveys
                                                    (.getElementById js/document taulukko-id))}}
-                     [:thead
-                      (when-let [rivi-ennen (:rivi-ennen opts)]
-                        [:tr
-                         (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-                           ^{:key teksti}
-                           [:th {:colSpan (or sarakkeita 1)
-                                 :class (y/tasaus-luokka tasaa)}
-                            teksti])])
-                      [:tr
-                       (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
-                         ^{:key (str nimi)}
-                         [:th {:class (y/luokat otsikkorivi-luokka
-                                                (y/tasaus-luokka tasaa))
-                               :width (or leveys "5%")}
-                          otsikko])
-                       (when (and (not piilota-toiminnot?)
-                                  tallenna)
-                         [:th.toiminnot {:width "40px"} " "])]]])
+                     [thead]])
                   [:tbody
                    (if muokataan
                      ;; Muokkauskäyttöliittymä
