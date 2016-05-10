@@ -130,8 +130,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti max-korkeus-atom suunta-atom]
   (let [ikkunan-reunaan-jaava-tyhja-tila 15
         solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
-        etaisyys-alareunaan (dom/elementin-etaisyys-alareunaan solmu)
-        etaisyys-ylareunaan (dom/elementin-etaisyys-ylareunaan solmu)
+        etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan solmu)
+        etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan solmu)
         suunta (if (< etaisyys-alareunaan 75)
                  :ylos
                  :alas)]

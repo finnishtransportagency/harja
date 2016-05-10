@@ -84,7 +84,7 @@
         (map #(konv/array->vec % :yha_elyt))
         (map #(konv/array->vec % :yha_vuodet))
 
-        (map #(if (:yha_yhatunnus %)
+        (map #(if (:yha_yhaid %)
                (assoc % :yhatiedot {:yhatunnus (:yha_yhatunnus %)
                                     :yhaid (:yha_yhaid %)
                                     :yhanimi (:yha_yhanimi %)

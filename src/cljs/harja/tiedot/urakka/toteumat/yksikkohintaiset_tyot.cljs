@@ -63,15 +63,17 @@
 (def yks-hint-tyot-tehtavittain
   (reaction
    (let [assosioi (fn [rivit rivin-avain haettava-avain]
-                    (assosioi rivit rivin-avain haettava-avain @u/valittu-sopimusnumero @u/valittu-hoitokausi @u/urakan-yks-hint-tyot))]
+                    (assosioi rivit rivin-avain haettava-avain @u/valittu-sopimusnumero
+                              @u/valittu-hoitokausi @u/urakan-yks-hint-tyot))]
      (when @yks-hint-tehtavien-summat
-       (-> @yks-hint-tehtavien-summat
-         (assosioi :yksikkohinta :yksikkohinta)
-         (assosioi :hoitokauden-suunniteltu-maara :maara)
-         (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
-         (assosioi :yksikko :yksikko)
-         (laske-toteutuneet-kustannukset)
-         (laske-erotus))))))
+       (sort-by :nimi
+                (-> @yks-hint-tehtavien-summat
+                    (assosioi :yksikkohinta :yksikkohinta)
+                    (assosioi :hoitokauden-suunniteltu-maara :maara)
+                    (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
+                    (assosioi :yksikko :yksikko)
+                    (laske-toteutuneet-kustannukset)
+                    (laske-erotus)))))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 

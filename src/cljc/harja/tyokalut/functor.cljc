@@ -1,5 +1,8 @@
 (ns harja.tyokalut.functor
-  "Simppeli functor implementaatio (geneerinen map)")
+  "Simppeli functor implementaatio (geneerinen map)"
+  #?@(:clj [(:require [clojure.core.async :refer [go <!]])]
+      :cljs [(:require [cljs.core.async :refer [<!]])
+             (:require-macros [cljs.core.async.macros :refer [go]])]))
 
 (defprotocol Functor
   (fmap- [this f]
@@ -39,7 +42,12 @@
   #?@(:clj
       [java.util.concurrent.Future
        (fmap- [this f]
-              (future (f @this)))]))
+              (future (f @this)))])
+
+  #?(:cljs cljs.core.async.impl.channels.ManyToManyChannel
+     :clj clojure.core.async.impl.channels.ManyToManyChannel)
+  (fmap- [this f]
+    (go (f (<! this)))))
 
 (defn fmap
   "Map f over the items in the given container. Returns a container of the same type as the input."
