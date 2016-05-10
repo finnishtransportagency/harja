@@ -30,6 +30,7 @@
          id)
 
      (:id (luo-laatupoikkeama<! db
+                                "harja-ui"
                                 urakka
                                 (konv/sql-timestamp aika)
                                 (when tekija (name tekija))
