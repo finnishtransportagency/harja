@@ -27,7 +27,7 @@ BEGIN
                          AND (ajorata=0 OR ajorata=ajoratavalinta);
     ELSE
       RETURN QUERY SELECT ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT)
-                   FROM tieverkko_paloina
+                   FROM tieverkko_paloina                                                                       Ko
                    WHERE tie=tie_
                          AND osa=aosa_
                          AND (ajorata=0 OR ajorata=ajoratavalinta);
