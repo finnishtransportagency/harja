@@ -76,7 +76,8 @@
                        :alkuetaisyys nil
                        :loppuetaisyys nil
                        :loppuosa nil
-                       :ilmoitukset_lahetetty nil})
+                       :ilmoitukset_lahetetty nil
+                       :lahde "harja-ui"})
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu

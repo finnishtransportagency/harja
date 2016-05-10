@@ -98,7 +98,8 @@
                         :laatija_etunimi (:etunimi laatija)
                         :laatija_sukunimi (:sukunimi laatija)
                         :ulkoinen_id (:id tunniste)
-                        :ilmoitukset_lahetetty nil}))]
+                        :ilmoitukset_lahetetty nil
+                        :lahde "harja-api"}))]
       (log/debug "Luotiin uusi turvallisuuspoikkeama id:llä " tp-id)
       tp-id)))
 

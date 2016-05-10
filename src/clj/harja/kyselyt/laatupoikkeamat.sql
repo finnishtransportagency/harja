@@ -205,7 +205,8 @@ WHERE id = :id;
 -- voi antaa päätöstietoja.
 INSERT
 INTO laatupoikkeama
-(urakka,
+(lahde,
+ urakka,
  aika,
  tekija,
  kohde,
@@ -220,7 +221,7 @@ INTO laatupoikkeama
  tr_alkuetaisyys,
  tr_loppuetaisyys,
  ulkoinen_id)
-VALUES (:urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
+VALUES (:lahde::lahde, :urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
                  :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :ulkoinen_id);
 

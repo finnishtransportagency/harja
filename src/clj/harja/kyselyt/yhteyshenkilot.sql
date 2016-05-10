@@ -54,7 +54,7 @@ SELECT
 FROM paivystys p
   LEFT JOIN yhteyshenkilo y ON p.yhteyshenkilo = y.id
   LEFT JOIN urakka u ON u.id = :urakka
-  LEFT JOIN organisaatio org ON u.urakoitsija = org.id
+  LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE p.urakka = :urakka AND
       (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
