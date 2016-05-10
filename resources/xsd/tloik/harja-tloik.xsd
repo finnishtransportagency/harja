@@ -38,7 +38,7 @@
                             <xs:element name="ilmoitusId" type="xs:int" minOccurs="0" />
                             <xs:element name="urakka" type="urakka" minOccurs="0" />
                             <xs:element name="urakoitsija" type="organisaatio" minOccurs="0" />
-                            <xs:element name="paivystaja" type="henkilo" minOccurs="0" />
+                            <xs:element name="paivystajat" type="paivystajat" minOccurs="0" />
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -226,7 +226,7 @@
             <xs:element name="ilmoitusId" type="xs:int" minOccurs="0" />
             <xs:element name="urakka" type="urakka" minOccurs="0" />
             <xs:element name="urakoitsija" type="organisaatio" minOccurs="0" />
-            <xs:element name="paivystaja" type="henkilo" minOccurs="0" />
+            <xs:element name="paivystajat" type="paivystajat" minOccurs="0" />
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="urakka">
@@ -249,6 +249,11 @@
         <xs:sequence>
             <xs:element name="henkilo" type="henkilo" minOccurs="0" />
             <xs:element name="organisaatio" type="organisaatio" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="paivystajat">
+        <xs:sequence>
+            <xs:element name="paivystaja" type="henkilo" minOccurs="0" />
         </xs:sequence>
     </xs:complexType>
 </xs:schema>
