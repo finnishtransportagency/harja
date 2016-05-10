@@ -64,8 +64,7 @@
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]
                                      (reset! korkeus (-> js/window .-innerHeight))
-                                     (reset! leveys (-> js/window .-innerWidth))
-                                     ))
+                                     (reset! leveys (-> js/window .-innerWidth))))
                              true))
 
 (defn elementti-idlla [id]
@@ -88,7 +87,6 @@
       (recur (+ offset (.-offsetTop parent))
              (.-offsetParent parent)))))
 
-
 (defn sijainti-sailiossa
   "Palauttaa elementin sijainnin suhteessa omaan säiliöön."
   [elt]
@@ -101,12 +99,17 @@
         etaisyys (- @korkeus (.-bottom r))]
     etaisyys))
 
-(defn elementin-etaisyys-ylareunaan [solmu]
+(defn elementin-etaisyys-ylareunaan
+  [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (.-top r)]
     etaisyys))
 
-(defn elementin-etaisyys-oikeaan-reunaan [solmu]
+(defn elementin-etaisyys-oikeaan-reunaan
+  [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (- @leveys (.-right r))]
     etaisyys))
+
+(defn scroll-sijainti-ylareunaan []
+  (-> js/window .-window .-scrollY))
