@@ -74,7 +74,7 @@
                                     (> (:id %) 0))
                           (:id %)))
                   uudet-paivystajat)
-            res (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
+            res (sort-by :loppu (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat)))]
         (reset! paivystajat res)
         true)))
 
@@ -270,7 +270,7 @@
              :tyyppi :string :leveys "20%"
              :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
             {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
-             :tyyppi :valinta :muokattava? (constantly false)
+             :tyyppi :valinta
              :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
              :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
 
