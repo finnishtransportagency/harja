@@ -213,7 +213,8 @@
   "Palauttaa urakan tarkastukset annetulle aikavälille."
   ([db user parametrit]
    (hae-urakan-tarkastukset db user parametrit false 501))
-  ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi]} palauta-reitti? max-rivimaara]
+  ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi vain-laadunalitukset?]}
+    palauta-reitti? max-rivimaara]
    (oikeudet/lue oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
    (into []
          (comp tarkastus-xf
@@ -226,6 +227,7 @@
           (konv/sql-timestamp loppupvm)
           (if tienumero true false) tienumero
           (if tyyppi true false) (and tyyppi (name tyyppi))
+          vain-laadunalitukset?
           max-rivimaara))))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]

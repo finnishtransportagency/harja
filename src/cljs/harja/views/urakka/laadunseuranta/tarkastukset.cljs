@@ -17,7 +17,6 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.ikonit :as ikonit]
-
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
 
@@ -73,6 +72,15 @@
                                        :soratie "Soratien tarkastukset"
                                        :laatu "Laaduntarkastus")}
           tarkastukset/tarkastustyyppi]]]
+
+       [:span.label-ja-kentta
+        [:span.kentan-otsikko "Näytä"]
+        [:div.kentta
+         [tee-kentta {:tyyppi :valinta :valinnat [false true]
+                      :valinta-nayta {false "Kaikki tarkastukset"
+                                      true "Vain laadunalitukset"}}
+          tarkastukset/vain-laadunalitukset?]]]
+
        [valinnat/tienumero tarkastukset/tienumero]
 
 

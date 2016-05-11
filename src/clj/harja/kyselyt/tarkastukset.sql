@@ -29,6 +29,7 @@ WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+      AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
 LIMIT :maxrivimaara;
 
 -- name: hae-tarkastus

@@ -16,6 +16,7 @@
 
 (defonce tienumero (atom nil))                              ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil))                        ;; nil = kaikki, :tiesto, :talvihoito, :soratie
+(defonce vain-laadunalitukset? (atom false))  ;; true = näytä vain laadunalitukset
 
 (defn hae-tarkastus
   "Hakee tarkastuksen kaikki tiedot urakan id:n ja tarkastuksen id:n perusteella. Tähän liittyy laatupoikkeamat sekä niiden reklamaatiot."
@@ -39,13 +40,15 @@
     aikavali
     (or kuukausi aikavali)))
 
-(defn kasaa-haun-parametrit [urakka-kaynnissa? urakka-id kuukausi aikavali tienumero tyyppi]
+(defn kasaa-haun-parametrit [urakka-kaynnissa? urakka-id kuukausi aikavali tienumero tyyppi
+                             vain-laadunalitukset?]
   (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)]
     {:urakka-id urakka-id
      :alkupvm   alkupvm
      :loppupvm  loppupvm
      :tienumero tienumero
-     :tyyppi    tyyppi}))
+     :tyyppi    tyyppi
+     :vain-laadunalitukset? vain-laadunalitukset?}))
 
 (def urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
@@ -55,11 +58,13 @@
                laadunseurannassa? @laadunseuranta/laadunseurannassa?
                valilehti (nav/valittu-valilehti :laadunseuranta)
                tienumero @tienumero
-               tyyppi @tarkastustyyppi]
+               tyyppi @tarkastustyyppi
+               vain-laadunalitukset? @vain-laadunalitukset?]
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
               (let [parametrit (kasaa-haun-parametrit urakka-kaynnissa? urakka-id
-                                                      kuukausi aikavali tienumero tyyppi)]
+                                                      kuukausi aikavali tienumero tyyppi
+                                                      vain-laadunalitukset?)]
                 (when (and laadunseurannassa? (= :tarkastukset valilehti)
                            (:urakka-id parametrit) (:alkupvm parametrit) (:loppupvm parametrit))
                   (go (into [] (<! (hae-urakan-tarkastukset parametrit))))))))
