@@ -1,5 +1,6 @@
 (ns harja.palvelin.komponentit.todennus-test
   (:require [harja.palvelin.komponentit.todennus :as todennus]
+            [harja.domain.oikeudet :as oikeudet]
             [clojure.test :as t :refer [deftest is use-fixtures]]))
 
 (def testiroolit {"root" {:nimi "root"
@@ -32,3 +33,9 @@
   (is (= {:roolit #{} :urakkaroolit {666 #{"paivystaja"}}
           :organisaatioroolit {42 #{"urakoitsija"}}}
          (oikeudet "Y123456-7_urakoitsija,u123_paivystaja"))))
+
+(deftest tilaajan-kayttaja
+  (is (= {:roolit             #{"Tilaajan_Kayttaja"}
+          :organisaatioroolit {}
+          :urakkaroolit       {}}
+         (todennus/kayttajan-roolit urakat urakoitsijat oikeudet/roolit "Tilaajan_Kayttaja"))))
