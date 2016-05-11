@@ -37,7 +37,7 @@
           (recur (get-csrf-token))))))
 
 (defn virhe?
-  "Tarkastaa sisältääkö palvelimen vastaus :failure avaimen, statuksen 500 tai on EiOikeutta viesti"
+  "Tarkastaa onko vastaus tyhjä, sisältääkö se :failure, :virhe, tai :error avaimen, tai on EiOikeutta viesti"
   [vastaus]
   (or (nil? vastaus)
       (roolit/ei-oikeutta? vastaus)
