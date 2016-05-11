@@ -345,18 +345,15 @@
                @data)]
     [:div.boolean
      (let [checkbox [:div.checkbox
-                           [:label
-                            [:input {:type      "checkbox" :checked arvo
-                                     :on-change #(let [valittu? (-> % .-target .-checked)]
-                                                  (reset! data valittu?))}
-                             teksti]]]]
+                     [:label
+                      [:input {:type      "checkbox" :checked arvo
+                               :on-change #(let [valittu? (-> % .-target .-checked)]
+                                             (reset! data valittu?))}
+                       teksti]]]]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
-           (map-indexed (fn [i cb]
-                          ^{:key i}
-                          [:td cb])
-                        checkbox)]]
+           [:td checkbox]]]
          checkbox))]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
