@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Ylläpitokohteelle keskimääräinen vuorokausiliikenne ja nykyinen päällyste (YHA-integraatio)
 
 ALTER TABLE yllapitokohde ADD COLUMN keskimaarainen_vuorokausiliikenne INTEGER;
@@ -15,6 +14,3 @@ DROP INDEX index_paallystyskohde;
 
 -- Kanta kertoo voidaanko sidontaa muuttaa, sidonta menee lukkoon kun jotain tietoja muuttelee
 ALTER TABLE yhatiedot ADD COLUMN sidonta_lukittu BOOLEAN NOT NULL DEFAULT FALSE;
-=======
-ALTER TABLE tarkastusreitti ADD COLUMN laadunalitus BOOLEAN NOT NULL DEFAULT FALSE;
->>>>>>> develop
