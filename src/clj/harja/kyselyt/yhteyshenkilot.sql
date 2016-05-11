@@ -113,7 +113,8 @@ FROM yhteyshenkilo_urakka;
 -- name: luo-yhteyshenkilo<!
 -- Tekee uuden yhteyshenkilön
 INSERT INTO yhteyshenkilo (etunimi, sukunimi, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, kayttajatunnus, ulkoinen_id)
-VALUES (:etu, :suku, :tyopuh, :matkapuh, :email, :org, :sampoid, :kayttajatunnus, :ulkoinen_id);
+VALUES (:etunimi, :sukunimi, :tyopuhelin, :matkapuhelin, :sahkoposti, :organisaatio,
+        :sampoid, :kayttajatunnus, :ulkoinen_id);
 
 -- name: aseta-yhteyshenkilon-rooli!
 UPDATE yhteyshenkilo_urakka
@@ -127,8 +128,9 @@ INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo, urakka) VALUES (:rooli, 
 -- name: paivita-yhteyshenkilo<!
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
-SET etunimi  = :etu, sukunimi = :suku, tyopuhelin = :tyopuh, matkapuhelin = :matkapuh,
-  sahkoposti = :email, organisaatio = :org
+   SET etunimi  = :etunimi, sukunimi = :sukunimi,
+       tyopuhelin = :tyopuhelin, matkapuhelin = :matkapuhelin,
+       sahkoposti = :sahkoposti, organisaatio = :organisaatio
 WHERE id = :id;
 
 -- name: paivita-yhteyshenkilo-ulkoisella-idlla<!
@@ -173,7 +175,7 @@ WHERE id = :id AND urakka = :urakka;
 -- name: paivita-paivystys!
 -- Päivittää päivystyksen tiedot
 UPDATE paivystys
-SET alku = :alku, loppu = :loppu
+SET alku = :alku, loppu = :loppu, vastuuhenkilo = :vastuuhenkilo, varahenkilo = :varahenkilo
 WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-paivystys-yhteyshenkilon-idlla<!

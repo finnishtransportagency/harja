@@ -211,7 +211,8 @@
            "kokonaishintainen"
            (:id user) "" ""
            (:lisatieto toteuma)
-           nil nil nil nil nil nil nil)]
+           nil nil nil nil nil nil nil
+           "harja-ui")]
     (toteumat/luo-toteuma-materiaali<!
      db (:id t) (:id (:materiaali toteuma))
      (:maara toteuma) (:id user))))

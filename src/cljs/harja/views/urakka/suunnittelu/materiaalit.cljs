@@ -1,6 +1,6 @@
 (ns harja.views.urakka.suunnittelu.materiaalit
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :refer [raksiboksi] :refer-macros [deftk]]
+            [harja.ui.yleiset :refer [raksiboksi]]
             [harja.tiedot.urakka.suunnittelu.materiaalit :as t]
             [harja.loki :refer [log logt]]
             [harja.tiedot.urakka :as u]
@@ -45,7 +45,7 @@
                     #(reset! virheet (grid/hae-virheet %)))
           :jarjesta (comp :nimi :materiaali)
           }
-         
+
          [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
            :muokattava? (constantly false)
            :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
@@ -55,36 +55,36 @@
            :tyyppi :positiivinen-numero}
           {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
            :tyyppi :string :muokattava? (constantly false)}]
-         
+
          yleiset-materiaalit-muokattu]]))))
-  
+
 (defn materiaalit [ur]
   (let [;; haetaan kaikki materiaalit urakalle
         urakan-materiaalit (atom nil)
 
         hae-urakan-materiaalit (fn [ur]
                                  (go (reset! urakan-materiaalit (<! (t/hae-urakan-materiaalit (:id ur))))))
-        
+
         ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
         sopimuksen-materiaalit-hoitokausittain
         (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero]
                     (u/ryhmittele-hoitokausittain (filter #(= sopimus-id (:sopimus %))
                                                           @urakan-materiaalit)
                                                   (u/hoitokaudet ur))))
-        
-        
+
+
         ;; valitaan materiaaleista vain valitun hoitokauden
         materiaalit (reaction (let [hk @u/valittu-hoitokausi]
                                 (get @sopimuksen-materiaalit-hoitokausittain hk)))
 
-        ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat 
+        ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat
         materiaalikoodit (reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit)))
-        
+
         ;; Jaetaan materiaalikoodit yleisiin ja kohdistettaviin
         yleiset-materiaalikoodit (reaction (filter #(not (:kohdistettava %)) @materiaalikoodit))
         kohdistettavat-materiaalikoodit (reaction (filter :kohdistettava @materiaalikoodit))
-        
-        
+
+
         ;; luokitellaan yleiset materiaalit ja pohjavesialueiden materiaalit
         yleiset-materiaalit (reaction (let [materiaalit (into {}
                                                               (comp (filter #(not (contains? % :pohjavesialue)))
@@ -101,16 +101,16 @@
                                                     [alku loppu] @u/valittu-hoitokausi]
                                                 (recur (assoc materiaalit id {:id id :materiaali mk :alkupvm alku :loppupvm loppu})
                                                        materiaalikoodit)))))))
-        
+
         yleiset-materiaalit-virheet (atom nil)
         yleiset-materiaalit-muokattu (reaction @yleiset-materiaalit)
-        
+
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? (atom false)
-        
+
         ;; jos tulevaisuudessa on dataa, joka poikkeaa tämän hoitokauden materiaaleista, varoita ylikirjoituksesta
         varoita-ylikirjoituksesta?
-        (reaction (let [kopioi? @tuleville?                 
+        (reaction (let [kopioi? @tuleville?
                         varoita? (s/varoita-ylikirjoituksesta? @sopimuksen-materiaalit-hoitokausittain
                                                                @u/valittu-hoitokausi)]
                     (if-not kopioi?
@@ -120,14 +120,14 @@
     (hae-urakan-materiaalit ur)
 
     (komp/luo
-     
+
      {:component-will-receive-props (fn [this & [_ ur]]
                                       (hae-urakan-materiaalit ur))}
-  
+
      (fn [ur]
-       (let [muokattu? (not= @yleiset-materiaalit @yleiset-materiaalit-muokattu)                           
+       (let [muokattu? (not= @yleiset-materiaalit @yleiset-materiaalit-muokattu)
              virheita? (not (empty? @yleiset-materiaalit-virheet))
-                           
+
              voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
              voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-materiaalit (:id ur))]
          [:div.materiaalit
@@ -136,10 +136,10 @@
                                      :virheet yleiset-materiaalit-virheet}
            ur @u/valittu-hoitokausi @u/valittu-sopimusnumero
            @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
-     
+
           (when voi-muokata?
             [raksiboksi "Tallenna tulevillekin hoitokausille" @tuleville?
-             #(swap! tuleville? not) 
+             #(swap! tuleville? not)
              [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
              (and @tuleville? @varoita-ylikirjoituksesta?)
              ])
@@ -149,7 +149,7 @@
              [:button.nappi-ensisijainen
               {:disabled (not voi-tallentaa?)
                :on-click #(do (.preventDefault %)
-                              (go 
+                              (go
                                 (let [rivit (vals @yleiset-materiaalit-muokattu)
                                       rivit (if @tuleville?
                                               (u/rivit-tulevillekin-kausille ur rivit @u/valittu-hoitokausi)

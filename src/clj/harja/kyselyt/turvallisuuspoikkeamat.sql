@@ -404,7 +404,7 @@ INSERT INTO turvallisuuspoikkeama
  vahingoittuneet_ruumiinosat, sairauspoissaolo_jatkuu, aiheutuneet_seuraukset, vaylamuoto,
  laatija_etunimi, laatija_sukunimi,
  turvallisuuskoordinaattori_etunimi, turvallisuuskoordinaattori_sukunimi,
- ilmoittaja_etunimi, ilmoittaja_sukunimi, ulkoinen_id, ilmoitukset_lahetetty)
+ ilmoittaja_etunimi, ilmoittaja_sukunimi, ulkoinen_id, ilmoitukset_lahetetty, lahde)
 VALUES
   (:urakka, :tapahtunut, :paattynyt, :kasitelty, :ammatti :: tyontekijanammatti, :ammatti_muu,
             :tehtava, :kuvaus, :vammat :: turvallisuuspoikkeama_aiheutuneet_vammat [], :poissa,
@@ -419,7 +419,7 @@ VALUES
                                                         :turvallisuuskoordinaattori_etunimi,
    :turvallisuuskoordinaattori_sukunimi,
    :ilmoittaja_etunimi, :ilmoittaja_sukunimi,
-   :ulkoinen_id, :ilmoitukset_lahetetty);
+   :ulkoinen_id, :ilmoitukset_lahetetty, :lahde::lahde);
 
 --name: lokita-lahetys<!
 UPDATE turvallisuuspoikkeama

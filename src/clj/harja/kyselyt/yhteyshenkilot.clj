@@ -11,14 +11,12 @@
 (defn onko-olemassa-paivystys-jossa-yhteyshenkilona-id? [db paivystaja-id]
   (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id db paivystaja-id))))
 
-(defn hae-urakan-tamanhetkinen-paivystaja [db urakkaid]
-  (let [paivystajat (harja.kyselyt.yhteyshenkilot/hae-urakan-taman-hetkiset-paivystajat db urakkaid)]
-    (if (= 1 (count paivystajat))
-      (first paivystajat)
-      (when (< 0 (count paivystajat))
-        (if (some :vastuuhenkilo paivystajat)
-          (first (filter :vastuuhenkilo paivystajat))
-          (first paivystajat))))))
+(defn hae-urakan-tamanhetkiset-paivystajat
+  "Palauttaa urakan tämän hetkiset päivystäjät, jotka ovat vastuuhenkilöitä (heille viesti)"
+  [db urakkaid]
+  (->> urakkaid
+       (hae-urakan-taman-hetkiset-paivystajat db)
+       (filter :vastuuhenkilo)))
 
 (defn luo-yhteyshenkilo [db etu suku tyopuhelin matkapuhelin email org sampoid kayttajatunnus ulkoinen_id]
   (harja.kyselyt.yhteyshenkilot/luo-yhteyshenkilo<!

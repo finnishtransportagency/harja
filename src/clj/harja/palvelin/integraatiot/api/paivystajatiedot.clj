@@ -20,7 +20,8 @@
             [harja.palvelin.integraatiot.api.sanomat.paivystajatiedot :as paivystajatiedot-sanoma]
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]))
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
+            [harja.domain.puhelinnumero :as puhelinnumero]))
 
 (defn parsi-paivamaara [paivamaara]
   (when paivamaara
@@ -94,15 +95,17 @@
                                       vastuuhenkilo))))
 
 (defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]} urakoitsija-id]
-  (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
-    (do
-      (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
-      (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email
-                                                                    (str id))))
-    (do
-      (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
-      (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email
-                                               urakoitsija-id nil liviTunnus (str id))))))
+  (let [matkapuhelin (puhelinnumero/kanonisoi matkapuhelin)
+        tyopuhelin (puhelinnumero/kanonisoi tyopuhelin)]
+    (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
+     (do
+       (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
+       (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email
+                                                                     (str id))))
+     (do
+       (log/debug "Päivystäjää ei löytynyt ulkoisella id:llä. Lisätään uusi päivystäjä")
+       (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email
+                                                urakoitsija-id nil liviTunnus (str id)))))))
 
 
 (defn tallenna-paivystajatiedot [db urakka-id data]

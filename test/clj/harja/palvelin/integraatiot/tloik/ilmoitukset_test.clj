@@ -16,9 +16,10 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]))
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [cheshire.core :as cheshire]))
 
-(def kayttaja "jvh")
+(def kayttaja "yit-rakennus")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -47,14 +48,17 @@
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+  (is (= 1 (count (hae-ilmoitus)))
+      "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+  (is (= 1 (count (hae-ilmoitus)))
+      "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus))) "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
+  (is (= 1 (count (hae-ilmoitus)))
+      "Kun viesti on tuotu toiseen kertaan, on päivitetty olemassa olevaa ilmoitusta eikä luotu uutta.")
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-urakan-paattely
@@ -70,29 +74,39 @@
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-ilmoitus))
 
-;; fixme: poistettu flaky testi, feilaili oudosti
-#_(deftest tarkista-viestin-kasittely-ja-kuittaukset
+(deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
-    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
-    (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
-    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
+    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+                    #(swap! viestit conj (.getText %)))
+    (let [ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"]
+                                                       kayttaja portti))]
+      (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
-    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
+      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
 
-    (let [xml (first @viestit)
-          data (xml/lue xml)]
-      (is (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
-      (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
-      (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
-      (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
+      (let [xml (first @viestit)
+            data (xml/lue xml)]
+        (is (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
+        (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
+            "Kuittauksen on tehty oikeaan viestiin.")
+        (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
+        (is (empty? (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
 
-    (is (= 1 (count (hae-ilmoitus))) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
+      (is (= 1 (count (hae-ilmoitus)))
+          "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
+
+      (let [{:keys [status body]} @ilmoitushaku]
+        (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
+        (is (= (-> (cheshire/decode body)
+                   (get "ilmoitukset")
+                   count) 1) "Ilmoituksia on vastauksessa yksi")))
     (poista-ilmoitus)))
 
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+
         viestit (atom [])]
-    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %)))
+    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+                    #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
 
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
@@ -100,11 +114,11 @@
     (let [xml (first @viestit)
           data (xml/lue xml)]
       (is (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
-      (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text)) "Kuittauksen on tehty oikeaan viestiin.")
+      (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
+          "Kuittauksen on tehty oikeaan viestiin.")
       (is (= "virhe" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
-      (is (= "Tiedoilla ei voitu päätellä urakkaa." (z/xml1-> data :virhe z/text)) "Virheitä ei ole raportoitu."))
+      (is (= "Tiedoilla ei voitu päätellä urakkaa." (z/xml1-> data :virhe z/text))
+          "Virheitä ei ole raportoitu."))
 
     (is (= 0 (count (hae-ilmoitus))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
-
-

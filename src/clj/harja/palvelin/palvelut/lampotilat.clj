@@ -130,7 +130,7 @@
 
 (defn aseta-suolasakon-kaytto [db user {:keys [urakka-id kaytossa?]}]
   (log/debug "Käytössä? " kaytossa?)
-  (oikeudet/kirjoita oikeudet/urakat-toteumat-suola user urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-suola user urakka-id)
   (jdbc/with-db-transaction
     [db db]
     (q/aseta-suolasakon-kaytto! db kaytossa? (:id user) urakka-id)

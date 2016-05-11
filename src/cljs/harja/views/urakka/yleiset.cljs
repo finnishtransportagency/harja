@@ -22,9 +22,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.ui.yleiset :refer [deftk]]))
+            [harja.ui.komponentti :as komp]
+            [harja.fmt :as fmt])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
 
@@ -138,161 +138,208 @@
           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
          @kayttajat]))))
 
-(deftk yleiset [ur]
-       [yhteyshenkilot (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))
-        paivystajat (reverse (sort-by :loppu (<! (yht/hae-urakan-paivystajat (:id ur)))))
-        yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))
-        sopimustyyppi (:sopimustyyppi ur)]
-       (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-             yha-tuontioikeus? (cond (= (:tyyppi ur) :paallystys)
-                                     (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
-                                     (= (:tyyppi ur) :paikkaus)
-                                     (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
-                                     :default false)
-             paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
-                                                (= (:tyyppi ur) :paikkaus))
-             paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
-             sisaltaa-ilmoituksia? (:sisaltaa-ilmoituksia? ur)
-             sisaltaa-ilmoituksia-vihje "Urakalle on kirjattu ilmoituksia, sidontaa ei voi muuttaa."]
-         (when (and yha-tuontioikeus?
-                    paallystys-tai-paikkausurakka?
-                    (not paallystys-tai-paikkausurakka-sidottu?)
-                    (not sisaltaa-ilmoituksia?))
-           (yha/nayta-tuontidialogi ur))
-         [:div
-          [bs/panel {}
-           "Yleiset tiedot"
-           [yleiset/tietoja {}
-            "Urakan nimi:" (:nimi ur)
-            "Urakan tunnus:" (:sampoid ur)
-            "YHA:n urakkatunnus:"
-            (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (get-in ur [:yhatiedot :yhatunnus]))
-            "YHA:n ELY:t"
-            (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (str/join ", " (get-in ur [:yhatiedot :elyt])))
-            "YHA:n vuodet:"
-            (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
-              (str/join ", " (get-in ur [:yhatiedot :vuodet])))
-            "YHA-sidonta:"
-            (cond
-              (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?)  (not paallystys-tai-paikkausurakka-sidottu?))
-              [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
-              (and paallystys-tai-paikkausurakka? yha-tuontioikeus? (not paallystys-tai-paikkausurakka-sidottu?))
-              [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
-               [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                           :disabled sisaltaa-ilmoituksia?}
-               "Sido YHA-urakkaan"]]
-              (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) paallystys-tai-paikkausurakka-sidottu?)
-              [:span "Sidottu YHA-urakkaan. Vain urakanvalvoja voi muuttaa sidontaa."]
-              (and paallystys-tai-paikkausurakka? yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
-              [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
-               [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                           :disabled sisaltaa-ilmoituksia?}
-               "Vaihda sidottu urakka"]]
-              :default nil)
-            "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
-            "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
-            "Tilaaja:" (:nimi (:hallintayksikko ur))
-            "Urakoitsija:" (:nimi (:urakoitsija ur))
-            ;; valaistus, tiemerkintä --> palvelusopimus
-            ;; päällystys --> kokonaisurakka
-            "Sopimustyyppi: "
-            (when-not (= :hoito (:tyyppi ur))
-              [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
-                                            :valinta @sopimustyyppi
-                                            :format-fn #(if %
-                                                         (str/capitalize (name %))
-                                                         "Ei sopimustyyppiä")
-                                            :valitse-fn #(tallenna-sopimustyyppi ur %)
-                                            :disabled (not kirjoitusoikeus?)}
-               sopimus/+sopimustyypit+])
-            "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
-            (when paallystys-tai-paikkausurakka?
-              [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
-                                            :valinta (:tyyppi ur)
-                                            :format-fn #(navigaatio/nayta-urakkatyyppi %)
-                                            :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                            :disabled (not kirjoitusoikeus?)}
-               [:paallystys :paikkaus]])]]
-
-          [urakkaan-liitetyt-kayttajat (:id ur)]
-
-          [grid/grid
-           {:otsikko "Yhteyshenkilöt"
-            :tyhja "Ei yhteyshenkilöitä."
-            :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
-           [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys "17%"
-             :hae #(do (when (:rooli %)
-                         (str/capitalize (:rooli %))))
-             :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
-
-             :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
-
-             :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
-            {:otsikko "Organisaatio"
-             :nimi :organisaatio
-             :fmt :nimi
-             :leveys "17%"
-             :tyyppi :valinta
-             :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-             :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
-
-            {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                                    nimi
-                                    (str (:etunimi %)
-                                         (when-let [suku (:sukunimi %)]
-                                           (str " " suku))))
-             :pituus-max 64
-             :aseta (fn [yht arvo]
-                      (assoc yht :nimi arvo))
-             :tyyppi :string :leveys "15%"
-             :validoi [[:ei-tyhja "Anna yhteyshenkilön nimi"]]}
-            {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
-            {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "12%" :pituus 16}
-            {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "22%"}]
-           @yhteyshenkilot]
+(defn paivystajat [ur]
+  (let [paivystajat (atom nil)
+        hae! (fn [urakka-id]
+               (reset! paivystajat nil)
+               (go (reset! paivystajat
+                           (reverse (sort-by :loppu
+                                             (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
+    (hae! (:id ur))
+    (komp/luo
+      (komp/kun-muuttuu (comp hae! :id))
+      (fn [ur]
+        [grid/grid
+         {:otsikko "Päivystystiedot"
+          :tyhja "Ei päivystystietoja."
+          :tallenna #(tallenna-paivystajat ur paivystajat %)}
+         [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+                                  nimi
+                                  (str (:etunimi %)
+                                       (when-let [suku (:sukunimi %)]
+                                         (str " " suku))))
+           :aseta (fn [yht arvo]
+                    (assoc yht :nimi arvo))
 
 
-          [grid/grid
-           {:otsikko "Päivystystiedot"
-            :tyhja "Ei päivystystietoja."
-            :tallenna #(tallenna-paivystajat ur paivystajat %)}
-           [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                                    nimi
-                                    (str (:etunimi %)
-                                         (when-let [suku (:sukunimi %)]
-                                           (str " " suku))))
-             :aseta (fn [yht arvo]
-                      (assoc yht :nimi arvo))
+           :tyyppi :string :leveys 15
+           :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
+          {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
+           :tyyppi :valinta
+           :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
+           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
 
+          {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
+           :pituus 16}
+          {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
+           :pituus 16}
+          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
+           :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
+          {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys 10
+           :validoi [[:ei-tyhja "Aseta alkupvm"]
+                     (fn [alku rivi]
+                       (let [loppu (:loppu rivi)]
+                         (when (and alku loppu
+                                    (t/before? loppu alku))
+                           "Alkupvm ei voi olla lopun jälkeen.")))
+                     ]}
+          {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys 10
+           :validoi [[:ei-tyhja "Aseta loppupvm"]
+                     (fn [loppu rivi]
+                       (let [alku (:alku rivi)]
+                         (when (and alku loppu
+                                    (t/before? loppu alku))
+                           "Loppupvm ei voi olla alkua ennen.")))]}
+          {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
+           :leveys 10
+           :fmt fmt/totuus :tasaa :keskita}]
+         @paivystajat]))))
 
-             :tyyppi :string :leveys "20%"
-             :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
-            {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys "15%"
-             :tyyppi :valinta
-             :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-             :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+(defn yleiset-tiedot [ur]
+  (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+        sopimustyyppi (:sopimustyyppi ur)
+        yha-tuontioikeus? (cond
+                            (= (:tyyppi ur) :paallystys)
+                            (oikeudet/on-muu-oikeus? "sido"
+                                                     oikeudet/urakat-kohdeluettelo-paallystyskohteet
+                                                     (:id @nav/valittu-urakka) @istunto/kayttaja)
+                            (= (:tyyppi ur) :paikkaus)
+                            (oikeudet/on-muu-oikeus? "sido"
+                                                     oikeudet/urakat-kohdeluettelo-paikkauskohteet
+                                                     (:id @nav/valittu-urakka) @istunto/kayttaja)
+                            :default false)
+        paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
+                                           (= (:tyyppi ur) :paikkaus))
+        paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
+        sisaltaa-ilmoituksia? (:sisaltaa-ilmoituksia? ur)
+        sisaltaa-ilmoituksia-vihje "Urakalle on kirjattu ilmoituksia, sidontaa ei voi muuttaa."]
+    [bs/panel {}
+     "Yleiset tiedot"
+     [yleiset/tietoja {}
+      "Urakan nimi:" (:nimi ur)
+      "Urakan tunnus:" (:sampoid ur)
+      "YHA:n urakkatunnus:"
+      (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
+        (get-in ur [:yhatiedot :yhatunnus]))
+      "YHA:n ELY:t"
+      (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
+        (str/join ", " (get-in ur [:yhatiedot :elyt])))
+      "YHA:n vuodet:"
+      (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
+        (str/join ", " (get-in ur [:yhatiedot :vuodet])))
+      "YHA-sidonta:"
+      (cond
+        (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) (not paallystys-tai-paikkausurakka-sidottu?))
+        [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
+        (and paallystys-tai-paikkausurakka? yha-tuontioikeus? (not paallystys-tai-paikkausurakka-sidottu?))
+        [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
+         [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
+                                      :disabled sisaltaa-ilmoituksia?}
+          "Sido YHA-urakkaan"]]
+        (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) paallystys-tai-paikkausurakka-sidottu?)
+        [:span "Sidottu YHA-urakkaan. Vain urakanvalvoja voi muuttaa sidontaa."]
+        (and paallystys-tai-paikkausurakka? yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
+        [:span (when sisaltaa-ilmoituksia? {:title sisaltaa-ilmoituksia-vihje})
+         [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
+                                      :disabled sisaltaa-ilmoituksia?}
+          "Vaihda sidottu urakka"]]
+        :default nil)
+      "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
+      "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
+      "Tilaaja:" (:nimi (:hallintayksikko ur))
+      "Urakoitsija:" (:nimi (:urakoitsija ur))
+      ;; valaistus, tiemerkintä --> palvelusopimus
+      ;; päällystys --> kokonaisurakka
+      "Sopimustyyppi: "
+      (when-not (= :hoito (:tyyppi ur))
+        [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                      :valinta sopimustyyppi
+                                      :format-fn #(if %
+                                                   (str/capitalize (name %))
+                                                   "Ei sopimustyyppiä")
+                                      :valitse-fn #(tallenna-sopimustyyppi ur %)
+                                      :disabled (not kirjoitusoikeus?)}
+         sopimus/+sopimustyypit+])
+      "Urakkatyyppi: "                                      ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
+      (when paallystys-tai-paikkausurakka?
+        [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                      :valinta (:tyyppi ur)
+                                      :format-fn #(navigaatio/nayta-urakkatyyppi %)
+                                      :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
+                                      :disabled (not kirjoitusoikeus?)}
+         [:paallystys :paikkaus]])]]))
 
-            {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys "10%"
-             :pituus 16}
-            {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys "10%"
-             :pituus 16}
-            {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys "20%"
-             :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
-            {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
-             :validoi [[:ei-tyhja "Aseta alkupvm"]
-                       (fn [alku rivi]
-                         (let [loppu (:loppu rivi)]
-                           (when (and alku loppu
-                                      (t/before? loppu alku))
-                             "Alkupvm ei voi olla lopun jälkeen.")))
-                       ]}
-            {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys "10%"
-             :validoi [[:ei-tyhja "Aseta loppupvm"]
-                       (fn [loppu rivi]
-                         (let [alku (:alku rivi)]
-                           (when (and alku loppu
-                                      (t/before? loppu alku))
-                             "Loppupvm ei voi olla alkua ennen.")))]}]
-           @paivystajat]]))
+(defn yhteyshenkilot [ur]
+  (let [yhteyshenkilot (atom nil)
+        yhteyshenkilotyypit (atom nil)
+        hae! (fn [ur]
+               (reset! yhteyshenkilot nil)
+               (go (reset! yhteyshenkilot
+                           (<! (yht/hae-urakan-yhteyshenkilot (:id ur))))))]
+    (go (reset! yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))))
+    (hae! ur)
+    (komp/luo
+      (komp/kun-muuttuu hae!)
+      (fn [ur]
+        [grid/grid
+         {:otsikko "Yhteyshenkilöt"
+          :tyhja "Ei yhteyshenkilöitä."
+          :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
+         [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
+           :hae #(do (when (:rooli %)
+                       (str/capitalize (:rooli %))))
+           :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
+
+           :valinnat (vec (concat [nil] @yhteyshenkilotyypit))
+
+           :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
+          {:otsikko "Organisaatio"
+           :nimi :organisaatio
+           :fmt :nimi
+           :leveys 17
+           :tyyppi :valinta
+           :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
+           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+
+          {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+                                  nimi
+                                  (str (:etunimi %)
+                                       (when-let [suku (:sukunimi %)]
+                                         (str " " suku))))
+           :pituus-max 64
+           :aseta (fn [yht arvo]
+                    (assoc yht :nimi arvo))
+           :tyyppi :string :leveys 15
+           :validoi [[:ei-tyhja "Anna yhteyshenkilön nimi"]]}
+          {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
+          {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
+          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
+         @yhteyshenkilot]))))
+
+(defn- nayta-yha-tuontidialogi
+  "Näyttää modaalin YHA tuontidialogin, jos tarvii."
+  [ur]
+  (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+        yha-tuontioikeus? (cond (= (:tyyppi ur) :paallystys)
+                                (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
+                                (= (:tyyppi ur) :paikkaus)
+                                (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
+                                :default false)
+        paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
+                                           (= (:tyyppi ur) :paikkaus))
+        paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
+        sisaltaa-ilmoituksia? (:sisaltaa-ilmoituksia? ur)
+        sisaltaa-ilmoituksia-vihje "Urakalle on kirjattu ilmoituksia, sidontaa ei voi muuttaa."]
+    (when (and yha-tuontioikeus?
+               paallystys-tai-paikkausurakka?
+               (not paallystys-tai-paikkausurakka-sidottu?)
+               (not sisaltaa-ilmoituksia?))
+      (yha/nayta-tuontidialogi ur))))
+
+(defn yleiset [ur]
+  (nayta-yha-tuontidialogi ur)
+  [:div
+   [yleiset-tiedot ur]
+   [urakkaan-liitetyt-kayttajat (:id ur)]
+   [yhteyshenkilot ur]
+   [paivystajat ur]])
