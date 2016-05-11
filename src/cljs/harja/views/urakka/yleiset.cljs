@@ -23,8 +23,7 @@
             [harja.ui.modal :as modal]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.ui.yleiset :refer [deftk]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
 
