@@ -7,54 +7,54 @@
 
 (defn lue-urakat [data]
   (mapv (fn [urakka]
-          (hash-map :yhaid (z/xml1-> urakka :yha:yha-id z/text xml/parsi-kokonaisluku)
-                    :elyt (vec (mapcat #(z/xml-> % :yha:ely z/text) (z/xml-> urakka :yha:elyt)))
-                    :vuodet (vec (mapcat #(z/xml-> % :yha:vuosi z/text xml/parsi-kokonaisluku) (z/xml-> urakka :yha:vuodet)))
-                    :yhatunnus (z/xml1-> urakka :yha:tunnus z/text)
-                    :sampotunnus (z/xml1-> urakka :yha:sampotunnus z/text)))
-        (z/xml-> data :yha:urakat :yha:urakka)))
+          (hash-map :yhaid (z/xml1-> urakka :yha-id z/text xml/parsi-kokonaisluku)
+                    :elyt (vec (mapcat #(z/xml-> % :ely z/text) (z/xml-> urakka :elyt)))
+                    :vuodet (vec (mapcat #(z/xml-> % :vuosi z/text xml/parsi-kokonaisluku) (z/xml-> urakka :vuodet)))
+                    :yhatunnus (z/xml1-> urakka :tunnus z/text)
+                    :sampotunnus (z/xml1-> urakka :sampotunnus z/text)))
+        (z/xml-> data :urakat :urakka)))
 
 (defn lue-virhe [data]
-  (z/xml1-> data :yha:virhe z/text))
+  (z/xml1-> data :virhe z/text))
 
 (defn lue-tierekisteriosoitevali [tierekisteriosoitevali]
-  (hash-map :karttapaivamaara (z/xml1-> tierekisteriosoitevali :yha:karttapaivamaara z/text xml/parsi-paivamaara)
-            :tienumero (z/xml1-> tierekisteriosoitevali :yha:tienumero z/text xml/parsi-kokonaisluku)
-            :ajorata (z/xml1-> tierekisteriosoitevali :yha:ajorata z/text xml/parsi-kokonaisluku)
-            :kaista (z/xml1-> tierekisteriosoitevali :yha:kaista z/text xml/parsi-kokonaisluku)
-            :aosa (z/xml1-> tierekisteriosoitevali :yha:aosa z/text xml/parsi-kokonaisluku)
-            :aet (z/xml1-> tierekisteriosoitevali :yha:aet z/text xml/parsi-kokonaisluku)
-            :losa (z/xml1-> tierekisteriosoitevali :yha:losa z/text xml/parsi-kokonaisluku)
-            :let (z/xml1-> tierekisteriosoitevali :yha:let z/text xml/parsi-kokonaisluku)))
+  (hash-map :karttapaivamaara (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)
+            :tienumero (z/xml1-> tierekisteriosoitevali :tienumero z/text xml/parsi-kokonaisluku)
+            :ajorata (z/xml1-> tierekisteriosoitevali :ajorata z/text xml/parsi-kokonaisluku)
+            :kaista (z/xml1-> tierekisteriosoitevali :kaista z/text xml/parsi-kokonaisluku)
+            :aosa (z/xml1-> tierekisteriosoitevali :aosa z/text xml/parsi-kokonaisluku)
+            :aet (z/xml1-> tierekisteriosoitevali :aet z/text xml/parsi-kokonaisluku)
+            :losa (z/xml1-> tierekisteriosoitevali :losa z/text xml/parsi-kokonaisluku)
+            :let (z/xml1-> tierekisteriosoitevali :let z/text xml/parsi-kokonaisluku)))
 
 (defn lue-paallystystoimenpide [paallystystoimenpide]
-  (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :yha:uusi-paallyste z/text xml/parsi-kokonaisluku)
-            :raekoko (z/xml1-> paallystystoimenpide :yha:raekoko z/text xml/parsi-kokonaisluku)
-            :kokonaismassamaara (z/xml1-> paallystystoimenpide :yha:kokonaismassamaara z/text xml/parsi-kokonaisluku)
-            :rc-prosentti (z/xml1-> paallystystoimenpide :yha:rc-prosentti z/text xml/parsi-kokonaisluku)
-            :kuulamylly (z/xml1-> paallystystoimenpide :yha:kuulamylly z/text xml/parsi-kokonaisluku)
-            :paallystetyomenetelma (z/xml1-> paallystystoimenpide :yha:paallystetyomenetelma z/text xml/parsi-kokonaisluku)))
+  (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)
+            :raekoko (z/xml1-> paallystystoimenpide :raekoko z/text xml/parsi-kokonaisluku)
+            :kokonaismassamaara (z/xml1-> paallystystoimenpide :kokonaismassamaara z/text xml/parsi-kokonaisluku)
+            :rc-prosentti (z/xml1-> paallystystoimenpide :rc-prosentti z/text xml/parsi-kokonaisluku)
+            :kuulamylly (z/xml1-> paallystystoimenpide :kuulamylly z/text xml/parsi-kokonaisluku)
+            :paallystetyomenetelma (z/xml1-> paallystystoimenpide :paallystetyomenetelma z/text xml/parsi-kokonaisluku)))
 
 (defn lue-alikohteet [alikohteet]
   (mapv (fn [alikohde]
           (hash-map
-            :yha-id (z/xml1-> alikohde :yha:yha-id z/text xml/parsi-kokonaisluku)
-            :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :yha:tierekisteriosoitevali))
-            :tunnus (z/xml1-> alikohde :yha:tunnus z/text)
-            :paallystystoimenpide (z/xml1-> alikohde :yha:paallystystoimenpide lue-paallystystoimenpide)))
-        (z/xml-> alikohteet :yha:alikohde)))
+            :yha-id (z/xml1-> alikohde :yha-id z/text xml/parsi-kokonaisluku)
+            :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :tierekisteriosoitevali))
+            :tunnus (z/xml1-> alikohde :tunnus z/text)
+            :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)))
+        (z/xml-> alikohteet :alikohde)))
 
 (defn lue-kohteet [data]
   (mapv (fn [kohde]
-          (hash-map :yha-id (z/xml1-> kohde :yha:yha-id z/text xml/parsi-kokonaisluku)
-                    :kohdetyyppi (z/xml1-> kohde :yha:kohdetyyppi z/text keyword)
-                    :tunnus (z/xml1-> kohde :yha:tunnus z/text)
-                    :yllapitoluokka (z/xml1-> kohde :yha:yllapitoluokka z/text xml/parsi-kokonaisluku)
-                    :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :yha:keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
-                    :nykyinen-paallyste (z/xml1-> kohde :yha:nykyinen-paallyste z/text xml/parsi-kokonaisluku)
-                    :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> kohde :yha:tierekisteriosoitevali))
-                    :alikohteet (lue-alikohteet (z/xml1-> kohde :yha:alikohteet))))
-        (z/xml-> data :yha:kohteet :yha:kohde)))
+          (hash-map :yha-id (z/xml1-> kohde :yha-id z/text xml/parsi-kokonaisluku)
+                    :kohdetyyppi (z/xml1-> kohde :kohdetyyppi z/text keyword)
+                    :tunnus (z/xml1-> kohde :tunnus z/text)
+                    :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
+                    :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
+                    :nykyinen-paallyste (z/xml1-> kohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)
+                    :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> kohde :tierekisteriosoitevali))
+                    :alikohteet (lue-alikohteet (z/xml1-> kohde :alikohteet))))
+        (z/xml-> data :kohteet :kohde)))
 
 (defn lue-sanoma [viesti]
   (when (not (xml/validoi +xsd-polku+ "yha.xsd" viesti))
