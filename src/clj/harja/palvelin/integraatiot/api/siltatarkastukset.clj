@@ -60,7 +60,8 @@
          (aika-string->java-sql-date (:tarkastusaika tarkastus))
          (str (get-in tarkastus [:tarkastaja :etunimi]) " " (get-in tarkastus [:tarkastaja :sukunimi]))
          (:id kayttaja)
-         ulkoinen-id)))
+         ulkoinen-id
+         "harja-api")))
 
 (defn paivita-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Päivitetään vanha siltarkastus")

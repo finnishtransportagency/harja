@@ -58,7 +58,8 @@
          ""
          (get-in toteuma [:tunniste :id])
          (:reitti toteuma)
-         nil nil nil nil nil)))
+         nil nil nil nil nil
+         "harja-api")))
 
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))

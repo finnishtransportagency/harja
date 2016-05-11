@@ -2,8 +2,9 @@
 -- Tallentaa uuden liitteen. Liitteen large object pitää olla tallennettuna jo ja oid annettava.
 INSERT
   INTO liite
-       (nimi, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu, urakka, kuvaus)
-VALUES (:nimi, :tyyppi, :koko, :oid, :pikkukuva, :luoja, current_timestamp, :urakka, :kuvaus);
+       (nimi, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu, urakka, kuvaus, lahde)
+VALUES (:nimi, :tyyppi, :koko, :oid, :pikkukuva, :luoja, current_timestamp, :urakka,
+        :kuvaus, :lahdejarjestelma::lahde);
 
 -- name: hae-liite-lataukseen
 -- Hakee liitteen tiedot sen latausta varten. 

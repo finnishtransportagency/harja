@@ -207,7 +207,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               kentan-virheet (get rivin-virheet nimi)
               kentan-varoitukset (get rivin-varoitukset nimi)
               kentan-huomautukset (get rivin-huomautukset nimi)
-              tasaus-luokka (if (= tasaa :oikea) "tasaa-oikealle" "")
+              tasaus-luokka (y/tasaus-luokka tasaa)
               fokus-id [id nimi]]
 
           (if (or (nil? muokattava?) (muokattava? rivi))
@@ -576,7 +576,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           rivit)))))
                            nil)
         maarita-rendattavien-rivien-maara (fn [this _]
-                                            (when (and (pos? (dom/elementin-etaisyys-alareunaan (r/dom-node this)))
+                                            (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))]
 

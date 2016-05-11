@@ -8,7 +8,7 @@
 (defn laheta-ilmoitus-sahkopostilla [{:keys [email google-static-maps-key]} {id :ilmoitus-id :as ilmoitus} {vastaanottaja :sahkoposti :as paivystaja}]
   (if vastaanottaja
     (do
-      (log/debug "Lähetetään ilmoitus (id: %s) sähköpostilla osoitteeseen: %s" id vastaanottaja)
+      (log/debug "Lähetetään ilmoitus (id: " id ") sähköpostilla osoitteeseen: " vastaanottaja)
       (let [lahettaja (sahkoposti/vastausosoite email)
             [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti lahettaja ilmoitus google-static-maps-key)]
         (sahkoposti/laheta-viesti! email lahettaja vastaanottaja otsikko viesti)))
