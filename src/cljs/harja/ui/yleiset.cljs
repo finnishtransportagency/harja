@@ -167,9 +167,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (fn [this]
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
-      (fn [{:keys [valinta format-fn valitse-fn class disabled on-focus title li-luokka-fn]} vaihtoehdot]
+      (fn [{:keys [valinta format-fn valitse-fn class disabled
+                   on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko]} vaihtoehdot]
         (let [term (atom "")
-              format-fn (or format-fn str)]
+              format-fn (or format-fn str)
+              ryhmitellyt-itemit (when ryhmittely
+                                   (group-by ryhmittely vaihtoehdot))
+              ryhmissa? (not (nil? ryhmitellyt-itemit))]
           [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
            [:button.nappi-alasveto
             {:class       (when disabled "disabled")
@@ -227,13 +231,22 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
                                                            @max-korkeus @avautumissuunta)}
             (doall
+              (if ryhmissa?
+                (for [ryhma nayta-ryhmat]
+                  [:div.alasvetolista-ryhma
+                   [:div.alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
+                  (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
+                    ^{:key (hash vaihtoehto)}
+                     [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
+                      (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                          (reset! auki false)
+                                                          nil))])])
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
-
                 [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
                  (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
                                                      (reset! auki false)
-                                                     nil))]))]])))))
+                                                     nil))])))]])))))
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
