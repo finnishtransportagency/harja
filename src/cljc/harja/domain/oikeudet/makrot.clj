@@ -3,7 +3,8 @@
   Täällä ei ole mitään muuta kutsuttavaa kuin maarittele-oikeudet!"
   (:require [dk.ative.docjure.spreadsheet :as xls]
             [clojure.string :as str]
-            [clojure.set :refer [union]]))
+            [clojure.set :refer [union]]
+            [harja.tyokalut.functor :refer [fmap]]))
 
 (defn- lue-workbook []
   (xls/load-workbook-from-file "resources/roolit.xlsx"))
@@ -68,33 +69,24 @@
                             roolit)]
     (map
      (fn [{:keys [osio nakyma rivi]}]
-       (let [roolien-oikeudet (keep (fn [{:keys [sarake rooli]}]
-                                      (when-let [oikeus (into #{}
-                                                              (some-> (str sarake rivi)
-                                                                      (xls/select-cell sheet)
-                                                                      xls/read-cell
-                                                                      (str/split #",")))]
-                                        {:rooli (kuvaus->rooli rooli)
-                                         :luku? (oikeus "R")
-                                         :kirjoitus? (oikeus "W")
-                                         :muu (disj oikeus "R" "W")}))
-                                    sarakkeet)]
+       (let [roolien-oikeudet (into {}
+                                    (keep (fn [{:keys [sarake rooli]}]
+                                            (let [oikeus (into #{}
+                                                               (remove str/blank?)
+                                                               (some-> (str sarake rivi)
+                                                                       (xls/select-cell sheet)
+                                                                       xls/read-cell
+                                                                       (str/split #",")))
+                                                  rooli (kuvaus->rooli rooli)]
+                                              (when (and rooli (not (empty? oikeus)))
+                                                [rooli oikeus])))
+                                          sarakkeet))]
          {:sym (oikeus-sym osio nakyma)
           :osio osio
           :nakyma nakyma
           :taso1 (kanonisoi (str osio "-" (first (str/split nakyma #" "))))
           :kuvaus (str "Osio '" osio "' näkymä '" nakyma "'")
-          :luku (into #{}
-                      (keep :rooli
-                            (filter :luku? roolien-oikeudet)))
-          :kirjoitus (into #{}
-                           (keep :rooli
-                                 (filter :kirjoitus? roolien-oikeudet)))
-          :muu (into {}
-                     (keep (fn [{:keys [rooli muu]}]
-                             (when-not (empty? muu)
-                               [rooli muu])))
-                     roolien-oikeudet)}))
+          :roolien-oikeudet roolien-oikeudet}))
      rivit)))
 
 (defn- lue-oikeudet []
@@ -113,34 +105,34 @@
        ~@(mapv
           (fn [oikeudet]
             `(do
-               ~@(mapv (fn [{:keys [sym kuvaus luku kirjoitus muu]}]
-                         `(def ~sym (harja.domain.oikeudet/->KayttoOikeus ~kuvaus
-                                                                          ~luku ~kirjoitus ~muu)))
+               ~@(mapv (fn [{:keys [sym kuvaus roolien-oikeudet]}]
+                         `(def ~sym (harja.domain.oikeudet/->KayttoOikeus
+                                     ~kuvaus ~roolien-oikeudet)))
                        oikeudet)))
-          (partition 16 16 [] oikeudet))
+          (partition-all 16 oikeudet))
 
        ;; Määritellään osioille vielä roolit, jotka on union kaikista osion oikeuksista.
        ;; Näillä voi testata osion näkyvyyttä.
        (do
          ~@(mapv
             (fn [[osio oikeudet]]
-              (let [luku (reduce union #{} (map :luku oikeudet))
-                    kirjoitus (reduce union #{} (map :kirjoitus oikeudet))
+              (let [roolien-oikeudet (apply merge-with union
+                                            (map :roolien-oikeudet oikeudet))
                     sym (symbol (kanonisoi osio))]
                 `(def ~sym
                    (harja.domain.oikeudet/->KayttoOikeus (str "Osio " ~osio)
-                                                         ~luku ~kirjoitus {}))))
+                                                         ~roolien-oikeudet))))
             (group-by :osio oikeudet)))
 
        ;; Määritellään 1. tason näkymille oikeudet, jotka on union kaikista alaosioiden oikeuksista
        (do
          ~@(mapv (fn [[taso1 oikeudet]]
-                   (let [luku (reduce union #{} (map :luku oikeudet))
-                         kirjoitus (reduce union #{} (map :kirjoitus oikeudet))
+                   (let [roolien-oikeudet (apply merge-with union
+                                                 (map :roolien-oikeudet oikeudet))
                          sym (symbol taso1)]
                      `(def ~sym
                         (harja.domain.oikeudet/->KayttoOikeus (str "Osio/taso " ~taso1)
-                                                              ~luku ~kirjoitus {}))))
+                                                              ~roolien-oikeudet))))
                  (group-by :taso1
                            ;; Vain niille, joilla 1. taso ei ole ainoa taso
                            (filter (fn [{:keys [taso1 osio nakyma]}]

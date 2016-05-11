@@ -64,8 +64,7 @@
 (defonce koon-kuuntelija (do (set! (.-onresize js/window)
                                    (fn [_]
                                      (reset! korkeus (-> js/window .-innerHeight))
-                                     (reset! leveys (-> js/window .-innerWidth))
-                                     ))
+                                     (reset! leveys (-> js/window .-innerWidth))))
                              true))
 
 (defn elementti-idlla [id]
@@ -88,7 +87,6 @@
       (recur (+ offset (.-offsetTop parent))
              (.-offsetParent parent)))))
 
-
 (defn sijainti-sailiossa
   "Palauttaa elementin sijainnin suhteessa omaan säiliöön."
   [elt]
@@ -96,17 +94,40 @@
         [x2 y2 w2 h2] (sijainti (.-parentNode elt))]
     [(- x1 x2) (- y1 y2) w1 h1]))
 
+(defn scroll-sijainti-ylareunaan []
+  (-> js/window .-window .-scrollY))
+
 (defn elementin-etaisyys-viewportin-alareunaan [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (- @korkeus (.-bottom r))]
     etaisyys))
 
-(defn elementin-etaisyys-viewportin-ylareunaan [solmu]
+(defn elementin-etaisyys-viewportin-ylareunaan-alareunasta
+  [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        etaisyys (.-bottom r)]
+    etaisyys))
+
+(defn elementin-etaisyys-viewportin-ylareunaan
+  [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (.-top r)]
     etaisyys))
 
-(defn elementin-etaisyys-viewportin-oikeaan-reunaan [solmu]
+(defn elementin-etaisyys-viewportin-oikeaan-reunaan
+  [solmu]
   (let [r (.getBoundingClientRect solmu)
         etaisyys (- @leveys (.-right r))]
     etaisyys))
+
+(defn elementin-korkeus
+  [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        korkeus (.-height r)]
+    korkeus))
+
+(defn elementin-leveys
+  [solmu]
+  (let [r (.getBoundingClientRect solmu)
+        korkeus (.-width r)]
+    korkeus))

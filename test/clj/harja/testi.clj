@@ -177,7 +177,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
-                     :urakkaroolit ()})
+                     :urakkaroolit {}})
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
 (def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh" :organisaatio 11})
@@ -305,30 +305,22 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
-   :urakkaroolit [{:urakka {:id @oulun-alueurakan-2005-2010-id,
-                            :nimi "Oulun alueurakka 2005-2012",
-                            :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                   :rooli "ELY_Urakanvalvoja"}]})
+   :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
+   :urakkaroolit {@oulun-alueurakan-2005-2010-id, #{"ELY_Urakanvalvoja"}}})
 
 (defn oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
-   :roolit #{"vastuuhenkilo"}, :id 17, :etunimi "Yitin",
+   :roolit #{}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
-   :urakkaroolit [{:urakka {:id @oulun-alueurakan-2005-2010-id,
-                            :nimi "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
-                            :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                   :luotu nil,
-                   :rooli "urakoitsijan urakan vastuuhenkilo"}]})
+   :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
+   :urakkaroolit {@oulun-alueurakan-2005-2010-id #{"vastuuhenkilo"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
-   :roolit #{"urakoitsijan urakan vastuuhenkilo"}, :id 17, :etunimi "Yitin",
+   :roolit #{}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
-   :urakkaroolit [{:urakka {:id 234234324234,               ;;eli ei ole oulun urakan ID
-                            :nimi "Oulun alueurakka 2005-2012", :urakoitsija {:nimi "YIT Rakennus Oy", :id 10},
-                            :hallintayksikko {:nimi "Pohjois-Pohjanmaa ja Kainuu", :id 8}},
-                   :luotu nil,
-                   :rooli "urakoitsijan urakan vastuuhenkilo"}]})
+   :organisaation-urakat #{234234324234}
+   :urakkaroolit {234234324234 #{"vastuuhenkilo"}}})
 
 ;; Selkeä rajoite on, että tässä testataan usein vain ensimmäistä, tai tietyllä
 ;; indeksillä löytyvää. Yleensä pitäisi tieten oikeanlainenkin rivi löytyä, mutta

@@ -188,9 +188,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
          (when auki
            vetolaatikko)]]])))
 
-
-
-
 (defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                               esta-poistaminen-tooltip piilota-toiminnot?
                               fokus aseta-fokus! tulevat-rivit vetolaatikot]} skeema rivi]
@@ -265,15 +262,15 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
           [:span.klikattava {:on-click #(do (.preventDefault %)
                                             (muokkaa! id assoc :poistettu true))}
            (ikonit/livicon-trash)]))
-      (when-not (empty? rivin-virheet)                       ; true ;-not (empty? rivin-virheet)
+      (when-not (empty? rivin-virheet)                      ; true ;-not (empty? rivin-virheet)
         [:span.rivilla-virheita
          (ikonit/livicon-warning-sign)])])])
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
                             vetolaatikot tallenna piilota-toiminnot? valittu-rivi
                             mahdollista-rivin-valinta]} skeema rivi]
-  [:tr {:class    (str luokka (when (= rivi @valittu-rivi)
-                                " rivi-valittu"))
+  [:tr {:class (str luokka (when (= rivi @valittu-rivi)
+                             " rivi-valittu"))
         :on-click #(do
                     (when rivi-klikattu
                       (if (not= @valittu-rivi rivi)
@@ -291,13 +288,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
        [vetolaatikon-tila ohjaus vetolaatikot id]
        ^{:key (str nimi)}
        [:td {:class (y/luokat
-                     (y/tasaus-luokka tasaa)
-                     (when pakota-rivitys? "grid-pakota-rivitys")
-                     (case reunus
-                       :ei "grid-reunus-ei"
-                       :vasen "grid-reunus-vasen"
-                       :oikea "grid-reunus-oikea"
-                       nil))}
+                      (y/tasaus-luokka tasaa)
+                      (when pakota-rivitys? "grid-pakota-rivitys")
+                      (case reunus
+                        :ei "grid-reunus-ei"
+                        :vasen "grid-reunus-vasen"
+                        :oikea "grid-reunus-oikea"
+                        nil))}
         (if (= tyyppi :komponentti)
           (komponentti rivi)
           (let [haettu-arvo (if hae
@@ -312,7 +309,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               (fmt arvon-pituus-rajattu)
               [nayta-arvo skeema (vain-luku-atomina arvon-pituus-rajattu)])))]))
    (when (and (not piilota-toiminnot?)
-           tallenna) [:td.toiminnot])])
+              tallenna) [:td.toiminnot])])
 
 (def renderoi-rivia-kerralla 100)
 
@@ -392,8 +389,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  true
                                  tallenna-vain-muokatut)
 
-        fokus (atom nil) ;; nyt fokusoitu item [id :sarake]
-
+        fokus (atom nil)                                    ;; nyt fokusoitu item [id :sarake]
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
         validoi-ja-anna-virheet (fn [virheet uudet-tiedot tyyppi]
@@ -416,7 +412,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                          vanha-jarjestys @jarjestys
                          uudet-tiedot (swap! muokatut assoc id
                                              ((or uusi-rivi identity)
-                                              (merge rivin-tiedot {(or tunniste :id) id :koskematon true})))
+                                               (merge rivin-tiedot {(or tunniste :id) id :koskematon true})))
                          uusi-jarjestys (swap! jarjestys conj id)]
                      (swap! historia conj [vanhat-tiedot vanhat-virheet vanhat-varoitukset vanhat-huomautukset vanha-jarjestys])
                      (swap! virheet (fn [virheet]
@@ -571,14 +567,31 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                         rivit)
                                  (let [id ((or tunniste :id) r)]
                                    (recur (assoc muok
-                                                 id (assoc r :koskematon true))
+                                            id (assoc r :koskematon true))
                                           (conj jarj id)
                                           rivit)))))
                            nil)
-        maarita-rendattavien-rivien-maara (fn [this _]
+        kiinnita-otsikkorivi? (atom false)
+        kiinnitetyn-otsikkorivin-keveys (atom 0)
+        maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
+                                                  (reset! kiinnitetyn-otsikkorivin-keveys (dom/elementin-leveys (r/dom-node this))))
+        maarita-rendattavien-rivien-maara (fn [this]
                                             (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
-                                              (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))]
+                                              (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
+        kasittele-otsikkorivin-kiinnitys (fn [this]
+                                           (if (and
+                                                 (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
+                                                 (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
+                                                 (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
+                                             (reset! kiinnita-otsikkorivi? true)
+                                             (reset! kiinnita-otsikkorivi? false)))
+        kasittele-scroll-event (fn [this _]
+                                 (maarita-rendattavien-rivien-maara this)
+                                 (kasittele-otsikkorivin-kiinnitys this))
+        kasittele-resize-event (fn [this _]
+                                 (maarita-kiinnitetyn-otsikkorivin-leveys this)
+                                 (kasittele-otsikkorivin-kiinnitys this))]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
@@ -587,216 +600,225 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (aloita-muokkaus! tiedot))
 
     (komp/luo
-     (komp/dom-kuuntelija js/window
-                          EventType/SCROLL maarita-rendattavien-rivien-maara)
-     {:component-will-receive-props
-      (fn [this & [_ _ _ tiedot]]
-        ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
-        (nollaa-muokkaustiedot!)
-        (when muokkaa-aina
-          (aloita-muokkaus! tiedot))
-        (reset! rivien-maara (count tiedot))
-        (maarita-rendattavien-rivien-maara this nil))
+      (komp/dom-kuuntelija js/window
+                           EventType/SCROLL kasittele-scroll-event
+                           EventType/RESIZE kasittele-resize-event)
+      {:component-will-receive-props
+       (fn [this & [_ _ _ tiedot]]
+         ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
+         (nollaa-muokkaustiedot!)
+         (when muokkaa-aina
+           (aloita-muokkaus! tiedot))
+         (reset! rivien-maara (count tiedot))
+         (maarita-rendattavien-rivien-maara this))
 
-      :component-did-mount
-      (fn [this _]
-        (maarita-rendattavien-rivien-maara this nil))
+       :component-did-mount
+       (fn [this _]
+         (maarita-kiinnitetyn-otsikkorivin-leveys this)
+         (maarita-rendattavien-rivien-maara this))
 
-      :component-will-unmount
-      (fn []
-        (nollaa-muokkaustiedot!))}
-     (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
-                  muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
-                  korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
-       (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
-             colspan (if (or piilota-toiminnot? (nil? tallenna))
-                       (count skeema)
-                       (inc (count skeema)))
-             muokataan (not (nil? @muokatut))
-             tiedot (if max-rivimaara
-                 (take max-rivimaara alkup-tiedot)
-                 alkup-tiedot)
-             muokkauspaneeli (fn [nayta-otsikko?]
-                               [:div.panel-heading
-                                (if-not muokataan
-                                  [:span.pull-right.muokkaustoiminnot
-                                   (when (and tallenna
-                                              (not (nil? tiedot)))
-                                     [:div (when (and (= :ei-mahdollinen tallenna)
-                                                      tallennus-ei-mahdollinen-tooltip)
-                                             {:title (tallennus-ei-mahdollinen-tooltip)})
-                                      [:button.nappi-ensisijainen
-                                       {:disabled (or (= :ei-mahdollinen tallenna)
-                                                      @gridia-muokataan?)
-                                        :on-click #(do (.preventDefault %)
-                                                       (aloita-muokkaus! tiedot))}
-                                       [:span.grid-muokkaa
-                                        [y/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]])]
-                                  [:span.pull-right.muokkaustoiminnot
-                                   [:button.nappi-toissijainen
-                                    {:disabled (empty? @historia)
-                                     :on-click #(do (.stopPropagation %)
-                                                    (.preventDefault %)
-                                                    (peru!))}
-                                    [y/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
+       :component-will-unmount
+       (fn []
+         (nollaa-muokkaustiedot!))}
+      (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
+                    korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
+           (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+                 colspan (if (or piilota-toiminnot? (nil? tallenna))
+                           (count skeema)
+                           (inc (count skeema)))
+                 muokataan (not (nil? @muokatut))
+                 tiedot (if max-rivimaara
+                          (take max-rivimaara alkup-tiedot)
+                          alkup-tiedot)
+                 muokkauspaneeli (fn [nayta-otsikko?]
+                                   [:div.panel-heading
+                                    (if-not muokataan
+                                      [:span.pull-right.muokkaustoiminnot
+                                       (when (and tallenna
+                                                  (not (nil? tiedot)))
+                                         [:div (when (and (= :ei-mahdollinen tallenna)
+                                                          tallennus-ei-mahdollinen-tooltip)
+                                                 {:title (tallennus-ei-mahdollinen-tooltip)})
+                                          [:button.nappi-ensisijainen
+                                           {:disabled (or (= :ei-mahdollinen tallenna)
+                                                          @gridia-muokataan?)
+                                            :on-click #(do (.preventDefault %)
+                                                           (aloita-muokkaus! tiedot))}
+                                           [:span.grid-muokkaa
+                                            [y/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]])]
+                                      [:span.pull-right.muokkaustoiminnot
+                                       [:button.nappi-toissijainen
+                                        {:disabled (empty? @historia)
+                                         :on-click #(do (.stopPropagation %)
+                                                        (.preventDefault %)
+                                                        (peru!))}
+                                        [y/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
 
-                                   (when-not (= false voi-lisata?)
-                                     [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                                            (lisaa-rivi! ohjaus {}))}
-                                      [y/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
+                                       (when-not (= false voi-lisata?)
+                                         [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
+                                                                                                (lisaa-rivi! ohjaus {}))}
+                                          [y/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
 
-                                   (when-not muokkaa-aina
-                                     [:button.nappi-myonteinen.grid-tallenna
-                                      {:disabled (or (not (empty? @virheet))
-                                                     @tallennus-kaynnissa)
-                                       :on-click #(when-not @tallennus-kaynnissa
-                                                    (let [kaikki-rivit (mapv second @muokatut)
-                                                          tallennettavat
-                                                          (if tallenna-vain-muokatut
-                                                            (do (log "TALLENNA VAIN MUOKATUT")
-                                                                (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
-                                                            kaikki-rivit)]
-                                                      (do (.preventDefault %)
-                                                          (reset! tallennus-kaynnissa true)
-                                                          (go (if (<! (tallenna tallennettavat)))
-                                                              (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
-                                      [y/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
+                                       (when-not muokkaa-aina
+                                         [:button.nappi-myonteinen.grid-tallenna
+                                          {:disabled (or (not (empty? @virheet))
+                                                         @tallennus-kaynnissa)
+                                           :on-click #(when-not @tallennus-kaynnissa
+                                                       (let [kaikki-rivit (mapv second @muokatut)
+                                                             tallennettavat
+                                                             (if tallenna-vain-muokatut
+                                                               (do (log "TALLENNA VAIN MUOKATUT")
+                                                                   (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
+                                                               kaikki-rivit)]
+                                                         (do (.preventDefault %)
+                                                             (reset! tallennus-kaynnissa true)
+                                                             (go (if (<! (tallenna tallennettavat)))
+                                                                 (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                                          [y/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
 
-                                   (when-not muokkaa-aina
-                                     [:button.nappi-kielteinen.grid-peru
-                                      {:on-click #(do
-                                                    (.preventDefault %)
-                                                    (nollaa-muokkaustiedot!)
-                                                    (when peruuta (peruuta))
-                                                    nil)}
-                                      [y/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
-                                (when nayta-otsikko? [:h6.panel-title otsikko])])]
-         [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
-          (muokkauspaneeli true)
-          [:div.panel-body
-           (if (nil? tiedot)
-             (ajax-loader)
-             [:table.grid
-              [:thead
-               (when-let [rivi-ennen (:rivi-ennen opts)]
-                 [:tr
-                  (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-                    ^{:key teksti}
-                    [:th {:colSpan (or sarakkeita 1)
-                          :class (y/tasaus-luokka tasaa)}
-                     teksti])])
-               [:tr
-                (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
-                  ^{:key (str nimi)}
-                  [:th {:class (y/luokat otsikkorivi-luokka
-                                         (y/tasaus-luokka tasaa))
-                        :width (or leveys "5%")} otsikko])
-                (when (and (not piilota-toiminnot?)
-                           tallenna)
-                  [:th.toiminnot {:width "40px"} " "])]]
+                                       (when-not muokkaa-aina
+                                         [:button.nappi-kielteinen.grid-peru
+                                          {:on-click #(do
+                                                       (.preventDefault %)
+                                                       (nollaa-muokkaustiedot!)
+                                                       (when peruuta (peruuta))
+                                                       nil)}
+                                          [y/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
+                                    (when nayta-otsikko? [:h6.panel-title otsikko])])
+                 thead (fn []
+                         [:thead
+                          (when-let [rivi-ennen (:rivi-ennen opts)]
+                            [:tr
+                             (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+                               ^{:key teksti}
+                               [:th {:colSpan (or sarakkeita 1)
+                                     :class (y/tasaus-luokka tasaa)}
+                                teksti])])
+                          [:tr
+                           (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
+                             ^{:key (str nimi)}
+                             [:th {:class (y/luokat otsikkorivi-luokka
+                                                    (y/tasaus-luokka tasaa))
+                                   :width (or leveys "5%")}
+                              otsikko])
+                           (when (and (not piilota-toiminnot?)
+                                      tallenna)
+                             [:th.toiminnot {:width "40px"} " "])]])]
+             [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
+              (muokkauspaneeli true)
+              [:div.panel-body
+               (if (nil? tiedot)
+                 (ajax-loader)
+                 [:table.grid
+                  [thead]
+                  (when @kiinnita-otsikkorivi?
+                    [:table.grid {:style {:position "fixed"
+                                          :top 0
+                                          :width @kiinnitetyn-otsikkorivin-keveys}}
+                     [thead]])
+                  [:tbody
+                   (if muokataan
+                     ;; Muokkauskäyttöliittymä
+                     (let [muokatut @muokatut
+                           jarjestys @jarjestys
+                           tulevat-rivit (fn [aloitus-idx]
+                                           ;;(log "TULEVAT RIVIT, alk: " (pr-str aloitus-idx))
+                                           ;;(log "jarjestys: " (pr-str (drop (inc aloitus-idx) jarjestys)))
+                                           (map #(get muokatut %) (drop (inc aloitus-idx) jarjestys)))]
+                       (if (empty? muokatut)
+                         [:tr.tyhja [:td {:colSpan colspan} tyhja]]
+                         (let [kaikki-virheet @virheet
+                               kaikki-varoitukset @varoitukset
+                               kaikki-huomautukset @huomautukset
+                               nykyinen-fokus @fokus]
+                           (doall (mapcat #(keep identity %)
+                                          (map-indexed
+                                            (fn [i id]
+                                              (if (otsikko? id)
+                                                (let [teksti (:teksti id)]
+                                                  [^{:key teksti}
+                                                  [:tr.otsikko
+                                                   [:td {:colSpan colspan}
+                                                    [:h5 teksti]]]])
+                                                (let [rivi (get muokatut id)
+                                                      rivin-virheet (get kaikki-virheet id)
+                                                      rivin-varoitukset (get kaikki-varoitukset id)
+                                                      rivin-huomautukset (get kaikki-huomautukset id)]
+                                                  (when-not (:poistettu rivi)
+                                                    [^{:key id}
+                                                    [muokkaus-rivi {:ohjaus ohjaus
+                                                                    :vetolaatikot vetolaatikot
+                                                                    :muokkaa! muokkaa!
+                                                                    :luokka (str (if (even? (+ i 1))
+                                                                                   "parillinen"
+                                                                                   "pariton"))
+                                                                    :id id
+                                                                    :rivin-virheet rivin-virheet
+                                                                    :rivin-varoitukset rivin-varoitukset
+                                                                    :rivin-huomautukset rivin-huomautukset
+                                                                    :voi-poistaa? voi-poistaa?
+                                                                    :esta-poistaminen? esta-poistaminen?
+                                                                    :esta-poistaminen-tooltip esta-poistaminen-tooltip
+                                                                    :fokus nykyinen-fokus
+                                                                    :aseta-fokus! #(reset! fokus %)
+                                                                    :tulevat-rivit (tulevat-rivit i)
+                                                                    :piilota-toiminnot? piilota-toiminnot?}
+                                                     skeema rivi]
+                                                     (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
+                                            jarjestys))))))
 
-              [:tbody
-               (if muokataan
-                 ;; Muokkauskäyttöliittymä
-                 (let [muokatut @muokatut
-                       jarjestys @jarjestys
-                       tulevat-rivit (fn [aloitus-idx]
-                                       ;;(log "TULEVAT RIVIT, alk: " (pr-str aloitus-idx))
-                                       ;;(log "jarjestys: " (pr-str (drop (inc aloitus-idx) jarjestys)))
-                                       (map #(get muokatut %) (drop (inc aloitus-idx) jarjestys)))]
-                   (if (empty? muokatut)
-                     [:tr.tyhja [:td {:colSpan colspan} tyhja]]
-                     (let [kaikki-virheet @virheet
-                           kaikki-varoitukset @varoitukset
-                           kaikki-huomautukset @huomautukset
-                           nykyinen-fokus @fokus]
-                       (doall (mapcat #(keep identity %)
-                                      (map-indexed
-                                       (fn [i id]
-                                         (if (otsikko? id)
-                                           (let [teksti (:teksti id)]
-                                             [^{:key teksti}
-                                              [:tr.otsikko
-                                               [:td {:colSpan colspan}
-                                                [:h5 teksti]]]])
-                                           (let [rivi (get muokatut id)
-                                                 rivin-virheet (get kaikki-virheet id)
-                                                 rivin-varoitukset (get kaikki-varoitukset id)
-                                                 rivin-huomautukset (get kaikki-huomautukset id)]
-                                             (when-not (:poistettu rivi)
-                                               [^{:key id}
-                                                [muokkaus-rivi {:ohjaus                   ohjaus
-                                                                :vetolaatikot             vetolaatikot
-                                                                :muokkaa!                 muokkaa!
-                                                                :luokka                   (str (if (even? (+ i 1))
-                                                                                                 "parillinen"
-                                                                                                 "pariton"))
-                                                                :id                       id
-                                                                :rivin-virheet            rivin-virheet
-                                                                :rivin-varoitukset        rivin-varoitukset
-                                                                :rivin-huomautukset       rivin-huomautukset
-                                                                :voi-poistaa?             voi-poistaa?
-                                                                :esta-poistaminen?        esta-poistaminen?
-                                                                :esta-poistaminen-tooltip esta-poistaminen-tooltip
-                                                                :fokus                    nykyinen-fokus
-                                                                :aseta-fokus!             #(reset! fokus %)
-                                                                :tulevat-rivit            (tulevat-rivit i)
-                                                                :piilota-toiminnot?       piilota-toiminnot?}
-                                                 skeema rivi]
-                                                (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
-                                       jarjestys))))))
+                     ;; Näyttömuoto
+                     (let [rivit (take @renderoi-max-rivia tiedot)]
+                       (if (empty? rivit)
+                         [:tr.tyhja [:td {:col-span colspan} tyhja]]
+                         (doall
+                           (let [rivit-jarjestetty (sort-by
+                                                     (fn [rivi] (if (:yhteenveto rivi) 1 0)) ; Yhteenveto-rivin tulee olla aina viimeisenä
+                                                     rivit)]
+                             (mapcat #(keep identity %)
+                                     (map-indexed
+                                       (fn [i rivi]
+                                         (if (otsikko? rivi)
+                                           [^{:key (:teksti rivi)}
+                                           [:tr.otsikko
+                                            [:td {:colSpan colspan}
+                                             [:h5 (:teksti rivi)]]]]
 
-                 ;; Näyttömuoto
-                 (let [rivit (take @renderoi-max-rivia tiedot)]
-                   (if (empty? rivit)
-                     [:tr.tyhja [:td {:col-span colspan} tyhja]]
-                     (doall
-                      (let [rivit-jarjestetty (sort-by
-                                               (fn [rivi] (if (:yhteenveto rivi) 1 0)) ; Yhteenveto-rivin tulee olla aina viimeisenä
-                                               rivit)]
-                        (mapcat #(keep identity %)
-                                (map-indexed
-                                 (fn [i rivi]
-                                   (if (otsikko? rivi)
-                                     [^{:key (:teksti rivi)}
-                                      [:tr.otsikko
-                                       [:td {:colSpan colspan}
-                                        [:h5 (:teksti rivi)]]]]
+                                           (let [id ((or tunniste :id) rivi)]
+                                             [^{:key id}
+                                             [naytto-rivi {:ohjaus ohjaus
+                                                           :vetolaatikot vetolaatikot
+                                                           :id id
+                                                           :tallenna tallenna
+                                                           :luokka (str (if (even? (+ i 1)) "parillinen" "pariton")
+                                                                        (when rivi-klikattu
+                                                                          " klikattava ")
+                                                                        (when (:korosta rivi) " korostettu-rivi ")
+                                                                        (when (:lihavoi rivi) " bold ")
+                                                                        (when (:yhteenveto rivi) " yhteenveto ")
+                                                                        (when rivin-luokka
+                                                                          (rivin-luokka rivi)))
+                                                           :rivi-klikattu rivi-klikattu
+                                                           :rivi-valinta-peruttu rivi-valinta-peruttu
+                                                           :valittu-rivi valittu-rivi
+                                                           :mahdollista-rivin-valinta mahdollista-rivin-valinta
+                                                           :piilota-toiminnot? piilota-toiminnot?}
+                                              skeema rivi]
+                                              (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
+                                       rivit-jarjestetty)))))))]])
 
-                                     (let [id ((or tunniste :id) rivi)]
-                                       [^{:key id}
-                                        [naytto-rivi {:ohjaus                    ohjaus
-                                                      :vetolaatikot              vetolaatikot
-                                                      :id                        id
-                                                      :tallenna                  tallenna
-                                                      :luokka                    (str (if (even? (+ i 1)) "parillinen" "pariton")
-                                                                                      (when rivi-klikattu
-                                                                                        " klikattava ")
-                                                                                      (when (:korosta rivi) " korostettu-rivi ")
-                                                                                      (when (:lihavoi rivi) " bold ")
-                                                                                      (when (:yhteenveto rivi) " yhteenveto ")
-                                                                                      (when rivin-luokka
-                                                                                        (rivin-luokka rivi)))
-                                                      :rivi-klikattu             rivi-klikattu
-                                                      :rivi-valinta-peruttu      rivi-valinta-peruttu
-                                                      :valittu-rivi              valittu-rivi
-                                                      :mahdollista-rivin-valinta mahdollista-rivin-valinta
-                                                      :piilota-toiminnot?        piilota-toiminnot?}
-                                         skeema rivi]
-                                        (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
-                                 rivit-jarjestetty)))))))]])
-
-           (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
-             [:div.alert-warning (or max-rivimaaran-ylitys-viesti
-                                     "Liikaa hakutuloksia, rajaa hakua")])
-           (when (and muokataan muokkaa-footer)
-             [muokkaa-footer ohjaus])]
-                                        ;taulukon allekin muokkaustoiminnot jos rivejä yli rajamäärän (joko muokkaus- tai näyttötila)
-          (when (> (count (or @muokatut tiedot))
-                   +rivimaara-jonka-jalkeen-napit-alaskin+)
-            [:span.gridin-napit-alhaalla
-             (muokkauspaneeli false)])])))))
+               (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
+                 [:div.alert-warning (or max-rivimaaran-ylitys-viesti
+                                         "Liikaa hakutuloksia, rajaa hakua")])
+               (when (and muokataan muokkaa-footer)
+                 [muokkaa-footer ohjaus])]
+              ;taulukon allekin muokkaustoiminnot jos rivejä yli rajamäärän (joko muokkaus- tai näyttötila)
+              (when (> (count (or @muokatut tiedot))
+                       +rivimaara-jonka-jalkeen-napit-alaskin+)
+                [:span.gridin-napit-alhaalla
+                 (muokkauspaneeli false)])])))))
 
 
 (defn muokkaus-grid
@@ -828,7 +850,7 @@ Optiot on mappi optioita:
            muokkaa-footer muutos uusi-rivi luokat validoi-aina?] :as opts} skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
-        virheet-atom (or (:virheet opts) (atom {}))              ;; validointivirheet: (:id rivi) => [virheet]
+        virheet-atom (or (:virheet opts) (atom {}))         ;; validointivirheet: (:id rivi) => [virheet]
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
@@ -861,8 +883,7 @@ Optiot on mappi optioita:
                       (avaa-vetolaatikko! [_ id]
                         (swap! vetolaatikot-auki conj id))
                       (sulje-vetolaatikko! [_ id]
-                        (swap! vetolaatikot-auki disj id))
-                      ))
+                        (swap! vetolaatikot-auki disj id))))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [muokatut virheet id funktio & argumentit]
@@ -886,7 +907,6 @@ Optiot on mappi optioita:
                      (when muutos
                        (muutos (ohjaus-fn muokatut virheet)))))
 
-
         ;; Peruu yhden muokkauksen
         peru! (fn [muokatut virheet]
                 (let [[muok virh] (peek @historia)]
@@ -894,10 +914,7 @@ Optiot on mappi optioita:
                   (reset! virheet virh))
                 (swap! historia pop)
                 (when muutos
-                  (muutos (ohjaus-fn muokatut virheet))))
-
-        ]
-
+                  (muutos (ohjaus-fn muokatut virheet))))]
 
     (r/create-class
       {:component-will-receive-props
@@ -922,8 +939,7 @@ Optiot on mappi optioita:
                ohjaus (ohjaus-fn muokatut virheet)
                voi-muokata? (if (nil? voi-muokata?)
                               true
-                              voi-muokata?)
-               ]
+                              voi-muokata?)]
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 

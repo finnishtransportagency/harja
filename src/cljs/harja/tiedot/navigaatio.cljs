@@ -37,7 +37,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 (declare kasittele-url! paivita-url valitse-urakka)
 
-(defonce murupolku-nakyvissa? (reaction (not @raportit/raportit-nakymassa?)))
+(defonce murupolku-nakyvissa? (reaction (and (not @raportit/raportit-nakymassa?)
+                                             (not= @valittu-sivu :about)
+                                             (not= @valittu-sivu :hallinta))))
 (defonce murupolku-domissa? (atom false))
 
 (defonce kartan-extent (atom nil))
@@ -206,7 +208,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
-  (reset! valittu-hallintayksikko yks)
+  (reset! valittu-hallintayksikko-id (:id yks))
   (reset! valittu-urakka-id nil)
   (reset! valittu-urakka nil)
   (paivita-url))

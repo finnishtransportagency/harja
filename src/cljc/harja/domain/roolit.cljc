@@ -104,7 +104,7 @@
   "Palauttaa setin rooleja, joita käyttäjällä on annetussa urakassa."
   #?(:cljs ([urakka-id] (urakkaroolit @istunto/kayttaja urakka-id)))
   ([{r :urakkaroolit} urakka-id]
-  (get r urakka-id)))
+   (or (get r urakka-id) #{})))
 
 (defn organisaatioroolit
   "Palauttaa setin rooleja, joita käyttäjällä on annetussa organisaatiossa."

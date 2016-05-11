@@ -23,14 +23,17 @@ tai linkitetyssä roolissa muotoa <linkitetty id>_<roolin nimi>. Palauttaa
 roolin tiedot ja linkitetyn id:n vektorissa, jos rooli ei ole linkitetty id
 on nil."
   [roolit ryhma]
-  (some (fn [{:keys [nimi linkki] :as rooli}]
-          (cond
-            (= nimi ryhma)
-            [rooli nil]
+  (let [roolit (vals roolit)
+        ryhmanimet (into #{}
+                         (map :nimi roolit))]
+    (some (fn [{:keys [nimi linkki] :as rooli}]
+            (cond
+              (= nimi ryhma)
+              [rooli nil]
 
-            (and linkki (str/ends-with? ryhma (str "_" nimi)))
-            [rooli (first (str/split ryhma #"_"))]))
-        (vals roolit)))
+              (and (not (ryhmanimet ryhma)) linkki (str/ends-with? ryhma (str "_" nimi)))
+              [rooli (first (str/split ryhma #"_"))]))
+          roolit)))
 
 (defn- yleisroolit [roolit-ja-linkit]
   (into #{}

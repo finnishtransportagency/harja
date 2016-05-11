@@ -4,12 +4,13 @@
    #?(:clj [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])
    [harja.domain.roolit :as roolit]
    #?(:clj [slingshot.slingshot :refer [throw+]])
-   #?(:cljs [harja.tiedot.istunto :as istunto]))
+   #?(:cljs [harja.tiedot.istunto :as istunto])
+   [clojure.set :as s])
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
 (declare on-oikeus? on-muu-oikeus?)
-(defrecord KayttoOikeus [kuvaus luku kirjoitus muu])
+(defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 
 #?(:cljs
    (extend-type KayttoOikeus
@@ -26,17 +27,75 @@
 
 (maarittele-oikeudet!)
 
-(defn on-oikeus?
-  "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
-  [tyyppi oikeus urakka-id kayttaja]
-  (let [sallitut (tyyppi oikeus)]
-    (or (roolit/roolissa? kayttaja sallitut)
-        (if urakka-id
-          ;; Jos urakka annettu, tarkista onko tähän urakkaan kyseinen oikeus
-          (roolit/rooli-urakassa? kayttaja sallitut urakka-id)
+(defn- roolin-oikeudet [kayttooikeus rooli]
+  (or (get (:roolien-oikeudet kayttooikeus) rooli)
+      #{}))
 
-          ;; Jos ei urakkaa, katso onko missään urakassa oikeus
-          (roolit/rooli-jossain-urakassa? kayttaja sallitut)))))
+(defn- on-lukuoikeus? [kayttooikeus rooli]
+  (let [oikeudet (roolin-oikeudet kayttooikeus rooli)]
+    (cond
+      (oikeudet "R*") :kaikki
+      (oikeudet "R+") :organisaatio
+      (oikeudet "R") :urakka)))
+
+(defn- on-kirjoitusoikeus? [kayttooikeus rooli]
+  (let [oikeudet (roolin-oikeudet kayttooikeus rooli)]
+    (cond
+      (oikeudet "W*") :kaikki
+      (oikeudet "W+") :organisaatio
+      (oikeudet "W") :urakka)))
+
+(defn- on-oikeus-urakkaan? [oikeus-pred urakka-id organisaation-urakka?
+                            {rooli :rooli roolin-urakka-id :urakka-id}]
+  (let [konteksti (oikeus-pred rooli)]
+    (case konteksti
+      ;; Kaikki antaa oikeuden mihin vaan urakkaan
+      :kaikki :kaikki
+
+      ;; Organisaatio, jos testattava urakka kuuluu tälle organisaatiolle
+      :organisaatio (when organisaation-urakka?
+                      :organisaatio)
+
+      ;; Urakka, jos urakkarooli on annettu testattavalle urakalle
+      :urakka (when (= roolin-urakka-id urakka-id)
+                :urakka)
+
+      ;; Ei oikeutta
+      nil)))
+
+(defn- on-oikeus?
+  "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
+  [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit urakkaroolit] :as kayttaja}]
+  (let [oikeus-pred (partial (case tyyppi
+                               :luku on-lukuoikeus?
+                               :kirjoitus on-kirjoitusoikeus?)
+                             oikeus)
+        kaikki-urakkaroolit (apply concat (vals urakkaroolit))
+        kaikki-roolit (concat roolit
+                              kaikki-urakkaroolit)]
+
+
+
+    (if-not urakka-id
+      ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
+      (some oikeus-pred kaikki-roolit)
+
+
+      ;; Jos urakka on annettu, tarkista että on oikeus tässä urakassa
+      ;; tai oikeus, joka implikoi urakan (+ = org. urakka, * = mikä tahansa urakka)
+      (some #(on-oikeus-urakkaan? oikeus-pred urakka-id
+                                  (organisaation-urakat urakka-id) %)
+            (concat
+             ;; Yleiset roolit (ei urakkaan sidottu)
+             (map (fn [r]
+                    {:rooli r
+                     :urakka-id nil}) roolit)
+             ;; Urakkakohtaiset roolit urakan id:llä
+             (mapcat (fn [[urakka-id roolit]]
+                       (for [r roolit]
+                         {:rooli r
+                          :urakka-id urakka-id}))
+                     urakkaroolit))))))
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"

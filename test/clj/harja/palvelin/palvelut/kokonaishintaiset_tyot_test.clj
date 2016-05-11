@@ -50,10 +50,11 @@
 
         urakoitsijan-urakanvalvoja (oulun-urakan-urakoitsijan-urakkavastaava)
         ei-ole-taman-urakan-urakoitsijan-urakanvalvoja (ei-ole-oulun-urakan-urakoitsijan-urakkavastaava)
+        _ (println  "URAKOITSIJAN URAKANVALVOJA" urakoitsijan-urakanvalvoja "; O AU ID " @oulun-alueurakan-2005-2010-id)
         kokonaishintaiset-tyot-kutsujana-urakoitsija
         (filter #(= oulun-alueurakan-sopimus (:sopimus %))
-                (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :kokonaishintaiset-tyot urakoitsijan-urakanvalvoja @oulun-alueurakan-2005-2010-id))]
+                (kutsu-palvelua (:http-palvelin jarjestelma) :kokonaishintaiset-tyot
+                                urakoitsijan-urakanvalvoja @oulun-alueurakan-2005-2010-id))]
 
     (is (= (count kokonaishintaiset-tyot) oulun-alueurakan-toiden-lkm))
     (is (= (count kokonaishintaiset-tyot-kutsujana-urakoitsija) oulun-alueurakan-toiden-lkm))
