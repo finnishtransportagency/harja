@@ -114,7 +114,7 @@
 (defn tallenna-suolasakko-ja-pohjavesialueet
   [db user {:keys [hoitokaudet urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
   (log/debug"tallenna-suolasakko-ja-pohjavesialueet tiedot: " (pr-str tiedot))
-  (oikeudet/kirjoita oikeudet/urakat-toteumat-suola user urakka)
+  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-suola user urakka)
   (jdbc/with-db-transaction
     [db db]
     (doseq [hk hoitokaudet]
