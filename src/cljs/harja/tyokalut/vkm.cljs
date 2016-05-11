@@ -110,7 +110,7 @@ Palautettavassa datassa:
 (defn virhe?
   "Tarkistaa epäonnistuiko VKM kutsu"
   [tulos]
-  (contains? tulos :virhe))
+  (harja.asiakas.kommunikaatio/virhe? tulos))
 
 (defn loytyi?
   "Tarkista että tulos ei ole virhe eikä tyhjä tai pelkkä nil reitti"
