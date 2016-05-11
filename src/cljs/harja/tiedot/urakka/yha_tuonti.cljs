@@ -104,46 +104,6 @@
       (paivita-osoitteen-osa loppuosanosoite :losa "osa")))
 
 (defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
-  ;; esimerkki yha:n palauttamista kohteista
-  #_[{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124,
-                                           :kuulamylly 4,
-                                           :paallystetyomenetelma 22,
-                                           :raekoko 12,
-                                           :rc-prosentti 14,
-                                           :uusi-paallyste 11},
-                    :tierekisteriosoitevali {:aet 3,
-                                             :ajorata 0,
-                                             :aosa 3,
-                                             :kaista 11,
-                                             :karttapaivamaara #inst"2015-12-31T22:00:00.000-00:00",
-                                             :let 3,
-                                             :losa 3,
-                                             :tienumero 3},
-                    :tunnus "A",
-                    :yha-id 3}],
-      :keskimaarainen-vuorokausiliikenne 1000,
-      :kohdetyyppi :paikkaus,
-      :nykyinen-paallyste 1,
-      :tierekisteriosoitevali {:aet 3,
-                               :ajorata 0,
-                               :aosa 3,
-                               :kaista 11,
-                               :karttapaivamaara #inst"2015-12-31T22:00:00.000-00:00",
-                               :let 3,
-                               :losa 3,
-                               :tienumero 3},
-      :tunnus "string",
-      :yha-id 5,
-      :yllapitoluokka 1}]
-
-  ;; esimerkki vkm:n palauttamista kohteista
-  #_{"tieosoitteet" [{"ajorata" 0, "palautusarvo" 1, "osa" 1, "etaisyys" 1, "tie" 20, "tunniste" "kohde-string-alku"}
-                     {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-string-loppu"}
-                     {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "alikohde-string-A-alku"}
-                     {"palautusarvo" 0,
-                      "virheteksti" "Tieosoitteelle ei saatu historiatietoa.",
-                      "tunniste" "alikohde-string-A-loppu"}]}
-
   (mapv (fn [kohde]
           (let [alkuosanhakutunnus (kohteen-alun-tunnus kohde)
                 loppuosanhakutunnus (kohteen-lopun-tunnus kohde)
