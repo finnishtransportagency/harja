@@ -143,12 +143,10 @@
                               :tyyppi
                               (= :urakoitsija))]
          [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
-                          (cond
-                            (= @nav/valittu-sivu :hallinta) "hide"
-                            (= @nav/valittu-sivu :about) "hide"
-                            (not @nav/murupolku-nakyvissa?) "hide"
-                            :default ""))}
-          (if (or ei-urakkaa? (= @nav/valittu-sivu :raportit))
+                          (if @nav/murupolku-nakyvissa?
+                            ""
+                            "hide"))}
+          (if ei-urakkaa?
             [:ol.murupolku
              [:div.col-sm-6.murupolku-vasen
               [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]
