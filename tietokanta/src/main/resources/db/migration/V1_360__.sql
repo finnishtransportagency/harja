@@ -14,3 +14,8 @@ DROP INDEX index_paallystyskohde;
 
 -- Kanta kertoo voidaanko sidontaa muuttaa, sidonta menee lukkoon kun jotain tietoja muuttelee
 ALTER TABLE yhatiedot ADD COLUMN sidonta_lukittu BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Muunnetaan YHA id:t biginteiksi
+ALTER TABLE yhatiedot ALTER COLUMN yhaid TYPE BIGINT;
+ALTER TABLE yllapitokohde ALTER COLUMN yhaid TYPE BIGINT;
+ALTER TABLE yllapitokohdeosa ALTER COLUMN yhaid TYPE BIGINT;
