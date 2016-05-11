@@ -36,7 +36,7 @@
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
-                                        <xs:element name="sampotunnus" nillable="false" minOccurs="1" maxOccurs="1">
+                                        <xs:element name="sampotunnus" minOccurs="0" maxOccurs="1">
                                             <xs:simpleType>
                                                 <xs:restriction base="xs:string">
                                                     <xs:maxLength value="50"/>
@@ -94,7 +94,7 @@
                         <xs:sequence>
                             <xs:element name="yha-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1"/>
                             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
-                            <xs:element name="sampotunnus" nillable="false" minOccurs="1" maxOccurs="1">
+                            <xs:element name="sampotunnus" minOccurs="0" maxOccurs="1">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="50"/>
