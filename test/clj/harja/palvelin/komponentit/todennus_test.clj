@@ -39,3 +39,10 @@
           :organisaatioroolit {}
           :urakkaroolit       {}}
          (todennus/kayttajan-roolit urakat urakoitsijat oikeudet/roolit "Tilaajan_Kayttaja"))))
+
+(deftest ely-peruskayttaja
+  (is (= {:roolit             #{"ELY_Peruskayttaja"}
+          :organisaatioroolit {}
+          :urakkaroolit       {}}
+         (todennus/kayttajan-roolit urakat urakoitsijat oikeudet/roolit "ELY_Peruskayttaja"))))
+
