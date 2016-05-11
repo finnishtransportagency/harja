@@ -183,6 +183,7 @@
   (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "haeUrakanKohteet" yha-id))]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
+      ;; todo: ota pois, kun saadaan yhteys toimimaan YHA:n
       (with-fake-http [url +testi-urakan-kohdehakuvastaus+]
         (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "yha" "kohteiden-haku"

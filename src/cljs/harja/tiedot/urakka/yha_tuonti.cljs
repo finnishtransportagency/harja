@@ -42,30 +42,42 @@
   (log "[YHA] Haetaan YHA-kohteet urakalle id:llä" harja-urakka-id)
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
+(defn kohteen-alun-tunnus [kohde]
+  (str "kohde-" (:tunnus kohde) "-alku"))
+
+(defn kohteen-lopun-tunnus [kohde]
+  (str "kohde-" (:tunnus kohde) "-loppu"))
+
+(defn alikohteen-alun-tunnus [kohde alikohde]
+  (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-alku"))
+
+(defn alikohteen-lopun-tunnus [kohde alikohde]
+  (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-loppu"))
+
 (defn rakenna-tieosoitteet [kohteet]
   {:tieosoitteet
    (into []
          (flatten
            (mapv (fn [kohde]
                    (let [tr (:tierekisteriosoitevali kohde)]
-                     [{:tunniste (str "kohde-" (:tunnus kohde) "-alku")
+                     [{:tunniste (kohteen-alun-tunnus kohde)
                        :tie (:tienumero tr)
                        :osa (:aosa tr)
                        :etaisyys (:aet tr)
                        :ajorata (:ajorata tr)}
-                      {:tunniste (str "kohde-" (:tunnus kohde) "-loppu")
+                      {:tunniste (kohteen-lopun-tunnus kohde)
                        :tie (:tienumero tr)
                        :osa (:losa tr)
                        :etaisyys (:let tr)
                        :ajorata (:ajorata tr)}
                       (mapv (fn [alikohde]
                               (let [tr (:tierekisteriosoitevali alikohde)]
-                                [{:tunniste (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-alku" )
+                                [{:tunniste (alikohteen-alun-tunnus kohde alikohde)
                                   :tie (:tienumero tr)
                                   :osa (:aosa tr)
                                   :etaisyys (:aet tr)
                                   :ajorata (:ajorata tr)}
-                                 {:tunniste (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-loppu")
+                                 {:tunniste (alikohteen-lopun-tunnus kohde alikohde)
                                   :tie (:tienumero tr)
                                   :osa (:losa tr)
                                   :etaisyys (:let tr)
@@ -73,15 +85,25 @@
                             (:alikohteet kohde))]))
                  kohteet)))})
 
-(defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
-  ;; esimerkki vkm:n palauttamista kohteista
-  #_ {"tieosoitteet" [{"ajorata" 0, "palautusarvo" 1, "osa" 1, "etaisyys" 1, "tie" 20, "tunniste" "kohde-string-alku"}
-                      {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-string-loppu"}
-                      {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "alikohde-string-A-alku"}
-                      {"palautusarvo" 0,
-                       "virheteksti" "Tieosoitteelle ei saatu historiatietoa.",
-                       "tunniste" "alikohde-string-A-loppu"}]}
+(defn paivita-osoitteen-osa [kohde osoite avain tunnus]
+  (assoc-in kohde [:tierekisteriosoitevali avain]
+            (if-let [arvo (get osoite tunnus)]
+              arvo
+              (get-in kohde [:tierekisteriosoitevali avain]))))
 
+(defn hae-vkm-osoite [vkm-kohteet hakutunnus]
+  (first (filter #(= hakutunnus (get % "tunniste")) (get vkm-kohteet "tieosoitteet"))))
+
+(defn paivita-tieosoite [kohde alkuosanosoite loppuosanosoite]
+  (-> kohde
+      (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
+      (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
+      (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
+      (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
+      (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
+      (paivita-osoitteen-osa loppuosanosoite :losa "osa")))
+
+(defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
   ;; esimerkki yha:n palauttamista kohteista
   #_[{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124,
                                            :kuulamylly 4,
@@ -114,8 +136,31 @@
       :yha-id 5,
       :yllapitoluokka 1}]
 
-  ;; todo: toteuta yhdistäminen!
-  yha-kohteet)
+  ;; esimerkki vkm:n palauttamista kohteista
+  #_{"tieosoitteet" [{"ajorata" 0, "palautusarvo" 1, "osa" 1, "etaisyys" 1, "tie" 20, "tunniste" "kohde-string-alku"}
+                     {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-string-loppu"}
+                     {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "alikohde-string-A-alku"}
+                     {"palautusarvo" 0,
+                      "virheteksti" "Tieosoitteelle ei saatu historiatietoa.",
+                      "tunniste" "alikohde-string-A-loppu"}]}
+
+  (mapv (fn [kohde]
+          (let [alkuosanhakutunnus (kohteen-alun-tunnus kohde)
+                loppuosanhakutunnus (kohteen-lopun-tunnus kohde)
+                alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
+                loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
+            (-> kohde
+                (paivita-tieosoite alkuosanosoite loppuosanosoite)
+                (assoc :alikohteet
+                       (mapv
+                         (fn [alikohde]
+                           (let [alkuosanhakutunnus (alikohteen-alun-tunnus kohde alikohde)
+                                 loppuosanhakutunnus (alikohteen-lopun-tunnus kohde alikohde)
+                                 alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
+                                 loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
+                             (paivita-tieosoite alikohde alkuosanosoite loppuosanosoite)))
+                         (:alikohteet kohde))))))
+        yha-kohteet))
 
 (defn paivita-yha-kohteet
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
