@@ -147,7 +147,6 @@
            [(when jarjestelman-lisaama-toteuma?
               {:otsikko "Lähde" :nimi :luoja :tyyppi :string
                :hae (fn [rivi]
-                      (println "jeejee " rivi)
                       (str "Järjestelmä (" (get-in rivi [:suorittaja :nimi]) ")"))
                :muokattava? (constantly false)
                :vihje toteumat/ilmoitus-jarjestelman-muokkaama-toteuma})
