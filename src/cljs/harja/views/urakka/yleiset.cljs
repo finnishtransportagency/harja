@@ -260,7 +260,7 @@
       (when paallystys-tai-paikkausurakka?
         [:span (cond sidonta-lukittu?
                      {:title "Urakan sidonta on lukittu, urakkatyyppiä ei voi enää muuttaa."}
-                     yha-tuontioikeus?
+                     (not yha-tuontioikeus?)
                      {:title "Vain urakanvalvoja voi muuttaa urakan tyyppiä"}
                      :default nil)
          [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
