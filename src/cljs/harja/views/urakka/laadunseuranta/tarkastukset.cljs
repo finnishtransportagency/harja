@@ -43,7 +43,8 @@
 (defn uusi-tarkastus []
   {:uusi? true
    :aika (pvm/nyt)
-   :tarkastaja @istunto/kayttajan-nimi})
+   :tarkastaja @istunto/kayttajan-nimi
+   :laadunalitus false})
 
 (defn valitse-tarkastus [tarkastus-id]
   (go
@@ -195,7 +196,6 @@
 (defn tarkastus [tarkastus-atom]
   (let [tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)]
-    (log (pr-str @tarkastus-atom))
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
@@ -204,15 +204,16 @@
        :muokkaa! #(reset! tarkastus-atom %)
        :voi-muokata? (and @tiedot-laatupoikkeamat/voi-kirjata?
                           (not jarjestelmasta?))
-       :footer [napit/palvelinkutsu-nappi
-                "Tallenna tarkastus"
-                (fn []
-                  (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-                {:disabled (validoi-tarkastuslomake tarkastus)
-                 :kun-onnistuu (fn [tarkastus]
-                                 (reset! tarkastukset/valittu-tarkastus nil)
-                                 (tarkastukset/paivita-tarkastus-listaan! tarkastus))
-                 :ikoni (ikonit/tallenna)}]}
+       :footer-fn (fn [virheet _ _]
+                    [napit/palvelinkutsu-nappi
+                     "Tallenna tarkastus"
+                     (fn []
+                       (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
+                     {:disabled (not (empty? virheet))
+                      :kun-onnistuu (fn [tarkastus]
+                                      (reset! tarkastukset/valittu-tarkastus nil)
+                                      (tarkastukset/paivita-tarkastus-listaan! tarkastus))
+                      :ikoni (ikonit/tallenna)}])}
       [(when jarjestelmasta?
          {:otsikko "Lähde" :nimi :luoja :tyyppi :string
           :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))

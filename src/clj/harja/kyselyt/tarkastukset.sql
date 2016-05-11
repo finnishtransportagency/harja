@@ -116,7 +116,8 @@ SET aika           = :aika,
   tyyppi           = :tyyppi :: tarkastustyyppi,
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp,
-  havainnot        = :havainnot
+  havainnot        = :havainnot,
+  laadunalitus     = :laadunalitus
 WHERE urakka = :urakka AND id = :id;
 
 -- name: luo-talvihoitomittaus<!
