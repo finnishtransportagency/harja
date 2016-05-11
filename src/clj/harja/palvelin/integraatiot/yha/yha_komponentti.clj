@@ -14,7 +14,6 @@
 (def +virhe-urakan-kohdehaussa+ ::yha-virhe-urakan-kohdehaussa)
 
 ;; todo: poista kun saadaan oikea yhteys YHA:n
-
 (def +testi-urakan-kohdehakuvastaus+
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
 <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">

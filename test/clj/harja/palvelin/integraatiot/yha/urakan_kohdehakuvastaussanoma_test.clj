@@ -16,9 +16,8 @@
 
 (deftest tarkista-usean-urakan-hakuvastaus
   (let [vastaus (vastaussanoma/lue-sanoma +onnistunut-urakan-kohdehakuvastaus+)]
-    (println vastaus)
     (is (= 1 (count (:kohteet vastaus))))
-    (is (= 3 (:yhaid (first (:kohteet vastaus)))))
+    (is (= 3 (:yha-id (first (:kohteet vastaus)))))
     (is (= 2 (count (:alikohteet (first (:kohteet vastaus))))))
     (is (= "A" (:tunnus (first (:alikohteet (first (:kohteet vastaus)))))))
     (is (= "B" (:tunnus (second (:alikohteet (first (:kohteet vastaus)))))))))

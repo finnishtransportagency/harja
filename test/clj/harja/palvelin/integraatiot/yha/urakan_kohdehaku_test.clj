@@ -30,7 +30,84 @@
 (deftest tarkista-urakan-kohteiden-haku
   (let [urakka-id (hae-urakka-id)
         yha-id (hae-yha-id urakka-id)
-        odotettu-vastaus [{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124
+        odotettu-vastaus[{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 2
+                                                               :kuulamylly 3
+                                                               :paallystetyomenetelma 31
+                                                               :raekoko 12
+                                                               :rc-prosentti 80
+                                                               :uusi-paallyste 21}
+                                        :tierekisteriosoitevali {:aet 0
+                                                                 :ajorata 0
+                                                                 :aosa 36
+                                                                 :kaista 1
+                                                                 :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                                 :let 0
+                                                                 :losa 41
+                                                                 :tienumero 66}
+                                        :tunnus nil
+                                        :yha-id 254915666}
+                                       {:paallystystoimenpide {:kokonaismassamaara 1
+                                                               :kuulamylly 1
+                                                               :paallystetyomenetelma 21
+                                                               :raekoko 10
+                                                               :rc-prosentti 1
+                                                               :uusi-paallyste 21}
+                                        :tierekisteriosoitevali {:aet 0
+                                                                 :ajorata 0
+                                                                 :aosa 41
+                                                                 :kaista 1
+                                                                 :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                                 :let 2321
+                                                                 :losa 41
+                                                                 :tienumero 66}
+                                        :tunnus nil
+                                        :yha-id 254915667}]
+                          :keskimaarainen-vuorokausiliikenne 2509
+                          :kohdetyyppi :paallystys
+                          :nykyinen-paallyste 1
+                          :tierekisteriosoitevali {:aet 0
+                                                   :ajorata 0
+                                                   :aosa 36
+                                                   :kaista 1
+                                                   :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                   :let 2321
+                                                   :losa 41
+                                                   :tienumero 66}
+                          :tunnus "kauhajoen suora"
+                          :yha-id 251041528
+                          :yllapitoluokka 3}
+                         {:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 1
+                                                               :kuulamylly 1
+                                                               :paallystetyomenetelma 21
+                                                               :raekoko 10
+                                                               :rc-prosentti 1
+                                                               :uusi-paallyste 21}
+                                        :tierekisteriosoitevali {:aet 450
+                                                                 :ajorata 0
+                                                                 :aosa 230
+                                                                 :kaista 1
+                                                                 :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                                 :let 460
+                                                                 :losa 230
+                                                                 :tienumero 3}
+                                        :tunnus nil
+                                        :yha-id 254915669}]
+                          :keskimaarainen-vuorokausiliikenne 3107
+                          :kohdetyyppi :paallystys
+                          :nykyinen-paallyste 1
+                          :tierekisteriosoitevali {:aet 450
+                                                   :ajorata 0
+                                                   :aosa 230
+                                                   :kaista 1
+                                                   :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                   :let 460
+                                                   :losa 230
+                                                   :tienumero 3}
+                          :tunnus "asdf"
+                          :yha-id 251603670
+                          :yllapitoluokka 1}]
+        ;; todo: palauta tämä vastaus, kun YHA-yhteys saadaan toimimaan
+        #_[{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124
                                                                 :kuulamylly 4
                                                                 :paallystetyomenetelma 22
                                                                 :raekoko 12

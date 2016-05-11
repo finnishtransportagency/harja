@@ -28,125 +28,131 @@
   </urakoiden-hakuvastaus>")
 
 (def +urakoiden-tyhja-hakuvastaus+
-  "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:urakat/>
-  </yha:urakoiden-hakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <urakat/>
+  </urakoiden-hakuvastaus>")
 
 (def +invalidi-urakoiden-hakuvastaus+
-  "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:tagi-jonka-ei-kuulunut-elaa/>
-    <yha:urakat/>
-    <yha:virhe>Tapahtui virhe</yha:virhe>
-  </yha:urakoiden-hakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <tagi-jonka-ei-kuulunut-elaa/>
+    <urakat/>
+    <virhe>Tapahtui virhe</virhe>
+  </urakoiden-hakuvastaus>")
 
 (def +usean-urakan-hakuvastaus+
-  "<yha:urakoiden-hakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:urakat>
-      <yha:urakka>
-       <yha:yha-id>3</yha:yha-id>
-       <yha:elyt>
-         <yha:ely>POP</yha:ely>
-       </yha:elyt>
-       <yha:vuodet>
-         <yha:vuosi>2016</yha:vuosi>
-       </yha:vuodet>
-       <yha:sampotunnus>SAMPOTUNNUS1</yha:sampotunnus>
-       <yha:tunnus>YHATUNNUS1</yha:tunnus>
-      </yha:urakka>
-      <yha:urakka>
-        <yha:yha-id>3</yha:yha-id>
-        <yha:elyt>
-          <yha:ely>POP</yha:ely>
-          <yha:ely>Pohjois-Savo</yha:ely>
-        </yha:elyt>
-        <yha:vuodet>
-          <yha:vuosi>2016</yha:vuosi>
-          <yha:vuosi>2017</yha:vuosi>
-        </yha:vuodet>
-        <yha:sampotunnus>SAMPOTUNNUS2</yha:sampotunnus>
-        <yha:tunnus>YHATUNNUS2</yha:tunnus>
-      </yha:urakka>
-    </yha:urakat>
-  </yha:urakoiden-hakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+  <urakoiden-hakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <urakat>
+      <urakka>
+       <yha-id>3</yha-id>
+       <elyt>
+         <ely>POP</ely>
+       </elyt>
+       <vuodet>
+         <vuosi>2016</vuosi>
+       </vuodet>
+       <sampotunnus>SAMPOTUNNUS1</sampotunnus>
+       <tunnus>YHATUNNUS1</tunnus>
+      </urakka>
+      <urakka>
+        <yha-id>3</yha-id>
+        <elyt>
+          <ely>POP</ely>
+          <ely>Pohjois-Savo</ely>
+        </elyt>
+        <vuodet>
+          <vuosi>2016</vuosi>
+          <vuosi>2017</vuosi>
+        </vuodet>
+        <sampotunnus>SAMPOTUNNUS2</sampotunnus>
+        <tunnus>YHATUNNUS2</tunnus>
+      </urakka>
+    </urakat>
+  </urakoiden-hakuvastaus>")
 
 (def +onnistunut-urakan-kohdehakuvastaus+
-  "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:kohteet>
-      <yha:kohde>
-        <yha:yha-id>3</yha:yha-id>
-        <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
-        <yha:tunnus>string</yha:tunnus>
-        <yha:yllapitoluokka>1</yha:yllapitoluokka>
-        <yha:keskimaarainen-vuorokausiliikenne>1000</yha:keskimaarainen-vuorokausiliikenne>
-        <yha:nykyinen-paallyste>1</yha:nykyinen-paallyste>
-        <yha:tierekisteriosoitevali>
-          <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
-          <yha:tienumero>3</yha:tienumero>
-          <yha:ajorata>0</yha:ajorata>
-          <yha:kaista>11</yha:kaista>
-          <yha:aosa>3</yha:aosa>
-          <yha:aet>3</yha:aet>
-          <yha:losa>3</yha:losa>
-          <yha:let>3</yha:let>
-        </yha:tierekisteriosoitevali>
-        <yha:alikohteet>
-          <yha:alikohde>
-            <yha:yha-id>3</yha:yha-id>
-            <yha:tierekisteriosoitevali>
-              <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
-              <yha:tienumero>3</yha:tienumero>
-              <yha:ajorata>0</yha:ajorata>
-              <yha:kaista>11</yha:kaista>
-              <yha:aosa>3</yha:aosa>
-              <yha:aet>3</yha:aet>
-              <yha:losa>3</yha:losa>
-              <yha:let>3</yha:let>
-            </yha:tierekisteriosoitevali>
-            <yha:tunnus>A</yha:tunnus>
-            <yha:paallystystoimenpide>
-              <yha:uusi-paallyste>11</yha:uusi-paallyste>
-              <yha:raekoko>12</yha:raekoko>
-              <yha:kokonaismassamaara>124</yha:kokonaismassamaara>
-              <yha:rc-prosentti>14</yha:rc-prosentti>
-              <yha:kuulamylly>4</yha:kuulamylly>
-              <yha:paallystetyomenetelma>22</yha:paallystetyomenetelma>
-            </yha:paallystystoimenpide>
-          </yha:alikohde>
-          <yha:alikohde>
-            <yha:yha-id>4</yha:yha-id>
-            <yha:tierekisteriosoitevali>
-              <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
-              <yha:tienumero>3</yha:tienumero>
-              <yha:ajorata>0</yha:ajorata>
-              <yha:kaista>11</yha:kaista>
-              <yha:aosa>3</yha:aosa>
-              <yha:aet>3</yha:aet>
-              <yha:losa>3</yha:losa>
-              <yha:let>3</yha:let>
-            </yha:tierekisteriosoitevali>
-            <yha:tunnus>B</yha:tunnus>
-            <yha:paallystystoimenpide>
-              <yha:uusi-paallyste>11</yha:uusi-paallyste>
-              <yha:raekoko>12</yha:raekoko>
-              <yha:kokonaismassamaara>124</yha:kokonaismassamaara>
-              <yha:rc-prosentti>14</yha:rc-prosentti>
-              <yha:kuulamylly>4</yha:kuulamylly>
-              <yha:paallystetyomenetelma>22</yha:paallystetyomenetelma>
-            </yha:paallystystoimenpide>
-          </yha:alikohde>
-        </yha:alikohteet>
-      </yha:kohde>
-    </yha:kohteet>
-  </yha:urakan-kohdehakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <kohteet>
+      <kohde>
+        <yha-id>3</yha-id>
+        <kohdetyyppi>paikkaus</kohdetyyppi>
+        <tunnus>string</tunnus>
+        <yllapitoluokka>1</yllapitoluokka>
+        <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
+        <nykyinen-paallyste>1</nykyinen-paallyste>
+        <tierekisteriosoitevali>
+          <karttapaivamaara>2016-01-01</karttapaivamaara>
+          <tienumero>3</tienumero>
+          <ajorata>0</ajorata>
+          <kaista>11</kaista>
+          <aosa>3</aosa>
+          <aet>3</aet>
+          <losa>3</losa>
+          <let>3</let>
+        </tierekisteriosoitevali>
+        <alikohteet>
+          <alikohde>
+            <yha-id>3</yha-id>
+            <tierekisteriosoitevali>
+              <karttapaivamaara>2016-01-01</karttapaivamaara>
+              <tienumero>3</tienumero>
+              <ajorata>0</ajorata>
+              <kaista>11</kaista>
+              <aosa>3</aosa>
+              <aet>3</aet>
+              <losa>3</losa>
+              <let>3</let>
+            </tierekisteriosoitevali>
+            <tunnus>A</tunnus>
+            <paallystystoimenpide>
+              <uusi-paallyste>11</uusi-paallyste>
+              <raekoko>12</raekoko>
+              <kokonaismassamaara>124</kokonaismassamaara>
+              <rc-prosentti>14</rc-prosentti>
+              <kuulamylly>4</kuulamylly>
+              <paallystetyomenetelma>22</paallystetyomenetelma>
+            </paallystystoimenpide>
+          </alikohde>
+          <alikohde>
+            <yha-id>4</yha-id>
+            <tierekisteriosoitevali>
+              <karttapaivamaara>2016-01-01</karttapaivamaara>
+              <tienumero>3</tienumero>
+              <ajorata>0</ajorata>
+              <kaista>11</kaista>
+              <aosa>3</aosa>
+              <aet>3</aet>
+              <losa>3</losa>
+              <let>3</let>
+            </tierekisteriosoitevali>
+            <tunnus>B</tunnus>
+            <paallystystoimenpide>
+              <uusi-paallyste>11</uusi-paallyste>
+              <raekoko>12</raekoko>
+              <kokonaismassamaara>124</kokonaismassamaara>
+              <rc-prosentti>14</rc-prosentti>
+              <kuulamylly>4</kuulamylly>
+              <paallystetyomenetelma>22</paallystetyomenetelma>
+            </paallystystoimenpide>
+          </alikohde>
+        </alikohteet>
+      </kohde>
+    </kohteet>
+  </urakan-kohdehakuvastaus>")
 
 (def +invalidi-urakan-kohdehakuvastaus+
-  "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:tagi-jonka-ei-kuulunut-elaa/>
-    <yha:kohteet/>
-    <yha:virhe>Tapahtui virhe</yha:virhe>
-  </yha:urakan-kohdehakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+  <urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <tagi-jonka-ei-kuulunut-elaa/>
+    <kohteet/>
+    <virhe>Tapahtui virhe</virhe>
+  </urakan-kohdehakuvastaus>")
 
 (def +tyhja-urakan-kohteidenhakuvastaus+
-  "<yha:urakan-kohdehakuvastaus xmlns:yha=\"http://www.liikennevirasto.fi/xsd/yha\">
-    <yha:kohteet/>
-  </yha:urakan-kohdehakuvastaus>")
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+  <urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">
+    <kohteet/>
+  </urakan-kohdehakuvastaus>")
