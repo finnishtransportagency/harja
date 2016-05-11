@@ -38,13 +38,11 @@
     (doseq [tyo tyot]
       (let [parametrit [c (:yksikko tyo) (:yksikkohinta tyo) (:id user)
                         urakka-id (:sopimus tyo) (:tehtava tyo)
-                        (java.sql.Date. (.getTime (:alkupvm tyo)))
-                        (java.sql.Date. (.getTime (:loppupvm tyo)))]]
+                        (konv/sql-date (:alkupvm tyo))
+                        (konv/sql-date (:loppupvm tyo))]]
 
         (if (:poistettu tyo)
           (do
-            ;; vain järjestelmän vastuuhenkilö voi poistaa muutoshintaisia töitä
-            (oikeudet/vaadi-oikeus "poista" oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user)
             (apply q/poista-muutoshintainen-tyo! parametrit))
           ;; uusien rivien id on negatiivinen
           (if (neg? (:id tyo))

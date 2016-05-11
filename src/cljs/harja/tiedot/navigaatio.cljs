@@ -208,7 +208,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Rajapinta hallintayksikön valitsemiseen, jota viewit voivat kutsua
 (defn valitse-hallintayksikko [yks]
-  (reset! valittu-hallintayksikko yks)
+  (reset! valittu-hallintayksikko-id (:id yks))
   (reset! valittu-urakka-id nil)
   (reset! valittu-urakka nil)
   (paivita-url))

@@ -1,13 +1,15 @@
 (ns harja.palvelin.oikeudet-test
     (:require [clojure.test :refer :all]
               [taoensso.timbre :as log]
+              [slingshot.slingshot :refer [try+ throw+]]
               [harja.domain.oikeudet :as oikeudet]
               [harja.testi :refer :all]))
 
 ;; Järjestelmävastaava
 (def jvh {:roolit #{"Jarjestelmavastaava"}
           :urakkaroolit {}
-          :organisaatio {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"}})
+          :organisaatio {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"}
+          :organisaation-urakat #{}})
 
 ;; ELYn urakanvalvoja
 (def ely-uv {:roolit #{}
@@ -27,6 +29,13 @@
              :urakkaroolit {1 #{"vastuuhenkilo"}}
              :organisaatio urakoitsija
              :organisaation-urakat #{1 2 3}})
+
+;; Tilaajan käyttäjä
+(def tilaajan-kayttaja {:roolit #{"Tilaajan_Kayttaja"}
+                        :urakkaroolit {}
+                        :organisaatio {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"}
+                        :organisaation-urakat #{}})
+
 
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
@@ -55,3 +64,16 @@
   (is (oikeudet/voi-lukea? oikeudet/hallinta nil jvh))
   (doseq [k [ely-uv ur-pk ur-uvh]]
     (is (not (oikeudet/voi-lukea? oikeudet/hallinta nil k)))))
+
+(deftest tilaajan-kayttajan-lukuoikeuksia
+  (is (try+
+        (oikeudet/lue oikeudet/urakat tilaajan-kayttaja 1)
+        true
+        (catch harja.domain.roolit.EiOikeutta e
+          false)))
+  (is (oikeudet/voi-lukea? oikeudet/urakat nil tilaajan-kayttaja))
+  (is (oikeudet/voi-lukea? oikeudet/urakat 1 tilaajan-kayttaja))
+  (is (oikeudet/voi-lukea? oikeudet/urakat-yleiset nil tilaajan-kayttaja))
+  (is (oikeudet/voi-lukea? oikeudet/urakat-yleiset 1 tilaajan-kayttaja))
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset 2 tilaajan-kayttaja)))
+  (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-materiaalit 42 tilaajan-kayttaja)))
