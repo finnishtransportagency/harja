@@ -3,7 +3,6 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [nuolivalinta]]))
 
-
 (defn suodatettu-lista
   "Luettelo, jossa on hakukenttä filtteröinnille.
   opts voi sisältää
@@ -33,10 +32,7 @@
         on-select (or (:on-select opts) #(reset! valittu %))
 
         ;; Indeksi korostettuun elementtiin näppäimistöliikkumista varten (nil jos ei korostettua)
-        korostus-idx (atom nil)
-
-
-        ]
+        korostus-idx (atom nil)]
     (fn [opts lista]
 
       (let [term (or (:term opts) termi-atom)
