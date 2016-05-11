@@ -108,11 +108,7 @@
         [:div
          [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur))
                   "-tyyppisen urakan ")
-          [:strong (str (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi")] "?"]
-         [:p (str "Vaihtamisen jälkeen nykyiseen "
-                  (string/lower-case (navigaatio/nayta-urakkatyyppi (:tyyppi ur)))
-                  "urakkaan sidotut tiedot, kuten ilmoituslomakkeet, säilytetään, "
-                  "mutta ne eivät enää ole näkyvissä.")]]))))
+          [:strong (str (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi")] "?"]]))))
 
 (defn urakkaan-liitetyt-kayttajat [urakka-id]
   (let [kayttajat (atom nil)
@@ -266,7 +262,8 @@
                                       :valinta (:tyyppi ur)
                                       :format-fn #(navigaatio/nayta-urakkatyyppi %)
                                       :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                      :disabled (not kirjoitusoikeus?)}
+                                      :disabled (or (not yha-tuontioikeus?)
+                                                    sidonta-lukittu?)}
          [:paallystys :paikkaus]])]]))
 
 (defn yhteyshenkilot [ur]
