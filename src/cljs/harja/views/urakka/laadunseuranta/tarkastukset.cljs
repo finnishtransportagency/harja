@@ -258,6 +258,13 @@
         :nimi :havainnot
         :koko [80 :auto]
         :tyyppi :text
+        :palstoja 2
+        :validoi (when (:laadunalitus tarkastus)
+                   [[:ei-tyhja "Kirjaa laadunalituksen havainnot"]])}
+
+       {:teksti "Laadun alitus" :nayta-rivina? true
+        :nimi :laadunalitus
+        :tyyppi :checkbox
         :palstoja 2}
 
        (when (not (empty? (:vakiohavainnot tarkastus)))
