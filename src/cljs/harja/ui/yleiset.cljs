@@ -94,21 +94,19 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:a {:href linkki :target "_blank"} otsikko])
 
 (defn raksiboksi
-  ([teksti checked toiminto info-teksti nayta-infoteksti?]
-   (raksiboksi teksti checked toiminto info-teksti nayta-infoteksti? nil))
-  ([teksti checked toiminto info-teksti nayta-infoteksti? komponentti]
-   (let [toiminto-fn (fn [e] (do (.preventDefault e) (toiminto) nil))]
-     [:span.raksiboksi
-      [:div.input-group
-       [:div.input-group-addon
-        [:input.klikattava {:type      "checkbox"
-                 :checked   (if checked "checked" "")
-                 :on-change #(toiminto-fn %)}]
-        [:span.raksiboksi-teksti.klikattava {:on-click #(toiminto-fn %)} teksti]]
-       (when komponentti
-         komponentti)]
-      (when nayta-infoteksti?
-        info-teksti)])))
+  [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti]} checked]
+  (let [toiminto-fn (fn [e] (do (.preventDefault e) (toiminto) nil))]
+    [:span.raksiboksi
+     [:div.input-group
+      [:div.input-group-addon
+       [:input.klikattava {:type      "checkbox"
+                           :checked   (if checked "checked" "")
+                           :on-change #(toiminto-fn %)}]
+       [:span.raksiboksi-teksti.klikattava {:on-click #(toiminto-fn %)} teksti]]
+      (when komponentti
+        komponentti)]
+     (when nayta-infoteksti?
+       info-teksti)]))
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])

@@ -208,10 +208,10 @@
             kaytossa? @suolasakko-kaytossa?]
         [:span.suolasakot
          [kartta/kartan-paikka]
-         [yleiset/raksiboksi "Suolasakko käytössä" kaytossa?
-          #(go (reset! suolasakko-kaytossa?
-                       (<! (suola/aseta-suolasakon-kaytto (:id ur)
-                                                          (not kaytossa?)))))
-          nil false]
+         [yleiset/raksiboksi {:teksti "Suolasakko käytössä"
+                              :toiminto #(go (reset! suolasakko-kaytossa?
+                                                     (<! (suola/aseta-suolasakon-kaytto (:id ur)
+                                                                                        (not kaytossa?)))))}
+          kaytossa?]
          (when @suolasakko-kaytossa?
            [suolasakko-lomake])]))))

@@ -203,12 +203,13 @@
 
      (when-not vain-hoitokausivalinta?
        [:div.raportin-valittu-aikavali
-       [yleiset/raksiboksi "Valittu aikaväli" @vapaa-aikavali?
-        #(swap! vapaa-aikavali? not)
-        nil false (when @vapaa-aikavali?
-                    [:div
-                     [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
-                     [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])]])]))
+        [yleiset/raksiboksi {:teksti "Valittu aikaväli"
+                             :toiminto #(swap! vapaa-aikavali? not)
+                             :komponentti (when @vapaa-aikavali?
+                                            [:div
+                                             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
+                                             [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])}
+         @vapaa-aikavali?]])]))
 
 (def tienumero (atom nil))
 
@@ -239,12 +240,11 @@
   (if @nav/valittu-urakka
     [:span]
     [:div.urakoittain
-     [yleiset/raksiboksi (:nimi p)
-      @urakoittain?
-      #(do (swap! urakoittain? not)
-           (reset! arvo
-                   {:urakoittain? @urakoittain?}))
-      nil false]]))
+     [yleiset/raksiboksi {:teksti (:nimi p)
+                          :toiminto #(do (swap! urakoittain? not)
+                                         (reset! arvo
+                                                 {:urakoittain? @urakoittain?}))}
+      @urakoittain?]]))
 
 (def laatupoikkeama-tekija (atom :kaikki))
 
@@ -288,7 +288,9 @@
                               {(or (tyomaakokousraportit (:nimi p))
                                    (:nimi p)) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])}))]
     [:div
-     [yleiset/raksiboksi (:nimi p) (get-in @muistetut-parametrit avaimet) paivita! nil false]]))
+     [yleiset/raksiboksi {:teksti (:nimi p)
+                          :toiminto paivita!}
+      (get-in @muistetut-parametrit avaimet)]]))
 
 (defmethod raportin-parametri "hoitoluokat" [p arvo]
   (komp/luo
@@ -309,13 +311,12 @@
                   (for [{:keys [nimi numero]} sarake
                         :let [valittu? (valitut numero)]]
                     ^{:key numero}
-                    [yleiset/raksiboksi
-                     nimi valittu?
-                     #(let [uusi-arvo {:hoitoluokat
-                                       ((if valittu? disj conj) valitut numero)}]
-                        (reset! arvo uusi-arvo)
-                        (swap! muistetut-parametrit merge uusi-arvo))
-                     nil nil])]))))]])))
+                    [yleiset/raksiboksi {:teksti nimi
+                                         :toiminto #(let [uusi-arvo {:hoitoluokat
+                                                                     ((if valittu? disj conj) valitut numero)}]
+                                                     (reset! arvo uusi-arvo)
+                                                     (swap! muistetut-parametrit merge uusi-arvo))}
+                     valittu?])]))))]])))
 
 (defmethod raportin-parametri :default [p arvo]
   [:span (pr-str p)])
