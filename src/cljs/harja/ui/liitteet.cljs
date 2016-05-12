@@ -6,7 +6,8 @@
             [harja.ui.modal :as modal]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [harja.tietoturva.liitteet :as t-liitteet])
+            [harja.tietoturva.liitteet :as t-liitteet]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn naytettava-liite?
@@ -103,11 +104,13 @@ Optiot voi sisältää:
 (defn liitteet [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id]} liitteet]
   [:span
    ;; Näytä olemassaolevat liitteet
-   (for [liite liitteet]
-     ^{:key (:id liite)}
-     [liitetiedosto liite])
+   (when (oikeudet/voi-lukea? oikeudet/urakat-liiteet urakka-id)
+     (for [liite liitteet]
+       ^{:key (:id liite)}
+       [liitetiedosto liite]))
    ;; Uuden liitteen lähetys
-   (when uusi-liite-atom
-     [liite {:urakka-id urakka-id
-             :liite-ladattu #(reset! uusi-liite-atom %)
-             :nappi-teksti (or uusi-liite-teksti "Lisää liite")}])])
+   (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liiteet urakka-id)
+     (when uusi-liite-atom
+       [liite {:urakka-id     urakka-id
+               :liite-ladattu #(reset! uusi-liite-atom %)
+               :nappi-teksti  (or uusi-liite-teksti "Lisää liite")}]))])
