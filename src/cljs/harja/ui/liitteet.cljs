@@ -104,12 +104,12 @@ Optiot voi sisältää:
 (defn liitteet [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id]} liitteet]
   [:span
    ;; Näytä olemassaolevat liitteet
-   (when (oikeudet/voi-lukea? oikeudet/urakat-liiteet urakka-id)
+   (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
      (for [liite liitteet]
        ^{:key (:id liite)}
        [liitetiedosto liite]))
    ;; Uuden liitteen lähetys
-   (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liiteet urakka-id)
+   (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
        [liite {:urakka-id     urakka-id
                :liite-ladattu #(reset! uusi-liite-atom %)
