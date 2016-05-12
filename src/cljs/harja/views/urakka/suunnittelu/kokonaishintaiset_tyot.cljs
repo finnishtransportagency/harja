@@ -221,11 +221,11 @@
              :voi-poistaa? (constantly false)
              :muokkaa-footer (fn [g]
                                [:div.kok-hint-muokkaa-footer
-                                [raksiboksi "Tallenna tulevillekin hoitokausille"
-                                 @tuleville?
-                                 #(swap! tuleville? not)
-                                 [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                 (and @tuleville? @varoita-ylikirjoituksesta?)]])}
+                                [raksiboksi {:teksti "Tallenna tulevillekin hoitokausille"
+                                             :toiminto #(swap! tuleville? not)
+                                             :info-teksti  [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                             :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
+                                 @tuleville?]])}
             
             ;; sarakkeet
             [{:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}

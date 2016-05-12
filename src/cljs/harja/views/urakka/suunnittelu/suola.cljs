@@ -204,14 +204,15 @@
                    (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                    (nav/vaihda-kartan-koko! :M)))
     (fn []
-      (let [ur @nav/valittu-urakka
+      (let [urakka-id (:id @nav/valittu-urakka)
             kaytossa? @suolasakko-kaytossa?]
         [:span.suolasakot
          [kartta/kartan-paikka]
-         [yleiset/raksiboksi "Suolasakko käytössä" kaytossa?
-          #(go (reset! suolasakko-kaytossa?
-                       (<! (suola/aseta-suolasakon-kaytto (:id ur)
-                                                          (not kaytossa?)))))
-          nil false]
+         [yleiset/raksiboksi {:teksti "Suolasakko käytössä"
+                              :toiminto #(go (reset! suolasakko-kaytossa?
+                                                     (<! (suola/aseta-suolasakon-kaytto urakka-id
+                                                                                        (not kaytossa?)))))
+                              :disabled? (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola urakka-id))}
+          kaytossa?]
          (when @suolasakko-kaytossa?
            [suolasakko-lomake])]))))

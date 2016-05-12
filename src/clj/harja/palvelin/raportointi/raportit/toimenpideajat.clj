@@ -81,7 +81,7 @@
                           {:otsikko "22 - 02" :tasaa :keskita :reunus :oikea :leveys aika-leveys}])
                        talvihoitoluokat)
 
-               [{:otsikko "Yht" :tasaa :oikea :leveys yhteensa-leveys}]))
+               [{:otsikko "Yht." :tasaa :oikea :leveys yhteensa-leveys}]))
 
         ;; varsinaiset rivit
         (vec

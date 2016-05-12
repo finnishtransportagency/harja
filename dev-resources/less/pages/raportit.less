@@ -13,11 +13,31 @@
             padding-top: 2px;
         }
     }
-    th {
-        background-color: @raportin-tehostevari;
-        border-color: @raportin-tehostevari;
-        color: @valkoinen;
-        font-weight: normal;
+    thead {
+        > tr {
+            > th {
+                background-color: @raportin-tehostevari;
+                border-color: @valkoinen;
+                color: @valkoinen;
+                font-weight: normal;
+                &:first-child {
+                    border-left: 1px solid @raportin-tehostevari;
+                }
+                &:last-child {
+                    border-right: 1px solid @raportin-tehostevari;
+                }
+            }
+        }
+        > tr:first-child {
+            > th {
+                border-top: 1px solid @raportin-tehostevari;
+            }
+        }
+        > tr:last-child {
+            > th {
+                border-bottom: 1px solid @raportin-tehostevari;
+            }
+        }
     }
     .otsikko {
         h5 {

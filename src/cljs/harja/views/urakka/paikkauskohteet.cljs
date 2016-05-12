@@ -1,8 +1,7 @@
 (ns harja.views.urakka.paikkauskohteet
   "Paikkauskohteet"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.urakka.paikkaus :as paikkaus]

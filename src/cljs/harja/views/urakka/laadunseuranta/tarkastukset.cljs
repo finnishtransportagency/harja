@@ -4,7 +4,7 @@
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.istunto :as istunto]
@@ -84,7 +84,8 @@
        [valinnat/tienumero tarkastukset/tienumero]
 
 
-       (when @tiedot-laatupoikkeamat/voi-kirjata?
+       (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                       (:id @nav/valittu-urakka))
          [napit/uusi "Uusi tarkastus"
           #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
           {:luokka "alle-marginia"}])
@@ -202,26 +203,31 @@
       (not validi?))))
 
 (defn tarkastus [tarkastus-atom]
-  (let [tarkastus @tarkastus-atom
-        jarjestelmasta? (:jarjestelma tarkastus)]
+  (let [urakka-id (:id @nav/valittu-urakka)
+        tarkastus @tarkastus-atom
+        jarjestelmasta? (:jarjestelma tarkastus)
+        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                                  urakka-id)]
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
       {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
        :muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? (and @tiedot-laatupoikkeamat/voi-kirjata?
+       :voi-muokata? (and voi-kirjoittaa?
                           (not jarjestelmasta?))
        :footer-fn (fn [virheet _ _]
-                    [napit/palvelinkutsu-nappi
-                     "Tallenna tarkastus"
-                     (fn []
-                       (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-                     {:disabled (not (empty? virheet))
-                      :kun-onnistuu (fn [tarkastus]
-                                      (reset! tarkastukset/valittu-tarkastus nil)
-                                      (tarkastukset/paivita-tarkastus-listaan! tarkastus))
-                      :ikoni (ikonit/tallenna)}])}
+                    (when voi-kirjoittaa?
+                      [napit/palvelinkutsu-nappi
+                       "Tallenna tarkastus"
+                       (fn []
+                         (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
+                       {:disabled (not (empty? virheet))
+                        :kun-onnistuu (fn [tarkastus]
+                                        (reset! tarkastukset/valittu-tarkastus nil)
+                                        (tarkastukset/paivita-tarkastus-listaan! tarkastus))
+                        :ikoni (ikonit/tallenna)}]))}
+
       [(when jarjestelmasta?
          {:otsikko "Lähde" :nimi :luoja :tyyppi :string
           :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
@@ -238,11 +244,11 @@
         :tyyppi :valinta
         :valinnat (tarkastustyypit-tekijalle (:tekija tarkastus))
         :valinta-nayta #(case %
-                         :tiesto "Tiestötarkastus"
-                         :talvihoito "Kelitarkastus"
-                         :soratie "Soratien tarkastus"
-                         :laatu "Laaduntarkastus"
-                         "- valitse -")
+                          :tiesto "Tiestötarkastus"
+                          :talvihoito "Kelitarkastus"
+                          :soratie "Soratien tarkastus"
+                          :laatu "Laaduntarkastus"
+                          "- valitse -")
         :palstoja 1}
 
        {:tyyppi :tierekisteriosoite
@@ -283,35 +289,37 @@
           :komponentti [:span (str/join ", " (:vakiohavainnot tarkastus))]
           :palstoja 2})
 
-       {:otsikko "Liitteet" :nimi :liitteet
-        :tyyppi :komponentti
-        :komponentti [liitteet/liitteet {:urakka-id (:id @nav/valittu-urakka)
-                                         :uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
-                                                                  #(swap! tarkastus-atom assoc :uusi-liite %))
-                                         :uusi-liite-teksti "Lisää liite tarkastukseen"}
-                      (:liitteet tarkastus)]}
-       {:rivi? true
-        :uusi-rivi? true
-        :nimi :laatupoikkeama
-        :tyyppi :komponentti
-        :vihje (if (:laatupoikkeamaid tarkastus)
-                 "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
-                 "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
-        :komponentti [napit/palvelinkutsu-nappi
-                      (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
-                      (fn []
-                        (go
-                          (let [tarkastus (<! (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
-                                tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
-                                                              tarkastus
-                                                              (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
-                            tarkastus-ja-laatupoikkeama)))
-                      {:disabled (validoi-tarkastuslomake tarkastus)
-                       :kun-onnistuu (fn [tarkastus]
-                                       (reset! tarkastus-atom tarkastus)
-                                       (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
-                       :ikoni (ikonit/livicon-arrow-right)
-                       :luokka :nappi-toissijainen}]}]
+       (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
+         {:otsikko     "Liitteet" :nimi :liitteet
+          :tyyppi      :komponentti
+          :komponentti [liitteet/liitteet {:urakka-id         urakka-id
+                                           :uusi-liite-atom   (r/wrap (:uusi-liite tarkastus)
+                                                                      #(swap! tarkastus-atom assoc :uusi-liite %))
+                                           :uusi-liite-teksti "Lisää liite tarkastukseen"}
+                        (:liitteet tarkastus)]})
+       (when voi-kirjoittaa?
+         {:rivi?       true
+          :uusi-rivi?  true
+          :nimi        :laatupoikkeama
+          :tyyppi      :komponentti
+          :vihje       (if (:laatupoikkeamaid tarkastus)
+                         "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
+                         "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
+          :komponentti [napit/palvelinkutsu-nappi
+                        (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
+                        (fn []
+                          (go
+                            (let [tarkastus (<! (tarkastukset/tallenna-tarkastus urakka-id tarkastus))
+                                  tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
+                                                                tarkastus
+                                                                (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
+                              tarkastus-ja-laatupoikkeama)))
+                        {:disabled     (validoi-tarkastuslomake tarkastus)
+                         :kun-onnistuu (fn [tarkastus]
+                                         (reset! tarkastus-atom tarkastus)
+                                         (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
+                         :ikoni        (ikonit/livicon-arrow-right)
+                         :luokka       :nappi-toissijainen}]})]
       tarkastus]]))
 
 

@@ -45,15 +45,21 @@
       (oikeudet "W+") :organisaatio
       (oikeudet "W") :urakka)))
 
-(defn- on-oikeus-urakkaan? [oikeus-pred urakka-id organisaation-urakka?
-                            {rooli :rooli roolin-urakka-id :urakka-id}]
+(defn- on-oikeus-urakkaan? [oikeus-pred urakka-id organisaatio-id organisaation-urakka?
+                            {rooli :rooli
+                             roolin-urakka-id :urakka-id
+                             roolin-organisaatio-id :organisaatio-id}]
   (let [konteksti (oikeus-pred rooli)]
     (case konteksti
       ;; Kaikki antaa oikeuden mihin vaan urakkaan
       :kaikki :kaikki
 
-      ;; Organisaatio, jos testattava urakka kuuluu tälle organisaatiolle
-      :organisaatio (when organisaation-urakka?
+      ;; Organisaatio, jos testattava urakka kuuluu organisaatiolle.
+      ;; Jos rooli on annettu organisaatiokohtaisesti, tarkistetaan, että käyttäjän
+      ;; organisaatio on sama kuin roolin organisaatio
+      :organisaatio (when (and (or (nil? roolin-organisaatio-id)
+                                   (= organisaatio-id roolin-organisaatio-id))
+                               organisaation-urakka?)
                       :organisaatio)
 
       ;; Urakka, jos urakkarooli on annettu testattavalle urakalle
@@ -65,37 +71,44 @@
 
 (defn- on-oikeus?
   "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
-  [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit urakkaroolit] :as kayttaja}]
+  [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
+                                   urakkaroolit organisaatioroolit] :as kayttaja}]
   (let [oikeus-pred (partial (case tyyppi
                                :luku on-lukuoikeus?
                                :kirjoitus on-kirjoitusoikeus?)
                              oikeus)
         kaikki-urakkaroolit (apply concat (vals urakkaroolit))
+        kaikki-organisaatioroolit (apply concat (vals organisaatioroolit))
         kaikki-roolit (concat roolit
-                              kaikki-urakkaroolit)]
+                              kaikki-urakkaroolit
+                              kaikki-organisaatioroolit)]
 
 
 
-    (if-not urakka-id
-      ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
-      (some oikeus-pred kaikki-roolit)
+    (or (if-not urakka-id
+          ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
+          (some oikeus-pred kaikki-roolit)
 
 
-      ;; Jos urakka on annettu, tarkista että on oikeus tässä urakassa
-      ;; tai oikeus, joka implikoi urakan (+ = org. urakka, * = mikä tahansa urakka)
-      (some #(on-oikeus-urakkaan? oikeus-pred urakka-id
-                                  (organisaation-urakat urakka-id) %)
-            (concat
-             ;; Yleiset roolit (ei urakkaan sidottu)
-             (map (fn [r]
-                    {:rooli r
-                     :urakka-id nil}) roolit)
-             ;; Urakkakohtaiset roolit urakan id:llä
-             (mapcat (fn [[urakka-id roolit]]
-                       (for [r roolit]
-                         {:rooli r
-                          :urakka-id urakka-id}))
-                     urakkaroolit))))))
+          ;; Jos urakka on annettu, tarkista että on oikeus tässä urakassa
+          ;; tai oikeus, joka implikoi urakan (+ = org. urakka, * = mikä tahansa urakka)
+          (some #(on-oikeus-urakkaan? oikeus-pred urakka-id (:id organisaatio)
+                                      (organisaation-urakat urakka-id) %)
+                (concat
+                  ;; Yleiset roolit (ei urakkaan sidottu)
+                  (map (fn [r]
+                         {:rooli r :urakka-id nil}) roolit)
+                  ;; Urakkakohtaiset roolit urakan id:llä
+                  (mapcat (fn [[urakka-id roolit]]
+                            (for [r roolit]
+                              {:rooli r :urakka-id urakka-id}))
+                          urakkaroolit)
+                  ;; Organisaatiokohtaiset roolit organisation id:llä
+                  (mapcat (fn [[org-id roolit]]
+                            (for [r roolit]
+                              {:rooli r :organisaatio-id org-id}))
+                          organisaatioroolit))))
+        false)))
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
@@ -165,3 +178,6 @@
 
 (def ilmoitus-ei-oikeutta-muokata-toteumaa
   "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")
+
+(defn roolin-kuvaus [rooli]
+  (:kuvaus (get roolit rooli)))

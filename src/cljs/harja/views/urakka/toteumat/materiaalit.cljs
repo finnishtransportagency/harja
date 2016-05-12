@@ -240,9 +240,11 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
          [grid/grid
           {:otsikko     (str (get-in mk [:materiaali :nimi]) " toteumat")
            :tyhja       (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
-           :tallenna    (tallenna-toteuma-materiaaleja urakan-id tiedot)
+           :tallenna    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit
+                                                        (:id @nav/valittu-urakka))
+                          (tallenna-toteuma-materiaaleja urakan-id tiedot))
            :voi-lisata? false
-           :tunniste :tmid}
+           :tunniste    :tmid}
           [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus :leveys "20%"
             :hae     (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
            {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :positiivinen-numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)
