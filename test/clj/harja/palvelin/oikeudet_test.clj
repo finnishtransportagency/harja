@@ -8,27 +8,32 @@
 ;; Järjestelmävastaava
 (def jvh {:roolit #{"Jarjestelmavastaava"}
           :urakkaroolit {}
+          :organisaatioroolit {}
           :organisaatio {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"}
           :organisaation-urakat #{}})
 
 ;; ELYn urakanvalvoja
 (def ely-uv {:roolit #{}
              :urakkaroolit {1 #{"ELY_Urakanvalvoja"}}
+             :organisaatioroolit {}
              :organisaation-urakat #{1 2 3}
              :organisaatio {:id 666 :tyyppi "hallintayksikko" :nimi "Mun ely"}})
 
 (def urakoitsija {:id 123 :tyyppi "urakoitsija" :nimi "Asfaltia"})
+(def urakoitsijan-urakat #{1 2 3})
 ;; Urakoitsijan pääkäyttäjä
 (def ur-pk {:roolit #{"Paakayttaja"}
             :urakkaroolit {}
+            :organisaatioroolit {}
             :organisaatio urakoitsija
-            :organisaation-urakat #{1 2 3}})
+            :organisaation-urakat urakoitsijan-urakat})
 
 ;; Urakoitsijan urakanvastuuhenkilö
 (def ur-uvh {:roolit #{}
              :urakkaroolit {1 #{"vastuuhenkilo"}}
+             :organisaatioroolit {}
              :organisaatio urakoitsija
-             :organisaation-urakat #{1 2 3}})
+             :organisaation-urakat urakoitsijan-urakat})
 
 ;; Tilaajan käyttäjä
 (def tilaajan-kayttaja {:roolit #{"Tilaajan_Kayttaja"}
@@ -36,6 +41,12 @@
                         :organisaatio {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"}
                         :organisaation-urakat #{}})
 
+;; Urakoitsijan laatupäällikkö
+(def ur-laatu {:roolit #{}
+               :urakkaroolit {}
+               :organisaatioroolit {123 #{"Laatupaallikko"}}
+               :organisaatio urakoitsija
+               :organisaation-urakat urakoitsijan-urakat})
 
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
@@ -77,3 +88,12 @@
   (is (oikeudet/voi-lukea? oikeudet/urakat-yleiset 1 tilaajan-kayttaja))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset 2 tilaajan-kayttaja)))
   (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-materiaalit 42 tilaajan-kayttaja)))
+
+
+(deftest yrityksen-laatupaallikko-nakee-oman-org
+  ;; Saa lukea oman organisaation urakoimien urakoiden yleiset tiedot
+  (doseq [u urakoitsijan-urakat]
+    (is (oikeudet/voi-lukea? oikeudet/urakat-yleiset u ur-laatu)))
+
+  ;; Ei saa lukea muita urakoita
+  (is (not (oikeudet/voi-lukea? oikeudet/urakat-yleiset 666 ur-laatu))))
