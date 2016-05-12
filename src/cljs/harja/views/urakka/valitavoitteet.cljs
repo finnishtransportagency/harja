@@ -81,8 +81,7 @@
      (when (and (nil? pvm)
                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur)))
        ;; Ei ole valmis, sallitaan urakoitsijan käyttäjän merkitä se valmiiksi
-       [valitavoite-valmis-lomake opts ur vt]
-         )]))
+       [valitavoite-valmis-lomake opts ur vt])]))
 
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
@@ -107,13 +106,17 @@
           :tyhja (if (nil? @tavoitteet)
                    [y/ajax-loader "Välitavoitteita haetaan..."]
                    "Ei välitavoitteita")
-          :tallenna #(go (reset! tallennus-kaynnissa true)
-                         (go
-                           (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
-                           (reset! tallennus-kaynnissa false)))
+          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur))
+                      #(go (reset! tallennus-kaynnissa true)
+                           (go
+                             (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
+                             (reset! tallennus-kaynnissa false))))
 
           :vetolaatikot (into {}
-                              (map (juxt :id (partial valitavoite-lomake {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
+                              (map
+                               (juxt :id
+                                     (partial valitavoite-lomake
+                                              {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
                               @tavoitteet)}
 
          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
@@ -136,7 +139,10 @@
                            (reset! tallennus-kaynnissa false)))
 
           :vetolaatikot (into {}
-                              (map (juxt :id (partial valitavoite-lomake {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
+                              (map
+                               (juxt :id
+                                     (partial valitavoite-lomake
+                                              {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
                               @tavoitteet)}
 
          [{:tyyppi :vetolaatikon-tila :leveys "5%"}
