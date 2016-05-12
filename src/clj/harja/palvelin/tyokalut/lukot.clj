@@ -1,5 +1,6 @@
 (ns harja.palvelin.tyokalut.lukot
-  (:require [harja.kyselyt.lukot :as lukko]))
+  (:require [harja.kyselyt.lukot :as lukko]
+            [taoensso.timbre :as log]))
 
 (defn aja-toiminto [db tunniste toiminto-fn]
   (try
@@ -14,9 +15,13 @@
   Palauttaa true jos toiminto ajettiin, false muuten"
   [db tunniste toiminto-fn]
   (if (lukko/aseta-lukko? db tunniste nil)
-    (do (aja-toiminto db tunniste toiminto-fn)
-        true)
-    false))
+    (do
+      (log/debug (format "Lukkoa: %s ei ole asetettu. Voidaan ajaa toiminto."))
+      (aja-toiminto db tunniste toiminto-fn)
+      true)
+    (do
+      (log/debug (format "Lukkoa: %s on asetettu. Toimintoa ei voida ajaa."))
+      false)))
 
 (defn aja-lukon-kanssa
   "Ajaa toiminnon lukon kanssa. Odottaa kunnes lukko on vapaana."
