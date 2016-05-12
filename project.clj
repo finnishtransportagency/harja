@@ -71,7 +71,7 @@
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
                  [cljs-ajax "0.5.3"]
-                 [figwheel "0.5.2"]
+                 [figwheel "0.5.3"]
 
                  [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "0.13.3-0"]
@@ -121,6 +121,9 @@
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.10.0"]
+
+                 [com.cemerick/piggieback "0.2.1"]
+                 [figwheel-sidecar "0.5.3"]
                  ]
 
   :dev-dependencies [
@@ -148,7 +151,7 @@
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-less "1.7.5"]
             [lein-ancient "0.5.5"]
-            [lein-figwheel "0.5.0-2"]
+            [lein-figwheel "0.5.3"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
@@ -173,7 +176,8 @@
                                  :optimizations :none
                                  :pretty-print  true
                                  :source-map    "target/cljs/test/test.js.map"
-                                 :closure-output-charset "US-ASCII"}
+                                 :closure-output-charset "US-ASCII"
+                                 }
                 :notify-command ["./run-karma.sh"]}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
@@ -220,7 +224,8 @@
   :repl-options {:init-ns harja.palvelin.main
                  :init    (harja.palvelin.main/-main)
                  :port    4005
-                 :timeout 120000}
+                 :timeout 120000
+                 :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
 
   ;; Clientin reload ja REPL
