@@ -12,12 +12,21 @@
           :organisaatio {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"}
           :organisaation-urakat #{}})
 
+(def ely {:id 666 :tyyppi "hallintayksikko" :nimi "Mun ely"})
+(def ely-urakat #{1 2 3})
+
 ;; ELYn urakanvalvoja
 (def ely-uv {:roolit #{}
              :urakkaroolit {1 #{"ELY_Urakanvalvoja"}}
              :organisaatioroolit {}
-             :organisaation-urakat #{1 2 3}
-             :organisaatio {:id 666 :tyyppi "hallintayksikko" :nimi "Mun ely"}})
+             :organisaation-urakat ely-urakat
+             :organisaatio ely})
+
+(def ely-kayttaja {:roolit #{"ELY_Kayttaja"}
+                   :urakkaroolit {}
+                   :organisaatioroolit {}
+                   :organisaation-urakat ely-urakat
+                   :organisaatio ely})
 
 (def urakoitsija {:id 123 :tyyppi "urakoitsija" :nimi "Asfaltia"})
 (def urakoitsijan-urakat #{1 2 3})
@@ -97,3 +106,14 @@
 
   ;; Ei saa lukea muita urakoita
   (is (not (oikeudet/voi-lukea? oikeudet/urakat-yleiset 666 ur-laatu))))
+
+(deftest ely-kayttaja-voi-vain-lukea
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit 1 ely-kayttaja)))
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset 1 ely-kayttaja)))
+
+  ;; Voi lukea oman elyn urakoita...
+  (doseq [u ely-urakat]
+    (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-suola u ely-kayttaja)))
+
+  ;; ...sekä muitakin urakoita
+  (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-suola 666 ely-kayttaja)))
