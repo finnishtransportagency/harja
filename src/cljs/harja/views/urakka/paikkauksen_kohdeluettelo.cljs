@@ -2,8 +2,7 @@
   "Paikkauksen 'Kohdeluettelo' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      livi-pudotusvalikko vihje]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko vihje]]
             [harja.views.urakka.paikkauskohteet :as paikkauskohteet]
             [harja.views.urakka.paikkausilmoitukset :as paikkausilmoitukset]
 
