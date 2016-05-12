@@ -57,6 +57,13 @@
                :organisaatio urakoitsija
                :organisaation-urakat urakoitsijan-urakat})
 
+;; Urakoitsijan Urakan laatuvastaava
+(def ur-urakan-lv {:roolit #{}
+                   :urakkaroolit {1 #{"Laadunvalvoja"}}
+                   :organisaatioroolit {}
+                   :organisaatio urakoitsija
+                   :organisaation-urakat urakoitsijan-urakat})
+
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
   (is (oikeudet/voi-lukea? oikeudet/raportit-laskutusyhteenveto 1 jvh))
@@ -117,3 +124,6 @@
 
   ;; ...sekä muitakin urakoita
   (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-suola 666 ely-kayttaja)))
+
+(deftest urakoitsijan-urakan-lv-nakee-oman-urakkansa
+  (is (oikeudet/voi-lukea? oikeudet/urakat 1 ur-urakan-lv)))
