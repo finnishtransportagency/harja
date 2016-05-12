@@ -4,7 +4,7 @@
 
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.istunto :as istunto]
@@ -75,7 +75,8 @@
        [valinnat/tienumero tarkastukset/tienumero]
 
 
-       (when @tiedot-laatupoikkeamat/voi-kirjata?
+       (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                       (:id @nav/valittu-urakka))
          [napit/uusi "Uusi tarkastus"
           #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
           {:luokka "alle-marginia"}])
@@ -202,7 +203,8 @@
      [lomake/lomake
       {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
        :muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? (and @tiedot-laatupoikkeamat/voi-kirjata?
+       :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                                    (:id @nav/valittu-urakka))
                           (not jarjestelmasta?))
        :footer [napit/palvelinkutsu-nappi
                 "Tallenna tarkastus"
