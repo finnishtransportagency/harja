@@ -85,29 +85,30 @@
 
 
 
-    (if-not urakka-id
-      ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
-      (some oikeus-pred kaikki-roolit)
+    (or (if-not urakka-id
+          ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
+          (some oikeus-pred kaikki-roolit)
 
 
-      ;; Jos urakka on annettu, tarkista että on oikeus tässä urakassa
-      ;; tai oikeus, joka implikoi urakan (+ = org. urakka, * = mikä tahansa urakka)
-      (some #(on-oikeus-urakkaan? oikeus-pred urakka-id (:id organisaatio)
-                                  (organisaation-urakat urakka-id) %)
-            (concat
-             ;; Yleiset roolit (ei urakkaan sidottu)
-             (map (fn [r]
-                    {:rooli r :urakka-id nil}) roolit)
-             ;; Urakkakohtaiset roolit urakan id:llä
-             (mapcat (fn [[urakka-id roolit]]
-                       (for [r roolit]
-                         {:rooli r :urakka-id urakka-id}))
-                     urakkaroolit)
-             ;; Organisaatiokohtaiset roolit organisation id:llä
-             (mapcat (fn [[org-id roolit]]
-                       (for [r roolit]
-                         {:rooli r :organisaatio-id org-id}))
-                     organisaatioroolit))))))
+          ;; Jos urakka on annettu, tarkista että on oikeus tässä urakassa
+          ;; tai oikeus, joka implikoi urakan (+ = org. urakka, * = mikä tahansa urakka)
+          (some #(on-oikeus-urakkaan? oikeus-pred urakka-id (:id organisaatio)
+                                      (organisaation-urakat urakka-id) %)
+                (concat
+                  ;; Yleiset roolit (ei urakkaan sidottu)
+                  (map (fn [r]
+                         {:rooli r :urakka-id nil}) roolit)
+                  ;; Urakkakohtaiset roolit urakan id:llä
+                  (mapcat (fn [[urakka-id roolit]]
+                            (for [r roolit]
+                              {:rooli r :urakka-id urakka-id}))
+                          urakkaroolit)
+                  ;; Organisaatiokohtaiset roolit organisation id:llä
+                  (mapcat (fn [[org-id roolit]]
+                            (for [r roolit]
+                              {:rooli r :organisaatio-id org-id}))
+                          organisaatioroolit))))
+        false)))
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
