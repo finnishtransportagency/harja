@@ -177,3 +177,6 @@
 
 (def ilmoitus-ei-oikeutta-muokata-toteumaa
   "Käyttäjäroolillasi ei ole oikeutta muokata tätä toteumaa.")
+
+(defn roolin-kuvaus [rooli]
+  (:kuvaus (get roolit rooli)))

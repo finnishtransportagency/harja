@@ -10,7 +10,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakat :as urakat]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -65,6 +66,36 @@
     (nayta-organisaation-yhteystiedot o)
     (nav/valitse-hallintayksikko o)))
 
+(defn- kayttajan-tiedot [{org :organisaatio
+                          email :sahkoposti
+                          roolit :roolit
+                          urakkaroolit :urakkaroolit
+                          organisaatioroolit :organisaatioroolit
+                          :as k}]
+  (let [org-nimi (:nimi org)
+        org-tyyppi (:tyyppi org)
+        uniikit-roolit #(when-not (empty? %)
+                          (str/join ", "
+                                    (into #{}
+                                          (mapcat (partial keep oikeudet/roolin-kuvaus)
+                                                  (vals %)))))]
+    [:div.kayttajan-tiedot
+     [kaksi-palstaa-otsikkoja-ja-arvoja {}
+      "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
+                                                     (modal/piilota!)
+                                                     (valitse-organisaatio org))}
+                       (when org-nimi org-nimi)]
+      "Org. tyyppi:" (when org-tyyppi (name org-tyyppi))
+      "Käyttäjänimi:" (get k :kayttajanimi)
+      "Puhelin:" (get k :puhelin)
+      "Sähköposti:" (when email
+                      [:a {:href (str "mailto:" email)}
+                       email])
+      "Roolit" (when (not (empty? roolit))
+                 (str/join ", " (keep oikeudet/roolin-kuvaus roolit)))
+      "Urakkaroolit" (uniikit-roolit urakkaroolit)
+      "Organisaatioroolit" (uniikit-roolit organisaatioroolit)]]))
+
 (defn nayta-kayttaja
   [k]
   (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
@@ -74,22 +105,8 @@
                                                         :on-click #(do (.preventDefault %)
                                                                        (modal/piilota!))}
                             "Sulje"]]}
-                (let [org (:organisaatio k)
-                      org-nimi (:nimi org)
-                      org-tyyppi (:tyyppi org)
-                      email (get k :sahkoposti)]
-                  [:div.kayttajan-tiedot
-                  [kaksi-palstaa-otsikkoja-ja-arvoja {}
-                   "Organisaatio:" [:a.klikattava {:on-click #(do (.preventDefault %)
-                                                                  (modal/piilota!)
-                                                                  (valitse-organisaatio org))}
-                                    (when org-nimi org-nimi)]
-                   "Org. tyyppi:" (when org-tyyppi (name org-tyyppi))
-                   "Käyttäjänimi:" (get k :kayttajanimi)
-                   "Puhelin:" (get k :puhelin)
-                   "Sähköposti:" (when email
-                                   [:a {:href (str "mailto:" email)}
-                                    email])]])))
+
+                (kayttajan-tiedot k)))
 
 (defn valitse-hakutulos
   [tulos]
