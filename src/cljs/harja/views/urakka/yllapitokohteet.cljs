@@ -33,6 +33,7 @@
      [:div.tr-virhe (ikonit/livicon-warning-sign)
       virhe])])
 
+;; Ylläpitokohteiden sarakkeiden leveydet
 (def haitari-leveys 5)
 (def id-leveys 10)
 (def kohde-leveys 15)
@@ -46,6 +47,10 @@
 (def bitumi-indeksi-leveys 10)
 (def kaasuindeksi-leveys 10)
 (def yhteensa-leveys 10)
+
+;; Ylläpitokohdeosien sarakkeiden leveydet
+(def nimi-leveys 20)
+(def toimenpide-leveys 20)
 
 (defn yllapitokohdeosat [_ yllapitokohde-atom]
   (let [tr-osoite (fn [rivi]
@@ -114,7 +119,7 @@
                                              (grid/poista-virhe! g id kentta))
                                            (log "sain sijainnin " (clj->js sijainti))
                                            (swap! tr-sijainnit assoc osoite sijainti))))))))))))}
-          [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys 20 :validoi [[:ei-tyhja "Anna nimi"]]}
+          [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys nimi-leveys :validoi [[:ei-tyhja "Anna nimi"]]}
            {:otsikko "Tienumero" :nimi :tr_numero :tyyppi :positiivinen-numero
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
            {:otsikko "Aosa" :nimi :tr_alkuosa :tyyppi :positiivinen-numero
@@ -130,7 +135,7 @@
                    (str (tierekisteri/laske-tien-pituus {:aet (:tr_alkuetaisyys rivi)
                                                          :let (:tr_loppuetaisyys rivi)})))
             :leveys tr-leveys}
-           {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 20 :validoi [[:ei-tyhja "Anna toimenpide"]]}]
+           {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys :validoi [[:ei-tyhja "Anna toimenpide"]]}]
           kohdeosat]
          [yllapitokohdeosa-virheet tr-virheet]]))))
 
