@@ -1,8 +1,7 @@
 (ns harja.views.urakka.paallystyskohteet
   "Päällystyskohteet"
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      livi-pudotusvalikko tietoja]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko tietoja]]
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.loki :refer [log logt tarkkaile!]]
             [cljs.core.async :refer [<!]]
