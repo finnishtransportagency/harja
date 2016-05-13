@@ -29,7 +29,6 @@
                                                            :paallystyskohde-id paallystyskohde-id}))
 
 (defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
-  (urakka/lukitse-urakan-yha-sidonta! urakka-id)
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
                                          :paallystysilmoitus lomakedata}))

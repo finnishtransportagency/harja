@@ -28,7 +28,8 @@
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -180,6 +181,7 @@
        :ikoni (ikonit/tallenna)
        :kun-onnistuu (fn [vastaus]
                        (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
+                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                        (reset! paallystys/paallystysilmoitukset vastaus)
                        (reset! paallystys/paallystysilmoitus-lomakedata nil))}]]))
 

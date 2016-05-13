@@ -21,7 +21,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -128,11 +129,12 @@
         (log "PAI Lomake-data: " (pr-str @paikkaus/paikkausilmoitus-lomakedata))
         (log "PAIK Lähetetään data " (pr-str lahetettava-data))
         (paikkaus/tallenna-paikkausilmoitus! urakka-id sopimus-id lahetettava-data))
-      {:luokka       "nappi-ensisijainen"
-       :disabled     (false? @valmis-tallennettavaksi?)
-       :ikoni        (ikonit/tallenna)
+      {:luokka "nappi-ensisijainen"
+       :disabled (false? @valmis-tallennettavaksi?)
+       :ikoni (ikonit/tallenna)
        :kun-onnistuu (fn [vastaus]
                        (log "PAI Lomake tallennettu, vastaus: " (pr-str vastaus))
+                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                        (reset! paikkaus/paikkaustoteumat vastaus)
                        (reset! paikkaus/paikkausilmoitus-lomakedata nil))}]]))
 
