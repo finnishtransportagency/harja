@@ -1,54 +1,55 @@
-<yha:urakan-kohdehakuvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
-    <yha:kohteet>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<urakan-kohdehakuvastaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
+    <kohteet>
         <!--Zero or more repetitions:-->
-        <yha:kohde>
-            <yha:yha-id>3</yha:yha-id>
-            <yha:kohdetyyppi>paikkaus</yha:kohdetyyppi>
-            <yha:tunnus>string</yha:tunnus>
+        <kohde>
+            <yha-id>3</yha-id>
+            <kohdetyyppi>paikkaus</kohdetyyppi>
+            <tunnus>string</tunnus>
             <!--Optional:-->
-            <yha:yllapitoluokka>1</yha:yllapitoluokka>
+            <yllapitoluokka>1</yllapitoluokka>
             <!--Optional:-->
-            <yha:keskimaarainen-vuorokausiilikenne>1000</yha:keskimaarainen-vuorokausiilikenne>
+            <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
             <!--Optional:-->
-            <yha:nykyinen-paallyste>1</yha:nykyinen-paallyste>
-            <yha:tierekisteriosoitevali>
-                <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
-                <yha:tienumero>3</yha:tienumero>
-                <yha:ajorata>0</yha:ajorata>
-                <yha:kaista>11</yha:kaista>
-                <yha:aosa>3</yha:aosa>
-                <yha:aet>3</yha:aet>
-                <yha:losa>3</yha:losa>
-                <yha:let>3</yha:let>
-            </yha:tierekisteriosoitevali>
-            <yha:alikohteet>
+            <nykyinen-paallyste>1</nykyinen-paallyste>
+            <tierekisteriosoitevali>
+                <karttapaivamaara>2016-01-01</karttapaivamaara>
+                <tienumero>3</tienumero>
+                <ajorata>0</ajorata>
+                <kaista>11</kaista>
+                <aosa>3</aosa>
+                <aet>3</aet>
+                <losa>3</losa>
+                <let>3</let>
+            </tierekisteriosoitevali>
+            <alikohteet>
                 <!--Zero or more repetitions:-->
-                <yha:alikohde>
-                    <yha:yha-id>3</yha:yha-id>
-                    <yha:tierekisteriosoitevali>
-                        <yha:karttapaivamaara>2016-01-01</yha:karttapaivamaara>
-                        <yha:tienumero>3</yha:tienumero>
-                        <yha:ajorata>0</yha:ajorata>
-                        <yha:kaista>11</yha:kaista>
-                        <yha:aosa>3</yha:aosa>
-                        <yha:aet>3</yha:aet>
-                        <yha:losa>3</yha:losa>
-                        <yha:let>3</yha:let>
-                    </yha:tierekisteriosoitevali>
-                    <yha:tunnus>A</yha:tunnus>
+                <alikohde>
+                    <yha-id>3</yha-id>
+                    <tierekisteriosoitevali>
+                        <karttapaivamaara>2016-01-01</karttapaivamaara>
+                        <tienumero>3</tienumero>
+                        <ajorata>0</ajorata>
+                        <kaista>11</kaista>
+                        <aosa>3</aosa>
+                        <aet>3</aet>
+                        <losa>3</losa>
+                        <let>3</let>
+                    </tierekisteriosoitevali>
+                    <tunnus>A</tunnus>
                     <!--Optional:-->
-                    <yha:paallystystoimenpide>
-                        <yha:uusi-paallyste>11</yha:uusi-paallyste>
-                        <yha:raekoko>12</yha:raekoko>
-                        <yha:kokonaismassamaara>124</yha:kokonaismassamaara>
-                        <yha:rc-prosentti>14</yha:rc-prosentti>
+                    <paallystystoimenpide>
+                        <uusi-paallyste>11</uusi-paallyste>
+                        <raekoko>12</raekoko>
+                        <kokonaismassamaara>124</kokonaismassamaara>
+                        <rc-prosentti>14</rc-prosentti>
                         <!--Optional:-->
-                        <yha:kuulamylly>4</yha:kuulamylly>
-                        <yha:paallystetyomenetelma>22</yha:paallystetyomenetelma>
-                    </yha:paallystystoimenpide>
-                </yha:alikohde>
-            </yha:alikohteet>
-        </yha:kohde>
-    </yha:kohteet>
-    <yha:virhe></yha:virhe>
-</yha:urakan-kohdehakuvastaus>
+                        <kuulamylly>4</kuulamylly>
+                        <paallystetyomenetelma>22</paallystetyomenetelma>
+                    </paallystystoimenpide>
+                </alikohde>
+            </alikohteet>
+        </kohde>
+    </kohteet>
+    <virhe></virhe>
+</urakan-kohdehakuvastaus>

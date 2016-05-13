@@ -9,6 +9,7 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
             [harja.kyselyt.paikkaus :as q]
+            [harja.palvelin.palvelut.yha :as yha]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [cheshire.core :as cheshire]

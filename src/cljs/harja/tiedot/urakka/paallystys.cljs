@@ -10,7 +10,8 @@
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka :as u])
+    [harja.tiedot.urakka :as u]
+    [harja.tiedot.urakka :as urakka])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -18,18 +19,20 @@
 
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
+
 (defn hae-paallystystoteumat [urakka-id sopimus-id]
-  (k/post! :urakan-paallystystoteumat {:urakka-id  urakka-id
+  (k/post! :urakan-paallystystoteumat {:urakka-id urakka-id
                                        :sopimus-id sopimus-id}))
 
 (defn hae-paallystysilmoitus-paallystyskohteella [urakka-id sopimus-id paallystyskohde-id]
-  (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id          urakka-id
-                                                           :sopimus-id         sopimus-id
+  (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id
                                                            :paallystyskohde-id paallystyskohde-id}))
 
-(defn tallenna-paallystysilmoitus [urakka-id sopimus-id lomakedata]
-  (k/post! :tallenna-paallystysilmoitus {:urakka-id          urakka-id
-                                         :sopimus-id         sopimus-id
+(defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
+  (urakka/lukitse-valitun-urakan-yha-sidonta!)
+  (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
+                                         :sopimus-id sopimus-id
                                          :paallystysilmoitus lomakedata}))
 
 (def paallystystoteumat
@@ -40,10 +43,10 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
 
-(defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce paallystysilmoitus-lomakedata (atom nil))          ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (def paallystysilmoituslomake-lukittu? (reaction (let [_ @lukko/nykyinen-lukko]
-                                               (lukko/nykyinen-nakyma-lukittu?))))
+                                                   (lukko/nykyinen-nakyma-lukittu?))))
 
 (defonce karttataso-paallystyskohteet (atom false))
 
@@ -55,9 +58,26 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
+(def yhan-paallystyskohteet
+  (reaction
+    (filter
+      yllapitokohteet/yha-kohde?
+      @paallystyskohteet)))
+
+(def harjan-paallystyskohteet
+  (reaction
+    (filter (comp not yllapitokohteet/yha-kohde?)
+            @paallystyskohteet)))
+
+(def kohteet-yhteensa
+  (reaction
+    (concat @yhan-paallystyskohteet @harjan-paallystyskohteet)))
+
+(tarkkaile! "[YHA] Päällystyskohteet: " yhan-paallystyskohteet)
+
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
-                         kohderivit @paallystyskohteet
+                         kohderivit @yhan-paallystyskohteet
                          toteumarivit @paallystystoteumat
                          avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
                      (when (and taso

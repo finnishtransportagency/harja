@@ -108,7 +108,6 @@
     (is (>= (count (:paallystys vastaus)) 1))
     (is (>= (count (:ilmoitukset vastaus)) 1))))
 
-
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)
         vastaus (hae-tk parametrit)]

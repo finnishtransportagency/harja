@@ -48,7 +48,7 @@
     (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :paikkaus-klikattu kohdeosan-reitti-klikattu)
     (komp/lippu paikkaus/karttataso-paikkauskohteet)
-    (fn []
+    (fn [ur]
       (if (:yhatiedot ur)
         [:span.kohdeluettelo
          [bs/tabs {:style :tabs :classes "tabs-taso2"
@@ -56,7 +56,7 @@
 
           "Paikkauskohteet"
           :paikkauskohteet
-          [paikkauskohteet/paikkauskohteet]
+          [paikkauskohteet/paikkauskohteet ur]
 
           "Paikkausilmoitukset"
           :paikkausilmoitukset
