@@ -53,6 +53,9 @@
                                                                                                       (when urakkatyyppi (name urakkatyyppi))))]
     toteutuneet-materiaalit))
 
+(defn- materiaalin-otsikko [t]
+  (str (:materiaali_nimi t)
+       " (" (:materiaali_yksikko t) ")"))
 
 
 (defn suorita [db user {:keys [urakka-id 
@@ -89,8 +92,7 @@
                   raportin-nimi alkupvm loppupvm)
         materiaalit (sort-by materiaalidomain/materiaalien-jarjestys (distinct
                                                                        (map
-                                                                         #(str (:materiaali_nimi %)
-                                                                               " (" (:materiaali_yksikko %) ")")
+                                                                         materiaalin-otsikko
                                                                          toteumat)))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
 
@@ -111,7 +113,7 @@
                 (for [[urakka toteumat] toteumat-urakan-mukaan]
                   (into []
                         (concat [urakka]
-                                (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
+                                (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                                   (for [m materiaalit]
                                     (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
 
