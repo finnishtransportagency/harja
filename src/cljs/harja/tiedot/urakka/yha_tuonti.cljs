@@ -153,9 +153,7 @@
                       yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiten tallentaminen epäonnistui."}
-                    (do
-                      (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
-                      {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot}))))))))))
+                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot})))))))))
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
@@ -174,6 +172,7 @@
   ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
   ([harja-urakka-id optiot]
   (go (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
+        (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
         (if (= (:status vastaus) :ok)
           (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
           (kasittele-epaonnistunut-kohteiden-paivitys vastaus))))))
