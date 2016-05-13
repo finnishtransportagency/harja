@@ -16,7 +16,8 @@
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -92,6 +93,7 @@
                                            %)
                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat! urakka-id sopimus-id (:id rivi) osat))]
                             (log "[PAAL] ylläpitokohdeosat tallennettu: " (pr-str vastaus))
+                            (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                             (resetoi-tr-tiedot)
                             (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))
            :luokat ["yllapitokohdeosat-haitari"]

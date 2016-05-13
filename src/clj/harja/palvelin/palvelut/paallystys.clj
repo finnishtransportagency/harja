@@ -23,9 +23,9 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
 
-(defn hae-urakan-paallystystoteumat [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
                         (map #(konv/string-polusta->keyword % [:paatos_taloudellinen_osa]))
@@ -36,7 +36,7 @@
                                              yllapitokohteet/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                db urakka-id sopimus-id (:paallystyskohde_id %))))))
-                      (q/hae-urakan-paallystystoteumat db urakka-id sopimus-id))]
+                      (q/hae-urakan-paallystysilmoitukset db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
 
@@ -82,7 +82,7 @@
             :paallystyskohde-id paallystyskohde-id
             :kommentit kommentit))))))
 
-(defn paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu_tekninen_osa perustelu_taloudellinen_osa kasittelyaika_tekninen_osa kasittelyaika_taloudellinen_osa]}]
+(defn- paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu_tekninen_osa perustelu_taloudellinen_osa kasittelyaika_tekninen_osa kasittelyaika_taloudellinen_osa]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and (= paatos_tekninen_osa :hyvaksytty)
@@ -110,7 +110,7 @@
                                    paallystyskohde-id))
   id)
 
-(defn luo-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id]}]
+(defn- luo-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id]}]
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (log/debug "valmispvm_kohde: " (pr-str valmispvm_kohde))
   (log/debug "valmispvm_paallystys: " (pr-str valmispvm_paallystys))
@@ -129,13 +129,12 @@
                                      muutoshinta
                                      (:id user)))))
 
-(defn luo-tai-paivita-paallystysilmoitus [db user lomakedata paallystysilmoitus-kannassa]
+(defn- luo-tai-paivita-paallystysilmoitus [db user lomakedata paallystysilmoitus-kannassa]
   (if paallystysilmoitus-kannassa
     (paivita-paallystysilmoitus db user lomakedata)
     (luo-paallystysilmoitus db user lomakedata)))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
-  (yha/lukitse-urakan-yha-sidonta db urakka-id)
   (log/debug "Käsitellään päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
@@ -144,6 +143,7 @@
   (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
 
   (jdbc/with-db-transaction [c db]
+    (yha/lukitse-urakan-yha-sidonta db urakka-id)
     (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella
                                         c user {:urakka-id urakka-id
                                                 :sopimus-id sopimus-id
@@ -186,7 +186,7 @@
             ;; Liitä kommentti päällystysilmoitukseen
             (q/liita-kommentti<! c paallystysilmoitus-id (:id kommentti))))
 
-        (hae-urakan-paallystystoteumat c user {:urakka-id urakka-id
+        (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
                                                :sopimus-id sopimus-id})))))
 
 (defrecord Paallystys []
@@ -194,9 +194,9 @@
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)]
-      (julkaise-palvelu http :urakan-paallystystoteumat
+      (julkaise-palvelu http :urakan-paallystysilmoitukset
                         (fn [user tiedot]
-                          (hae-urakan-paallystystoteumat db user tiedot)))
+                          (hae-urakan-paallystysilmoitukset db user tiedot)))
       (julkaise-palvelu http :urakan-paallystysilmoitus-paallystyskohteella
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitus-paallystyskohteella db user tiedot)))
@@ -208,7 +208,7 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-paallystystoteumat
+      :urakan-paallystysilmoitukset
       :urakan-paallystysilmoitus-paallystyskohteella
       :tallenna-paallystysilmoitus
       :tallenna-paallystyskohteet)

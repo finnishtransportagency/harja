@@ -1,5 +1,5 @@
--- name: hae-urakan-paikkaustoteumat
--- Hakee urakan kaikki paikkaustoteumat
+-- name: hae-urakan-paikkausilmoitukset
+-- Hakee urakan kaikki paikkausilmoitukset
 SELECT
   yllapitokohde.id AS paikkauskohde_id,
   pi.id,

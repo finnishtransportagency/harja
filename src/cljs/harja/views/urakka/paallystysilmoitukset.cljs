@@ -28,7 +28,8 @@
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus])
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -180,7 +181,8 @@
        :ikoni (ikonit/tallenna)
        :kun-onnistuu (fn [vastaus]
                        (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
-                       (reset! paallystys/paallystystoteumat vastaus)
+                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
+                       (reset! paallystys/paallystysilmoitukset vastaus)
                        (reset! paallystys/paallystysilmoitus-lomakedata nil))}]]))
 
 (defn paallystysilmoituslomake []
@@ -533,7 +535,7 @@
        [:h3 "Päällystysilmoitukset"]
        [grid/grid
         {:otsikko ""
-         :tyhja (if (nil? @paallystys/paallystystoteumat) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+         :tyhja (if (nil? @paallystys/paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
          :tunniste :kohdenumero}
         [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
          {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
@@ -568,7 +570,7 @@
                                 :hyvaksytty 0
                                 :hylatty 1
                                 3)))
-          @paallystys/paallystystoteumat)]])))
+          @paallystys/paallystysilmoitukset)]])))
 
 (defn paallystysilmoitukset []
   (komp/luo

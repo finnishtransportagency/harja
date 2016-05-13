@@ -19,8 +19,8 @@
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
 
-(defn hae-paallystystoteumat [urakka-id sopimus-id]
-  (k/post! :urakan-paallystystoteumat {:urakka-id urakka-id
+(defn hae-paallystysilmoitukset [urakka-id sopimus-id]
+  (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                        :sopimus-id sopimus-id}))
 
 (defn hae-paallystysilmoitus-paallystyskohteella [urakka-id sopimus-id paallystyskohde-id]
@@ -29,18 +29,17 @@
                                                            :paallystyskohde-id paallystyskohde-id}))
 
 (defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
-  (urakka/lukitse-valitun-urakan-yha-sidonta!)
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
                                          :paallystysilmoitus lomakedata}))
 
-(def paallystystoteumat
+(def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystysilmoitukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+                (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil))          ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
@@ -77,7 +76,7 @@
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
                          kohderivit @yhan-paallystyskohteet
-                         toteumarivit @paallystystoteumat
+                         toteumarivit @paallystysilmoitukset
                          avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
                      (when (and taso
                                 (or kohderivit toteumarivit))
