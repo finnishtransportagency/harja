@@ -24,7 +24,8 @@
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat]
             [clojure.string :as str]
             [harja.tiedot.navigaatio.reitit :as reitit]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -207,15 +208,16 @@
         tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
-                                                  urakka-id)]
+                                                  urakka-id)
+        voi-muokata? (and voi-kirjoittaa?
+                          (not jarjestelmasta?))]
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
       {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
        :muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? (and voi-kirjoittaa?
-                          (not jarjestelmasta?))
+       :voi-muokata? voi-muokata?
        :footer-fn (fn [virheet _ _]
                     (when voi-kirjoittaa?
                       [napit/palvelinkutsu-nappi
@@ -277,10 +279,14 @@
         :validoi (when (:laadunalitus tarkastus)
                    [[:ei-tyhja "Kirjaa laadunalituksen havainnot"]])}
 
-       {:teksti "Laadun alitus" :nayta-rivina? true
+       {:otsikko (when-not voi-muokata?
+                   ;; Näytä otsikko näyttömuodossa
+                   "Laadun alitus")
+        :teksti "Laadun alitus" :nayta-rivina? true
         :nimi :laadunalitus
         :tyyppi :checkbox
-        :palstoja 2}
+        :palstoja 2
+        :fmt fmt/totuus}
 
        (when (not (empty? (:vakiohavainnot tarkastus)))
          {:otsikko "Vakio\u00ADhavainnot"
