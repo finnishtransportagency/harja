@@ -2,7 +2,6 @@
 SELECT -- haetaan käytetyt määrät per materiaali ja kk
          u.id as urakka_id, u.nimi as urakka_nimi,
          NULL as luokka, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-  mk.yksikko AS materiaali_yksikko,
          date_trunc('month', t.alkanut) as kk, SUM(tm.maara) as maara
  FROM toteuma t
       JOIN toteuma_materiaali tm ON tm.toteuma=t.id
@@ -18,7 +17,6 @@ UNION
 SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
        u.id as urakka_id, u.nimi as urakka_nimi,
        rp.talvihoitoluokka as luokka, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-  mk.yksikko AS materiaali_yksikko,
        date_trunc('month', t.alkanut) as kk, SUM(rm.maara) as maara
   FROM reitti_materiaali rm
        JOIN materiaalikoodi mk ON mk.id = rm.materiaalikoodi
@@ -37,7 +35,6 @@ SELECT -- Haetaan suunnitelmat materiaaleille
        u.id as urakka_id, u.nimi as urakka_nimi,
        NULL as luokka,
        mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-  mk.yksikko AS materiaali_yksikko,
        NULL as kk,
        SUM(s.maara) as maara
   FROM materiaalin_kaytto s
@@ -72,7 +69,6 @@ SELECT *
      )
      SELECT -- haetaan käytetyt määrät per materiaali ja kk
             NULL as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       mk.yksikko AS materiaali_yksikko,
             (SELECT SUM(tm.maara)
                FROM toteuma_materiaali tm
      	       JOIN toteuma t ON tm.toteuma=t.id
@@ -88,7 +84,6 @@ SELECT *
      UNION
      SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
             hl.column1 as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       mk.yksikko AS materiaali_yksikko,
             (SELECT SUM(rm.maara)
                FROM reitti_materiaali rm
      	       JOIN reittipiste rp1 ON rm.reittipiste=rp1.id
@@ -109,7 +104,6 @@ SELECT *
             NULL as luokka,
             NULL as kk, -- tyhjä kk pvm kertoo suunnitelman
             mks.id as materiaali_id, mks.nimi as materiaali_nimi,
-       mk.yksikko AS materiaali_yksikko,
             (SELECT SUM(s.maara)
                FROM materiaalin_kaytto s
      	 WHERE s.materiaali = mks.id
@@ -145,7 +139,6 @@ SELECT *
      )
      SELECT -- haetaan käytetyt määrät per materiaali ja kk
             NULL as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       mk.yksikko AS materiaali_yksikko,
             urk.id as urakka_id, urk.nimi as urakka_nimi,
             (SELECT SUM(tm.maara)
                FROM toteuma_materiaali tm
@@ -160,7 +153,6 @@ SELECT *
      UNION
      SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
             hl.column1 as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-       mk.yksikko AS materiaali_yksikko,
             urk.id as urakka_id, urk.nimi as urakka_nimi,
             (SELECT SUM(rm.maara)
                FROM reitti_materiaali rm
@@ -180,7 +172,6 @@ SELECT *
             NULL as luokka,
             NULL as kk, -- tyhjä kk pvm kertoo suunnitelman
             mks.id as materiaali_id, mks.nimi as materiaali_nimi,
-       mk.yksikko AS materiaali_yksikko,
             urk.id as urakka_id, urk.nimi as urakka_nimi,
             (SELECT SUM(s.maara)
                FROM materiaalin_kaytto s
@@ -218,7 +209,6 @@ WITH RECURSIVE kuukaudet (kk) AS (
 )
 SELECT -- haetaan käytetyt määrät per materiaali ja kk
        NULL as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-  mk.yksikko AS materiaali_yksikko,
        urk.id as urakka_id, urk.nimi as urakka_nimi,
        (SELECT SUM(tm.maara)
           FROM toteuma_materiaali tm
@@ -232,7 +222,6 @@ SELECT -- haetaan käytetyt määrät per materiaali ja kk
        CROSS JOIN urakat urk
 UNION -- haetaan reittipisteiden toteumat luokiteltuna
 SELECT hl.column1 as luokka, kkt.kk, mk.id as materiaali_id, mk.nimi as materiaali_nimi,
-  mk.yksikko AS materiaali_yksikko,
        urk.id as urakka_id, urk.nimi as urakka_nimi,
        (SELECT SUM(rm.maara)
           FROM reitti_materiaali rm
@@ -252,7 +241,6 @@ SELECT -- Haetaan suunnitelmat materiaaleille
        NULL as luokka,
        NULL as kk, -- tyhjä kk pvm kertoo suunnitelman
        mks.id as materiaali_id, mks.nimi as materiaali_nimi,
-  mk.yksikko AS materiaali_yksikko,
        urk.id as urakka_id, urk.nimi as urakka_nimi,
        (SELECT SUM(s.maara)
           FROM materiaalin_kaytto s
