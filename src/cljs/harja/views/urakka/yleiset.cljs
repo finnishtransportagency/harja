@@ -251,11 +251,11 @@
          sopimus/+sopimustyypit+])
       "Urakkatyyppi: "                                      ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
       (when paallystys-tai-paikkausurakka?
-        [:span (cond sidonta-lukittu?
-                     {:title "Urakan sidonta on lukittu, urakkatyyppiä ei voi enää muuttaa."}
-                     (not yha-tuontioikeus?)
-                     {:title "Vain urakanvalvoja voi muuttaa urakan tyyppiä"}
-                     :default nil)
+        [:span {:title (cond sidonta-lukittu?
+                             "Urakan sidonta on lukittu, urakkatyyppiä ei voi enää muuttaa."
+                             (not yha-tuontioikeus?)
+                             "Vain urakanvalvoja voi muuttaa urakan tyyppiä"
+                             :default nil)}
          [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
                                       :valinta (:tyyppi ur)
                                       :format-fn #(navigaatio/nayta-urakkatyyppi %)
