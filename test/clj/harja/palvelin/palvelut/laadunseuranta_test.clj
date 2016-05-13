@@ -36,7 +36,8 @@
                     :sivukaltevuus 5
                     :tasaisuus     1
                     :kiinteys      3}
-   :havainnot     "kuvaus tähän"})
+   :havainnot     "kuvaus tähän"
+   :laadunalitus true})
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -48,7 +49,8 @@
                                                {:urakka-id urakka-id
                                                 :alkupvm   #inst "2005-10-01T00:00:00.000-00:00"
                                                 :loppupvm  #inst "2006-09-30T00:00:00.000-00:00"
-                                                :tienumero %})
+                                                :tienumero %
+                                                :vain-laadunalitukset? false})
         tarkastuksia-ennen-kaikki (count (hae-tarkastukset nil))
         tarkastuksia-ennen-tie1 (count (hae-tarkastukset 1))
         tarkastuksia-ennen-tie2 (count (hae-tarkastukset 2))
@@ -135,15 +137,18 @@
 (deftest hae-urakan-tarkastukset
   (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-tarkastukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                         :alkupvm   (pvm/luo-pvm (+ 1900 100) 9 1)
-                                                                         :loppupvm  (pvm/luo-pvm (+ 1900 110) 8 30)
-                                                                         :tienumero nil
-                                                                         :tyyppi    nil})]
+                                :hae-urakan-tarkastukset +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :alkupvm   (pvm/luo-pvm (+ 1900 100) 9 1)
+                                 :loppupvm  (pvm/luo-pvm (+ 1900 110) 8 30)
+                                 :tienumero nil
+                                 :tyyppi    nil
+                                 :vain-laadunalitukset? false})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
-      (is (= #{:ok? :jarjestelma :havainnot :vakiohavainnot :aika :tr :tekija :id :tyyppi :tarkastaja}
+      (is (= #{:ok? :jarjestelma :havainnot :laadunalitus :vakiohavainnot :aika
+               :tr :tekija :id :tyyppi :tarkastaja}
              (into #{} (keys tarkastus)))))))
 
 (deftest hae-tarkastus

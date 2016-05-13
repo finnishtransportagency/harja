@@ -13,7 +13,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
-            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]))
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
+            [clojure.string :as str]))
 
 (defn tee-onnistunut-vastaus [varoitukset]
   (tee-kirjausvastauksen-body {:ilmoitukset "Tarkastukset kirjattu onnistuneesti"
@@ -30,41 +31,45 @@
 
 (defn kasittele-tarkastukset [db liitteiden-hallinta kayttaja tyyppi urakka-id data]
   (mapv
-    (fn [rivi]
-      (let [tarkastus (:tarkastus rivi)
-            ulkoinen-id (-> tarkastus :tunniste :id)]
-        (jdbc/with-db-transaction [transaktio db]
-          (let [{tarkastus-id :id}
-                (first
-                  (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
-                uusi? (nil? tarkastus-id)]
+   (fn [rivi]
+     (let [tarkastus (:tarkastus rivi)
+           ulkoinen-id (-> tarkastus :tunniste :id)]
+       (jdbc/with-db-transaction [transaktio db]
+         (let [{tarkastus-id :id}
+               (first
+                (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))
+               uusi? (nil? tarkastus-id)]
 
-            (let [aika (json/aika-string->java-sql-date (:aika tarkastus))
-                  tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
-                  geometria (if tr-osoite (:geometria tr-osoite)
-                                          (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
-                  id (tarkastukset/luo-tai-paivita-tarkastus
-                       db kayttaja urakka-id
-                       {:id          tarkastus-id
-                        :ulkoinen-id ulkoinen-id
-                        :tyyppi      tyyppi
-                        :aika        aika
-                        :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
-                        :sijainti    geometria
-                        :tr          {:numero        (:tie tr-osoite)
-                                      :alkuosa       (:aosa tr-osoite)
-                                      :alkuetaisyys  (:aet tr-osoite)
-                                      :loppuosa      (:losa tr-osoite)
-                                      :loppuetaisyys (:let tr-osoite)}
-                        :havainnot   (:havainnot tarkastus)})
-                  liitteet (:liitteet tarkastus)]
+           (let [aika (json/aika-string->java-sql-date (:aika tarkastus))
+                 tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti tarkastus) (:loppusijainti tarkastus))
+                 geometria (if tr-osoite (:geometria tr-osoite)
+                               (sijainnit/tee-geometria (:alkusijainti tarkastus) (:loppusijainti tarkastus)))
+                 id (tarkastukset/luo-tai-paivita-tarkastus
+                     db kayttaja urakka-id
+                     {:id          tarkastus-id
+                      :ulkoinen-id ulkoinen-id
+                      :tyyppi      tyyppi
+                      :aika        aika
+                      :tarkastaja  (json/henkilo->nimi (:tarkastaja tarkastus))
+                      :sijainti    geometria
+                      :tr          {:numero        (:tie tr-osoite)
+                                    :alkuosa       (:aosa tr-osoite)
+                                    :alkuetaisyys  (:aet tr-osoite)
+                                    :loppuosa      (:losa tr-osoite)
+                                    :loppuetaisyys (:let tr-osoite)}
+                      :havainnot   (:havainnot tarkastus)
+                      :laadunalitus (let [alitus (:laadunalitus tarkastus)]
+                                      (if (nil? alitus)
+                                        (not (str/blank? (:havainnot tarkastus)))
+                                        alitus))})
+                 liitteet (:liitteet tarkastus)]
 
-              (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
-              (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
-              (when-not tr-osoite
-                (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
-                        (:alkusijainti tarkastus) (:loppusijainti tarkastus))))))))
-    (:tarkastukset data)))
+             (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
+             (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
+             (when-not tr-osoite
+               (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
+                       (:alkusijainti tarkastus) (:loppusijainti tarkastus))))))))
+   (:tarkastukset data)))
 
 (defn kirjaa-tarkastus [db liitteiden-hallinta kayttaja tyyppi {id :id} data]
   (let [urakka-id (Long/parseLong id)]

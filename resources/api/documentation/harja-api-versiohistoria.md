@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 0.0.9</b>
-<b>Julkaistu: 11.2.2016</b>
+<b>Nykyinen versio: 0.1.5</b>
+<b>Julkaistu: 13.5.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.1.5. Julkaistu 13.5.2016:
+    - Tarkastuksessa on optionaalinen "laadunalitus" kenttä, jolla voidaan sanoa onko kyseessä
+      laadun alitus vai ei. Jos kenttää ei ole, toimitaan vanhan päättelyn mukaan, jossa
+      havainnot tekstin mukaan päätellään tieto.
 - Versionumero: 0.1.4. Julkaistu 4.5.2016:
     - Mahdollisuus poistaa urakan haluttujen päivystäjien päivystykset.
 - Versionumero: 0.1.3. Julkaistu 18.4.2016

@@ -10,7 +10,8 @@
 
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti ulkoinen-id havainnot] :as tarkastus}]
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti
+                             ulkoinen-id havainnot laadunalitus] :as tarkastus}]
   (log/info "tarkastus: " tarkastus)
   (let [sijainti (if (instance? PGgeometry sijainti)
                    sijainti
@@ -21,15 +22,17 @@
         (:id (luo-tarkastus<! db
                               "harja-ui"
                               urakka-id (konv/sql-timestamp aika)
-                              (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                              sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id havainnot)))
+                              (:numero tr) (:alkuosa tr) (:alkuetaisyys tr)
+                              (:loppuosa tr) (:loppuetaisyys tr)
+                              sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id
+                              havainnot laadunalitus)))
 
       (do (log/debug (format "Päivitetään tarkastus id: %s " id))
           (paivita-tarkastus! db
                               (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
                               sijainti tarkastaja (name tyyppi) (:id user)
-                              havainnot
+                              havainnot laadunalitus
                               urakka-id id)
           id))))
 
