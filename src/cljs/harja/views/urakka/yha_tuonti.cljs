@@ -8,8 +8,7 @@
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
             [harja.tiedot.navigaatio :as nav]
-            [clojure.string :as str]
-            [harja.tiedot.urakka :as u])
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))

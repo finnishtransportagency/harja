@@ -10,7 +10,6 @@
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka :as u]
     [harja.tiedot.urakka :as urakka])
 
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -37,7 +36,7 @@
 
 (def paallystystoteumat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystysilmoitukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
@@ -52,7 +51,7 @@
 
 (def paallystyskohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystyskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)

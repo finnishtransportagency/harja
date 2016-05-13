@@ -41,7 +41,7 @@
                            (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
                            (reset! paallystys/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? vastaus)))))}]
 
-       #_[yllapitokohteet-view/yllapitokohteet ;; Pitää selvittää onko tämä päällystys vai paikkaus vai molemmat
+       #_[yllapitokohteet-view/yllapitokohteet ;; Pitäisi olla paikkauskohteita
         paallystys/harjan-paallystyskohteet
         {:otsikko "Harjan päällystyskohteet"
          :paallystysnakyma? true

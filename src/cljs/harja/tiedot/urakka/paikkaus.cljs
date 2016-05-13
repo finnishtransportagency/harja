@@ -9,7 +9,6 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-    [harja.tiedot.urakka :as u]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka :as urakka])
 
@@ -42,7 +41,7 @@
 
 (defonce paikkaustoteumat
          (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-                      [valittu-sopimus-id _] @u/valittu-sopimusnumero
+                      [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                       nakymassa? @paikkausilmoitukset-nakymassa?]
                      {:nil-kun-haku-kaynnissa? true}
                      (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
@@ -52,7 +51,7 @@
 
 (def paikkauskohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paikkauskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)

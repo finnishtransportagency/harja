@@ -38,19 +38,19 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
-  hal.id                   AS hallintayksikko_id,
-  hal.nimi                 AS hallintayksikko_nimi,
-  hal.lyhenne              AS hallintayksikko_lyhenne,
-  urk.id                   AS urakoitsija_id,
-  urk.nimi                 AS urakoitsija_nimi,
-  urk.ytunnus              AS urakoitsija_ytunnus,
-  yhatunnus                AS yha_yhatunnus,
-  yhaid                    AS yha_yhaid,
-  yhanimi                  AS yha_yhanimi,
-  elyt::TEXT[]             AS yha_elyt,
-  vuodet::INTEGER[]        AS yha_vuodet,
-  kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
-  sidonta_lukittu          AS yha_sidonta_lukittu,
+  hal.id                      AS hallintayksikko_id,
+  hal.nimi                    AS hallintayksikko_nimi,
+  hal.lyhenne                 AS hallintayksikko_lyhenne,
+  urk.id                      AS urakoitsija_id,
+  urk.nimi                    AS urakoitsija_nimi,
+  urk.ytunnus                 AS urakoitsija_ytunnus,
+  yt.yhatunnus                AS yha_yhatunnus,
+  yt.yhaid                    AS yha_yhaid,
+  yt.yhanimi                  AS yha_yhanimi,
+  yt.elyt::TEXT[]             AS yha_elyt,
+  yt.vuodet::INTEGER[]        AS yha_vuodet,
+  yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
+  yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   (SELECT EXISTS(SELECT id
                      FROM paallystysilmoitus
                      WHERE paallystyskohde IN (SELECT id
@@ -71,7 +71,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
-  LEFT JOIN yhatiedot ON u.id = yhatiedot.urakka
+  LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE hallintayksikko = :hallintayksikko
       AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
@@ -309,19 +309,19 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
-  hal.id                   AS hallintayksikko_id,
-  hal.nimi                 AS hallintayksikko_nimi,
-  hal.lyhenne              AS hallintayksikko_lyhenne,
-  urk.id                   AS urakoitsija_id,
-  urk.nimi                 AS urakoitsija_nimi,
-  urk.ytunnus              AS urakoitsija_ytunnus,
-  yhatunnus                AS yha_yhatunnus,
-  yhaid                    AS yha_yhaid,
-  yhanimi                  AS yha_yhanimi,
-  elyt::TEXT[]             AS yha_elyt,
-  vuodet::INTEGER[]        AS yha_vuodet,
-  kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
-  sidonta_lukittu          AS yha_sidonta_lukittu,
+  hal.id                      AS hallintayksikko_id,
+  hal.nimi                    AS hallintayksikko_nimi,
+  hal.lyhenne                 AS hallintayksikko_lyhenne,
+  urk.id                      AS urakoitsija_id,
+  urk.nimi                    AS urakoitsija_nimi,
+  urk.ytunnus                 AS urakoitsija_ytunnus,
+  yt.yhatunnus                AS yha_yhatunnus,
+  yt.yhaid                    AS yha_yhaid,
+  yt.yhanimi                  AS yha_yhanimi,
+  yt.elyt::TEXT[]             AS yha_elyt,
+  yt.vuodet::INTEGER[]        AS yha_vuodet,
+  yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
+  yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   (SELECT EXISTS(SELECT id
                      FROM paallystysilmoitus
                      WHERE paallystyskohde IN (SELECT id
@@ -342,7 +342,7 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
   LEFT JOIN hanke h ON u.hanke = h.id
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
-  LEFT JOIN yhatiedot ON u.id = yhatiedot.urakka
+  LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE u.id = :urakka_id;
 
 -- name: hae-urakan-urakoitsija
