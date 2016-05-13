@@ -86,7 +86,7 @@
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
                                           (modal/piilota!)
                                           (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
-                                          (yha/paivita-yha-kohteet (:id urakka) {:sidontahaku? true}))}]))}]
+                                          (yha/paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? false}))}]))}]
      @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []

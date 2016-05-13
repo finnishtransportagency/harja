@@ -134,38 +134,57 @@
                          (:alikohteet kohde))))))
         yha-kohteet))
 
-(defn paivita-yha-kohteet
+(defn- hae-paivita-ja-tallenna-yllapitokohteet
   "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
-   Suoritus tapahtuu asynkronisesti"
+   Palauttaa mapin, jossa tietoja suorituksesta"
+  [harja-urakka-id]
+  (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
+            _ (log "[YHA] Uudet YHA-kohteet: " (pr-str uudet-yha-kohteet))]
+        (if (k/virhe? uudet-yha-kohteet)
+          {:status :error :viesti "Kohteiden haku YHA:sta epäonnistui."}
+          (if (= (count uudet-yha-kohteet) 0)
+            {:status :ok :viesti "Uusia kohteita ei löytynyt."}
+            (let [tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
+                  tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
+                  vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
+              (if (k/virhe? vkm-kohteet)
+                {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."}
+                (let [kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
+                  (if (k/virhe? yhatiedot)
+                    {:status :error :viesti "Päivitettyjen kohteiten tallentaminen epäonnistui."}
+                    (do
+                      (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
+                      {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot}))))))))))
+
+(defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
+  ;; Tallenna uudet YHA-tiedot urakalle
+  (when (= (:id @nav/valittu-urakka) harja-urakka-id)
+    (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
+  ;; Näytä ilmoitus tarvittaessa
+  (when (and (= (count (:uudet-kohteet vastaus)) 0)
+             (:nayta-ilmoitus-ei-uusia-kohteita? optiot))
+    (viesti/nayta! (:viesti vastaus) :success viesti/viestin-nayttoaika-lyhyt)))
+
+(defn- kasittele-epaonnistunut-kohteiden-paivitys [vastaus]
+  (viesti/nayta! (:viesti vastaus) :warning viesti/viestin-nayttoaika-keskipitka))
+
+(defn paivita-yha-kohteet
+  "Päivittää urakalle uudet YHA-kohteet. Suoritus tapahtuu asynkronisesti"
   ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
   ([harja-urakka-id optiot]
-   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
-             _ (log "[YHA] Uudet YHA-kohteet: " (pr-str uudet-yha-kohteet))]
-         (if (k/virhe? uudet-yha-kohteet)
-           (viesti/nayta! "Kohteiden haku YHA:sta epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-           (if (= (count uudet-yha-kohteet) 0)
-             (when-not (:sidontahaku? optiot)
-               (viesti/nayta! "Uusia kohteita ei löytynyt." :success viesti/viestin-nayttoaika-lyhyt))
-             (let [tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
-                   tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
-                   vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
-               (if (k/virhe? vkm-kohteet)
-                 (viesti/nayta! "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
-                 (let [kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
-                       yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
-                   (if (k/virhe? yhatiedot)
-                     (viesti/nayta! "YHA:n kohteiden tallentaminen epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
-                     (do
-                       (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
-                       (when (= (:id @nav/valittu-urakka) harja-urakka-id)
-                         (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot)))))))))))))
+  (go (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
+        (if (= (:status vastaus) :ok)
+          (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
+          (kasittele-epaonnistunut-kohteiden-paivitys vastaus))))))
+
 
 (defn paivita-kohdeluettelo [urakka oikeus]
   [harja.ui.napit/palvelinkutsu-nappi
    "Hae uudet YHA-kohteet"
    #(do
      (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
-     (paivita-yha-kohteet (:id urakka)))
+     (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
    {:luokka "nappi-ensisijainen"
     :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
     :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
