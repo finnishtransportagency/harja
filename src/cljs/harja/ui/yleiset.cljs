@@ -174,7 +174,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               format-fn (or format-fn str)
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
-              ryhmissa? (not (nil? ryhmitellyt-itemit))]
+              ryhmissa? (not (nil? ryhmitellyt-itemit))
+              lista-item (fn [vaihtoehto]
+                           [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
+                            (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                                (reset! auki false)
+                                                                nil))])]
           [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
            [:button.nappi-alasveto
             {:class       (when disabled "disabled")
@@ -234,20 +239,15 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             (doall
               (if ryhmissa?
                 (for [ryhma nayta-ryhmat]
+                  ^{:key ryhma}
                   [:div.harja-alasvetolista-ryhma
                    [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                   (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                     ^{:key (hash vaihtoehto)}
-                     [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-                      (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                          (reset! auki false)
-                                                          nil))])])
+                    [lista-item vaihtoehto])])
               (for [vaihtoehto vaihtoehdot]
                 ^{:key (hash vaihtoehto)}
-                [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-                 (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                     (reset! auki false)
-                                                     nil))])))]])))))
+                [lista-item vaihtoehto])))]])))))
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
