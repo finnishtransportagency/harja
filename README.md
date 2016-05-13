@@ -144,6 +144,8 @@ Huom. voit olla välittämättä virheilmoituksesta: could not change directory 
 > exit
 > scp <omatunnus>@harja-db1-stg:/home/<omatunnus>/harja-stg-dump /Users/<omatunnus>/Desktop/harja-stg-dump
 
+Käy poistamassa dumppi kotihakemistostasi
+
 Dumppi on nyt siirretty työpöydällesi. Siirrä se haluamaasi paikkaan.
 
 ### harja-test

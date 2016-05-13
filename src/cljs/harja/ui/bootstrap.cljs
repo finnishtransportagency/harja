@@ -1,6 +1,8 @@
 (ns harja.ui.bootstrap
   "Common Bootstrap components for Reagent UI."
-  (:require [reagent.core :refer [atom]]))
+  (:require [reagent.core :refer [atom]]
+            [harja.loki :refer [log]]
+            [harja.ui.komponentti :as komp]))
 
 
 (defn tabs
@@ -11,27 +13,42 @@ The following keys are supported in the configuration:
   :style     Tab style, either :pills or :tabs. Defaults to :tabs. "
 
   [{:keys [active style classes]} & alternating-title-and-component]
-  (let [style-class (case (or style :tabs)
-                      :pills "nav-pills"
-                      :tabs (str "nav-tabs " classes))
-        tabs (filter #(not (nil? (nth % 2)))
-                     (partition 3 alternating-title-and-component))
-        [active-tab-title active-tab-keyword active-component]
-        (first (filter #(= @active (nth % 1)) tabs))]
-    [:span
-     [:ul.nav {:class style-class}
-      (map
-       (fn [[title keyword]]
-         ^{:key title}
-         [:li {:role  "presentation"
-               :class (when (= keyword active-tab-keyword)
-                        "active")}
-          [:a.klikattava {:on-click #(do
-                                       (.preventDefault %)
-                                       (reset! active keyword))}
-           title]])
-       tabs)]
-     [:div.valilehti active-component]]))
+  (let [tarkista-aktiivinen-tabi (fn [active alternating-title-and-component]
+                                   (let [tab-nimet (keep #(when (not (nil? (nth % 2)))
+                                                           (nth % 1))
+                                                         (partition 3 alternating-title-and-component))]
+                                     (when-not (some #{@active} tab-nimet)
+                                       (when-let [eka-tabi (first tab-nimet)]
+                                         (reset! active eka-tabi)))))]
+    (tarkista-aktiivinen-tabi active alternating-title-and-component)
+    (komp/luo
+     (komp/kun-muuttuu (fn [{:keys [active style classes]} & alternating-title-and-component]
+                         (tarkista-aktiivinen-tabi active alternating-title-and-component)))
+     (fn [{:keys [active style classes]} & alternating-title-and-component]
+       (let [style-class (case (or style :tabs)
+                           :pills "nav-pills"
+                           :tabs (str "nav-tabs " classes))
+             tabs (filter #(not (nil? (nth % 2)))
+                          (partition 3 alternating-title-and-component))
+             [active-tab-title active-tab-keyword active-component]
+             (or (first (filter #(= @active (nth % 1)) tabs))
+                 (first tabs))]
+         (if (empty? tabs)
+           [:span "Ei käyttöoikeutta."]
+           [:span
+            [:ul.nav {:class style-class}
+             (map
+               (fn [[title keyword]]
+                 ^{:key title}
+                 [:li {:role  "presentation"
+                       :class (when (= keyword active-tab-keyword)
+                                "active")}
+                  [:a.klikattava {:on-click #(do
+                                              (.preventDefault %)
+                                              (reset! active keyword))}
+                   title]])
+               tabs)]
+            [:div.valilehti active-component]]))))))
 
 (defn navbar
   "A Bootstrap navbar component"
