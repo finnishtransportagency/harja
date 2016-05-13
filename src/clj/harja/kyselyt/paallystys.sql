@@ -1,5 +1,5 @@
--- name: hae-urakan-paallystystoteumat
--- Hakee urakan kaikki paallystystoteumat
+-- name: hae-urakan-paallystysilmoitukset
+-- Hakee urakan kaikki päällystysilmoitukset
 SELECT
   yllapitokohde.id AS paallystyskohde_id,
   pi.tila,

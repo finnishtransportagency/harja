@@ -19,8 +19,8 @@
 (defonce paikkauskohteet-nakymassa? (atom false))
 (defonce paikkausilmoitukset-nakymassa? (atom false))
 
-(defn hae-paikkaustoteumat [urakka-id sopimus-id]
-  (k/post! :urakan-paikkaustoteumat {:urakka-id  urakka-id
+(defn hae-paikkausilmoitukset [urakka-id sopimus-id]
+  (k/post! :urakan-paikkausilmoitukset {:urakka-id  urakka-id
                                      :sopimus-id sopimus-id}))
 
 (defn hae-paikkausilmoitus-paikkauskohteella [urakka-id sopimus-id paikkauskohde-id]
@@ -45,7 +45,7 @@
                       nakymassa? @paikkausilmoitukset-nakymassa?]
                      {:nil-kun-haku-kaynnissa? true}
                      (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                       (hae-paikkaustoteumat valittu-urakka-id valittu-sopimus-id))))
+                       (hae-paikkausilmoitukset valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paikkausilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan paikkausilmoitus-taulun sisältöä
 
