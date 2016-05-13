@@ -135,8 +135,8 @@
         yha-kohteet))
 
 (defn- hae-paivita-ja-tallenna-yllapitokohteet
-  "Hakee YHA-kohteet, päivittää ne kutsumalla VMK-palvelua ja tallentaa ne Harjan kantaan.
-   Palauttaa mapin, jossa tietoja suorituksesta"
+  "Hakee YHA-kohteet, päivittää ne nykyiselle tieverkolle kutsumalla VMK-palvelua (viitekehysmuunnin)
+   ja tallentaa ne Harjan kantaan. Palauttaa mapin, jossa tietoja suorituksesta"
   [harja-urakka-id]
   (go (let [uudet-yha-kohteet (<! (hae-yha-kohteet harja-urakka-id))
             _ (log "[YHA] Uudet YHA-kohteet: " (pr-str uudet-yha-kohteet))]
