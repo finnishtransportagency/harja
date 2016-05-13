@@ -16,13 +16,13 @@
                                     :sopimus-id sopimus-id}))
 
 (defn tallenna-yllapitokohteet! [urakka-id sopimus-id kohteet]
-  (urakka/lukitse-valitun-urakan-yha-sidonta!)
+  (urakka/lukitse-urakan-yha-sidonta! urakka-id)
   (k/post! :tallenna-yllapitokohteet {:urakka-id urakka-id
                                       :sopimus-id sopimus-id
                                       :kohteet kohteet}))
 
 (defn tallenna-yllapitokohdeosat! [urakka-id sopimus-id yllapitokohde-id osat]
-  (urakka/lukitse-valitun-urakan-yha-sidonta!)
+  (urakka/lukitse-urakan-yha-sidonta! urakka-id)
   (k/post! :tallenna-yllapitokohdeosat {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
                                         :yllapitokohde-id yllapitokohde-id

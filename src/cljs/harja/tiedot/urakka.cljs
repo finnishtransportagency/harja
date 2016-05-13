@@ -349,5 +349,6 @@
                     "MAKU 2005"
                     "MAKU 2010"))))))
 
-(defn lukitse-valitun-urakan-yha-sidonta! []
-  (swap! nav/valittu-urakka assoc-in [:yhatiedot :sidonta-lukittu?] true))
+(defn lukitse-urakan-yha-sidonta! [urakka-id]
+  (when (= @nav/valittu-urakka-id urakka-id)
+    (swap! nav/valittu-urakka assoc-in [:yhatiedot :sidonta-lukittu?] true)))

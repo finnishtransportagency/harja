@@ -29,7 +29,7 @@
                                                        :paikkauskohde-id paikkauskohde-id}))
 
 (defn tallenna-paikkausilmoitus! [urakka-id sopimus-id lomakedata]
-  (urakka/lukitse-valitun-urakan-yha-sidonta!)
+  (urakka/lukitse-urakan-yha-sidonta! urakka-id)
   (k/post! :tallenna-paikkausilmoitus {:urakka-id        urakka-id
                                        :sopimus-id       sopimus-id
                                        :paikkausilmoitus lomakedata}))
