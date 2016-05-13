@@ -17,6 +17,18 @@
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn yha-tuontioikeus? [urakka]
+  (case (:tyyppi urakka)
+    :paallystys
+    (oikeudet/on-muu-oikeus? "sido"
+                             oikeudet/urakat-kohdeluettelo-paallystyskohteet
+                             (:id @nav/valittu-urakka) @istunto/kayttaja)
+    :paikkaus
+    (oikeudet/on-muu-oikeus? "sido"
+                             oikeudet/urakat-kohdeluettelo-paikkauskohteet
+                             (:id @nav/valittu-urakka) @istunto/kayttaja)
+    :default false))
+
 (def hakulomake-data (atom nil))
 (def hakutulokset-data (atom []))
 (def sidonta-kaynnissa? (atom false))

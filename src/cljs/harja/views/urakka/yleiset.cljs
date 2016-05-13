@@ -12,6 +12,7 @@
             [harja.tiedot.urakka.yhteystiedot :as yht]
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
             [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.urakka.yhatuonti :as yhatiedot]
             [harja.views.urakka.yhatuonti :as yha]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
@@ -195,16 +196,7 @@
 (defn yleiset-tiedot [ur]
   (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
         sopimustyyppi (:sopimustyyppi ur)
-        yha-tuontioikeus? (cond
-                            (= (:tyyppi ur) :paallystys)
-                            (oikeudet/on-muu-oikeus? "sido"
-                                                     oikeudet/urakat-kohdeluettelo-paallystyskohteet
-                                                     (:id @nav/valittu-urakka) @istunto/kayttaja)
-                            (= (:tyyppi ur) :paikkaus)
-                            (oikeudet/on-muu-oikeus? "sido"
-                                                     oikeudet/urakat-kohdeluettelo-paikkauskohteet
-                                                     (:id @nav/valittu-urakka) @istunto/kayttaja)
-                            :default false)
+        yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
         paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                            (= (:tyyppi ur) :paikkaus))
         paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
@@ -323,11 +315,7 @@
 (defn- nayta-yha-tuontidialogi
   "Näyttää modaalin YHA tuontidialogin, jos tarvii."
   [ur]
-  (let [yha-tuontioikeus? (cond (= (:tyyppi ur) :paallystys)
-                                (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
-                                (= (:tyyppi ur) :paikkaus)
-                                (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id @nav/valittu-urakka) @istunto/kayttaja)
-                                :default false)
+  (let [yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
         paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                            (= (:tyyppi ur) :paikkaus))
         paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
