@@ -3,8 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]

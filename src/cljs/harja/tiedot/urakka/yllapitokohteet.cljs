@@ -1,8 +1,7 @@
 (ns harja.tiedot.urakka.yllapitokohteet
   "Ylläpitokohteiden tiedot"
   (:require
-    [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                              livi-pudotusvalikko]]
+    [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
     [harja.loki :refer [log tarkkaile!]]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]

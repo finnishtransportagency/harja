@@ -2,8 +2,7 @@
   "Päällystyksen tiedot"
   (:require
     [reagent.core :refer [atom] :as r]
-    [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                              livi-pudotusvalikko]]
+    [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.loki :refer [log tarkkaile!]]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]

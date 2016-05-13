@@ -148,7 +148,8 @@
         [grid/grid
          {:otsikko "Päivystystiedot"
           :tyhja "Ei päivystystietoja."
-          :tallenna #(tallenna-paivystajat ur paivystajat %)}
+          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                      #(tallenna-paivystajat ur paivystajat %))}
          [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                   nimi
                                   (str (:etunimi %)
@@ -284,9 +285,10 @@
       (komp/kun-muuttuu hae!)
       (fn [ur]
         [grid/grid
-         {:otsikko "Yhteyshenkilöt"
-          :tyhja "Ei yhteyshenkilöitä."
-          :tallenna #(tallenna-yhteyshenkilot ur yhteyshenkilot %)}
+         {:otsikko  "Yhteyshenkilöt"
+          :tyhja    "Ei yhteyshenkilöitä."
+          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                      #(tallenna-yhteyshenkilot ur yhteyshenkilot %))}
          [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
            :hae #(do (when (:rooli %)
                        (str/capitalize (:rooli %))))

@@ -2,7 +2,7 @@
   "Urakan 'Muut työt' välilehti, sis. Muutos-, lisä- ja äkilliset hoitotyöt"
   (:require [reagent.core :refer [atom]]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki
                                                   alasveto-ei-loydoksia livi-pudotusvalikko radiovalinta vihje]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]

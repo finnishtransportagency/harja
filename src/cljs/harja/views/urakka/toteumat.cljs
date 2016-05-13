@@ -2,8 +2,7 @@
   "Urakan 'Toteumat' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      livi-pudotusvalikko]]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.tiedot.urakka :as u]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--Created with Liquid XML Studio Developer Edition 9.1.11.3570 (http://www.liquid-technologies.com)-->
-<xs:schema 
-    targetNamespace="http://www.liikennevirasto.fi/xsd/harja" 
-    version="1.0" 
-    xmlns="http://www.liikennevirasto.fi/xsd/harja"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema
+        targetNamespace="http://www.liikennevirasto.fi/xsd/harja"
+        version="1.0"
+        xmlns="http://www.liikennevirasto.fi/xsd/harja"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xs:element name="ilmoitus">
         <xs:complexType>
             <xs:sequence>
@@ -253,7 +253,7 @@
     </xs:complexType>
     <xs:complexType name="paivystajat">
         <xs:sequence>
-            <xs:element name="paivystaja" type="henkilo" minOccurs="0" />
+            <xs:element name="paivystaja" type="henkilo" minOccurs="0" maxOccurs="unbounded" />
         </xs:sequence>
     </xs:complexType>
 </xs:schema>

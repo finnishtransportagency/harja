@@ -2,8 +2,7 @@
   "Päällystysurakan 'Kohdeluettelo' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.bootstrap :as bs]
-            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
-                                      livi-pudotusvalikko vihje] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko vihje] :as yleiset]
             [harja.views.urakka.paallystyskohteet :as paallystyskohteet]
             [harja.views.urakka.paallystysilmoitukset :as paallystysilmoitukset]
             [harja.views.kartta :as kartta]

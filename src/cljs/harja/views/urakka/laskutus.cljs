@@ -7,7 +7,8 @@
             [harja.loki :refer [log]]
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.ui.komponentti :as komp]
-            [harja.views.urakka.maksuerat :as maksuerat])
+            [harja.views.urakka.maksuerat :as maksuerat]
+            [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -27,4 +28,5 @@
         "Maksuerät"
         :maksuerat
         ^{:key "maksuerat"}
-        [maksuerat/maksuerat-listaus]]])))
+        (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
+          [maksuerat/maksuerat-listaus])]])))

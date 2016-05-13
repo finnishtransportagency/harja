@@ -9,7 +9,9 @@
                                               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
                                               kuittaustyypin-selite nayta-tierekisteriosoite]]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn ilmoitus [ilmoitus]
   [:div
@@ -45,12 +47,14 @@
     [:div
      (if @tiedot/uusi-kuittaus-auki?
        [kuittaukset/uusi-kuittaus-lomake]
-       [:button.nappi-ensisijainen
-        {:class    "uusi-kuittaus-nappi"
-         :on-click #(do
-                     (tiedot/avaa-uusi-kuittaus!)
-                     (.preventDefault %))}
-        (ikonit/livicon-plus) " Uusi kuittaus"])
+       (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                       (:id @nav/valittu-urakka))
+         [:button.nappi-ensisijainen
+          {:class    "uusi-kuittaus-nappi"
+           :on-click #(do
+                       (tiedot/avaa-uusi-kuittaus!)
+                       (.preventDefault %))}
+          (ikonit/livicon-plus) " Uusi kuittaus"]))
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div
