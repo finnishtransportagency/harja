@@ -87,16 +87,17 @@
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? naytettavat-rivit) "Ei raportoitavia tarkastuksia.")
                  :sheet-nimi raportin-nimi}
-      (flatten (keep identity [{:leveys "10%" :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
-                               {:leveys "5%" :otsikko "Klo"}
-                               {:leveys "6%" :otsikko "Tie"}
-                               {:leveys "6%" :otsikko "Aosa"}
-                               {:leveys "6%" :otsikko "Aet"}
-                               {:leveys "6%" :otsikko "Losa"}
-                               {:leveys "6%" :otsikko "Let"}
-                               {:leveys "20%" :otsikko "Tar\u00ADkas\u00ADtaja"}
-                               {:leveys "25%" :otsikko "Ha\u00ADvain\u00ADnot"}
-                               {:leveys "5%" :otsikko "Liit\u00ADteet" :tyyppi :liite}]))
+      (flatten (keep identity [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
+                               {:leveys 5 :otsikko "Klo"}
+                               {:leveys 6 :otsikko "Tie"}
+                               {:leveys 6 :otsikko "Aosa"}
+                               {:leveys 6 :otsikko "Aet"}
+                               {:leveys 6 :otsikko "Losa"}
+                               {:leveys 6 :otsikko "Let"}
+                               {:leveys 20 :otsikko "Tar\u00ADkas\u00ADtaja"}
+                               {:leveys 25 :otsikko "Ha\u00ADvain\u00ADnot"}
+                               {:leveys 6 :otsikko "Laadun alitus"}
+                               {:leveys 5 :otsikko "Liit\u00ADteet" :tyyppi :liite}]))
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         (reverse (sort-by (fn [rivi] [(:aika rivi)
                                       (get-in rivi [:tr :numero])])
@@ -112,4 +113,5 @@
            (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
            (:havainnot rivi)
+           (fmt/totuus (:laadunalitus rivi))
            [:liitteet (:liitteet rivi)]]))]]))

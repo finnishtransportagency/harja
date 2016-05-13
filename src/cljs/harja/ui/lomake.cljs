@@ -304,52 +304,52 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
                  voi-muokata?] :as opts} skeema
          {muokatut ::muokatut
-          virheet ::virheet
-          varoitukset ::varoitukset
-          huomautukset ::huomautukset
           :as  data}]
-      (kasittele-virhe
-       (let [voi-muokata? (if (some? voi-muokata?)
-                            voi-muokata?
-                            true)
-             muokkaa-kenttaa-fn (fn [nimi]
-                                  (fn [uudet-tiedot]
-                                    (-> uudet-tiedot
-                                        (validoi skeema)
-                                        (assoc ::muokatut (conj (or muokatut #{}) nimi))
-                                        muokkaa!)))]
-         ;(lovg "RENDER! fokus = " (pr-str @fokus))
-         [:div.lomake
-          (when otsikko
-            [:h3.lomake-otsikko otsikko])
-          (doall
-           (map-indexed
-            (fn [i skeemat]
-              (let [otsikko (when (otsikko? (first skeemat))
-                              (first skeemat))
-                    skeemat (if otsikko
-                              (rest skeemat)
-                              skeemat)
-                    rivi-ui [nayta-rivi skeemat
-                             data
-                             #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
-                             voi-muokata?
-                             @fokus
-                             #(reset! fokus %)
-                             muokatut
-                             virheet
-                             varoitukset
-                             huomautukset]]
-                (if otsikko
-                  ^{:key i}
-                  [:span
-                   [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
-                   rivi-ui]
-                  (with-meta rivi-ui {:key i}))))
-            (rivita skeema)))
+      (let [{virheet ::virheet
+             varoitukset ::varoitukset
+             huomautukset ::huomautukset} (validoi data skeema)]
+        (kasittele-virhe
+         (let [voi-muokata? (if (some? voi-muokata?)
+                              voi-muokata?
+                              true)
+               muokkaa-kenttaa-fn (fn [nimi]
+                                    (fn [uudet-tiedot]
+                                      (-> uudet-tiedot
+                                          (validoi skeema)
+                                          (assoc ::muokatut (conj (or muokatut #{}) nimi))
+                                          muokkaa!)))]
+                                        ;(lovg "RENDER! fokus = " (pr-str @fokus))
+           [:div.lomake
+            (when otsikko
+              [:h3.lomake-otsikko otsikko])
+            (doall
+             (map-indexed
+              (fn [i skeemat]
+                (let [otsikko (when (otsikko? (first skeemat))
+                                (first skeemat))
+                      skeemat (if otsikko
+                                (rest skeemat)
+                                skeemat)
+                      rivi-ui [nayta-rivi skeemat
+                               data
+                               #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
+                               voi-muokata?
+                               @fokus
+                               #(reset! fokus %)
+                               muokatut
+                               virheet
+                               varoitukset
+                               huomautukset]]
+                  (if otsikko
+                    ^{:key i}
+                    [:span
+                     [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
+                     rivi-ui]
+                    (with-meta rivi-ui {:key i}))))
+              (rivita skeema)))
 
-          (when-let [footer (if footer-fn
-                              (footer-fn virheet varoitukset huomautukset)
-                              footer)]
-            [:div.lomake-footer.row
-             [:div.col-md-12 footer]])])))))
+            (when-let [footer (if footer-fn
+                                (footer-fn virheet varoitukset huomautukset)
+                                footer)]
+              [:div.lomake-footer.row
+               [:div.col-md-12 footer]])]))))))

@@ -17,7 +17,6 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.ikonit :as ikonit]
-
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as valinnat]
 
@@ -25,7 +24,8 @@
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as tiedot-laatupoikkeamat]
             [clojure.string :as str]
             [harja.tiedot.navigaatio.reitit :as reitit]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -43,7 +43,8 @@
 (defn uusi-tarkastus []
   {:uusi? true
    :aika (pvm/nyt)
-   :tarkastaja @istunto/kayttajan-nimi})
+   :tarkastaja @istunto/kayttajan-nimi
+   :laadunalitus false})
 
 (defn valitse-tarkastus [tarkastus-id]
   (go
@@ -72,6 +73,15 @@
                                        :soratie "Soratien tarkastukset"
                                        :laatu "Laaduntarkastus")}
           tarkastukset/tarkastustyyppi]]]
+
+       [:span.label-ja-kentta
+        [:span.kentan-otsikko "Näytä"]
+        [:div.kentta
+         [tee-kentta {:tyyppi :valinta :valinnat [false true]
+                      :valinta-nayta {false "Kaikki tarkastukset"
+                                      true "Vain laadunalitukset"}}
+          tarkastukset/vain-laadunalitukset?]]]
+
        [valinnat/tienumero tarkastukset/tienumero]
 
 
@@ -198,26 +208,28 @@
         tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
-                                                  urakka-id)]
-    (log (pr-str @tarkastus-atom))
+                                                  urakka-id)
+        voi-muokata? (and voi-kirjoittaa?
+                          (not jarjestelmasta?))]
     [:div.tarkastus
      [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
      [lomake/lomake
       {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
        :muokkaa! #(reset! tarkastus-atom %)
-       :voi-muokata? (and voi-kirjoittaa?
-                          (not jarjestelmasta?))
-       :footer [napit/palvelinkutsu-nappi
-                "Tallenna tarkastus"
-                (fn []
-                  (tarkastukset/tallenna-tarkastus urakka-id tarkastus))
-                {:disabled (or (not voi-kirjoittaa?)
-                               (validoi-tarkastuslomake tarkastus))
-                 :kun-onnistuu (fn [tarkastus]
-                                 (reset! tarkastukset/valittu-tarkastus nil)
-                                 (tarkastukset/paivita-tarkastus-listaan! tarkastus))
-                 :ikoni (ikonit/tallenna)}]}
+       :voi-muokata? voi-muokata?
+       :footer-fn (fn [virheet _ _]
+                    (when voi-kirjoittaa?
+                      [napit/palvelinkutsu-nappi
+                       "Tallenna tarkastus"
+                       (fn []
+                         (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus))
+                       {:disabled (not (empty? virheet))
+                        :kun-onnistuu (fn [tarkastus]
+                                        (reset! tarkastukset/valittu-tarkastus nil)
+                                        (tarkastukset/paivita-tarkastus-listaan! tarkastus))
+                        :ikoni (ikonit/tallenna)}]))}
+
       [(when jarjestelmasta?
          {:otsikko "Lähde" :nimi :luoja :tyyppi :string
           :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
@@ -234,11 +246,11 @@
         :tyyppi :valinta
         :valinnat (tarkastustyypit-tekijalle (:tekija tarkastus))
         :valinta-nayta #(case %
-                         :tiesto "Tiestötarkastus"
-                         :talvihoito "Kelitarkastus"
-                         :soratie "Soratien tarkastus"
-                         :laatu "Laaduntarkastus"
-                         "- valitse -")
+                          :tiesto "Tiestötarkastus"
+                          :talvihoito "Kelitarkastus"
+                          :soratie "Soratien tarkastus"
+                          :laatu "Laaduntarkastus"
+                          "- valitse -")
         :palstoja 1}
 
        {:tyyppi :tierekisteriosoite
@@ -263,7 +275,18 @@
         :nimi :havainnot
         :koko [80 :auto]
         :tyyppi :text
-        :palstoja 2}
+        :palstoja 2
+        :validoi (when (:laadunalitus tarkastus)
+                   [[:ei-tyhja "Kirjaa laadunalituksen havainnot"]])}
+
+       {:otsikko (when-not voi-muokata?
+                   ;; Näytä otsikko näyttömuodossa
+                   "Laadun alitus")
+        :teksti "Laadun alitus" :nayta-rivina? true
+        :nimi :laadunalitus
+        :tyyppi :checkbox
+        :palstoja 2
+        :fmt fmt/totuus}
 
        (when (not (empty? (:vakiohavainnot tarkastus)))
          {:otsikko "Vakio\u00ADhavainnot"
