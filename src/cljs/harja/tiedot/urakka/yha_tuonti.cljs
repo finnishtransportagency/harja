@@ -27,7 +27,7 @@
     (oikeudet/on-muu-oikeus? "sido"
                              oikeudet/urakat-kohdeluettelo-paikkauskohteet
                              (:id @nav/valittu-urakka) @istunto/kayttaja)
-    :default false))
+    false))
 
 (def hakulomake-data (atom nil))
 (def hakutulokset-data (atom []))
