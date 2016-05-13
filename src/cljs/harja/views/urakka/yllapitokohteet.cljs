@@ -151,7 +151,7 @@
    [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
     {:otsikko "Kohde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
      :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-    {:otsikko "Kohde" :nimi :nimi
+    {:otsikko "Kohteen nimi" :nimi :nimi
      :tyyppi :string :leveys kohde-leveys}
     {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr_numero :muokattava? (constantly (not (:yha-sidottu? optiot)))
      :tyyppi :positiivinen-numero :leveys tr-leveys}
