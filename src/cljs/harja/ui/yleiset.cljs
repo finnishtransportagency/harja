@@ -234,8 +234,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             (doall
               (if ryhmissa?
                 (for [ryhma nayta-ryhmat]
-                  [:div.alasvetolista-ryhma
-                   [:div.alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
+                  [:div.harja-alasvetolista-ryhma
+                   [:div.harja-alasvetolista-ryhman-otsikko (ryhman-otsikko ryhma)]
                   (for [vaihtoehto (get ryhmitellyt-itemit ryhma)]
                     ^{:key (hash vaihtoehto)}
                      [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
