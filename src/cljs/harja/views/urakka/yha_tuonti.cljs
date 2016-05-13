@@ -8,7 +8,8 @@
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
             [harja.tiedot.navigaatio :as nav]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tiedot.urakka :as u])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -24,7 +25,7 @@
                             :disabled @yha/sidonta-kaynnissa?
                             :virheviesti "Urakoiden haku YHA:sta epäonnistui."
                             :kun-onnistuu (fn [vastaus]
-                                            (log "YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
+                                            (log "[YHA] YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
                                             (reset! yha/hakutulokset-data vastaus))}]}
    [{:otsikko "YHA-tunniste"
      :nimi :yhatunniste
@@ -46,7 +47,7 @@
      {:otsikko "Löytyneet urakat"
       :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
       :tunniste :yhatunnus}
-     [{:otsikko "Tunnus"
+     [{:otsikko "YHA-tunnus"
        :nimi :yhatunnus
        :tyyppi :string
        :muokattava? (constantly false)}
@@ -84,7 +85,9 @@
                           :virheviesti "Urakan sidonta epäonnistui."
                           :kun-onnistuu (fn [vastaus]
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
-                                          (modal/piilota!))}]))}]
+                                          (modal/piilota!)
+                                          (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
+                                          (yha/paivita-yha-kohteet (:id urakka) {:sidontahaku? true}))}]))}]
      @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []
@@ -93,8 +96,8 @@
 (defn- tuontidialogi [urakka optiot]
   [:div
    (if (:sitomaton-urakka? optiot)
-     [vihje (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta.")]
-     [lomake/yleinen-varoitus (str (:nimi urakka) " on jo sidottu YHA-urakkaan " (get-in urakka [:yhatiedot :yhatunnus]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet poistetaan.")])
+     [vihje (str (:nimi urakka) " täytyy sitoa YHA:n vastaavaan urakkaan tietojen siirtämiseksi Harjaan. Etsi YHA-urakka täyttämällä vähintään yksi hakuehto ja tee sidonta. Kun urakka on sidottu, voi sidonnan vaihtaa niin kauan kuin urakan tietoja ei ole muokattu.")]
+     [lomake/yleinen-varoitus (str (:nimi urakka) " on jo sidottu YHA-urakkaan " (get-in urakka [:yhatiedot :yhatunnus]) ". Jos vaihdat sidonnan toiseen urakkaan, kaikki Harja-urakkaan tuodut kohteet ja niiden ilmoitukset poistetaan.")])
    [hakulomake urakka]
    [hakutulokset urakka]
    (when @yha/sidonta-kaynnissa?

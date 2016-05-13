@@ -17,9 +17,7 @@
             [taoensso.truss :as truss :refer-macros [have]])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-
-                   ))
+                   [reagent.ratom :refer [reaction run!]]))
 
 (defonce valittu-sopimusnumero (let [val (atom nil)]
                                  (run! (reset! val (first (:sopimukset @nav/valittu-urakka))))
@@ -350,3 +348,6 @@
                   (if (< urakan-alkuvuosi 2017)
                     "MAKU 2005"
                     "MAKU 2010"))))))
+
+(defn lukitse-valitun-urakan-yha-sidonta! []
+  (swap! nav/valittu-urakka assoc-in [:yhatiedot :sidonta-lukittu?] true))

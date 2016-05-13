@@ -12,6 +12,7 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
+            [harja.palvelin.palvelut.yha :as yha]
             [harja.domain.skeema :as skeema]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]))
@@ -134,6 +135,7 @@
     (luo-paallystysilmoitus db user lomakedata)))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
+  (yha/lukitse-urakan-yha-sidonta db urakka-id)
   (log/debug "Käsitellään päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id

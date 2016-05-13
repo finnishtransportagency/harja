@@ -5,6 +5,9 @@
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def viestin-nayttoaika-lyhyt 1500)
+(def viestin-nayttoaika-keskipitka 5000)
+
 ;; Viesti on reagent komponentti, joka näytetään.
 ;; Luokka on jokin bootstrapin alert-* luokista (ilman etuliitettä)
 (defonce viesti-sisalto (atom {:viesti nil

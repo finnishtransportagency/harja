@@ -10,7 +10,8 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.urakka :as u]
-    [harja.tiedot.navigaatio :as nav])
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka :as urakka])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -28,7 +29,8 @@
                                                        :sopimus-id       sopimus-id
                                                        :paikkauskohde-id paikkauskohde-id}))
 
-(defn tallenna-paikkausilmoitus [urakka-id sopimus-id lomakedata]
+(defn tallenna-paikkausilmoitus! [urakka-id sopimus-id lomakedata]
+  (urakka/lukitse-valitun-urakan-yha-sidonta!)
   (k/post! :tallenna-paikkausilmoitus {:urakka-id        urakka-id
                                        :sopimus-id       sopimus-id
                                        :paikkausilmoitus lomakedata}))
