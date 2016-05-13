@@ -141,7 +141,7 @@
 
 (defn aikasuodattimet []
   [:div#tk-paavalikko
-   [:span "Näytä seuraavat aikavälillä:"]
+   [:span "Näytä seuraavat aikavälillä (max. yksi vuosi):"]
    (when (= :nykytilanne @tiedot/valittu-tila)
      [nykytilanteen-aikavalinnat])
    (when (= :historiakuva @tiedot/valittu-tila)

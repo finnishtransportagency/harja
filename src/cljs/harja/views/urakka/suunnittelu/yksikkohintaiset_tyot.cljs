@@ -183,11 +183,11 @@
                                  (ryhmittele-hinnoitellut @tyorivit))
            :piilota-toiminnot? true
            :muokkaa-footer (fn [g]
-                             [raksiboksi "Tallenna tulevillekin hoitokausille"
-                              @tuleville?
-                              #(swap! tuleville? not)
-                              [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                              @varoita-ylikirjoituksesta?])
+                             [raksiboksi {:teksti "Tallenna tulevillekin hoitokausille"
+                                          :toiminto #(swap! tuleville? not)
+                                          :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                          :nayta-infoteksti? @varoita-ylikirjoituksesta?}
+                              @tuleville?])
            :prosessoi-muutos (if (= :hoito (:tyyppi ur))
                                (fn [rivit]
                                  (let [rivit (seq rivit)]

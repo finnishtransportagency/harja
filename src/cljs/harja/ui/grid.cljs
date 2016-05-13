@@ -591,26 +591,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  (kasittele-otsikkorivin-kiinnitys this))
         kasittele-resize-event (fn [this _]
                                  (maarita-kiinnitetyn-otsikkorivin-leveys this)
-                                 (kasittele-otsikkorivin-kiinnitys this))
-        thead (fn []
-                [:thead
-                 (when-let [rivi-ennen (:rivi-ennen opts)]
-                   [:tr
-                    (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-                      ^{:key teksti}
-                      [:th {:colSpan (or sarakkeita 1)
-                            :class (y/tasaus-luokka tasaa)}
-                       teksti])])
-                 [:tr
-                  (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
-                    ^{:key (str nimi)}
-                    [:th {:class (y/luokat otsikkorivi-luokka
-                                           (y/tasaus-luokka tasaa))
-                          :width (or leveys "5%")}
-                     otsikko])
-                  (when (and (not piilota-toiminnot?)
-                             tallenna)
-                    [:th.toiminnot {:width "40px"} " "])]])]
+                                 (kasittele-otsikkorivin-kiinnitys this))]
 
     (when-let [ohj (:ohjaus opts)]
       (aseta-grid ohj ohjaus))
@@ -705,7 +686,26 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                        (when peruuta (peruuta))
                                                        nil)}
                                           [y/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
-                                    (when nayta-otsikko? [:h6.panel-title otsikko])])]
+                                    (when nayta-otsikko? [:h6.panel-title otsikko])])
+                 thead (fn []
+                         [:thead
+                          (when-let [rivi-ennen (:rivi-ennen opts)]
+                            [:tr
+                             (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+                               ^{:key teksti}
+                               [:th {:colSpan (or sarakkeita 1)
+                                     :class (y/tasaus-luokka tasaa)}
+                                teksti])])
+                          [:tr
+                           (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
+                             ^{:key (str nimi)}
+                             [:th {:class (y/luokat otsikkorivi-luokka
+                                                    (y/tasaus-luokka tasaa))
+                                   :width (or leveys "5%")}
+                              otsikko])
+                           (when (and (not piilota-toiminnot?)
+                                      tallenna)
+                             [:th.toiminnot {:width "40px"} " "])]])]
              [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
               (muokkauspaneeli true)
               [:div.panel-body
@@ -883,8 +883,7 @@ Optiot on mappi optioita:
                       (avaa-vetolaatikko! [_ id]
                         (swap! vetolaatikot-auki conj id))
                       (sulje-vetolaatikko! [_ id]
-                        (swap! vetolaatikot-auki disj id))
-                      ))
+                        (swap! vetolaatikot-auki disj id))))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
         muokkaa! (fn [muokatut virheet id funktio & argumentit]
@@ -908,7 +907,6 @@ Optiot on mappi optioita:
                      (when muutos
                        (muutos (ohjaus-fn muokatut virheet)))))
 
-
         ;; Peruu yhden muokkauksen
         peru! (fn [muokatut virheet]
                 (let [[muok virh] (peek @historia)]
@@ -916,10 +914,7 @@ Optiot on mappi optioita:
                   (reset! virheet virh))
                 (swap! historia pop)
                 (when muutos
-                  (muutos (ohjaus-fn muokatut virheet))))
-
-        ]
-
+                  (muutos (ohjaus-fn muokatut virheet))))]
 
     (r/create-class
       {:component-will-receive-props
@@ -944,8 +939,7 @@ Optiot on mappi optioita:
                ohjaus (ohjaus-fn muokatut virheet)
                voi-muokata? (if (nil? voi-muokata?)
                               true
-                              voi-muokata?)
-               ]
+                              voi-muokata?)]
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 

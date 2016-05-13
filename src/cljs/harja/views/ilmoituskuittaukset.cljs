@@ -22,7 +22,7 @@
 
 (defn kasittele-kuittauskasityksen-vastaus [vastaus]
   (when vastaus
-    (viesti/nayta! "Kuittaus lähetetty T-LOIK:n." :success)
+    (viesti/nayta! "Kuittaus lähetetty Tieliikennekeskukseen." :success)
     (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
   (ilmoitukset/sulje-uusi-kuittaus!))
