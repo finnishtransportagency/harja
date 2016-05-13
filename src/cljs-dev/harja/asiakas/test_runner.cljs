@@ -10,6 +10,7 @@
    [harja.app-test]
    [harja.tiedot.muokkauslukko-test]
    [harja.tiedot.urakka.suunnittelu-test]
+   [harja.tiedot.urakka.yhatuonti-test]
    [harja.views.urakka.siltatarkastukset-test]
    [harja.views.urakka.paallystysilmoitukset-test]
    [harja.views.urakka.paikkausilmoitukset-test]
@@ -60,7 +61,8 @@
                   'harja.views.urakka.paallystysilmoitukset-test
                   'harja.views.urakka.paikkausilmoitukset-test
                   'harja.pvm-test
-                  'harja.ui.dom-test))
+                  'harja.ui.dom-test
+                  'harja.tiedot.urakka.yhatuonti-test))
 
 (defn change-favicon [ico]
   (let [link (.createElement js/document "link")

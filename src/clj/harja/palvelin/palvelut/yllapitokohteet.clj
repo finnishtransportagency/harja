@@ -6,6 +6,7 @@
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.palvelut.yha :as yha]
             [harja.kyselyt.yllapitokohteet :as q]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]))
@@ -25,7 +26,7 @@
                                                    (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                      db urakka-id sopimus-id (:id %))))))
                         (q/hae-urakan-yllapitokohteet db urakka-id sopimus-id))]
-      (log/debug "Päällystyskohteet saatu: " (pr-str (map :nimi vastaus)))
+      (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
 (defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
@@ -34,7 +35,7 @@
   (let [vastaus (into []
                       kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id yllapitokohde-id))]
-    (log/debug "Päällystyskohdeosat saatu: " (pr-str vastaus))
+    (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
@@ -63,7 +64,8 @@
 
 (defn luo-uusi-yllapitokohde [db user urakka-id sopimus-id
                               {:keys [kohdenumero nimi sopimuksen_mukaiset_tyot
-                                      arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
+                                      arvonvahennykset bitumi_indeksi kaasuindeksi poistettu
+                                      nykyinen_paallyste keskimaarainen_vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde")
   (when-not poistettu
     (q/luo-yllapitokohde<! db
@@ -74,11 +76,14 @@
                            (or sopimuksen_mukaiset_tyot 0)
                            (or arvonvahennykset 0)
                            (or bitumi_indeksi 0)
-                           (or kaasuindeksi 0))))
+                           (or kaasuindeksi 0)
+                           (or keskimaarainen_vuorokausiliikenne 0)
+                           nykyinen_paallyste)))
 
 (defn paivita-yllapitokohde [db user urakka-id sopimus-id
                              {:keys [id kohdenumero nimi sopimuksen_mukaiset_tyot
-                                     arvonvahennykset bitumi_indeksi kaasuindeksi poistettu]}]
+                                     arvonvahennykset bitumi_indeksi kaasuindeksi
+                                     nykyinen_paallyste keskimaarainen_vuorokausiliikenne poistettu]}]
   (if poistettu
     (do (log/debug "Tarkistetaan onko ylläpitokohteella ilmoituksia")
         (let [paallystysilmoitus (q/onko-olemassa-paallystysilmoitus? db id)
@@ -99,9 +104,12 @@
                                   (or arvonvahennykset 0)
                                   (or bitumi_indeksi 0)
                                   (or kaasuindeksi 0)
+                                  (or keskimaarainen_vuorokausiliikenne 0)
+                                  nykyinen_paallyste
                                   id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
+  (yha/lukitse-urakan-yha-sidonta db urakka-id)
   (jdbc/with-db-transaction [c db]
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
     (doseq [kohde kohteet]
@@ -114,7 +122,7 @@
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
-(defn luo-uusi-yllapitokohdeosa [db user yllapitokohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
+(defn luo-uusi-yllapitokohdeosa [db user yllapitokohde-id {:keys [nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys toimenpide poistettu sijainti]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -126,11 +134,9 @@
                               (or tr_loppuosa 0)
                               (or tr_loppuetaisyys 0)
                               (geo/geometry (geo/clj->pg sijainti))
-                              (or kvl 0)
-                              nykyinen_paallyste
                               toimenpide)))
 
-(defn paivita-yllapitokohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys kvl nykyinen_paallyste toimenpide poistettu sijainti]}]
+(defn paivita-yllapitokohdeosa [db user {:keys [id nimi tr_numero tr_alkuosa tr_alkuetaisyys tr_loppuosa tr_loppuetaisyys toimenpide poistettu sijainti]}]
   (if poistettu
     (do (log/debug "Poistetaan ylläpitokohdeosa")
         (q/poista-yllapitokohdeosa! db id))
@@ -144,12 +150,11 @@
                                      (or tr_loppuetaisyys 0)
                                      (when-not (empty? sijainti)
                                        (geo/geometry (geo/clj->pg sijainti)))
-                                     (or kvl 0)
-                                     nykyinen_paallyste
                                      toimenpide
                                      id))))
 
 (defn tallenna-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
+  (yha/lukitse-urakan-yha-sidonta db urakka-id)
   (jdbc/with-db-transaction [c db]
     (log/debug "Tallennetaan ylläpitokohdeosat. Ylläpitokohde-id: " yllapitokohde-id)
     (doseq [osa osat]
@@ -157,7 +162,7 @@
       (if (and (:id osa) (not (neg? (:id osa))))
         (paivita-yllapitokohdeosa c user osa)
         (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-    (q/paivita-paallystys-tai-paikkausurakan-geometria c urakka-id)
+    (yha/paivita-yllapitourakan-geometriat c urakka-id)
     (let [yllapitokohdeosat (hae-urakan-yllapitokohdeosat c user {:urakka-id urakka-id
                                                                   :sopimus-id sopimus-id
                                                                   :yllapitokohde-id yllapitokohde-id})]

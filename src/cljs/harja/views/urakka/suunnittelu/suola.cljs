@@ -135,7 +135,7 @@
                                                     (not @pohjavesialueita-muokattu?))
                                  :ikoni        (ikonit/tallenna)
                                  :kun-onnistuu #(do
-                                                 (viesti/nayta! "Tallentaminen onnistui" :success 1500)
+                                                 (viesti/nayta! "Tallentaminen onnistui" :success viesti/viestin-nayttoaika-lyhyt)
                                                  (reset! pohjavesialueita-muokattu? false)
                                                  (reset! suolasakot-ja-lampotilat %))}])]}
           [{:otsikko "Talvisuolan käyttöraja" :pakollinen? true

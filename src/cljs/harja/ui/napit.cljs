@@ -82,7 +82,7 @@
          (when @nayta-virheviesti?
            (case virheen-esitystapa
              :flash (do
-                      (viesti/nayta! virheviesti :warning 5000)
+                      (viesti/nayta! virheviesti :warning viesti/viestin-nayttoaika-keskipitka)
                       (sulkemisfunktio)
                       nil)
              :modal (do (modal/nayta! {:otsikko "Virhe tapahtui" :sulje sulkemisfunktio} virheviesti) nil)

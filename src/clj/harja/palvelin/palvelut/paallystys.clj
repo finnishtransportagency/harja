@@ -12,6 +12,7 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
+            [harja.palvelin.palvelut.yha :as yha]
             [harja.domain.skeema :as skeema]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]))
@@ -134,6 +135,7 @@
     (luo-paallystysilmoitus db user lomakedata)))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
+  (yha/lukitse-urakan-yha-sidonta db urakka-id)
   (log/debug "Käsitellään päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
@@ -142,50 +144,50 @@
   (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
 
   (jdbc/with-db-transaction [c db]
-                            (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella
-                                                                c user {:urakka-id urakka-id
-                                                                        :sopimus-id sopimus-id
-                                                                        :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})
-                                  paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
-                                                                ;; Tunnistetaan uuden tallentaminen
-                                                                paallystysilmoitus-kannassa)]
-                              (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
+    (let [paallystysilmoitus-kannassa (hae-urakan-paallystysilmoitus-paallystyskohteella
+                                        c user {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})
+          paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
+                                        ;; Tunnistetaan uuden tallentaminen
+                                        paallystysilmoitus-kannassa)]
+      (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
 
-                              ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
-                              ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
-                              (if (or
-                                    (not (= (:paatos_tekninen_osa paallystysilmoitus-kannassa)
-                                            (or (:paatos_tekninen_osa paallystysilmoitus) nil)))
-                                    (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa)
-                                            (or (:paatos_taloudellinen_osa paallystysilmoitus) nil))))
-                                ;; FIXME Pitää varmistaa ja testata, ettei myöskään selitystä voi muuttaa ilman oikeuksia
-                                (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                                       user urakka-id))
+      ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
+      ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
+      (if (or
+            (not (= (:paatos_tekninen_osa paallystysilmoitus-kannassa)
+                    (or (:paatos_tekninen_osa paallystysilmoitus) nil)))
+            (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa)
+                    (or (:paatos_taloudellinen_osa paallystysilmoitus) nil))))
+        ;; FIXME Pitää varmistaa ja testata, ettei myöskään selitystä voi muuttaa ilman oikeuksia
+        (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                               user urakka-id))
 
-                              ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
-                              ;; mutta tehdään silti tarkistus
-                              (log/debug "Tarkistetaan onko POT lukittu...")
-                              (if (= :lukittu (:tila paallystysilmoitus-kannassa))
-                                (do (log/debug "POT on lukittu, ei voi päivittää!")
-                                    (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
-                                (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))
+      ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
+      ;; mutta tehdään silti tarkistus
+      (log/debug "Tarkistetaan onko POT lukittu...")
+      (if (= :lukittu (:tila paallystysilmoitus-kannassa))
+        (do (log/debug "POT on lukittu, ei voi päivittää!")
+            (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
+        (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))
 
-                              (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user paallystysilmoitus
-                                                                                              paallystysilmoitus-kannassa)]
+      (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user paallystysilmoitus
+                                                                      paallystysilmoitus-kannassa)]
 
-                                ;; Luodaan uusi kommentti
-                                (when-let [uusi-kommentti (:uusi-kommentti paallystysilmoitus)]
-                                  (log/info "Uusi kommentti: " uusi-kommentti)
-                                  (let [kommentti (kommentit/luo-kommentti<! c
-                                                                             nil
-                                                                             (:kommentti uusi-kommentti)
-                                                                             nil
-                                                                             (:id user))]
-                                    ;; Liitä kommentti päällystysilmoitukseen
-                                    (q/liita-kommentti<! c paallystysilmoitus-id (:id kommentti))))
+        ;; Luodaan uusi kommentti
+        (when-let [uusi-kommentti (:uusi-kommentti paallystysilmoitus)]
+          (log/info "Uusi kommentti: " uusi-kommentti)
+          (let [kommentti (kommentit/luo-kommentti<! c
+                                                     nil
+                                                     (:kommentti uusi-kommentti)
+                                                     nil
+                                                     (:id user))]
+            ;; Liitä kommentti päällystysilmoitukseen
+            (q/liita-kommentti<! c paallystysilmoitus-id (:id kommentti))))
 
-                                (hae-urakan-paallystystoteumat c user {:urakka-id urakka-id
-                                                                       :sopimus-id sopimus-id})))))
+        (hae-urakan-paallystystoteumat c user {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id})))))
 
 (defrecord Paallystys []
   component/Lifecycle

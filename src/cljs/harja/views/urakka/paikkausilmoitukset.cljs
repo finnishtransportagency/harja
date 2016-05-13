@@ -127,7 +127,7 @@
                                   (grid/poista-idt [:ilmoitustiedot :toteumat]))]
         (log "PAI Lomake-data: " (pr-str @paikkaus/paikkausilmoitus-lomakedata))
         (log "PAIK Lähetetään data " (pr-str lahetettava-data))
-        (paikkaus/tallenna-paikkausilmoitus urakka-id sopimus-id lahetettava-data))
+        (paikkaus/tallenna-paikkausilmoitus! urakka-id sopimus-id lahetettava-data))
       {:luokka       "nappi-ensisijainen"
        :disabled     (false? @valmis-tallennettavaksi?)
        :ikoni        (ikonit/tallenna)
