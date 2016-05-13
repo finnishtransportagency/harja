@@ -93,12 +93,8 @@
 (defn tarkastus-tiedolla-onko-ok
   "Tarkastus on OK jos havaintoja ei ole tai havainnon teksti on OK
   eikä tarkastuksella ole vakiohavaintoja"
-  [tarkastus]
-  (if (and (or (empty? (:havainnot tarkastus))
-               (= "ok" (clojure.string/lower-case (:havainnot tarkastus))))
-           (empty? (:vakiohavainnot tarkastus)))
-    (assoc tarkastus :ok? true)
-    (assoc tarkastus :ok? false)))
+  [{laadunalitus :laadunalitus :as tarkastus}]
+  (assoc tarkastus :ok? (not laadunalitus)))
 
 (defn validoi-laatupoikkeama [data]
   (skeema/tarkista Laatupoikkeama data))
@@ -107,4 +103,3 @@
   (let [virheet (validoi-laatupoikkeama data)]
     #?(:cljs (log "laatupoikkeama virheet: " (pr-str virheet)))
     (nil? virheet)))
-                    
