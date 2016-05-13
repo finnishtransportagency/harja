@@ -27,7 +27,8 @@
      [:span
       [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
                                   :on-click #(modal/nayta!
-                                              {:otsikko (str "Liite: " (:nimi tiedosto))}
+                                              {:otsikko (str "Liite: " (:nimi tiedosto))
+                                               :leveys "80%"}
                                               (liitekuva-modalissa tiedosto))}]
       [:span.liite-nimi (:nimi tiedosto)]]
      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
@@ -42,7 +43,8 @@
        [:span
         (if (naytettava-liite? liite)
           [:a.klikattava {:on-click #(modal/nayta!
-                                         {:otsikko (str "Liite: " (:nimi liite))}
+                                         {:otsikko (str "Liite: " (:nimi liite))
+                                          :leveys "80%"}
                                          (liitekuva-modalissa liite))}
            (inc index)]
           [:a {:href (k/liite-url (:id liite))
