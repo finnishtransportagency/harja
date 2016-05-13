@@ -143,7 +143,9 @@
              _ (log "[YHA] Uudet YHA-kohteet: " (pr-str uudet-yha-kohteet))]
          (if (k/virhe? uudet-yha-kohteet)
            (viesti/nayta! "Kohteiden haku YHA:sta epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-           (if (> (count uudet-yha-kohteet) 0)
+           (if (= (count uudet-yha-kohteet) 0)
+             (when-not (:sidontahaku? optiot)
+               (viesti/nayta! "Uusia kohteita ei löytynyt." :success viesti/viestin-nayttoaika-lyhyt))
              (let [tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
                    tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
                    vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
@@ -155,9 +157,8 @@
                      (viesti/nayta! "YHA:n kohteiden tallentaminen epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
                      (do
                        (log "[YHA] Kohteet käsitelty, urakan uudet yhatiedot: " (pr-str yhatiedot))
-                       (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot))))))
-             (when-not (:sidontahaku? optiot)
-               (viesti/nayta! "Uusia kohteita ei löytynyt." :success viesti/viestin-nayttoaika-lyhyt))))))))
+                       (when (= (:id @nav/valittu-urakka) harja-urakka-id)
+                         (swap! nav/valittu-urakka assoc :yhatiedot yhatiedot)))))))))))))
 
 (defn paivita-kohdeluettelo [urakka oikeus]
   [harja.ui.napit/palvelinkutsu-nappi
