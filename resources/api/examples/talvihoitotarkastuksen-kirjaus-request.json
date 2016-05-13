@@ -36,6 +36,7 @@
           "sukunimi": "Tarkastaja"
         },
         "havainnot": "Tie hiekoittamatta. Todella liukasta.",
+        "laadunalitus": true,
         "liitteet": [
           {
             "liite": {
