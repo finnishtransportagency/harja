@@ -54,8 +54,7 @@
     toteutuneet-materiaalit))
 
 (defn- materiaalin-otsikko [t]
-  (str (:materiaali_nimi t)
-       " (" (:materiaali_yksikko t) ")"))
+  (str (:materiaali_nimi t) " (" (:materiaali_yksikko t) ")"))
 
 
 (defn suorita [db user {:keys [urakka-id 
@@ -90,10 +89,16 @@
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        materiaalit (sort-by materiaalidomain/materiaalien-jarjestys (distinct
-                                                                       (map
-                                                                         materiaalin-otsikko
-                                                                         toteumat)))
+        ;; Aluksi pitää laittaa materiaalit järjestykseen nimen (string) perusteella, sitten liittää
+        ;; jokaiseen mukaan yksikkö, pitäen yllä alkuperäinen järjestys..
+        materiaalit (mapv
+                      (fn [materiaalin_nimi]
+                        (some (fn [t] (when (= (:materiaali_nimi t) materiaalin_nimi)
+                                        (materiaalin-otsikko t))) toteumat))
+                      (sort-by materiaalidomain/materiaalien-jarjestys (distinct
+                                                                         (map
+                                                                           #(str (:materiaali_nimi %))
+                                                                           toteumat))))
         toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
 
     [:raportti {:nimi raportin-nimi}
@@ -120,7 +125,7 @@
                 ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
                 (when (not (empty? toteumat))
                   [(concat ["Yhteensä"]
-                           (let [toteumat-materiaalin-mukaan (group-by :materiaali_nimi toteumat)]
+                           (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                              (for [m materiaalit]
                                (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))))]]))
 
