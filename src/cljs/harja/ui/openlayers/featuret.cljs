@@ -3,6 +3,8 @@
   (:require [ol.Feature]
 
             [ol.geom.Polygon]
+            [ol.geom.MultiPolygon]
+
             [ol.geom.Point]
             [ol.geom.Circle]
             [ol.geom.LineString]
@@ -155,11 +157,13 @@ pienemmällä zindexillä." :const true}
 
 
 (defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
-  (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js (mapv :coordinates polygons)))}))
+  (ol.Feature. #js {:geometry (let [multi (ol.geom.MultiPolygon.)]
+                                (doseq [polygon polygons]
+                                  (.appendPolygon multi (ol.geom.Polygon. (clj->js [(:coordinates polygon)]))))
+                                multi)}))
 
 (defmethod luo-feature :multiline [{:keys [lines] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (mapv :points lines)))}))
-
 
 (defmethod luo-feature :line [{:keys [points] :as spec}]
   (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
