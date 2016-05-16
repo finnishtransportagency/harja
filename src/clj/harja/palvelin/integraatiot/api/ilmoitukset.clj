@@ -16,7 +16,8 @@
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+            [harja.tyokalut.json-validointi :as json])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-ilmoituksen-id [db ilmoitusid]
@@ -68,7 +69,7 @@
              "laheta-ilmoitus"
              (fn []
                (let [data {:ilmoitukset (mapv (fn [ilmoitus] (sanomat/rakenna-ilmoitus (konversio/alaviiva->rakenne ilmoitus))) ilmoitukset)}
-                     vastaus (tee-vastaus json-skeemat/+ilmoitusten-haku+ data)]
+                     vastaus (tee-vastaus json-skeemat/ilmoitusten-haku data)]
                  (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
                  (doseq [ilmoitus ilmoitukset]
                    (notifikaatiot/ilmoita-lahetetysta-ilmoituksesta tapahtumat (:ilmoitusid ilmoitus) :api))
@@ -114,7 +115,7 @@
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
-        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/+ilmoitustoimenpiteen-kirjaaminen+ json-skeemat/+kirjausvastaus+
+        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
                          (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
   (stop [{http :http-palvelin :as this}]

@@ -87,7 +87,7 @@
       (POST "/api/urakat/:id/laatupoikkeama" request
         (kasittele-kutsu db integraatioloki
                          :lisaa-laatupoikkeama request
-                         json-skeemat/+laatupoikkeaman-kirjaus+ json-skeemat/+kirjausvastaus+
+                         json-skeemat/laatupoikkeaman-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja)))))
     this)

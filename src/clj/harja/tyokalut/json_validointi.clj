@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
             [webjure.json-schema.validator :refer [validate]]
+            [webjure.json-schema.validator.macro :refer [make-validator]]
             [cheshire.core :as cheshire]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]]))
@@ -60,3 +61,23 @@
     (if-not virheet
       (log/debug "JSON data on validia")
       (kasittele-validointivirheet virheet))))
+
+(defn lue-skeematiedosto [polku]
+  (cheshire/parse-string (slurp polku)))
+
+(defmacro tee-validaattori
+  [skeemaresurssin-polku]
+  (let [skeema (lue-skeematiedosto (str "resources/" (eval skeemaresurssin-polku)))]
+    `(let [validator#
+           (make-validator ~skeema {:draft3-required true
+                                    :ref-resolver (fn [polku#]
+                                                    (lue-skeematiedosto
+                                                     (.substring polku# (count "file:"))))})]
+       (fn [json#]
+         (try
+           (let [virheet# (validator# (cheshire/parse-string json#))]
+             (if-not virheet#
+               (log/debug "JSON data on validia")
+               (kasittele-validointivirheet virheet#)))
+           (catch Exception e#
+             (kasittele-validointivirheet (.getMessage e#))))))))

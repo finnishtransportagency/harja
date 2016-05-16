@@ -80,15 +80,15 @@
 (def palvelut
   [{:palvelu       :lisaa-tiestotarkastus
     :polku         "/api/urakat/:id/tarkastus/tiestotarkastus"
-    :pyynto-skeema json-skeemat/+tiestotarkastuksen-kirjaus+
+    :pyynto-skeema json-skeemat/tiestotarkastuksen-kirjaus
     :tyyppi        :tiesto}
    {:palvelu       :lisaa-talvihoitotarkastus
     :polku         "/api/urakat/:id/tarkastus/talvihoitotarkastus"
-    :pyynto-skeema json-skeemat/+talvihoitotarkastuksen-kirjaus+
+    :pyynto-skeema json-skeemat/talvihoitotarkastuksen-kirjaus
     :tyyppi        :talvihoito}
    {:palvelu       :lisaa-soratietarkastus
     :polku         "/api/urakat/:id/tarkastus/soratietarkastus"
-    :pyynto-skeema json-skeemat/+soratietarkastuksen-kirjaus+
+    :pyynto-skeema json-skeemat/soratietarkastuksen-kirjaus
     :tyyppi        :soratie}])
 
 (defrecord Tarkastukset []
@@ -100,7 +100,7 @@
         (POST polku request
           (do
             (kasittele-kutsu db integraatioloki palvelu request
-                             pyynto-skeema json-skeemat/+kirjausvastaus+
+                             pyynto-skeema json-skeemat/kirjausvastaus
                              (fn [parametrit data kayttaja db]
                                (kirjaa-tarkastus db liitteiden-hallinta kayttaja tyyppi parametrit data)))))))
 

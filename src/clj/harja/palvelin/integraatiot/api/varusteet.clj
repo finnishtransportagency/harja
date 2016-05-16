@@ -124,42 +124,42 @@
     (julkaise-reitti
       http :hae-tietolaji
       (GET "/api/varusteet/tietolaji" request
-        (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/+tietolajien-haku+
+        (kasittele-kutsu-async db integraatioloki :hae-tietolaji request nil json-skeemat/tietolajien-haku
                                (fn [parametrit _ kayttaja _]
                                  (hae-tietolaji tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietueet
       (GET "/api/varusteet/haku" request
-        (kasittele-kutsu-async db integraatioloki :hae-tietueet request nil json-skeemat/+varusteiden-haku-vastaus+
+        (kasittele-kutsu-async db integraatioloki :hae-tietueet request nil json-skeemat/varusteiden-haku-vastaus
                                (fn [parametrit _ kayttaja _]
                                  (hae-varusteet tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :hae-tietue
       (GET "/api/varusteet/varuste" request
-        (kasittele-kutsu-async db integraatioloki :hae-tietue request nil json-skeemat/+varusteen-haku-vastaus+
+        (kasittele-kutsu-async db integraatioloki :hae-tietue request nil json-skeemat/varusteen-haku-vastaus
                                (fn [parametrit _ kayttaja _]
                                  (hae-varuste tierekisteri parametrit kayttaja)))))
 
     (julkaise-reitti
       http :lisaa-tietue
       (POST "/api/varusteet/varuste" request
-        (kasittele-kutsu-async db integraatioloki :lisaa-tietue request json-skeemat/+varusteen-lisays+ json-skeemat/+kirjausvastaus+
+        (kasittele-kutsu-async db integraatioloki :lisaa-tietue request json-skeemat/varusteen-lisays json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (lisaa-varuste tierekisteri db data kayttaja)))))
 
     (julkaise-reitti
       http :paivita-tietue
       (PUT "/api/varusteet/varuste" request
-        (kasittele-kutsu-async db integraatioloki :paivita-tietue request json-skeemat/+varusteen-paivitys+ json-skeemat/+kirjausvastaus+
+        (kasittele-kutsu-async db integraatioloki :paivita-tietue request json-skeemat/varusteen-paivitys json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (paivita-varuste tierekisteri data kayttaja)))))
 
     (julkaise-reitti
       http :poista-tietue
       (DELETE "/api/varusteet/varuste" request
-        (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/+varusteen-poisto+ json-skeemat/+kirjausvastaus+
+        (kasittele-kutsu-async db integraatioloki :poista-tietue request json-skeemat/varusteen-poisto json-skeemat/kirjausvastaus
                                (fn [_ data kayttaja _]
                                  (poista-varuste tierekisteri data kayttaja)))))
     this)

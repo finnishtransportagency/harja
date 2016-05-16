@@ -145,8 +145,8 @@
                          integraatioloki
                          :lisaa-reittitoteuma
                          request
-                         json-skeemat/+reittitoteuman-kirjaus+
-                         json-skeemat/+kirjausvastaus+
+                         json-skeemat/reittitoteuman-kirjaus
+                         json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db] (#'kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]

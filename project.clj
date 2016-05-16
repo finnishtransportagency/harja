@@ -96,7 +96,7 @@
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
-                 [webjure/json-schema "0.5"]
+                 [webjure/json-schema "0.6"]
 
                  [org.clojure/test.check "0.9.0"]
 

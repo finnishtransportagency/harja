@@ -138,7 +138,7 @@
       http :lisaa-siltatarkastus
       (POST "/api/urakat/:id/tarkastus/siltatarkastus" request
         (kasittele-kutsu db integraatioloki :lisaa-siltatarkastus request
-                         json-skeemat/+siltatarkastuksen-kirjaus+ json-skeemat/+kirjausvastaus+
+                         json-skeemat/siltatarkastuksen-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (lisaa-siltatarkastus parametrit data kayttaja db)))))
     this)

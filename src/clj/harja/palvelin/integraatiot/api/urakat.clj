@@ -70,12 +70,12 @@
 (def hakutyypit
   [{:palvelu        :hae-urakka
     :polku          "/api/urakat/:id"
-    :vastaus-skeema json-skeemat/+urakan-haku-vastaus+
+    :vastaus-skeema json-skeemat/urakan-haku-vastaus
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
                       (hae-urakka-idlla db parametrit kayttaja-id))}
    {:palvelu        :hae-urakka-ytunnuksella
     :polku          "/api/urakat/haku/:ytunnus"
-    :vastaus-skeema json-skeemat/+urakoiden-haku-vastaus+
+    :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
     :kasittely-fn   (fn [parametrit _ kayttaja-id db]
                       (hae-urakka-ytunnuksella db parametrit kayttaja-id))}])
 
