@@ -12,7 +12,8 @@
             [cljs-time.core :as t]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -156,20 +157,46 @@
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
                      :koodi :kohteiden-tallentaminen-epaonnistui}
+                    ;; FIXME Tarkista epäonnistuneet VKM-kohteet ja palauta mappi:
+                    #_{:status :ok :epaonnistuneet-kohteet [] :yhatiedot yhatiedot
+                       :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}
                     {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
                      :koodi :kohteet-tallennettu})))))))))
+
+(defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
+  [:div
+   [:p "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
+   [:ul
+    (for [kohde epaonnistuneet-kohteet]
+      [:li (:tunniste kohde)])]])
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
   (when (= (:id @nav/valittu-urakka) harja-urakka-id)
     (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
+
   ;; Näytä ilmoitus tarvittaessa
-  (when (and (= (:koodi vastaus) :ei-uusia-kohteita)
+  (when (and (= (:status vastaus) :ok)
+             (= (:koodi vastaus) :ei-uusia-kohteita)
              (:nayta-ilmoitus-ei-uusia-kohteita? optiot))
     (viesti/nayta! (:viesti vastaus) :success viesti/viestin-nayttoaika-lyhyt)))
 
 (defn- kasittele-epaonnistunut-kohteiden-paivitys [vastaus]
-  (viesti/nayta! (:viesti vastaus) :warning viesti/viestin-nayttoaika-keskipitka))
+  ;; Kohteiden osittain epäonnistunut päivittäminen näytetään modal-dialogissa
+  (when (and (= (:status vastaus) :error)
+             (= (:koodi vastaus) :kohteiden-paivittaminen-vmklla-epaonnistui-osittain))
+    (modal/nayta!
+      {:otsikko "Kaikkia kohteita ei voitu käsitellä"
+       :footer [:button.nappi-toissijainen {:on-click (fn [e]
+                                                        (.preventDefault e)
+                                                        (modal/piilota!))}
+                "Sulje"]}
+      [vkm-yhdistamistulos-dialogi (:epaonnistuneet-kohteet vastaus)]))
+
+  ;; Muut virheet käsitellään perus virheviestinä.
+  (when (and (= (:status vastaus) :error)
+             (not= (:koodi vastaus) :kohteiden-paivittaminen-vmklla-epaonnistui-osittain))
+    (viesti/nayta! (:viesti vastaus) :warning viesti/viestin-nayttoaika-keskipitka)))
 
 (defn paivita-yha-kohteet
   "Päivittää urakalle uudet YHA-kohteet. Suoritus tapahtuu asynkronisesti"
