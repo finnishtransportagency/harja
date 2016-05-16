@@ -146,13 +146,16 @@
            :koodi :kohteiden-haku-yhasta-epaonnistui}
           (if (= (count uudet-yha-kohteet) 0)
             {:status :ok :viesti "Uusia kohteita ei löytynyt." :koodi :ei-uusia-kohteita}
-            (let [tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
+            (let [_ (log "[YHA] Tehdään VKM-haku")
+                  tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
                   tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
                   vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
               (if (k/virhe? vkm-kohteet)
                 {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
                  :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
-                (let [kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
+                      kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                      _ (log "[YHA] Tallennetaan uudet kohteet")
                       yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
