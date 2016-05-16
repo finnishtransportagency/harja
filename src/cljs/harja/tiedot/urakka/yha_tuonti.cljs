@@ -135,6 +135,8 @@
                          (:alikohteet kohde))))))
         yha-kohteet))
 
+(def kohteiden-paivittaminen-kaynnissa? (atom false))
+
 (defn- hae-paivita-ja-tallenna-yllapitokohteet
   "Hakee YHA-kohteet, päivittää ne nykyiselle tieverkolle kutsumalla VMK-palvelua (viitekehysmuunnin)
    ja tallentaa ne Harjan kantaan. Palauttaa mapin, jossa tietoja suorituksesta"
@@ -205,8 +207,11 @@
   "Päivittää urakalle uudet YHA-kohteet. Suoritus tapahtuu asynkronisesti"
   ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
   ([harja-urakka-id optiot]
-   (go (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
+   (go
+     (reset! kohteiden-paivittaminen-kaynnissa? true)
+     (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
          (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
+         (reset! kohteiden-paivittaminen-kaynnissa? false)
          (if (= (:status vastaus) :ok)
            (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
            (kasittele-epaonnistunut-kohteiden-paivitys vastaus))))))
@@ -219,7 +224,8 @@
      (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
      (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
    {:luokka "nappi-ensisijainen"
-    :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
+    :disabled (or (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
+                  @kohteiden-paivittaminen-kaynnissa?)
     :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
     :kun-onnistuu (fn [_]
                     (log "[YHA] Kohdeluettelo päivitetty")
