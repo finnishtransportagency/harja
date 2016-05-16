@@ -151,15 +151,13 @@
               (if (k/virhe? vkm-kohteet)
                 {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
                  :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
-                (let [kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)]
-                  (if false ;; FIXME käsittele yhdistämisen aiheuttamat virheet näyttämällä modal dialog
-                    {:status :error :koodi :vkm-kohteiden-yhdistaminen-epaonnistui}
-                    (let [yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
-                      (if (k/virhe? yhatiedot)
-                        {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
-                         :koodi :kohteiden-tallentaminen-epaonnistui}
-                        {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
-                         :koodi :kohteet-tallennettu})))))))))))
+                (let [kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
+                  (if (k/virhe? yhatiedot)
+                    {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
+                     :koodi :kohteiden-tallentaminen-epaonnistui}
+                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
+                     :koodi :kohteet-tallennettu})))))))))
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
