@@ -137,8 +137,7 @@
             :hae (fn [rivi]
                    (str (tierekisteri/laske-tien-pituus {:aet (:tr_alkuetaisyys rivi)
                                                          :let (:tr_loppuetaisyys rivi)})))
-            :leveys tr-leveys}
-           {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys :validoi [[:ei-tyhja "Anna toimenpide"]]}]
+            :leveys tr-leveys}]
           kohdeosat]
          [yllapitokohdeosa-virheet tr-virheet]]))))
 

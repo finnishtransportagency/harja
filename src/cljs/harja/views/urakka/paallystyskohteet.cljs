@@ -44,21 +44,6 @@
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
-       #_[yllapitokohteet-view/yllapitokohteet ;; Pitäisi olla paikkauskohteita
-        paallystys/harjan-paallystyskohteet
-        {:otsikko "Harjan päällystyskohteet"
-         :paallystysnakyma? true
-         :yha-sidottu? false
-         :tallenna (fn [kohteet]
-                     (go (let [urakka-id (:id @nav/valittu-urakka)
-                               [sopimus-id _] @u/valittu-sopimusnumero
-                               _ (log "PÄÄ Tallennetaan päällystyskohteet: " (pr-str kohteet))
-                               vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet! urakka-id sopimus-id kohteet))]
-                           (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                           (reset! paallystys/harjan-paallystyskohteet (filter (comp not yllapitokohteet/yha-kohde?) vastaus)))))
-         :kun-onnistuu (fn [_]
-                         (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
-
        [yllapitokohteet-view/yllapitokohteet-yhteensa
         paallystys/kohteet-yhteensa {:paallystysnakyma? true}]
 

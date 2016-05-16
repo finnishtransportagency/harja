@@ -62,14 +62,8 @@
       yllapitokohteet/yha-kohde?
       @paallystyskohteet)))
 
-(def harjan-paallystyskohteet
-  (reaction
-    (filter (comp not yllapitokohteet/yha-kohde?)
-            @paallystyskohteet)))
-
 (def kohteet-yhteensa
-  (reaction
-    (concat @yhan-paallystyskohteet @harjan-paallystyskohteet)))
+  (reaction @yhan-paallystyskohteet))
 
 (tarkkaile! "[YHA] Päällystyskohteet: " yhan-paallystyskohteet)
 
