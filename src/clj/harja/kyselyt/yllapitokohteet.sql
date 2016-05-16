@@ -13,6 +13,7 @@ SELECT
   ypk.kaasuindeksi,
   ypk.nykyinen_paallyste,
   ypk.keskimaarainen_vuorokausiliikenne,
+  yllapitoluokka,
   ypk.tr_numero,
   ypk.tr_alkuosa,
   ypk.tr_alkuetaisyys,
