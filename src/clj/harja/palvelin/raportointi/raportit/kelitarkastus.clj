@@ -101,6 +101,7 @@
        {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}
        {:leveys 5 :otsikko "Tar\u00ADkas\u00ADtaja"}
        {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}
+       {:leveys 3 :otsikko "Laadun alitus"}
        {:leveys 5 :otsikko "Liit\u00ADteet" :tyyppi :liite}]
       (yleinen/ryhmittele-tulokset-raportin-taulukolle
         (reverse (sort-by (fn [rivi] [(:aika rivi)
@@ -124,4 +125,5 @@
            (get-in rivi [:lampotila :tie])
            (:tarkastaja rivi)
            (:havainnot rivi)
+           (fmt/totuus (:laadunalitus rivi))
            [:liitteet (:liitteet rivi)]]))]]))

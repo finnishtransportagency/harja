@@ -435,3 +435,21 @@
 
 (defn explain [sql]
   (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
+
+
+(def figwheel-repl-options
+  ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten
+  ;; (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel! figwheel-repl-options) (cljs-repl))")
+  ;; M-x cider-jack-in-clojurescript
+  ;;
+  {:figwheel-options {}
+   :build-ids ["dev"]
+   :all-builds
+   [{:id "dev"
+     :figwheel true
+     :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+     :compiler {:optimizations :none :source-map true
+                :output-to "dev-resources/js/harja.js"
+                :output-dir "dev-resources/js/out"
+                :libs ["src/js/kuvataso.js"]
+                :closure-output-charset "US-ASCII"}}]})

@@ -10,6 +10,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
@@ -28,6 +29,7 @@ WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+      AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
 LIMIT :maxrivimaara;
 
 -- name: hae-tarkastus
@@ -45,6 +47,7 @@ SELECT
   t.tarkastaja,
   t.tyyppi,
   t.havainnot,
+  t.laadunalitus,
   t.luoja,
   o.nimi        AS organisaatio,
   k.kayttajanimi,
@@ -95,10 +98,10 @@ ORDER BY l.luotu ASC;
 INSERT
 INTO tarkastus
 (lahde, urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot)
+ sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus)
 VALUES (:lahde::lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
                  :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
-        :havainnot);
+        :havainnot, :laadunalitus);
 
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot
@@ -114,7 +117,8 @@ SET aika           = :aika,
   tyyppi           = :tyyppi :: tarkastustyyppi,
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp,
-  havainnot        = :havainnot
+  havainnot        = :havainnot,
+  laadunalitus     = :laadunalitus
 WHERE urakka = :urakka AND id = :id;
 
 -- name: luo-talvihoitomittaus<!
@@ -177,6 +181,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
@@ -205,6 +210,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
@@ -236,6 +242,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.tarkastaja,
   t.tyyppi,
   u.nimi as urakka,
@@ -265,6 +272,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.tarkastaja,
   t.tyyppi,
   thm.talvihoitoluokka,
@@ -300,6 +308,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.tarkastaja,
   t.tyyppi,
   thm.talvihoitoluokka,
@@ -338,6 +347,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
@@ -376,6 +386,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.tarkastaja,
   t.tyyppi,
   st_length(t.sijainti) as tr_metrit,
@@ -403,6 +414,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.tarkastaja,
   t.tyyppi,
   st_length(t.sijainti) as tr_metrit,
@@ -433,6 +445,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
   t.havainnot,
+  t.laadunalitus,
   t.tarkastaja,
   t.tyyppi,
   st_length(t.sijainti) as tr_metrit,

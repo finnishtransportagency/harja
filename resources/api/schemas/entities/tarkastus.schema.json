@@ -19,10 +19,14 @@
     },
     "havainnot": {
       "id": "urn:harja/tarkastus/havainnot",
-      "type": "object",
       "required": false,
       "type": "string",
       "maxLength": 4096
+    },
+    "laadunalitus": {
+      "id": "urn:harja/tarkastus/laadunalitus",
+      "type": "boolean",
+      "required": false
     },
     "liitteet": {
       "id": "urn:harja/liitteet",

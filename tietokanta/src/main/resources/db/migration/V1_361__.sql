@@ -1,16 +1,8 @@
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'sorateiden muokkaushoylays'::suoritettavatehtava
-WHERE nimi = 'Sorateiden muokkaushöyläys';
+-- Lisää laadunalitus boolean
+ALTER TABLE tarkastus
+  ADD laadunalitus boolean NOT NULL DEFAULT false;
 
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'sorateiden polynsidonta'::suoritettavatehtava
-WHERE nimi = 'Sorateiden pölynsidonta';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'paallysteiden juotostyot'::suoritettavatehtava
-WHERE nimi = 'Päällysteiden juotostyöt';
-
-UPDATE toimenpidekoodi
-SET suoritettavatehtava = 'paallysteiden paikkaus'::suoritettavatehtava
-WHERE nimi = 'Päällysteiden paikkaus';
-
+-- Päivitä vanhan säännön mukaisesti: jos tekstiä kirjattu havaintoon -> laadunalitus
+UPDATE tarkastus
+   SET laadunalitus = true
+ WHERE trim(lower(havainnot)) NOT IN ('','ok');

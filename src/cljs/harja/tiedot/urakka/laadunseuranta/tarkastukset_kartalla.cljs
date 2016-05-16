@@ -31,4 +31,4 @@
       (tarkastukset/kasaa-haun-parametrit
         @tiedot-urakka/valittu-urakka-kaynnissa?
         @nav/valittu-urakka-id @tiedot-urakka/valittu-hoitokauden-kuukausi @tiedot-urakka/valittu-aikavali
-        @tarkastukset/tienumero @tarkastukset/tarkastustyyppi))))
+        @tarkastukset/tienumero @tarkastukset/tarkastustyyppi false))))
