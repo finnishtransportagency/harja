@@ -39,6 +39,7 @@
 (def id-leveys 10)
 (def kohde-leveys 15)
 (def kvl-leveys 5)
+(def yllapitoluokka-leveys 5)
 (def nykyinen-paallyste-leveys 8)
 (def tr-leveys 8)
 (def tarjoushinta-leveys 10)
@@ -158,7 +159,7 @@
    [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
     {:otsikko "Kohde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
      :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-    {:otsikko "Kohteen nimi" :nimi :nimi
+    {:otsikko "Koh\u00ADteen nimi" :nimi :nimi
      :tyyppi :string :leveys kohde-leveys}
     {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr_numero :muokattava? (constantly (not (:yha-sidottu? optiot)))
      :tyyppi :positiivinen-numero :leveys tr-leveys}
@@ -178,6 +179,9 @@
     {:otsikko "KVL"
      :nimi :keskimaarainen_vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
      :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+    {:otsikko "Yl\u00ADlä\u00ADpi\u00ADto\u00ADluok\u00ADka"
+     :nimi :yllapitoluokka :tyyppi :numero :leveys yllapitoluokka-leveys
+     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
     {:otsikko "Ny\u00ADkyi\u00ADnen pääl\u00ADlys\u00ADte"
      :nimi :nykyinen_paallyste
      :fmt #(paallystys-ja-paikkaus/hae-paallyste-koodilla %)
@@ -188,7 +192,7 @@
      :leveys nykyinen-paallyste-leveys
      :muokattava? (constantly (not (:yha-sidottu? optiot)))}
     (when (:paallystysnakyma? optiot)
-      {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot
+      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen_mukaiset_tyot
        :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :validoi [[:ei-tyhja "Anna arvo"]]})
     (when (:paallystysnakyma? optiot)
       {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false)
@@ -196,13 +200,13 @@
     (when (:paikkausnakyma? optiot)
       {:otsikko "Toteutunut hinta" :nimi :toteutunut_hinta :muokattava? (constantly false)
        :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
-    {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt
+    {:otsikko "Ar\u00ADvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt
      :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-    {:otsikko "Bitumi-in\u00ADdek\u00ADsi" :nimi :bitumi_indeksi :fmt fmt/euro-opt
+    {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi_indeksi :fmt fmt/euro-opt
      :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-    {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
+    {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
      :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
-    {:otsikko "Kokonais\u00ADhinta (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)" :muokattava? (constantly false)
+    {:otsikko "Ko\u00ADko\u00ADnais\u00ADhinta (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)" :muokattava? (constantly false)
      :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
      :hae (fn [rivi] (+ (:sopimuksen_mukaiset_tyot rivi)
                         (:muutoshinta rivi)
