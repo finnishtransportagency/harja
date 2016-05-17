@@ -51,13 +51,13 @@
                                                    :kaasuindeksi]))
         ;; Hae päällystysilmoitus kannasta
         paallystysilmoitus (into []
-                                   (comp (map konv/alaviiva->rakenne)
-                                         (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                         (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                         (map #(konv/string-polusta->keyword % [:tila]))
-                                         (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
-                                         (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa])))
-                                   (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
+                                 (comp (map konv/alaviiva->rakenne)
+                                       (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                                       (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
+                                       (map #(konv/string-polusta->keyword % [:tila]))
+                                       (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
+                                       (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa])))
+                                 (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
         ;; Yhdistä kohdeosat
         paallystysilmoitus (first (konv/sarakkeet-vektoriin
                                     paallystysilmoitus
@@ -66,15 +66,17 @@
         _ (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
         ;; Lisää kohdeosat ilmoitustietojen päällystystoimenpiteisiin
         paallystysilmoitus (-> paallystysilmoitus
-                               (assoc-in [:ilmoitustiedot :osoitteet]
-                                     (mapv
-                                       (fn [osoite]
-                                         (log/debug "Osoite on: " (pr-str osoite))
-                                         (merge osoite
-                                                (first (filter
-                                                         (fn [osa] (= (:id osoite) (:id osa)))
-                                                         (:kohdeosat paallystysilmoitus)))))
-                                       (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])))
+                               (assoc-in
+                                 [:ilmoitustiedot :osoitteet]
+                                 (mapv
+                                   (fn [kohdeosa]
+                                     ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
+                                     (merge kohdeosa
+                                            (first (filter
+                                                     (fn [paallystystoimenpide]
+                                                       (= (:id kohdeosa) (:id paallystystoimenpide)))
+                                                     (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])))))
+                                   (:kohdeosat paallystysilmoitus)))
                                (dissoc :kohdeosat))]
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
     (if-not paallystysilmoitus
