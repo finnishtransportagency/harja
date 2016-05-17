@@ -63,7 +63,6 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
-        _ (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
         ;; Lisää kohdeosat ilmoitustietoihin
         paallystysilmoitus (-> paallystysilmoitus
                                (assoc-in
