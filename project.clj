@@ -168,6 +168,7 @@
                                :output-dir    "dev-resources/js/out"
                                :libs ["src/js/kuvataso.js"]
                                :closure-output-charset "US-ASCII"
+                               :recompile-dependents false
                                }}
                {:id             "test"
                 :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
