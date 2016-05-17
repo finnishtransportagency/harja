@@ -156,6 +156,7 @@
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
        :valinnat-fn   valintakasittelija
        :leveys        45
+       :jos-tyhja     "Toimenpiteelle ei ole suunniteltu yhtään tehtävää."
        :validoi       [[:ei-tyhja "Valitse tehtävä"]]
        :aseta         (fn [rivi arvo] (assoc rivi
                                              :tehtava arvo

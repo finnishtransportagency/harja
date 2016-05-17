@@ -1,4 +1,3 @@
--- Poista kohdeluettelon alikohteelta toimenpide.
--- Tämä tieto menee nykyään esitäytettyyn POT-lomakkeeseen.
--- Jos toimenpide halutaan jatkossa näyttää kohdeluettelossa, se pitää joinia POTin kautta.
-ALTER TABLE yllapitokohdeosa DROP COLUMN toimenpide;
+-- Toteumalla pakko olla sopimus ja urakka
+ALTER TABLE toteuma ALTER COLUMN urakka SET NOT NULL;
+ALTER TABLE toteuma ALTER COLUMN sopimus SET NOT NULL;

@@ -155,6 +155,11 @@
               (swap! parametri-arvot
                      assoc "Aikaväli" {:virhe "Aikaväli puuttuu"})))))
 
+;; Sovittu asiakaspalaverissa että tarjotaan 7 vuotta, ja jos jokin rapsa ei hyvin
+;; toimi, ei se ole niin vaarallista. Voidaan tarvittaessa myöh. korjailla yksittäisiä
+;; raportteja. Syytä tarjota 7v koska on 7-vuotisia urakoita.
+(def +raportin-aikavalin-max-pituus-vuotta+ 7)
+
 (defmethod raportin-parametri "aikavali" [p arvo]
   ;; Näytetään seuraavat valinnat
   ;; - vuosi (joko urakkavuodet tai generoitu lista)
@@ -203,12 +208,12 @@
 
      (when-not vain-hoitokausivalinta?
        [:div.raportin-valittu-aikavali
-        [yleiset/raksiboksi {:teksti "Valittu aikaväli"
-                             :toiminto #(swap! vapaa-aikavali? not)
+        [yleiset/raksiboksi {:teksti      "Valittu aikaväli"
+                             :toiminto    #(swap! vapaa-aikavali? not)
                              :komponentti (when @vapaa-aikavali?
                                             [:div
-                                             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [5 :vuosi]}]
-                                             [vihje "Raportin suurin sallitu aikaväli on 5 vuotta" "raportit-valittuaikavali-vihje"]])}
+                                             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]}]
+                                             [vihje (str "Raportin pisin sallittu aikaväli on " +raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])}
          @vapaa-aikavali?]])]))
 
 (def tienumero (atom nil))
