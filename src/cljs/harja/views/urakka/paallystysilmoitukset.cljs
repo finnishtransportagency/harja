@@ -186,14 +186,14 @@
                                   (grid/poista-idt [:ilmoitustiedot :kiviaines])
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet])
                                   (grid/poista-idt [:ilmoitustiedot :tyot]))]
-        (log "PÄÄ Lomake-data: " (pr-str @paallystys/paallystysilmoitus-lomakedata))
-        (log "PÄÄ Lähetetään data " (pr-str lahetettava-data))
+        (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str @paallystys/paallystysilmoitus-lomakedata))
+        (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus! urakka-id sopimus-id lahetettava-data))
       {:luokka "nappi-ensisijainen"
        :disabled (false? @valmis-tallennettavaksi?)
        :ikoni (ikonit/tallenna)
        :kun-onnistuu (fn [vastaus]
-                       (log "PÄÄ Lomake tallennettu, vastaus: " (pr-str vastaus))
+                       (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
                        (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                        (reset! paallystys/paallystysilmoitukset vastaus)
                        (reset! paallystys/paallystysilmoitus-lomakedata nil))}]]))
@@ -226,7 +226,7 @@
         (reaction
           (let [valmispvm-kohde (:valmispvm_kohde @paallystys/paallystysilmoitus-lomakedata)
                 tila (:tila @paallystys/paallystysilmoitus-lomakedata)]
-            (log "PÄÄ valmis käsi " (pr-str valmispvm-kohde) (pr-str tila))
+            (log "[PÄÄLLYSTYS] valmis käsi " (pr-str valmispvm-kohde) (pr-str tila))
             (and tila
                  valmispvm-kohde
                  (not (= tila :aloitettu))
@@ -294,7 +294,7 @@
              [lomake/lomake {:voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                                 (false? @paallystys/paallystysilmoituslomake-lukittu?))
                              :muokkaa! (fn [uusi]
-                                         (log "PÄÄ Muokataan kohteen tietoja: " (pr-str uusi))
+                                         (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                                          (swap! paallystys/paallystysilmoitus-lomakedata merge uusi))}
               [{:otsikko "Kohde" :nimi :kohde
                 :hae (fn [_]
@@ -341,7 +341,7 @@
              {:otsikko "Päällystetyt tierekisteriosoitteet"
               :tunniste :tie
               :voi-muokata? (do
-                              (log "PÄÄ tila " (pr-str (:tila lomakedata-nyt)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa lomakedata-nyt)))
+                              (log "[PÄÄLLYSTYS] tila " (pr-str (:tila lomakedata-nyt)) " Päätös tekninen: " (pr-str (:paatos_tekninen_osa lomakedata-nyt)))
                               (and (not= :lukittu (:tila lomakedata-nyt))
                                    (not= :hyvaksytty (:paatos_tekninen_osa lomakedata-nyt))
                                    (false? @paallystys/paallystysilmoituslomake-lukittu?)))
