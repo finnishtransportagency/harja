@@ -179,7 +179,8 @@
                           (hae-yha-kohteet db yha user tiedot)))
       (julkaise-palvelu http :tallenna-uudet-yha-kohteet
                         (fn [user tiedot]
-                          (tallenna-uudet-yha-kohteet db user tiedot)))))
+                          (tallenna-uudet-yha-kohteet db user tiedot))))
+    this)
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)

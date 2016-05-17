@@ -120,20 +120,29 @@
     (komp/luo
       (komp/kun-muuttuu hae!)
       (fn [urakka-id]
-        [grid/grid
-         {:otsikko "Urakkaan liitetyt käyttäjät"
-          :tunniste :kayttajatunnus
-          :tyhja (if (nil? @kayttajat)
-                   [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
-                   "Ei urakkaan liitettyjä käyttäjiä.")}
+        (let [kayttajat @kayttajat]
+          [grid/grid
+           {:otsikko  "Urakkaan liitetyt käyttäjät"
+            :tunniste :kayttajatunnus
+            :tyhja    (cond
+                        (nil? kayttajat)
+                        [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
 
-         [{:otsikko "Rooli" :nimi :roolit :fmt #(str/join ", " %) :tyyppi :string :leveys "15%"}
-          {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string :leveys "15%"}
-          {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string
-           :leveys "25%"}
-          {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
-          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
-         @kayttajat]))))
+                        (k/virhe? kayttajat)
+                        "Virhe haettaessa käyttäjiä FIM-palvelusta."
+
+                        :default
+                        "Ei urakkaan liitettyjä käyttäjiä.")}
+
+           [{:otsikko "Rooli" :nimi :roolit :fmt #(str/join ", " %) :tyyppi :string :leveys "15%"}
+            {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string :leveys "15%"}
+            {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string
+             :leveys  "25%"}
+            {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
+            {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
+           (if (k/virhe? kayttajat)
+             []
+             kayttajat)])))))
 
 (defn paivystajat [ur]
   (let [paivystajat (atom nil)

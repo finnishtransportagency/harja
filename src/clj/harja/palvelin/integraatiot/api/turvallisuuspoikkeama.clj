@@ -233,7 +233,7 @@
       http :lisaa-turvallisuuspoikkeama
       (POST "/api/urakat/:id/turvallisuuspoikkeama" request
         (kasittele-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
-                         json-skeemat/+turvallisuuspoikkeama-kirjaus+ json-skeemat/+kirjausvastaus+
+                         json-skeemat/turvallisuuspoikkeama-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (kirjaa-turvallisuuspoikkeama liitteiden-hallinta turi db parametrit data kayttaja)))))
     this)

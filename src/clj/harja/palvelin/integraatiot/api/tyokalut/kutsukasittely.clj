@@ -124,7 +124,9 @@
      (let [json (cheshire/encode payload)]
        (if skeema
          (do
-           (json/validoi skeema json)
+           (if (fn? skeema)
+             (skeema json)
+             (json/validoi skeema json))
            {:status status
             :headers {"Content-Type" "application/json"}
             :body json})
@@ -170,7 +172,9 @@
              (or (= :post (:request-method request))
                  (= :put (:request-method request))
                  (= :delete (:request-method request))))
-    (json/validoi skeema body)
+    (if (fn? skeema)
+      (skeema body)
+      (json/validoi skeema body))
     (cheshire/decode body true)))
 
 (defn hae-kayttaja [db kayttajanimi]

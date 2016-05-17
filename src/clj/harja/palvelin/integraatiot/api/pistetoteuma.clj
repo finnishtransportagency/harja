@@ -58,7 +58,7 @@
     (julkaise-reitti
       http :lisaa-pistetoteuma
       (POST "/api/urakat/:id/toteumat/piste" request
-        (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request json-skeemat/+pistetoteuman-kirjaus+ json-skeemat/+kirjausvastaus+
+        (kasittele-kutsu db integraatioloki :lisaa-pistetoteuma request json-skeemat/pistetoteuman-kirjaus json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db] (kirjaa-toteuma db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]

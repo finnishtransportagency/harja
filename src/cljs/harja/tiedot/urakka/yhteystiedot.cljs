@@ -29,7 +29,7 @@
     ch))
 
 (defn hae-urakan-kayttajat [urakka-id]
-  (k/post! :hae-urakan-kayttajat urakka-id))
+  (k/post! :hae-urakan-kayttajat urakka-id nil true))
                             
    
 (defn hae-urakan-paivystajat [urakka-id]

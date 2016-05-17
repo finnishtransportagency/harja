@@ -11,12 +11,12 @@
 
 (deftest tarkista-json-datan-validius
   (let [json-data (slurp (io/resource "api/examples/virhe-response.json"))]
-    (json/validoi json-skeemat/+virhevastaus+ json-data)))
+    (is (nil? (json-skeemat/virhevastaus json-data)))))
 
 (deftest tarkista-epavalidi-json-data
   (let [json-data (clojure.string/replace (slurp (io/resource "api/examples/virhe-response.json")) "\"virhe\"" "\"rikki\"")]
     (try+
-      (json/validoi json-skeemat/+virhevastaus+ json-data)
+      (json-skeemat/virhevastaus json-data)
       (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
       (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
         (println virheet)
@@ -25,16 +25,12 @@
 (deftest tarkista-syntaksiltaan-virheellinen-json
   (let [json-data "{\"Seppo\": on selkeästi rikki},"]
     (try+
-      (json/validoi json-skeemat/+virhevastaus+ json-data)
-      (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
-      (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-        (println virheet)
-        (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
+     (json-skeemat/virhevastaus json-data)
+     (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
+     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
+       (println virheet)
+       (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
 
 (deftest urakkahaun-vastaus
-  (try+
-    (json/validoi json-skeemat/+urakan-haku-vastaus+
-                  (slurp (io/resource "api/examples/urakan-haku-response.json")))
-    (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-      (println virheet)
-      (is (.contains (:viesti (first virheet)) "JSON ei ole validia")))))
+  (is (nil? (json-skeemat/urakan-haku-vastaus
+             (slurp (io/resource "api/examples/urakan-haku-response.json"))))))

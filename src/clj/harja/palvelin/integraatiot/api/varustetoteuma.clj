@@ -128,8 +128,8 @@
                          integraatioloki
                          :lisaa-varustetoteuma
                          request
-                         json-skeemat/+varustetoteuman-kirjaus+
-                         json-skeemat/+kirjausvastaus+
+                         json-skeemat/varustetoteuman-kirjaus
+                         json-skeemat/kirjausvastaus
                          (fn [parametit data kayttaja db] (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]

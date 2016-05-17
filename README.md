@@ -179,11 +179,22 @@ Valmis!
 Harja käyttää liikenneviraston extranetista tulevia headereita kirjautumiseen.
 Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä.
 
+Oikeudet on määritelty tiedostossa resources/roolit.xslx: 1. välilehti kertoo oikeudet, 2. välilehti roolit
+Harjan harja.domain.oikeudet.makrot luo Excelin pohjalta roolit käytettäväksi koodista.
+Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä frontissa että backissä. Frontissa yleensä
+piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
+luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
+
 Seuraavat headerit tuettuna:
 * OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
 * OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit), esim "Jarjestelmavastaava"
-* OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto"
+tai <urakan-SAMPO-ID>_ELY_Urakanvalvoja tai Urakoitisijan laatupäällikkö <urakoitsijan-ytunnus>_Laatupaallikko
+* OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto" tai "YIT Rakennus Oy"
+* OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
 * OAM_USER_FIRST_NAME: Etunimi
 * OAM_USER_LAST_NAME: Sukunimi
 * OAM_USER_MAIL: Sähköpostiosoite
 * OAM_USER_MOBILE: Puhelinnumero
+
+Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
+jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
