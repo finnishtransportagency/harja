@@ -49,19 +49,18 @@
                                                    :arvonvahennykset
                                                    :bitumi_indeksi
                                                    :kaasuindeksi]))
-        paallystysilmoitus (first
-                             (into []
+        paallystysilmoitus (into []
                                    (comp (map konv/alaviiva->rakenne)
                                          (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                          (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                                          (map #(konv/string-polusta->keyword % [:tila]))
                                          (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
                                          (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa])))
-                                   (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))
-        _ (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
-        paallystysilmoitus (konv/sarakkeet-vektoriin
-                             paallystysilmoitus
-                             {:kohdaosa :kohdeosat})]
+                                   (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id))
+        paallystysilmoitus (first (konv/sarakkeet-vektoriin
+                                    paallystysilmoitus
+                                    {:kohdeosa :kohdeosat}
+                                    :id))]
     (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
     (if-not paallystysilmoitus
       ;; Uusi päällystysilmoitus
