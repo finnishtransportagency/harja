@@ -49,6 +49,7 @@
                                                    :arvonvahennykset
                                                    :bitumi_indeksi
                                                    :kaasuindeksi]))
+        ;; Hae päällystysilmoitus kannasta
         paallystysilmoitus (into []
                                    (comp (map konv/alaviiva->rakenne)
                                          (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
@@ -56,12 +57,26 @@
                                          (map #(konv/string-polusta->keyword % [:tila]))
                                          (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
                                          (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa])))
-                                   (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id))
+                                   (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
+        ;; Yhdistä kohdeosat
         paallystysilmoitus (first (konv/sarakkeet-vektoriin
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
-                                    :id))]
-    (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
+                                    :id))
+        _ (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
+        ;; Lisää kohdeosat ilmoitustietojen päällystystoimenpiteisiin
+        paallystysilmoitus (-> paallystysilmoitus
+                               (assoc-in [:ilmoitustiedot :osoitteet]
+                                     (mapv
+                                       (fn [osoite]
+                                         (log/debug "Osoite on: " (pr-str osoite))
+                                         (merge osoite
+                                                (first (filter
+                                                         (fn [osa] (= (:id osoite) (:id osa)))
+                                                         (:kohdeosat paallystysilmoitus)))))
+                                       (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])))
+                               (dissoc :kohdeosat))]
+    (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
     (if-not paallystysilmoitus
       ;; Uusi päällystysilmoitus
       ^{:uusi true}
