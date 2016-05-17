@@ -64,7 +64,7 @@
                                     {:kohdeosa :kohdeosat}
                                     :id))
         _ (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
-        ;; Lisää kohdeosat ilmoitustietojen päällystystoimenpiteisiin
+        ;; Lisää kohdeosat ilmoitustietoihin
         paallystysilmoitus (-> paallystysilmoitus
                                (assoc-in
                                  [:ilmoitustiedot :osoitteet]
@@ -74,7 +74,7 @@
                                      (merge kohdeosa
                                             (first (filter
                                                      (fn [paallystystoimenpide]
-                                                       (= (:id kohdeosa) (:id paallystystoimenpide)))
+                                                       (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide)))
                                                      (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])))))
                                    (:kohdeosat paallystysilmoitus)))
                                (dissoc :kohdeosat))]
