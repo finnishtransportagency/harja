@@ -33,7 +33,7 @@ SELECT
   ilmoitustiedot,
   paatos_tekninen_osa             AS "paatos-tekninen-osa",
   paatos_taloudellinen_osa        AS "paatos-taloudellinen-osa",
-  perustelu_tekninen_osa          AS "paatos-tekninen-osa",
+  perustelu_tekninen_osa          AS "perustelu-tekninen-osa",
   perustelu_taloudellinen_osa     AS "perustelu-taloudellinen-osa",
   kasittelyaika_tekninen_osa      AS "kasittelyaika-tekninen-osa",
   kasittelyaika_taloudellinen_osa AS "kasittelyaika-taloudellinen-osa",
