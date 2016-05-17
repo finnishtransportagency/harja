@@ -187,8 +187,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :disabled    (if disabled "disabled" "")
              :title       title
              :on-click    #(do
-                            (swap! auki not)
-                            nil)
+                            (when-not (empty? vaihtoehdot)
+                              (swap! auki not)
+                            nil))
              :on-focus    on-focus
              :on-key-down #(let [kc (.-keyCode %)]
                             ;; keycode 9 on TAB, ei tehdä silloin mitään, jotta kenttien
