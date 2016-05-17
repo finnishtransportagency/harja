@@ -22,7 +22,8 @@
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kartta.varit.alpha :as varit]
-            [harja.ui.openlayers.taso :as taso])
+            [harja.ui.openlayers.taso :as taso]
+            [reagent.core :as r])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -170,7 +171,8 @@
 (defn- kartan-paikkavaraus
   [kartan-koko & args]
   (let [paivita (fn [paikkavaraus]
-                  (go (>! paivita-kartan-sijainti paikkavaraus)))
+                  (go (>! paivita-kartan-sijainti paikkavaraus))
+                  (r/next-tick #(go (>! paivita-kartan-sijainti paikkavaraus))))
         scroll-kuuntelija (fn [_]
                             (paivita :scroll))]
     (komp/luo
