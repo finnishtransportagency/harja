@@ -24,24 +24,32 @@ SELECT
   paallystysilmoitus.id,
   tila,
   aloituspvm,
-  valmispvm_kohde,
-  valmispvm_paallystys,
+  valmispvm_kohde                 AS "valmispvm-kohde",
+  valmispvm_paallystys            AS "valmispvm-paallystys",
   takuupvm,
-  ypk.nimi as kohdenimi,
+  ypk.nimi                        AS kohdenimi,
   ypk.kohdenumero,
   muutoshinta,
   ilmoitustiedot,
-  paatos_tekninen_osa,
-  paatos_taloudellinen_osa,
-  perustelu_tekninen_osa,
-  perustelu_taloudellinen_osa,
-  kasittelyaika_tekninen_osa,
-  kasittelyaika_taloudellinen_osa
+  paatos_tekninen_osa             AS "paatos-tekninen-osa",
+  paatos_taloudellinen_osa        AS "paatos-taloudellinen-osa",
+  perustelu_tekninen_osa          AS "paatos-tekninen-osa",
+  perustelu_taloudellinen_osa     AS "perustelu-taloudellinen-osa",
+  kasittelyaika_tekninen_osa      AS "kasittelyaika-tekninen-osa",
+  kasittelyaika_taloudellinen_osa AS "kasittelyaika-taloudellinen-osa",
+  ypko.id                         AS kohdeosa_id,
+  ypko.nimi                       AS kohdeosa_nimi,
+  ypko.tr_numero                  AS kohdeosa_tie,
+  ypko.tr_alkuosa                 AS kohdeosa_aosa,
+  ypko.tr_alkuetaisyys            AS kohdeosa_aet,
+  ypko.tr_loppuosa                AS kohdeosa_losa,
+  ypko.tr_loppuetaisyys           AS kohdeosa_let
 FROM paallystysilmoitus
   JOIN yllapitokohde ypk ON ypk.id = paallystysilmoitus.paallystyskohde
-                             AND ypk.urakka = :urakka
-                             AND ypk.sopimus = :sopimus
-                             AND ypk.poistettu IS NOT TRUE
+                            AND ypk.urakka = :urakka
+                            AND ypk.sopimus = :sopimus
+                            AND ypk.poistettu IS NOT TRUE
+  JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = ypk.id
 WHERE paallystyskohde = :paallystyskohde
       AND paallystysilmoitus.poistettu IS NOT TRUE;
 

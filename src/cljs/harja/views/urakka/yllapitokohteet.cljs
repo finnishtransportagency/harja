@@ -133,7 +133,7 @@
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
            {:otsikko "Let" :nimi :tr_loppuetaisyys :tyyppi :positiivinen-numero
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
-           {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
+           {:otsikko "Pit." :nimi :pit :muokattava? (constantly false) :tyyppi :string
             :hae (fn [rivi]
                    (str (tierekisteri/laske-tien-pituus {:aet (:tr_alkuetaisyys rivi)
                                                          :let (:tr_loppuetaisyys rivi)})))

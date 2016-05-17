@@ -40,7 +40,8 @@
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
 
-(defn hae-urakan-paallystysilmoitus-paallystyskohteella [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
+(defn hae-urakan-paallystysilmoitus-paallystyskohteella
+  [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [kohdetiedot (first (yllapitokohteet-q/hae-urakan-yllapitokohde db urakka-id paallystyskohde-id))
@@ -48,13 +49,19 @@
                                                    :arvonvahennykset
                                                    :bitumi_indeksi
                                                    :kaasuindeksi]))
-        paallystysilmoitus (first (into []
-                                        (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                              (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                              (map #(konv/string-polusta->keyword % [:tila]))
-                                              (map #(konv/string-polusta->keyword % [:paatos_tekninen_osa]))
-                                              (map #(konv/string-polusta->keyword % [:paatos_taloudellinen_osa])))
-                                        (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))]
+        paallystysilmoitus (first
+                             (into []
+                                   (comp (map konv/alaviiva->rakenne)
+                                         (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                                         (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
+                                         (map #(konv/string-polusta->keyword % [:tila]))
+                                         (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
+                                         (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa])))
+                                   (q/hae-urakan-paallystysilmoitus-paallystyskohteella db urakka-id sopimus-id paallystyskohde-id)))
+        _ (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
+        paallystysilmoitus (konv/sarakkeet-vektoriin
+                             paallystysilmoitus
+                             {:kohdaosa :kohdeosat})]
     (log/debug "Päällystysilmoitus saatu: " (pr-str paallystysilmoitus))
     (if-not paallystysilmoitus
       ;; Uusi päällystysilmoitus
@@ -187,7 +194,7 @@
             (q/liita-kommentti<! c paallystysilmoitus-id (:id kommentti))))
 
         (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
-                                               :sopimus-id sopimus-id})))))
+                                                  :sopimus-id sopimus-id})))))
 
 (defrecord Paallystys []
   component/Lifecycle
