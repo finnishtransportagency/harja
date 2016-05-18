@@ -160,12 +160,12 @@
    :osoitteet
    [{:tie s/Int
      :ajorata +ajorata+
-     :suunta +suunta+
      :kaista +kaista+
      :aosa s/Int
      :aet s/Int
      :losa s/Int
      :let s/Int
+     (s/optional-key :kohdeosa-id) s/Int
      ; Osoitteelle tehdyt toimenpiteet
      :paallystetyyppi paallystys-ja-paikkaus/+paallystetyyppi+
      :raekoko s/Int
