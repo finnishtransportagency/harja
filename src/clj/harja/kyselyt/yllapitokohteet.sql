@@ -126,7 +126,8 @@ WHERE id = :id;
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
-INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti)
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
@@ -134,7 +135,9 @@ VALUES (:yllapitokohde,
         :tr_alkuetaisyys,
         :tr_loppuosa,
         :tr_loppuetaisyys,
-        :sijainti;
+        :tr_ajorata,
+        :tr_kaista,
+        :sijainti);
 
 -- name: paivita-yllapitokohdeosa!
 -- Päivittää yllapitokohdeosan
@@ -146,6 +149,8 @@ SET
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuosa      = :tr_loppuosa,
   tr_loppuetaisyys = :tr_loppuetaisyys,
+  tr_ajorata       = :tr_ajorata,
+  tr_kaista        = :tr_kaista,
   sijainti         = :sijainti
 WHERE id = :id;
 

@@ -154,7 +154,7 @@
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
-                                          tr-loppuetaisyys poistettu sijainti]}]
+                                          tr-loppuetaisyys tr-ajorata tr-kaista poistettu sijainti]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -165,10 +165,13 @@
                               (or tr-alkuetaisyys 0)
                               (or tr-loppuosa 0)
                               (or tr-loppuetaisyys 0)
+                              tr-ajorata
+                              tr-kaista
                               (geo/geometry (geo/clj->pg sijainti)))))
 
 (defn- paivita-yllapitokohdeosa [db user {:keys [id nimi tr-numero tr-alkuosa tr-alkuetaisyys
-                                                 tr-loppuosa tr-loppuetaisyys poistettu sijainti]}]
+                                                 tr-loppuosa tr-loppuetaisyys tr-ajorata
+                                                 tr-kaista poistettu sijainti]}]
 
   (if poistettu
     (do (log/debug "Poistetaan ylläpitokohdeosa")
@@ -181,6 +184,8 @@
                                      (or tr-alkuetaisyys 0)
                                      (or tr-loppuosa 0)
                                      (or tr-loppuetaisyys 0)
+                                     tr-ajorata
+                                     tr-kaista
                                      (when-not (empty? sijainti)
                                        (geo/geometry (geo/clj->pg sijainti)))
                                      id))))
