@@ -351,7 +351,6 @@
              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "15%"}
               {:otsikko "Tienumero" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
                :validoi [[:ei-tyhja "Tienumero puuttuu"]]}
-              ; FIXME Voidaanko korvata yllapitokohteet-namespacen kohdeosat-komponentilla?
               #_{:otsikko "Ajorata" ;; FIXME Toistaiseksi samat tiedot kuin kohdeluettelossa, halutaanko YHA:n kaista ja ajorata mukaan?
                :nimi :ajorata
                :tyyppi :valinta
