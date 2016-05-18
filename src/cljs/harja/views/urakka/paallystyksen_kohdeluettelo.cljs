@@ -30,7 +30,7 @@
         :aihe :paallystys-klikattu
         :kohde {:nimi (get-in kohde [:kohde :nimi])}
         :kohdeosa {:nimi (get-in kohde [:osa :nimi])}
-        :nykyinen_paallyste (get-in kohde [:osa :nykyinen-paallyste])
+        :nykyinen-paallyste (get-in kohde [:osa :nykyinen-paallyste])
         :toimenpide (get-in kohde [:osa :toimenpide])
         :paallystysilmoitus {:tila (:tila kohde)}
         :tr {:numero (get-in kohde [:osa :tr-numero])

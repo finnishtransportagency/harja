@@ -22,7 +22,8 @@
             [harja.ui.tierekisteri :as tierekisteri]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -59,8 +60,10 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                      (oikeudet/voi-kirjoittaa?
-                      oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id @nav/valittu-urakka))
+                      (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
+                                               (:id @nav/valittu-urakka)
+                                               istunto/kayttaja)
                       (not= (:tila @paikkaus/paikkausilmoitus-lomakedata) :lukittu)
                       (false? @paikkaus/paikkausilmoituslomake-lukittu?))
         paatostiedot (r/wrap {:paatos        (:paatos @paikkaus/paikkausilmoitus-lomakedata)
@@ -310,9 +313,9 @@
          {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
                                                                                                                             (paallystys-ja-paikkaus/nayta-paatos (:paatos rivi)))}
          {:otsikko     "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
-          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
+          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde-id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]
-                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
+                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde-id rivi))}
                                                     [:span "Aloita paikkausilmoitus"]]))}]
         (sort-by
           (juxt (fn [toteuma] (case (:tila toteuma)

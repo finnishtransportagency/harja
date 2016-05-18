@@ -29,7 +29,8 @@
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -57,7 +58,9 @@
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
                       (oikeudet/on-muu-oikeus? "päätös"
-                        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id @nav/valittu-urakka))
+                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                               (:id @nav/valittu-urakka)
+                                               istunto/kayttaja)
                       (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
                       (false? @paallystys/paallystysilmoituslomake-lukittu?))
         paatos-tekninen-osa
@@ -612,9 +615,9 @@
           :komponentti (fn [rivi]
                          (if (:tila rivi)
                            [:button.nappi-toissijainen.nappi-grid
-                            {:on-click #(avaa-paallystysilmoitus (:paallystyskohde_id rivi))}
+                            {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                             [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                           [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde_id rivi))}
+                           [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                             [:span "Aloita päällystysilmoitus"]]))}]
         (sort-by
           (juxt (fn [toteuma] (case (:tila toteuma)

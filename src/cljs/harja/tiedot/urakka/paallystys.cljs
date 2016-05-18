@@ -75,18 +75,18 @@
                      (when (and taso
                                 (or kohderivit toteumarivit))
                        (kartalla-esitettavaan-muotoon
-                         (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                         (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                       kohderivit)
                                  toteumarivit)
                          @paallystysilmoitus-lomakedata
-                         [:paallystyskohde_id]
+                         [:paallystyskohde-id]
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
                                              (assoc (merge kohdeosa
                                                            (dissoc kohde :kohdeosat))
                                                :tila (or (:paallystysilmoitus_tila kohde) (:tila kohde))
-                                               :avoin? (= (:paallystyskohde_id kohde) avoin-paallystysilmoitus)
+                                               :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
                                                :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
                                                :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
                                            (:kohdeosat kohde))))
