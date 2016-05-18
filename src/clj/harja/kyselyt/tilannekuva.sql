@@ -160,6 +160,8 @@ WHERE
    t.kasitelty BETWEEN :alku AND :loppu);
 
 -- name: hae-paallystykset-nykytilanteeseen
+-- Hakee nykytilanteeseen kaikki päällystyskohteet, jotka eivät ole valmiita tai ovat
+-- valmistuneet viikon sisällä.
 SELECT
   ypk.id,
   ypk.kohdenumero,
@@ -180,11 +182,13 @@ SELECT
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND (pi.tila :: TEXT != 'valmis' OR
-                                          (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
-WHERE ypk.poistettu IS NOT TRUE;
+WHERE ypk.poistettu IS NOT TRUE
+      AND (pi.tila :: TEXT != 'valmis' OR
+           (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
 
 -- name: hae-paallystykset-historiakuvaan
+-- Hakee historiakuvaan kaikki päällystyskohteet, jotka ovat olleet aktiivisia
+-- annetulla aikavälillä
 SELECT
   ypk.id,
   ypk.kohdenumero,
@@ -209,6 +213,8 @@ WHERE ypk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-paikkaukset-nykytilanteeseen
+-- Hakee nykytilanteeseen kaikki paikkauskohteet, jotka eivät ole valmiita tai ovat
+-- valmistuneet viikon sisällä.
 SELECT
   ypk.id,
   ypk.kohdenumero,
@@ -229,11 +235,13 @@ SELECT
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = ypk.id
-                                   AND (pi.tila :: TEXT != 'valmis' OR
-                                        (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
-WHERE ypk.poistettu IS NOT TRUE;
+WHERE ypk.poistettu IS NOT TRUE
+      AND (pi.tila :: TEXT != 'valmis' OR
+           (now() - pi.valmispvm_kohde) < INTERVAL '7 days');
 
 -- name: hae-paikkaukset-historiakuvaan
+-- Hakee historiakuvaan kaikki paikkauskohteet, jotka ovat olleet aktiivisia
+-- annetulla aikavälillä
 SELECT
   pk.id,
   pk.kohdenumero,
