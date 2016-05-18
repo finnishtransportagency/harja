@@ -134,9 +134,28 @@
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
            {:otsikko "Let" :nimi :tr-loppuetaisyys :tyyppi :positiivinen-numero
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
-           {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero
+           {:otsikko "Ajorata"
+            :nimi :tr-ajorata
+            :tyyppi :valinta
+            :fmt (fn [arvo]
+                   (:nimi (first (filter
+                                   (fn [ajorata]
+                                     (= arvo (:koodi ajorata)))
+                                   pot/+ajoradat+))))
+            :valinta-arvo :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
+            :valinnat pot/+ajoradat+
             :leveys tr-leveys}
-           {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero
+           {:otsikko "Kaista"
+            :nimi :tr-kaista
+            :tyyppi :valinta
+            :fmt #(:nimi (first (filter
+                                  (fn [kaista]
+                                    (= % (:koodi kaista)))
+                                  pot/+kaistat+)))
+            :valinta-arvo :koodi
+            :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
+            :valinnat pot/+kaistat+
             :leveys tr-leveys}
            {:otsikko "Pit." :nimi :pit :muokattava? (constantly false) :tyyppi :string
             :hae (fn [rivi]
