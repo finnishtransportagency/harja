@@ -349,6 +349,7 @@
               :virheet alikohteet-virheet
               :rivinumerot? true
               :uusi-id (inc (count @paallystystoimenpiteet))}
+             ;; FIXME Käytä kohdeosat komponenttia tai muuten yhtenäistä logiikka, jotta tien tarkistus, sijainti yms. toimii samalla tavalla
              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "15%"}
               {:otsikko "Tienumero" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
                :validoi [[:ei-tyhja "Tienumero puuttuu"]]}

@@ -137,32 +137,6 @@
                                    paallystyskohde-id))
   id)
 
-(defn- kasittele-paallystysilmoituksen-tierekisterikohteet
-  "Ottaa päällystysilmoituksen ilmoitustiedot.
-   Päivittää päällystyskohteen alikohteet niin, että niiden tiedot ovat samat kuin päällystysilmoituslomakkeessa.
-   Palauttaa ilmoitustiedot, jossa päällystystoimenpiteiltä on riisuttu tieosoitteet."
-  [db user urakka-id sopimus-id yllapitokohde-id ilmoitustiedot]
-  (yllapitokohteet/tallenna-yllapitokohdeosat db
-                                              user
-                                              {:urakka-id urakka-id
-                                               :sopimus-id sopimus-id
-                                               :yllapitokohde-id yllapitokohde-id
-                                               :osat (mapv
-                                                       (fn [osoite]
-                                                         {:id (:kohdeosa-id osoite)
-                                                          :nimi (:nimi osoite)
-                                                          :tr-numero (:tie osoite)
-                                                          :tr-alkuosa (:aosa osoite)
-                                                          :tr-alkuetaisyys (:aet osoite)
-                                                          :tr-loppuosa (:losa osoite)
-                                                          :tr-loppuetaisyys (:let osoite)
-                                                          :poistettu (:poistettu osoite) ; FIXME Toimiiko tämä?
-                                                          :sijainti nil}) ; FIXME Mistä tämä?
-                                                       (:osoitteet ilmoitustiedot))})
-  (assoc ilmoitustiedot :osoitteet (mapv
-                                      #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu)
-                                      (:osoitteet ilmoitustiedot))))
-
 (defn- luo-paallystysilmoitus [db user
                                {:keys [ilmoitustiedot aloituspvm valmispvm-kohde valmispvm-paallystys
                                        takuupvm paallystyskohde-id]}]
@@ -183,6 +157,32 @@
                                      (konv/sql-date takuupvm)
                                      muutoshinta
                                      (:id user)))))
+
+(defn- kasittele-paallystysilmoituksen-tierekisterikohteet
+  "Ottaa päällystysilmoituksen ilmoitustiedot.
+   Päivittää päällystyskohteen alikohteet niin, että niiden tiedot ovat samat kuin päällystysilmoituslomakkeessa.
+   Palauttaa ilmoitustiedot, jossa päällystystoimenpiteiltä on riisuttu tieosoitteet."
+  [db user urakka-id sopimus-id yllapitokohde-id ilmoitustiedot]
+  (yllapitokohteet/tallenna-yllapitokohdeosat db
+                                              user
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :yllapitokohde-id yllapitokohde-id
+                                               :osat (mapv
+                                                       (fn [osoite]
+                                                         {:id (:kohdeosa-id osoite)
+                                                          :nimi (:nimi osoite)
+                                                          :tr-numero (:tie osoite)
+                                                          :tr-alkuosa (:aosa osoite)
+                                                          :tr-alkuetaisyys (:aet osoite)
+                                                          :tr-loppuosa (:losa osoite)
+                                                          :tr-loppuetaisyys (:let osoite)
+                                                          :poistettu (:poistettu osoite)
+                                                          :sijainti (:sijainti osoite)})
+                                                       (:osoitteet ilmoitustiedot))})
+  (assoc ilmoitustiedot :osoitteet (mapv
+                                     #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu)
+                                     (:osoitteet ilmoitustiedot))))
 
 (defn- luo-tai-paivita-paallystysilmoitus [db user urakka-id sopimus-id lomakedata paallystysilmoitus-kannassa]
   (let [lomakedata (assoc lomakedata
