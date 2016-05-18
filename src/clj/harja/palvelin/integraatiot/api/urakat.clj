@@ -41,14 +41,19 @@
     (for [materiaali materiaalit]
       {:materiaali {:nimi (:nimi materiaali) :yksikko (:yksikko materiaali)}})))
 
+(defn- urakan-tiedot [urakka]
+  (-> urakka
+      (assoc :vaylamuoto "tie")
+      (dissoc :takuu)))
+
 (defn muodosta-vastaus-urakan-haulle [db id urakka]
   {:urakka
-   {:tiedot      (assoc urakka :vaylamuoto "tie")
+   {:tiedot      (urakan-tiedot urakka)
     :sopimukset  (hae-urakan-sopimukset db id)
     :materiaalit (hae-materiaalit db)}})
 
 (defn muodosta-vastaus-organisaation-urakoiden-haulle [urakat]
-  {:urakat (mapv (fn [urakka] {:urakka {:tiedot (assoc urakka :vaylamuoto "tie")}}) urakat)})
+  {:urakat (mapv (fn [urakka] {:urakka {:tiedot (urakan-tiedot urakka)}}) urakat)})
 
 (defn hae-urakka-idlla [db {:keys [id]} kayttaja]
   (log/debug "Haetaan urakka id:llä: " id)
