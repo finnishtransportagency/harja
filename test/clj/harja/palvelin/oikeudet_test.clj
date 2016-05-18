@@ -22,6 +22,21 @@
              :organisaation-urakat ely-urakat
              :organisaatio ely})
 
+;; ELYn urakanvalvoja eri ELYn urakassa
+(def ely-uv-eri-elyssa {:roolit #{}
+             :urakkaroolit {4 #{"ELY_Urakanvalvoja"}}
+             :organisaatioroolit {}
+             :organisaation-urakat ely-urakat
+             :organisaatio ely})
+
+
+;; ELYn turvallisuusvastaava eri ELYn urakassa
+(def ely-tv-eri-elyssa {:roolit #{}
+                        :urakkaroolit {4 #{"ELY_turvallisuusvastaava"}}
+                        :organisaatioroolit {}
+                        :organisaation-urakat ely-urakat
+                        :organisaatio ely})
+
 (def ely-kayttaja {:roolit #{"ELY_Kayttaja"}
                    :urakkaroolit {}
                    :organisaatioroolit {}
@@ -127,3 +142,9 @@
 
 (deftest urakoitsijan-urakan-lv-nakee-oman-urakkansa
   (is (oikeudet/voi-lukea? oikeudet/urakat 1 ur-urakan-lv)))
+
+(deftest urakan-valvoja-eri-elyn-urakassa
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot 4 ely-uv-eri-elyssa)))
+
+(deftest urakan-turvallisuusvalvoja-eri-elyn-urakassa
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus 4 ely-tv-eri-elyssa)))

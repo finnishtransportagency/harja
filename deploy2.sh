@@ -30,6 +30,11 @@ if [ -z "$BRANCH" ]; then
     BRANCH=$CURRENT_BRANCH
 fi
 
+echo "Alustetaan testikanta"
+pushd vagrant
+sh migrate_test.sh > /dev/null
+popd
+
 if [ -z "$UNIT" ] || [ "$UNIT" = true ]; then
   # msg "Voit estää unit testien ajamisen antamalla toiseksi parametriksi jotain muuta kuin true"
   # echo ""

@@ -12,7 +12,9 @@ dev-resources/js/out/
 logs/
 doc/
 harja-stg-dump.sql
+harja-stg-dump
 harja-test-dump.sql
+harja-test-dump
 tietokanta.tgz
 /resources/gitlog.edn
 .lein-failures

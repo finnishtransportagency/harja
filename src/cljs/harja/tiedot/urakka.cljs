@@ -341,6 +341,12 @@
            {:urakka-id    urakka-id
             :urakkatyyppi uusi-urakkatyyppi}))
 
+(defn aseta-takuu-loppupvm [urakka-id loppupvm]
+  (k/post! :aseta-takuun-loppupvm
+           {:urakka-id urakka-id
+            :takuu {:loppupvm loppupvm}}
+           nil true))
+
 (def urakassa-kaytetty-indeksi
   (reaction (when-let [ur @nav/valittu-urakka]
               (when (= :hoito (:tyyppi ur))
