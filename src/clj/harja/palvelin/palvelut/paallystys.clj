@@ -172,17 +172,19 @@
                                                 :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})
           paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
                                         ;; Tunnistetaan uuden tallentaminen
-                                        paallystysilmoitus-kannassa)]
+                                        paallystysilmoitus-kannassa)
+          kasittelytiedot-muuttuneet? (fn [uudet-tiedot tiedot-kannassa]
+                                        (let [vertailtavat
+                                              [:paatos-tekninen-osa :paatos-taloudellinen-osa
+                                               :perustelu-tekninen-osa :perustelu-taloudellinen-osa
+                                               :kasittelyaika-tekninen-osa :kasittelyaika-taloudellinen-osa]]
+                                          (not= ((apply juxt vertailtavat) uudet-tiedot)
+                                                ((apply juxt vertailtavat) tiedot-kannassa))))]
       (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
 
       ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
       ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
-      (if (or
-            (not (= (:paatos_tekninen_osa paallystysilmoitus-kannassa)
-                    (or (:paatos_tekninen_osa paallystysilmoitus) nil)))
-            (not (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa)
-                    (or (:paatos_taloudellinen_osa paallystysilmoitus) nil))))
-        ;; FIXME Pitää varmistaa ja testata, ettei myöskään selitystä voi muuttaa ilman oikeuksia
+      (if (kasittelytiedot-muuttuneet? paallystysilmoitus paallystysilmoitus-kannassa)
         (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                user urakka-id))
 
