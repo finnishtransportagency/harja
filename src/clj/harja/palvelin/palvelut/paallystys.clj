@@ -141,12 +141,12 @@
   "Ottaa päällystysilmoituksen ilmoitustiedot.
    Päivittää päällystyskohteen alikohteet niin, että niiden tiedot ovat samat kuin päällystysilmoituslomakkeessa.
    Palauttaa ilmoitustiedot, jossa päällystystoimenpiteiltä on riisuttu tieosoitteet."
-  [db user ilmoitustiedot]
+  [db user urakka-id sopimus-id yllapitokohde-id ilmoitustiedot]
   (yllapitokohteet/tallenna-yllapitokohdeosat db
                                               user
-                                              {:urakka-id
-                                               :sopimus-id
-                                               :yllapitokohde-id
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :yllapitokohde-id yllapitokohde-id
                                                :osat (mapv
                                                        (fn [osoite]
                                                          {:id (:kohdeosa-id osoite)
@@ -184,15 +184,21 @@
                                      muutoshinta
                                      (:id user)))))
 
-(defn- luo-tai-paivita-paallystysilmoitus [db user lomakedata paallystysilmoitus-kannassa]
+(defn- luo-tai-paivita-paallystysilmoitus [db user urakka-id sopimus-id lomakedata paallystysilmoitus-kannassa]
   (let [lomakedata (assoc lomakedata
                      :ilmoitustiedot
-                     (kasittele-paallystysilmoituksen-tierekisterikohteet db user (:ilmoitustiedot lomakedata)))]
+                     (kasittele-paallystysilmoituksen-tierekisterikohteet db
+                                                                          user
+                                                                          urakka-id
+                                                                          sopimus-id
+                                                                          (:paallystyskohde-id lomakedata)
+                                                                          (:ilmoitustiedot lomakedata)))]
     (if paallystysilmoitus-kannassa
       (paivita-paallystysilmoitus db user lomakedata)
       (luo-paallystysilmoitus db user lomakedata))))
 
-(defn- tarkista-paallystysilmoituksen-tallentamisoikeudet [paallystysilmoitus paallystysilmoitus-kannassa]
+(defn- tarkista-paallystysilmoituksen-tallentamisoikeudet [user urakka-id
+                                                           paallystysilmoitus paallystysilmoitus-kannassa]
   (let [kasittelytiedot-muuttuneet? (fn [uudet-tiedot tiedot-kannassa]
                                       (let [vertailtavat
                                             [:paatos-tekninen-osa :paatos-taloudellinen-osa
@@ -232,8 +238,13 @@
           paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
                                         paallystysilmoitus-kannassa)]
       (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
-      (tarkista-paallystysilmoituksen-tallentamisoikeudet paallystysilmoitus paallystysilmoitus-kannassa)
-      (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user paallystysilmoitus
+      (tarkista-paallystysilmoituksen-tallentamisoikeudet user urakka-id
+                                                          paallystysilmoitus paallystysilmoitus-kannassa)
+      (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c
+                                                                      user
+                                                                      urakka-id
+                                                                      sopimus-id
+                                                                      paallystysilmoitus
                                                                       paallystysilmoitus-kannassa)]
         ;; Luodaan uusi kommentti
         (when-let [uusi-kommentti (:uusi-kommentti paallystysilmoitus)]
