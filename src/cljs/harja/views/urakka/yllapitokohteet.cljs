@@ -122,7 +122,7 @@
                                              (grid/poista-virhe! g id kentta))
                                            (log "sain sijainnin " (clj->js sijainti))
                                            (swap! tr-sijainnit assoc osoite sijainti))))))))))))}
-          [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys nimi-leveys :validoi [[:ei-tyhja "Anna nimi"]]}
+          [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys nimi-leveys}
            {:otsikko "Tienumero" :nimi :tr-numero :tyyppi :positiivinen-numero
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
            {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero
