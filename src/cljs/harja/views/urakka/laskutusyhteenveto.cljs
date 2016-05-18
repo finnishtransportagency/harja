@@ -3,22 +3,18 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! chan]]
 
-            [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            
+
             [harja.tiedot.raportit :as raportit]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.raportti :refer [muodosta-html]] 
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t])
@@ -63,14 +59,23 @@
          [valinnat/hoitokauden-kuukausi]
          
          (when-let [p @laskutusyhteenvedon-parametrit]
-           [:form {:style {:float "right"} :target "_blank" :method "POST"
-                   
-                   :action (k/pdf-url :raportointi)}
+           [:span
+            ^{:key "raporttixls"}
+            [:form {:style {:float "right"} :target "_blank" :method "POST"
+                    :action (k/excel-url :raportointi)}
+             [:input {:type "hidden" :name "parametrit"
+                      :value (t/clj->transit p)}]
+             [:button.nappi-ensisijainen {:type "submit"}
+              (ikonit/print)
+              " Tallenna Excel"]]
+            ^{:key "raporttipdf"}
+            [:form {:style {:float "right"} :target "_blank" :method "POST"
+                    :action (k/pdf-url :raportointi)}
             [:input {:type "hidden" :name "parametrit"
                      :value (t/clj->transit p)}]
             [:button.nappi-ensisijainen {:type "submit"}
              (ikonit/print)
-             " Lataa PDF"]])
+             " Tallenna PDF"]]])
          
          (when-let [tiedot @laskutusyhteenvedon-tiedot]
            [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutusyhteenveto)])]))))

@@ -250,12 +250,15 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                                    #(kasittele-url! (.-token %)))
   h))
 
+(defn nykyinen-url []
+  (str (reitit/muodosta-polku @reitit/url-navigaatio)
+       "?"
+       (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
+       (when-let [u @valittu-urakka] (str "&u=" (:id u)))))
+
 ;; asettaa oikean sisällön urliin ohjelman tilan perusteella
 (defn paivita-url []
-  (let [url (str (reitit/muodosta-polku @reitit/url-navigaatio)
-                 "?"
-                 (when-let [hy @valittu-hallintayksikko] (str "&hy=" (:id hy)))
-                 (when-let [u @valittu-urakka] (str "&u=" (:id u))))]
+  (let [url (nykyinen-url)]
     (when (not= url (.-token historia))
       (log "URL != token :: " url " != " (.getToken historia))
       (.setToken historia url))))
@@ -316,7 +319,8 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
     (swap! reitit/url-navigaatio
            reitit/tulkitse-polku polku))
-  (reset! render-lupa-url-kasitelty? true))
+  (reset! render-lupa-url-kasitelty? true)
+  (t/julkaise! {:aihe :url-muuttui :url url}))
 
 (.setEnabled historia true)
 

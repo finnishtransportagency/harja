@@ -44,7 +44,7 @@
          (if (= kanava parametrit-ch)
            ;; Uudet parametrit tuli ennen timeouttia
            (recur arvo)
-           
+
            ;; timeout
            (do (nappaa-virhe
                  (apply paivitys-fn parametrit))
@@ -65,7 +65,7 @@
           (reset! lippu false)))))
 
 (defn paivita-jos-muuttunut
-  "Palauttaa funktion, joka ottaa samat parametrit kuin annettu paivitys-fn, mutta 
+  "Palauttaa funktion, joka ottaa samat parametrit kuin annettu paivitys-fn, mutta
    ei kutsu funktiota jos parametrit ovat täysin samat kuin edellisellä kerralla.
    Optionaalisesti ottaa arvon, joka palautetaan kun samoilla parametreillä kutsutaan
    (oletus nil).
@@ -81,9 +81,9 @@
            paluuarvo-jos-sama
            (do (reset! edelliset-parametrit parametrit)
                (apply paivitys-fn parametrit))))))))
-            
+
 (defn paivittaja
-  "Koostaa haku-lippu, kuristin ja paivita-jos-muuttunut funktioiden 
+  "Koostaa haku-lippu, kuristin ja paivita-jos-muuttunut funktioiden
    toiminnallisuuden käteväksi kokonaisuudeksi.
    Palauttaa kaksi funktiota vektorissa: päivitys ja päivityksen lopetus. "
   [kurista-ms haku-lippu-atom paivita-fn]
@@ -95,4 +95,3 @@
           (haku-lippu haku-lippu-atom)
           (kuristin kurista-ms))
      #(reset! aktiivinen false)]))
-  
