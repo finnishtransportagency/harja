@@ -204,7 +204,7 @@
                                                              (get-in tapahtuma [:tr :alkuetaisyys])
                                                              (get-in tapahtuma [:tr :loppuosa])
                                                              (get-in tapahtuma [:tr :loppuetaisyys]))]
-                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
+                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paallystysilmoitus :tila]))]
                                                  (when aloitettu
@@ -232,7 +232,7 @@
                                                              (get-in tapahtuma [:tr :alkuetaisyys])
                                                              (get-in tapahtuma [:tr :loppuosa])
                                                              (get-in tapahtuma [:tr :loppuetaisyys]))]
-                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen_paallyste tapahtuma))]
+                                                 ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paikkausilmoitus :tila]))]
                                                  (when aloitettu
