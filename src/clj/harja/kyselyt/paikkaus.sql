@@ -1,7 +1,7 @@
 -- name: hae-urakan-paikkausilmoitukset
 -- Hakee urakan kaikki paikkausilmoitukset
 SELECT
-  yllapitokohde.id AS paikkauskohde_id,
+  yllapitokohde.id AS "paikkauskohde-id",
   pi.id,
   pi.tila,
   nimi,
@@ -20,8 +20,8 @@ SELECT
   paikkausilmoitus.id,
   tila,
   aloituspvm,
-  valmispvm_kohde,
-  valmispvm_paikkaus,
+  valmispvm_kohde AS "valmispvm-kohde",
+  valmispvm_paikkaus AS "valmispvm-paikkaus",
   ypk.nimi as kohdenimi,
   ypk.kohdenumero,
   ilmoitustiedot,

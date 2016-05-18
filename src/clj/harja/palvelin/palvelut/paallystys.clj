@@ -28,14 +28,14 @@
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-polusta->keyword % [:paatos_taloudellinen_osa]))
-                        (map #(konv/string-polusta->keyword % [:paatos_tekninen_osa]))
+                        (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa]))
+                        (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
                         (map #(konv/string-polusta->keyword % [:tila]))
                         (map #(assoc % :kohdeosat
                                        (into []
                                              yllapitokohteet/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db urakka-id sopimus-id (:paallystyskohde_id %))))))
+                                               db urakka-id sopimus-id (:paallystyskohde-id %))))))
                       (q/hae-urakan-paallystysilmoitukset db urakka-id sopimus-id))]
     (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
     vastaus))
@@ -45,9 +45,9 @@
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [kohdetiedot (first (yllapitokohteet-q/hae-urakan-yllapitokohde db urakka-id paallystyskohde-id))
-        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen_mukaiset_tyot
+        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen-mukaiset-tyot
                                                    :arvonvahennykset
-                                                   :bitumi_indeksi
+                                                   :bitumi-indeksi
                                                    :kaasuindeksi]))
         ;; Hae päällystysilmoitus kannasta
         paallystysilmoitus (into []
@@ -104,13 +104,18 @@
             :paallystyskohde-id paallystyskohde-id
             :kommentit kommentit))))))
 
-(defn- paivita-paallystysilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id paatos_tekninen_osa paatos_taloudellinen_osa perustelu_tekninen_osa perustelu_taloudellinen_osa kasittelyaika_tekninen_osa kasittelyaika_taloudellinen_osa]}]
+(defn- paivita-paallystysilmoitus [db user
+                                   {:keys [id ilmoitustiedot aloituspvm valmispvm-kohde
+                                           valmispvm-paallystys takuupvm paallystyskohde-id
+                                           paatos-tekninen-osa paatos-taloudellinen-osa perustelu-tekninen-osa
+                                           perustelu-taloudellinen-osa kasittelyaika-tekninen-osa
+                                           kasittelyaika-taloudellinen-osa]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-        tila (if (and (= paatos_tekninen_osa :hyvaksytty)
-                      (= paatos_taloudellinen_osa :hyvaksytty))
+        tila (if (and (= paatos-tekninen-osa :hyvaksytty)
+                      (= paatos-taloudellinen-osa :hyvaksytty))
                "lukittu"
-               (if (and valmispvm_kohde valmispvm_paallystys) "valmis" "aloitettu"))
+               (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu"))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
@@ -118,26 +123,28 @@
                                    tila
                                    encoodattu-ilmoitustiedot
                                    (konv/sql-date aloituspvm)
-                                   (konv/sql-date valmispvm_kohde)
-                                   (konv/sql-date valmispvm_paallystys)
+                                   (konv/sql-date valmispvm-kohde)
+                                   (konv/sql-date valmispvm-paallystys)
                                    (konv/sql-date takuupvm)
                                    muutoshinta
-                                   (if paatos_tekninen_osa (name paatos_tekninen_osa))
-                                   (if paatos_taloudellinen_osa (name paatos_taloudellinen_osa))
-                                   perustelu_tekninen_osa
-                                   perustelu_taloudellinen_osa
-                                   (konv/sql-date kasittelyaika_tekninen_osa)
-                                   (konv/sql-date kasittelyaika_taloudellinen_osa)
+                                   (if paatos-tekninen-osa (name paatos-tekninen-osa))
+                                   (if paatos-taloudellinen-osa (name paatos-taloudellinen-osa))
+                                   perustelu-tekninen-osa
+                                   perustelu-taloudellinen-osa
+                                   (konv/sql-date kasittelyaika-tekninen-osa)
+                                   (konv/sql-date kasittelyaika-taloudellinen-osa)
                                    (:id user)
                                    paallystyskohde-id))
   id)
 
-(defn- luo-paallystysilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paallystys takuupvm paallystyskohde-id]}]
+(defn- luo-paallystysilmoitus [db user
+                               {:keys [ilmoitustiedot aloituspvm valmispvm-kohde valmispvm-paallystys
+                                       takuupvm paallystyskohde-id]}]
   (log/debug "Luodaan uusi päällystysilmoitus.")
-  (log/debug "valmispvm_kohde: " (pr-str valmispvm_kohde))
-  (log/debug "valmispvm_paallystys: " (pr-str valmispvm_paallystys))
+  (log/debug "valmispvm-kohde: " (pr-str valmispvm-kohde))
+  (log/debug "valmispvm-paallystys: " (pr-str valmispvm-paallystys))
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-        tila (if (and valmispvm_kohde valmispvm_paallystys) "valmis" "aloitettu")
+        tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (:id (q/luo-paallystysilmoitus<! db
@@ -145,8 +152,8 @@
                                      tila
                                      encoodattu-ilmoitustiedot
                                      (konv/sql-date aloituspvm)
-                                     (konv/sql-date valmispvm_kohde)
-                                     (konv/sql-date valmispvm_paallystys)
+                                     (konv/sql-date valmispvm-kohde)
+                                     (konv/sql-date valmispvm-paallystys)
                                      (konv/sql-date takuupvm)
                                      muutoshinta
                                      (:id user)))))
@@ -170,8 +177,8 @@
                                         c user {:urakka-id urakka-id
                                                 :sopimus-id sopimus-id
                                                 :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})
+          ;; Tunnistetaan uuden tallentaminen
           paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
-                                        ;; Tunnistetaan uuden tallentaminen
                                         paallystysilmoitus-kannassa)
           kasittelytiedot-muuttuneet? (fn [uudet-tiedot tiedot-kannassa]
                                         (let [vertailtavat
@@ -193,7 +200,7 @@
       (log/debug "Tarkistetaan onko POT lukittu...")
       (if (= :lukittu (:tila paallystysilmoitus-kannassa))
         (do (log/debug "POT on lukittu, ei voi päivittää!")
-            (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
+            (throw (RuntimeException. "Päällystysilmoitus oyhan lukittu, ei voi päivittää!")))
         (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))
 
       (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user paallystysilmoitus

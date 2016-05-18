@@ -1,15 +1,15 @@
 -- name: hae-urakan-paallystysilmoitukset
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
-  yllapitokohde.id AS paallystyskohde_id,
+  yllapitokohde.id AS "paallystyskohde-id",
   pi.tila,
   nimi,
   kohdenumero,
-  pi.paatos_tekninen_osa,
-  pi.paatos_taloudellinen_osa,
-  sopimuksen_mukaiset_tyot,
+  pi.paatos_tekninen_osa AS "paatos-tekninen-osa",
+  pi.paatos_taloudellinen_osa  AS "paatos-taloudellinen-osa",
+  sopimuksen_mukaiset_tyot  AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset,
-  bitumi_indeksi,
+  bitumi_indeksi AS "bitumi-indeksi",
   kaasuindeksi
 FROM yllapitokohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id

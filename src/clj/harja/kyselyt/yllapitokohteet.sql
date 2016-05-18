@@ -2,27 +2,27 @@
 -- Hakee urakan kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
   ypk.id,
-  pi.id    AS paallystysilmoitus_id,
-  pi.tila  AS paallystysilmoitus_tila,
+  pi.id    AS "paallystysilmoitus-id",
+  pi.tila  AS "paallystysilmoitus-tila",
   pi.muutoshinta,
+  pai.id   AS "paikkausilmoitus-id",
+  pai.tila AS "paikkausilmoitus-tila",
+  pai.toteutunut_hinta AS "toteutunut-hinta",
   ypk.kohdenumero,
   ypk.nimi,
-  ypk.sopimuksen_mukaiset_tyot,
+  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
-  ypk.bitumi_indeksi,
+  ypk.bitumi_indeksi AS "bitumi-indeksi",
   ypk.kaasuindeksi,
-  ypk.nykyinen_paallyste,
-  ypk.keskimaarainen_vuorokausiliikenne,
+  ypk.nykyinen_paallyste AS "nykyinen-paallyste",
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   yllapitoluokka,
-  ypk.tr_numero,
-  ypk.tr_alkuosa,
-  ypk.tr_alkuetaisyys,
-  ypk.tr_loppuosa,
-  ypk.tr_loppuetaisyys,
-  ypk.yhaid,
-  pai.id   AS paikkausilmoitus_id,
-  pai.tila AS paikkausilmoitus_tila,
-  pai.toteutunut_hinta
+  ypk.tr_numero AS "tr-numero",
+  ypk.tr_alkuosa AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypk.yhaid
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -39,9 +39,9 @@ SELECT
   id,
   kohdenumero,
   nimi,
-  sopimuksen_mukaiset_tyot,
+  sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset,
-  bitumi_indeksi,
+  bitumi_indeksi AS "bitumi-indeksi",
   kaasuindeksi
 FROM yllapitokohde
 WHERE urakka = :urakka AND id = :id;
@@ -51,11 +51,11 @@ WHERE urakka = :urakka AND id = :id;
 SELECT
   ypko.id,
   ypko.nimi,
-  ypko.tr_numero,
-  ypko.tr_alkuosa,
-  ypko.tr_alkuetaisyys,
-  ypko.tr_loppuosa,
-  ypko.tr_loppuetaisyys,
+  ypko.tr_numero AS "tr-numero",
+  ypko.tr_alkuosa AS "tr-alkuosa",
+  ypko.tr_alkuetaisyys AS "tr-alkuetaisyys",
+  ypko.tr_loppuosa AS "tr-loppuosa",
+  ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id

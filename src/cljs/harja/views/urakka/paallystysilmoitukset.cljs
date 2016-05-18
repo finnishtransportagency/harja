@@ -66,31 +66,31 @@
                  :perustelu-tekninen-osa
                  (:perustelu_tekninen_osa @paallystys/paallystysilmoitus-lomakedata)
                  :kasittelyaika-tekninen-osa
-                 (:kasittelyaika_tekninen_osa @paallystys/paallystysilmoitus-lomakedata)}
+                 (:kasittelyaika-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
                          #(-> %
-                              (assoc :paatos_tekninen_osa
+                              (assoc :paatos-tekninen-osa
                                      (:paatos-tekninen uusi-arvo))
-                              (assoc :perustelu_tekninen_osa
+                              (assoc :perustelu-tekninen-osa
                                      (:perustelu-tekninen-osa uusi-arvo))
-                              (assoc :kasittelyaika_tekninen_osa
+                              (assoc :kasittelyaika-tekninen-osa
                                      (:kasittelyaika-tekninen-osa uusi-arvo))))))
         paatos-taloudellinen-osa
         (r/wrap {:paatos-taloudellinen
-                 (:paatos_taloudellinen_osa @paallystys/paallystysilmoitus-lomakedata)
+                 (:paatos-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)
                  :perustelu-taloudellinen-osa
-                 (:perustelu_taloudellinen_osa @paallystys/paallystysilmoitus-lomakedata)
+                 (:perustelu-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)
                  :kasittelyaika-taloudellinen-osa
-                 (:kasittelyaika_taloudellinen_osa @paallystys/paallystysilmoitus-lomakedata)}
+                 (:kasittelyaika-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
                          #(-> %
-                              (assoc :paatos_taloudellinen_osa
+                              (assoc :paatos-taloudellinen-osa
                                      (:paatos-taloudellinen uusi-arvo))
-                              (assoc :perustelu_taloudellinen_osa
+                              (assoc :perustelu-taloudellinen-osa
                                      (:perustelu-taloudellinen-osa uusi-arvo))
-                              (assoc :kasittelyaika_taloudellinen_osa
+                              (assoc :kasittelyaika-taloudellinen-osa
                                      (:kasittelyaika-taloudellinen-osa uusi-arvo))))))]
 
     (when @valmis-kasiteltavaksi?
@@ -106,7 +106,7 @@
           :nimi :kasittelyaika-tekninen-osa
           :tyyppi :pvm
           :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]
-                    [:pvm-toisen-pvmn-jalkeen (:valmispvm_kohde @paallystys/paallystysilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
+                    [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
 
          {:otsikko "Päätös"
           :nimi :paatos-tekninen
@@ -136,7 +136,7 @@
           :nimi :kasittelyaika-taloudellinen-osa
           :tyyppi :pvm
           :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]
-                    [:pvm-toisen-pvmn-jalkeen (:valmispvm_kohde @paallystys/paallystysilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
+                    [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
 
          {:otsikko "Päätös"
           :nimi :paatos-taloudellinen
@@ -238,7 +238,7 @@
       (fn []
         (let [lomakedata-nyt @paallystys/paallystysilmoitus-lomakedata
               kohteen-tiedot (r/wrap {:aloituspvm (:aloituspvm lomakedata-nyt)
-                                      :valmispvm_kohde (:valmispvm-kohde lomakedata-nyt)
+                                      :valmispvm-kohde (:valmispvm-kohde lomakedata-nyt)
                                       :valmispvm-paallystys (:valmispvm-paallystys lomakedata-nyt)
                                       :takuupvm (:takuupvm lomakedata-nyt)}
                                      (fn [uusi-arvo]
@@ -622,11 +622,11 @@
                                 :valmis 1
                                 :aloitettu 3
                                 4))
-                (fn [toteuma] (case (:paatos_tekninen_osa toteuma)
+                (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
                                 :hyvaksytty 0
                                 :hylatty 1
                                 3))
-                (fn [toteuma] (case (:paatos_taloudellinen_osa toteuma)
+                (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
                                 :hyvaksytty 0
                                 :hylatty 1
                                 3)))
