@@ -134,7 +134,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
          (run! (when-let [ur @valittu-urakka]
                  (reset! valittu-urakkatyyppi (urakkatyyppi (:tyyppi ur))))))
 
-(defn paivita-urakka [urakka-id funktio & argumentit]
+(defn paivita-urakka! [urakka-id funktio & argumentit]
   (swap! hallintayksikon-urakkalista (fn [urakat]
                        (mapv #(if (= urakka-id (:id %))
                                (apply funktio % argumentit)

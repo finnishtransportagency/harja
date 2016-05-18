@@ -23,7 +23,11 @@
             [harja.ui.modal :as modal]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.fmt :as fmt])
+            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.napit :as napit]
+            [harja.fmt :as fmt]
+            [harja.ui.ikonit :as ikonit]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -81,7 +85,7 @@
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
   (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) uusi-sopimustyyppi))]
         (if-not (k/virhe? res)
-          (nav/paivita-urakka (:id ur) assoc :sopimustyyppi res)
+          (nav/paivita-urakka! (:id ur) assoc :sopimustyyppi res)
           true))))
 
 (defn vahvista-urakkatyypin-vaihtaminen [ur uusi-urakkatyyppi]
@@ -91,7 +95,7 @@
                                                     (:id ur)
                                                     (name uusi-urakkatyyppi)))]
                                       (if-not (k/virhe? res)
-                                        (nav/paivita-urakka (:id ur) assoc :tyyppi res)
+                                        (nav/paivita-urakka! (:id ur) assoc :tyyppi res)
                                         true))))]
       (modal/nayta!
         {:otsikko "Vaihdetaanko urakkatyyppi?"
@@ -201,6 +205,21 @@
            :fmt fmt/totuus :tasaa :keskita}]
          @paivystajat]))))
 
+(defn takuuaika [ur]
+  (let [loppupvm (atom (get-in ur [:takuu :loppupvm]))]
+    (komp/luo
+     (komp/kun-muuttuu #(reset! loppupvm (get-in % [:takuu :loppupvm])))
+     (fn [ur]
+       [:span.takuuaika.inline
+        (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+          [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
+           (r/wrap (get-in ur [:takuu :loppupvm])
+                   #(nav/paivita-urakka! (:id ur) assoc-in [:takuu :loppupvm] %))]
+          [:span
+           (if-let [p (get-in ur [:takuu :loppupvm])]
+             (pvm/pvm p)
+             "Ei asetettu")])]))))
+
 (defn yleiset-tiedot [ur]
   (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
         sopimustyyppi (:sopimustyyppi ur)
@@ -252,6 +271,7 @@
         :default nil)
       "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
+      "Takuu päättyy:" [takuuaika ur]
       "Tilaaja:" (:nimi (:hallintayksikko ur))
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       ;; valaistus, tiemerkintä --> palvelusopimus
