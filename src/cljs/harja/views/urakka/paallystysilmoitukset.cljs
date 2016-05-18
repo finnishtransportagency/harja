@@ -56,7 +56,7 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                      (oikeudet/voi-kirjoittaa?
+                      (oikeudet/on-muu-oikeus? "päätös"
                         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id @nav/valittu-urakka))
                       (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
                       (false? @paallystys/paallystysilmoituslomake-lukittu?))
@@ -348,6 +348,7 @@
              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "15%"}
               {:otsikko "Tienumero" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
                :validoi [[:ei-tyhja "Tienumero puuttuu"]]}
+              ; FIXME Voidaanko korvata yllapitokohteet-namespacen kohdeosat-komponentilla?
               #_{:otsikko "Ajorata" ;; FIXME Toistaiseksi samat tiedot kuin kohdeluettelossa, halutaanko YHA:n kaista ja ajorata mukaan?
                :nimi :ajorata
                :tyyppi :valinta
