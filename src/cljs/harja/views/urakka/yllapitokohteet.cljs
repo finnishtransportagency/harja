@@ -17,7 +17,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.domain.paallystysilmoitus :as pot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -174,10 +175,29 @@
      :tyyppi :positiivinen-numero :leveys tr-leveys}
     {:otsikko "Let" :nimi :tr-loppuetaisyys :muokattava? (constantly (not (:yha-sidottu? optiot)))
      :tyyppi :positiivinen-numero :leveys tr-leveys}
-    {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero
-     :leveys tr-leveys :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-    {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero
-     :leveys tr-leveys :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+    {:otsikko "Ajorata"
+     :nimi :tr-ajorata
+     :tyyppi :valinta
+     :fmt (fn [arvo]
+            (:nimi (first (filter
+                            (fn [ajorata]
+                              (= arvo (:koodi ajorata)))
+                            pot/+ajoradat+))))
+     :valinta-arvo :koodi
+     :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
+     :valinnat pot/+ajoradat+
+     :leveys tr-leveys}
+    {:otsikko "Kaista"
+     :nimi :tr-kaista
+     :tyyppi :valinta
+     :fmt #(:nimi (first (filter
+                           (fn [kaista]
+                             (= % (:koodi kaista)))
+                             pot/+kaistat+)))
+     :valinta-arvo :koodi
+     :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
+     :valinnat pot/+kaistat+
+     :leveys tr-leveys}
     {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
      :hae (fn [rivi]
             (str (tierekisteri/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)

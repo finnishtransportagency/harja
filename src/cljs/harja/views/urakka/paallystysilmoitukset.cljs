@@ -195,6 +195,7 @@
       {:luokka "nappi-ensisijainen"
        :disabled (false? @valmis-tallennettavaksi?)
        :ikoni (ikonit/tallenna)
+       :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu (fn [vastaus]
                        (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
                        (urakka/lukitse-urakan-yha-sidonta! urakka-id)
