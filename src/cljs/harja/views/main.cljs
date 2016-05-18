@@ -86,9 +86,9 @@
                (oikeudet/laadunseuranta))
       [:li {:role "presentation"}
        [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu" (str k/+polku+ "laadunseuranta/")]])]
-    
+
    :right
-   [palaute/palaute-linkki]
+   [palaute/palaute-linkki @istunto/kayttaja (nav/nykyinen-url)]
    [kayttajatiedot istunto/kayttaja]])
 
 (defn ladataan []

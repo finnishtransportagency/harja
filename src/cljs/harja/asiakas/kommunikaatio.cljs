@@ -10,7 +10,6 @@
             [harja.transit :as transit]
             [harja.domain.roolit :as roolit]
             [clojure.string :as str]
-            [harja.virhekasittely :as vk]
             [cljs-time.core :as time]
             [goog.string :as gstr])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))

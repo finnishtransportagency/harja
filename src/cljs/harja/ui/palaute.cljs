@@ -1,36 +1,43 @@
 (ns harja.ui.palaute
   (:require [clojure.string :as string]
             [harja.ui.ikonit :as ikonit]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [reagent.core :refer [atom]]
+            [harja.tiedot.istunto :as istunto]
+            [harja.asiakas.tapahtumat :as t]))
 
 (def sahkoposti "harjapalaute@solita.fi")
+
+(def url (atom nil))
+(defonce aseta-url
+  (t/kuuntele! :url-muuttui #(reset! url (:url %))))
+
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
   "Palautetta HARJAsta")
 (def palaute-body
-  "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen mukaan liittämistä, ne ovat meille erittäin hyödyllisiä.
-Voit pyyhkiä tämän tekstin pois.")
+  (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
+       "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
+       "Ota kuvakaappaukseen mukaan koko selainikkuna."))
 
 (def virhe-otsikko
   "HARJA räsähti")
 
-(defn virhe-body [virheviesti]
-  (let [sijainti-harjassa (-> (str (-> js/window .-window .-location .-href))
-                              (str/replace  "&" " "))] ;; FIXME &-merkkiä ei saanut escapetettua, tämä toimii kunnes löytyy parempi ratkaisu
-    (str
-      "
-      ---
-      Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös hyvä apu. Ethän pyyhi alla olevia virheen teknisiä tietoja pois.
-      ---
+(defn tekniset-tiedot [kayttaja url]
+  (let [enc #(.encodeURIComponent js/window %)]
+    (str "\n---\n"
+         "Sijainti Harjassa: " (enc url) "\n"
+         "Käyttäjä: " (enc (pr-str kayttaja)))))
 
-      Tekniset tiedot:
-
-      "
-      virheviesti
-      "
-
-      Sijainti Harjassa: " sijainti-harjassa)))
+(defn virhe-body [virheviesti kayttaja url]
+  (str
+   "\n---\n"
+   "Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös "
+   "hyvä apu. Ethän pyyhi alla olevia virheen teknisiä tietoja pois."
+   "\n---\nTekniset tiedot:\n"
+   virheviesti
+   (tekniset-tiedot kayttaja url)))
 
 (defn- mailto []
   (str "mailto:" sahkoposti))
@@ -56,15 +63,15 @@ Voit pyyhkiä tämän tekstin pois.")
 (defn palaute-linkki []
   [:a#palautelinkki
    {:href (-> (mailto)
-                              (subject palaute-otsikko "?")
-                              (body palaute-body))}
+              (subject palaute-otsikko "?")
+              (body (str palaute-body (tekniset-tiedot @istunto/kayttaja @url))))}
    [:span (ikonit/livicon-kommentti) " Palautetta!"]])
 
 (defn virhe-palaute [virhe]
   [:a#palautelinkki
    {:href (-> (mailto)
               (subject virhe-otsikko "?")
-              (body (virhe-body virhe)))
+              (body (virhe-body virhe @istunto/kayttaja @url)))
     :on-click #(.stopPropagation %)}
    [:span
     [ikonit/envelope]

@@ -36,10 +36,10 @@
                    (mapv (fn [tehtava]
                            (let [splitattu (str/split tehtava #"\^")]
                              {:tehtava-id (Integer/parseInt (first splitattu))
-                              :tpk-id     (Integer/parseInt (second splitattu))
-                              :nimi       (get splitattu 2)
-                              :maara      (Double/parseDouble (get splitattu 3))
-                              }))
+                              :tpk-id (Integer/parseInt (second splitattu))
+                              :nimi (get splitattu 2)
+                              :maara (when-let [maara (get splitattu 3)]
+                                       (Double/parseDouble maara))}))
                          (:tehtavat %))))))
 
 (def tyhja-tr-osoite {:numero nil :alkuosa nil :alkuetaisyys nil :loppuosa nil :loppuetaisyys nil})

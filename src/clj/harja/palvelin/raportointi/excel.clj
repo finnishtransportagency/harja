@@ -131,7 +131,7 @@
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)]
-    (doseq [elementti sisalto]
+    (doseq [elementti (remove nil? sisalto)]
       (muodosta-excel elementti workbook)))
   (:nimi raportin-tunnistetiedot))
 
