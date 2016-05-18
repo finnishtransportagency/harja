@@ -58,7 +58,7 @@
                                        (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
                                        (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa])))
                                  (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
-        ;; Yhdistä kohdeosat
+        ;; Yhdistä kohdeosat samalle riville
         paallystysilmoitus (first (konv/sarakkeet-vektoriin
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
@@ -70,7 +70,7 @@
                                  (mapv
                                    (fn [kohdeosa]
                                      ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
-                                     (merge kohdeosa
+                                     (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
                                             (first (filter
                                                      (fn [paallystystoimenpide]
                                                        (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide)))
