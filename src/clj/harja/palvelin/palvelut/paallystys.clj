@@ -163,6 +163,28 @@
     (paivita-paallystysilmoitus db user lomakedata)
     (luo-paallystysilmoitus db user lomakedata)))
 
+(defn- tarkista-paallystysilmoituksen-tallentamisoikeudet [paallystysilmoitus paallystysilmoitus-kannassa]
+  (let [kasittelytiedot-muuttuneet? (fn [uudet-tiedot tiedot-kannassa]
+                                      (let [vertailtavat
+                                            [:paatos-tekninen-osa :paatos-taloudellinen-osa
+                                             :perustelu-tekninen-osa :perustelu-taloudellinen-osa
+                                             :kasittelyaika-tekninen-osa :kasittelyaika-taloudellinen-osa]]
+                                        (not= ((apply juxt vertailtavat) uudet-tiedot)
+                                              ((apply juxt vertailtavat) tiedot-kannassa))))]
+    ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
+    ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
+    (if (kasittelytiedot-muuttuneet? paallystysilmoitus paallystysilmoitus-kannassa)
+      (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                             user urakka-id))
+
+    ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
+    ;; mutta tehdään silti tarkistus
+    (log/debug "Tarkistetaan onko POT lukittu...")
+    (if (= :lukittu (:tila paallystysilmoitus-kannassa))
+      (do (log/debug "POT on lukittu, ei voi päivittää!")
+          (throw (RuntimeException. "Päällystysilmoitus oyhan lukittu, ei voi päivittää!")))
+      (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))))
+
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
   (log/debug "Käsitellään päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
@@ -179,33 +201,11 @@
                                                 :paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)})
           ;; Tunnistetaan uuden tallentaminen
           paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
-                                        paallystysilmoitus-kannassa)
-          kasittelytiedot-muuttuneet? (fn [uudet-tiedot tiedot-kannassa]
-                                        (let [vertailtavat
-                                              [:paatos-tekninen-osa :paatos-taloudellinen-osa
-                                               :perustelu-tekninen-osa :perustelu-taloudellinen-osa
-                                               :kasittelyaika-tekninen-osa :kasittelyaika-taloudellinen-osa]]
-                                          (not= ((apply juxt vertailtavat) uudet-tiedot)
-                                                ((apply juxt vertailtavat) tiedot-kannassa))))]
+                                        paallystysilmoitus-kannassa)]
       (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
-
-      ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
-      ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
-      (if (kasittelytiedot-muuttuneet? paallystysilmoitus paallystysilmoitus-kannassa)
-        (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                               user urakka-id))
-
-      ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
-      ;; mutta tehdään silti tarkistus
-      (log/debug "Tarkistetaan onko POT lukittu...")
-      (if (= :lukittu (:tila paallystysilmoitus-kannassa))
-        (do (log/debug "POT on lukittu, ei voi päivittää!")
-            (throw (RuntimeException. "Päällystysilmoitus oyhan lukittu, ei voi päivittää!")))
-        (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))
-
+      (tarkista-paallystysilmoituksen-tallentamisoikeudet paallystysilmoitus paallystysilmoitus-kannassa)
       (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c user paallystysilmoitus
                                                                       paallystysilmoitus-kannassa)]
-
         ;; Luodaan uusi kommentti
         (when-let [uusi-kommentti (:uusi-kommentti paallystysilmoitus)]
           (log/info "Uusi kommentti: " uusi-kommentti)
