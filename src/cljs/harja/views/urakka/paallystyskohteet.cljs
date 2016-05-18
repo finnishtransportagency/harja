@@ -17,7 +17,9 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -39,8 +41,10 @@
                                [sopimus-id _] @u/valittu-sopimusnumero
                                _ (log "PÄÄ Tallennetaan päällystyskohteet: " (pr-str kohteet))
                                vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet! urakka-id sopimus-id kohteet))]
-                           (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
-                           (reset! paallystys/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? vastaus)))))
+                           (if (k/virhe? vastaus)
+                             (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                             (do (log "PÄÄ päällystyskohteet tallennettu: " (pr-str vastaus))
+                                 (reset! paallystys/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? vastaus)))))))
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 

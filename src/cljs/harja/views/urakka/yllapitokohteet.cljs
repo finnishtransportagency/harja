@@ -19,7 +19,9 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka :as urakka]
-            [harja.domain.paallystysilmoitus :as pot])
+            [harja.domain.paallystysilmoitus :as pot]
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -95,10 +97,13 @@
                                                   (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                            %)
                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat! urakka-id sopimus-id (:id rivi) osat))]
-                            (log "[PAAL] ylläpitokohdeosat tallennettu: " (pr-str vastaus))
-                            (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-                            (resetoi-tr-tiedot)
-                            (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))
+                            (if (k/virhe? vastaus)
+                              (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                              (do
+                                (log "[PAAL] ylläpitokohdeosat tallennettu: " (pr-str vastaus))
+                                (urakka/lukitse-urakan-yha-sidonta! urakka-id)
+                                (resetoi-tr-tiedot)
+                                (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))))
            :luokat ["yllapitokohdeosat-haitari"]
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [g]

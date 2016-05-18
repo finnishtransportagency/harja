@@ -15,7 +15,9 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.pvm :as pvm]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -36,8 +38,11 @@
                                [sopimus-id _] @u/valittu-sopimusnumero
                                _ (log "PÄÄ Tallennetaan paikkauskohteet: " (pr-str kohteet))
                                vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet! urakka-id sopimus-id kohteet))]
-                           (log "PÄÄ paikkaustyskohteet tallennettu: " (pr-str vastaus))
-                           (reset! paikkaus/paikkauskohteet vastaus))))
+                           (if (k/virhe? vastaus)
+                             (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                             (do
+                               (log "PÄÄ paikkaustyskohteet tallennettu: " (pr-str vastaus))
+                               (reset! paikkaus/paikkauskohteet vastaus))))))
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
