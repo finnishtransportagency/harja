@@ -226,7 +226,9 @@
              (number? @tallennus-kaynnissa) [yleiset/ajax-loader-pieni]
              (= :virhe @tallennus-kaynnissa) [:span (ikonit/livicon-warning-sign)]
              :default nil)
-           (when-not (pvm/jalkeen? (get-in ur [:takuu :loppupvm]) (:loppupvm ur))
+           (when (and
+                   (get-in ur [:takuu :loppupvm])
+                   (not (pvm/jalkeen? (get-in ur [:takuu :loppupvm]) (:loppupvm ur))))
              (yleiset/vihje "Takuu päättyy yleensä urakan päättymisen jälkeen, tarkista päivämäärä"))]
           [:span
            (if-let [p (get-in ur [:takuu :loppupvm])]
