@@ -25,7 +25,7 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.views.kartta :as kartta]
-            [harja.ui.tierekisteri :as tierekisteri]
+            [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
@@ -378,7 +378,7 @@
               {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pit." :nimi :pituus :leveys "10%" :tyyppi :numero
-               :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri/laske-tien-pituus rivi))}]
+               :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}]
              paallystystoimenpiteet]
 
             [grid/muokkaus-grid
@@ -486,7 +486,7 @@
               {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero
-               :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri/laske-tien-pituus rivi))}
+               :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
               {:otsikko "Käsittely\u00ADmenetelmä"
                :nimi :kasittelymenetelma
                :tyyppi :valinta

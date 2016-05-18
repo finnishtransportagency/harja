@@ -14,6 +14,7 @@
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yha :as yha]
             [harja.domain.skeema :as skeema]
+            [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]))
 
@@ -75,7 +76,7 @@
                                                      (fn [paallystystoimenpide]
                                                        (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide)))
                                                      (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])))))
-                                   (:kohdeosat paallystysilmoitus)))
+                                   (sort-by tierekisteri-domain/tiekohteiden-jarjestys (:kohdeosat paallystysilmoitus))))
                                (dissoc :kohdeosat))]
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
     (if-not paallystysilmoitus

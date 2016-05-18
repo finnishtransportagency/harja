@@ -4,6 +4,7 @@
     [cljs.test :as test :refer-macros [deftest is]]
     [harja.loki :refer [log]]
     [harja.domain.paallystysilmoitus :as pot]
+    [harja.domain.tierekisteri :as tierekisteri-domain]
     [harja.ui.tierekisteri :as tierekisteri]))
 
 (deftest tien-pituus-laskettu-oikein
@@ -13,12 +14,12 @@
         tie4 {:aet 1 :let 2}
         tie5 {:aet 0 :let 1}
         tie6 {:aet 1}]
-    (is (= (tierekisteri/laske-tien-pituus tie1) 2))
-    (is (= (tierekisteri/laske-tien-pituus tie2) 0))
-    (is (= (tierekisteri/laske-tien-pituus tie3) 103))
-    (is (= (tierekisteri/laske-tien-pituus tie4) 1))
-    (is (= (tierekisteri/laske-tien-pituus tie5) 1))
-    (is (= (tierekisteri/laske-tien-pituus tie6) nil))))
+    (is (= (tierekisteri-domain/laske-tien-pituus tie1) 2))
+    (is (= (tierekisteri-domain/laske-tien-pituus tie2) 0))
+    (is (= (tierekisteri-domain/laske-tien-pituus tie3) 103))
+    (is (= (tierekisteri-domain/laske-tien-pituus tie4) 1))
+    (is (= (tierekisteri-domain/laske-tien-pituus tie5) 1))
+    (is (= (tierekisteri-domain/laske-tien-pituus tie6) nil))))
 
 (deftest muutos-kokonaishintaan-laskettu-oikein
   (let [tyot [{:tilattu-maara 10 :toteutunut-maara 15 :yksikkohinta 1}

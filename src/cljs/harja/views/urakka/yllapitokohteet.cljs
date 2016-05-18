@@ -14,6 +14,7 @@
             [harja.views.kartta :as kartta]
             [harja.geo :as geo]
             [harja.ui.tierekisteri :as tierekisteri]
+            [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.tiedot.urakka :as u]
@@ -159,10 +160,10 @@
             :leveys tr-leveys}
            {:otsikko "Pit." :nimi :pit :muokattava? (constantly false) :tyyppi :string
             :hae (fn [rivi]
-                   (str (tierekisteri/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)
+                   (str (tierekisteri-domain/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)
                                                          :let (:tr-loppuetaisyys rivi)})))
             :leveys tr-leveys}]
-          kohdeosat]
+          (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
          [yllapitokohdeosa-virheet tr-virheet]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
@@ -219,7 +220,7 @@
      :leveys tr-leveys}
     {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
      :hae (fn [rivi]
-            (str (tierekisteri/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)
+            (str (tierekisteri-domain/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)
                                                   :let (:tr-loppuetaisyys rivi)})))
      :leveys tr-leveys}
     {:otsikko "KVL"
@@ -260,7 +261,7 @@
                         (:arvonvahennykset rivi)
                         (:bitumi-indeksi rivi)
                         (:kaasuindeksi rivi)))}]
-   @kohteet-atom])
+   (sort-by tierekisteri-domain/tiekohteiden-jarjestys @kohteet-atom)])
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
   (let [yhteensa (reaction (let [kohteet @kohteet-atom
