@@ -49,21 +49,25 @@
                             {rooli :rooli
                              roolin-urakka-id :urakka-id
                              roolin-organisaatio-id :organisaatio-id}]
-  (let [konteksti (oikeus-pred rooli)]
+  (let [konteksti (oikeus-pred rooli)
+        urakkaoikeus? (= roolin-urakka-id urakka-id)]
     (case konteksti
       ;; Kaikki antaa oikeuden mihin vaan urakkaan
       :kaikki :kaikki
 
       ;; Organisaatio, jos testattava urakka kuuluu organisaatiolle.
       ;; Jos rooli on annettu organisaatiokohtaisesti, tarkistetaan, että käyttäjän
-      ;; organisaatio on sama kuin roolin organisaatio
-      :organisaatio (when (and (or (nil? roolin-organisaatio-id)
-                                   (= organisaatio-id roolin-organisaatio-id))
-                               organisaation-urakka?)
-                      :organisaatio)
+      ;; organisaatio on sama kuin roolin organisaatio.
+      ;; Erikoistapauksena urakkarooli voi olla myös muusta organisaatiosta
+      :organisaatio (if (and (or (nil? roolin-organisaatio-id)
+                                 (= organisaatio-id roolin-organisaatio-id))
+                             organisaation-urakka?)
+                      :organisaatio
+                      (when urakkaoikeus?
+                        :urakka))
 
       ;; Urakka, jos urakkarooli on annettu testattavalle urakalle
-      :urakka (when (= roolin-urakka-id urakka-id)
+      :urakka (when urakkaoikeus?
                 :urakka)
 
       ;; Ei oikeutta
