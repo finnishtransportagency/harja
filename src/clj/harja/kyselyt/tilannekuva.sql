@@ -65,10 +65,10 @@ FROM ilmoitus i
 WHERE
   ((:alku :: DATE IS NULL AND :loppu :: DATE IS NULL)
    OR ((i.ilmoitettu BETWEEN :alku AND :loppu) OR
-   EXISTS (SELECT id FROM ilmoitustoimenpide
-   WHERE
-   ilmoitus = i.id AND
-   kuitattu BETWEEN :alku AND :loppu))) AND
+       EXISTS (SELECT id FROM ilmoitustoimenpide
+       WHERE
+         ilmoitus = i.id AND
+         kuitattu BETWEEN :alku AND :loppu))) AND
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
   i.ilmoitustyyppi :: TEXT IN (:tyypit);
 
@@ -99,7 +99,7 @@ FROM laatupoikkeama l
 WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND (l.aika BETWEEN :alku AND :loppu OR
            l.kasittelyaika BETWEEN :alku AND :loppu) AND
-           l.tekija :: TEXT IN (:tekijat)
+      l.tekija :: TEXT IN (:tekijat)
       AND l.poistettu IS NOT TRUE;
 
 -- name: hae-tarkastukset
@@ -120,9 +120,9 @@ SELECT
   t.tyyppi
 FROM tarkastus t
 WHERE sijainti IS NOT NULL
-  AND (t.urakka IN (:urakat) OR t.urakka IS NULL)
-  AND (t.aika BETWEEN :alku AND :loppu) AND
-       t.tyyppi :: TEXT IN (:tyypit);
+      AND (t.urakka IN (:urakat) OR t.urakka IS NULL)
+      AND (t.aika BETWEEN :alku AND :loppu) AND
+      t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
@@ -171,9 +171,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
-  ypko.tr_loppuetaisyys,
-  pi.id                                   AS "paallystysilmoitus-id",
-  pi.tila                                 AS "paallystysilmoitus-tila",
+  pi.id   AS paallystysilmoitus_id,
+  pi.tila AS paallystysilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paallystys AS paallystysvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
@@ -181,8 +180,8 @@ SELECT
 FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-    AND (pi.tila :: TEXT != 'valmis' OR
-             (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
+                                     AND (pi.tila :: TEXT != 'valmis' OR
+                                          (now() - pi.valmispvm_kohde) < INTERVAL '7 days')
 WHERE ypk.poistettu IS NOT TRUE;
 
 -- name: hae-paallystykset-historiakuvaan
@@ -197,8 +196,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
-  pi.id                                   AS "paallystysilmoitus-id",
-  pi.tila                                 AS "paallystysilmoitus-tila",
+  pi.id                                   AS paallystysilmoitus_id,
+  pi.tila                                 AS paallystysilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paallystys                 AS paallystysvalmispvm,
   pi.valmispvm_kohde                      AS kohdevalmispvm,
@@ -221,8 +220,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
-  pi.id   AS "paikkausilmoitus-id",
-  pi.tila AS "paikkausilmoitus-tila",
+  pi.id   AS paikkausilmoitus_id,
+  pi.tila AS paikkausilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paikkaus AS paikkausvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
@@ -246,8 +245,8 @@ SELECT
   ypko.tr_alkuetaisyys,
   ypko.tr_loppuosa,
   ypko.tr_loppuetaisyys,
-  pi.id   AS "paikkausilmoitus-id",
-  pi.tila AS "paikkausilmoitus-tila",
+  pi.id   AS paikkausilmoitus_id,
+  pi.tila AS paikkausilmoitus_tila,
   pi.aloituspvm,
   pi.valmispvm_paikkaus AS paikkausvalmispvm,
   pi.valmispvm_kohde AS kohdevalmispvm,
@@ -256,7 +255,7 @@ FROM yllapitokohdeosa ypko
   LEFT JOIN yllapitokohde pk ON ypko.yllapitokohde = pk.id
   LEFT JOIN paikkausilmoitus pi ON pi.paikkauskohde = pk.id
 WHERE pk.poistettu IS NOT TRUE AND
-       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
+      (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
 -- FIXME: poista tästä "turhaa" tietoa, jota ei renderöinti tarvi
@@ -266,11 +265,11 @@ SELECT
   tt.toimenpidekoodi          AS tehtava_toimenpidekoodi,
   tpk.nimi                    AS tehtava_toimenpide
 FROM toteuma_tehtava tt
-     JOIN toteuma t ON tt.toteuma = t.id
-                        AND t.alkanut >= :alku
-                        AND t.paattynyt <= :loppu
-                        AND t.poistettu IS NOT TRUE
-     JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
+  JOIN toteuma t ON tt.toteuma = t.id
+                    AND t.alkanut >= :alku
+                    AND t.paattynyt <= :loppu
+                    AND t.poistettu IS NOT TRUE
+  JOIN toimenpidekoodi tpk ON tpk.id = tt.toimenpidekoodi
 WHERE tt.poistettu IS NOT TRUE AND
       tt.toimenpidekoodi IN (:toimenpidekoodit) AND
       (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
@@ -281,11 +280,11 @@ WHERE tt.poistettu IS NOT TRUE AND
 -- name: hae-toteumien-selitteet
 SELECT
   DISTINCT(tt.toimenpidekoodi) AS toimenpidekoodi,
-  (SELECT nimi
-   FROM toimenpidekoodi tpk
-   WHERE id = tt.toimenpidekoodi) AS toimenpide
+          (SELECT nimi
+           FROM toimenpidekoodi tpk
+           WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
-     JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toteuma t ON tt.toteuma = t.id
                     AND t.alkanut >= :alku
                     AND t.paattynyt <= :loppu
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
