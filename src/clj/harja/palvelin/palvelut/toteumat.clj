@@ -277,7 +277,11 @@
 (def erilliskustannus-xf
   (comp
     erilliskustannus-tyyppi-xf
-    erilliskustannus-rahasumma-xf))
+    erilliskustannus-rahasumma-xf
+    ;; Asiakastyytyväisyysbonuksen indeksikorotus lasketaan eri kaavalla
+    (map #(if (= (:tyyppi %) :asiakastyytyvaisyysbonus)
+           (assoc % :indeksikorjattuna (:bonus-indeksikorjattuna %))
+           %))))
 
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/lue  oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
