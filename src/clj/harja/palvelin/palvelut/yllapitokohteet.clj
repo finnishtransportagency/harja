@@ -87,13 +87,13 @@
                            tr-loppuetaisyys
                            tr-ajorata
                            tr-kaista
-                           (or keskimaarainen-vuorokausiliikenne 0)
+                           keskimaarainen-vuorokausiliikenne
                            yllapitoluokka,
                            nykyinen-paallyste,
-                           (or sopimuksen-mukaiset-tyot 0)
-                           (or arvonvahennykset 0)
-                           (or bitumi-indeksi 0)
-                           (or kaasuindeksi 0)
+                           sopimuksen-mukaiset-tyot
+                           arvonvahennykset
+                           bitumi-indeksi
+                           kaasuindeksi
                            nykyinen-paallyste)))
 
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
@@ -130,10 +130,10 @@
                                   keskimaarainen-vuorokausiliikenne
                                   yllapitoluokka,
                                   nykyinen-paallyste,
-                                  (or sopimuksen-mukaiset-tyot 0)
-                                  (or arvonvahennykset 0)
-                                  (or bitumi-indeksi 0)
-                                  (or kaasuindeksi 0)
+                                  sopimuksen-mukaiset-tyot
+                                  arvonvahennykset
+                                  bitumi-indeksi
+                                  kaasuindeksi
                                   id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
@@ -160,11 +160,11 @@
     (q/luo-yllapitokohdeosa<! db
                               yllapitokohde-id
                               nimi
-                              (or tr-numero 0)
-                              (or tr-alkuosa 0)
-                              (or tr-alkuetaisyys 0)
-                              (or tr-loppuosa 0)
-                              (or tr-loppuetaisyys 0)
+                              tr-numero
+                              tr-alkuosa
+                              tr-alkuetaisyys
+                              tr-loppuosa
+                              tr-loppuetaisyys
                               tr-ajorata
                               tr-kaista
                               (geo/geometry (geo/clj->pg sijainti)))))
@@ -179,11 +179,11 @@
     (do (log/debug "Päivitetään ylläpitokohdeosa")
         (q/paivita-yllapitokohdeosa! db
                                      nimi
-                                     (or tr-numero 0)
-                                     (or tr-alkuosa 0)
-                                     (or tr-alkuetaisyys 0)
-                                     (or tr-loppuosa 0)
-                                     (or tr-loppuetaisyys 0)
+                                     tr-numero
+                                     tr-alkuosa
+                                     tr-alkuetaisyys
+                                     tr-loppuosa
+                                     tr-loppuetaisyys
                                      tr-ajorata
                                      tr-kaista
                                      (when-not (empty? sijainti)

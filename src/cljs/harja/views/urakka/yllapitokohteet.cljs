@@ -200,7 +200,7 @@
      :muokattava? (constantly (not (:yha-sidottu? optiot)))}
     (when (:paallystysnakyma? optiot)
       {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
-       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :validoi [[:ei-tyhja "Anna arvo"]]})
+       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys})
     (when (:paallystysnakyma? optiot)
       {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false)
        :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
@@ -208,11 +208,11 @@
       {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :muokattava? (constantly false)
        :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
     {:otsikko "Ar\u00ADvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt
-     :tyyppi :numero :leveys arvonvahennykset-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+     :tyyppi :numero :leveys arvonvahennykset-leveys}
     {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi :fmt fmt/euro-opt
-     :tyyppi :numero :leveys bitumi-indeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+     :tyyppi :numero :leveys bitumi-indeksi-leveys}
     {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
-     :tyyppi :numero :leveys kaasuindeksi-leveys :validoi [[:ei-tyhja "Anna arvo"]]}
+     :tyyppi :numero :leveys kaasuindeksi-leveys}
     {:otsikko "Ko\u00ADko\u00ADnais\u00ADhinta (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)" :muokattava? (constantly false)
      :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
      :hae (fn [rivi] (+ (:sopimuksen-mukaiset-tyot rivi)
