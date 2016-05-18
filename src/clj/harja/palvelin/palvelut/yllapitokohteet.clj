@@ -112,6 +112,7 @@
                                   id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
+  ;; FIXME Tallenna myös tien tiedot....
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (jdbc/with-db-transaction [c db]

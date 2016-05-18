@@ -96,6 +96,7 @@
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
 
 (defn- luo-esitaytetty-paallystysilmoitus [db user kohde kohdeosat]
+  ; FIXME Ei toimi enää näin, koska osoitteet tulevat suoraan alikohteilta
   (log/debug "Tehdään kohdeosista esitäytetty päällystysilmoitus")
   (let [ilmoitustiedot {:osoitteet
                         (mapv
@@ -136,6 +137,8 @@
                                               :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                               :tr_loppuosa (:losa tierekisteriosoitevali)
                                               :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                              :tr_ajorata (:ajorata tierekisteriosoitevali)
+                                              :tr_kaista (:kaista tierekisteriosoitevali)
                                               :yhatunnus tunnus
                                               :yhaid yha-id
                                               :tyyppi (name kohdetyyppi)
@@ -153,6 +156,8 @@
                                          :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                          :tr_loppuosa (:losa tierekisteriosoitevali)
                                          :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                         :tr_ajorata (:ajorata tierekisteriosoitevali)
+                                         :tr_kaista (:kaista tierekisteriosoitevali)
                                          :yhaid yha-id}))
         (when (= kohdetyyppi :paallystys)
           (luo-esitaytetty-paallystysilmoitus c user kohde alikohteet))))

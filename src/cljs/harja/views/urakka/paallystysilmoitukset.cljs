@@ -351,7 +351,7 @@
              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "15%"}
               {:otsikko "Tienumero" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
                :validoi [[:ei-tyhja "Tienumero puuttuu"]]}
-              #_{:otsikko "Ajorata" ;; FIXME Toistaiseksi samat tiedot kuin kohdeluettelossa, halutaanko YHA:n kaista ja ajorata mukaan?
+              {:otsikko "Ajorata"
                :nimi :ajorata
                :tyyppi :valinta
                :valinta-arvo :koodi
@@ -359,15 +359,7 @@
                :valinnat pot/+ajoradat+
                :leveys "20%"
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              #_{:otsikko "Suunta"
-               :nimi :suunta
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse suunta -")
-               :valinnat pot/+suunnat+
-               :leveys "20%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              #_{:otsikko "Kaista"
+              {:otsikko "Kaista"
                :nimi :kaista
                :tyyppi :valinta
                :valinta-arvo :koodi

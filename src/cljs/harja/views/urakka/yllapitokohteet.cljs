@@ -133,6 +133,10 @@
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
            {:otsikko "Let" :nimi :tr-loppuetaisyys :tyyppi :positiivinen-numero
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
+           {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero
+            :leveys tr-leveys}
+           {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero
+            :leveys tr-leveys}
            {:otsikko "Pit." :nimi :pit :muokattava? (constantly false) :tyyppi :string
             :hae (fn [rivi]
                    (str (tierekisteri/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)
@@ -170,6 +174,10 @@
      :tyyppi :positiivinen-numero :leveys tr-leveys}
     {:otsikko "Let" :nimi :tr-loppuetaisyys :muokattava? (constantly (not (:yha-sidottu? optiot)))
      :tyyppi :positiivinen-numero :leveys tr-leveys}
+    {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :positiivinen-numero
+     :leveys tr-leveys :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+    {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :positiivinen-numero
+     :leveys tr-leveys :muokattava? (constantly (not (:yha-sidottu? optiot)))}
     {:otsikko "Pit" :nimi :pit :muokattava? (constantly false) :tyyppi :string
      :hae (fn [rivi]
             (str (tierekisteri/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)
@@ -248,7 +256,10 @@
       {:otsikko "" :nimi :tr-alkuetaisyys :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-loppuosa :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-loppuetaisyys :tyyppi :string :leveys tr-leveys}
+      {:otsikko "" :nimi :tr-ajorata :tyyppi :string :leveys tr-leveys}
+      {:otsikko "" :nimi :tr-kaista :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
+      {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
       {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :nykyinen-paallyste :tyyppi :string :leveys nykyinen-paallyste-leveys}

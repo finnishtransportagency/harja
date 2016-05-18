@@ -22,6 +22,8 @@ SELECT
   ypk.tr_alkuetaisyys AS "tr-alkuetaisyys",
   ypk.tr_loppuosa AS "tr-loppuosa",
   ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypk.tr_ajorata AS "tr-ajorata",
+  ypk.tr_kaista AS "tr-kaista",
   ypk.yhaid
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
@@ -56,6 +58,8 @@ SELECT
   ypko.tr_alkuetaisyys AS "tr-alkuetaisyys",
   ypko.tr_loppuosa AS "tr-loppuosa",
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypko.tr_ajorata AS "tr-ajorata",
+  ypko.tr_kaista AS "tr-kaista",
   sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
