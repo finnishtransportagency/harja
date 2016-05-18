@@ -36,7 +36,7 @@
 
 ;; Ylläpitokohteiden sarakkeiden leveydet
 (def haitari-leveys 5)
-(def id-leveys 10)
+(def id-leveys 6)
 (def kohde-leveys 15)
 (def kvl-leveys 5)
 (def yllapitoluokka-leveys 5)
@@ -160,9 +160,9 @@
                                       (not (nil? (:paikkausilmoitus-id rivi)))))
     :esta-poistaminen-tooltip (fn [_] "Kohteelle on kirjattu ilmoitus, kohdetta ei voi poistaa.")}
    [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
-    {:otsikko "Kohde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
+    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
      :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
-    {:otsikko "Koh\u00ADteen nimi" :nimi :nimi
+    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
      :tyyppi :string :leveys kohde-leveys}
     {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))
      :tyyppi :positiivinen-numero :leveys tr-leveys}

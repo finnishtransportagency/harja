@@ -591,18 +591,18 @@
         {:otsikko ""
          :tyhja (if (nil? @paallystys/paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
          :tunniste :kohdenumero}
-        [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%"
+        [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
           :hae (fn [rivi]
                  (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
-         {:otsikko "Päätös, tekninen" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
+         {:otsikko "Päätös, tekninen" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys 20
           :komponentti (fn [rivi]
                          (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
-         {:otsikko "Päätös, taloudel\u00ADlinen" :nimi :paatos-taloudellinen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%"
+         {:otsikko "Päätös, taloudel\u00ADlinen" :nimi :paatos-taloudellinen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys 20
           :komponentti (fn [rivi]
                          (paallystys-ja-paikkaus/nayta-paatos (:paatos-taloudellinen-osa rivi)))}
-         {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
+         {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
           :komponentti (fn [rivi]
                          (if (:tila rivi)
                            [:button.nappi-toissijainen.nappi-grid
