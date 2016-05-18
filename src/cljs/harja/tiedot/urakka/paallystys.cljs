@@ -70,14 +70,14 @@
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
                          kohderivit @yhan-paallystyskohteet
-                         toteumarivit @paallystysilmoitukset
+                         ilmoitukset @paallystysilmoitukset
                          avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
                      (when (and taso
-                                (or kohderivit toteumarivit))
+                                (or kohderivit ilmoitukset))
                        (kartalla-esitettavaan-muotoon
                          (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                       kohderivit)
-                                 toteumarivit)
+                                 ilmoitukset)
                          @paallystysilmoitus-lomakedata
                          [:paallystyskohde-id]
                          (comp
@@ -85,7 +85,7 @@
                                      (keep (fn [kohdeosa]
                                              (assoc (merge kohdeosa
                                                            (dissoc kohde :kohdeosat))
-                                               :tila (or (:paallystysilmoitus_tila kohde) (:tila kohde))
+                                               :tila (or (:paallystysilmoitus-tila kohde) (:tila kohde))
                                                :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
                                                :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
                                                :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))

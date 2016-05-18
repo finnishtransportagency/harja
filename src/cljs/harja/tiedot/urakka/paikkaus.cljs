@@ -74,7 +74,7 @@
                                      (keep (fn [kohdeosa]
                                              (assoc (merge kohdeosa
                                                            (dissoc kohde :kohdeosat))
-                                               :tila (or (:paikkausilmoitus_tila kohde) (:tila kohde))
+                                               :tila (or (:paikkausilmoitus-tila kohde) (:tila kohde))
                                                :avoin? (= (:paikkauskohde-id kohde) avoin-paikkausilmoitus)
                                                :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
                                                :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
