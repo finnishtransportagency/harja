@@ -43,11 +43,13 @@ SELECT
   ypko.tr_alkuosa                 AS kohdeosa_aosa,
   ypko.tr_alkuetaisyys            AS kohdeosa_aet,
   ypko.tr_loppuosa                AS kohdeosa_losa,
-  ypko.tr_loppuetaisyys           AS kohdeosa_let
-FROM yllapitokohdeosa ypko
+  ypko.tr_loppuetaisyys           AS kohdeosa_let,
+  ypko.tr_ajorata                 AS "kohdeosa_ajorata",
+  ypko.tr_kaista                  AS "kohdeosa_kaista"
+FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
-  JOIN yllapitokohde ypk ON ypk.id = :paallystyskohde
+  LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
 WHERE ypko.yllapitokohde = :paallystyskohde
       AND ypko.poistettu IS NOT TRUE
       AND ypk.poistettu IS NOT TRUE;

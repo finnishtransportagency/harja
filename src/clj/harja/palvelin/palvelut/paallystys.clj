@@ -177,11 +177,13 @@
                                                           :tr-alkuetaisyys (:aet osoite)
                                                           :tr-loppuosa (:losa osoite)
                                                           :tr-loppuetaisyys (:let osoite)
+                                                          :tr-ajorata (:ajorata osoite)
+                                                          :tr-kaista (:kaista osoite)
                                                           :poistettu (:poistettu osoite)
                                                           :sijainti (:sijainti osoite)})
                                                        (:osoitteet ilmoitustiedot))})
   (assoc ilmoitustiedot :osoitteet (mapv
-                                     #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu)
+                                     #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
                                      (:osoitteet ilmoitustiedot))))
 
 (defn- luo-tai-paivita-paallystysilmoitus [db user urakka-id sopimus-id lomakedata paallystysilmoitus-kannassa]
