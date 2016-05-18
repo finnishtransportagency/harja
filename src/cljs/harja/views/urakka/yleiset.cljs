@@ -206,15 +206,29 @@
          @paivystajat]))))
 
 (defn takuuaika [ur]
-  (let [loppupvm (atom (get-in ur [:takuu :loppupvm]))]
+  (let [tallennus-kaynnissa (atom false)]
     (komp/luo
-     (komp/kun-muuttuu #(reset! loppupvm (get-in % [:takuu :loppupvm])))
+     (komp/kun-muuttuu #(swap! tallennus-kaynnissa
+                               (fn [k]
+                                 (if (= k (:id %))
+                                   k
+                                   false))))
      (fn [ur]
        [:span.takuuaika.inline
         (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-          [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
-           (r/wrap (get-in ur [:takuu :loppupvm])
-                   #(nav/paivita-urakka! (:id ur) assoc-in [:takuu :loppupvm] %))]
+          [:span
+           [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
+            (r/wrap (get-in ur [:takuu :loppupvm])
+                    #(do (reset! tallennus-kaynnissa (:id ur))
+                         (nav/paivita-urakka! (:id ur) assoc-in [:takuu :loppupvm] %)
+                         (go (reset! tallennus-kaynnissa
+                                     (if (k/virhe? (<! (urakka/aseta-takuu-loppupvm (:id ur) %)))
+                                       :virhe
+                                       false)))))]
+           (cond
+             (number? @tallennus-kaynnissa) [yleiset/ajax-loader-pieni]
+             (= :virhe @tallennus-kaynnissa) [:span (ikonit/livicon-warning-sign)]
+             :default nil)]
           [:span
            (if-let [p (get-in ur [:takuu :loppupvm])]
              (pvm/pvm p)
