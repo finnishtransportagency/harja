@@ -2,8 +2,6 @@
   "Urakan 'Yleiset' välilehti: perustiedot ja yhteyshenkilöt"
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.bootstrap :as bs]
-            [clojure.string :as string]
-            [harja.domain.roolit :as roolit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.istunto :as istunto]
@@ -24,7 +22,6 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :as r])
@@ -228,7 +225,9 @@
            (cond
              (number? @tallennus-kaynnissa) [yleiset/ajax-loader-pieni]
              (= :virhe @tallennus-kaynnissa) [:span (ikonit/livicon-warning-sign)]
-             :default nil)]
+             :default nil)
+           (when-not (pvm/jalkeen? (get-in ur [:takuu :loppupvm]) (:loppupvm ur))
+             (yleiset/vihje "Takuu päättyy yleensä urakan päättymisen jälkeen, tarkista päivämäärä"))]
           [:span
            (if-let [p (get-in ur [:takuu :loppupvm])]
              (pvm/pvm p)
