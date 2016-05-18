@@ -62,6 +62,8 @@
 
         (map #(assoc % :loppupvm (pvm/aikana (:loppupvm %) 23 59 59 999))) ; Automaattikonversiolla aika on 00:00
 
+        (map #(assoc % :takuu {:loppupvm (:takuu_loppupvm %)}))
+
         ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja
         ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"}
         (map #(update-in % [:sopimukset] (fn [jdbc-array]
@@ -100,7 +102,7 @@
                       :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
                       :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
                       :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet :sisaltaa_ilmoituksia
-                      :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu))))
+                      :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
 
 (defn hallintayksikon-urakat [db user hallintayksikko-id]
   ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
@@ -154,6 +156,11 @@
                 urakka-xf
                 (q/hae-yksittainen-urakka db urakka-id))))
 
+(defn aseta-takuun-loppupvm [db user {:keys [urakka-id takuu]}]
+  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
+  (q/aseta-takuun-loppupvm! db {:urakka urakka-id
+                                :loppupvm (:loppupvm takuu)}))
+
 (defrecord Urakat []
   component/Lifecycle
   (start [this]
@@ -179,6 +186,9 @@
       (julkaise-palvelu http :tallenna-urakan-tyyppi
                         (fn [user tiedot]
                           (tallenna-urakan-tyyppi (:db this) user tiedot)))
+      (julkaise-palvelu http :aseta-takuun-loppupvm
+                        (fn [user tiedot]
+                          (aseta-takuun-loppupvm (:db this) user tiedot)))
       this))
 
   (stop [this]
@@ -188,4 +198,6 @@
     (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
     (poista-palvelu (:http-palvelin this) :tallenna-urakan-sopimustyyppi)
     (poista-palvelu (:http-palvelin this) :tallenna-urakan-tyyppi)
+    (poista-palvelu (:http-palvelin this) :aseta-takuun-loppupvm)
+
     this))
