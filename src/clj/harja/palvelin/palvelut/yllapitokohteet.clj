@@ -66,9 +66,13 @@
                                    :sopimus-id sopimus-id})))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id
-                               {:keys [kohdenumero nimi sopimuksen-mukaiset-tyot
-                                       arvonvahennykset bitumi-indeksi kaasuindeksi poistettu
-                                       nykyinen-paallyste keskimaarainen-vuorokausiliikenne]}]
+                               {:keys [kohdenumero nimi
+                                       tr-numero tr-alkuosa tr-alkuetaisyys
+                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
+                                       tr-keskimaarainen-vuorokausiliikenne yllapitoluokka
+                                       sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
+                                       kaasuindeksi poistettu nykyinen-paallyste
+                                       keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde")
   (when-not poistettu
     (q/luo-yllapitokohde<! db
@@ -76,15 +80,28 @@
                            sopimus-id
                            kohdenumero
                            nimi
+                           tr-numero
+                           tr-alkuosa
+                           tr-alkuetaisyys
+                           tr-loppuosa
+                           tr-loppuetaisyys
+                           tr-ajorata
+                           tr-kaista
+                           (or keskimaarainen-vuorokausiliikenne 0)
+                           yllapitoluokka,
+                           nykyinen-paallyste,
                            (or sopimuksen-mukaiset-tyot 0)
                            (or arvonvahennykset 0)
                            (or bitumi-indeksi 0)
                            (or kaasuindeksi 0)
-                           (or keskimaarainen-vuorokausiliikenne 0)
                            nykyinen-paallyste)))
 
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
-                              {:keys [id kohdenumero nimi sopimuksen-mukaiset-tyot
+                              {:keys [id kohdenumero nimi
+                                      tr-numero tr-alkuosa tr-alkuetaisyys
+                                      tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
+                                      tr-keskimaarainen-vuorokausiliikenne yllapitoluokka
+                                      sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
                                       nykyinen-paallyste keskimaarainen-vuorokausiliikenne poistettu]}]
   (if poistettu
@@ -103,16 +120,23 @@
         (q/paivita-yllapitokohde! db
                                   kohdenumero
                                   nimi
+                                  tr-numero
+                                  tr-alkuosa
+                                  tr-alkuetaisyys
+                                  tr-loppuosa
+                                  tr-loppuetaisyys
+                                  tr-ajorata
+                                  tr-kaista
+                                  keskimaarainen-vuorokausiliikenne
+                                  yllapitoluokka,
+                                  nykyinen-paallyste,
                                   (or sopimuksen-mukaiset-tyot 0)
                                   (or arvonvahennykset 0)
                                   (or bitumi-indeksi 0)
                                   (or kaasuindeksi 0)
-                                  (or keskimaarainen-vuorokausiliikenne 0)
-                                  nykyinen-paallyste
                                   id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
-  ;; FIXME Tallenna myös tien tiedot....
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (jdbc/with-db-transaction [c db]

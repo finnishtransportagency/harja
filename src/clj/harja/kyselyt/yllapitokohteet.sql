@@ -71,19 +71,30 @@ WHERE yllapitokohde = :yllapitokohde
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
-INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot,
-                           arvonvahennykset, bitumi_indeksi, kaasuindeksi,
-                           keskimaarainen_vuorokausiliikenne, nykyinen_paallyste)
+INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
+                           tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+                           tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
+                           yllapitoluokka, nykyinen_paallyste,
+                           sopimuksen_mukaiset_tyot,
+                           arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES (:urakka,
         :sopimus,
         :kohdenumero,
         :nimi,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :tr_ajorata,
+        :tr_kaista,
+        :keskimaarainen_vuorokausiliikenne,
+        :yllapitoluokka,
+        :nykyinen_paallyste,
         :sopimuksen_mukaiset_tyot,
         :arvonvahennykset,
         :bitumi_indeksi,
-        :kaasuindeksi,
-        :keskimaarainen_vuorokausiliikenne,
-        :nykyinen_paallyste);
+        :kaasuindeksi);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -91,12 +102,20 @@ UPDATE yllapitokohde
 SET
   kohdenumero                       = :kohdenumero,
   nimi                              = :nimi,
+  tr_numero                         = :tr_numero,
+  tr_alkuosa                        = :tr_alkuosa,
+  tr_alkuetaisyys                   = :tr_alkuetaisyys,
+  tr_loppuosa                       = :tr_loppuosa,
+  tr_loppuetaisyys                  = :tr_loppuetaisyys,
+  tr_ajorata                        = :tr_ajorata,
+  tr_kaista                         = :tr_kaista,
+  keskimaarainen_vuorokausiliikenne = :keskimaarainen_vuorokausiliikenne,
+  yllapitoluokka                    = :yllapitoluokka,
+  nykyinen_paallyste                = :nykyinen_paallyste,
   sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
   arvonvahennykset                  = :arvonvanhennykset,
   bitumi_indeksi                    = :bitumi_indeksi,
-  kaasuindeksi                      = :kaasuindeksi,
-  keskimaarainen_vuorokausiliikenne = :keskimaarainen_vuorokausiliikenne,
-  nykyinen_paallyste                = :nykyinen_paallyste
+  kaasuindeksi                      = :kaasuindeksi
 WHERE id = :id;
 
 -- name: poista-yllapitokohde!
