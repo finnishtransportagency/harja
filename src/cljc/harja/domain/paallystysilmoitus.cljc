@@ -158,7 +158,8 @@
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet
-   [{:tie s/Int
+   [{:nimi s/Str
+     :tie s/Int
      :ajorata +ajorata+
      :kaista +kaista+
      :aosa s/Int
