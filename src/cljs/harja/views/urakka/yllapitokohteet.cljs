@@ -169,8 +169,8 @@
              {:nimi :tr-alkuetaisyys}
              {:nimi :tr-loppuosa}
              {:nimi :tr-loppuetaisyys}
-             {:nimi :tr-kaista}
-             {:nimi :tr-ajorata}])
+             {:nimi :tr-ajorata}
+             {:nimi :tr-kaista}])
           (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
          [tr-virheilmoitus tr-virheet]]))))
 
@@ -210,8 +210,8 @@
                      {:nimi :tr-alkuetaisyys :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-loppuosa :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-loppuetaisyys :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-kaista :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-ajorata :muokattava? (constantly (not (:yha-sidottu? optiot)))}])
+                     {:nimi :tr-ajorata :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+                     {:nimi :tr-kaista :muokattava? (constantly (not (:yha-sidottu? optiot)))}])
                   [{:otsikko "KVL"
                     :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}

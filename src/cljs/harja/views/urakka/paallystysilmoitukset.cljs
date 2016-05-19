@@ -359,8 +359,8 @@
                 {:nimi :aet}
                 {:nimi :losa}
                 {:nimi :let}
-                {:nimi :kaista}
-                {:nimi :ajorata}])
+                {:nimi :ajorata}
+                {:nimi :kaista}])
              paallystystoimenpiteet]
 
             [grid/muokkaus-grid
