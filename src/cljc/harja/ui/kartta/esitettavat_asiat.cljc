@@ -295,7 +295,6 @@
         :alue (maarittele-feature tp (valittu-fn? tp) ikoni)))))
 
 (defn- paikkaus-paallystys [tyyppi pt valittu-fn? teksti]
-  (log "[BUG] pt on: " (pr-str pt))
   (let [tila (:tila pt)
         tila-teksti (str ", " ((fnil name "suunniteltu") tila))
         ikoni (ulkoasu/yllapidon-ikoni)
