@@ -221,7 +221,7 @@
     (log/debug "Tarkistetaan onko POT lukittu...")
     (if (= :lukittu (:tila paallystysilmoitus-kannassa))
       (do (log/debug "POT on lukittu, ei voi päivittää!")
-          (throw (RuntimeException. "Päällystysilmoitus oyhan lukittu, ei voi päivittää!")))
+          (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
       (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
