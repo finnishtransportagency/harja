@@ -101,7 +101,7 @@
         ilmoitustiedot {:osoitteet
                         (mapv
                           (fn [{:keys [tierekisteriosoitevali
-                                       paallystystoimenpide] :as kohdeosa}]
+                                       paallystystoimenpide] :as yha-kohdeosa}]
                             (let [kohdeosa-kannassa
                                   (first (filter
                                            (fn [osa]
