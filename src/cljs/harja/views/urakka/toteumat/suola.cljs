@@ -70,7 +70,7 @@
                     :voi-poistaa? muokattava?
                     :max-rivimaara 500
                     :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."}
-         [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
+         [{:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
            :tyyppi :valinta
            :validoi [[:ei-tyhja "Valitse materiaali"]]
            :valinta-nayta #(or (:nimi %) "- valitse -")
