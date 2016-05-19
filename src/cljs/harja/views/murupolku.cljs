@@ -131,9 +131,7 @@
       (fn [this {klikkaus :tapahtuma}]
         (when-not (dom/sisalla? this klikkaus)
           (reset! valinta-auki false))))
-      {:component-did-mount  (fn [_]
-                               (t/julkaise! {:aihe :murupolku-muuttunut}))
-       :component-did-update (fn [_]
+      {:component-did-update (fn [_]
                                (when-not (= @nav/murupolku-nakyvissa? @nav/DANGEROUS-murupolku-naytetty-domissa?)
                                  (reset! nav/DANGEROUS-murupolku-naytetty-domissa? @nav/murupolku-nakyvissa?)))}
       (fn []
