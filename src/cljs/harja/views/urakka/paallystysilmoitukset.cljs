@@ -353,6 +353,14 @@
              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "15%"}
               {:otsikko "Tienumero" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
                :validoi [[:ei-tyhja "Tienumero puuttuu"]]}
+              {:otsikko "Aosa" :nimi :aosa :leveys "10%" :tyyppi :positiivinen-numero
+               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Aet" :nimi :aet :leveys "10%" :tyyppi :positiivinen-numero
+               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Losa" :nimi :losa :leveys "10%" :tyyppi :positiivinen-numero
+               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
+               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Ajorata"
                :nimi :ajorata
                :tyyppi :valinta
@@ -368,14 +376,6 @@
                :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
                :valinnat pot/+kaistat+
                :leveys "20%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Aosa" :nimi :aosa :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Aet" :nimi :aet :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Losa" :nimi :losa :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pit." :nimi :pituus :leveys "10%" :tyyppi :numero
                :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}]
