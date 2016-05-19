@@ -218,6 +218,7 @@
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (poista-ilmoitustiedoista-tieosoitteet (:ilmoitustiedot paallystysilmoitus))))
 
         ; Lukittu, ei voi enää päivittää
+        (log/debug "Tarkistetaan, ettei voi muokata lukittua ilmoitusta.")
         (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
                                                                                                    :sopimus-id         sopimus-id

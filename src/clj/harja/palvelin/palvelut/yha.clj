@@ -13,13 +13,15 @@
             [cheshire.core :as cheshire]))
 
 (defn paivita-yllapitourakan-geometriat [db urakka-id]
+  (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
+  (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
-  (log/debug "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
+  (log/info "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
   (yha-q/lisaa-urakalle-yha-tiedot<! db {:urakka urakka-id
                                          :yhatunnus yhatunnus
                                          :yhaid yhaid

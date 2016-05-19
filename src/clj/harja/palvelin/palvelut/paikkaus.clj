@@ -151,6 +151,7 @@
 
       ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
       ;; mutta tehdään silti tarkistus
+      ; FIXME Pura funktioksi kuten päällystyksessä
       (log/debug "Tarkistetaan onko MINIPOT lukittu...")
       (if (= :lukittu (:tila paikkausilmoitus-kannassa))
         (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
