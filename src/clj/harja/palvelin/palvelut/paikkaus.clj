@@ -44,7 +44,7 @@
         paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                             (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
-                                            (map #(konv/string-poluista->keyword % [[:tila] :paatos])))
+                                            (map #(konv/string-poluista->keyword % [[:tila] [:paatos]])))
                                       (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]
     (log/debug "Paikkausilmoitus saatu: " (pr-str paikkausilmoitus))
     ;; Uusi paikkausilmoitus
