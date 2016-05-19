@@ -167,7 +167,8 @@
                               tr-loppuetaisyys
                               tr-ajorata
                               tr-kaista
-                              (geo/geometry (geo/clj->pg sijainti)))))
+                              (when sijainti
+                                (geo/geometry (geo/clj->pg sijainti))))))
 
 (defn- paivita-yllapitokohdeosa [db user {:keys [id nimi tr-numero tr-alkuosa tr-alkuetaisyys
                                                  tr-loppuosa tr-loppuetaisyys tr-ajorata
