@@ -60,7 +60,7 @@
                       (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                (:id @nav/valittu-urakka)
-                                               istunto/kayttaja)
+                                               @istunto/kayttaja)
                       (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
                       (false? @paallystys/paallystysilmoituslomake-lukittu?))
         paatos-tekninen-osa

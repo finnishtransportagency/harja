@@ -66,6 +66,7 @@
               arvot))))
 
 (defn kasittele-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
+  ; FIXME Pitäisi generisöidä jotta voi käyttää myös POT-lomakkeessa
   (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
   (let [haetut (into #{} (keys @tr-sijainnit-atom))]
     ;; jos on tullut uusi TR osoite, haetaan sille sijainti

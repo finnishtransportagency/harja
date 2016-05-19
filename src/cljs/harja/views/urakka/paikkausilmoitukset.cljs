@@ -63,7 +63,7 @@
                       (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
                                                (:id @nav/valittu-urakka)
-                                               istunto/kayttaja)
+                                               @istunto/kayttaja)
                       (not= (:tila @paikkaus/paikkausilmoitus-lomakedata) :lukittu)
                       (false? @paikkaus/paikkausilmoituslomake-lukittu?))
         paatostiedot (r/wrap {:paatos        (:paatos @paikkaus/paikkausilmoitus-lomakedata)
