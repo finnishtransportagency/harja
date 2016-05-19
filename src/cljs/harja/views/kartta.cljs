@@ -22,8 +22,7 @@
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kartta.varit.alpha :as varit]
-            [harja.ui.openlayers.taso :as taso]
-            [reagent.core :as r])
+            [harja.ui.openlayers.taso :as taso])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
