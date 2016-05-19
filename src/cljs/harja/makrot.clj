@@ -50,6 +50,11 @@
        (harja.loki/error e#)
        (harja.virhekasittely/arsyttava-virhe "go-blokki kaatui: " e#))))
 
+(defmacro nappaa-virhe-hiljaa [& body]
+  `(try
+     ~@body
+     (catch :default e#
+       (harja.loki/error e#))))
 
 ;; Helpompi Google Closure luokkien extend,
 ;; http://www.50ply.com/blog/2012/07/08/extending-closure-from-clojurescript/

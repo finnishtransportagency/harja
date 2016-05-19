@@ -38,6 +38,7 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
+  u.takuu_loppupvm,
   hal.id                   AS hallintayksikko_id,
   hal.nimi                 AS hallintayksikko_nimi,
   hal.lyhenne              AS hallintayksikko_lyhenne,
@@ -98,6 +99,7 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
+  u.takuu_loppupvm,
   hal.id                   AS hallintayksikko_id,
   hal.nimi                 AS hallintayksikko_nimi,
   hal.lyhenne              AS hallintayksikko_lyhenne,
@@ -129,6 +131,7 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
+  u.takuu_loppupvm,
   hal.id                   AS hallintayksikko_id,
   hal.nimi                 AS hallintayksikko_nimi,
   hal.lyhenne              AS hallintayksikko_lyhenne,
@@ -196,6 +199,7 @@ SELECT
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
+  u.takuu_loppupvm,
   h.alueurakkanro AS alueurakkanumero,
   urk.nimi        AS urakoitsija_nimi,
   urk.ytunnus     AS urakoitsija_ytunnus
@@ -211,6 +215,7 @@ SELECT
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
+  u.takuu_loppupvm,
   h.alueurakkanro AS alueurakkanumero,
   urk.nimi        AS urakoitsija_nimi,
   urk.ytunnus     AS urakoitsija_ytunnus
@@ -309,6 +314,7 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
+  u.takuu_loppupvm,
   hal.id                   AS hallintayksikko_id,
   hal.nimi                 AS hallintayksikko_nimi,
   hal.lyhenne              AS hallintayksikko_lyhenne,
@@ -440,3 +446,8 @@ WHERE u.id = :id;
 -- name: hae-urakan-sampo-id
 -- single?: true
 SELECT sampoid FROM urakka where id = :urakka
+
+-- name: aseta-takuun-loppupvm!
+UPDATE urakka
+   SET takuu_loppupvm = :loppupvm
+ WHERE id = :urakka

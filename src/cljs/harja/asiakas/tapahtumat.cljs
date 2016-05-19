@@ -3,7 +3,7 @@
   (:require [cljs.core.async :refer [<! >! chan alts! pub sub unsub unsub-all put! close!]]
             [harja.loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja.makrot :refer [nappaa-virhe]]))
+                   [harja.makrot :refer [nappaa-virhe-hiljaa]]))
 
 (def julkaisukanava (chan))
 
@@ -20,7 +20,7 @@ voi lopettaa."
           ch (chan)]
       (go (loop [tapahtuma (<! ch)]
             (when tapahtuma
-              (nappaa-virhe (kasittelija tapahtuma))
+              (nappaa-virhe-hiljaa (kasittelija tapahtuma))
               (recur (<! ch)))))
       (sub julkaisu aihe ch)
       #(unsub julkaisu aihe ch))

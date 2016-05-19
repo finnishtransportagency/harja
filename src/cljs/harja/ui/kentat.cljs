@@ -499,7 +499,7 @@
                             ""))))
 
        :reagent-render
-       (fn [{:keys [on-focus]} data]
+       (fn [{:keys [on-focus placeholder]} data]
          (let [nykyinen-pvm @data
                nykyinen-teksti @teksti
                pvm-tyhjana (or pvm-tyhjana (constantly nil))
@@ -511,6 +511,7 @@
             {:on-click #(do (reset! auki true) nil)
              :style    {:display "inline-block"}}
             [:input.pvm {:class       (when lomake? "form-control")
+                         :placeholder (or placeholder "pp.kk.vvvv")
                          :value       nykyinen-teksti
                          :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
                          :on-change   #(muuta! data (-> % .-target .-value))

@@ -333,7 +333,8 @@ SELECT
   lisatieto,
   luotu,
   luoja,
-  kuukauden_indeksikorotus(pvm, indeksin_nimi, rahasumma, urakka) AS indeksikorjattuna
+  kuukauden_indeksikorotus(pvm, indeksin_nimi, rahasumma, urakka) AS indeksikorjattuna,
+  (SELECT korotettuna FROM laske_hoitokauden_asiakastyytyvaisyysbonus(urakka, pvm, indeksin_nimi, rahasumma)) AS "bonus-indeksikorjattuna"
 FROM erilliskustannus
 WHERE urakka = :urakka
       AND pvm >= :alkupvm AND pvm <= :loppupvm AND poistettu IS NOT TRUE;
