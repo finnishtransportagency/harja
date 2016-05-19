@@ -21,3 +21,14 @@ nimen. Numero on tierekisterin koodi luokalle."}
 (def ^{:doc "Mäppäys talvihoitoluokan nimestä sen numeroon."}
   talvihoitoluokan-numero
   (into {} (map (juxt :nimi :numero)) talvihoitoluokat))
+
+(def ^{:doc "Mahdolliset soratieluokat. Nimi kertoo käyttöliittymässä käytetyn nimen.
+Numero on tierekisterin koodi luokalle."}
+  soratieluokat
+  [{:nimi "I" :kuvaus "I lk Vilkkaat soratiet" :numero 1}
+   {:nimi "II" :kuvaus "II lk Perussoratiet" :numero 2}
+   {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3}])
+
+(def ^{:doc "Mäppäys soratieluokan numerosta sen nimeen."}
+  soratieluokan-nimi
+  (into {} (map (juxt :numero :nimi)) soratieluokat))

@@ -473,3 +473,52 @@ INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite)
     liite
   FROM tarkastus_liite
   WHERE tarkastus = :tarkastus;
+
+-- name: hae-laaduntarkastukset
+-- Hakee laaduntarkastukset joko urakalle, hallintayksikölle tai koko maalle.
+-- Laaduntarkastuksia ovat kaikki tarkastukset, jotka ovat tilaajan tekemiä (tekijän org.tyyppi
+-- ei ole urakoitsija).
+SELECT
+  t.id,
+  t.aika,
+  t.tr_numero,
+  t.tr_alkuosa,
+  t.tr_alkuetaisyys,
+  t.tr_loppuosa,
+  t.tr_loppuetaisyys,
+  t.havainnot,
+  t.laadunalitus,
+  t.tarkastaja,
+  t.tyyppi,
+  st_length(t.sijainti) as tr_metrit,
+  u.nimi as urakka,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid,
+  stm.tarkastus as soratiemittaus_id,
+  stm.hoitoluokka as soratiemittaus_hoitoluokka,
+  stm.tasaisuus as soratiemittaus_tasaisuus,
+  stm.kiinteys as soratiemittaus_kiinteys,
+  stm.polyavyys as soratiemittaus_polyavyys,
+  stm.sivukaltevuus as soratiemittaus_sivukaltevuus,
+  thm.tarkastus as talvihoitomittaus_id,
+  thm.talvihoitoluokka as talvihoitomittaus_talvihoitoluokka,
+  thm.lumimaara as talvihoitomittaus_lumimaara,
+  thm.tasaisuus as talvihoitomittaus_tasaisuus,
+  thm.kitka as talvihoitomittaus_kitka,
+  thm.ajosuunta as talvihoitomittaus_ajosuunta,
+  thm.lampotila_tie as talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma as talvihoitomittaus_lampotila_ilma
+FROM tarkastus t
+  LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
+  LEFT JOIN liite ON tarkastus_liite.liite = liite.id
+  JOIN urakka u ON t.urakka = u.id
+  LEFT JOIN soratiemittaus stm ON stm.tarkastus = t.id
+  LEFT JOIN talvihoitomittaus thm ON thm.tarkastus = t.id
+WHERE t.tyyppi = 'laatu'::tarkastustyyppi
+      AND (t.aika BETWEEN :alku AND :loppu)
+      AND (:tienumero::integer IS NULL OR t.tr_numero = :tienumero)
+      AND (:urakka::integer IS NULL OR t.urakka = :urakka)
+      AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)

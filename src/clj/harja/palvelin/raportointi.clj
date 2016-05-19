@@ -21,6 +21,7 @@
             [harja.palvelin.raportointi.raportit.suolasakko]
             [harja.palvelin.raportointi.raportit.tiestotarkastus]
             [harja.palvelin.raportointi.raportit.kelitarkastus]
+            [harja.palvelin.raportointi.raportit.laaduntarkastus]
             [harja.palvelin.raportointi.raportit.laatupoikkeama]
             [harja.palvelin.raportointi.raportit.sanktio]
             [harja.palvelin.raportointi.raportit.soratietarkastus]
