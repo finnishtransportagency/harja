@@ -187,9 +187,12 @@
                 :poistettu (:poistettu osoite)
                 :sijainti (:sijainti osoite)})
              (:osoitteet ilmoitustiedot))})
-  (assoc ilmoitustiedot :osoitteet (mapv
-                                     #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
-                                     (:osoitteet ilmoitustiedot))))
+  (let [uudet-osoitteet (mapv
+                          #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
+                          (:osoitteet ilmoitustiedot))
+        uudet-ilmoitustiedot (assoc ilmoitustiedot :osoitteet uudet-osoitteet)]
+    (log/debug "uudet ilmoitustiedot: " (pr-str uudet-ilmoitustiedot))
+    uudet-ilmoitustiedot))
 
 (defn- luo-tai-paivita-paallystysilmoitus [db user urakka-id sopimus-id lomakedata paallystysilmoitus-kannassa]
   (let [lomakedata (assoc lomakedata
@@ -229,7 +232,7 @@
       (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))))
 
 (defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
-  (log/debug "Käsitellään päällystysilmoitus: " paallystysilmoitus
+  (log/debug "Tallennetaan päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
              ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
