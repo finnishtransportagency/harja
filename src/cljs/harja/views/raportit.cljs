@@ -589,8 +589,7 @@
     (fn []
       (if (oikeudet/raportit)
         [:span
-         (log "Onko murupolku näkyvissä? " (pr-str @nav/murupolku-nakyvissa?))
          (when-not @raportit/suoritettu-raportti
-           [kartta/kartan-paikka @nav/murupolku-nakyvissa?])
+           [kartta/kartan-paikka @nav/DANGEROUS-murupolku-naytetty-domissa?])
          (raporttivalinnat-ja-raportti)]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
