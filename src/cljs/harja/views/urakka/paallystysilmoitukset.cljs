@@ -352,15 +352,15 @@
              ;; FIXME Tarkista TR-osoite (samalla tavalla kuin yllapitokohteet-namespacessa)
              [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "15%"}
               {:otsikko "Tienumero" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tienumero puuttuu"]]}
+               :validoi [[:ei-tyhja "Anna tienumero"]]}
               {:otsikko "Aosa" :nimi :aosa :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :validoi [[:ei-tyhja "Anna alkuosa"]]}
               {:otsikko "Aet" :nimi :aet :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
               {:otsikko "Losa" :nimi :losa :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :validoi [[:ei-tyhja "Anna loppuosa"]]}
               {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
               {:otsikko "Ajorata"
                :nimi :ajorata
                :tyyppi :valinta
