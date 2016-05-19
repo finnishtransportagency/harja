@@ -29,9 +29,9 @@
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa]))
-                        (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
-                        (map #(konv/string-polusta->keyword % [:tila]))
+                        (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
+                                                                [:paatos-tekninen-osa]
+                                                                [:tila]]))
                         (map #(assoc % :kohdeosat
                                        (into []
                                              yllapitokohteet/kohdeosa-xf
@@ -55,9 +55,9 @@
                                  (comp (map konv/alaviiva->rakenne)
                                        (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                        (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                       (map #(konv/string-polusta->keyword % [:tila]))
-                                       (map #(konv/string-polusta->keyword % [:paatos-tekninen-osa]))
-                                       (map #(konv/string-polusta->keyword % [:paatos-taloudellinen-osa])))
+                                       (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
+                                                                               [:paatos-tekninen-osa]
+                                                                               [:tila]])))
                                  (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
         ;; Yhdistä kohdeosat samalle riville
         paallystysilmoitus (first (konv/sarakkeet-vektoriin
