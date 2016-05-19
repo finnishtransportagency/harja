@@ -339,7 +339,7 @@
             [:h3 "Tekninen osa"]
 
             [grid/muokkaus-grid
-             {:otsikko "Kohteen tierekisteriosoitteet"
+             {:otsikko "Tierekisteriosoitteet"
               :tunniste :tie
               :voi-muokata? (do
                               (log "[PÄÄLLYSTYS] tila " (pr-str (:tila lomakedata-nyt)) " Päätös tekninen: " (pr-str (:paatos-tekninen-osa lomakedata-nyt)))
