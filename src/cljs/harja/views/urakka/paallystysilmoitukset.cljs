@@ -353,7 +353,14 @@
              ;; FIXME Tarkista TR-osoite (samalla tavalla kuin yllapitokohteet-namespacessa)
              (yllapitokohteet/tierekisteriosoite-sarakkeet
                10
-               [:tie :nimi :aosa :aet :losa :let :ajorata :kaista])
+               [{:nimi :nimi}
+                {:nimi :tie}
+                {:nimi :aosa}
+                {:nimi :aet}
+                {:nimi :losa}
+                {:nimi :let}
+                {:nimi :kaista}
+                {:nimi :ajorata}])
              paallystystoimenpiteet]
 
             [grid/muokkaus-grid
