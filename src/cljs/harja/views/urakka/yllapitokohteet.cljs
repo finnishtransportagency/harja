@@ -58,6 +58,37 @@
 (def nimi-leveys 20)
 (def toimenpide-leveys 20)
 
+(defn tierekisteriosoite-sarakkeet [perusleveys [nimi tie aosa aet losa let ajorata kaista]]
+  [{:otsikko "Nimi" :nimi nimi :tyyppi :string :leveys (+ perusleveys 5)}
+   {:otsikko "Tienumero" :nimi tie :tyyppi :positiivinen-numero :leveys perusleveys
+    :validoi [[:ei-tyhja "Anna tienumero"]]}
+   {:otsikko "Aosa" :nimi aosa :leveys perusleveys :tyyppi :positiivinen-numero
+    :validoi [[:ei-tyhja "Anna alkuosa"]]}
+   {:otsikko "Aet" :nimi aet :leveys perusleveys :tyyppi :positiivinen-numero
+    :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
+   {:otsikko "Losa" :nimi losa :leveys perusleveys :tyyppi :positiivinen-numero
+    :validoi [[:ei-tyhja "Anna loppuosa"]]}
+   {:otsikko "Let" :nimi let :leveys perusleveys :tyyppi :positiivinen-numero
+    :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
+   {:otsikko "Ajorata"
+    :nimi ajorata
+    :tyyppi :valinta
+    :valinta-arvo :koodi
+    :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
+    :valinnat pot/+ajoradat+
+    :leveys (+ 10 perusleveys)
+    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+   {:otsikko "Kaista"
+    :nimi kaista
+    :tyyppi :valinta
+    :valinta-arvo :koodi
+    :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
+    :valinnat pot/+kaistat+
+    :leveys (+ 10 perusleveys)
+    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+   {:otsikko "Pit." :nimi :pituus :leveys perusleveys :tyyppi :numero
+    :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}])
+
 (defn tr-osoite [rivi]
   (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
     (when (every? #(not (str/blank? %)) arvot)
@@ -125,45 +156,9 @@
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [grid]
                      (kasittele-tr-osoite grid tr-sijainnit tr-virheet))}
-          [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys nimi-leveys}
-           {:otsikko "Tienumero" :nimi :tr-numero :tyyppi :positiivinen-numero
-            :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
-           {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero
-            :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuosa"]]}
-           {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero
-            :leveys tr-leveys :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
-           {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero
-            :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuosa"]]}
-           {:otsikko "Let" :nimi :tr-loppuetaisyys :tyyppi :positiivinen-numero
-            :leveys tr-leveys :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
-           {:otsikko "Ajorata"
-            :nimi :tr-ajorata
-            :tyyppi :valinta
-            :fmt (fn [arvo]
-                   (:nimi (first (filter
-                                   (fn [ajorata]
-                                     (= arvo (:koodi ajorata)))
-                                   pot/+ajoradat+))))
-            :valinta-arvo :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
-            :valinnat pot/+ajoradat+
-            :leveys tr-leveys}
-           {:otsikko "Kaista"
-            :nimi :tr-kaista
-            :tyyppi :valinta
-            :fmt #(:nimi (first (filter
-                                  (fn [kaista]
-                                    (= % (:koodi kaista)))
-                                  pot/+kaistat+)))
-            :valinta-arvo :koodi
-            :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
-            :valinnat pot/+kaistat+
-            :leveys tr-leveys}
-           {:otsikko "Pit." :nimi :pit :muokattava? (constantly false) :tyyppi :string
-            :hae (fn [rivi]
-                   (str (tierekisteri-domain/laske-tien-pituus {:aet (:tr-alkuetaisyys rivi)
-                                                                :let (:tr-loppuetaisyys rivi)})))
-            :leveys tr-leveys}]
+          (tierekisteriosoite-sarakkeet
+            tr-leveys
+            [:nimi :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista])
           (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
          [tr-virheilmoitus tr-virheet]]))))
 

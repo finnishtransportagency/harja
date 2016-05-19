@@ -28,6 +28,7 @@
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.istunto :as istunto])
@@ -350,35 +351,9 @@
               :rivinumerot? true
               :uusi-id (inc (count @paallystystoimenpiteet))}
              ;; FIXME Tarkista TR-osoite (samalla tavalla kuin yllapitokohteet-namespacessa)
-             [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "15%"}
-              {:otsikko "Tienumero" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Anna tienumero"]]}
-              {:otsikko "Aosa" :nimi :aosa :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Anna alkuosa"]]}
-              {:otsikko "Aet" :nimi :aet :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Anna alkuetäisyys"]]}
-              {:otsikko "Losa" :nimi :losa :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Anna loppuosa"]]}
-              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Anna loppuetäisyys"]]}
-              {:otsikko "Ajorata"
-               :nimi :ajorata
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
-               :valinnat pot/+ajoradat+
-               :leveys "20%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Kaista"
-               :nimi :kaista
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
-               :valinnat pot/+kaistat+
-               :leveys "20%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pit." :nimi :pituus :leveys "10%" :tyyppi :numero
-               :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}]
+             (yllapitokohteet/tierekisteriosoite-sarakkeet
+               10
+               [:tie :nimi :aosa :aet :losa :let :ajorata :kaista])
              paallystystoimenpiteet]
 
             [grid/muokkaus-grid

@@ -106,12 +106,13 @@
             :paallystyskohde-id paallystyskohde-id
             :kommentit kommentit))))))
 
-(defn- paivita-paallystysilmoitus [db user
-                                   {:keys [id ilmoitustiedot aloituspvm valmispvm-kohde
-                                           valmispvm-paallystys takuupvm paallystyskohde-id
-                                           paatos-tekninen-osa paatos-taloudellinen-osa perustelu-tekninen-osa
-                                           perustelu-taloudellinen-osa kasittelyaika-tekninen-osa
-                                           kasittelyaika-taloudellinen-osa]}]
+(defn- paivita-paallystysilmoitus
+  [db user
+   {:keys [id ilmoitustiedot aloituspvm valmispvm-kohde
+           valmispvm-paallystys takuupvm paallystyskohde-id
+           paatos-tekninen-osa paatos-taloudellinen-osa perustelu-tekninen-osa
+           perustelu-taloudellinen-osa kasittelyaika-tekninen-osa
+           kasittelyaika-taloudellinen-osa]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and (= paatos-tekninen-osa :hyvaksytty)
@@ -121,22 +122,23 @@
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (q/paivita-paallystysilmoitus! db
-                                   tila
-                                   encoodattu-ilmoitustiedot
-                                   (konv/sql-date aloituspvm)
-                                   (konv/sql-date valmispvm-kohde)
-                                   (konv/sql-date valmispvm-paallystys)
-                                   (konv/sql-date takuupvm)
-                                   muutoshinta
-                                   (if paatos-tekninen-osa (name paatos-tekninen-osa))
-                                   (if paatos-taloudellinen-osa (name paatos-taloudellinen-osa))
-                                   perustelu-tekninen-osa
-                                   perustelu-taloudellinen-osa
-                                   (konv/sql-date kasittelyaika-tekninen-osa)
-                                   (konv/sql-date kasittelyaika-taloudellinen-osa)
-                                   (:id user)
-                                   paallystyskohde-id))
+    (q/paivita-paallystysilmoitus!
+      db
+      tila
+      encoodattu-ilmoitustiedot
+      (konv/sql-date aloituspvm)
+      (konv/sql-date valmispvm-kohde)
+      (konv/sql-date valmispvm-paallystys)
+      (konv/sql-date takuupvm)
+      muutoshinta
+      (if paatos-tekninen-osa (name paatos-tekninen-osa))
+      (if paatos-taloudellinen-osa (name paatos-taloudellinen-osa))
+      perustelu-tekninen-osa
+      perustelu-taloudellinen-osa
+      (konv/sql-date kasittelyaika-tekninen-osa)
+      (konv/sql-date kasittelyaika-taloudellinen-osa)
+      (:id user)
+      paallystyskohde-id))
   id)
 
 (defn- luo-paallystysilmoitus [db user
@@ -149,41 +151,43 @@
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-    (:id (q/luo-paallystysilmoitus<! db
-                                     paallystyskohde-id
-                                     tila
-                                     encoodattu-ilmoitustiedot
-                                     (konv/sql-date aloituspvm)
-                                     (konv/sql-date valmispvm-kohde)
-                                     (konv/sql-date valmispvm-paallystys)
-                                     (konv/sql-date takuupvm)
-                                     muutoshinta
-                                     (:id user)))))
+    (:id (q/luo-paallystysilmoitus<!
+           db
+           paallystyskohde-id
+           tila
+           encoodattu-ilmoitustiedot
+           (konv/sql-date aloituspvm)
+           (konv/sql-date valmispvm-kohde)
+           (konv/sql-date valmispvm-paallystys)
+           (konv/sql-date takuupvm)
+           muutoshinta
+           (:id user)))))
 
 (defn- kasittele-paallystysilmoituksen-tierekisterikohteet
   "Ottaa päällystysilmoituksen ilmoitustiedot.
    Päivittää päällystyskohteen alikohteet niin, että niiden tiedot ovat samat kuin päällystysilmoituslomakkeessa.
    Palauttaa ilmoitustiedot, jossa päällystystoimenpiteiltä on riisuttu tieosoitteet."
   [db user urakka-id sopimus-id yllapitokohde-id ilmoitustiedot]
-  (yllapitokohteet/tallenna-yllapitokohdeosat db
-                                              user
-                                              {:urakka-id urakka-id
-                                               :sopimus-id sopimus-id
-                                               :yllapitokohde-id yllapitokohde-id
-                                               :osat (mapv
-                                                       (fn [osoite]
-                                                         {:id (:kohdeosa-id osoite)
-                                                          :nimi (:nimi osoite)
-                                                          :tr-numero (:tie osoite)
-                                                          :tr-alkuosa (:aosa osoite)
-                                                          :tr-alkuetaisyys (:aet osoite)
-                                                          :tr-loppuosa (:losa osoite)
-                                                          :tr-loppuetaisyys (:let osoite)
-                                                          :tr-ajorata (:ajorata osoite)
-                                                          :tr-kaista (:kaista osoite)
-                                                          :poistettu (:poistettu osoite)
-                                                          :sijainti (:sijainti osoite)})
-                                                       (:osoitteet ilmoitustiedot))})
+  (yllapitokohteet/tallenna-yllapitokohdeosat
+    db
+    user
+    {:urakka-id urakka-id
+     :sopimus-id sopimus-id
+     :yllapitokohde-id yllapitokohde-id
+     :osat (mapv
+             (fn [osoite]
+               {:id (:kohdeosa-id osoite)
+                :nimi (:nimi osoite)
+                :tr-numero (:tie osoite)
+                :tr-alkuosa (:aosa osoite)
+                :tr-alkuetaisyys (:aet osoite)
+                :tr-loppuosa (:losa osoite)
+                :tr-loppuetaisyys (:let osoite)
+                :tr-ajorata (:ajorata osoite)
+                :tr-kaista (:kaista osoite)
+                :poistettu (:poistettu osoite)
+                :sijainti (:sijainti osoite)})
+             (:osoitteet ilmoitustiedot))})
   (assoc ilmoitustiedot :osoitteet (mapv
                                      #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
                                      (:osoitteet ilmoitustiedot))))
@@ -203,13 +207,14 @@
 
 (defn- tarkista-paallystysilmoituksen-tallentamisoikeudet [user urakka-id
                                                            paallystysilmoitus paallystysilmoitus-kannassa]
-  (let [kasittelytiedot-muuttuneet? (fn [uudet-tiedot tiedot-kannassa]
-                                      (let [vertailtavat
-                                            [:paatos-tekninen-osa :paatos-taloudellinen-osa
-                                             :perustelu-tekninen-osa :perustelu-taloudellinen-osa
-                                             :kasittelyaika-tekninen-osa :kasittelyaika-taloudellinen-osa]]
-                                        (not= (select-keys uudet-tiedot vertailtavat)
-                                              (select-keys tiedot-kannassa vertailtavat))))]
+  (let [kasittelytiedot-muuttuneet?
+        (fn [uudet-tiedot tiedot-kannassa]
+          (let [vertailtavat
+                [:paatos-tekninen-osa :paatos-taloudellinen-osa
+                 :perustelu-tekninen-osa :perustelu-taloudellinen-osa
+                 :kasittelyaika-tekninen-osa :kasittelyaika-taloudellinen-osa]]
+            (not= (select-keys uudet-tiedot vertailtavat)
+                  (select-keys tiedot-kannassa vertailtavat))))]
     ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
     ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
     (if (kasittelytiedot-muuttuneet? paallystysilmoitus paallystysilmoitus-kannassa)
