@@ -168,7 +168,6 @@
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
-  ; FIXME Lisää TR-osoitteen validointi
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {})] ;; virheelliset TR sijainnit
     (komp/luo
