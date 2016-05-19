@@ -25,7 +25,7 @@
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
-  (log/debug "Haetaan urakan päällystystoteumat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
+  (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
@@ -38,7 +38,7 @@
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                db urakka-id sopimus-id (:paallystyskohde-id %))))))
                       (q/hae-urakan-paallystysilmoitukset db urakka-id sopimus-id))]
-    (log/debug "Päällystystoteumat saatu: " (pr-str vastaus))
+    (log/debug "Päällystysilmoitukset saatu: " (pr-str vastaus))
     vastaus))
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
