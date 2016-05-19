@@ -58,14 +58,39 @@
 (def nimi-leveys 20)
 (def toimenpide-leveys 20)
 
+(defn tr-osoite [rivi]
+  (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
+      (when (every? #(not (str/blank? %)) arvot)
+        ;; Tierekisteriosoite on täytetty (ei tyhjiä kenttiä)
+        (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
+                arvot))))
+
+(defn kasittele-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
+  (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
+    (let [haetut (into #{} (keys @tr-sijainnit-atom))]
+      ;; jos on tullut uusi TR osoite, haetaan sille sijainti
+      (doseq [[id rivi] (grid/hae-muokkaustila grid)]
+        (if (:poistettu rivi)
+          (swap! tr-virheet-atom dissoc id)
+          (let [osoite (tr-osoite rivi)]
+            (when (and osoite (not (haetut osoite)))
+              (go
+                (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
+                (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
+                  (when (= (get (grid/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
+                    (if-let [virhe (when-not (vkm/loytyi? sijainti)
+                                     "Virheellinen TR-osoite")]
+                      (do (swap! tr-virheet-atom assoc id virhe)
+                          (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+                            (grid/aseta-virhe! grid id kentta "Tarkista tie")))
+                      (do (swap! tr-virheet-atom dissoc id)
+                          (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+                            (grid/poista-virhe! grid id kentta))
+                          (log "sain sijainnin " (clj->js sijainti))
+                          (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
+
 (defn yllapitokohdeosat [_ yllapitokohde-atom]
-  (let [tr-osoite (fn [rivi]
-                    (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
-                      (when (every? #(not (str/blank? %)) arvot)
-                        ;; Tierekisteriosoite on täytetty (ei tyhjiä kenttiä)
-                        (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
-                                arvot))))
-        tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
+  (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {})  ;; virheelliset TR sijainnit
         resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))]
     (komp/luo
@@ -97,29 +122,8 @@
                                 (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))))
            :luokat ["yllapitokohdeosat-haitari"]
            :peruuta #(resetoi-tr-tiedot)
-           :muutos (fn [g]
-                     (log "VIRHEET:" (pr-str (grid/hae-virheet g)))
-                     (let [haetut (into #{} (keys @tr-sijainnit))]
-                       ;; jos on tullut uusi TR osoite, haetaan sille sijainti
-                       (doseq [[id rivi] (grid/hae-muokkaustila g)]
-                         (if (:poistettu rivi)
-                           (swap! tr-virheet dissoc id)
-                           (let [osoite (tr-osoite rivi)]
-                             (when (and osoite (not (haetut osoite)))
-                               (go
-                                 (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
-                                 (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
-                                   (when (= (get (grid/hae-muokkaustila g) id) rivi) ;; ettei rivi ole uudestaan muuttunut
-                                     (if-let [virhe (when-not (vkm/loytyi? sijainti)
-                                                      "Virheellinen TR-osoite")]
-                                       (do (swap! tr-virheet assoc id virhe)
-                                           (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                                             (grid/aseta-virhe! g id kentta "Tarkista tie")))
-                                       (do (swap! tr-virheet dissoc id)
-                                           (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                                             (grid/poista-virhe! g id kentta))
-                                           (log "sain sijainnin " (clj->js sijainti))
-                                           (swap! tr-sijainnit assoc osoite sijainti))))))))))))}
+           :muutos (fn [grid]
+                     (kasittele-tr-osoite grid tr-sijainnit tr-virheet))}
           [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys nimi-leveys}
            {:otsikko "Tienumero" :nimi :tr-numero :tyyppi :positiivinen-numero
             :leveys tr-leveys :validoi [[:ei-tyhja "Anna tienumero"]]}
