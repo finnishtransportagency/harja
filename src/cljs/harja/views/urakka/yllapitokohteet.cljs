@@ -167,6 +167,7 @@
          [yllapitokohdeosa-virheet tr-virheet]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
+  ; FIXME Lisää TR-osoitteen validointi
   [grid/grid
    {:otsikko (:otsikko optiot)
     :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
