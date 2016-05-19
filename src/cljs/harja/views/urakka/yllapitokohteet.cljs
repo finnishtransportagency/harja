@@ -76,7 +76,6 @@
                             (reset! tr-sijainnit {})
                             (reset! tr-virheet {}))]
     (komp/luo
-      (komp/ulos #(kartta/poista-popup!))
       (fn [{:keys [kohdeosat id] :as rivi} yllapitokohde-atom]
         (log "[PAAL] Renderöi alikohteet")
         [:div
