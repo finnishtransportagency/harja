@@ -40,6 +40,16 @@ WHERE yllapitokohde IN
        FROM yllapitokohde
        WHERE urakka = :urakka);
 
+-- name: hae-yllapitokohteen-kohdeosat
+SELECT
+  id,
+  tr_numero AS "tr-numero",
+  tr_alkuosa AS "tr-alkuosa",
+  tr_alkuetaisyys AS "tr-alkuetaisyys",
+  tr_loppuosa AS "tr-loppuosa",
+  tr_loppuetaisyys AS "tr-loppuetaisyys"
+from yllapitokohdeosa WHERE yllapitokohde = :id;
+
 -- name: hae-urakoiden-sidontatiedot
 SELECT
   yt.yhaid,

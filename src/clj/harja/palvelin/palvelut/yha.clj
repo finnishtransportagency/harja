@@ -95,24 +95,28 @@
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
 
-(defn- luo-esitaytetty-paallystysilmoitus [db user kohde kohdeosat]
-  ; FIXME Ei toimi enää näin, koska osoitteet tulevat suoraan alikohteilta
+(defn- luo-esitaytetty-paallystysilmoitus [db user yllapitokohde yha-kohdeosat]
   (log/debug "Tehdään kohdeosista esitäytetty päällystysilmoitus")
-  (let [ilmoitustiedot {:osoitteet
+  (let [kohdeosat-kannassa (yha-q/hae-yllapitokohteen-kohdeosat db {:id (:id yllapitokohde)})
+        ilmoitustiedot {:osoitteet
                         (mapv
-                          (fn [{:keys [tierekisteriosoitevali paallystystoimenpide] :as kohdeosa}]
-                            {:tie (:tienumero tierekisteriosoitevali)
-                             :aosa (:aosa tierekisteriosoitevali)
-                             :aet (:aet tierekisteriosoitevali)
-                             :losa (:losa tierekisteriosoitevali)
-                             :let (:let tierekisteriosoitevali)
-                             :ajorata (:ajorata tierekisteriosoitevali)
-                             :kaista (:kaista tierekisteriosoitevali)
-                             :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
-                             :paallystetyyppi (:uusi-paallyste paallystystoimenpide)})
-                          kohdeosat)}
+                          (fn [{:keys [tierekisteriosoitevali
+                                       paallystystoimenpide] :as kohdeosa}]
+                            (let [kohdeosa-kannassa
+                                  (first (filter
+                                           (fn [osa]
+                                             (and (= (:tienumero tierekisteriosoitevali) (:tr-numero osa))
+                                                  (= (:aosa tierekisteriosoitevali) (:tr-alkuosa osa))
+                                                  (= (:aet tierekisteriosoitevali) (:tr-alkuetaisyys osa))
+                                                  (= (:losa tierekisteriosoitevali) (:tr-loppuosa osa))
+                                                  (= (:let tierekisteriosoitevali) (:tr-loppuetaisyys osa))))
+                                           kohdeosat-kannassa))]
+                              {:kohdeosa-id (:id kohdeosa-kannassa)
+                               :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
+                               :paallystetyyppi (:uusi-paallyste paallystystoimenpide)}))
+                          yha-kohdeosat)}
         ilmoitustiedot-json (cheshire/encode ilmoitustiedot)]
-    (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde (:id kohde)
+    (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde (:id yllapitokohde)
                                         :ilmoitustiedot ilmoitustiedot-json
                                         :luoja (:id user)})
     (log/debug "Esitäytetty päällystysilmoitus tehty")))

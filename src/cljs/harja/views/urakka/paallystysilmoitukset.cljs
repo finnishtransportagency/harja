@@ -422,7 +422,7 @@
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Massa (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero
+              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
