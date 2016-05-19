@@ -185,9 +185,9 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc :paatos_taloudellinen_osa :hyvaksytty)
-                                 (assoc :paatos_tekninen_osa :hyvaksytty)
-                                 (assoc :perustelu_tekninen_osa "Hyvä ilmoitus!"))]
+                                 (assoc :paatos-taloudellinen-osa :hyvaksytty)
+                                 (assoc :paatos-tekninen-osa :hyvaksytty)
+                                 (assoc :perustelu-tekninen-osa "Hyvä ilmoitus!"))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
@@ -201,9 +201,9 @@
         (log/debug "POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
-        (is (= (:paatos_tekninen_osa paallystysilmoitus-kannassa) :hyvaksytty))
-        (is (= (:paatos_taloudellinen_osa paallystysilmoitus-kannassa) :hyvaksytty))
-        (is (= (:perustelu_tekninen_osa paallystysilmoitus-kannassa) (:perustelu_tekninen_osa paallystysilmoitus)))
+        (is (= (:paatos-tekninen-osa paallystysilmoitus-kannassa) :hyvaksytty))
+        (is (= (:paatos-taloudellinen-osa paallystysilmoitus-kannassa) :hyvaksytty))
+        (is (= (:perustelu-tekninen-osa paallystysilmoitus-kannassa) (:perustelu-tekninen-osa paallystysilmoitus)))
         (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
 
         ; Lukittu, ei voi enää päivittää
@@ -214,9 +214,9 @@
 
         (u (str "UPDATE paallystysilmoitus SET
                       tila = NULL,
-                      paatos_tekninen_osa = NULL,
-                      paatos_taloudellinen_osa = NULL,
-                      perustelu_tekninen_osa = NULL
+                      paatos-tekninen-osa = NULL,
+                      paatos-taloudellinen-osa = NULL,
+                      perustelu-tekninen-osa = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
 (deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
@@ -226,9 +226,9 @@
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-                                 (assoc :paatos_taloudellinen_osa :hyvaksytty)
-                                 (assoc :paatos_tekninen_osa :hyvaksytty)
-                                 (assoc :perustelu_tekninen_osa "Yritän saada ilmoituksen hyväksytyksi ilman oikeuksia."))]
+                                 (assoc :paatos-taloudellinen-osa :hyvaksytty)
+                                 (assoc :paatos-tekninen-osa :hyvaksytty)
+                                 (assoc :perustelu-tekninen-osa "Yritän saada ilmoituksen hyväksytyksi ilman oikeuksia."))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-tero+ {:urakka-id          urakka-id
