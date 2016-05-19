@@ -121,7 +121,6 @@
   []
   (let [valinta-auki (atom nil)]
     (komp/luo
-      (komp/ulos #(reset! nav/murupolku-domissa? false))
       (komp/kuuntelija
       [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
        :urakka-valittu :urakkavalinta-poistettu]
@@ -133,7 +132,6 @@
         (when-not (dom/sisalla? this klikkaus)
           (reset! valinta-auki false))))
       {:component-did-mount  (fn [_]
-                               (reset! nav/murupolku-domissa? true)
                                (t/julkaise! {:aihe :murupolku-muuttunut}))
        :component-did-update (fn [_]
                                (if-not (= @nav/murupolku-nakyvissa? @nav/DANGEROUS-murupolku-naytetty-domissa?)

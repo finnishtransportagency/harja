@@ -53,8 +53,6 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
   päivitys tapahtuu aina vasta kun murupolku on oikeasti piilotettu DOMissa."}
   DANGEROUS-murupolku-naytetty-domissa? (atom @murupolku-nakyvissa?))
 
-(defonce murupolku-domissa? (atom false))
-
 (defonce kartan-extent (atom nil))
 
 (defonce kartalla-nakyva-alue
