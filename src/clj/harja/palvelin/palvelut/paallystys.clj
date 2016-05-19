@@ -91,7 +91,6 @@
 
       (do
         (log/debug "Haetaan kommentit...")
-        (log/info "KOHDETIEDOT: " kohdetiedot)
         (let [kommentit (into []
                               (comp (map konv/alaviiva->rakenne)
                                     (map (fn [{:keys [liite] :as kommentti}]
