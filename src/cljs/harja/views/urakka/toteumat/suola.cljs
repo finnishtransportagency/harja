@@ -79,7 +79,7 @@
            :validoi [[:ei-tyhja "Anna päivämäärä"]]
            :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
           {:otsikko "Käytetty määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
-           :validoi [[:ei-tyhja "Anna määrä"]]}
+           :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
            :hae #(if (muokattava? %) (:lisatieto %) "Koneellisesti raportoitu")}]
 
