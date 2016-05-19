@@ -172,8 +172,7 @@
 (defn- kartan-paikkavaraus
   [kartan-koko & args]
   (let [paivita (fn [paikkavaraus]
-                  (go (>! paivita-kartan-sijainti paikkavaraus))
-                  (r/next-tick #(go (>! paivita-kartan-sijainti paikkavaraus))))
+                  (go (>! paivita-kartan-sijainti paikkavaraus)))
         scroll-kuuntelija (fn [_]
                             (paivita :scroll))]
     (komp/luo
