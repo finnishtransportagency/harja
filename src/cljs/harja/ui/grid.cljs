@@ -970,9 +970,10 @@ Optiot on mappi optioita:
               [:thead
                [:tr
                 (if rivinumerot? [:th {:width "40px"} " "])
-                (for [{:keys [otsikko leveys nimi]} skeema]
+                (for [{:keys [otsikko leveys nimi tasaa]} skeema]
                   ^{:key (str nimi)}
-                  [:th.rivinumero {:width (or leveys "5%")} otsikko])
+                  [:th.rivinumero {:width (or leveys "5%")
+                                   :class  (y/tasaus-luokka tasaa)} otsikko])
                 (when-not piilota-toiminnot?
                   [:th.toiminnot {:width "40px"} " "])]]
 
