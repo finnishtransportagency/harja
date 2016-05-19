@@ -72,10 +72,11 @@
                                    (fn [kohdeosa]
                                      ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
                                      (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                            (first (filter
-                                                     (fn [paallystystoimenpide]
-                                                       (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide)))
-                                                     (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])))))
+                                            (some
+                                              (fn [paallystystoimenpide]
+                                                (when (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide))
+                                                  paallystystoimenpide))
+                                              (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))
                                    (sort-by tierekisteri-domain/tiekohteiden-jarjestys (:kohdeosat paallystysilmoitus))))
                                (dissoc :kohdeosat))]
     (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
@@ -207,8 +208,8 @@
                                             [:paatos-tekninen-osa :paatos-taloudellinen-osa
                                              :perustelu-tekninen-osa :perustelu-taloudellinen-osa
                                              :kasittelyaika-tekninen-osa :kasittelyaika-taloudellinen-osa]]
-                                        (not= ((apply juxt vertailtavat) uudet-tiedot)
-                                              ((apply juxt vertailtavat) tiedot-kannassa))))]
+                                        (not= (select-keys uudet-tiedot vertailtavat)
+                                              (select-keys tiedot-kannassa vertailtavat))))]
     ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
     ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
     (if (kasittelytiedot-muuttuneet? paallystysilmoitus paallystysilmoitus-kannassa)

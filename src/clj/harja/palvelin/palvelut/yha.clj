@@ -103,16 +103,17 @@
                           (fn [{:keys [tierekisteriosoitevali
                                        paallystystoimenpide] :as yha-kohdeosa}]
                             (let [kohdeosa-kannassa
-                                  (first (filter
-                                           (fn [osa]
-                                             (and (= (:tienumero tierekisteriosoitevali) (:tr-numero osa))
-                                                  (= (:aosa tierekisteriosoitevali) (:tr-alkuosa osa))
-                                                  (= (:aet tierekisteriosoitevali) (:tr-alkuetaisyys osa))
-                                                  (= (:losa tierekisteriosoitevali) (:tr-loppuosa osa))
-                                                  (= (:let tierekisteriosoitevali) (:tr-loppuetaisyys osa))
-                                                  (= (:ajorata tierekisteriosoitevali) (:tr-ajorata osa))
-                                                  (= (:kaista tierekisteriosoitevali) (:tr-kaista osa))))
-                                           kohdeosat-kannassa))]
+                                  (some
+                                    (fn [osa]
+                                      (when (and (= (:tienumero tierekisteriosoitevali) (:tr-numero osa))
+                                                 (= (:aosa tierekisteriosoitevali) (:tr-alkuosa osa))
+                                                 (= (:aet tierekisteriosoitevali) (:tr-alkuetaisyys osa))
+                                                 (= (:losa tierekisteriosoitevali) (:tr-loppuosa osa))
+                                                 (= (:let tierekisteriosoitevali) (:tr-loppuetaisyys osa))
+                                                 (= (:ajorata tierekisteriosoitevali) (:tr-ajorata osa))
+                                                 (= (:kaista tierekisteriosoitevali) (:tr-kaista osa)))
+                                        osa))
+                                    kohdeosat-kannassa)]
                               {:kohdeosa-id (:id kohdeosa-kannassa)
                                :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
                                :paallystetyyppi (:uusi-paallyste paallystystoimenpide)}))
