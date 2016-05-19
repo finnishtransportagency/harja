@@ -47,7 +47,9 @@ SELECT
   tr_alkuosa AS "tr-alkuosa",
   tr_alkuetaisyys AS "tr-alkuetaisyys",
   tr_loppuosa AS "tr-loppuosa",
-  tr_loppuetaisyys AS "tr-loppuetaisyys"
+  tr_loppuetaisyys AS "tr-loppuetaisyys",
+  tr_ajorata AS "tr-ajorata",
+  tr_kaista AS "tr-kaista"
 from yllapitokohdeosa WHERE yllapitokohde = :id;
 
 -- name: hae-urakoiden-sidontatiedot

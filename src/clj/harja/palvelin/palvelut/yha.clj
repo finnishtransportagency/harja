@@ -109,7 +109,9 @@
                                                   (= (:aosa tierekisteriosoitevali) (:tr-alkuosa osa))
                                                   (= (:aet tierekisteriosoitevali) (:tr-alkuetaisyys osa))
                                                   (= (:losa tierekisteriosoitevali) (:tr-loppuosa osa))
-                                                  (= (:let tierekisteriosoitevali) (:tr-loppuetaisyys osa))))
+                                                  (= (:let tierekisteriosoitevali) (:tr-loppuetaisyys osa))
+                                                  (= (:ajorata tierekisteriosoitevali) (:tr-ajorata osa))
+                                                  (= (:kaista tierekisteriosoitevali) (:tr-kaista osa))))
                                            kohdeosat-kannassa))]
                               {:kohdeosa-id (:id kohdeosa-kannassa)
                                :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
