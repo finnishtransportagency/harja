@@ -65,19 +65,11 @@
                         ;; Tierekisteriosoite on täytetty (ei tyhjiä kenttiä)
                         (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
                                 arvot))))
-
-        ;; onnistuneesti haetut TR-sijainnit
-        tr-sijainnit (atom {})
-
-        ;; virheelliset TR sijainnit 
-        tr-virheet (atom {})
-
-        resetoi-tr-tiedot (fn []
-                            (reset! tr-sijainnit {})
-                            (reset! tr-virheet {}))]
+        tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
+        tr-virheet (atom {})  ;; virheelliset TR sijainnit
+        resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))]
     (komp/luo
       (fn [{:keys [kohdeosat id] :as rivi} yllapitokohde-atom]
-        (log "[PAAL] Renderöi alikohteet")
         [:div
          [grid/grid
           {:otsikko "Tierekisterikohteet"
