@@ -134,7 +134,7 @@
       {:component-did-mount  (fn [_]
                                (t/julkaise! {:aihe :murupolku-muuttunut}))
        :component-did-update (fn [_]
-                               (if-not (= @nav/murupolku-nakyvissa? @nav/DANGEROUS-murupolku-naytetty-domissa?)
+                               (when-not (= @nav/murupolku-nakyvissa? @nav/DANGEROUS-murupolku-naytetty-domissa?)
                                  (reset! nav/DANGEROUS-murupolku-naytetty-domissa? @nav/murupolku-nakyvissa?)))}
       (fn []
        (let [ur @nav/valittu-urakka
