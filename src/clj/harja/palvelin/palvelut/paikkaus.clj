@@ -21,7 +21,7 @@
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-poluista->keyword % [[:tila] :paatos]))
+                        (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
                         (map #(assoc % :kohdeosat
                                        (into []
                                              yllapitokohteet/kohdeosa-xf
