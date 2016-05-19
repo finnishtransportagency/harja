@@ -6,7 +6,8 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
        'hankinta-alue'::raporttikonteksti,
        'koko maa'::raporttikonteksti],
  ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri,
-       ('Tienumero', 'tienumero', false, NULL)::raporttiparametri],
+       ('Tienumero', 'tienumero', false, NULL)::raporttiparametri,
+       ('Vain laadun alitukset', 'checkbox', false, NULL)::raporttiparametri],
  '#''harja.palvelin.raportointi.raportit.laaduntarkastus/suorita',
   'hoito'::urakkatyyppi
 );

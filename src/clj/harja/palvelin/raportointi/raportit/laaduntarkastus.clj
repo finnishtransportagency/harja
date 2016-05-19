@@ -13,13 +13,15 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [clojure.string :as str]))
 
-(defn hae-tarkastukset [db {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero]}]
+(defn hae-tarkastukset [db {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero
+                                   laadunalitus]}]
   (tarkastukset-q/hae-laaduntarkastukset db
                                          {:urakka urakka-id
                                           :hallintayksikko hallintayksikko-id
                                           :alku alkupvm
                                           :loppu loppupvm
-                                          :tienumero tienumero}))
+                                          :tienumero tienumero
+                                          :laadunalitus laadunalitus}))
 
 
 (defn talvihoitomittaus [{:keys [talvihoitoluokka lumimaara tasaisuus kitka lampotila]}]
@@ -51,12 +53,16 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
-                               (hae-tarkastukset db {:konteksti konteksti
-                                                     :urakka-id urakka-id
-                                                     :hallintayksikko-id hallintayksikko-id
-                                                     :alkupvm alkupvm
-                                                     :loppupvm loppupvm
-                                                     :tienumero tienumero}))
+                               (hae-tarkastukset
+                                db {:konteksti konteksti
+                                    :urakka-id urakka-id
+                                    :hallintayksikko-id hallintayksikko-id
+                                    :alkupvm alkupvm
+                                    :loppupvm loppupvm
+                                    :tienumero tienumero
+                                    :laadunalitus (if (parametrit "Vain laadun alitukset")
+                                                    true
+                                                    nil)}))
         naytettavat-rivit (konv/sarakkeet-vektoriin
                             naytettavat-rivit
                             {:liite :liitteet})

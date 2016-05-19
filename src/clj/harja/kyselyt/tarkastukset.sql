@@ -522,3 +522,4 @@ WHERE t.tyyppi = 'laatu'::tarkastustyyppi
       AND (:tienumero::integer IS NULL OR t.tr_numero = :tienumero)
       AND (:urakka::integer IS NULL OR t.urakka = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:laadunalitus::boolean IS NULL OR t.laadunalitus = :laadunalitus)
