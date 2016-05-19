@@ -51,7 +51,7 @@
   (when-let
     [karttasailio (dom/elementti-idlla "kartta-container")]
     (let [tyyli (.-style karttasailio)]
-      (log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
+      ;;(log "ASETA-KARTAN-SIJAINTI: " x ", " y ", " w ", " h ", " naulattu?)
       (if naulattu?
         (do
           (set! (.-position tyyli) "fixed")
@@ -120,22 +120,21 @@
                           :mount true
                           :timeout
                           ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
-                          (do
-                            (log "KARTTA LÄHTI OIKEASTI")
+                          (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
                             (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
                             (recur nil nil nil w h nil))))
                 paikka-elt (<! (elementti-idlla-odota "kartan-paikka"))
                 [uusi-x uusi-y uusi-w uusi-h] (dom/sijainti paikka-elt)
                 uusi-offset-y (dom/offset-korkeus paikka-elt)]
 
-            (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
+            ;; (log "KARTAN PAIKKA: " x "," y " (" w "x" h ") OY: " offset-y " => " uusi-x "," uusi-y " (" uusi-w "x" uusi-h ") OY: " uusi-offset-y)
 
 
             (cond
               ;; Eka kerta, asetetaan kartan sijainti
               (or (= :aseta paivita) aseta (nil? naulattu?))
               (let [naulattu? (neg? uusi-y)]
-                (log "EKA KERTA")
+                                        ;(log "EKA KERTA")
                 (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
                 (when (or (not= w uusi-w) (not= h uusi-h))
                   (reagent/next-tick #(openlayers/invalidate-size!)))
@@ -179,20 +178,16 @@
      (komp/kuuntelija #{:ikkunan-koko-muuttunut
                         :murupolku-muuttunut}
                       #(paivita :aseta))
-     {:component-did-mount    #(do
-                                (log "Kartan paikkavaraus, did mount")
-                                (events/listen js/window
-                                               EventType/SCROLL
-                                               scroll-kuuntelija)
-                                (paivita :mount))
-      :component-did-update   #(do
-                                (log "Kartan paikkavaraus, will update")
-                                (paivita :aseta))
-      :component-will-unmount (fn [this]
-                                (log "Kartan paikkavaraus, will unmount")
-                                ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
-                                (events/unlisten js/window EventType/SCROLL scroll-kuuntelija)
-                                (paivita false))}
+      {:component-did-mount    #(do
+                                 (events/listen js/window
+                                                EventType/SCROLL
+                                                scroll-kuuntelija)
+                                 (paivita :mount))
+       :component-did-update   #(paivita :aseta)
+       :component-will-unmount (fn [this]
+                                 ;; jos karttaa ei saa näyttää, asemoidaan se näkyvän osan yläpuolelle
+                                 (events/unlisten js/window EventType/SCROLL scroll-kuuntelija)
+                                 (paivita false))}
 
       (fn []
         [:div#kartan-paikka {:style {:height        (fmt/pikseleina @kartan-korkeus)
@@ -492,6 +487,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
     (let [extent (reduce geo/yhdista-extent
                          (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))
           extentin-margin-metreina geo/pisteen-extent-laajennus]
+      (log "EXTENT TASOISTA: " (pr-str extent))
       (if extent
         (keskita-kartta-alueeseen! (geo/laajenna-extent extent extentin-margin-metreina))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
@@ -543,6 +539,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
         (add-watch nav/kartan-koko :muuttuvan-kartan-koon-kuuntelija
                    (fn [_ _ _ _]
                      (when @pida-geometriat-nakyvilla?
+                       (log "Kartan koko muuttui, zoomataan!")
                        (zoomaa-geometrioihin))))
 
         ;; Hallintayksiköt ja valittu urakka ovat nykyään :organisaatio
