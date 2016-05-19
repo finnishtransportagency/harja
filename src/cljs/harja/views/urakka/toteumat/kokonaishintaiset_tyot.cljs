@@ -43,7 +43,7 @@
        [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 3}
         {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
         {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
-        {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt}
+        {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt :tasaa :oikea}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
         {:otsikko     "Tarkastele koko toteumaa"
          :nimi        :tarkastele-toteumaa
@@ -82,7 +82,7 @@
       [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys "3%"}
        {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "19%"}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "38%"}
-       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%" :fmt #(fmt/desimaaliluku-opt % 1)}
+       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%" :fmt #(fmt/desimaaliluku-opt % 1) :tasaa :oikea}
        {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
       toteumat]]))

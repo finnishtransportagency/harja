@@ -248,7 +248,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
           [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus :leveys "20%"
             :hae     (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
            {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :positiivinen-numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)
-            :leveys  "20%"}
+            :leveys  "20%" :tasaa :oikea}
            {:otsikko "Suorittaja" :nimi :suorittaja :pituus-max 256 :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false) :leveys "20%"}
            {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false) :leveys "20%"}
            {:otsikko     "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
@@ -283,9 +283,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
     [{:tyyppi :vetolaatikon-tila :leveys "5%"}
      {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys "50%"}
      {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys "10%"}
-     {:otsikko "Maksimi\u00ADmäärä" :nimi :sovittu_maara :hae :maara :leveys "20%"}
-     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys "20%"}
-     {:otsikko     "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti
+     {:otsikko "Maksimi\u00ADmäärä" :nimi :sovittu_maara :hae :maara :leveys "20%" :tasaa :oikea}
+     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys "20%" :tasaa :oikea}
+     {:otsikko     "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti :tasaa :oikea
       :muokattava? (constantly false) :leveys "20%"
       :komponentti
                    (fn [rivi]
