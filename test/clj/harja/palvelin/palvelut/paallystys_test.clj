@@ -102,6 +102,16 @@
                                     :yksikko          "km"
                                     :yksikkohinta     5}]}})
 
+(defn poista-ilmoitustiedoista-tieosoitteet [ilmoitustiedot]
+  (-> ilmoitustiedot
+      (assoc :osoitteet
+             (mapv (fn [osoite]
+                     (dissoc osoite
+                             :nimi :tie :aosa
+                             :aet :losa :let
+                             :ajorata :kaista))
+                   (:osoitteet ilmoitustiedot)))))
+
 (def paallystyskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "
                                                            SELECT yllapitokohde.id as paallystyskohde_id
                                                            FROM yllapitokohde
@@ -173,7 +183,7 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= (:muutoshinta paallystysilmoitus-kannassa) (java.math.BigDecimal. 500)))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
+        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (poista-ilmoitustiedoista-tieosoitteet (:ilmoitustiedot paallystysilmoitus))))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
@@ -204,7 +214,8 @@
         (is (= (:paatos-tekninen-osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:paatos-taloudellinen-osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:perustelu-tekninen-osa paallystysilmoitus-kannassa) (:perustelu-tekninen-osa paallystysilmoitus)))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
+        ;; Kantaan mennyt POT ei sisällä osoitteita, ne on tallennettu yllapitokohdeosa-tauluun
+        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (poista-ilmoitustiedoista-tieosoitteet (:ilmoitustiedot paallystysilmoitus))))
 
         ; Lukittu, ei voi enää päivittää
         (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -214,9 +225,9 @@
 
         (u (str "UPDATE paallystysilmoitus SET
                       tila = NULL,
-                      paatos-tekninen-osa = NULL,
-                      paatos-taloudellinen-osa = NULL,
-                      perustelu-tekninen-osa = NULL
+                      paatos_tekninen_osa = NULL,
+                      paatos_taloudellinen_osa = NULL,
+                      perustelu_tekninen_osa = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
 (deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
