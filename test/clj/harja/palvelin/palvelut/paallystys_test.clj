@@ -40,13 +40,13 @@
    :valmispvm_paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm       (pvm/luo-pvm 2005 9 3)
    :muutoshinta    0
-   :ilmoitustiedot {:osoitteet    [{:tie                       1
+   :ilmoitustiedot {:osoitteet    [{:nimi "Tie 1"
+                                    :tie                       1
                                     :aosa                      2
                                     :aet                       3
                                     :losa                      4
                                     :let                       5
                                     :ajorata                   1
-                                    :suunta                    0
                                     :kaista                    1
                                     :paallystetyyppi           1
                                     :raekoko                   1
@@ -57,13 +57,13 @@
                                     :massamaara                7
                                     :pinta-ala                 8
                                     :edellinen-paallystetyyppi 1}
-                                   {:tie                       1
+                                   {:nimi "Tie 2"
+                                    :tie                       2
                                     :aosa                      2
                                     :aet                       3
                                     :losa                      4
                                     :let                       5
                                     :ajorata                   1
-                                    :suunta                    0
                                     :kaista                    1
                                     :paallystetyyppi           1
                                     :raekoko                   1
