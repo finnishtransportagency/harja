@@ -86,11 +86,11 @@
        {:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys 15
         :hae     (fn [rivi]
                    (varustetiedot/varuste-toimenpide->string (:toimenpide rivi)))}
-       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10}
-       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5}
-       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5}
-       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5}
-       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5}
+       {:otsikko "Tie" :nimi :tie :tyyppi :positiivinen-numero :leveys 10 :tasaa :oikea}
+       {:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
+       {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
+       {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
+       {:otsikko "Let" :nimi :let :tyyppi :positiivinen-numero :leveys 5 :tasaa :oikea}
        {:otsikko "Kuntoluokka" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
        {:otsikko     "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
         :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
