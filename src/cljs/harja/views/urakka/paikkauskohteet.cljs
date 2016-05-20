@@ -36,12 +36,15 @@
          :tallenna (fn [kohteet]
                      (go (let [urakka-id (:id @nav/valittu-urakka)
                                [sopimus-id _] @u/valittu-sopimusnumero
-                               _ (log "PÄÄ Tallennetaan paikkauskohteet: " (pr-str kohteet))
-                               vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet! urakka-id sopimus-id kohteet))]
+                               _ (log "[PAIK] Tallennetaan paikkauskohteet: " (pr-str kohteet))
+                               vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet!
+                                             urakka-id sopimus-id
+                                             (mapv #(assoc % :tyyppi :paikkaus)
+                                                   kohteet)))]
                            (if (k/virhe? vastaus)
                              (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
                              (do
-                               (log "PÄÄ paikkaustyskohteet tallennettu: " (pr-str vastaus))
+                               (log "[PAIK]paikkaustyskohteet tallennettu: " (pr-str vastaus))
                                (reset! paikkaus/paikkauskohteet vastaus))))))
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]

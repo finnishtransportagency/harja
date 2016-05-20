@@ -69,11 +69,11 @@
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                       yllapitoluokka
+                                       yllapitoluokka tyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
                                        kaasuindeksi poistettu nykyinen-paallyste
                                        keskimaarainen-vuorokausiliikenne]}]
-  (log/debug "Luodaan uusi ylläpitokohde")
+  (log/debug "Luodaan uusi ylläpitokohde tyyppiä " tyyppi)
   (when-not poistettu
     (q/luo-yllapitokohde<! db
                            urakka-id
@@ -94,7 +94,8 @@
                            arvonvahennykset
                            bitumi-indeksi
                            kaasuindeksi
-                           nykyinen-paallyste)))
+                           (when tyyppi
+                             (name tyyppi)))))
 
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
                               {:keys [id kohdenumero nimi
