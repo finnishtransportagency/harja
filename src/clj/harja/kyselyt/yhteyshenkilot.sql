@@ -19,14 +19,11 @@ FROM yhteyshenkilo y
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE yu.urakka = :urakka;
 
--- name: poista-urakan-paivystajatiedot!
--- Poistaa annetun urakan päivystäjätiedot
+-- name: poista-urakan-paivystykset!
+-- Poistaa annetun urakan päivystykset ulkoisella id:lla
 DELETE FROM paivystys
 WHERE urakka = :urakka AND
-      yhteyshenkilo IN
-      (SELECT id
-       FROM yhteyshenkilo
-       WHERE ulkoinen_id IN (:ulkoiset_idt));
+      ulkoinen_id IN (:ulkoiset_idt);
 
 -- name: hae-urakan-paivystajat
 -- Hakee urakan päivystykset
@@ -163,8 +160,8 @@ WHERE id = (SELECT yhteyshenkilo
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
 INSERT INTO paivystys
-(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
-VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo);
+(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo, ulkoinen_id)
+VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo, :ulkoinen_id);
 
 -- name: hae-paivystyksen-yhteyshenkilo-id
 -- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
@@ -186,6 +183,16 @@ SET alku        = :alku,
   varahenkilo   = :varahenkilo,
   vastuuhenkilo = :vastuuhenkilo
 WHERE yhteyshenkilo = :yhteyshenkilo_id;
+
+-- name: paivita-paivystys-ulkoisella-idlla<!
+-- Päivittää päivystyksen tiedot
+UPDATE paivystys
+SET alku        = :alku,
+  loppu         = :loppu,
+  varahenkilo   = :varahenkilo,
+  vastuuhenkilo = :vastuuhenkilo,
+  yhteyshenkilo = :yhteyshenkilo_id
+WHERE ulkoinen_id = :ulkoinen_id;
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan Sampo id:llä
@@ -228,6 +235,12 @@ SELECT exists(
     SELECT id
     FROM paivystys
     WHERE yhteyshenkilo = :yhteyshenkilo);
+
+-- name: onko-olemassa-paivystys-ulkoisella-idlla
+SELECT exists(
+    SELECT id
+    FROM paivystys
+    WHERE ulkoinen_id = :ulkoinen_id);
 
 -- name: hae-urakan-taman-hetkiset-paivystajat
 SELECT

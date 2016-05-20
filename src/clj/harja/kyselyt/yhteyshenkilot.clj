@@ -11,6 +11,9 @@
 (defn onko-olemassa-paivystys-jossa-yhteyshenkilona-id? [db paivystaja-id]
   (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-paivystys-jossa-yhteyshenkilona-id db paivystaja-id))))
 
+(defn onko-olemassa-paivystys-ulkoisella-idlla? [db ulkoinen-id]
+  (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-paivystys-ulkoisella-idlla db ulkoinen-id))))
+
 (defn hae-urakan-tamanhetkiset-paivystajat
   "Palauttaa urakan tämän hetkiset päivystäjät, jotka ovat vastuuhenkilöitä (heille viesti)"
   [db urakkaid]
