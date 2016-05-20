@@ -343,7 +343,7 @@
     (= nimi "Toimenpide") "3"
     :default nimi))
 
-(def parametri-omalle-riville? #{"aikavali" "urakoittain"})
+(def parametri-omalle-riville? #{"aikavali" "urakoittain" "checkbox"})
 
 (def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
   +vientimuodot+
