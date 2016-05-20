@@ -154,6 +154,7 @@
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                    :paallystysilmoitus paallystysilmoitus})
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+            muutoshinta (ffirst (q (str "SELECT muutoshinta FROM paallystysilmoitus WHERE paallystyskohde = (SELECT id FROM yllapitokohde WHERE id =" paallystyskohde-id ");")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id urakka-id
@@ -163,8 +164,13 @@
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        (is (= (:muutoshinta paallystysilmoitus-kannassa) (java.math.BigDecimal. 500)))
-        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
+        (is (= (:muutoshinta paallystysilmoitus-kannassa) muutoshinta))
+        ;; Toimenpiteen tiedot on tallennettu oikein
+        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :massa :rc% :tyomenetelma
+                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]]
+          ;; Toimenpiteen tiedot on tallennettu oikein
+          (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
+                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
@@ -206,14 +212,12 @@
         (is (not (some #(= (:nimi %) "Tie 555")
                    (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
         (let [toimenpide-avaimet [:paallystetyyppi :raekoko :massa :rc% :tyomenetelma
-                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]
-              tie-avaimet [:nimi :tie :aosa :aet :losa :let :kaista :ajorata]]
+                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]]
           ;; Lisättiin yksi alikohde uutena. Toista ei lisätty, koska se oli merkitty poistetuksi
           (is (= alikohteet-maara-ennen-tallennusta (- alikohteet-maara-tallennuksen-jalkeen 1)))
-          ;; Tien tietoja ei tallennettu ilmoitukseen, menevät yllapitokohdeosa-tauluun
+          ;; Toimenpiteen tiedot on tallennettu oikein
           (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
-                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet)))
-          (is (empty? (select-keys (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]) tie-avaimet))))
+                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
 
         ; Lukittu, ei voi enää päivittää
         (log/debug "Tarkistetaan, ettei voi muokata lukittua ilmoitusta.")

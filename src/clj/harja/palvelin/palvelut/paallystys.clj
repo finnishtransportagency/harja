@@ -60,7 +60,8 @@
                                         paallystysilmoitus
                                         {:kohdeosa :kohdeosat}
                                         :id))
-            ;; Lisää kohdeosat ilmoitustietoihin
+            ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
+            ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
             paallystysilmoitus (-> paallystysilmoitus
                                    (assoc-in
                                      [:ilmoitustiedot :osoitteet]
@@ -111,6 +112,7 @@
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+    (log/debug "POT muutoshinta: " muutoshinta)
     (q/paivita-paallystysilmoitus!
       db
       tila
@@ -138,6 +140,7 @@
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+    (log/debug "POT muutoshinta: " muutoshinta)
     (:id (q/luo-paallystysilmoitus<!
            db
            paallystyskohde-id
