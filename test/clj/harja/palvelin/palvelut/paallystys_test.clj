@@ -36,8 +36,8 @@
 
 (def pot-testidata
   {:aloituspvm (pvm/luo-pvm 2005 9 1)
-   :valmispvm_kohde (pvm/luo-pvm 2005 9 2)
-   :valmispvm_paallystys (pvm/luo-pvm 2005 9 2)
+   :valmispvm-kohde (pvm/luo-pvm 2005 9 2)
+   :valmispvm-paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm (pvm/luo-pvm 2005 9 3)
    :muutoshinta 0
    :ilmoitustiedot {:osoitteet [{:nimi "Tie 666"
@@ -144,36 +144,27 @@
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
     (is (not (nil? paallystyskohde-id)))
-
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-          maara-ennen-lisaysta (ffirst (q
-                                         (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
+          maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                   :sopimus-id sopimus-id
                                                                    :paallystysilmoitus paallystysilmoitus})
-      (let [maara-lisayksen-jalkeen (ffirst (q
-                                              (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
+      (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :paallystyskohde-id paallystyskohde-id})]
-        (log/debug "POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
-        (log/debug "Muutoshinta: " (:muutoshinta paallystysilmoitus-kannassa))
-        (log/debug "Muutoshinta tyyppi: " (type (:muutoshinta paallystysilmoitus-kannassa)))
+        (log/debug "Testitallennus valmis. POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
         (is (not (nil? paallystysilmoitus-kannassa)))
-        #_(is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        #_(is (= (:muutoshinta paallystysilmoitus-kannassa) (java.math.BigDecimal. 500)))
-        #_(is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
-        #_(is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+        (is (= (:tila paallystysilmoitus-kannassa) :valmis))
+        (is (= (:muutoshinta paallystysilmoitus-kannassa) (java.math.BigDecimal. 500)))
+        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 

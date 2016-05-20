@@ -18,6 +18,9 @@ WHERE urakka = :urakka
 AND sopimus = :sopimus
 AND yllapitokohde.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
+SELECT id FROM paallystysilmoitus WHERE paallystyskohde = :paallystyskohde;
+
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
@@ -29,6 +32,10 @@ SELECT
   takuupvm,
   ypk.nimi                        AS kohdenimi,
   ypk.kohdenumero,
+  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi AS "bitumi-indeksi",
+  ypk.kaasuindeksi
   muutoshinta,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "paatos-tekninen-osa",
