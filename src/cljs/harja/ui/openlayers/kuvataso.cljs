@@ -7,7 +7,8 @@
             [ol.source.ImageStatic]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :refer [karttakuva-url]]
-            [harja.ui.openlayers.taso :refer [Taso]]))
+            [harja.ui.openlayers.taso :refer [Taso]]
+            [cljs-time.core :as t]))
 
 (defn- ol-kuva [extent resolution url]
   (ol.Image. extent resolution 1 nil url "use-credentials"
@@ -22,7 +23,8 @@
                 (let [[x1 y1 x2 y2] extent
                       uusi-url (apply karttakuva-url
                                       (concat  ["x1" x1 "y1" y1 "x2" x2 "y2" y2
-                                                "r" resolution "pr" pixel-ratio]
+                                                "r" resolution "pr" pixel-ratio
+                                                "ts" (t/now)]
                                                parametrit))]
                   (if (= uusi-url url)
                     [url image]
