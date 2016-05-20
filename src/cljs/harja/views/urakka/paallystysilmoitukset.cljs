@@ -383,14 +383,11 @@
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
                                   "- Valitse päällyste -"))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
-               :leveys "30%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :leveys "30%"}
+              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
               {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero
-               :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :leveys "10%"}
+              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
                :nimi :tyomenetelma
                :tyyppi :valinta
@@ -400,14 +397,10 @@
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
                                   "- Valitse menetelmä -"))
                :valinnat pot/+tyomenetelmat+
-               :leveys "30%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :leveys "30%"}
+              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero}
+              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero}
+              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero}
               {:otsikko "Edellinen päällyste"
                :nimi :edellinen-paallystetyyppi
                :tyyppi :valinta
@@ -417,8 +410,7 @@
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
                                   "- Valitse päällyste -"))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
-               :leveys "30%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :leveys "30%"}
               {:otsikko "Kuulamylly"
                :nimi :kuulamylly
                :tyyppi :valinta
@@ -439,17 +431,15 @@
               :virheet kiviaines-virheet
               :uusi-id (inc (count @kiviaines))}
              [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
-               :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :leveys "30%"}
+              {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
               {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
-               :leveys "20%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :leveys "20%"}
               {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys "30%"
-               :tyyppi :string :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :tyyppi :string :pituus-max 256}
+              {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
               {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string
-               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
+               :pituus-max 256}]
              kiviaines]
 
             [grid/muokkaus-grid
@@ -478,37 +468,37 @@
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
                                   "- Valitse menetelmä -"))
                :valinnat pot/+alustamenetelmat+
-               :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :leveys "30%"}
               {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
-               :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+               :tyyppi :positiivinen-numero}
               {:otsikko "Verkko\u00ADtyyppi"
                :nimi :verkkotyyppi
                :tyyppi :valinta
                :valinta-arvo :koodi
                :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
                :valinnat pot/+verkkotyypit+
-               :leveys "25%" :validoi [[:ei-tyhja "Verkon tyyppi puuttuu"]]}
+               :leveys "25%"}
               {:otsikko "Verkon sijainti"
                :nimi :verkon-sijainti
                :tyyppi :valinta
                :valinta-arvo :koodi
                :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
                :valinnat pot/+verkon-sijainnit+
-               :leveys "25%" :validoi [[:ei-tyhja "Verkon sijainti puuttuu"]]}
+               :leveys "25%"}
               {:otsikko "Verkon tarkoitus"
                :nimi :verkon-tarkoitus
                :tyyppi :valinta
                :valinta-arvo :koodi
                :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
                :valinnat pot/+verkon-tarkoitukset+
-               :leveys "25%" :validoi [[:ei-tyhja "Verkon tarkoitus puuttuu"]]}
+               :leveys "25%"}
               {:otsikko "Tekninen toimen\u00ADpide"
                :nimi :tekninen-toimenpide
                :tyyppi :valinta
                :valinta-arvo :koodi
                :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
                :valinnat pot/+tekniset-toimenpiteet+
-               :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}]
+               :leveys "30%"}]
              alustalle-tehdyt-toimet]]
 
            [:fieldset.lomake-osa

@@ -158,36 +158,36 @@
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet
-   [{:nimi s/Str
+   [{(s/optional-key :nimi) s/Str
      :tie s/Int
-     :ajorata +ajorata+
-     :kaista +kaista+
+     (s/optional-key :ajorata) (s/maybe +ajorata+)
+     (s/optional-key :kaista) (s/maybe +kaista+)
      :aosa s/Int
      :aet s/Int
      :losa s/Int
      :let s/Int
      (s/optional-key :kohdeosa-id) s/Int
      ; Osoitteelle tehdyt toimenpiteet
-     :paallystetyyppi paallystys-ja-paikkaus/+paallystetyyppi+
-     :raekoko s/Int
-     :massa s/Num                                           ;; kg/m2
-     :rc% s/Int
-     :tyomenetelma +tyomenetelma+                           ;; koodisto "työmenetelmä"
-     :leveys s/Num                                          ;; metriä, esim. 4,2
-     :massamaara s/Num                                      ;; tonnia
-     :pinta-ala s/Num                                       ;; m2
+     (s/optional-key :paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi+
+     (s/optional-key :raekoko) s/Int
+     (s/optional-key :massa) s/Num ;; kg/m2
+     (s/optional-key :rc%) s/Int
+     (s/optional-key :tyomenetelma) +tyomenetelma+ ;; koodisto "työmenetelmä"
+     (s/optional-key :leveys) s/Num ;; metriä, esim. 4,2
+     (s/optional-key :massamaara) s/Num ;; tonnia
+     (s/optional-key :pinta-ala) s/Num ;; m2
      (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
-     :edellinen-paallystetyyppi paallystys-ja-paikkaus/+paallystetyyppi+
+     (s/optional-key :edellinen-paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi+
      (s/optional-key :poistettu) s/Bool}]
 
    ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
    :kiviaines
-   [{:esiintyma s/Str
-     :km-arvo s/Str
-     :muotoarvo s/Str
-     :sideainetyyppi s/Str
-     :pitoisuus s/Num
-     :lisaaineet s/Str
+   [{(s/optional-key :esiintyma) s/Str
+     (s/optional-key :km-arvo) s/Str
+     (s/optional-key :muotoarvo) s/Str
+     (s/optional-key :sideainetyyppi) s/Str
+     (s/optional-key :pitoisuus) s/Num
+     (s/optional-key :lisaaineet) s/Str
      (s/optional-key :poistettu) s/Bool}]
 
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
@@ -198,17 +198,17 @@
      :aet s/Int
      :losa s/Int
      :let s/Int
-     :kasittelymenetelma +alustamenetelma+                  ;; +alustamenetelma+ skeemasta
-     :paksuus s/Num                                         ;; cm
-     :verkkotyyppi +verkkotyyppi+                           ;; +verkkotyyppi+ skeemasta
-     :verkon-tarkoitus +verkon-tarkoitus+
-     :verkon-sijainti +verkon-sijainti+
-     :tekninen-toimenpide +tekninen-toimenpide+             ;; +tekninen-toimenpide+ skeemasta
+     (s/optional-key :kasittelymenetelma) +alustamenetelma+ ;; +alustamenetelma+ skeemasta
+     (s/optional-key :paksuus) s/Num ;; cm
+     (s/optional-key :verkkotyyppi) +verkkotyyppi+ ;; +verkkotyyppi+ skeemasta
+     (s/optional-key :verkon-tarkoitus) +verkon-tarkoitus+
+     (s/optional-key :verkon-sijainti) +verkon-sijainti+
+     (s/optional-key :tekninen-toimenpide) +tekninen-toimenpide+ ;; +tekninen-toimenpide+ skeemasta
      (s/optional-key :poistettu) s/Bool}]
 
    ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
    :tyot
-   [{:tyyppi +paallystystyon-tyyppi+                        ;; +paallystystyon-tyyppi+ skeemasta
+   [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
      :tyo s/Str
      :tilattu-maara s/Num
      :toteutunut-maara s/Num
