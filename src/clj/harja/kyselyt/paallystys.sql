@@ -25,6 +25,7 @@ SELECT id FROM paallystysilmoitus WHERE paallystyskohde = :paallystyskohde;
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
+  pi.muutoshinta,
   tila,
   aloituspvm,
   valmispvm_kohde                 AS "valmispvm-kohde",
@@ -35,8 +36,7 @@ SELECT
   ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi AS "bitumi-indeksi",
-  ypk.kaasuindeksi
-  muutoshinta,
+  ypk.kaasuindeksi,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "paatos-tekninen-osa",
   paatos_taloudellinen_osa        AS "paatos-taloudellinen-osa",
