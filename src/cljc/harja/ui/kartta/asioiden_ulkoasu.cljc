@@ -8,6 +8,8 @@
 (def +zindex+ 4)
 (def +normaali-leveys+ 6)
 (def +valitun-leveys+ 8)
+(def +ok-tarkastus-leveys-valittu+ 4)
+(def +ok-tarkastus-leveys+ 2)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
 
@@ -248,7 +250,7 @@
                     :konsultti (:ok-tarkastus-konsultti viivojen-varit)
                     :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
                     (:ok-tarkastus viivojen-varit))
-           :width (if valittu? 4 2)}
+           :width (if valittu? +ok-tarkastus-leveys-valittu+ +ok-tarkastus-leveys+)}
           {:color (case tekija
                     :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
                     :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
