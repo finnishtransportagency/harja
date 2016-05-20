@@ -11,3 +11,12 @@ INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) 
  '#''harja.palvelin.raportointi.raportit.laaduntarkastus/suorita',
   'hoito'::urakkatyyppi
 );
+
+-- Lisää laaduntarkastus ja toimenpiteiden ajoittuminen työmaakokousraporttiin
+UPDATE raportti
+   SET parametrit = array_cat(parametrit,
+     ARRAY[
+      ('Laaduntarkastusraportti','checkbox',true,'urakka'::raporttikonteksti)::raporttiparametri,
+      ('Toimenpiteiden ajoittuminen','checkbox',true,'urakka'::raporttikonteksti)::raporttiparametri
+     ])
+WHERE nimi = 'tyomaakokous';
