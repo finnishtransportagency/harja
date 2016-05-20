@@ -592,6 +592,6 @@
       (if (oikeudet/raportit)
         [:span
          (when-not @raportit/suoritettu-raportti
-           [kartta/kartan-paikka @nav/murupolku-domissa?])
+           [kartta/kartan-paikka @nav/DANGEROUS-murupolku-naytetty-domissa?])
          (raporttivalinnat-ja-raportti)]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))

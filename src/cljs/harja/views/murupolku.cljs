@@ -121,8 +121,7 @@
   []
   (let [valinta-auki (atom nil)]
     (komp/luo
-     (komp/ulos #(reset! nav/murupolku-domissa? false))
-     (komp/kuuntelija
+      (komp/kuuntelija
       [:hallintayksikko-valittu :hallintayksikkovalinta-poistettu
        :urakka-valittu :urakkavalinta-poistettu]
       #(reset! valinta-auki false)
@@ -132,10 +131,10 @@
       (fn [this {klikkaus :tapahtuma}]
         (when-not (dom/sisalla? this klikkaus)
           (reset! valinta-auki false))))
-     {:component-did-mount (fn [_]
-                             (reset! nav/murupolku-domissa? true)
-                             (t/julkaise! {:aihe :murupolku-muuttunut}))}
-     (fn []
+      {:component-did-update (fn [_]
+                               (when-not (= @nav/murupolku-nakyvissa? @nav/DANGEROUS-murupolku-naytetty-domissa?)
+                                 (reset! nav/DANGEROUS-murupolku-naytetty-domissa? @nav/murupolku-nakyvissa?)))}
+      (fn []
        (let [ur @nav/valittu-urakka
              ei-urakkaa? (nil? ur)
              urakoitsija? (-> @istunto/kayttaja
