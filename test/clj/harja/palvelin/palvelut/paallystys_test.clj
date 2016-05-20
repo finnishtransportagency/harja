@@ -40,8 +40,8 @@
    :valmispvm_paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm (pvm/luo-pvm 2005 9 3)
    :muutoshinta 0
-   :ilmoitustiedot {:osoitteet [{:nimi "Tie 1"
-                                 :tie 1
+   :ilmoitustiedot {:osoitteet [{:nimi "Tie 666"
+                                 :tie 666
                                  :aosa 2
                                  :aet 3
                                  :losa 4
@@ -57,8 +57,8 @@
                                  :massamaara 7
                                  :pinta-ala 8
                                  :edellinen-paallystetyyppi 1}
-                                {:nimi "Tie 2"
-                                 :tie 2
+                                {:nimi "Tie 555"
+                                 :tie 555
                                  :aosa 2
                                  :aet 3
                                  :losa 4
@@ -186,7 +186,10 @@
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :paatos-taloudellinen-osa :hyvaksytty)
                                  (assoc :paatos-tekninen-osa :hyvaksytty)
-                                 (assoc :perustelu-tekninen-osa "Hyvä ilmoitus!"))]
+                                 (assoc :perustelu-tekninen-osa "Hyvä ilmoitus!"))
+          alikohteet-maara-ennen-tallennusta (ffirst (q
+                                                       (str "SELECT count(*) FROM yllapitokohdeosa
+                                                       WHERE yllapitokohde = " paallystyskohde-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
@@ -196,17 +199,27 @@
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
-                                                                        :paallystyskohde-id paallystyskohde-id})]
+                                                                        :paallystyskohde-id paallystyskohde-id})
+            alikohteet-maara-tallennuksen-jalkeen (ffirst (q
+                                                         (str "SELECT count(*) FROM yllapitokohdeosa
+                                                       WHERE yllapitokohde = " paallystyskohde-id ";")))]
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (:paatos-tekninen-osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:paatos-taloudellinen-osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:perustelu-tekninen-osa paallystysilmoitus-kannassa) (:perustelu-tekninen-osa paallystysilmoitus)))
-        ;; Kantaan mennyt POT ei sisällä osoitteita, ne on tallennettu yllapitokohdeosa-tauluun
-        (is (= (count (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])) 2))
+
+        ;; Tie 666 tiedot tallentuivat kantaan, mutta tie 555 ei koska oli poistettu
+        (is (some #(= (:nimi %) "Tie 666")
+                  (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
+        (is (not (some #(= (:nimi %) "Tie 555")
+                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
         (let [toimenpide-avaimet [:paallystetyyppi :raekoko :massa :rc% :tyomenetelma
                                   :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]
               tie-avaimet [:nimi :tie :aosa :aet :losa :let :kaista :ajorata]]
+          ;; Lisättiin yksi alikohde uutena. Toista ei lisätty, koska se oli merkitty poistetuksi
+          (is (= alikohteet-maara-ennen-tallennusta (- alikohteet-maara-tallennuksen-jalkeen 1)))
+          ;; Tien tietoja ei tallennettu ilmoitukseen, menevät yllapitokohdeosa-tauluun
           (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
                  (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet)))
           (is (empty? (select-keys (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]) tie-avaimet))))
