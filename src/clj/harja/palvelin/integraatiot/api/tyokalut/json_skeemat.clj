@@ -68,7 +68,7 @@
 (def +paivystajatietojen-poistovastaus+ "api/schemas/paivystajatietojen-poisto-response.schema.json")
 (def paivystajatietojen-poistovastaus (tee-validaattori "api/schemas/paivystajatietojen-poisto-response.schema.json"))
 (def +paivystajatietojen-poisto+ "api/schemas/paivystajatietojen-poisto-request.schema.json")
-(def paivystajatietojen-poisto (tee-validaattori "api/schemas/paivystajatietojen-poisto-request.schema.json"))
+(def paivystyksen-poisto (tee-validaattori "api/schemas/paivystyksen-poisto-request.schema.json"))
 
 (def +tyokoneenseuranta-kirjaus+ "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json")
 (def tyokoneenseuranta-kirjaus (tee-validaattori "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json"))

@@ -201,13 +201,13 @@
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn   (fn [parametrit data kayttaja db]
                       (kirjaa-paivystajatiedot db parametrit data kayttaja))}
-   {:palvelu        :poista-paivystajatiedot
-    :polku          "/api/urakat/:id/paivystajatiedot"
-    :tyyppi         :DELETE
-    :kutsu-skeema   json-skeemat/paivystajatietojen-poisto
+   {:palvelu :poista-paivystajatiedot
+    :polku "/api/urakat/:id/paivystajatiedot"
+    :tyyppi :DELETE
+    :kutsu-skeema json-skeemat/paivystyksen-poisto
     :vastaus-skeema json-skeemat/paivystajatietojen-poistovastaus
-    :kasittely-fn   (fn [parametrit data kayttaja-id db]
-                      (poista-paivystajatiedot db data parametrit kayttaja-id))}])
+    :kasittely-fn (fn [parametrit data kayttaja-id db]
+                    (poista-paivystajatiedot db data parametrit kayttaja-id))}])
 
 (defrecord Paivystajatiedot []
   component/Lifecycle
