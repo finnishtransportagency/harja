@@ -119,30 +119,32 @@ hakutiheys-historiakuva 1200000)
 (defonce nykytilanteen-aikasuodattimen-arvo (atom 2))
 
 (defn kasaa-parametrit [hallintayksikko urakka urakoitsija urakkatyyppi tila
-                        nakyva-alue nykytilanteen-aikasuodattimen-arvo
-                        historiakuvan-aikavali suodattimet]
+                        nakyva-alue suodattimet]
   (merge
    {:hallintayksikko (:id hallintayksikko)
     :urakka-id       (:id urakka)
     :urakoitsija     (:id urakoitsija)
     :urakkatyyppi    (:arvo urakkatyyppi)
     :nykytilanne?    (= :nykytilanne tila)
-    :alue            nakyva-alue
-    :alku            (if (= tila :nykytilanne)
-                       (t/minus (pvm/nyt)
-                                (t/hours nykytilanteen-aikasuodattimen-arvo))
-                       (first historiakuvan-aikavali))
-    :loppu           (if (= tila :nykytilanne)
-                       (pvm/nyt)
-                       (second historiakuvan-aikavali))}
+    :alue            nakyva-alue}
    (tk/valitut-suodattimet suodattimet)))
+
+(defn aikaparametrilla [parametrit]
+  (merge
+    parametrit
+    {:alku (if (= @valittu-tila :nykytilanne)
+             (t/minus (pvm/nyt)
+                      (t/hours @nykytilanteen-aikasuodattimen-arvo))
+             (first historiakuvan-aikavali))
+     :loppu (if (= @valittu-tila :nykytilanne)
+              (pvm/nyt)
+              (second @historiakuvan-aikavali))}))
 
 (defonce hakuparametrit
   (reaction
    (kasaa-parametrit @nav/valittu-hallintayksikko @nav/valittu-urakka
                      @nav/valittu-urakoitsija @nav/valittu-urakkatyyppi
                      @valittu-tila @nav/kartalla-nakyva-alue
-                     @nykytilanteen-aikasuodattimen-arvo @historiakuvan-aikavali
                      @suodattimet)))
 
 (defn yhdista-tyokonedata [uusi]
@@ -213,7 +215,7 @@ hakutiheys-historiakuva 1200000)
     (reset! tilannekuva-kartalla/url-hakuparametrit
             (k/url-parametri (dissoc hakuparametrit :alue)))
 
-    (let [tulos (-> (<! (k/post! :hae-tilannekuvaan hakuparametrit))
+    (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!))]
       (when @nakymassa?
