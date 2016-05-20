@@ -70,7 +70,7 @@
                   :muokattava? (or (:muokattava? ajorata) (constantly true))
                   :tyyppi :valinta
                   :valinta-arvo :koodi
-                  :valinta-nayta #(if % % "- Valitse ajorata -")
+                  :valinta-nayta #(if % (:koodi %) "- Valitse ajorata -")
                   :valinnat pot/+ajoradat+
                   :leveys perusleveys}
                  {:otsikko "Kais\u00ADta"
@@ -78,7 +78,7 @@
                   :nimi (:nimi kaista)
                   :tyyppi :valinta
                   :valinta-arvo :koodi
-                  :valinta-nayta #(if % % "- Valitse kaista -")
+                  :valinta-nayta #(if % (:koodi %) "- Valitse kaista -")
                   :valinnat pot/+kaistat+
                   :leveys perusleveys}
                  {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
