@@ -69,7 +69,7 @@
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                       tr-keskimaarainen-vuorokausiliikenne yllapitoluokka
+                                       yllapitoluokka
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
                                        kaasuindeksi poistettu nykyinen-paallyste
                                        keskimaarainen-vuorokausiliikenne]}]
@@ -100,7 +100,7 @@
                               {:keys [id kohdenumero nimi
                                       tr-numero tr-alkuosa tr-alkuetaisyys
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                      tr-keskimaarainen-vuorokausiliikenne yllapitoluokka
+                                      yllapitoluokka
                                       sopimuksen-mukaiset-tyot
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
                                       nykyinen-paallyste keskimaarainen-vuorokausiliikenne poistettu]}]
