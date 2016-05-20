@@ -36,7 +36,10 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
                                hallintayksikko-id urakoittain?] :as parametrit}]
-  (let [parametrit {:urakka urakka-id
+  (let [hoitoluokat (or hoitoluokat
+                        ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
+                        (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
+        parametrit {:urakka urakka-id
                     :hallintayksikko hallintayksikko-id
                     :alkupvm alkupvm
                     :loppupvm loppupvm

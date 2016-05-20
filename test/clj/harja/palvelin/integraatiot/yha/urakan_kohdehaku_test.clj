@@ -27,7 +27,7 @@
 (defn tee-url [yha-id]
   (str +yha-url+ (format "urakat/%s/kohteet" yha-id)))
 
-(deftest tarkista-urakan-kohteiden-haku
+#_(deftest tarkista-urakan-kohteiden-haku
   (let [urakka-id (hae-urakka-id)
         yha-id (hae-yha-id urakka-id)
         odotettu-vastaus[{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 2

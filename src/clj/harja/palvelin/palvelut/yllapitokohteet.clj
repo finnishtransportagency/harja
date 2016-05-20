@@ -176,22 +176,44 @@
 
   (if poistettu
     (do (log/debug "Poistetaan ylläpitokohdeosa")
-        (q/poista-yllapitokohdeosa! db id))
+        (q/poista-yllapitokohdeosa! db id)
+        nil)
     (do (log/debug "Päivitetään ylläpitokohdeosa")
-        (q/paivita-yllapitokohdeosa! db
-                                     nimi
-                                     tr-numero
-                                     tr-alkuosa
-                                     tr-alkuetaisyys
-                                     tr-loppuosa
-                                     tr-loppuetaisyys
-                                     tr-ajorata
-                                     tr-kaista
-                                     (when-not (empty? sijainti)
-                                       (geo/geometry (geo/clj->pg sijainti)))
-                                     id))))
+        (q/paivita-yllapitokohdeosa<! db
+                                      nimi
+                                      tr-numero
+                                      tr-alkuosa
+                                      tr-alkuetaisyys
+                                      tr-loppuosa
+                                      tr-loppuetaisyys
+                                      tr-ajorata
+                                      tr-kaista
+                                      (when-not (empty? sijainti)
+                                        (geo/geometry (geo/clj->pg sijainti)))
+                                      id))))
 
-(defn tallenna-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
+(defn tallenna-yllapitokohdeosa
+  "Tallentaa yksittäisen ylläpitokohdeosan kantaan.
+   Tarkistaa, tuleeko kohdeosa päivittää, poistaa vai luoda uutena.
+   Palauttaa päivitetyn kohdeosan (tai nil jos kohdeosa poistettiin"
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osa]}]
+  (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (jdbc/with-db-transaction [c db]
+    (yha/lukitse-urakan-yha-sidonta db urakka-id)
+    (log/debug "Tallennetaan ylläpitokohdeosa. Ylläpitokohde-id: " yllapitokohde-id)
+    (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
+    (let [uusi-osa (if (and (:id osa) (not (neg? (:id osa))))
+                     (paivita-yllapitokohdeosa c user osa)
+                     (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa))]
+      (yha/paivita-yllapitourakan-geometriat c urakka-id)
+      uusi-osa)))
+
+(defn tallenna-yllapitokohdeosat
+  "Tallentaa ylläpitokohdeosat kantaan.
+   Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
+   Palauttaa kohteen päivittyneet kohdeosat."
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (jdbc/with-db-transaction [c db]

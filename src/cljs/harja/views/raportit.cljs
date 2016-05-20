@@ -271,6 +271,7 @@
   {"Erilliskustannukset" :erilliskustannukset
    "Ilmoitukset" :ilmoitusraportti
    "Kelitarkastusraportti" :kelitarkastusraportti
+   "Laaduntarkastusraportti" :laaduntarkastusraportti
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
    "Materiaaliraportti" :materiaaliraportti
@@ -282,7 +283,8 @@
    "Yksikköhintaiset työt päivittäin" :yksikkohintaiset-tyot
    "Yksikköhintaisten töiden raportti" :yksikkohintaiset-tyot
    "Yksikköhintaiset työt tehtävittäin" :yks-hint-tehtavien-summat
-   "Ympäristöraportti" :ymparisto})
+   "Ympäristöraportti" :ymparisto
+   "Toimenpiteiden ajoittuminen" :toimenpideajat})
 
 (defmethod raportin-parametri "checkbox" [p arvo]
   (let [avaimet [(:nimi @valittu-raporttityyppi)
@@ -343,7 +345,7 @@
     (= nimi "Toimenpide") "3"
     :default nimi))
 
-(def parametri-omalle-riville? #{"aikavali" "urakoittain"})
+(def parametri-omalle-riville? #{"aikavali" "urakoittain" "tienumero"})
 
 (def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
   +vientimuodot+
@@ -590,6 +592,6 @@
       (if (oikeudet/raportit)
         [:span
          (when-not @raportit/suoritettu-raportti
-           [kartta/kartan-paikka @nav/murupolku-domissa?])
+           [kartta/kartan-paikka @nav/DANGEROUS-murupolku-naytetty-domissa?])
          (raporttivalinnat-ja-raportti)]
         [:span "Sinulla ei ole oikeutta tarkastella raportteja."]))))
