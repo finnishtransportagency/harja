@@ -60,6 +60,7 @@ SELECT
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   ypko.tr_ajorata AS "tr-ajorata",
   ypko.tr_kaista AS "tr-kaista",
+  toimenpide,
   sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
@@ -127,7 +128,7 @@ WHERE id = :id;
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
@@ -137,6 +138,7 @@ VALUES (:yllapitokohde,
         :tr_loppuetaisyys,
         :tr_ajorata,
         :tr_kaista,
+        :toimenpide,
         :sijainti);
 
 -- name: paivita-yllapitokohdeosa<!
@@ -151,6 +153,7 @@ SET
   tr_loppuetaisyys = :tr_loppuetaisyys,
   tr_ajorata       = :tr_ajorata,
   tr_kaista        = :tr_kaista,
+  toimenpide       = :toimenpide,
   sijainti         = :sijainti
 WHERE id = :id;
 

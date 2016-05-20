@@ -18,7 +18,7 @@
 (def jarjestelma nil)
 
 (Locale/setDefault (Locale. "fi" "FI"))
-(log/set-config! [:appenders :standard-out :min-level] :info)
+(log/set-config! [:appenders :standard-out :min-level] :debug)
 
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"

@@ -159,16 +159,18 @@
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [grid]
                      (kasittele-tr-osoite grid tr-sijainnit tr-virheet))}
-          (tierekisteriosoite-sarakkeet
-            tr-leveys
-            [{:nimi :nimi}
-             {:nimi :tr-numero}
-             {:nimi :tr-alkuosa}
-             {:nimi :tr-alkuetaisyys}
-             {:nimi :tr-loppuosa}
-             {:nimi :tr-loppuetaisyys}
-             {:nimi :tr-ajorata}
-             {:nimi :tr-kaista}])
+          (into [] (concat
+                     (tierekisteriosoite-sarakkeet
+                       tr-leveys
+                       [{:nimi :nimi}
+                        {:nimi :tr-numero}
+                        {:nimi :tr-alkuosa}
+                        {:nimi :tr-alkuetaisyys}
+                        {:nimi :tr-loppuosa}
+                        {:nimi :tr-loppuetaisyys}
+                        {:nimi :tr-ajorata}
+                        {:nimi :tr-kaista}])
+                     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}]))
           (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
          [tr-virheilmoitus tr-virheet]]))))
 
