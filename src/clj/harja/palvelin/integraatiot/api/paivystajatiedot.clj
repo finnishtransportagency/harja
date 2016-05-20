@@ -163,7 +163,7 @@
     (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
     (log/debug "Poistettavat ulkoiset idt: " (pr-str ulkoiset-idt) " urakka " (:id parametrit))
     (yhteyshenkilot/poista-urakan-paivystykset! db urakka-id ulkoiset-idt)
-    {:viesti "Päivystykset poistettu"}))
+    (paivystajatiedot-sanoma/tee-onnistunut-poisto-vastaus)))
 
 (defn hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]
   (log/debug "Haetaan päivystäjätiedot sijainnilla parametreillä: " parametrit)
@@ -214,7 +214,7 @@
     :polku "/api/urakat/:id/paivystajatiedot"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/paivystyksen-poisto
-    :vastaus-skeema json-skeemat/paivystajatietojen-poistovastaus
+    :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja-id db]
                     (poista-paivystykset db data parametrit kayttaja-id))}])
 

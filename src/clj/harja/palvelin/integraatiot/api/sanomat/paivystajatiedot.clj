@@ -45,3 +45,6 @@
 
 (defn tee-onnistunut-kirjaus-vastaus []
   (kutsukasittely/tee-kirjausvastauksen-body {:ilmoitukset "Päivystäjätiedot kirjattu onnistuneesti"}))
+
+(defn tee-onnistunut-poisto-vastaus []
+  (kutsukasittely/tee-kirjausvastauksen-body {:ilmoitukset "Päivystykset poistettu onnistuneesti"}))
