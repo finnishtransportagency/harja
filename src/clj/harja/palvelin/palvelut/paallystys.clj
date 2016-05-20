@@ -42,8 +42,8 @@
     vastaus))
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
-  [db user {:keys [urakka-id sopimus-id paallystyskohde-id]}]
-  (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
+  [db user {:keys [urakka-id paallystyskohde-id]}]
+  (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [kohdetiedot (first (yllapitokohteet-q/hae-urakan-yllapitokohde db urakka-id paallystyskohde-id))
         kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen-mukaiset-tyot
@@ -144,8 +144,6 @@
                                {:keys [ilmoitustiedot aloituspvm valmispvm-kohde valmispvm-paallystys
                                        takuupvm paallystyskohde-id]}]
   (log/debug "Luodaan uusi päällystysilmoitus.")
-  (log/debug "valmispvm-kohde: " (pr-str valmispvm-kohde))
-  (log/debug "valmispvm-paallystys: " (pr-str valmispvm-paallystys))
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
@@ -209,7 +207,6 @@
                                                                           sopimus-id
                                                                           (:paallystyskohde-id lomakedata)
                                                                           (:ilmoitustiedot lomakedata)))]
-    (log/debug "Uusi lomakedata: " (pr-str lomakedata))
     (if paallystysilmoitus-kannassa
       (paivita-paallystysilmoitus db user lomakedata)
       (luo-paallystysilmoitus db user lomakedata))))
@@ -255,7 +252,7 @@
           ;; Tunnistetaan uuden tallentaminen
           paallystysilmoitus-kannassa (when-not (:uusi (meta paallystysilmoitus-kannassa))
                                         paallystysilmoitus-kannassa)]
-      (log/debug "POT kannassa: " paallystysilmoitus-kannassa)
+      (log/debug "Nykyinen POT kannassa: " paallystysilmoitus-kannassa)
       (tarkista-paallystysilmoituksen-tallentamisoikeudet user urakka-id
                                                           paallystysilmoitus paallystysilmoitus-kannassa)
       (let [paallystysilmoitus-id (luo-tai-paivita-paallystysilmoitus c
@@ -274,9 +271,10 @@
                                                      (:id user))]
             ;; Liitä kommentti päällystysilmoitukseen
             (q/liita-kommentti<! c paallystysilmoitus-id (:id kommentti))))
-
-        (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
-                                                  :sopimus-id sopimus-id})))))
+        (let [uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
+                                                                          :sopimus-id sopimus-id})]
+          (log/debug "Tallennus tehty, palautetaan uudet päällystysilmoitukset: " (count uudet-ilmoitukset) " kpl")
+          uudet-ilmoitukset)))))
 
 (defrecord Paallystys []
   component/Lifecycle

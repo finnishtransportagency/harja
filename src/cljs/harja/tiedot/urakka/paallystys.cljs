@@ -23,9 +23,8 @@
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                        :sopimus-id sopimus-id}))
 
-(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id sopimus-id paallystyskohde-id]
+(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
-                                                           :sopimus-id sopimus-id
                                                            :paallystyskohde-id paallystyskohde-id}))
 
 (defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
