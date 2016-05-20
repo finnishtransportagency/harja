@@ -160,8 +160,8 @@
    :osoitteet
    [{(s/optional-key :nimi) s/Str
      :tie s/Int
-     (s/optional-key :ajorata) +ajorata+
-     (s/optional-key :kaista) +kaista+
+     (s/optional-key :ajorata) (s/maybe +ajorata+)
+     (s/optional-key :kaista) (s/maybe +kaista+)
      :aosa s/Int
      :aet s/Int
      :losa s/Int

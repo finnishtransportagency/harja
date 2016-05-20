@@ -167,29 +167,35 @@
    Päivittää päällystyskohteen alikohteet niin, että niiden tiedot ovat samat kuin päällystysilmoituslomakkeessa.
    Palauttaa ilmoitustiedot, jossa päällystystoimenpiteiltä on riisuttu tieosoitteet."
   [db user urakka-id sopimus-id yllapitokohde-id ilmoitustiedot]
-  (yllapitokohteet/tallenna-yllapitokohdeosat
-    db
-    user
-    {:urakka-id urakka-id
-     :sopimus-id sopimus-id
-     :yllapitokohde-id yllapitokohde-id
-     :osat (mapv
-             (fn [osoite]
-               {:id (:kohdeosa-id osoite)
-                :nimi (:nimi osoite)
-                :tr-numero (:tie osoite)
-                :tr-alkuosa (:aosa osoite)
-                :tr-alkuetaisyys (:aet osoite)
-                :tr-loppuosa (:losa osoite)
-                :tr-loppuetaisyys (:let osoite)
-                :tr-ajorata (:ajorata osoite)
-                :tr-kaista (:kaista osoite)
-                :poistettu (:poistettu osoite)
-                :sijainti (:sijainti osoite)})
-             (:osoitteet ilmoitustiedot))})
-  (let [uudet-osoitteet (mapv
-                          #(dissoc % :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
-                          (:osoitteet ilmoitustiedot))
+  (let [uudet-osoitteet (into []
+                              (keep
+                                (fn [osoite]
+                                  (log/debug "Käsitellään POT-lomakkeen TR-osoite: " (pr-str osoite))
+                                  (let [kohdeosa-kannassa
+                                        (yllapitokohteet/tallenna-yllapitokohdeosa
+                                          db
+                                          user
+                                          {:urakka-id urakka-id
+                                           :sopimus-id sopimus-id
+                                           :yllapitokohde-id yllapitokohde-id
+                                           :osa {:id (:kohdeosa-id osoite)
+                                                 :nimi (:nimi osoite)
+                                                 :tr-numero (:tie osoite)
+                                                 :tr-alkuosa (:aosa osoite)
+                                                 :tr-alkuetaisyys (:aet osoite)
+                                                 :tr-loppuosa (:losa osoite)
+                                                 :tr-loppuetaisyys (:let osoite)
+                                                 :tr-ajorata (:ajorata osoite)
+                                                 :tr-kaista (:kaista osoite)
+                                                 :poistettu (:poistettu osoite)
+                                                 :sijainti (:sijainti osoite)}})
+                                        _ (log/debug "Kohdeosan tiedot päivitetty omaan tauluun. Uusi kohdeosa kannassa: " (pr-str kohdeosa-kannassa))]
+                                    (when kohdeosa-kannassa
+                                      (log/debug "Poistetaan osoitteelta tien tiedot")
+                                      (-> osoite
+                                          (dissoc :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
+                                          (assoc :kohdeosa-id (:id kohdeosa-kannassa))))))
+                                (:osoitteet ilmoitustiedot)))
         uudet-ilmoitustiedot (assoc ilmoitustiedot :osoitteet uudet-osoitteet)]
     (log/debug "uudet ilmoitustiedot: " (pr-str uudet-ilmoitustiedot))
     uudet-ilmoitustiedot))
@@ -203,6 +209,7 @@
                                                                           sopimus-id
                                                                           (:paallystyskohde-id lomakedata)
                                                                           (:ilmoitustiedot lomakedata)))]
+    (log/debug "Uusi lomakedata: " (pr-str lomakedata))
     (if paallystysilmoitus-kannassa
       (paivita-paallystysilmoitus db user lomakedata)
       (luo-paallystysilmoitus db user lomakedata))))

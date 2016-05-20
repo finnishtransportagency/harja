@@ -139,7 +139,7 @@ VALUES (:yllapitokohde,
         :tr_kaista,
         :sijainti);
 
--- name: paivita-yllapitokohdeosa!
+-- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan
 UPDATE yllapitokohdeosa
 SET
