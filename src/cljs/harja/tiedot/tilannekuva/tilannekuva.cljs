@@ -213,7 +213,7 @@ hakutiheys-historiakuva 1200000)
       (kartta/aseta-paivitetaan-karttaa-tila! true))
 
     (reset! tilannekuva-kartalla/url-hakuparametrit
-            (k/url-parametri (dissoc hakuparametrit :alue)))
+            (k/url-parametri (aikaparametrilla (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
                     (yhdista-tyokonedata)
