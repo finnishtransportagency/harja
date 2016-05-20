@@ -355,12 +355,12 @@
                10
                [{:nimi :nimi}
                 {:nimi :tie}
+                {:nimi :ajorata}
+                {:nimi :kaista}
                 {:nimi :aosa}
                 {:nimi :aet}
                 {:nimi :losa}
-                {:nimi :let}
-                {:nimi :ajorata}
-                {:nimi :kaista}])
+                {:nimi :let}])
              paallystystoimenpiteet]
 
             [grid/muokkaus-grid
