@@ -89,8 +89,6 @@
                   :validoi [[:ei-tyhja "Anna loppuosa"]] :muokattava? (or (:muokattava? losa) (constantly true))}
                  {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
                   :validoi [[:ei-tyhja "Anna loppuetäisyys"]] :muokattava? (or (:muokattava? let) (constantly true))}
-
-
                  {:otsikko "Pit." :nimi :pituus :leveys perusleveys :tyyppi :numero
                   :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}])))
 
