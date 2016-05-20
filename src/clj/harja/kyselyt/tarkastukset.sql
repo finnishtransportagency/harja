@@ -476,8 +476,6 @@ INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite)
 
 -- name: hae-laaduntarkastukset
 -- Hakee laaduntarkastukset joko urakalle, hallintayksikölle tai koko maalle.
--- Laaduntarkastuksia ovat kaikki tarkastukset, jotka ovat tilaajan tekemiä (tekijän org.tyyppi
--- ei ole urakoitsija).
 SELECT
   t.id,
   t.aika,
