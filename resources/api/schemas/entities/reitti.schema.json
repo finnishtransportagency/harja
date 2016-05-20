@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "type": "array",
-  "maxItems" : 5000,
+  "maxItems" : 7000,
   "items": {
     "id": "urn:harja/reitti/0",
     "type": "object",
