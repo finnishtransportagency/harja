@@ -15,7 +15,9 @@
     [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain :as yks-hint-kuukausittain]
     [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain :as yks-hint-paivittain]
     [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain :as yks-hint-tehtavittain]
-    [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]))
+    [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
+    [harja.palvelin.raportointi.raportit.laaduntarkastus :as laaduntarkastus]
+    [harja.palvelin.raportointi.raportit.toimenpideajat :as toimenpideajat]))
 
 (defn osat [raportti]
   ;; Pudotetaan pois :raportti keyword ja string tai map optiot.
@@ -40,12 +42,14 @@
            [[:erilliskustannukset "Erilliskustannukset" erilliskustannukset/suorita]
             [:ilmoitusraportti "Ilmoitukset" ilmoitus/suorita]
             [:kelitarkastusraportti "Kelitarkastusraportti" kelitarkastukset/suorita]
+            [:laaduntarkastusraportti "Laaduntarkastusraportti" laaduntarkastus/suorita]
             [:laatupoikkeamaraportti "Laatupoikkeamat" laatupoikkeamat/suorita]
             [:laskutusyhteenveto "Laskutusyhteenveto" laskutusyhteenveto/suorita]
             [:materiaaliraportti "Materiaaliraportti" materiaalit/suorita]
             [:sanktioraportti "Sanktioiden yhteenveto" sanktiot/suorita]
             [:soratietarkastusraportti "Soratietarkastukset" soratietarkastukset/suorita]
             [:tiestotarkastusraportti "Tiestötarkastukset" tiestotarkastukset/suorita]
+            [:toimenpideajat "Toimenpiteiden ajoittuminen" toimenpideajat/suorita]
             [:turvallisuus "Turvallisuusraportti" turvallisuus/suorita]
             [:yks-hint-kuukausiraportti "Yksikköhintaiset työt kuukausittain" yks-hint-kuukausittain/suorita]
             [:yksikkohintaiset-tyot "Yksikköhintaiset työt päivittäin" yks-hint-paivittain/suorita]
