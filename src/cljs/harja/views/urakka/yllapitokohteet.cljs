@@ -81,7 +81,7 @@
                   :valinta-nayta #(if % (:nimi %) "- Valitse ajorata -")
                   :valinnat pot/+ajoradat+
                   :leveys (+ 10 perusleveys)
-                  :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                  :validoi [[:ei-tyhja "Ajorata puuttuu"]]}
                  {:otsikko "Kaista"
                   :muokattava? (or (:muokattava? kaista) (constantly true))
                   :nimi (:nimi kaista)
@@ -90,7 +90,7 @@
                   :valinta-nayta #(if % (:nimi %) "- Valitse kaista -")
                   :valinnat pot/+kaistat+
                   :leveys (+ 10 perusleveys)
-                  :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                  :validoi [[:ei-tyhja "Kaista puuttuu"]]}
                  {:otsikko "Pit." :nimi :pituus :leveys perusleveys :tyyppi :numero
                   :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}])))
 
