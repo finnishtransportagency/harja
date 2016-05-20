@@ -18,10 +18,14 @@ WHERE urakka = :urakka
 AND sopimus = :sopimus
 AND yllapitokohde.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
+SELECT id FROM paallystysilmoitus WHERE paallystyskohde = :paallystyskohde;
+
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
   pi.id,
+  pi.muutoshinta,
   tila,
   aloituspvm,
   valmispvm_kohde                 AS "valmispvm-kohde",
@@ -29,7 +33,10 @@ SELECT
   takuupvm,
   ypk.nimi                        AS kohdenimi,
   ypk.kohdenumero,
-  muutoshinta,
+  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi AS "bitumi-indeksi",
+  ypk.kaasuindeksi,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "paatos-tekninen-osa",
   paatos_taloudellinen_osa        AS "paatos-taloudellinen-osa",
@@ -50,8 +57,8 @@ FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
-WHERE ypko.yllapitokohde = :paallystyskohde
-      AND ypko.poistettu IS NOT TRUE
+                                     AND ypko.poistettu IS NOT TRUE
+WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoitus!

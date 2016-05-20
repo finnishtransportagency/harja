@@ -36,12 +36,12 @@
 
 (def pot-testidata
   {:aloituspvm (pvm/luo-pvm 2005 9 1)
-   :valmispvm_kohde (pvm/luo-pvm 2005 9 2)
-   :valmispvm_paallystys (pvm/luo-pvm 2005 9 2)
+   :valmispvm-kohde (pvm/luo-pvm 2005 9 2)
+   :valmispvm-paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm (pvm/luo-pvm 2005 9 3)
    :muutoshinta 0
-   :ilmoitustiedot {:osoitteet [{:nimi "Tie 1"
-                                 :tie 1
+   :ilmoitustiedot {:osoitteet [{:nimi "Tie 666"
+                                 :tie 666
                                  :aosa 2
                                  :aet 3
                                  :losa 4
@@ -57,8 +57,8 @@
                                  :massamaara 7
                                  :pinta-ala 8
                                  :edellinen-paallystetyyppi 1}
-                                {:nimi "Tie 2"
-                                 :tie 2
+                                {:nimi "Tie 555"
+                                 :tie 555
                                  :aosa 2
                                  :aet 3
                                  :losa 4
@@ -144,36 +144,33 @@
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
     (is (not (nil? paallystyskohde-id)))
-
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
-          maara-ennen-lisaysta (ffirst (q
-                                         (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
+          maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                   :sopimus-id sopimus-id
                                                                    :paallystysilmoitus paallystysilmoitus})
-      (let [maara-lisayksen-jalkeen (ffirst (q
-                                              (str "SELECT count(*) FROM paallystysilmoitus
-                                            LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
-                                            AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
+      (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+            muutoshinta (ffirst (q (str "SELECT muutoshinta FROM paallystysilmoitus WHERE paallystyskohde = (SELECT id FROM yllapitokohde WHERE id =" paallystyskohde-id ");")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :paallystyskohde-id paallystyskohde-id})]
-        (log/debug "POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
-        (log/debug "Muutoshinta: " (:muutoshinta paallystysilmoitus-kannassa))
-        (log/debug "Muutoshinta tyyppi: " (type (:muutoshinta paallystysilmoitus-kannassa)))
+        (log/debug "Testitallennus valmis. POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
         (is (not (nil? paallystysilmoitus-kannassa)))
-        #_(is (= (:tila paallystysilmoitus-kannassa) :valmis))
-        #_(is (= (:muutoshinta paallystysilmoitus-kannassa) (java.math.BigDecimal. 500)))
-        #_(is (= (:ilmoitustiedot paallystysilmoitus-kannassa) (:ilmoitustiedot paallystysilmoitus)))
-        #_(is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+        (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
+        (is (= (:tila paallystysilmoitus-kannassa) :valmis))
+        (is (= (:muutoshinta paallystysilmoitus-kannassa) muutoshinta))
+        ;; Toimenpiteen tiedot on tallennettu oikein
+        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :massa :rc% :tyomenetelma
+                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]]
+          ;; Toimenpiteen tiedot on tallennettu oikein
+          (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
+                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
@@ -186,7 +183,10 @@
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :paatos-taloudellinen-osa :hyvaksytty)
                                  (assoc :paatos-tekninen-osa :hyvaksytty)
-                                 (assoc :perustelu-tekninen-osa "Hyvä ilmoitus!"))]
+                                 (assoc :perustelu-tekninen-osa "Hyvä ilmoitus!"))
+          alikohteet-maara-ennen-tallennusta (ffirst (q
+                                                       (str "SELECT count(*) FROM yllapitokohdeosa
+                                                       WHERE yllapitokohde = " paallystyskohde-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
@@ -196,20 +196,28 @@
                                                         :urakan-paallystysilmoitus-paallystyskohteella
                                                         +kayttaja-jvh+ {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
-                                                                        :paallystyskohde-id paallystyskohde-id})]
+                                                                        :paallystyskohde-id paallystyskohde-id})
+            alikohteet-maara-tallennuksen-jalkeen (ffirst (q
+                                                         (str "SELECT count(*) FROM yllapitokohdeosa
+                                                       WHERE yllapitokohde = " paallystyskohde-id ";")))]
         (is (not (nil? paallystysilmoitus-kannassa)))
         (is (= (:tila paallystysilmoitus-kannassa) :lukittu))
         (is (= (:paatos-tekninen-osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:paatos-taloudellinen-osa paallystysilmoitus-kannassa) :hyvaksytty))
         (is (= (:perustelu-tekninen-osa paallystysilmoitus-kannassa) (:perustelu-tekninen-osa paallystysilmoitus)))
-        ;; Kantaan mennyt POT ei sisällä osoitteita, ne on tallennettu yllapitokohdeosa-tauluun
-        (is (= (count (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])) 2))
+
+        ;; Tie 666 tiedot tallentuivat kantaan, mutta tie 555 ei koska oli poistettu
+        (is (some #(= (:nimi %) "Tie 666")
+                  (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
+        (is (not (some #(= (:nimi %) "Tie 555")
+                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
         (let [toimenpide-avaimet [:paallystetyyppi :raekoko :massa :rc% :tyomenetelma
-                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]
-              tie-avaimet [:nimi :tie :aosa :aet :losa :let :kaista :ajorata]]
+                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]]
+          ;; Lisättiin yksi alikohde uutena. Toista ei lisätty, koska se oli merkitty poistetuksi
+          (is (= alikohteet-maara-ennen-tallennusta (- alikohteet-maara-tallennuksen-jalkeen 1)))
+          ;; Toimenpiteen tiedot on tallennettu oikein
           (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
-                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet)))
-          (is (empty? (select-keys (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]) tie-avaimet))))
+                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
 
         ; Lukittu, ei voi enää päivittää
         (log/debug "Tarkistetaan, ettei voi muokata lukittua ilmoitusta.")
