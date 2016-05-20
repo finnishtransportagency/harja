@@ -18,10 +18,6 @@
     [harja.makrot :refer [nappaa-virhe with-loop-from-channel]]
     [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn laske-tien-pituus [{alkuet :aet loppuet :let}]
-  (if (and alkuet loppuet)
-    (Math/abs (- loppuet alkuet))))
-
 (defn tieosoite
   "Näyttää tieosoitteen muodossa tienumero/tieosa/alkuosa/alkuetäisyys - tienumero//loppuosa/loppuetäisyys.
   Jos ei kaikkia kenttiä ole saatavilla, palauttaa 'ei saatavilla' -viestin"

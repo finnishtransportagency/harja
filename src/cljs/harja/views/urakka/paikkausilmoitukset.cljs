@@ -19,9 +19,11 @@
             [harja.domain.paikkausilmoitus :as minipot]
             [harja.views.kartta :as kartta]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.ui.tierekisteri :as tierekisteri]
+            [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.ui.napit :as napit]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -58,8 +60,10 @@
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
   [valmis-kasiteltavaksi?]
   (let [muokattava? (and
-                      (oikeudet/voi-kirjoittaa?
-                      oikeudet/urakat-kohdeluettelo-paikkausilmoitukset (:id @nav/valittu-urakka))
+                      (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
+                                               (:id @nav/valittu-urakka)
+                                               @istunto/kayttaja)
                       (not= (:tila @paikkaus/paikkausilmoitus-lomakedata) :lukittu)
                       (false? @paikkaus/paikkausilmoituslomake-lukittu?))
         paatostiedot (r/wrap {:paatos        (:paatos @paikkaus/paikkausilmoitus-lomakedata)
@@ -128,11 +132,13 @@
         (log "PAI Lomake-data: " (pr-str @paikkaus/paikkausilmoitus-lomakedata))
         (log "PAIK Lähetetään data " (pr-str lahetettava-data))
         (paikkaus/tallenna-paikkausilmoitus! urakka-id sopimus-id lahetettava-data))
-      {:luokka       "nappi-ensisijainen"
-       :disabled     (false? @valmis-tallennettavaksi?)
-       :ikoni        (ikonit/tallenna)
+      {:luokka "nappi-ensisijainen"
+       :disabled (false? @valmis-tallennettavaksi?)
+       :ikoni (ikonit/tallenna)
+       :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu (fn [vastaus]
                        (log "PAI Lomake tallennettu, vastaus: " (pr-str vastaus))
+                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                        (reset! paikkaus/paikkaustoteumat vastaus)
                        (reset! paikkaus/paikkausilmoitus-lomakedata nil))}]]))
 
@@ -245,14 +251,14 @@
               {:otsikko "Loppu\u00ADtieosa" :nimi :losa :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :positiivinen-numero :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                                                        (tierekisteri/laske-tien-pituus rivi))}
+                                                                                                                        (tierekisteri-domain/laske-tien-pituus rivi))}
               {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen_leveys :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen_neliot :tyyppi :positiivinen-numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                                                                               (laske-tienpaallysteen-neliot (tierekisteri/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
+                                                                                                                                               (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
               {:otsikko "Paik\u00ADkaus\u00ADneliöt" :nimi :paikkausneliot :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Paik\u00ADkaus-%" :nimi :paikkausprosentti :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                                                                    (laske-paikkausprosentti (:paikkausneliot rivi)
-                                                                                                                                                            (laske-tienpaallysteen-neliot (tierekisteri/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
+                                                                                                                                                            (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
@@ -301,16 +307,16 @@
         {:otsikko ""
          :tyhja    (if (nil? @paikkaus/paikkaustoteumat) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
          :tunniste :kohdenumero}
-        [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys "10%"}
-         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys "50%"}
-         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys "20%" :hae (fn [rivi]
+        [{:otsikko "#" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20 :hae (fn [rivi]
                                                                                                            (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
-         {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys "20%" :komponentti (fn [rivi]
+         {:otsikko "Päätös" :nimi :paatos :muokattava? (constantly false) :tyyppi :komponentti :leveys 20 :komponentti (fn [rivi]
                                                                                                                             (paallystys-ja-paikkaus/nayta-paatos (:paatos rivi)))}
-         {:otsikko     "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys "25%" :tyyppi :komponentti
-          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
+         {:otsikko     "Paikkaus\u00ADilmoitus" :nimi :paikkausilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
+          :komponentti (fn [rivi] (if (:tila rivi) [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde-id rivi))}
                                                     [:span (ikonit/eye-open) " Paikkausilmoitus"]]
-                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde_id rivi))}
+                                                   [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paikkausilmoitus (:paikkauskohde-id rivi))}
                                                     [:span "Aloita paikkausilmoitus"]]))}]
         (sort-by
           (juxt (fn [toteuma] (case (:tila toteuma)

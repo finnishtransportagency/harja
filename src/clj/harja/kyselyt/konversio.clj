@@ -134,6 +134,14 @@
   (-> data
       (assoc-in avainpolku (keyword (get-in data avainpolku)))))
 
+(defn string-poluista->keyword
+  "Muuntaa annetuissa poluissa olevan stringin Clojure-keywordiksi"
+  [data avainpolut]
+  (reduce (fn [data polku]
+            (assoc-in data polku (keyword (get-in data polku))))
+          data
+          avainpolut))
+
 (defn decimal->double
   "Muuntaa postgresin tarkan numerotyypin doubleksi."
   [rivi & kentat]

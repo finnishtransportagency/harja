@@ -52,8 +52,8 @@
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
           {:otsikko "Maksimi\u00ADmäärä" :nimi :maara :leveys "30%"
            :muokattava? (constantly true)
-           :tyyppi :positiivinen-numero}
-          {:otsikko "Yks." :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
+           :tyyppi :positiivinen-numero :tasaa :oikea}
+          {:otsikko "Yks\u00ADikkö" :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
            :tyyppi :string :muokattava? (constantly false)}]
 
          yleiset-materiaalit-muokattu]]))))

@@ -11,6 +11,21 @@
 
 div.tietorivi {
   border-bottom: solid 1px lightGray;
+
+  & .nappi-ensisijainen {
+    height: calc(@input-korkeus * 0.85);
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+
+  & .nappi-alasveto {
+    height: calc(@input-korkeus * 0.85);
+
+    > .livicon-chevron-down {
+      height: 4px;
+    }
+  }
+
   .pvm-kentta {
     width: auto;
   }

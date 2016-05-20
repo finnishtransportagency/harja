@@ -165,7 +165,8 @@
        :maara
        :tyyppi :positiivinen-numero
        :leveys 25
-       :validoi [[:ei-tyhja "Anna määrä"]]}
+       :validoi [[:ei-tyhja "Anna määrä"]]
+       :tasaa :oikea}
       {:otsikko "Yks."
        :nimi :yksikko
        :tyyppi :string
@@ -334,7 +335,8 @@
           :nimi :maara
           :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
           :tyyppi :positiivinen-numero
-          :leveys 20}
+          :leveys 20
+          :tasaa :oikea}
          {:otsikko "Suorittaja"
           :nimi :suorittajan_nimi
           :muokattava? (constantly false)

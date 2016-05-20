@@ -190,7 +190,7 @@
       {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
       {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3}
       {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
-      {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero}]
+      {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea}]
      sanktiot]]))
 
 

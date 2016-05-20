@@ -207,7 +207,7 @@
     (assoc ilmoitus
       :type :ilmoitus
       :nimi (ilmoituksen-tooltip ilmoitus)
-      :selite {:teksti (str (ilmoitukset/ilmoitustyypin-nimi ilmoitustyyppi)
+      :selite {:teksti (str (ilmoitukset/ilmoitustyypin-lyhenne ilmoitustyyppi)
                             " ("
                             (str/lower-case (ilmoitukset/kuittaustyypin-selite tila))
                             ")")

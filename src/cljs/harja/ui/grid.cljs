@@ -970,9 +970,10 @@ Optiot on mappi optioita:
               [:thead
                [:tr
                 (if rivinumerot? [:th {:width "40px"} " "])
-                (for [{:keys [otsikko leveys nimi]} skeema]
+                (for [{:keys [otsikko leveys nimi tasaa]} skeema]
                   ^{:key (str nimi)}
-                  [:th.rivinumero {:width (or leveys "5%")} otsikko])
+                  [:th.rivinumero {:width (or leveys "5%")
+                                   :class  (y/tasaus-luokka tasaa)} otsikko])
                 (when-not piilota-toiminnot?
                   [:th.toiminnot {:width "40px"} " "])]]
 
@@ -995,7 +996,7 @@ Optiot on mappi optioita:
                                                                 "parillinen"
                                                                 "pariton"))}
                                    (if rivinumerot? [:td.rivinumero (+ i 1)])
-                                   (for [{:keys [nimi hae aseta fmt muokattava? tyyppi] :as s} skeema]
+                                   (for [{:keys [nimi hae aseta fmt muokattava? tyyppi tasaa] :as s} skeema]
                                      (if (= :vetolaatikon-tila tyyppi)
                                        ^{:key (str "vetolaatikontila" id)}
                                        [vetolaatikon-tila ohjaus vetolaatikot id]
@@ -1003,12 +1004,14 @@ Optiot on mappi optioita:
                                              arvo (if hae
                                                     (hae rivi)
                                                     (get rivi nimi))
+                                             tasaus-luokka (y/tasaus-luokka tasaa)
                                              kentan-virheet (get rivin-virheet nimi)]
                                          (if (or (nil? muokattava?) (muokattava? rivi i))
                                            ^{:key (str nimi)}
                                            [:td {:class (str "muokattava "
+                                                             tasaus-luokka
                                                              (when-not (empty? kentan-virheet)
-                                                               "sisaltaa-virheen"))}
+                                                               " sisaltaa-virheen"))}
                                             (when-not (empty? kentan-virheet)
                                               (virheen-ohje kentan-virheet))
 
@@ -1024,7 +1027,7 @@ Optiot on mappi optioita:
                                               [nayta-arvo s (vain-luku-atomina arvo)])]
 
                                            ^{:key (str nimi)}
-                                           [:td {:class (str "ei-muokattava")}
+                                           [:td {:class (str "ei-muokattava " tasaus-luokka)}
                                             ((or fmt str) (if hae
                                                             (hae rivi)
                                                             (get rivi nimi)))]))))

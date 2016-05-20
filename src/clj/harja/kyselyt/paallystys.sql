@@ -1,15 +1,15 @@
--- name: hae-urakan-paallystystoteumat
--- Hakee urakan kaikki paallystystoteumat
+-- name: hae-urakan-paallystysilmoitukset
+-- Hakee urakan kaikki päällystysilmoitukset
 SELECT
-  yllapitokohde.id AS paallystyskohde_id,
+  yllapitokohde.id AS "paallystyskohde-id",
   pi.tila,
   nimi,
   kohdenumero,
-  pi.paatos_tekninen_osa,
-  pi.paatos_taloudellinen_osa,
-  sopimuksen_mukaiset_tyot,
+  pi.paatos_tekninen_osa AS "paatos-tekninen-osa",
+  pi.paatos_taloudellinen_osa  AS "paatos-taloudellinen-osa",
+  sopimuksen_mukaiset_tyot  AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset,
-  bitumi_indeksi,
+  bitumi_indeksi AS "bitumi-indeksi",
   kaasuindeksi
 FROM yllapitokohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
@@ -21,29 +21,38 @@ AND yllapitokohde.poistettu IS NOT TRUE;
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
 SELECT
-  paallystysilmoitus.id,
+  pi.id,
   tila,
   aloituspvm,
-  valmispvm_kohde,
-  valmispvm_paallystys,
+  valmispvm_kohde                 AS "valmispvm-kohde",
+  valmispvm_paallystys            AS "valmispvm-paallystys",
   takuupvm,
-  ypk.nimi as kohdenimi,
+  ypk.nimi                        AS kohdenimi,
   ypk.kohdenumero,
   muutoshinta,
   ilmoitustiedot,
-  paatos_tekninen_osa,
-  paatos_taloudellinen_osa,
-  perustelu_tekninen_osa,
-  perustelu_taloudellinen_osa,
-  kasittelyaika_tekninen_osa,
-  kasittelyaika_taloudellinen_osa
-FROM paallystysilmoitus
-  JOIN yllapitokohde ypk ON ypk.id = paallystysilmoitus.paallystyskohde
-                             AND ypk.urakka = :urakka
-                             AND ypk.sopimus = :sopimus
-                             AND ypk.poistettu IS NOT TRUE
-WHERE paallystyskohde = :paallystyskohde
-      AND paallystysilmoitus.poistettu IS NOT TRUE;
+  paatos_tekninen_osa             AS "paatos-tekninen-osa",
+  paatos_taloudellinen_osa        AS "paatos-taloudellinen-osa",
+  perustelu_tekninen_osa          AS "perustelu-tekninen-osa",
+  perustelu_taloudellinen_osa     AS "perustelu-taloudellinen-osa",
+  kasittelyaika_tekninen_osa      AS "kasittelyaika-tekninen-osa",
+  kasittelyaika_taloudellinen_osa AS "kasittelyaika-taloudellinen-osa",
+  ypko.id                         AS kohdeosa_id,
+  ypko.nimi                       AS kohdeosa_nimi,
+  ypko.tr_numero                  AS kohdeosa_tie,
+  ypko.tr_alkuosa                 AS kohdeosa_aosa,
+  ypko.tr_alkuetaisyys            AS kohdeosa_aet,
+  ypko.tr_loppuosa                AS kohdeosa_losa,
+  ypko.tr_loppuetaisyys           AS kohdeosa_let,
+  ypko.tr_ajorata                 AS "kohdeosa_ajorata",
+  ypko.tr_kaista                  AS "kohdeosa_kaista"
+FROM yllapitokohde ypk
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
+                                     AND pi.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
+WHERE ypko.yllapitokohde = :paallystyskohde
+      AND ypko.poistettu IS NOT TRUE
+      AND ypk.poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoitus!
 -- Päivittää päällystysilmoituksen

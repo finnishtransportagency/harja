@@ -13,13 +13,15 @@
             [cheshire.core :as cheshire]))
 
 (defn paivita-yllapitourakan-geometriat [db urakka-id]
+  (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
+  (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
-  (log/debug "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
+  (log/info "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
   (yha-q/lisaa-urakalle-yha-tiedot<! db {:urakka urakka-id
                                          :yhatunnus yhatunnus
                                          :yhaid yhaid
@@ -95,23 +97,31 @@
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id}))
 
-(defn- luo-esitaytetty-paallystysilmoitus [db user kohde kohdeosat]
+(defn- luo-esitaytetty-paallystysilmoitus [db user yllapitokohde yha-kohdeosat]
   (log/debug "Tehdään kohdeosista esitäytetty päällystysilmoitus")
-  (let [ilmoitustiedot {:osoitteet
+  (let [kohdeosat-kannassa (yha-q/hae-yllapitokohteen-kohdeosat db {:id (:id yllapitokohde)})
+        ilmoitustiedot {:osoitteet
                         (mapv
-                          (fn [{:keys [tierekisteriosoitevali paallystystoimenpide] :as kohdeosa}]
-                            {:tie (:tienumero tierekisteriosoitevali)
-                             :aosa (:aosa tierekisteriosoitevali)
-                             :aet (:aet tierekisteriosoitevali)
-                             :losa (:losa tierekisteriosoitevali)
-                             :let (:let tierekisteriosoitevali)
-                             :ajorata (:ajorata tierekisteriosoitevali)
-                             :kaista (:kaista tierekisteriosoitevali)
-                             :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
-                             :paallystetyyppi (:uusi-paallyste paallystystoimenpide)})
-                          kohdeosat)}
+                          (fn [{:keys [tierekisteriosoitevali
+                                       paallystystoimenpide] :as yha-kohdeosa}]
+                            (let [kohdeosa-kannassa
+                                  (some
+                                    (fn [osa]
+                                      (when (and (= (:tienumero tierekisteriosoitevali) (:tr-numero osa))
+                                                 (= (:aosa tierekisteriosoitevali) (:tr-alkuosa osa))
+                                                 (= (:aet tierekisteriosoitevali) (:tr-alkuetaisyys osa))
+                                                 (= (:losa tierekisteriosoitevali) (:tr-loppuosa osa))
+                                                 (= (:let tierekisteriosoitevali) (:tr-loppuetaisyys osa))
+                                                 (= (:ajorata tierekisteriosoitevali) (:tr-ajorata osa))
+                                                 (= (:kaista tierekisteriosoitevali) (:tr-kaista osa)))
+                                        osa))
+                                    kohdeosat-kannassa)]
+                              {:kohdeosa-id (:id kohdeosa-kannassa)
+                               :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
+                               :paallystetyyppi (:uusi-paallyste paallystystoimenpide)}))
+                          yha-kohdeosat)}
         ilmoitustiedot-json (cheshire/encode ilmoitustiedot)]
-    (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde (:id kohde)
+    (yha-q/luo-paallystysilmoitus<! db {:paallystyskohde (:id yllapitokohde)
                                         :ilmoitustiedot ilmoitustiedot-json
                                         :luoja (:id user)})
     (log/debug "Esitäytetty päällystysilmoitus tehty")))
@@ -136,6 +146,8 @@
                                               :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                               :tr_loppuosa (:losa tierekisteriosoitevali)
                                               :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                              :tr_ajorata (:ajorata tierekisteriosoitevali)
+                                              :tr_kaista (:kaista tierekisteriosoitevali)
                                               :yhatunnus tunnus
                                               :yhaid yha-id
                                               :tyyppi (name kohdetyyppi)
@@ -153,6 +165,8 @@
                                          :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                                          :tr_loppuosa (:losa tierekisteriosoitevali)
                                          :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                                         :tr_ajorata (:ajorata tierekisteriosoitevali)
+                                         :tr_kaista (:kaista tierekisteriosoitevali)
                                          :yhaid yha-id}))
         (when (= kohdetyyppi :paallystys)
           (luo-esitaytetty-paallystysilmoitus c user kohde alikohteet))))

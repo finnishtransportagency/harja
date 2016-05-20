@@ -17,18 +17,17 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
-(defn hae-urakan-paikkaustoteumat [db user {:keys [urakka-id sopimus-id]}]
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+(defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id]}]
+  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
-                        (map #(konv/string-polusta->keyword % [:paatos]))
-                        (map #(konv/string-polusta->keyword % [:tila]))
+                        (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
                         (map #(assoc % :kohdeosat
                                        (into []
                                              yllapitokohteet/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db urakka-id sopimus-id (:paikkauskohde_id %))))))
-                      (q/hae-urakan-paikkaustoteumat db urakka-id sopimus-id))]
+                                               db urakka-id sopimus-id (:paikkauskohde-id %))))))
+                      (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
 
@@ -45,8 +44,7 @@
         paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                             (map #(json/parsi-json-pvm-vectorista % [:ilmoitustiedot :toteumat] :takuupvm))
-                                            (map #(konv/string-polusta->keyword % [:tila]))
-                                            (map #(konv/string-polusta->keyword % [:paatos])))
+                                            (map #(konv/string-poluista->keyword % [[:tila] [:paatos]])))
                                       (q/hae-urakan-paikkausilmoitus-paikkauskohteella db urakka-id sopimus-id paikkauskohde-id)))]
     (log/debug "Paikkausilmoitus saatu: " (pr-str paikkausilmoitus))
     ;; Uusi paikkausilmoitus
@@ -73,7 +71,7 @@
             :paikkauskohde-id paikkauskohde-id
             :kommentit kommentit))))))
 
-(defn paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]
+(defn- paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]
   (log/debug "Päivitetään vanha paikkaussilmoitus, jonka id: " paikkauskohde-id)
   (let [tila (if (= paatos :hyvaksytty)
                "lukittu"
@@ -97,7 +95,7 @@
                                  paikkauskohde-id))
   id)
 
-(defn luo-paikkausilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id]}]
+(defn- luo-paikkausilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id]}]
   (log/debug "Luodaan uusi paikkausilmoitus.")
   (log/debug "valmispvm_kohde: " (pr-str valmispvm_kohde))
   (log/debug "valmispvm_paikkaus: " (pr-str valmispvm_paikkaus))
@@ -117,7 +115,7 @@
                                    (konv/sql-date valmispvm_paikkaus)
                                    (:id user)))))
 
-(defn luo-tai-paivita-paikkausilmoitus [db user lomakedata paikkausilmoitus-kannassa]
+(defn- luo-tai-paivita-paikkausilmoitus [db user lomakedata paikkausilmoitus-kannassa]
   (if paikkausilmoitus-kannassa
     (paivita-paikkausilmoitus db user lomakedata)
     (luo-paikkausilmoitus db user lomakedata)))
@@ -131,6 +129,7 @@
   (skeema/validoi paikkausilmoitus-domain/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]
+    (yha/lukitse-urakan-yha-sidonta db urakka-id)
     (let [paikkausilmoitus-kannassa (hae-urakan-paikkausilmoitus-paikkauskohteella
                                       c user {:urakka-id urakka-id
                                               :sopimus-id sopimus-id
@@ -152,6 +151,7 @@
 
       ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
       ;; mutta tehdään silti tarkistus
+      ; FIXME Pura funktioksi kuten päällystyksessä
       (log/debug "Tarkistetaan onko MINIPOT lukittu...")
       (if (= :lukittu (:tila paikkausilmoitus-kannassa))
         (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
@@ -172,16 +172,16 @@
             ;; Liitä kommentti paikkausilmoitukseen
             (q/liita-kommentti<! c paikkausilmoitus-id (:id kommentti))))
 
-        (hae-urakan-paikkaustoteumat c user {:urakka-id urakka-id
+        (hae-urakan-paikkausilmoitukset c user {:urakka-id urakka-id
                                              :sopimus-id sopimus-id})))))
 (defrecord Paikkaus []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)]
-      (julkaise-palvelu http :urakan-paikkaustoteumat
+      (julkaise-palvelu http :urakan-paikkausilmoitukset
                         (fn [user tiedot]
-                          (hae-urakan-paikkaustoteumat db user tiedot)))
+                          (hae-urakan-paikkausilmoitukset db user tiedot)))
       (julkaise-palvelu http :urakan-paikkausilmoitus-paikkauskohteella
                         (fn [user tiedot]
                           (hae-urakan-paikkausilmoitus-paikkauskohteella db user tiedot)))
@@ -193,7 +193,7 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-paikkaustoteumat
+      :urakan-paikkausilmoitukset
       :urakan-paikkausilmoitus-paikkauskohteella
       :tallenna-paikkaussilmoitus)
     this))

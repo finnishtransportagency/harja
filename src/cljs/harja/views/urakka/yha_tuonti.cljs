@@ -8,8 +8,7 @@
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
             [harja.tiedot.navigaatio :as nav]
-            [clojure.string :as str]
-            [harja.tiedot.urakka :as u])
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -87,7 +86,7 @@
                                           (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
                                           (modal/piilota!)
                                           (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
-                                          (yha/paivita-yha-kohteet (:id urakka) {:sidontahaku? true}))}]))}]
+                                          (yha/paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? false}))}]))}]
      @yha/hakutulokset-data]))
 
 (defn- sidonta-kaynnissa []

@@ -425,7 +425,7 @@
               :hae     #(get-in % [:tehtava :nimi]) :leveys "25%"}
              {:otsikko "Määrä" :pakollinen? true :tyyppi :string :nimi :maara
               :hae     #(if (get-in % [:tehtava :maara]) (get-in % [:tehtava :maara]) "-")
-              :leveys  "10%"}
+              :leveys  "10%" :tasaa :oikea}
              {:otsikko "Yksikkö"
               :nimi    :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "10%"}
              {:otsikko     "Muutos\u00ADhinta" :nimi :yksikkohinta :tasaa :oikea :tyyppi :positiivinen-numero

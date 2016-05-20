@@ -70,7 +70,7 @@
                     :voi-poistaa? muokattava?
                     :max-rivimaara 500
                     :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."}
-         [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
+         [{:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
            :tyyppi :valinta
            :validoi [[:ei-tyhja "Valitse materiaali"]]
            :valinta-nayta #(or (:nimi %) "- valitse -")
@@ -78,8 +78,8 @@
           {:otsikko "Pvm" :nimi :alkanut :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
            :validoi [[:ei-tyhja "Anna päivämäärä"]]
            :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
-          {:otsikko "Käytetty määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
-           :validoi [[:ei-tyhja "Anna määrä"]]}
+          {:otsikko "Käytetty määrä (t)" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
+           :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
            :hae #(if (muokattava? %) (:lisatieto %) "Koneellisesti raportoitu")}]
 

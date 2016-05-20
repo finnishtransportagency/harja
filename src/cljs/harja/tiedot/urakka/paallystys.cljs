@@ -10,7 +10,6 @@
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka :as u]
     [harja.tiedot.urakka :as urakka])
 
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -20,8 +19,8 @@
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
 
-(defn hae-paallystystoteumat [urakka-id sopimus-id]
-  (k/post! :urakan-paallystystoteumat {:urakka-id urakka-id
+(defn hae-paallystysilmoitukset [urakka-id sopimus-id]
+  (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                        :sopimus-id sopimus-id}))
 
 (defn hae-paallystysilmoitus-paallystyskohteella [urakka-id sopimus-id paallystyskohde-id]
@@ -30,18 +29,17 @@
                                                            :paallystyskohde-id paallystyskohde-id}))
 
 (defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
-  (urakka/lukitse-valitun-urakan-yha-sidonta!)
   (k/post! :tallenna-paallystysilmoitus {:urakka-id urakka-id
                                          :sopimus-id sopimus-id
                                          :paallystysilmoitus lomakedata}))
 
-(def paallystystoteumat
+(def paallystysilmoitukset
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystysilmoitukset-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
-                (hae-paallystystoteumat valittu-urakka-id valittu-sopimus-id))))
+                (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id))))
 
 (defonce paallystysilmoitus-lomakedata (atom nil))          ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
@@ -52,7 +50,7 @@
 
 (def paallystyskohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
-               [valittu-sopimus-id _] @u/valittu-sopimusnumero
+               [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystyskohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
@@ -64,37 +62,31 @@
       yllapitokohteet/yha-kohde?
       @paallystyskohteet)))
 
-(def harjan-paallystyskohteet
-  (reaction
-    (filter (comp not yllapitokohteet/yha-kohde?)
-            @paallystyskohteet)))
-
 (def kohteet-yhteensa
-  (reaction
-    (concat @yhan-paallystyskohteet @harjan-paallystyskohteet)))
+  (reaction @yhan-paallystyskohteet))
 
 (tarkkaile! "[YHA] Päällystyskohteet: " yhan-paallystyskohteet)
 
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
                          kohderivit @yhan-paallystyskohteet
-                         toteumarivit @paallystystoteumat
+                         ilmoitukset @paallystysilmoitukset
                          avoin-paallystysilmoitus (:paallystyskohde-id @paallystysilmoitus-lomakedata)]
                      (when (and taso
-                                (or kohderivit toteumarivit))
+                                (or kohderivit ilmoitukset))
                        (kartalla-esitettavaan-muotoon
-                         (concat (map #(assoc % :paallystyskohde_id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
+                         (concat (map #(assoc % :paallystyskohde-id (:id %)) ;; yhtenäistä id kohde ja toteumariveille
                                       kohderivit)
-                                 toteumarivit)
+                                 ilmoitukset)
                          @paallystysilmoitus-lomakedata
-                         [:paallystyskohde_id]
+                         [:paallystyskohde-id]
                          (comp
                            (mapcat (fn [kohde]
                                      (keep (fn [kohdeosa]
                                              (assoc (merge kohdeosa
                                                            (dissoc kohde :kohdeosat))
-                                               :tila (or (:paallystysilmoitus_tila kohde) (:tila kohde))
-                                               :avoin? (= (:paallystyskohde_id kohde) avoin-paallystysilmoitus)
+                                               :tila (or (:paallystysilmoitus-tila kohde) (:tila kohde))
+                                               :avoin? (= (:paallystyskohde-id kohde) avoin-paallystysilmoitus)
                                                :osa kohdeosa ;; Redundanttia, tarvitaanko tosiaan?
                                                :nimi (str (:nimi kohde) ": " (:nimi kohdeosa))))
                                            (:kohdeosat kohde))))

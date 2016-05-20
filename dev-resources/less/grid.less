@@ -221,8 +221,14 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       &.ei-muokattava {
         padding-left: @livi-taulukon-padding;
       }
+      &.ei-muokattava.tasaa-oikealle {
+        padding-right: @livi-taulukon-padding;
+      }
       &.muokattava > input {
         padding: 0 0 0 @livi-taulukon-padding;
+      }
+      &.muokattava.tasaa-oikealle > input {
+        padding: 0 @livi-taulukon-padding 0 0;
       }
       padding: @livi-taulukon-padding-muokatessa;
       .livi-taulukon-reunat;

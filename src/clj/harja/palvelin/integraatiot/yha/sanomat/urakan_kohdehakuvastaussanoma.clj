@@ -18,14 +18,11 @@
   (z/xml1-> data :virhe z/text))
 
 (defn lue-tierekisteriosoitevali [tierekisteriosoitevali]
-  (hash-map :karttapaivamaara (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)
-            :tienumero (z/xml1-> tierekisteriosoitevali :tienumero z/text xml/parsi-kokonaisluku)
-            :ajorata (z/xml1-> tierekisteriosoitevali :ajorata z/text xml/parsi-kokonaisluku)
-            :kaista (z/xml1-> tierekisteriosoitevali :kaista z/text xml/parsi-kokonaisluku)
-            :aosa (z/xml1-> tierekisteriosoitevali :aosa z/text xml/parsi-kokonaisluku)
-            :aet (z/xml1-> tierekisteriosoitevali :aet z/text xml/parsi-kokonaisluku)
-            :losa (z/xml1-> tierekisteriosoitevali :losa z/text xml/parsi-kokonaisluku)
-            :let (z/xml1-> tierekisteriosoitevali :let z/text xml/parsi-kokonaisluku)))
+  (merge
+    {:karttapaivamaara  (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)}
+    (into {}
+          (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
+          [:ajorata :kaista :aosa :aet :losa :let])))
 
 (defn lue-paallystystoimenpide [paallystystoimenpide]
   (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)
