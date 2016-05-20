@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat])
@@ -30,6 +31,10 @@
     (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "No operation code provided.")
              :virheet  [{:virhe "Toimenpiteelle ei ole annettu toimenpidekoodia (vv_operation)"}]}))
+  (when (not (toimenpidekoodit/onko-olemassa? db sampo-toimenpidekoodi))
+    (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
+             :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Unknown operation code provided.")
+             :virheet  [{:virhe "Tuntematon toimenpidekoodi (vv_operation)"}]}))
   (when (toimenpiteet/onko-tuotu-samposta? db sampo-toimenpidekoodi sampo-toimenpide-id sampo-urakka-id)
     (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
              :kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus

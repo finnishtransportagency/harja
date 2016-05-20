@@ -52,3 +52,9 @@ FROM toimenpidekoodi
 WHERE id = (SELECT emo
             FROM toimenpidekoodi
             WHERE id = :id);
+
+-- name: onko-olemassa?
+-- single?: true
+SELECT exists(SELECT id
+              FROM toimenpidekoodi
+              WHERE koodi = :toimenpidekoodi);
