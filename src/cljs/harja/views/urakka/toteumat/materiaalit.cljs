@@ -245,14 +245,39 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                           (tallenna-toteuma-materiaaleja urakan-id tiedot))
            :voi-lisata? false
            :tunniste    :tmid}
-          [{:otsikko "Päivämäärä" :tyyppi :pvm :nimi :aloitus :leveys "20%"
-            :hae     (comp pvm/pvm :alkanut :toteuma) :muokattava? (constantly false)}
-           {:otsikko "Määrä" :nimi :toteuman_maara :tyyppi :positiivinen-numero :hae (comp :maara :toteuma) :aseta #(assoc-in %1 [:toteuma :maara] %2)
-            :leveys  "20%" :tasaa :oikea}
-           {:otsikko "Suorittaja" :nimi :suorittaja :pituus-max 256 :tyyppi :text :hae (comp :suorittaja :toteuma) :muokattava? (constantly false) :leveys "20%"}
-           {:otsikko "Lisätietoja" :nimi :lisatiedot :tyyppi :text :hae (comp :lisatieto :toteuma) :muokattava? (constantly false) :leveys "20%"}
-           {:otsikko     "Tarkastele koko toteumaa" :nimi :tarkastele-toteumaa :tyyppi :komponentti
-            :komponentti (fn [rivi] (tarkastele-toteumaa-nappi rivi)) :muokattava? (constantly false) :leveys "20%"}]
+          [{:otsikko "Päivämäärä"
+            :tyyppi :pvm
+            :nimi :aloitus
+            :leveys "20%"
+            :hae     (comp pvm/pvm :alkanut :toteuma)
+            :muokattava? (constantly false)}
+           {:otsikko "Määrä"
+            :muokattava? (comp not :jarjestelmanlisaama)
+            :nimi :toteuman_maara
+            :tyyppi :positiivinen-numero
+            :hae (comp :maara :toteuma)
+            :aseta #(assoc-in %1 [:toteuma :maara] %2)
+            :leveys  "20%"
+            :tasaa :oikea}
+           {:otsikko "Suorittaja"
+            :nimi :suorittaja
+            :pituus-max 256
+            :tyyppi :text
+            :hae (comp :suorittaja :toteuma)
+            :muokattava? (constantly false)
+            :leveys "20%"}
+           {:otsikko "Lisätietoja"
+            :nimi :lisatiedot
+            :tyyppi :text
+            :hae (comp :lisatieto :toteuma)
+            :muokattava? (constantly false)
+            :leveys "20%"}
+           {:otsikko     "Tarkastele koko toteumaa"
+            :nimi :tarkastele-toteumaa
+            :tyyppi :komponentti
+            :komponentti (fn [rivi] (tarkastele-toteumaa-nappi rivi))
+            :muokattava? (constantly false)
+            :leveys "20%"}]
           @tiedot]]))))
 
 (defn materiaalit-paasivu
