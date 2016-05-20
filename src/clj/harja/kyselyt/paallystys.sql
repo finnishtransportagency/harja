@@ -57,8 +57,8 @@ FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
-WHERE ypko.yllapitokohde = :paallystyskohde
-      AND ypko.poistettu IS NOT TRUE
+                                     AND ypko.poistettu IS NOT TRUE
+WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE;
 
 -- name: paivita-paallystysilmoitus!
