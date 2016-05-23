@@ -218,22 +218,24 @@
 
 
 (defn paivita-kohdeluettelo [urakka oikeus]
-  [harja.ui.napit/palvelinkutsu-nappi
-   "Hae uudet YHA-kohteet"
-   #(do
-     (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
-     (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
-   {:luokka "nappi-ensisijainen"
-    :disabled (or (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
-                  @kohteiden-paivittaminen-kaynnissa?)
-    :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
-    :kun-onnistuu (fn [_]
-                    (log "[YHA] Kohdeluettelo päivitetty")
-                    (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
-                           (cljs-time.core/to-default-time-zone (t/now))))}])
+  (when-not @kohteiden-paivittaminen-kaynnissa?
+    [harja.ui.napit/palvelinkutsu-nappi
+    "Hae uudet YHA-kohteet"
+    #(do
+      (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
+      (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
+    {:luokka "nappi-ensisijainen"
+     :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
+     :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
+     :kun-onnistuu (fn [_]
+                     (log "[YHA] Kohdeluettelo päivitetty")
+                     (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
+                            (cljs-time.core/to-default-time-zone (t/now))))}]))
 
 (defn kohdeluettelo-paivitetty [urakka]
-  [:div (str "Kohdeluettelo päivitetty: "
-             (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
-               (pvm/pvm-aika kohdeluettelo-paivitetty)
-               "ei koskaan"))])
+  (if @kohteiden-paivittaminen-kaynnissa?
+    [ajax-loader "Kohteiden päivitys käynnissä"]
+    [:div (str "Kohdeluettelo päivitetty: "
+              (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
+                (pvm/pvm-aika kohdeluettelo-paivitetty)
+                "ei koskaan"))]))
