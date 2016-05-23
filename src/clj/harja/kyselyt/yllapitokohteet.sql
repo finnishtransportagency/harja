@@ -252,7 +252,13 @@ SET
   aikataulu_muokkaaja          = :aikataulu_muokkaaja,
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
 WHERE id = :id
-AND urakka = :urakkaid;;
+AND urakka = :urakkaid;
+
+-- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
+UPDATE yllapitokohde SET
+  valmis_tiemerkintaan = :valmis_tiemerkintaan
+WHERE id = :id
+AND urakka = :urakkaid;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun

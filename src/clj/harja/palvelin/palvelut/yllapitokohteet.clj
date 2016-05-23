@@ -59,6 +59,22 @@
   (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
+(defn merkitse-kohde-valmiiksi-tiemerkintaan
+  "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
+   Palauttaa päivitetyt kohteet aikataulunäkymään"
+  [db user
+                                              {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
+  (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
+  (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
+  (jdbc/with-db-transaction [db db]
+    (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
+          db
+          tiemerkintapvm
+          kohde-id
+          urakka-id)
+    (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                   :sopimus-id sopimus-id})))
+
 (defn tallenna-yllapitokohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
@@ -289,6 +305,9 @@
       (julkaise-palvelu http :tallenna-yllapitokohteiden-aikataulu
                         (fn [user tiedot]
                           (tallenna-yllapitokohteiden-aikataulu db user tiedot)))
+      (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
+                        (fn [user tiedot]
+                          (merkitse-kohde-valmiiksi-tiemerkintaan db user tiedot)))
       this))
 
   (stop [this]

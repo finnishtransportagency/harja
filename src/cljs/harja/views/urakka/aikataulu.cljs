@@ -14,13 +14,17 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.modal :as modal]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [cljs-time.core :as t]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn valmis-tiemerkintaan [urakka-id]
+
+
+(defn valmis-tiemerkintaan [kohde-id urakka-id]
   (let [valmis-tiemerkintaan (atom nil)]
-    (fn [urakka-id]
+    (fn [kohde-id urakka-id]
       [:button.nappi-ensisijainen.nappi-grid
        {:type "button"
         :on-click
@@ -34,12 +38,20 @@
                         :on-click #(do (.preventDefault %)
                                        (modal/piilota!))}
                        "Peruuta"]
-                      [:button.nappi-myonteinen
-                       {:type "button"
-                        :on-click #(do (.preventDefault %)
-                                       (modal/piilota!)
-                                       (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan @valmis-tiemerkintaan urakka-id))}
-                       "Merkitse"]]}
+                      [napit/palvelinkutsu-nappi
+                       "Merkitse"
+                       #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
+                            (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
+                              kohde-id
+                              (:valmis-tiemerkintaan @valmis-tiemerkintaan)
+                              urakka-id
+                              (first @u/valittu-sopimusnumero)))
+                       {;:disabled (not (some? @valmis-tiemerkintaan)) ; FIXME Ei päivity jos arvo muuttuu
+                        :luokka "nappi-myonteinen"
+                        :kun-onnistuu (fn [vastaus]
+                                        (modal/piilota!)
+                                        (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
+                                        (reset! tiedot/aikataulurivit vastaus))}]]}
             [:div
              [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]
              [lomake/lomake {:otsikko ""
@@ -47,6 +59,7 @@
                                          (reset! valmis-tiemerkintaan uusi-data))}
               [{:otsikko "Tiemerkinnän saa aloittaa"
                 :nimi :valmis-tiemerkintaan
+                :pakollinen? true
                 :tyyppi :pvm}]
               @valmis-tiemerkintaan]]))}
        "Aseta päivämäärä"])))
@@ -111,7 +124,7 @@
                            (if (:valmis-tiemerkintaan rivi)
                              [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]
                              (if (= (:nakyma optiot) :paallystys)
-                               [valmis-tiemerkintaan urakka-id]
+                               [valmis-tiemerkintaan (:id rivi) urakka-id]
                                [:span "Ei"])))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm

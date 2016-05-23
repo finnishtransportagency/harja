@@ -12,7 +12,6 @@
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-
 (defonce aikataulu-nakymassa? (atom false))
 
 (defn hae-aikataulut [urakka-id sopimus-id]
@@ -22,8 +21,11 @@
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {urakka-id urakka-id}))
 
-(defn merkitse-kohde-valmiiksi-tiemerkintaan [kohde-id urakka-id]
-  (log "TODO Lähetä kysely servulle, kohde: " (pr-str kohde-id)))
+(defn merkitse-kohde-valmiiksi-tiemerkintaan [kohde-id tiemerkintapvm urakka-id sopimus-id]
+  (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
+                                                    :tiemerkintapvm tiemerkintapvm
+                                                    :urakka-id urakka-id
+                                                    :sopimus-id sopimus-id}))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
