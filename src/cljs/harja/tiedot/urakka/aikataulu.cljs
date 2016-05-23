@@ -19,6 +19,9 @@
   (k/post! :hae-aikataulut {:urakka-id  urakka-id
                             :sopimus-id sopimus-id}))
 
+(defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
+  (k/post! :hae-tiemerkinnan-suorittavat-urakat {urakka-id urakka-id}))
+
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
@@ -26,6 +29,15 @@
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulut valittu-urakka-id valittu-sopimus-id))))
+
+(def tiemerkinnan-suorittavat-urakat
+  (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               nakymassa? @aikataulu-nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and valittu-urakka-id nakymassa?)
+                (hae-tiemerkinnan-suorittavat-urakat valittu-urakka-id))))
+
+(tarkkaile! "[AIKATAULU] Tiemerkinnän suorittavat urakat" tiemerkinnan-suorittavat-urakat)
 
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id kohteet]
   (go

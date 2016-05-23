@@ -46,6 +46,11 @@
   (log/debug "Haetaan urakan aikataulutiedot.")
   (q/hae-urakan-aikataulu db urakka-id sopimus-id))
 
+(defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
+  (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
+  (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
+  (q/hae-tiemerkinnan-suorittavat-urakat db))
+
 (defn tallenna-yllapitokohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
@@ -254,6 +259,9 @@
       (julkaise-palvelu http :hae-aikataulut
                         (fn [user tiedot]
                           (hae-urakan-aikataulu db user tiedot)))
+      (julkaise-palvelu http :hae-tiemerkinnan-suorittavat-urakat
+                        (fn [user tiedot]
+                          (hae-tiemerkinnan-suorittavat-urakat db user tiedot)))
       (julkaise-palvelu http :tallenna-yllapitokohteiden-aikataulu
                         (fn [user tiedot]
                           (tallenna-yllapitokohteiden-aikataulu db user tiedot)))

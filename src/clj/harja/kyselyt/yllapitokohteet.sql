@@ -186,6 +186,14 @@ WHERE
   AND sopimus = :sopimus
   AND yllapitokohde.poistettu IS NOT TRUE;
 
+-- name: hae-tiemerkinnan-suorittavat-urakat
+SELECT
+  id,
+  nimi,
+  hallintayksikko
+FROM urakka
+WHERE (loppupvm IS NULL or loppupvm >= NOW())
+
 -- name: tallenna-yllapitokohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde

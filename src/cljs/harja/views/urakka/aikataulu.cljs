@@ -53,8 +53,11 @@
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 10 :nimi :suorittaja-urakka
-              :tyyppi :string
-              :muokattava? (constantly false)})
+              :tyyppi :valinta
+              :valinta-arvo  :id
+              :valinta-nayta #(if % (:nimi %) "- Valitse urakka -")
+              :valinnat      @tiedot/tiemerkinnan-suorittavat-urakat
+              :muokattava? paallystysurakoitsijana?})
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Valmis tie\u00ADmerkin\u00ADtään" :leveys 7
               :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
