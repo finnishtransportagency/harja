@@ -254,7 +254,7 @@ SET
   aikataulu_tiemerkinta_alku   = :aikataulu_tiemerkinta_alku,
   aikataulu_tiemerkinta_loppu  = :aikataulu_tiemerkinta_loppu,
   aikataulu_muokattu           = NOW(),
-  aikataulu_muokkaaja          = :aikataulu_muokkaaja,
+  aikataulu_muokkaaja          = :aikataulu_muokkaaja
 WHERE id = :id;
 
 
