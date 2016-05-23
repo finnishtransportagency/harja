@@ -135,7 +135,7 @@
                          (:alikohteet kohde))))))
         yha-kohteet))
 
-(def kohteiden-paivittaminen-kaynnissa? (atom false))
+(def yha-kohteiden-paivittaminen-kaynnissa? (atom false))
 
 (defn- hae-paivita-ja-tallenna-yllapitokohteet
   "Hakee YHA-kohteet, päivittää ne nykyiselle tieverkolle kutsumalla VMK-palvelua (viitekehysmuunnin)
@@ -208,17 +208,17 @@
   ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
   ([harja-urakka-id optiot]
    (go
-     (reset! kohteiden-paivittaminen-kaynnissa? true)
+     (reset! yha-kohteiden-paivittaminen-kaynnissa? true)
      (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
          (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
-         (reset! kohteiden-paivittaminen-kaynnissa? false)
+         (reset! yha-kohteiden-paivittaminen-kaynnissa? false)
          (if (= (:status vastaus) :ok)
            (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
            (kasittele-epaonnistunut-kohteiden-paivitys vastaus))))))
 
 
 (defn paivita-kohdeluettelo [urakka oikeus]
-  (when-not @kohteiden-paivittaminen-kaynnissa?
+  (when-not @yha-kohteiden-paivittaminen-kaynnissa?
     [harja.ui.napit/palvelinkutsu-nappi
     "Hae uudet YHA-kohteet"
     #(do
@@ -233,7 +233,7 @@
                             (cljs-time.core/to-default-time-zone (t/now))))}]))
 
 (defn kohdeluettelo-paivitetty [urakka]
-  (if @kohteiden-paivittaminen-kaynnissa?
+  (if @yha-kohteiden-paivittaminen-kaynnissa?
     [ajax-loader "Kohteiden päivitys käynnissä"]
     [:div (str "Kohdeluettelo päivitetty: "
               (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
