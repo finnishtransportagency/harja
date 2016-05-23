@@ -46,9 +46,10 @@
             :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
            {:otsikko "Pääll. aloitus\u00AD" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? paallystysurakoitsijana?}
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
            {:otsikko "Pääll. valmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
-            :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt :muokattava? paallystysurakoitsijana?}
+            :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 10 :nimi :suorittava-tiemerkintaurakka
@@ -79,7 +80,8 @@
                                [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))})
            (when (= (:nakyma optiot) :tiemerkinta)
              {:otsikko "TM valmis" :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
-              :fmt pvm/pvm-opt :muokattava? tiemerkintaurakoitsijana?})
+              :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)})
            {:otsikko "Kohde valmis" :leveys 7 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
-            :fmt pvm/pvm-opt :muokattava? paallystysurakoitsijana?}]
+            :fmt pvm/pvm-opt
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))

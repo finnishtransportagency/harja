@@ -60,6 +60,8 @@
 
 (defn tallenna-yllapitokohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
+  ; FIXME Tehtävä oma oikeustarkistus päällystys- ja tiemerkintäurakalle, koska eivät saa muokata
+  ; samoja asioita
   (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   (jdbc/with-db-transaction [db db]
