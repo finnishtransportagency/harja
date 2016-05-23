@@ -60,8 +60,6 @@
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
-  ; FIXME Edelleen mahdollista päivittää mielivaltainem kohde joka ei kuulu urakkaan
-  ; Tässä on kyse melko laajastakin ongelmasta, ks. HAR-2433
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
@@ -78,7 +76,8 @@
           (:aikataulu-kohde-valmis rivi)
           (:id user)
           (:suorittava-tiemerkintaurakka rivi)
-          (:id rivi)))
+          (:id rivi)
+          urakka-id))
       :tiemerkinta
       (doseq [rivi kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
@@ -86,7 +85,8 @@
           (:aikataulu-tiemerkinta-alku rivi)
           (:aikataulu-tiemerkinta-loppu rivi)
           (:id user)
-          (:id rivi))))
+          (:id rivi)
+          urakka-id)))
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
@@ -122,7 +122,7 @@
                            (when tyyppi
                              (name tyyppi)))))
 
-(defn- paivita-yllapitokohde [db user urakka-id sopimus-id
+(defn- paivita-yllapitokohde [db user urakka-id
                               {:keys [id kohdenumero nimi
                                       tr-numero tr-alkuosa tr-alkuetaisyys
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
@@ -140,7 +140,7 @@
                    (nil? paikkausilmoitus))
             (do
               (log/debug "Ilmoituksia ei löytynyt, poistetaan ylläpitokohde")
-              (q/poista-yllapitokohde! db id))
+              (q/poista-yllapitokohde! db id urakka-id))
             (log/debug "Ei voi poistaa, ylläpitokohteelle on kirjattu ilmoituksia!"))))
     (do (log/debug "Päivitetään ylläpitokohde")
         (q/paivita-yllapitokohde! db
@@ -160,7 +160,8 @@
                                   arvonvahennykset
                                   bitumi-indeksi
                                   kaasuindeksi
-                                  id))))
+                                  id
+                                  urakka-id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
@@ -171,7 +172,7 @@
     (doseq [kohde kohteet]
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
       (if (and (:id kohde) (not (neg? (:id kohde))))
-        (paivita-yllapitokohde c user urakka-id sopimus-id kohde)
+        (paivita-yllapitokohde c user urakka-id kohde)
         (luo-uusi-yllapitokohde c user urakka-id sopimus-id kohde)))
     (let [paallystyskohteet (hae-urakan-yllapitokohteet c user {:urakka-id urakka-id
                                                                 :sopimus-id sopimus-id})]
@@ -197,13 +198,14 @@
                               (when sijainti
                                 (geo/geometry (geo/clj->pg sijainti))))))
 
-(defn- paivita-yllapitokohdeosa [db user {:keys [id nimi tr-numero tr-alkuosa tr-alkuetaisyys
-                                                 tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                                 tr-kaista toimenpide poistettu sijainti]}]
+(defn- paivita-yllapitokohdeosa [db user urakka-id
+                                 {:keys [id nimi tr-numero tr-alkuosa tr-alkuetaisyys
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
+                                         tr-kaista toimenpide poistettu sijainti]}]
 
   (if poistettu
     (do (log/debug "Poistetaan ylläpitokohdeosa")
-        (q/poista-yllapitokohdeosa! db id)
+        (q/poista-yllapitokohdeosa! db id urakka-id)
         nil)
     (do (log/debug "Päivitetään ylläpitokohdeosa")
         (q/paivita-yllapitokohdeosa<! db
@@ -218,7 +220,8 @@
                                       toimenpide
                                       (when-not (empty? sijainti)
                                         (geo/geometry (geo/clj->pg sijainti)))
-                                      id))))
+                                      id
+                                      urakka-id))))
 
 (defn tallenna-yllapitokohdeosa
   "Tallentaa yksittäisen ylläpitokohdeosan kantaan.
@@ -232,7 +235,7 @@
     (log/debug "Tallennetaan ylläpitokohdeosa. Ylläpitokohde-id: " yllapitokohde-id)
     (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
     (let [uusi-osa (if (and (:id osa) (not (neg? (:id osa))))
-                     (paivita-yllapitokohdeosa c user osa)
+                     (paivita-yllapitokohdeosa c user urakka-id osa)
                      (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa))]
       (yha/paivita-yllapitourakan-geometriat c urakka-id)
       uusi-osa)))
@@ -250,7 +253,7 @@
     (doseq [osa osat]
       (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
       (if (and (:id osa) (not (neg? (:id osa))))
-        (paivita-yllapitokohdeosa c user osa)
+        (paivita-yllapitokohdeosa c user urakka-id osa)
         (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
     (yha/paivita-yllapitourakan-geometriat c urakka-id)
     (let [yllapitokohdeosat (hae-urakan-yllapitokohdeosat c user {:urakka-id urakka-id
