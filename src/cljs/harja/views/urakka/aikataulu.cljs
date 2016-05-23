@@ -49,7 +49,7 @@
                 :nimi :valmis-tiemerkintaan
                 :tyyppi :pvm}]
               @valmis-tiemerkintaan]]))}
-       "Valmis"])))
+       "Aseta päivämäärä"])))
 
 (defn aikataulu
   [urakka optiot]
