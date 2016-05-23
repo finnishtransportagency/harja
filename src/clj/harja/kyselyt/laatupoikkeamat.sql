@@ -17,6 +17,7 @@ FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON h.id = s.laatupoikkeama
 WHERE h.urakka = :urakka
+      AND h.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND s.suorasanktio IS NOT TRUE;
 
@@ -47,6 +48,7 @@ FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
 WHERE h.urakka = :urakka
+      AND h.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND selvitys_pyydetty = TRUE AND selvitys_annettu = FALSE
       AND s.suorasanktio IS NOT TRUE;
@@ -76,6 +78,7 @@ FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
 WHERE h.urakka = :urakka
+      AND h.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND paatos IS NOT NULL
       AND s.suorasanktio IS NOT TRUE;
@@ -107,6 +110,7 @@ FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
 WHERE h.urakka = :urakka
+      AND h.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND (h.luoja = :kayttaja OR
            h.id IN (SELECT hk.laatupoikkeama
@@ -141,6 +145,7 @@ FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN tarkastus_laatupoikkeama tl on h.id = tl.laatupoikkeama
 WHERE h.urakka = :urakka
+      AND h.poistettu IS NOT TRUE
       AND h.id = :id;
 
 -- name: hae-laatupoikkeaman-kommentit
@@ -162,7 +167,7 @@ SELECT
 FROM kommentti k
   JOIN kayttaja ka ON k.luoja = ka.id
   LEFT JOIN liite l ON l.id = k.liite
-WHERE k.poistettu = FALSE
+WHERE k.poistettu IS NOT TRUE
       AND k.id IN (SELECT hk.kommentti
                    FROM laatupoikkeama_kommentti hk
                    WHERE hk.laatupoikkeama = :id)
@@ -293,6 +298,7 @@ FROM laatupoikkeama lp
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE lp.urakka = :urakka
+      AND lp.poistettu IS NOT TRUE
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
 
@@ -319,6 +325,7 @@ FROM laatupoikkeama lp
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
                     AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
+      AND lp.poistettu IS NOT TRUE
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
 
 -- name: hae-koko-maan-laatupoikkeamat-liitteineen-raportille
@@ -343,4 +350,5 @@ FROM laatupoikkeama lp
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
+      AND lp.poistettu IS NOT TRUE
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli);
