@@ -60,6 +60,8 @@
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
+  ; FIXME Edelleen mahdollista päivittää mielivaltainem kohde joka ei kuulu urakkaan
+  ; Tässä on kyse melko laajastakin ongelmasta, ks. HAR-2433
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)

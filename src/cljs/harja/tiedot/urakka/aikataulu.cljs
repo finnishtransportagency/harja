@@ -22,6 +22,9 @@
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {urakka-id urakka-id}))
 
+(defn merkitse-kohde-valmiiksi-tiemerkintaan [kohde-id urakka-id]
+  (log "TODO Lähetä kysely servulle, kohde: " (pr-str kohde-id)))
+
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                [valittu-sopimus-id _] @u/valittu-sopimusnumero

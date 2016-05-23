@@ -12,7 +12,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.modal :as modal])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -77,15 +78,39 @@
                              (if (= (:nakyma optiot) :paallystys)
                                [:button.nappi-ensisijainen.nappi-grid
                                 {:type "button"
-                                 :on-click #(log "Painettu")} "Valmis"]
+                                 :on-click
+                                 (fn []
+                                   (modal/nayta!
+                                     {:otsikko "Merkintäänkö kohde valmiiksi tiemerkintään?"
+                                      :footer [:span
+                                               [:button.nappi-toissijainen
+                                                {:type "button"
+                                                 :on-click #(do (.preventDefault %)
+                                                                (modal/piilota!))}
+                                                "Peruuta"]
+                                               [:button.nappi-myonteinen
+                                                {:type "button"
+                                                 :on-click #(do (.preventDefault %)
+                                                                (modal/piilota!)
+                                                                (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan rivi urakka-id))}
+                                                "Merkitse"]]}
+                                     [:div
+                                      [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]]))}
+                                "Valmis"]
                                [:span "Ei"])
                              [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))}
-           ; FIXME Ei voi merkata ellei ole annettu lupaa "valmis tiemerkintään"
-           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
-            :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)}
-           ; FIXME Ei voi merkata ellei ole annettu lupaa "valmis tiemerkintään"
-           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä val\u00ADmis" :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
-              :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)}
+           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
+            :leveys 8 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
+            :fmt pvm/pvm-opt :muokattava? (fn [rivi]
+                                            (and (= (:nakyma optiot) :tiemerkinta)
+                                                 tiemerkintaurakoitsijana?
+                                                 (:valmis-tiemerkintaan rivi)))}
+           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä val\u00ADmis"
+            :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
+            :fmt pvm/pvm-opt :muokattava? (fn [rivi]
+                                            (and (= (:nakyma optiot) :tiemerkinta)
+                                                 tiemerkintaurakoitsijana?
+                                                 (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 7 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}]
