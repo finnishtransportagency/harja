@@ -193,6 +193,7 @@ SELECT
   hallintayksikko
 FROM urakka
 WHERE (loppupvm IS NULL or loppupvm >= NOW())
+AND tyyppi = 'tiemerkinta'::urakkatyyppi;
 
 -- name: tallenna-yllapitokohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun

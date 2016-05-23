@@ -37,8 +37,6 @@
               (when (and valittu-urakka-id nakymassa?)
                 (hae-tiemerkinnan-suorittavat-urakat valittu-urakka-id))))
 
-(tarkkaile! "[AIKATAULU] Tiemerkinnän suorittavat urakat" tiemerkinnan-suorittavat-urakat)
-
 (defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id kohteet]
   (go
     (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
