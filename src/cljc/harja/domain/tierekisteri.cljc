@@ -16,3 +16,18 @@
   ((juxt :tie :tr-numero :tienumero
         :aosa :tr-alkuosa
         :aet :tr-alkuetaisyys) kohde))
+
+(defn tierekisteriosoite-tekstina
+  [tr]
+  (let [tie (or (:numero tr) (:tr-numero tr))
+        aosa (or (:alkuosa tr) (:tr-alkuosa tr))
+        aet (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr))
+        losa (or (:loppuosa tr) (:tr-loppuosa tr))
+        let (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr))]
+    (if tie
+      (str "Tie " tie " / "
+           aosa " / "
+           aet " / "
+           losa " / "
+           let)
+      (str "Ei tierekisteriosoitetta"))))

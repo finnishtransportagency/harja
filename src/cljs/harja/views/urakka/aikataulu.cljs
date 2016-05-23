@@ -11,6 +11,7 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -23,12 +24,10 @@
       (let [ur @nav/valittu-urakka
             urakka-id (:id ur)
             sopimus-id (first @u/valittu-sopimusnumero)
-            aikataulut @tiedot/aikataulurivit
             paallystysurakoitsijana? #(oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu
                                                                 urakka-id)
             tiemerkintaurakoitsijana? #(oikeudet/urakat-aikataulu urakka-id "TM-valmis")
             voi-tallentaa? (or paallystysurakoitsijana? tiemerkintaurakoitsijana?)]
-        (log "aikataulut: " (pr-str aikataulut))
         [:div.aikataulu
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
@@ -44,7 +43,7 @@
            {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}
            {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
-            :muokattava? (constantly false)}
+            :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
            {:otsikko "Pääll. aloitus\u00AD" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? paallystysurakoitsijana?}

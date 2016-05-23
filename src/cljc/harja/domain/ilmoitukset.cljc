@@ -70,12 +70,6 @@
       (when (and (:ytunnus henkilo) (:organisaatio henkilo)) " ")
       (:ytunnus henkilo))))
 
-(defn nayta-tierekisteriosoite
-  [tr]
-  (if (and tr (:numero tr))
-    (str "Tie " (:numero tr) " / " (:alkuosa tr) " / " (:alkuetaisyys tr) " / " (:loppuosa tr) " / " (:loppuetaisyys tr))
-    (str "Ei tierekisteriosoitetta")))
-
 (defn parsi-puhelinnumero
   [henkilo]
   (let [tp (:tyopuhelin henkilo)

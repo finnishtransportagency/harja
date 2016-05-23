@@ -179,7 +179,14 @@ SELECT
   aikataulu_kohde_valmis  AS "aikataulu-kohde-valmis",
   aikataulu_muokattu  AS "aikataulu-muokattu",
   aikataulu_muokkaaja  AS "aikataulu-muokkaaja",
-  valmis_tiemerkintaan  AS "valmis-tiemerkintaan"
+  valmis_tiemerkintaan  AS "valmis-tiemerkintaan",
+  tr_numero AS "tr-numero",
+  tr_alkuosa AS "tr-alkuosa",
+  tr_alkuetaisyys AS "tr-alkuetaisyys",
+  tr_loppuosa AS "tr-loppuosa",
+  tr_loppuetaisyys AS "tr-loppuetaisyys",
+  tr_ajorata AS "tr-ajorata",
+  tr_kaista AS "tr-kaista"
 FROM yllapitokohde
 WHERE
   urakka = :urakka
