@@ -39,22 +39,22 @@
                                                                      sopimus-id
                                                                      %)
                        :ei-mahdollinen)}
-          [{:otsikko "Kohde\u00AD ID" :leveys 5 :nimi :kohdenumero :tyyppi :string
+          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
-           {:otsikko "Koh\u00ADteen nimi" :leveys 10 :nimi :nimi :tyyppi :string :pituus-max 128
+           {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}
            {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
             :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
            ; FIXME Numerot näkyy huonosti kapealla näytöllä & tallennus epäonnistuu jos kellonaikaa ei anna
-           {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
+           {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 10 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
-           {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
+           {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 10 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
-              :leveys 10 :nimi :suorittava-tiemerkintaurakka
+              :leveys 13 :nimi :suorittava-tiemerkintaurakka
               :tyyppi :valinta
               :fmt (fn [arvo]
                      (:nimi (some
@@ -71,7 +71,7 @@
                                 :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
                                 :eri-hallintayksikko "Muut tiemerkintäurakat")
               :muokattava? paallystysurakoitsijana?})
-           {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 7
+           {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
             :komponentti (fn [rivi]
                            (if (not (:valmis-tiemerkintaan rivi))
@@ -100,18 +100,18 @@
                                [:span "Ei"])
                              [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
-            :leveys 8 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
+            :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]
                                             (and (= (:nakyma optiot) :tiemerkinta)
                                                  tiemerkintaurakoitsijana?
                                                  (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä val\u00ADmis"
-            :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
+            :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]
                                             (and (= (:nakyma optiot) :tiemerkinta)
                                                  tiemerkintaurakoitsijana?
                                                  (:valmis-tiemerkintaan rivi)))}
-           {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 7 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
+           {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))
