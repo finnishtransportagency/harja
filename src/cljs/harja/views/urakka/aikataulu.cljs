@@ -23,7 +23,8 @@
 
 
 (defn valmis-tiemerkintaan [kohde-id urakka-id]
-  (let [valmis-tiemerkintaan (atom nil)]
+  (let [valmis-tiemerkintaan-lomake (atom nil)
+        valmis-tallennettavaksi? (reaction (some? (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)))]
     (fn [kohde-id urakka-id]
       [:button.nappi-ensisijainen.nappi-grid
        {:type "button"
@@ -43,10 +44,10 @@
                        #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
                             (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
                               kohde-id
-                              (:valmis-tiemerkintaan @valmis-tiemerkintaan)
+                              (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
                               urakka-id
                               (first @u/valittu-sopimusnumero)))
-                       {;:disabled (not (some? @valmis-tiemerkintaan)) ; FIXME Ei päivity jos arvo muuttuu
+                       {;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
                         :luokka "nappi-myonteinen"
                         :kun-onnistuu (fn [vastaus]
                                         (modal/piilota!)
@@ -56,12 +57,12 @@
              [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]
              [lomake/lomake {:otsikko ""
                              :muokkaa! (fn [uusi-data]
-                                         (reset! valmis-tiemerkintaan uusi-data))}
+                                         (reset! valmis-tiemerkintaan-lomake uusi-data))}
               [{:otsikko "Tiemerkinnän saa aloittaa"
                 :nimi :valmis-tiemerkintaan
                 :pakollinen? true
                 :tyyppi :pvm}]
-              @valmis-tiemerkintaan]]))}
+              @valmis-tiemerkintaan-lomake]]))}
        "Aseta päivämäärä"])))
 
 (defn aikataulu
