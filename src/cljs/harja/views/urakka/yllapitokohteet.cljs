@@ -21,7 +21,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.ui.viesti :as viesti]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.urakka.yhatuonti :as yha])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -180,7 +181,10 @@
 
 (defn yllapitokohteet [kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
-        tr-virheet (atom {})] ;; virheelliset TR sijainnit
+        tr-virheet (atom {}) ;; virheelliset TR sijainnit
+        tallenna (reaction (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
+                             :ei-mahdollinen
+                             (:tallenna optiot)))]
     (komp/luo
       (fn [kohteet-atom optiot]
         [:div.yllapitokohteet
@@ -191,7 +195,7 @@
                                              (fn [rivi]
                                                [yllapitokohdeosat rivi kohteet-atom]))
                                        @kohteet-atom))
-           :tallenna (:tallenna optiot)
+           :tallenna @tallenna
            :muutos (fn [grid]
                      (kasittele-tr-osoite grid tr-sijainnit tr-virheet))
            :voi-lisata? (not (:yha-sidottu? optiot))
