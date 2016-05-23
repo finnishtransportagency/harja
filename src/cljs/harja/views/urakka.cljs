@@ -30,7 +30,8 @@
     ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
     :suunnittelu (and (oikeudet/urakat-suunnittelu id) (not= sopimustyyppi :kokonaisurakka))
     :toteumat (and (oikeudet/urakat-toteumat id) (not= sopimustyyppi :kokonaisurakka))
-    :aikataulu (and (oikeudet/urakat-aikataulu id) (= tyyppi :paallystys))
+    :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
+                                                       (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (oikeudet/urakat-kohdeluettelo id) (= tyyppi :paallystys))
     :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo id) (= tyyppi :paikkaus))
     :laadunseuranta (oikeudet/urakat-laadunseuranta id)
@@ -81,7 +82,7 @@
      :aikataulu
      (when (valilehti-mahdollinen? :aikataulu ur)
        ^{:key "aikataulu"}
-       [aikataulu/aikataulu])
+       [aikataulu/aikataulu {:nakyma (:tyyppi ur)}])
 
      "Kohdeluettelo"
      :kohdeluettelo-paallystys
