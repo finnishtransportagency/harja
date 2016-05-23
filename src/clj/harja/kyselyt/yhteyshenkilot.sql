@@ -33,6 +33,7 @@ SELECT
   p.varahenkilo,
   p.alku,
   p.loppu,
+  y.id        AS yhteyshenkilo_id,
   y.etunimi,
   y.sukunimi,
   y.sahkoposti,
@@ -64,6 +65,7 @@ SELECT
   p.varahenkilo,
   p.alku,
   p.loppu,
+  y.id        AS yhteyshenkilo_id,
   y.etunimi,
   y.sukunimi,
   y.sahkoposti,
@@ -125,9 +127,9 @@ INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo, urakka) VALUES (:rooli, 
 -- name: paivita-yhteyshenkilo<!
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
-   SET etunimi  = :etunimi, sukunimi = :sukunimi,
-       tyopuhelin = :tyopuhelin, matkapuhelin = :matkapuhelin,
-       sahkoposti = :sahkoposti, organisaatio = :organisaatio
+SET etunimi  = :etunimi, sukunimi = :sukunimi,
+  tyopuhelin = :tyopuhelin, matkapuhelin = :matkapuhelin,
+  sahkoposti = :sahkoposti, organisaatio = :organisaatio
 WHERE id = :id;
 
 -- name: paivita-yhteyshenkilo-ulkoisella-idlla<!
@@ -280,14 +282,20 @@ WHERE (matkapuhelin = :puhelinnumero OR tyopuhelin = :puhelinnumero) AND
 LIMIT 1;
 
 -- name: hae-urakan-paivystaja-sahkopostilla
-SELECT y.id, y.etunimi, y.sukunimi,
-       y.matkapuhelin, y.tyopuhelin, y.sahkoposti,
-       o.ytunnus, o.nimi
-  FROM yhteyshenkilo y
-       JOIN paivystys p ON p.yhteyshenkilo = y.id
-       LEFT JOIN organisaatio o ON o.id = y.organisaatio
- WHERE p.urakka = :urakka AND
-       LOWER(sahkoposti) = LOWER(:sahkoposti)
+SELECT
+  y.id,
+  y.etunimi,
+  y.sukunimi,
+  y.matkapuhelin,
+  y.tyopuhelin,
+  y.sahkoposti,
+  o.ytunnus,
+  o.nimi
+FROM yhteyshenkilo y
+  JOIN paivystys p ON p.yhteyshenkilo = y.id
+  LEFT JOIN organisaatio o ON o.id = y.organisaatio
+WHERE p.urakka = :urakka AND
+      LOWER(sahkoposti) = LOWER(:sahkoposti)
 
 
 -- name: hae-yhteyshenkilo

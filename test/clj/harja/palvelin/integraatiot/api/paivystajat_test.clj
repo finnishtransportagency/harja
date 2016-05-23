@@ -4,7 +4,6 @@
             [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
             [cheshire.core :as cheshire]
             [harja.fmt :as fmt]))
 
@@ -93,14 +92,12 @@
                   kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (log/debug (:body vastaus))
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (log/debug (:body vastaus))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 

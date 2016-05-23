@@ -6,7 +6,8 @@
   "properties": {
     "id": {
       "id": "urn:harja/id",
-      "type": "integer"
+      "type": "integer",
+      "required": true
     },
     "paivystaja": {
       "id": "urn:harja/paivystys/paivystaja",
