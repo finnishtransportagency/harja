@@ -1,0 +1,1 @@
+ALTER TABLE paivystys ALTER COLUMN ulkoinen_id TYPE VARCHAR(255);
