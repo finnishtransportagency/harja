@@ -133,7 +133,7 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-        kohteet [{:kohdenumero                 "L03", :aikataulu_paallystys_alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu_muokkaaja 2, :urakka 5,
+        kohteet [{:kohdenumero                 "L03", :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu-muokkaaja 2, :urakka 5,
                   :aikataulu-kohde-valmis      (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
                   :valmis-tiemerkintaan        (pvm/->pvm-aika "23.5.2016 12:00"), :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00"),
                   :id                          1, :sopimus 8, :aikataulu-muokattu (pvm/->pvm-aika "29.5.2016 12:00"), :aikataulu-tiemerkinta-alku nil,
