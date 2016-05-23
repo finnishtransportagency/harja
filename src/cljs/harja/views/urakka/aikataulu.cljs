@@ -20,7 +20,7 @@
   [urakka optiot]
   (komp/luo
     (komp/lippu tiedot/aikataulu-nakymassa?)
-    (fn [urakka]
+    (fn [urakka optiot]
       (let [ur @nav/valittu-urakka
             urakka-id (:id ur)
             sopimus-id (first @u/valittu-sopimusnumero)
