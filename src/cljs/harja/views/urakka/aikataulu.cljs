@@ -16,10 +16,10 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn aikataulu
-  [optiot]
+  [urakka optiot]
   (komp/luo
     (komp/lippu tiedot/aikataulu-nakymassa?)
-    (fn []
+    (fn [urakka]
       (let [ur @nav/valittu-urakka
             urakka-id (:id ur)
             sopimus-id (first @u/valittu-sopimusnumero)
@@ -54,9 +54,16 @@
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 10 :nimi :suorittaja-urakka
               :tyyppi :valinta
-              :valinta-arvo  :id
+              :valinta-arvo :id
               :valinta-nayta #(if % (:nimi %) "- Valitse urakka -")
-              :valinnat      @tiedot/tiemerkinnan-suorittavat-urakat
+              :valinnat @tiedot/tiemerkinnan-suorittavat-urakat
+              :nayta-ryhmat [:sama-hallintayksikko :eri-hallintayksikko]
+              :ryhmittely #(if (= (:hallintayksikko %) (:id (:hallintayksikko urakka)))
+                            :sama-hallintayksikko
+                            :eri-hallintayksikko)
+              :ryhman-otsikko #(case %
+                                :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
+                                :eri-hallintayksikko "Muut tiemerkintäurakat")
               :muokattava? paallystysurakoitsijana?})
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Valmis tie\u00ADmerkin\u00ADtään" :leveys 7

@@ -82,7 +82,7 @@
      :aikataulu
      (when (valilehti-mahdollinen? :aikataulu ur)
        ^{:key "aikataulu"}
-       [aikataulu/aikataulu {:nakyma (:tyyppi ur)}])
+       [aikataulu/aikataulu ur {:nakyma (:tyyppi ur)}])
 
      "Kohdeluettelo"
      :kohdeluettelo-paallystys
