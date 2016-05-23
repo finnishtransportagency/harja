@@ -15,6 +15,7 @@
   "paivystykset": [
     {
       "paivystys": {
+        "id":1234,
         "paivystaja": {
           "id": 454653434,
           "etunimi": "Päivi",
@@ -32,6 +33,7 @@
     },
     {
       "paivystys": {
+        "id":87654,
         "paivystaja": {
           "id": 1123588,
           "etunimi": "Pertti",
