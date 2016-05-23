@@ -40,14 +40,14 @@
                        :ei-mahdollinen)}
           [{:otsikko "Kohde\u00AD ID" :leveys 5 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
-           {:otsikko "Kohteen nimi" :leveys 10 :nimi :nimi :tyyppi :string :pituus-max 128
+           {:otsikko "Koh\u00ADteen nimi" :leveys 10 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}
            {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
             :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
-           {:otsikko "Pääll. aloitus\u00AD" :leveys 8 :nimi :aikataulu-paallystys-alku
+           {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
-           {:otsikko "Pääll. valmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
+           {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
            (when (= (:nakyma optiot) :paallystys)
@@ -78,10 +78,11 @@
                                 {:type "button"
                                  :on-click #(log "Painettu")} "Valmis"]
                                [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))})
-           (when (= (:nakyma optiot) :tiemerkinta)
-             {:otsikko "TM valmis" :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
-              :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)})
-           {:otsikko "Kohde valmis" :leveys 7 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
+           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
+            :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)}
+           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä val\u00ADmis" :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
+              :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)}
+           {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 7 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))

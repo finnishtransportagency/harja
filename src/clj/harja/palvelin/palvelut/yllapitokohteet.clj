@@ -40,18 +40,19 @@
     (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
+(defn- hae-urakkatyyppi [db urakka-id]
+  (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id)))))
+
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Haetaan urakan aikataulutiedot urakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [urakkatyyppi (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id))))
-          _ (log/debug "Urakan tyyppi on " urakkatyyppi)]
-      (case urakkatyyppi
-        :paallystys
-        (q/hae-paallystysurakan-aikataulu db urakka-id sopimus-id)
-        :tiemerkinta
-        (q/hae-tiemerkintaurakan-aikataulu db urakka-id sopimus-id)))))
+    (case (hae-urakkatyyppi db urakka-id)
+      :paallystys
+      (q/hae-paallystysurakan-aikataulu db urakka-id sopimus-id)
+      :tiemerkinta
+      (q/hae-tiemerkintaurakan-aikataulu db urakka-id sopimus-id))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
@@ -60,22 +61,30 @@
 
 (defn tallenna-yllapitokohteiden-aikataulu [db user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
-  ; FIXME Tehtävä oma oikeustarkistus päällystys- ja tiemerkintäurakalle, koska eivät saa muokata
-  ; samoja asioita
   (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
+  ;; Oma päivityskysely kullekin urakalle, sillä päällystysurakoitsija ja tiemerkkari
+  ;; eivät saa muokata samoja asioita
   (jdbc/with-db-transaction [db db]
-    (doseq [rivi kohteet]
-      (q/tallenna-yllapitokohteen-aikataulu!
-        db
-        (:aikataulu-paallystys-alku rivi)
-        (:aikataulu-paallystys-loppu rivi)
-        (:aikataulu-tiemerkinta-alku rivi)
-        (:aikataulu-tiemerkinta-loppu rivi)
-        (:aikataulu-kohde-valmis rivi)
-        (:id user)
-        (:suorittava-tiemerkintaurakka rivi)
-        (:id rivi)))
+    (case (hae-urakkatyyppi db urakka-id)
+      :paallystys
+      (doseq [rivi kohteet]
+        (q/tallenna-paallystyskohteen-aikataulu!
+          db
+          (:aikataulu-paallystys-alku rivi)
+          (:aikataulu-paallystys-loppu rivi)
+          (:aikataulu-kohde-valmis rivi)
+          (:id user)
+          (:suorittava-tiemerkintaurakka rivi)
+          (:id rivi)))
+      :tiemerkinta
+      (doseq [rivi kohteet]
+        (q/tallenna-tiemerkintakohteen-aikataulu!
+          db
+          (:aikataulu-tiemerkinta-alku rivi)
+          (:aikataulu-tiemerkinta-loppu rivi)
+          (:id user)
+          (:id rivi))))
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 

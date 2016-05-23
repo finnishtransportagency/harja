@@ -235,19 +235,28 @@ FROM urakka
 WHERE (loppupvm IS NULL or loppupvm >= NOW())
 AND tyyppi = 'tiemerkinta'::urakkatyyppi;
 
--- name: tallenna-yllapitokohteen-aikataulu!
+-- name: tallenna-paallystyskohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET
   aikataulu_paallystys_alku    = :aikataulu_paallystys_alku,
   aikataulu_paallystys_loppu   = :aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku   = :aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu  = :aikataulu_tiemerkinta_loppu,
   aikataulu_kohde_valmis       = :aikataulu_kohde_valmis,
   aikataulu_muokattu           = NOW(),
   aikataulu_muokkaaja          = :aikataulu_muokkaaja,
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
 WHERE id = :id;
+
+-- name: tallenna-tiemerkintakohteen-aikataulu!
+-- Tallentaa ylläpitokohteen aikataulun
+UPDATE yllapitokohde
+SET
+  aikataulu_tiemerkinta_alku   = :aikataulu_tiemerkinta_alku,
+  aikataulu_tiemerkinta_loppu  = :aikataulu_tiemerkinta_loppu,
+  aikataulu_muokattu           = NOW(),
+  aikataulu_muokkaaja          = :aikataulu_muokkaaja,
+WHERE id = :id;
+
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
