@@ -78,4 +78,4 @@
               :fmt pvm/pvm-opt :muokattava? tiemerkintaurakoitsijana?})
            {:otsikko "Kohde valmis" :leveys 7 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? paallystysurakoitsijana?}]
-          @tiedot/aikataulurivit]]))))
+          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))
