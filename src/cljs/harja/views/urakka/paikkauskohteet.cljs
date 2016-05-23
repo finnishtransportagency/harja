@@ -32,7 +32,7 @@
        [kartta/kartan-paikka]
        [yllapitokohteet-view/yllapitokohteet paikkaus/paikkauskohteet
         {:otsikko "Paikkauskohteet"
-         :paikkausnakyma? true
+         :nakyma :paikkaus
          :tallenna (fn [kohteet]
                      (go (let [urakka-id (:id @nav/valittu-urakka)
                                [sopimus-id _] @u/valittu-sopimusnumero
@@ -50,7 +50,7 @@
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
-        paikkaus/paikkauskohteet {:paikkausnakyma? true}]
+        paikkaus/paikkauskohteet {:nakyma :paikkaus}]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paikkauskohteet]

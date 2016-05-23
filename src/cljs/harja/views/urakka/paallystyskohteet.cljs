@@ -35,7 +35,7 @@
        [yllapitokohteet-view/yllapitokohteet
         paallystys/yhan-paallystyskohteet
         {:otsikko "YHA:sta tuodut päällystyskohteet"
-         :paallystysnakyma? true
+         :nakyma :paallystys
          :yha-sidottu? true
          :tallenna (fn [kohteet]
                      (go (let [urakka-id (:id @nav/valittu-urakka)
@@ -55,7 +55,7 @@
        [yllapitokohteet-view/yllapitokohteet
         paallystys/harjan-paikkauskohteet
         {:otsikko "Harjan paikkauskohteet"
-         :paallystysnakyma? false
+         :nakyma :paallystys
          :yha-sidottu? false
          :tallenna (fn [kohteet]
                      (go (let [urakka-id (:id @nav/valittu-urakka)
@@ -71,7 +71,7 @@
                                  (reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) vastaus)))))))}]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa
-        paallystys/kohteet-yhteensa {:paallystysnakyma? true}]
+        paallystys/kohteet-yhteensa {:nakyma :paallystys}]
 
        [:div.kohdeluettelon-paivitys
         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]

@@ -172,14 +172,14 @@ SELECT
   nimi,
   urakka,
   sopimus,
-  aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu,
-  aikataulu_kohde_valmis,
-  aikataulu_muokattu,
-  aikataulu_muokkaaja,
-  valmis_tiemerkintaan
+  aikataulu_paallystys_alku AS "aikataulu-paallystys-alku",
+  aikataulu_paallystys_loppu  AS "aikataulu-paallystys-loppu",
+  aikataulu_tiemerkinta_alku  AS "aikataulu-tiemerkinta-alku",
+  aikataulu_tiemerkinta_loppu  AS "aikataulu-tiemerkinta-loppu",
+  aikataulu_kohde_valmis  AS "aikataulu-kohde-valmis",
+  aikataulu_muokattu  AS "aikataulu-muokattu",
+  aikataulu_muokkaaja  AS "aikataulu-muokkaaja",
+  valmis_tiemerkintaan  AS "valmis-tiemerkintaan"
 FROM yllapitokohde
 WHERE
   urakka = :urakka

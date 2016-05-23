@@ -41,7 +41,6 @@
     vastaus))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
-  ;; FIXME Refactoroi alaviivat pois SQL-kyselyssä
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Haetaan urakan aikataulutiedot.")
@@ -55,11 +54,11 @@
     (doseq [rivi kohteet]
       (q/tallenna-yllapitokohteen-aikataulu!
         db
-        (:aikataulu_paallystys_alku rivi)
-        (:aikataulu_paallystys_loppu rivi)
-        (:aikataulu_tiemerkinta_alku rivi)
-        (:aikataulu_tiemerkinta_loppu rivi)
-        (:aikataulu_kohde_valmis rivi)
+        (:aikataulu-paallystys-alku rivi)
+        (:aikataulu-paallystys-loppu rivi)
+        (:aikataulu-tiemerkinta-alku rivi)
+        (:aikataulu-tiemerkinta-loppu rivi)
+        (:aikataulu-kohde-valmis rivi)
         (:id user)
         (:id rivi)))
     (hae-urakan-aikataulu db user {:urakka-id urakka-id

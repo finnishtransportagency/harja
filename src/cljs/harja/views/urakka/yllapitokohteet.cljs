@@ -227,13 +227,13 @@
                     :valinta-nayta :nimi
                     :leveys nykyinen-paallyste-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                   (when (:paallystysnakyma? optiot)
+                   (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys})
-                   (when (:paallystysnakyma? optiot)
+                   (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
-                   (when (:paikkausnakyma? optiot)
+                   (when (= (:nakyma optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :muokattava? (constantly false)
                       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
                    {:otsikko "Ar\u00ADvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt
@@ -293,13 +293,13 @@
       {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :nykyinen-paallyste :tyyppi :string :leveys nykyinen-paallyste-leveys}
-      (when (:paallystysnakyma? optiot)
+      (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot :fmt fmt/euro-opt :tyyppi :numero
          :leveys tarjoushinta-leveys})
-      (when (:paallystysnakyma? optiot)
+      (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys muutoshinta-leveys})
-      (when (:paikkausnakyma? optiot)
+      (when (= (:nakyma optiot) :paikkaus)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :fmt fmt/euro-opt :tyyppi :numero
          :leveys toteutunut-hinta-leveys})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
