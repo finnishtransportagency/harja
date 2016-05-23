@@ -23,6 +23,8 @@
                            {:luokka "nappi-ensisijainen"
                             :disabled @yha/sidonta-kaynnissa?
                             :virheviesti "Urakoiden haku YHA:sta epäonnistui."
+                            :kun-virhe (fn [_]
+                                         (reset! yha/hakutulokset-data []))
                             :kun-onnistuu (fn [vastaus]
                                             (log "[YHA] YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
                                             (reset! yha/hakutulokset-data vastaus))}]}
@@ -41,53 +43,52 @@
    @yha/hakulomake-data])
 
 (defn- hakutulokset [urakka]
-  (let [sidonta-kaynnissa? @yha/sidonta-kaynnissa?]
-    [grid
-     {:otsikko "Löytyneet urakat"
-      :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
-      :tunniste :yhatunnus}
-     [{:otsikko "YHA-tunnus"
-       :nimi :yhatunnus
-       :tyyppi :string
-       :muokattava? (constantly false)}
-      {:otsikko "Sampo-tunnus"
-       :nimi :sampotunnus
-       :tyyppi :string
-       :muokattava? (constantly false)}
-      {:otsikko "ELY:t"
-       :nimi :elyt
-       :tyyppi :string
-       :muokattava? (constantly false)
-       :fmt #(str/join ", " %)}
-      {:otsikko "Vuodet"
-       :nimi :vuodet
-       :tyyppi :string
-       :muokattava? (constantly false)
-       :fmt #(str/join ", " %)}
-      {:otsikko "Sidonta"
-       :nimi :valitse
-       :tyyppi :komponentti
-       :komponentti (fn [rivi]
-                      (if (:sidottu-urakkaan rivi)
-                        [:span (str "Sidottu jo Harjan urakkaan: " (:sidottu-urakkaan rivi))]
-                        [harja.ui.napit/palvelinkutsu-nappi
-                         "Sido"
-                         #(do
-                           (log "[YHA] Sidotaan Harja-urakka " (:id urakka) " yha-urakkaan: " (pr-str rivi))
-                           (reset! yha/sidonta-kaynnissa? true)
-                           (yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi))
-                         {:luokka "nappi-ensisijainen"
-                          :disabled sidonta-kaynnissa?
-                          :kun-valmis (fn [vastaus]
-                                        (log "[YHA] Sidonta suoritettu, vastaus: " (pr-str vastaus))
-                                        (reset! yha/sidonta-kaynnissa? false))
-                          :virheviesti "Urakan sidonta epäonnistui."
-                          :kun-onnistuu (fn [vastaus]
-                                          (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
-                                          (modal/piilota!)
-                                          (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
-                                          (yha/paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? false}))}]))}]
-     @yha/hakutulokset-data]))
+  [grid
+   {:otsikko "Löytyneet urakat"
+    :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
+    :tunniste :yhatunnus}
+   [{:otsikko "YHA-tunnus"
+     :nimi :yhatunnus
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "Sampo-tunnus"
+     :nimi :sampotunnus
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "ELY:t"
+     :nimi :elyt
+     :tyyppi :string
+     :muokattava? (constantly false)
+     :fmt #(str/join ", " %)}
+    {:otsikko "Vuodet"
+     :nimi :vuodet
+     :tyyppi :string
+     :muokattava? (constantly false)
+     :fmt #(str/join ", " %)}
+    {:otsikko "Sidonta"
+     :nimi :valitse
+     :tyyppi :komponentti
+     :komponentti (fn [rivi]
+                    (if (:sidottu-urakkaan rivi)
+                      [:span (str "Sidottu jo Harjan urakkaan: " (:sidottu-urakkaan rivi))]
+                      [harja.ui.napit/palvelinkutsu-nappi
+                       "Sido"
+                       #(do
+                         (log "[YHA] Sidotaan Harja-urakka " (:id urakka) " yha-urakkaan: " (pr-str rivi))
+                         (reset! yha/sidonta-kaynnissa? true)
+                         (yha/sido-yha-urakka-harja-urakkaan (:id urakka) rivi))
+                       {:luokka "nappi-ensisijainen"
+                        :disabled @yha/sidonta-kaynnissa?
+                        :kun-valmis (fn [vastaus]
+                                      (log "[YHA] Sidonta suoritettu, vastaus: " (pr-str vastaus))
+                                      (reset! yha/sidonta-kaynnissa? false))
+                        :virheviesti "Urakan sidonta epäonnistui."
+                        :kun-onnistuu (fn [vastaus]
+                                        (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
+                                        (modal/piilota!)
+                                        (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
+                                        (yha/paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? false}))}]))}]
+   @yha/hakutulokset-data])
 
 (defn- sidonta-kaynnissa []
   [ajax-loader "Sidonta käynnissä..."])
