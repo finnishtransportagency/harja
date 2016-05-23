@@ -51,8 +51,12 @@
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt :muokattava? paallystysurakoitsijana?}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
-              :leveys 10 :nimi :suorittaja-urakka
+              :leveys 10 :nimi :suorittava-tiemerkintaurakka
               :tyyppi :valinta
+              :fmt (fn [arvo]
+                     (:nimi (some
+                              #(when (= (:id %) arvo) %)
+                              @tiedot/tiemerkinnan-suorittavat-urakat)))
               :valinta-arvo :id
               :valinta-nayta #(if % (:nimi %) "- Valitse urakka -")
               :valinnat @tiedot/tiemerkinnan-suorittavat-urakat

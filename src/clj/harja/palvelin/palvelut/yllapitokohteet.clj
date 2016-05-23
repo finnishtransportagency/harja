@@ -65,6 +65,7 @@
         (:aikataulu-tiemerkinta-loppu rivi)
         (:aikataulu-kohde-valmis rivi)
         (:id user)
+        (:suorittava-tiemerkintaurakka rivi)
         (:id rivi)))
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))

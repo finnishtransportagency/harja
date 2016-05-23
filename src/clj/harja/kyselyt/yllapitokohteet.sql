@@ -186,7 +186,8 @@ SELECT
   tr_loppuosa AS "tr-loppuosa",
   tr_loppuetaisyys AS "tr-loppuetaisyys",
   tr_ajorata AS "tr-ajorata",
-  tr_kaista AS "tr-kaista"
+  tr_kaista AS "tr-kaista",
+  suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka"
 FROM yllapitokohde
 WHERE
   urakka = :urakka
@@ -207,13 +208,14 @@ AND tyyppi = 'tiemerkinta'::urakkatyyppi;
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET
-  aikataulu_paallystys_alku   = :aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu  = :aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku  = :aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
-  aikataulu_kohde_valmis      = :aikataulu_kohde_valmis,
-  aikataulu_muokattu          = NOW(),
-  aikataulu_muokkaaja         = :aikataulu_muokattu
+  aikataulu_paallystys_alku    = :aikataulu_paallystys_alku,
+  aikataulu_paallystys_loppu   = :aikataulu_paallystys_loppu,
+  aikataulu_tiemerkinta_alku   = :aikataulu_tiemerkinta_alku,
+  aikataulu_tiemerkinta_loppu  = :aikataulu_tiemerkinta_loppu,
+  aikataulu_kohde_valmis       = :aikataulu_kohde_valmis,
+  aikataulu_muokattu           = NOW(),
+  aikataulu_muokkaaja          = :aikataulu_muokkaaja,
+  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
 WHERE id = :id;
 
 -- name: yllapitokohteella-paallystysilmoitus
