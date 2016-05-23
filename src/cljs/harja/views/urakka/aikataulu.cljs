@@ -13,9 +13,43 @@
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.ui.lomake :as lomake])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+(defn valmis-tiemerkintaan [urakka-id]
+  (let [valmis-tiemerkintaan (atom nil)]
+    (fn [urakka-id]
+      [:button.nappi-ensisijainen.nappi-grid
+       {:type "button"
+        :on-click
+        (fn []
+          (modal/nayta!
+            {:otsikko "Merkintäänkö kohde valmiiksi tiemerkintään?"
+             :luokka "merkitse-valmiiksi-tiemerkintaan"
+             :footer [:span
+                      [:button.nappi-toissijainen
+                       {:type "button"
+                        :on-click #(do (.preventDefault %)
+                                       (modal/piilota!))}
+                       "Peruuta"]
+                      [:button.nappi-myonteinen
+                       {:type "button"
+                        :on-click #(do (.preventDefault %)
+                                       (modal/piilota!)
+                                       (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan @valmis-tiemerkintaan urakka-id))}
+                       "Merkitse"]]}
+            [:div
+             [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]
+             [lomake/lomake {:otsikko ""
+                             :muokkaa! (fn [uusi-data]
+                                         (reset! valmis-tiemerkintaan uusi-data))}
+              [{:otsikko "Tiemerkinnän saa aloittaa"
+                :nimi :valmis-tiemerkintaan
+                :tyyppi :pvm}]
+              @valmis-tiemerkintaan]]))}
+       "Valmis"])))
 
 (defn aikataulu
   [urakka optiot]
@@ -74,31 +108,11 @@
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
             :komponentti (fn [rivi]
-                           (if (not (:valmis-tiemerkintaan rivi))
+                           (if (:valmis-tiemerkintaan rivi)
+                             [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]
                              (if (= (:nakyma optiot) :paallystys)
-                               [:button.nappi-ensisijainen.nappi-grid
-                                {:type "button"
-                                 :on-click
-                                 (fn []
-                                   (modal/nayta!
-                                     {:otsikko "Merkintäänkö kohde valmiiksi tiemerkintään?"
-                                      :footer [:span
-                                               [:button.nappi-toissijainen
-                                                {:type "button"
-                                                 :on-click #(do (.preventDefault %)
-                                                                (modal/piilota!))}
-                                                "Peruuta"]
-                                               [:button.nappi-myonteinen
-                                                {:type "button"
-                                                 :on-click #(do (.preventDefault %)
-                                                                (modal/piilota!)
-                                                                (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan rivi urakka-id))}
-                                                "Merkitse"]]}
-                                     [:div
-                                      [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]]))}
-                                "Valmis"]
-                               [:span "Ei"])
-                             [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))}
+                               [valmis-tiemerkintaan urakka-id]
+                               [:span "Ei"])))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]
