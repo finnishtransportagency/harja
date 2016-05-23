@@ -384,10 +384,10 @@
                                   "- Valitse päällyste -"))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
-              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
-              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero
+              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :tasaa :oikea}
+              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
-              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero}
+              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :tasaa :oikea}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
                :nimi :tyomenetelma
                :tyyppi :valinta
@@ -398,9 +398,12 @@
                                   "- Valitse menetelmä -"))
                :valinnat pot/+tyomenetelmat+
                :leveys "30%"}
-              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero}
-              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero}
-              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero}
+              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
+               :tasaa :oikea}
+              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero
+               :tasaa :oikea}
+              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
+               :tasaa :oikea}
               {:otsikko "Edellinen päällyste"
                :nimi :edellinen-paallystetyyppi
                :tyyppi :valinta
@@ -437,7 +440,7 @@
                :leveys "20%"}
               {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys "30%"
                :tyyppi :string :pituus-max 256}
-              {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
+              {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :tasaa :oikea}
               {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string
                :pituus-max 256}]
              kiviaines]
@@ -449,15 +452,15 @@
                                  (false? @paallystys/paallystysilmoituslomake-lukittu?))
               :uusi-id (inc (count @alustalle-tehdyt-toimet))
               :virheet alustalle-tehdyt-toimet-virheet}
-             [{:otsikko "Alku\u00ADtieosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
-               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alku\u00ADetäisyys" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero
+             [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
+               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
+               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
+               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
+               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
                :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
               {:otsikko "Käsittely\u00ADmenetelmä"
                :nimi :kasittelymenetelma
@@ -470,7 +473,7 @@
                :valinnat pot/+alustamenetelmat+
                :leveys "30%"}
               {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
-               :tyyppi :positiivinen-numero}
+               :tyyppi :positiivinen-numero :tasaa :oikea}
               {:otsikko "Verkko\u00ADtyyppi"
                :nimi :verkkotyyppi
                :tyyppi :valinta
@@ -523,15 +526,15 @@
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero
+              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
                :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%"
+              {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
                :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
                :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-              {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%"
+              {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea
                :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%"
+              {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
                :muokattava? (constantly false) :tyyppi :numero
                :hae (fn [rivi]
                       (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]

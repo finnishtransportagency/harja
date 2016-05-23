@@ -60,37 +60,41 @@
 
 (defn tierekisteriosoite-sarakkeet [perusleveys [nimi tie ajorata kaista aosa aet losa let]]
   (into []
-        (remove nil?
-                [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
-                             :leveys (+ perusleveys 5) :muokattava? (or (:muokattava? nimi) (constantly true))})
-                 {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie) :tyyppi :positiivinen-numero :leveys perusleveys
-                  :validoi [[:ei-tyhja "Anna tienumero"]] :muokattava? (or (:muokattava? tie) (constantly true))}
-                 {:otsikko "Ajo\u00ADrata"
-                  :nimi (:nimi ajorata)
-                  :muokattava? (or (:muokattava? ajorata) (constantly true))
-                  :tyyppi :valinta
-                  :valinta-arvo :koodi
-                  :valinta-nayta #(if % (:koodi %) "- Valitse ajorata -")
-                  :valinnat pot/+ajoradat+
-                  :leveys perusleveys}
-                 {:otsikko "Kais\u00ADta"
-                  :muokattava? (or (:muokattava? kaista) (constantly true))
-                  :nimi (:nimi kaista)
-                  :tyyppi :valinta
-                  :valinta-arvo :koodi
-                  :valinta-nayta #(if % (:koodi %) "- Valitse kaista -")
-                  :valinnat pot/+kaistat+
-                  :leveys perusleveys}
-                 {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
-                  :validoi [[:ei-tyhja "Anna alkuosa"]] :muokattava? (or (:muokattava? aosa) (constantly true))}
-                 {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero
-                  :validoi [[:ei-tyhja "Anna alkuetäisyys"]] :muokattava? (or (:muokattava? aet) (constantly true))}
-                 {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero
-                  :validoi [[:ei-tyhja "Anna loppuosa"]] :muokattava? (or (:muokattava? losa) (constantly true))}
-                 {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
-                  :validoi [[:ei-tyhja "Anna loppuetäisyys"]] :muokattava? (or (:muokattava? let) (constantly true))}
-                 {:otsikko "Pit." :nimi :pituus :leveys perusleveys :tyyppi :numero
-                  :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}])))
+        (remove
+          nil?
+          [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
+                       :leveys (+ perusleveys 5) :muokattava? (or (:muokattava? nimi) (constantly true))})
+           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
+            :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
+            :validoi [[:ei-tyhja "Anna tienumero"]] :muokattava? (or (:muokattava? tie) (constantly true))}
+           {:otsikko "Ajo\u00ADrata"
+            :nimi (:nimi ajorata)
+            :muokattava? (or (:muokattava? ajorata) (constantly true))
+            :tyyppi :valinta
+            :tasaa :oikea
+            :valinta-arvo :koodi
+            :valinta-nayta #(if % (:koodi %) "- Valitse ajorata -")
+            :valinnat pot/+ajoradat+
+            :leveys perusleveys}
+           {:otsikko "Kais\u00ADta"
+            :muokattava? (or (:muokattava? kaista) (constantly true))
+            :nimi (:nimi kaista)
+            :tyyppi :valinta
+            :tasaa :oikea
+            :valinta-arvo :koodi
+            :valinta-nayta #(if % (:koodi %) "- Valitse kaista -")
+            :valinnat pot/+kaistat+
+            :leveys perusleveys}
+           {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
+            :validoi [[:ei-tyhja "Anna alkuosa"]] :muokattava? (or (:muokattava? aosa) (constantly true))}
+           {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
+            :validoi [[:ei-tyhja "Anna alkuetäisyys"]] :muokattava? (or (:muokattava? aet) (constantly true))}
+           {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
+            :validoi [[:ei-tyhja "Anna loppuosa"]] :muokattava? (or (:muokattava? losa) (constantly true))}
+           {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
+            :validoi [[:ei-tyhja "Anna loppuetäisyys"]] :muokattava? (or (:muokattava? let) (constantly true))}
+           {:otsikko "Pit." :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
+            :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}])))
 
 (defn tr-osoite [rivi]
   (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
@@ -229,21 +233,21 @@
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
-                      :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys})
+                      :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :muokattava? (constantly false)
-                      :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys})
+                      :fmt fmt/euro-opt :tyyppi :numero :leveys muutoshinta-leveys :tasaa :oikea})
                    (when (= (:nakyma optiot) :paikkaus)
                      {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :muokattava? (constantly false)
-                      :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys})
+                      :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys :tasaa :oikea})
                    {:otsikko "Ar\u00ADvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt
-                    :tyyppi :numero :leveys arvonvahennykset-leveys}
+                    :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
                    {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi :fmt fmt/euro-opt
-                    :tyyppi :numero :leveys bitumi-indeksi-leveys}
+                    :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
                    {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
-                    :tyyppi :numero :leveys kaasuindeksi-leveys}
+                    :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
                    {:otsikko "Ko\u00ADko\u00ADnais\u00ADhinta (ind\u00ADek\u00ADsit mu\u00ADka\u00ADna)" :muokattava? (constantly false)
-                    :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys
+                    :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :numero :leveys yhteensa-leveys :tasaa :oikea
                     :hae (fn [rivi] (+ (:sopimuksen-mukaiset-tyot rivi)
                                        (:muutoshinta rivi)
                                        (:toteutunut-hinta rivi)
@@ -295,20 +299,20 @@
       {:otsikko "" :nimi :nykyinen-paallyste :tyyppi :string :leveys nykyinen-paallyste-leveys}
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot :fmt fmt/euro-opt :tyyppi :numero
-         :leveys tarjoushinta-leveys})
+         :leveys tarjoushinta-leveys :tasaa :oikea})
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Muutok\u00ADset" :nimi :muutoshinta :fmt fmt/euro-opt :tyyppi :numero
-         :leveys muutoshinta-leveys})
+         :leveys muutoshinta-leveys :tasaa :oikea})
       (when (= (:nakyma optiot) :paikkaus)
         {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :fmt fmt/euro-opt :tyyppi :numero
-         :leveys toteutunut-hinta-leveys})
+         :leveys toteutunut-hinta-leveys :tasaa :oikea})
       {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
-       :leveys arvonvahennykset-leveys}
+       :leveys arvonvahennykset-leveys :tasaa :oikea}
       {:otsikko "Bitumi-indeksi" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
-       :leveys bitumi-indeksi-leveys}
+       :leveys bitumi-indeksi-leveys :tasaa :oikea}
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
-       :leveys kaasuindeksi-leveys}
+       :leveys kaasuindeksi-leveys :tasaa :oikea}
       {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt
-       :tyyppi :numero :leveys yhteensa-leveys}
+       :tyyppi :numero :leveys yhteensa-leveys :tasaa :oikea}
       {:otsikko "" :nimi :muokkaustoiminnot-tyhja :tyyppi :string :leveys 3}]
      @yhteensa]))
