@@ -69,15 +69,16 @@
                                 :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
                                 :eri-hallintayksikko "Muut tiemerkintäurakat")
               :muokattava? paallystysurakoitsijana?})
-           (when (= (:nakyma optiot) :paallystys)
-             {:otsikko "Valmis tie\u00ADmerkin\u00ADtään" :leveys 7
-              :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
-              :komponentti (fn [rivi]
-                             (if (not (:valmis-tiemerkintaan rivi))
+           {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 7
+            :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
+            :komponentti (fn [rivi]
+                           (if (not (:valmis-tiemerkintaan rivi))
+                             (if (= (:nakyma optiot) :paallystys)
                                [:button.nappi-ensisijainen.nappi-grid
                                 {:type "button"
                                  :on-click #(log "Painettu")} "Valmis"]
-                               [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))})
+                               [:span "Ei"])
+                             [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä val\u00ADmis" :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
