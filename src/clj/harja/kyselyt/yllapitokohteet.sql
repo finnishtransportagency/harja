@@ -187,6 +187,7 @@ WHERE
   AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-tiemerkinnan-suorittavat-urakat
+-- FIXME Käytä urakka-id:tä sorttaamaan lähimpänä olevat ylimmäs
 SELECT
   id,
   nimi,
