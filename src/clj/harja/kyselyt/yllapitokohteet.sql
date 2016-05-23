@@ -164,8 +164,8 @@ UPDATE yllapitokohdeosa
 SET poistettu = TRUE
 WHERE id = :id;
 
--- name: hae-urakan-aikataulu
--- Hakee urakan kohteiden aikataulutiedot
+-- name: hae-paallystysurakan-aikataulu
+-- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
   id,
   kohdenumero,
@@ -192,7 +192,38 @@ FROM yllapitokohde
 WHERE
   urakka = :urakka
   AND sopimus = :sopimus
-  AND yllapitokohde.poistettu IS NOT TRUE;
+  AND poistettu IS NOT TRUE;
+
+-- name: hae-tiemerkintaurakan-aikataulu
+-- Hakee tiemerkintäurakan kohteiden aikataulutiedot
+SELECT
+  id,
+  kohdenumero,
+  nimi,
+  urakka,
+  sopimus,
+  aikataulu_paallystys_alku AS "aikataulu-paallystys-alku",
+  aikataulu_paallystys_loppu  AS "aikataulu-paallystys-loppu",
+  aikataulu_tiemerkinta_alku  AS "aikataulu-tiemerkinta-alku",
+  aikataulu_tiemerkinta_loppu  AS "aikataulu-tiemerkinta-loppu",
+  aikataulu_kohde_valmis  AS "aikataulu-kohde-valmis",
+  aikataulu_muokattu  AS "aikataulu-muokattu",
+  aikataulu_muokkaaja  AS "aikataulu-muokkaaja",
+  valmis_tiemerkintaan  AS "valmis-tiemerkintaan",
+  tr_numero AS "tr-numero",
+  tr_alkuosa AS "tr-alkuosa",
+  tr_alkuetaisyys AS "tr-alkuetaisyys",
+  tr_loppuosa AS "tr-loppuosa",
+  tr_loppuetaisyys AS "tr-loppuetaisyys",
+  tr_ajorata AS "tr-ajorata",
+  tr_kaista AS "tr-kaista"
+FROM yllapitokohde
+WHERE
+  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  AND poistettu IS NOT TRUE;
+
+-- name: hae-urakan-tyyppi
+SELECT tyyppi FROM urakka WHERE id = :urakkaid;
 
 -- name: hae-tiemerkinnan-suorittavat-urakat
 -- FIXME Käytä urakka-id:tä sorttaamaan lähimpänä olevat ylimmäs

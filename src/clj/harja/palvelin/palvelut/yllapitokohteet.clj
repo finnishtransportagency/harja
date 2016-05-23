@@ -43,8 +43,15 @@
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
-  (log/debug "Haetaan urakan aikataulutiedot.")
-  (q/hae-urakan-aikataulu db urakka-id sopimus-id))
+  (log/debug "Haetaan urakan aikataulutiedot urakalle: " urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [urakkatyyppi (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id))))
+          _ (log/debug "Urakan tyyppi on " urakkatyyppi)]
+      (case urakkatyyppi
+        :paallystys
+        (q/hae-paallystysurakan-aikataulu db urakka-id sopimus-id)
+        :tiemerkinta
+        (q/hae-tiemerkintaurakan-aikataulu db urakka-id sopimus-id)))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
