@@ -44,6 +44,7 @@
             :muokattava? (constantly false)}
            {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
             :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
+           ; FIXME Numerot näkyy huonosti kapealla näytöllä & tallennus epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
@@ -79,8 +80,10 @@
                                  :on-click #(log "Painettu")} "Valmis"]
                                [:span "Ei"])
                              [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))}
+           ; FIXME Ei voi merkata ellei ole annettu lupaa "valmis tiemerkintään"
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)}
+           ; FIXME Ei voi merkata ellei ole annettu lupaa "valmis tiemerkintään"
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä val\u00ADmis" :leveys 8 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
               :fmt pvm/pvm-opt :muokattava? #(and (= (:nakyma optiot) :tiemerkinta) tiemerkintaurakoitsijana?)}
            {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 7 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
