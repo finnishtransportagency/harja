@@ -187,11 +187,11 @@
         (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "yha" "kohteiden-haku"
           (fn [konteksti]
-            (let [parametrit (as-> {} p
-                                   (lisaa-http-parametri p "yha-id" yha-id)
-                                   (lisaa-http-parametri p "vuosi" (pvm/vuosi (pvm/nyt)))
-                                   ;; todo: hae käyttäjän livi-tunnus
-                                   (lisaa-http-parametri p "kayttaja" "kayttaja123"))
+            (let [parametrit (-> {}
+                                 (lisaa-http-parametri "yha-id" yha-id)
+                                 (lisaa-http-parametri "vuosi" (pvm/vuosi (pvm/nyt)))
+                                 ;; todo: hae käyttäjän livi-tunnus
+                                 (lisaa-http-parametri "kayttaja" "kayttaja123"))
                   http-asetukset {:metodi :GET :url url :parametrit parametrit}
                   {body :body headers :headers}
                   (integraatiotapahtuma/laheta konteksti :http http-asetukset)]

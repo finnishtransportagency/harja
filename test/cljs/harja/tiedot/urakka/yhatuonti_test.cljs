@@ -89,3 +89,17 @@
     (is (= 3 (get-in kohde [:tierekisteriosoitevali :aet])))
     (is (= 3 (get-in kohde [:tierekisteriosoitevali :losa])))
     (is (= 3 (get-in kohde [:tierekisteriosoitevali :let])))))
+
+(deftest tarkista-tieosoitteiden-rakentaminen
+  (let [oletettu-tulos {:tieosoitteet [{:tunniste "kohde-1-alku", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
+                                       {:tunniste "kohde-1-loppu", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
+                                       {:tunniste "alikohde-1-A-alku", :tie 4, :osa 3, :etaisyys 4, :ajorata 1}
+                                       {:tunniste "alikohde-1-A-loppu", :tie 4, :osa 4, :etaisyys 2, :ajorata 1}
+                                       {:tunniste "kohde-2-alku", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
+                                       {:tunniste "kohde-2-loppu", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}]}
+        tieosoitteet (yha/rakenna-tieosoitteet yha-data)]
+    (is (= oletettu-tulos tieosoitteet))))
+
+(deftest tarkista-kohteen-osan-paivittaminen
+  (is (= {:tierekisteriosoitevali {:aet 1}} (yha/paivita-osoitteen-osa {:tierekisteriosoitevali {:aet 1}} {} :aet "aet")))
+  (is (= {:tierekisteriosoitevali {:aet 2}} (yha/paivita-osoitteen-osa {:tierekisteriosoitevali {:aet 1}} {"aet" 2} :aet "aet"))))
