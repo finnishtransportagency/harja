@@ -45,7 +45,7 @@
             :muokattava? (constantly false)}
            {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
             :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
-           ; FIXME Numerot näkyy huonosti kapealla näytöllä & tallennus epäonnistuu jos kellonaikaa ei anna
+           ; FIXME Tallennus epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 10 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
