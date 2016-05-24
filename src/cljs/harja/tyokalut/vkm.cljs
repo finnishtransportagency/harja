@@ -1,11 +1,11 @@
 (ns harja.tyokalut.vkm
   "Viitekehysmuuntimen kyselyt (mm. TR-osoitehaku)
   HUOM! OSA TÄMÄN NAMESPACEN TARJOAMISTA PALVELUISTA ON VANHENTUNUT"
-  (:require [cljs.core.async :refer [<! >! chan put! close!]]
+  (:require [cljs.core.async :refer [<! >! chan put! close! alts! timeout]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go alt!]]))
 
 (defn- vkm-base-url []
   (if (k/kehitysymparistossa?)
@@ -38,8 +38,8 @@
             (.setAttribute "type" "text/javascript")
             (.setAttribute "src" (str (vkm-base-url) uri
                                       (map->parametrit
-                                       (assoc parametrit
-                                         :callback callback)))))
+                                        (assoc parametrit
+                                          :callback callback)))))
         ch (chan)
         tulos #(do (put! ch (js->clj %))
                    (close! ch)
@@ -47,8 +47,7 @@
                    (aset js/window callback nil))]
     (aset js/window callback tulos)
     (.appendChild (.-head js/document) s)
-    ;; PENDING: implement timeout	
-    ch))
+    (go (first (alts! [ch (timeout 5000)])))))
 
 (defn koordinaatti->tieosoite
   "Muuntaa annetun koordinaatin tieosoitteeksi."
