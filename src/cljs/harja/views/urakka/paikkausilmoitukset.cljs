@@ -84,7 +84,7 @@
           :nimi :kasittelyaika
           :tyyppi :pvm
           :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]
-                    [:pvm-toisen-pvmn-jalkeen (:valmispvm_kohde @paikkaus/paikkausilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
+                    [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde @paikkaus/paikkausilmoitus-lomakedata) "Käsittely ei voi olla ennen valmistumista"]]}
 
          {:otsikko "Päätös"
           :nimi :paatos
@@ -106,8 +106,8 @@
 
 (defn tallennus
   [valmis-tallennettavaksi?]
-  (let [huomautusteksti (reaction (let [valmispvm-kohde (:valmispvm_kohde @paikkaus/paikkausilmoitus-lomakedata)
-                                        valmispvm-paikkaus (:valmispvm_paikkaus @paikkaus/paikkausilmoitus-lomakedata)
+  (let [huomautusteksti (reaction (let [valmispvm-kohde (:valmispvm-kohde @paikkaus/paikkausilmoitus-lomakedata)
+                                        valmispvm-paikkaus (:valmispvm-paikkaus @paikkaus/paikkausilmoitus-lomakedata)
                                         paatos (:paatos @paikkaus/paikkausilmoitus-lomakedata)
                                         tila (:tila @paikkaus/paikkausilmoitus-lomakedata)]
                                     (cond (not (and valmispvm-kohde valmispvm-paikkaus))
@@ -150,12 +150,12 @@
       (komp/lukko (lukko/muodosta-lukon-id "paikkausilmoitus" (:kohdenumero @paikkaus/paikkausilmoitus-lomakedata)))
       (fn []
         (let [kohteen-tiedot (r/wrap {:aloituspvm (:aloituspvm @paikkaus/paikkausilmoitus-lomakedata)
-                                      :valmispvm_kohde (:valmispvm_kohde @paikkaus/paikkausilmoitus-lomakedata)
-                                      :valmispvm_paikkaus (:valmispvm_paikkaus @paikkaus/paikkausilmoitus-lomakedata)}
+                                      :valmispvm-kohde (:valmispvm-kohde @paikkaus/paikkausilmoitus-lomakedata)
+                                      :valmispvm-paikkaus (:valmispvm-paikkaus @paikkaus/paikkausilmoitus-lomakedata)}
                                      (fn [uusi-arvo]
                                        (reset! paikkaus/paikkausilmoitus-lomakedata (-> (assoc @paikkaus/paikkausilmoitus-lomakedata :aloituspvm (:aloituspvm uusi-arvo))
-                                                                                        (assoc :valmispvm_kohde (:valmispvm_kohde uusi-arvo))
-                                                                                        (assoc :valmispvm_paikkaus (:valmispvm_paikkaus uusi-arvo))))))
+                                                                                        (assoc :valmispvm-kohde (:valmispvm-kohde uusi-arvo))
+                                                                                        (assoc :valmispvm-paikkaus (:valmispvm-paikkaus uusi-arvo))))))
 
               toteutuneet-osoitteet
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @paikkaus/paikkausilmoitus-lomakedata)))
@@ -180,7 +180,7 @@
                                              (empty? toteutuneet-maarat-virheet)
                                              (false? lomake-lukittu-muokkaukselta?))))
               valmis-kasiteltavaksi? (reaction
-                                       (let [valmispvm-kohde (:valmispvm_kohde @paikkaus/paikkausilmoitus-lomakedata)
+                                       (let [valmispvm-kohde (:valmispvm-kohde @paikkaus/paikkausilmoitus-lomakedata)
                                              tila (:tila @paikkaus/paikkausilmoitus-lomakedata)]
                                          (log "PAI valmis käsi " (pr-str valmispvm-kohde) (pr-str tila))
                                          (and tila
@@ -206,14 +206,14 @@
                                          (reset! kohteen-tiedot uusi))}
               [{:otsikko "Kohde" :nimi :kohde :hae (fn [_] (str "#" (:kohdenumero @paikkaus/paikkausilmoitus-lomakedata) " " (:kohdenimi @paikkaus/paikkausilmoitus-lomakedata))) :muokattava? (constantly false)}
                {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm}
-               {:otsikko "Paikkaus valmistunut" :nimi :valmispvm_paikkaus :tyyppi :pvm}
-               {:otsikko "Kohde valmistunut" :nimi :valmispvm_kohde
+               {:otsikko "Paikkaus valmistunut" :nimi :valmispvm-paikkaus :tyyppi :pvm}
+               {:otsikko "Kohde valmistunut" :nimi :valmispvm-kohde
                 :vihje (when (and
-                               (:valmispvm_paikkaus @paikkaus/paikkausilmoitus-lomakedata)
-                               (:valmispvm_kohde @paikkaus/paikkausilmoitus-lomakedata)
+                               (:valmispvm-paikkaus @paikkaus/paikkausilmoitus-lomakedata)
+                               (:valmispvm-kohde @paikkaus/paikkausilmoitus-lomakedata)
                                (= :aloitettu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                          "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
-                :tyyppi :pvm :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm_paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
+                :tyyppi :pvm :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paikkaus "Kohdetta ei voi merkitä valmistuneeksi ennen kuin paikkaus on valmistunut."]]}
                {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :positiivinen-numero :palstoja 1 :hae #(fmt/euro-opt @kokonaishinta) :muokattava? (constantly false)}
                (when (or (= :valmis (:tila @paikkaus/paikkausilmoitus-lomakedata))
                          (= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
@@ -239,7 +239,7 @@
              {:otsikko "Paikatut tierekisteriosoitteet"
               :tunniste :tie
               :voi-muokata? (do
-                              (log "PAI tila " (pr-str (:tila @paikkaus/paikkausilmoitus-lomakedata)) " Päätös: " (pr-str (:paatos_tekninen_osa @paikkaus/paikkausilmoitus-lomakedata)))
+                              (log "PAI tila " (pr-str (:tila @paikkaus/paikkausilmoitus-lomakedata)) " Päätös: " (pr-str (:paatos @paikkaus/paikkausilmoitus-lomakedata)))
                               (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
                                    (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
                                    (false? @paikkaus/paikkausilmoituslomake-lukittu?)))
@@ -258,17 +258,17 @@
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tasaa :oikea
                :tyyppi :positiivinen-numero :muokattava? (constantly false) :hae (fn [rivi]
                                                                                    (tierekisteri-domain/laske-tien-pituus rivi))}
-              {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen_leveys :tasaa :oikea
+              {:otsikko "Tiepääl\u00ADlysteen leveys" :nimi :paallysteen-leveys :tasaa :oikea
                :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen_neliot :tasaa :oikea
+              {:otsikko "Tiepääl\u00ADlysteen neliöt" :nimi :paallysteen-neliot :tasaa :oikea
                :tyyppi :positiivinen-numero :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
-                                                                                                 (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen_leveys rivi)))}
+                                                                                                 (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen-leveys rivi)))}
               {:otsikko "Paik\u00ADkaus\u00ADneliöt" :nimi :paikkausneliot :tasaa :oikea
                :tyyppi :positiivinen-numero :leveys "10%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Paik\u00ADkaus-%" :nimi :paikkausprosentti
                :tyyppi :string :leveys "10%" :muokattava? (constantly false) :hae (fn [rivi]
                                                                                     (laske-paikkausprosentti (:paikkausneliot rivi)
-                                                                                                             (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen_leveys rivi))))}]
+                                                                                                             (laske-tienpaallysteen-neliot (tierekisteri-domain/laske-tien-pituus rivi) (:paallysteen-leveys rivi))))}]
              toteutuneet-osoitteet]
 
             [grid/muokkaus-grid
@@ -286,14 +286,14 @@
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 256 }
               {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys "10%" :kokonaisosan-maara 6
                :tasaa :oikea}
-              {:otsikko "Yks.hinta (alv 0%)" :nimi :yks_hint_alv_0
+              {:otsikko "Yks.hinta (alv 0%)" :nimi :yks-hint-alv-0
                :tyyppi :positiivinen-numero :leveys "10%" :kokonaisosan-maara 4 :tasaa :oikea}
-              {:otsikko "Yks.hinta (alv 24%)" :nimi :yks_hint_alv_24
+              {:otsikko "Yks.hinta (alv 24%)" :nimi :yks-hint-alv-24
                :leveys "10%" :tyyppi :positiivinen-numero :muokattava? (constantly false)
-               :hae (fn [rivi] (laske-tyon-alv (:yks_hint_alv_0 rivi) 24)) :tasaa :oikea}
+               :hae (fn [rivi] (laske-tyon-alv (:yks-hint-alv-0 rivi) 24)) :tasaa :oikea}
               {:otsikko "Yht. (alv 0%)" :nimi :yht :leveys "10%" :tyyppi :positiivinen-numero
                :muokattava? (constantly false) :tasaa :oikea
-               :hae (fn [rivi] (* (:yks_hint_alv_0 rivi) (:maara rivi)))}
+               :hae (fn [rivi] (* (:yks-hint-alv-0 rivi) (:maara rivi)))}
               {:otsikko "Takuupvm" :nimi :takuupvm :leveys "10%" :tyyppi :pvm}]
              toteutuneet-maarat]]
 
