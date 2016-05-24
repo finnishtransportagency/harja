@@ -120,6 +120,29 @@
     (paivita-paikkausilmoitus db user lomakedata)
     (luo-paikkausilmoitus db user lomakedata)))
 
+(defn- tarkista-paikkausilmoituksen-tallentamisoikeudet [user urakka-id
+                                                           uusi-paikkausilmoitus
+                                                           paikkausilmoitus-kannassa]
+  (let [kasittelytiedot-muuttuneet?
+        (fn [uudet-tiedot tiedot-kannassa]
+          (let [vertailtavat
+                [:paatos :perustelu :kasittelyaika]]
+            (not= (select-keys uudet-tiedot vertailtavat)
+                  (select-keys tiedot-kannassa vertailtavat))))]
+    ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
+    ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
+    (if (kasittelytiedot-muuttuneet? uusi-paikkausilmoitus paikkausilmoitus-kannassa)
+      (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
+                             user urakka-id))
+
+    ;; Käyttöliittymässä on estetty lukitun paikkausilmoituksen muokkaaminen,
+    ;; mutta tehdään silti tarkistus
+    (log/debug "Tarkistetaan onko MINIPOT lukittu...")
+    (if (= :lukittu (:tila paikkausilmoitus-kannassa))
+      (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
+          (throw (RuntimeException. "Paikkausilmoitus on lukittu, ei voi päivittää!")))
+      (log/debug "MINIPOT ei ole lukittu, vaan " (:tila paikkausilmoitus-kannassa)))))
+
 (defn tallenna-paikkausilmoitus [db user {:keys [urakka-id sopimus-id paikkausilmoitus]}]
   (log/debug "Tallennetaan paikkausilmoitus: " paikkausilmoitus
              ". Urakka-id " urakka-id
@@ -137,27 +160,12 @@
           paikkausilmoitus-kannassa (when-not (:uusi (meta paikkausilmoitus-kannassa))
                                       ;; Tunnistetaan uuden tallentaminen
                                       paikkausilmoitus-kannassa)]
+
       (log/debug "MINIPOT kannassa: " paikkausilmoitus-kannassa)
-
-      ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä
-      ;; päätöstä. Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
-      ; FIXME Pura funktioksi kuten päällystyksessä
-      (if (or
-            (not (= (:paatos paikkausilmoitus-kannassa)
-                    (or (:paatos paikkausilmoitus) nil)))
-            (not (= (:perustelu paikkausilmoitus-kannassa)
-                    (or (:perustelu paikkausilmoitus) nil))))
-        (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
-                               user urakka-id))
-
-      ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
-      ;; mutta tehdään silti tarkistus
-      ; FIXME Pura funktioksi kuten päällystyksessä
-      (log/debug "Tarkistetaan onko MINIPOT lukittu...")
-      (if (= :lukittu (:tila paikkausilmoitus-kannassa))
-        (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
-            (throw (RuntimeException. "Paikkausilmoitus on lukittu, ei voi päivittää!")))
-        (log/debug "MINIPOT ei ole lukittu, vaan " (:tila paikkausilmoitus-kannassa)))
+      (tarkista-paikkausilmoituksen-tallentamisoikeudet user
+                                                        urakka-id
+                                                        paikkausilmoitus
+                                                        paikkausilmoitus-kannassa)
 
       (let [paikkausilmoitus-id (luo-tai-paivita-paikkausilmoitus c user paikkausilmoitus
                                                                   paikkausilmoitus-kannassa)]
