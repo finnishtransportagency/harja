@@ -169,8 +169,6 @@
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
                       onnistuneet-kohteet (vec (filter #(not (:virhe %)) kohteet))
                       epaonnistuneet-kohteet (vec (filter :virhe kohteet))
-                      _ (log "-----> onnistuneet-kohteet: " (pr-str onnistuneet-kohteet))
-                      _ (log "-----> epaonnistuneet-kohteet: " (pr-str epaonnistuneet-kohteet))
                       _ (log "[YHA] Tallennetaan uudet kohteet")
                       yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id onnistuneet-kohteet))]
                   (if (k/virhe? yhatiedot)
@@ -235,9 +233,6 @@
      (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
        (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
        (reset! yha-kohteiden-paivittaminen-kaynnissa? false)
-
-       (log "----> vastaus: " (pr-str vastaus))
-
        (if (= (:status vastaus) :ok)
          (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
          (kasittele-epaonnistunut-kohteiden-paivitys vastaus harja-urakka-id))))))
