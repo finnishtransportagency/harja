@@ -269,7 +269,7 @@ SET
   aikataulu_muokattu          = NOW(),
   aikataulu_muokkaaja         = :aikataulu_muokkaaja
 WHERE id = :id
-AND urakka = :urakkaid;;
+AND suorittava_tiemerkintaurakka = :urakkaid;
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
