@@ -16,10 +16,10 @@
   (is (= (.toFixed (paikkausilmoitukset/laske-tyon-alv 4.5 100) 2) "9.00")))
 
 (deftest laskee-minipotin-kokonaishinnan-oikein
-  (let [tyot [{:yks_hint_alv_0 10 :maara 15}
-              {:yks_hint_alv_0 7 :maara 4}
-              {:yks_hint_alv_0 2 :maara 2}]
-        tyot2 [{:yks_hint_alv_0 2.4 :maara 6.5}
-               {:yks_hint_alv_0 3.3 :maara 2.5}]]
+  (let [tyot [{:yks-hint-alv-0 10 :maara 15}
+              {:yks-hint-alv-0 7 :maara 4}
+              {:yks-hint-alv-0 2 :maara 2}]
+        tyot2 [{:yks-hint-alv-0 2.4 :maara 6.5}
+               {:yks-hint-alv-0 3.3 :maara 2.5}]]
     (is (= (minipot/laske-kokonaishinta tyot) 182))
     (is (= (.toFixed (minipot/laske-kokonaishinta tyot2) 2) "23.85"))))
