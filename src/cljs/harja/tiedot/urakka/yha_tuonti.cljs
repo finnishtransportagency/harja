@@ -106,23 +106,32 @@
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
   (first (filter #(= hakutunnus (get % "tunniste")) (get vkm-kohteet "tieosoitteet"))))
 
-(defn paivita-tieosoite [kohde alkuosanosoite loppuosanosoite]
-  (-> kohde
-      (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
-      (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
-      (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
-      (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
-      (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
-      (paivita-osoitteen-osa loppuosanosoite :losa "osa")))
+(defn paivita-kohde [kohde alkuosanosoite loppuosanosoite virhe?]
+  (if virhe?
+    (assoc kohde :virhe true)
+    (-> kohde
+        (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
+        (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
+        (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
+        (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
+        (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
+        (paivita-osoitteen-osa loppuosanosoite :losa "osa"))))
+
+(defn vkm-virhe? [hakutunnus vkm-kohteet]
+  (some #(and (= hakutunnus (get % "tunniste"))
+              (not (= 1 (get % "palautusarvo"))))
+        (get vkm-kohteet "tieosoitteet")))
 
 (defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
   (mapv (fn [kohde]
           (let [alkuosanhakutunnus (kohteen-alun-tunnus kohde)
                 loppuosanhakutunnus (kohteen-lopun-tunnus kohde)
                 alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
-                loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
+                loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)
+                virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-kohteet)
+                           (vkm-virhe? loppuosanhakutunnus vkm-kohteet))]
             (-> kohde
-                (paivita-tieosoite alkuosanosoite loppuosanosoite)
+                (paivita-kohde alkuosanosoite loppuosanosoite virhe?)
                 (assoc :alikohteet
                        (mapv
                          (fn [alikohde]
@@ -130,7 +139,7 @@
                                  loppuosanhakutunnus (alikohteen-lopun-tunnus kohde alikohde)
                                  alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
                                  loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
-                             (paivita-tieosoite alikohde alkuosanosoite loppuosanosoite)))
+                             (paivita-kohde alikohde alkuosanosoite loppuosanosoite virhe?)))
                          (:alikohteet kohde))))))
         yha-kohteet))
 
@@ -150,22 +159,27 @@
             (let [_ (log "[YHA] Tehdään VKM-haku")
                   tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
                   tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
-                  vkm-kohteet (<!(vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
+                  vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
+              (log "[YHA] VKM-kohteet: " (pr-str vkm-kohteet))
               (if (k/virhe? vkm-kohteet)
                 {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
                  :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
+                ;; todo: yhdistämisen jälkeen täytyy tutkia kohteet joiden haku epäonnistui
                 (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                      onnistuneet-kohteet (vec (filter #(not (:virhe %)) kohteet))
+                      epaonnistuneet-kohteet (vec (filter :virhe kohteet))
+                      _ (log "-----> KOHTEET: " (pr-str kohteet))
                       _ (log "[YHA] Tallennetaan uudet kohteet")
-                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
+                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id onnistuneet-kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
                      :koodi :kohteiden-tallentaminen-epaonnistui}
-                    ;; FIXME Tarkista epäonnistuneet VKM-kohteet ja palauta mappi:
-                    #_{:status :ok :epaonnistuneet-kohteet [] :yhatiedot yhatiedot
-                       :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}
-                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
-                     :koodi :kohteet-tallennettu})))))))))
+                    (if (empty epaonnistuneet-kohteet)
+                      {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
+                       :koodi :kohteet-tallennettu}
+                      {:status :ok :epaonnistuneet-kohteet epaonnistuneet-kohteet :yhatiedot yhatiedot
+                       :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}))))))))))
 
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
