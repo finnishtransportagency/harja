@@ -135,14 +135,19 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
-(defn kasittele-kohdeosa [])
+(defn kasittele-paivittyneet-kohdeosat [kohteet]
+  (let [uudet-kohteet (mapv
+                        #(assoc % :tr-numero 666) ; FIXME Logiikkaa tänne!
+                        kohteet)]
+    (log "Uudet kohteet: " (pr-str uudet-kohteet))
+    uudet-kohteet))
 
-(defn yllapitokohdeosat [_ yllapitokohde-atom]
+(defn yllapitokohdeosat [rivi yllapitokohteet-atom]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))]
     (komp/luo
-      (fn [{:keys [kohdeosat id] :as rivi} yllapitokohde-atom]
+      (fn [{:keys [kohdeosat id] :as rivi} yllapitokohteet-atom]
         [:div
          [grid/grid
           {:otsikko "Tierekisterikohteet"
@@ -166,10 +171,17 @@
                                 (log "[PAAL] ylläpitokohdeosat tallennettu: " (pr-str vastaus))
                                 (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                                 (resetoi-tr-tiedot)
-                                (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))))
+                                (yllapitokohteet/paivita-yllapitokohde! yllapitokohteet-atom id assoc :kohdeosat vastaus)))))
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [grid]
-                     (validoi-tr-osoite grid tr-sijainnit tr-virheet))}
+                     (let [paivitetyt-kohdeosat (kasittele-paivittyneet-kohdeosat (:kohdeosat rivi))
+                           paivitetyt-yllapitokohteet (mapv
+                                                        (fn [kohde]
+                                                          (if (= (:id kohde) (:id rivi))
+                                                            (assoc kohde :kohdeosat paivitetyt-kohdeosat)
+                                                            kohde))
+                                                        @yllapitokohteet-atom)]
+                       (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
           (into [] (concat
                      (tierekisteriosoite-sarakkeet
                        tr-leveys
