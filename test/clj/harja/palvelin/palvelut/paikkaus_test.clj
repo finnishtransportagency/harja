@@ -38,8 +38,8 @@
 
 (def minipot-testidata
   {:aloituspvm          (pvm/luo-pvm 2005 9 1)
-   :valmispvm_kohde     (pvm/luo-pvm 2005 9 2)
-   :valmispvm_paikkaus  (pvm/luo-pvm 2005 9 2)
+   :valmispvm-kohde     (pvm/luo-pvm 2005 9 2)
+   :valmispvm-paikkaus  (pvm/luo-pvm 2005 9 2)
    :ilmoitustiedot
                         {:osoitteet
                          [{:tie                5
@@ -47,14 +47,14 @@
                            :aet                5
                            :losa               4
                            :let                6
-                           :paallysteen_leveys 6
+                           :paallysteen-leveys 6
                            :paikkausneliot     4}]
 
                          :toteumat
                          [{:suorite         3
                            :yksikko         "km"
                            :maara           5
-                           :yks_hint_alv_0  5
+                           :yks-hint-alv-0  5
                            :takuupvm        (pvm/luo-pvm 2005 9 1)}]}})
 
 
@@ -172,9 +172,8 @@
     (let [urakka-id @muhoksen-paikkausurakan-id
           sopimus-id @muhoksen-paikkausurakan-paasopimuksen-id
           paikkausilmoitus (-> (assoc minipot-testidata :paikkauskohde-id paikkauskohde-id)
-                                 (assoc :paatos_taloudellinen_osa :hyvaksytty)
-                                 (assoc :paatos_tekninen_osa :hyvaksytty)
-                                 (assoc :perustelu_tekninen_osa "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia. @:D"))]
+                                 (assoc :paatos :hyvaksytty)
+                                 (assoc :perustelu "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia. @:D"))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paikkausilmoitus +kayttaja-tero+ {:urakka-id          urakka-id
