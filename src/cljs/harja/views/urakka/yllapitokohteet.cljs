@@ -110,8 +110,8 @@
       (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
               arvot))))
 
-(defn kasittele-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
-  ; FIXME Pitäisi generisöidä jotta voi käyttää myös POT-lomakkeessa
+(defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
+  ; FIXME Pitäisi generisöidä jotta voi käyttää myös POT-lomakkeessa muokkausgridissä
   (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
   (let [haetut (into #{} (keys @tr-sijainnit-atom))]
     ;; jos on tullut uusi TR osoite, haetaan sille sijainti
@@ -135,6 +135,8 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
+(defn kasittele-kohdeosa [])
+
 (defn yllapitokohdeosat [_ yllapitokohde-atom]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
@@ -150,7 +152,6 @@
                             (when-let [viiva (some-> rivi :sijainti)]
                               (nav/vaihda-kartan-koko! :L)
                               (kartta/keskita-kartta-alueeseen! (geo/extent viiva))))
-           ; FIXME Varmista, että alikohde on parentin sisällä
            :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
                                 [sopimus-id _] @u/valittu-sopimusnumero
                                 sijainnit @tr-sijainnit
@@ -166,10 +167,9 @@
                                 (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                                 (resetoi-tr-tiedot)
                                 (yllapitokohteet/paivita-yllapitokohde! yllapitokohde-atom id assoc :kohdeosat vastaus)))))
-           :luokat ["yllapitokohdeosat-haitari"]
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [grid]
-                     (kasittele-tr-osoite grid tr-sijainnit tr-virheet))}
+                     (validoi-tr-osoite grid tr-sijainnit tr-virheet))}
           (into [] (concat
                      (tierekisteriosoite-sarakkeet
                        tr-leveys
@@ -203,7 +203,7 @@
                                        @kohteet-atom))
            :tallenna @tallenna
            :muutos (fn [grid]
-                     (kasittele-tr-osoite grid tr-sijainnit tr-virheet))
+                     (validoi-tr-osoite grid tr-sijainnit tr-virheet))
            :voi-lisata? (not (:yha-sidottu? optiot))
            :voi-poistaa? (constantly (not (:yha-sidottu? optiot)))
            :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi)))
@@ -220,12 +220,12 @@
                     tr-leveys
                     [nil
                      {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-ajorata :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-kaista :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-alkuosa :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-alkuetaisyys :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-loppuosa :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-loppuetaisyys :muokattava? (constantly (not (:yha-sidottu? optiot)))}])
+                     {:nimi :tr-ajorata}
+                     {:nimi :tr-kaista}
+                     {:nimi :tr-alkuosa}
+                     {:nimi :tr-alkuetaisyys}
+                     {:nimi :tr-loppuosa}
+                     {:nimi :tr-loppuetaisyys}])
                   [{:otsikko "KVL"
                     :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
