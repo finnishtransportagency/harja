@@ -33,10 +33,12 @@
           (modal/nayta!
             {:otsikko "Merkintäänkö kohde valmiiksi tiemerkintään?"
              :luokka "merkitse-valmiiksi-tiemerkintaan"
+             :sulje-fn #(reset! valmis-tiemerkintaan-lomake nil) ; FIXME ei toimi?
              :footer [:span
                       [:button.nappi-toissijainen
                        {:type "button"
                         :on-click #(do (.preventDefault %)
+                                       (reset! valmis-tiemerkintaan-lomake nil)
                                        (modal/piilota!))}
                        "Peruuta"]
                       [napit/palvelinkutsu-nappi
@@ -50,9 +52,9 @@
                        {;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
                         :luokka "nappi-myonteinen"
                         :kun-onnistuu (fn [vastaus]
-                                        (modal/piilota!)
                                         (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
-                                        (reset! tiedot/aikataulurivit vastaus))}]]}
+                                        (reset! tiedot/aikataulurivit vastaus)
+                                        (modal/piilota!))}]]}
             [:div
              [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]
              [lomake/lomake {:otsikko ""
