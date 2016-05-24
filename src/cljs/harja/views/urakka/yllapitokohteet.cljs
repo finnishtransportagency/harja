@@ -74,7 +74,10 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
-            :valinta-nayta #(if % (:koodi %) "- Valitse ajorata -")
+            :valinta-nayta (fn [arvo muokattava?]
+                             (if arvo (:koodi arvo) (if muokattava?
+                                                      "- Valitse ajorata -"
+                                                      "")))
             :valinnat pot/+ajoradat+
             :leveys perusleveys}
            {:otsikko "Kais\u00ADta"
@@ -83,7 +86,10 @@
             :tyyppi :valinta
             :tasaa :oikea
             :valinta-arvo :koodi
-            :valinta-nayta #(if % (:koodi %) "- Valitse kaista -")
+            :valinta-nayta (fn [arvo muokattava?]
+                             (if arvo (:koodi arvo) (if muokattava?
+                                                      "- Valitse kaista -"
+                                                      "")))
             :valinnat pot/+kaistat+
             :leveys perusleveys}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea

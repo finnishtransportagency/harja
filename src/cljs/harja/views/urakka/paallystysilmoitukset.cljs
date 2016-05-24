@@ -366,10 +366,12 @@
                :nimi :paallystetyyppi
                :tyyppi :valinta
                :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
+               :valinta-nayta (fn [rivi muokattava?]
                                 (if rivi
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse päällyste -"))
+                                  (if muokattava?
+                                    "- Valitse päällyste -"
+                                    "")))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
               {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :tasaa :oikea}
@@ -380,10 +382,12 @@
                :nimi :tyomenetelma
                :tyyppi :valinta
                :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
+               :valinta-nayta (fn [rivi muokattava?]
                                 (if rivi
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse menetelmä -"))
+                                  (if muokattava?
+                                    "- Valitse menetelmä -"
+                                    "")))
                :valinnat pot/+tyomenetelmat+
                :leveys "30%"}
               {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
@@ -396,10 +400,12 @@
                :nimi :edellinen-paallystetyyppi
                :tyyppi :valinta
                :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
+               :valinta-nayta (fn [rivi muokattava?]
                                 (if rivi
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse päällyste -"))
+                                  (if muokattava?
+                                    "- Valitse päällyste -"
+                                    "")))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
               {:otsikko "Kuulamylly"

@@ -403,16 +403,17 @@
                           :on-focus on-focus
                           :format-fn (if (empty? valinnat)
                                        (constantly (or jos-tyhja "Ei valintoja"))
-                                       (or valinta-nayta str))}
+                                       (or (and valinta-nayta #(valinta-nayta % true)) str))}
      valinnat]))
 
-(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo valinnat valinnat-fn rivi hae]} data]
+(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
+                                        valinnat valinnat-fn rivi hae]} data]
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))
         valinta (if valinta-arvo
                   (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                   nykyinen-arvo)]
-    [:span (or ((or valinta-nayta str) valinta) valinta)]))
+    [:span (or ((or valinta-nayta str false) valinta) valinta)]))
 
 
 
