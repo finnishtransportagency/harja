@@ -66,9 +66,9 @@
                       (false? @paallystys/paallystysilmoituslomake-lukittu?))
         paatos-tekninen-osa
         (r/wrap {:paatos-tekninen
-                 (:paatos_tekninen_osa @paallystys/paallystysilmoitus-lomakedata)
+                 (:paatos-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
                  :perustelu-tekninen-osa
-                 (:perustelu_tekninen_osa @paallystys/paallystysilmoitus-lomakedata)
+                 (:perustelu-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
                  :kasittelyaika-tekninen-osa
                  (:kasittelyaika-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
@@ -187,7 +187,6 @@
       "Tallenna"
       #(let [lomake @paallystys/paallystysilmoitus-lomakedata
              lahetettava-data (-> (grid/poista-idt lomake [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-idt [:ilmoitustiedot :kiviaines])
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet])
                                   (grid/poista-idt [:ilmoitustiedot :tyot]))]
         (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str @paallystys/paallystysilmoitus-lomakedata))
@@ -208,7 +207,6 @@
         paallystystoimenpide-virheet (atom {})
         alustalle-tehdyt-toimet-virheet (atom {})
         toteutuneet-maarat-virheet (atom {})
-        kiviaines-virheet (atom {})
 
         valmis-tallennettavaksi?
         (reaction
@@ -216,7 +214,6 @@
                 paallystystoimenpide-virheet @paallystystoimenpide-virheet
                 alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
                 toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
-                kiviaines-virheet @kiviaines-virheet
                 tila (:tila @paallystys/paallystysilmoitus-lomakedata)
                 lomake-lukittu-muokkaukselta? @paallystys/paallystysilmoituslomake-lukittu?]
             (and
@@ -225,7 +222,6 @@
               (empty? paallystystoimenpide-virheet)
               (empty? alustalle-tehdyt-toimet-virheet)
               (empty? toteutuneet-maarat-virheet)
-              (empty? kiviaines-virheet)
               (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi?
         (reaction
@@ -254,26 +250,18 @@
                                                    (assoc :takuupvm (:takuupvm uusi-arvo))
                                                    (assoc :hinta (:hinta uusi-arvo))))))
 
-              ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
+              ; Sisältää alikohteen päällystystoimenpiteen tiedot
               paallystystoimenpiteet
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot lomakedata-nyt)))
                       (fn [uusi-arvo]
                         (reset! paallystys/paallystysilmoitus-lomakedata
                                   (assoc-in lomakedata-nyt [:ilmoitustiedot :osoitteet]
                                             (grid/filteroi-uudet-poistetut uusi-arvo)))))
-
-              ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
-              kiviaines
-              (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot lomakedata-nyt)))
-                      (fn [uusi-arvo]
-                        (reset! paallystys/paallystysilmoitus-lomakedata
-                                (assoc-in @paallystys/paallystysilmoitus-lomakedata
-                                          [:ilmoitustiedot :kiviaines] (grid/filteroi-uudet-poistetut uusi-arvo)))))
               alustalle-tehdyt-toimet
               (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot lomakedata-nyt)))
                       (fn [uusi-arvo]
                         (reset! paallystys/paallystysilmoitus-lomakedata
-                                (assoc-in @paallystys/paallystysilmoitus-lomakedata
+                                (assoc-in lomakedata-nyt
                                           [:ilmoitustiedot :alustatoimet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
               toteutuneet-maarat
               (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot lomakedata-nyt)))
@@ -428,11 +416,15 @@
 
             [grid/muokkaus-grid
              {:otsikko "Kiviaines ja sideaine"
+              :rivinumerot? true
+              :validoi-aina? true
+              :voi-lisata? false
+              :voi-kumota? false
+              :voi-poistaa? (constantly false)
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos-tekninen-osa lomakedata-nyt))
                                  (false? @paallystys/paallystysilmoituslomake-lukittu?))
-              :virheet kiviaines-virheet
-              :uusi-id (inc (count @kiviaines))}
+              :virheet paallystystoimenpide-virheet}
              [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
                :leveys "30%"}
               {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
@@ -443,7 +435,7 @@
               {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :tasaa :oikea}
               {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string
                :pituus-max 256}]
-             kiviaines]
+             paallystystoimenpiteet]
 
             [grid/muokkaus-grid
              {:otsikko "Alustalle tehdyt toimet"
