@@ -58,9 +58,10 @@
           (fn [t _] (:tyyppi t)))
 
 (defmulti nayta-arvo
-          "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella. Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
+          "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella.
+          Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä
+          vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
           (fn [t _] (:tyyppi t)))
-
 
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
