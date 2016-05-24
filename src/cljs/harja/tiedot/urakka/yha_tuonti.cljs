@@ -169,16 +169,17 @@
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
                       onnistuneet-kohteet (vec (filter #(not (:virhe %)) kohteet))
                       epaonnistuneet-kohteet (vec (filter :virhe kohteet))
-                      _ (log "-----> KOHTEET: " (pr-str kohteet))
+                      _ (log "-----> onnistuneet-kohteet: " (pr-str onnistuneet-kohteet))
+                      _ (log "-----> epaonnistuneet-kohteet: " (pr-str epaonnistuneet-kohteet))
                       _ (log "[YHA] Tallennetaan uudet kohteet")
                       yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id onnistuneet-kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
                      :koodi :kohteiden-tallentaminen-epaonnistui}
-                    (if (empty epaonnistuneet-kohteet)
+                    (if (empty? epaonnistuneet-kohteet)
                       {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
                        :koodi :kohteet-tallennettu}
-                      {:status :ok :epaonnistuneet-kohteet epaonnistuneet-kohteet :yhatiedot yhatiedot
+                      {:status :error :epaonnistuneet-kohteet epaonnistuneet-kohteet :yhatiedot yhatiedot
                        :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}))))))))))
 
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
@@ -186,7 +187,11 @@
    [:p "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
    [:ul
     (for [kohde epaonnistuneet-kohteet]
-      [:li (:tunniste kohde)])]])
+      (let [tr (:tierekisteriosoitevali kohde)]
+        [:li
+         "Tunnus: " (:tunnus kohde)
+         ", YHA id: " (:yha-id kohde)
+         ", tierekisteriosoiteväli: " (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr)]))]])
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
@@ -199,7 +204,12 @@
              (:nayta-ilmoitus-ei-uusia-kohteita? optiot))
     (viesti/nayta! (:viesti vastaus) :success viesti/viestin-nayttoaika-lyhyt)))
 
-(defn- kasittele-epaonnistunut-kohteiden-paivitys [vastaus]
+(defn- kasittele-epaonnistunut-kohteiden-paivitys [vastaus harja-urakka-id]
+  (when (and
+          (some? (:yhatiedot vastaus))
+          (= (:id @nav/valittu-urakka) harja-urakka-id))
+    (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
+
   ;; Kohteiden osittain epäonnistunut päivittäminen näytetään modal-dialogissa
   (when (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :kohteiden-paivittaminen-vmklla-epaonnistui-osittain))
@@ -225,10 +235,12 @@
      (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
        (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
        (reset! yha-kohteiden-paivittaminen-kaynnissa? false)
+
+       (log "----> vastaus: " (pr-str vastaus))
+
        (if (= (:status vastaus) :ok)
          (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
-         (kasittele-epaonnistunut-kohteiden-paivitys vastaus))))))
-
+         (kasittele-epaonnistunut-kohteiden-paivitys vastaus harja-urakka-id))))))
 
 (defn paivita-kohdeluettelo [urakka oikeus]
   (when-not @yha-kohteiden-paivittaminen-kaynnissa?
