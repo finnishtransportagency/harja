@@ -174,7 +174,8 @@
         scroll-kuuntelija (fn [_]
                             (paivita :scroll))]
     (komp/luo
-     (komp/kuuntelija #{:ikkunan-koko-muuttunut}
+     (komp/kuuntelija #{:ikkunan-koko-muuttunut
+                        :murupolku-naytetty-domissa?}
                       #(paivita :aseta))
       {:component-did-mount    #(do
                                  (events/listen js/window
