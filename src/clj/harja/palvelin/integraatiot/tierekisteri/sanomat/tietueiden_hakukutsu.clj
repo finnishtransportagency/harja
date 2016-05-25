@@ -6,7 +6,7 @@
             [hiccup.core :refer [html]])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(def +xsd-polku+ "xsd/tierekisteri/schemas/")
+(def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
 (defn muodosta-xml-sisalto [tierekisteriosoitevali tietolajitunniste voimassaolopvm]
   [:ns2:haeTietueet

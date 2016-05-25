@@ -3,6 +3,7 @@
     {
       "varuste": {
         "tunniste": "HARJ123456789",
+        "tilannepvm": "2016-01-01T00:00:00Z",
         "sijainti": {
           "tie": {
             "numero": 1234,

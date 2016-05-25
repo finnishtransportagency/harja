@@ -17,7 +17,7 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tarkista-tietolajin-haku
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/hae-tietolaji-response.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
@@ -39,7 +39,7 @@
           (is (= odotettu-ominaisuus ominaisuus)))))))
 
 (deftest tarkista-tietueiden-haku
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/hae-tietueet-response.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietueet-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietueet") vastaus-xml]
       (let [tierekisteriosoitevali {:numero 1
@@ -80,7 +80,7 @@
           (is (= odotettu-tietue tietue)))))))
 
 (deftest tarkista-tietueen-haku
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/hae-tietue-response.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietue") vastaus-xml]
       (let [vastausdata (tierekisteri/hae-tietue (:tierekisteri jarjestelma) "asdf" "tl506")
@@ -112,7 +112,7 @@
 
 
 (deftest tarkista-tietueen-lisays
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/lisaatietue") vastaus-xml]
       (let [tietue {:lisaaja {:henkilo      "Keijo Käsittelijä"
@@ -142,7 +142,7 @@
 
 
 (deftest tarkista-tietueen-muokkaus
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/paivitatietue") vastaus-xml]
       (let [tietue {:paivittaja {:henkilo      "Keijo Käsittelijä"
@@ -172,7 +172,7 @@
         (is (true? (:onnistunut vastausdata)))))))
 
 (deftest tarkista-tietueen-poisto
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/poistatietue") vastaus-xml]
       (let [tiedot {:poistaja          {:henkilo      "Keijo Käsittelijä"
@@ -186,7 +186,7 @@
         (is (true? (:onnistunut vastausdata)))))))
 
 (deftest tarkista-virhevastauksen-kasittely
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
       (try+

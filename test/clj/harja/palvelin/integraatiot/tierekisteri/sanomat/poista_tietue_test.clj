@@ -16,7 +16,7 @@
                               :tietolajitunniste "tl505"
                               :poistettu         "2015-05-26+03:00"})
 
-(def +xsd+ "xsd/tierekisteri/schemas/")
+(def +xsd+ "xsd/tierekisteri/skeemat/")
 
 (deftest tarkista-kutsu
   (let [kutsu-xml (muodosta-kutsu poistettava-testitietue)

@@ -52,6 +52,8 @@
      {:parametri "let"
       :tyyppi :int}
      {:parametri "voimassaolopvm"
+      :tyyppi :date}
+     {:parametri "tilannepvm"
       :tyyppi :date}]))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
@@ -76,9 +78,10 @@
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
-        voimassaolopvm (.format (SimpleDateFormat. "yyyy-MM-dd") (.parse (SimpleDateFormat. "yyyy-MM-dd") (get parametrit "voimassaolopvm")))]
+        voimassaolopvm (.format (SimpleDateFormat. "yyyy-MM-dd") (.parse (SimpleDateFormat. "yyyy-MM-dd") (get parametrit "voimassaolopvm")))
+        tilannepvm (.format (SimpleDateFormat. "yyyy-MM-dd") (.parse (SimpleDateFormat. "yyyy-MM-dd") (get parametrit "tilannepvm")))]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
-               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
+               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite) " tilannepäivämäärällä: " tilannepvm)
     (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)

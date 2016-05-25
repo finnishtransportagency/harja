@@ -6,7 +6,7 @@
             [hiccup.core :refer [html]])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(def +xsd-polku+ "xsd/tierekisteri/schemas/")
+(def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
 (defn muodosta-xml-sisalto [tunniste tietolajitunniste]
   [:ns2:haeTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietue"}

@@ -5,16 +5,16 @@
 
 
 (deftest lue-onnistunut-vastaus
-  (is (:onnistunut (vastaus/lue (slurp "resources/xsd/tierekisteri/examples/hae-tietolaji-response.xml")))))
+  (is (:onnistunut (vastaus/lue (slurp "resources/xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml")))))
 
 (deftest lue-epaonnistunut-vastaus
-  (let [virhevastaus (vastaus/lue (slurp "resources/xsd/tierekisteri/examples/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
+  (let [virhevastaus (vastaus/lue (slurp "resources/xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (is (not (:onnistunut virhevastaus)))
     (is (= 1 (count (:virheet virhevastaus))))
     (is (= "Tietolajia ei löydy" (first (:virheet virhevastaus))))))
 
 (deftest lue-tietolajien-hakuvastaus
-  (let [xml (slurp "resources/xsd/tierekisteri/examples/hae-tietolaji-response.xml")
+  (let [xml (slurp "resources/xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml")
         vastaus (vastaus/lue xml)
         tietolaji (:tietolaji vastaus)
         ominaisuus (first (:ominaisuudet (:tietolaji vastaus)))
