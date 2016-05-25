@@ -355,12 +355,12 @@
                10
                [{:nimi :nimi}
                 {:nimi :tie}
+                {:nimi :ajorata}
+                {:nimi :kaista}
                 {:nimi :aosa}
                 {:nimi :aet}
                 {:nimi :losa}
-                {:nimi :let}
-                {:nimi :ajorata}
-                {:nimi :kaista}])
+                {:nimi :let}])
              paallystystoimenpiteet]
 
             [grid/muokkaus-grid
@@ -544,7 +544,7 @@
   (go
     (let [urakka-id (:id @nav/valittu-urakka)
           [sopimus-id _] @u/valittu-sopimusnumero
-          vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id sopimus-id paallystyskohteen-id))]
+          vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id paallystyskohteen-id))]
       (log "Päällystysilmoitus kohteelle " paallystyskohteen-id " => " (pr-str vastaus))
       (if-not (k/virhe? vastaus)
         (reset! paallystys/paallystysilmoitus-lomakedata vastaus)))))

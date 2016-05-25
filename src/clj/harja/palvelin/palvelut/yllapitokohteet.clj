@@ -41,7 +41,6 @@
     vastaus))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
-  ;; FIXME Refactoroi alaviivat pois SQL-kyselyssä
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Haetaan urakan aikataulutiedot.")
@@ -55,11 +54,11 @@
     (doseq [rivi kohteet]
       (q/tallenna-yllapitokohteen-aikataulu!
         db
-        (:aikataulu_paallystys_alku rivi)
-        (:aikataulu_paallystys_loppu rivi)
-        (:aikataulu_tiemerkinta_alku rivi)
-        (:aikataulu_tiemerkinta_loppu rivi)
-        (:aikataulu_kohde_valmis rivi)
+        (:aikataulu-paallystys-alku rivi)
+        (:aikataulu-paallystys-loppu rivi)
+        (:aikataulu-tiemerkinta-alku rivi)
+        (:aikataulu-tiemerkinta-loppu rivi)
+        (:aikataulu-kohde-valmis rivi)
         (:id user)
         (:id rivi)))
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
@@ -69,11 +68,11 @@
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                       yllapitoluokka
+                                       yllapitoluokka tyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
                                        kaasuindeksi poistettu nykyinen-paallyste
                                        keskimaarainen-vuorokausiliikenne]}]
-  (log/debug "Luodaan uusi ylläpitokohde")
+  (log/debug "Luodaan uusi ylläpitokohde tyyppiä " tyyppi)
   (when-not poistettu
     (q/luo-yllapitokohde<! db
                            urakka-id
@@ -94,7 +93,8 @@
                            arvonvahennykset
                            bitumi-indeksi
                            kaasuindeksi
-                           nykyinen-paallyste)))
+                           (when tyyppi
+                             (name tyyppi)))))
 
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
                               {:keys [id kohdenumero nimi
@@ -154,7 +154,7 @@
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
-                                          tr-loppuetaisyys tr-ajorata tr-kaista poistettu sijainti]}]
+                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu sijainti]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -167,12 +167,13 @@
                               tr-loppuetaisyys
                               tr-ajorata
                               tr-kaista
+                              toimenpide
                               (when sijainti
                                 (geo/geometry (geo/clj->pg sijainti))))))
 
 (defn- paivita-yllapitokohdeosa [db user {:keys [id nimi tr-numero tr-alkuosa tr-alkuetaisyys
                                                  tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                                 tr-kaista poistettu sijainti]}]
+                                                 tr-kaista toimenpide poistettu sijainti]}]
 
   (if poistettu
     (do (log/debug "Poistetaan ylläpitokohdeosa")
@@ -188,6 +189,7 @@
                                       tr-loppuetaisyys
                                       tr-ajorata
                                       tr-kaista
+                                      toimenpide
                                       (when-not (empty? sijainti)
                                         (geo/geometry (geo/clj->pg sijainti)))
                                       id))))

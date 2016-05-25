@@ -60,6 +60,7 @@ SELECT
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   ypko.tr_ajorata AS "tr-ajorata",
   ypko.tr_kaista AS "tr-kaista",
+  toimenpide,
   sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
@@ -76,7 +77,7 @@ INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, nykyinen_paallyste,
                            sopimuksen_mukaiset_tyot,
-                           arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, tyyppi)
 VALUES (:urakka,
         :sopimus,
         :kohdenumero,
@@ -94,7 +95,8 @@ VALUES (:urakka,
         :sopimuksen_mukaiset_tyot,
         :arvonvahennykset,
         :bitumi_indeksi,
-        :kaasuindeksi);
+        :kaasuindeksi,
+        :tyyppi::yllapitokohdetyyppi);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -127,7 +129,7 @@ WHERE id = :id;
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
@@ -137,6 +139,7 @@ VALUES (:yllapitokohde,
         :tr_loppuetaisyys,
         :tr_ajorata,
         :tr_kaista,
+        :toimenpide,
         :sijainti);
 
 -- name: paivita-yllapitokohdeosa<!
@@ -151,6 +154,7 @@ SET
   tr_loppuetaisyys = :tr_loppuetaisyys,
   tr_ajorata       = :tr_ajorata,
   tr_kaista        = :tr_kaista,
+  toimenpide       = :toimenpide,
   sijainti         = :sijainti
 WHERE id = :id;
 
@@ -168,14 +172,14 @@ SELECT
   nimi,
   urakka,
   sopimus,
-  aikataulu_paallystys_alku,
-  aikataulu_paallystys_loppu,
-  aikataulu_tiemerkinta_alku,
-  aikataulu_tiemerkinta_loppu,
-  aikataulu_kohde_valmis,
-  aikataulu_muokattu,
-  aikataulu_muokkaaja,
-  valmis_tiemerkintaan
+  aikataulu_paallystys_alku AS "aikataulu-paallystys-alku",
+  aikataulu_paallystys_loppu  AS "aikataulu-paallystys-loppu",
+  aikataulu_tiemerkinta_alku  AS "aikataulu-tiemerkinta-alku",
+  aikataulu_tiemerkinta_loppu  AS "aikataulu-tiemerkinta-loppu",
+  aikataulu_kohde_valmis  AS "aikataulu-kohde-valmis",
+  aikataulu_muokattu  AS "aikataulu-muokattu",
+  aikataulu_muokkaaja  AS "aikataulu-muokkaaja",
+  valmis_tiemerkintaan  AS "valmis-tiemerkintaan"
 FROM yllapitokohde
 WHERE
   urakka = :urakka

@@ -27,9 +27,9 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulut valittu-urakka-id valittu-sopimus-id))))
 
-(defn tallenna-paallystyskohteiden-aikataulu [urakka-id sopimus-id kohteet]
+(defn tallenna-yllapitokohteiden-aikataulu [urakka-id sopimus-id kohteet]
   (go
-    (let [vastaus (<! (k/post! :tallenna-paallystyskohteiden-aikataulu
+    (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
                                {:urakka-id  urakka-id
                                 :sopimus-id sopimus-id
                                 :kohteet    kohteet}))]

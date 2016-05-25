@@ -12,6 +12,7 @@ FROM yllapitokohde
                                    AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
+      AND tyyppi = 'paikkaus'::yllapitokohdetyyppi
       AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paikkausilmoitus-paikkauskohteella

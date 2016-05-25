@@ -23,9 +23,8 @@
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                        :sopimus-id sopimus-id}))
 
-(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id sopimus-id paallystyskohde-id]
+(defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
-                                                           :sopimus-id sopimus-id
                                                            :paallystyskohde-id paallystyskohde-id}))
 
 (defn tallenna-paallystysilmoitus! [urakka-id sopimus-id lomakedata]
@@ -48,7 +47,7 @@
 
 (defonce karttataso-paallystyskohteet (atom false))
 
-(def paallystyskohteet
+(def yllapitokohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
                nakymassa? @paallystyskohteet-nakymassa?]
@@ -60,10 +59,16 @@
   (reaction
     (filter
       yllapitokohteet/yha-kohde?
-      @paallystyskohteet)))
+      @yllapitokohteet)))
+
+(def harjan-paikkauskohteet
+  (reaction
+    (filter
+      (comp not yllapitokohteet/yha-kohde?)
+      @yllapitokohteet)))
 
 (def kohteet-yhteensa
-  (reaction @yhan-paallystyskohteet))
+  (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
 
 (tarkkaile! "[YHA] Päällystyskohteet: " yhan-paallystyskohteet)
 

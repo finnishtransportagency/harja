@@ -133,11 +133,11 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-        kohteet [{:kohdenumero                 "L03", :aikataulu_paallystys_alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu_muokkaaja 2, :urakka 5,
-                  :aikataulu_kohde_valmis      (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
-                  :valmis_tiemerkintaan        (pvm/->pvm-aika "23.5.2016 12:00"), :aikataulu_paallystys_loppu (pvm/->pvm-aika "20.5.2016 12:00"),
-                  :id                          1, :sopimus 8, :aikataulu_muokattu (pvm/->pvm-aika "29.5.2016 12:00"), :aikataulu_tiemerkinta_alku nil,
-                  :aikataulu_tiemerkinta_loppu (pvm/->pvm "26.5.2016")}]
+        kohteet [{:kohdenumero                 "L03", :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu-muokkaaja 2, :urakka 5,
+                  :aikataulu-kohde-valmis      (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
+                  :valmis-tiemerkintaan        (pvm/->pvm-aika "23.5.2016 12:00"), :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00"),
+                  :id                          1, :sopimus 8, :aikataulu-muokattu (pvm/->pvm-aika "29.5.2016 12:00"), :aikataulu-tiemerkinta-alku nil,
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2016")}]
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu +kayttaja-jvh+ {:urakka-id  urakka-id
                                                                                         :sopimus-id sopimus-id
@@ -146,21 +146,21 @@
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         vastaus-leppajarven-ramppi (first (filter #(= "L03" (:kohdenumero %)) vastaus))
-        odotettu {:aikataulu_kohde_valmis       (pvm/->pvm "29.5.2016")
-                  :aikataulu_muokkaaja         2
-                  :aikataulu_paallystys_alku   (pvm/->pvm-aika "19.5.2016 12:00")
-                  :aikataulu_paallystys_loppu   (pvm/->pvm-aika "20.5.2016 12:00")
-                  :aikataulu_tiemerkinta_alku  nil
-                  :aikataulu_tiemerkinta_loppu (pvm/->pvm "26.5.2016")
+        odotettu {:aikataulu-kohde-valmis       (pvm/->pvm "29.5.2016")
+                  :aikataulu-muokkaaja         2
+                  :aikataulu-paallystys-alku   (pvm/->pvm-aika "19.5.2016 12:00")
+                  :aikataulu-paallystys-loppu   (pvm/->pvm-aika "20.5.2016 12:00")
+                  :aikataulu-tiemerkinta-alku  nil
+                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2016")
                   :id                          1
                   :kohdenumero                 "L03"
                   :nimi                        "Leppäjärven ramppi"
                   :sopimus                     8
                   :urakka                      5
-                  :valmis_tiemerkintaan       (pvm/->pvm-aika "23.5.2016 12:00")}]
+                  :valmis-tiemerkintaan       (pvm/->pvm-aika "23.5.2016 12:00")}]
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
-    (is (= (:aikataulu_paallystys_alku odotettu) (:aikataulu_paallystys_alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_paallystys_alku")
-    (is (= (:aikataulu_paallystys_loppu odotettu) (:aikataulu_paallystys_loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_paallystys_loppu")
-    (is (= (:aikataulu_tiemerkinta_alku odotettu) (:aikataulu_tiemerkinta_alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_tiemerkinta_alku")
-    (is (= (:aikataulu_tiemerkinta_loppu odotettu) (:aikataulu_tiemerkinta_loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_tiemerkinta_loppu")
-    (is (= (:aikataulu_kohde_valmis odotettu) (:aikataulu_kohde_valmis vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu_kohde_valmis")))
+    (is (= (:aikataulu-paallystys-alku odotettu) (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-paallystys-alku")
+    (is (= (:aikataulu-paallystys-loppu odotettu) (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-paallystys-loppu")
+    (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-tiemerkinta-alku")
+    (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
+    (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-kohde-valmis")))
