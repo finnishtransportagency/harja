@@ -94,6 +94,7 @@
       (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :alkupvm])))
       (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :loppupvm])))
       (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :karttapvm])))
+      (assoc-in [:tietue :tilannepvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :tilannepvm])))
       (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date
                                                     (get-in data [:varuste :sijainti :tie :alkupvm])))
       (assoc :lisatty (xml/json-date-time->xml-xs-date (:lisatty data)))
@@ -111,6 +112,7 @@
       (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :alkupvm])))
       (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :loppupvm])))
       (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :karttapvm])))
+      (assoc-in [:tietue :tilannepvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :tilannepvm])))
       (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date
                                                     (get-in data [:varuste :sijainti :tie :alkupvm])))
       (assoc :paivitetty (xml/json-date-time->xml-xs-date (:paivitetty data)))
