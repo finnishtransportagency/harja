@@ -31,3 +31,9 @@
            losa " / "
            let)
       (str "Ei tierekisteriosoitetta"))))
+
+(defn jarjesta-kohteiden-kohdeosat [kohteet]
+  (mapv
+    (fn [kohde]
+      (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
+      kohteet))

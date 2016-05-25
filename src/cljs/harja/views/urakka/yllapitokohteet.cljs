@@ -153,6 +153,7 @@
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
   [kohteet index]
+  (log "[KOHDEOSA] Lisää uusi kohdeosa indeksin " index  " perään.")
   (let [uudet-kohteet (into [] (concat
                                  (take (inc index) kohteet)
                                  [{:nimi ""
@@ -256,7 +257,7 @@
                                                                                            paivitetyt-kohdeosat)]
                                                             (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
                                              (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]))})])))
-          (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
+          kohdeosat]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
