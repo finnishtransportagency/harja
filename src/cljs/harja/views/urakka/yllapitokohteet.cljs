@@ -152,6 +152,9 @@
          [grid/grid
           {:otsikko "Tierekisterikohteet"
            :tyhja (if (empty? kohdeosat) "Tierekisterikohteita ei löydy")
+           ;; YHA-sidotuille kohdeosille on toteutettu custom lisäys ja poistologiikka
+           :voi-lisata? (not (:yha-sidottu? optiot))
+           :voi-poistaa? (constantly (not (:yha-sidottu? optiot)))
            :rivi-klikattu (fn [rivi]
                             (log "KLIKKASIT: " (pr-str rivi))
                             (when-let [viiva (some-> rivi :sijainti)]
