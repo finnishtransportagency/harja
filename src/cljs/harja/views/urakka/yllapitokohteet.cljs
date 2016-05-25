@@ -111,7 +111,6 @@
               arvot))))
 
 (defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
-  ; FIXME Pitäisi generisöidä jotta voi käyttää myös POT-lomakkeessa muokkausgridissä
   (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
   (let [haetut (into #{} (keys @tr-sijainnit-atom))]
     ;; jos on tullut uusi TR osoite, haetaan sille sijainti
@@ -135,43 +134,30 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
-(defn kasittele-paivittyneet-kohdeosat [kohteet]
-  (let [uudet-kohteet
-        ;; Kopioi kohteen N loppuosa kohtee N + 1 alkuosaksi
-        ; FIXME Pitäisi tunnistaa kumpaa muokattiin, jotta kopiointi toimii myös toiseen suuntaan
-        (into [] (map-indexed
-                   (fn [index kohde]
-                     (if (< index (- (count kohteet) 1))
-                       (-> kohde
-                           (assoc :tr-loppuosa (:tr-alkuosa (get kohteet (inc index))))
-                           (assoc :tr-loppuetaisyys (:tr-alkuetaisyys (get kohteet (inc index)))))
-                       kohde))
-                   kohteet))]
-    uudet-kohteet))
-
-(defn lisaa-uusi-kohdeosa
-  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
-  [kohteet index]
-
-  (let [uudet-kohteet (into [] (concat
-                                 (take (inc index) kohteet)
-                                 [{:nimi ""
-                                   :tr-numero (:tr-numero (get kohteet index))
-                                   :tr-alkuosa nil
-                                   :tr-alkuetaisyys nil
-                                   :tr-loppuosa (:tr-loppuosa (get kohteet index))
-                                   :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index))
-                                   :toimenpide ""}]
-                                 (drop (inc index) kohteet)))
-        uudet-kohteet (assoc uudet-kohteet index (-> (get uudet-kohteet index)
-                                                     (assoc :tr-loppuosa nil)
-                                                     (assoc :tr-loppuetaisyys nil)))]
-    uudet-kohteet))
-
 (defn yllapitokohdeosat [kohdeosat optiot]
   (let [[sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id @nav/valittu-urakka)
-        grid-data (atom (zipmap (iterate inc 1) kohdeosat))]
+        grid-data (atom (zipmap (iterate inc 1) kohdeosat))
+        toiminnot-komponentti (fn [_ index]
+                    [:div
+                     [:button.nappi-ensisijainen
+                      {:on-click
+                       (fn []
+                         (let [paivitetyt-kohdeosat
+                               (tiedot/lisaa-uusi-kohdeosa (into [] (vals @grid-data)) index)]
+                           (reset! grid-data
+                                   (zipmap (iterate inc 1)
+                                           paivitetyt-kohdeosat))))}
+                      (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
+                     [:button.nappi-ensisijainen
+                      {:on-click
+                       (fn []
+                         (let [paivitetyt-kohdeosat
+                               (tiedot/poista-kohdeosa (into [] (vals @grid-data)) index)]
+                           (reset! grid-data
+                                   (zipmap (iterate inc 1)
+                                           paivitetyt-kohdeosat))))}
+                      (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])]
     (komp/luo
       (fn [kohdeosat {:keys [yllapitokohteet-atom
                              yllapitokohde-id] :as optiot}]
@@ -199,7 +185,7 @@
                                                     (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
            :voi-poistaa? (constantly false)
            :tunniste hash
-           :muutos #(let [paivitetyt-kohdeosat (kasittele-paivittyneet-kohdeosat (into [] (vals @grid-data)))]
+           :muutos #(let [paivitetyt-kohdeosat (tiedot/kasittele-paivittyneet-kohdeosat (into [] (vals @grid-data)))]
                      (reset! grid-data (zipmap (iterate inc 1) paivitetyt-kohdeosat)))}
           (into []
                 (remove
@@ -221,16 +207,7 @@
                                                                (< index (- (count kohdeosat) 1)))}])
                     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
                      {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
-                      :komponentti (fn [_ index]
-                                     [:button.nappi-ensisijainen
-                                      {:on-click
-                                       (fn []
-                                         (let [paivitetyt-kohdeosat
-                                               (lisaa-uusi-kohdeosa (into [] (vals @grid-data)) index)]
-                                           (reset! grid-data
-                                                   (zipmap (iterate inc 1)
-                                                           paivitetyt-kohdeosat))))}
-                                      (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")])}])))
+                      :komponentti toiminnot-komponentti}])))
           grid-data]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]

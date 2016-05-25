@@ -45,3 +45,42 @@
 
 (defn yha-kohde? [kohde]
   (some? (:yhaid kohde)))
+
+(defn kasittele-paivittyneet-kohdeosat [kohteet]
+  (let [uudet-kohteet
+        ;; Kopioi kohteen N loppuosa kohtee N + 1 alkuosaksi
+        ; FIXME Pitäisi tunnistaa kumpaa muokattiin, jotta kopiointi toimii myös toiseen suuntaan
+        (into [] (map-indexed
+                   (fn [index kohde]
+                     (if (< index (- (count kohteet) 1))
+                       (-> kohde
+                           (assoc :tr-loppuosa (:tr-alkuosa (get kohteet (inc index))))
+                           (assoc :tr-loppuetaisyys (:tr-alkuetaisyys (get kohteet (inc index)))))
+                       kohde))
+                   kohteet))]
+    uudet-kohteet))
+
+(defn lisaa-uusi-kohdeosa
+  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
+  [kohteet index]
+  (let [uudet-kohteet (into [] (concat
+                                 (take (inc index) kohteet)
+                                 [{:nimi ""
+                                   :tr-numero (:tr-numero (get kohteet index))
+                                   :tr-alkuosa nil
+                                   :tr-alkuetaisyys nil
+                                   :tr-loppuosa (:tr-loppuosa (get kohteet index))
+                                   :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index))
+                                   :toimenpide ""}]
+                                 (drop (inc index) kohteet)))
+        uudet-kohteet (assoc uudet-kohteet index (-> (get uudet-kohteet index)
+                                                     (assoc :tr-loppuosa nil)
+                                                     (assoc :tr-loppuetaisyys nil)))]
+    uudet-kohteet))
+
+(defn poista-kohdeosa
+  "Poistaa valitun kohdeosan annetusta indeksistä. Pidentää edellistä kohdeosaa niin, että sen pituus täyttää
+   poistetun kohdeosan jättämän alueen. Jos poistetaan ensimmäinen kohdeosa, pidennetään vastaavasti seuraava."
+  [kohteet index]
+  (log "[KOHDEOSAT] Painoit nappia :D")
+  kohteet)
