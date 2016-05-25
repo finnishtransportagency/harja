@@ -41,17 +41,9 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
                                              (not= @valittu-sivu :about)
                                              (not= @valittu-sivu :hallinta))))
 
-(defonce
-  ^{:doc "ÄLÄ KÄYTÄ TÄTÄ ELLET OLE IHAN VARMA SIITÄ MITÄ TEET!
-  Tämän atomin asettaa itse murupolkukomponentti, silloin kun se on oikeasti näkyvissä.
-  Tämä on todella nihkeä homma, mutta piti lisätä, koska kartan paikan laskemisessa oli aiemmin
-  rallitila. Paikkavaraus otti riippuvuuden murupolku-nakyvissa? atomista, jossa ajatuksena oli,
-  että jos murupolku piilotetaan, niin paikkavaruas lasketaan uusiksi. Ongelmana oli, että paikkavarauksen
-  laskentaan käytetään oikeaa murupolkuelementtiä DOMissa, ja murupolkuelementillä on riippuvuus samaan
-  murupolku-nakyvissa? atomiin. Joskus siis kartan paikan laskemisen ja murupolun piilottamisen
-  järjestys saattoi vaihdella. Nyt raporttien kartan paikalla on riippuvuus tästä atomista, jolloin
-  päivitys tapahtuu aina vasta kun murupolku on oikeasti piilotettu DOMissa."}
-  DANGEROUS-murupolku-naytetty-domissa? (atom @murupolku-nakyvissa?))
+
+
+
 
 (defonce kartan-extent (atom nil))
 
