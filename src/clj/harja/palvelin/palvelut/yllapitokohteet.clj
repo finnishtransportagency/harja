@@ -265,7 +265,7 @@
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    (log/debug "Tallennetaan ylläpitokohdeosat. Ylläpitokohde-id: " yllapitokohde-id)
+    (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
     (doseq [osa osat]
       (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
       (if (and (:id osa) (not (neg? (:id osa))))
