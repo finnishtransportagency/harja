@@ -20,8 +20,7 @@
                             (on-reload)
                             (if (.-harja_testmode js/window)
                               (test-runner/aja-e2e-testit)
-                              (test-runner/aja-testit))
-                            ))})
+                              (test-runner/aja-testit))))})
 
   (.log js/console "Alustetaan less.js uudelleenlataus")
   (let [less (aget js/window "less")
