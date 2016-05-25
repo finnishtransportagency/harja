@@ -152,16 +152,16 @@
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
   [kohteet index]
-  (log "[KOHDEOSA] Lisää uusi kohdeosa indeksin " index  " perään.")
+
   (let [uudet-kohteet (into [] (concat
                                  (take (inc index) kohteet)
                                  [{:nimi ""
-                                  :tr-numero (:tr-numero (get kohteet index))
-                                  :tr-alkuosa nil
-                                  :tr-alkuetaisyys nil
-                                  :tr-loppuosa (:tr-loppuosa (get kohteet index))
-                                  :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index))
-                                  :toimenpide ""}]
+                                   :tr-numero (:tr-numero (get kohteet index))
+                                   :tr-alkuosa nil
+                                   :tr-alkuetaisyys nil
+                                   :tr-loppuosa (:tr-loppuosa (get kohteet index))
+                                   :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index))
+                                   :toimenpide ""}]
                                  (drop (inc index) kohteet)))
         uudet-kohteet (assoc uudet-kohteet index (-> (get uudet-kohteet index)
                                                      (assoc :tr-loppuosa nil)
@@ -178,7 +178,7 @@
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tierekisterikohteet"
-           ;; YHA-sidotuille kohdeosille on toteutettu custom lisäys ja poistologiikka
+           ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
            :voi-lisata? false
            :piilota-toiminnot? true
            :paneelikomponentit [(fn []
@@ -186,9 +186,9 @@
                                    [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
                                    ;; TODO Hae ja assoc sijainti (geometria) ennen tätä
                                    #(tiedot/tallenna-yllapitokohdeosat! urakka-id
-                                                                         sopimus-id
-                                                                         yllapitokohde-id
-                                                                         (vals @grid-data))
+                                                                        sopimus-id
+                                                                        yllapitokohde-id
+                                                                        (vals @grid-data))
                                    {:luokka "nappi-myonteinen grid-tallenna"
                                     :virheviesti "Tallentaminen epäonnistui."
                                     :kun-onnistuu (fn [vastaus]
@@ -199,37 +199,38 @@
                                                     (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
            :voi-poistaa? (constantly false)
            :tunniste hash
-           :muutos #(let [uudet-kohteet (kasittele-paivittyneet-kohdeosat (into [] (vals @grid-data)))]
-                     (reset! grid-data (zipmap (iterate inc 1) uudet-kohteet)))}
-          (into [] (remove
-                     nil?
-                     (concat
-                       (tierekisteriosoite-sarakkeet
-                         tr-leveys
-                         [{:nimi :nimi}
-                          {:nimi :tr-numero}
-                          {:nimi :tr-ajorata}
-                          {:nimi :tr-kaista}
-                          {:nimi :tr-alkuosa :muokattava? (fn [_ index]
-                                                            (> index 0))}
-                          {:nimi :tr-alkuetaisyys :muokattava? (fn [_ index]
-                                                                 (> index 0))}
-                          {:nimi :tr-loppuosa :muokattava? (fn [_ index]
-                                                             (< index (- (count kohdeosat) 1)))}
-                          {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
-                                                                  (< index (- (count kohdeosat) 1)))}])
-                       [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
-                        {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
-                           :komponentti (fn [_ index]
-                                          [:button.nappi-ensisijainen
-                                           #_{:on-click (fn []
-                                                        (let [paivitetyt-kohdeosat (lisaa-uusi-kohdeosa (into [] kohdeosat) index)
-                                                              paivitetyt-yllapitokohteet
-                                                              (paivita-kohteen-kohdeosat @yllapitokohteet-atom
-                                                                                         (:id rivi)
-                                                                                         paivitetyt-kohdeosat)]
-                                                          (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
-                                           (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")])}])))
+           :muutos #(let [paivitetyt-kohdeosat (kasittele-paivittyneet-kohdeosat (into [] (vals @grid-data)))]
+                     (reset! grid-data (zipmap (iterate inc 1) paivitetyt-kohdeosat)))}
+          (into []
+                (remove
+                  nil?
+                  (concat
+                    (tierekisteriosoite-sarakkeet
+                      tr-leveys
+                      [{:nimi :nimi}
+                       {:nimi :tr-numero}
+                       {:nimi :tr-ajorata}
+                       {:nimi :tr-kaista}
+                       {:nimi :tr-alkuosa :muokattava? (fn [_ index]
+                                                         (> index 0))}
+                       {:nimi :tr-alkuetaisyys :muokattava? (fn [_ index]
+                                                              (> index 0))}
+                       {:nimi :tr-loppuosa :muokattava? (fn [_ index]
+                                                          (< index (- (count kohdeosat) 1)))}
+                       {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
+                                                               (< index (- (count kohdeosat) 1)))}])
+                    [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
+                     {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
+                      :komponentti (fn [_ index]
+                                     [:button.nappi-ensisijainen
+                                      {:on-click
+                                       (fn []
+                                         (let [paivitetyt-kohdeosat
+                                               (lisaa-uusi-kohdeosa (into [] (vals @grid-data)) index)]
+                                           (reset! grid-data
+                                                   (zipmap (iterate inc 1)
+                                                           paivitetyt-kohdeosat))))}
+                                      (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")])}])))
           grid-data]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
