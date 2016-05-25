@@ -201,7 +201,7 @@
           {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
            :leveys 10
            :fmt fmt/totuus :tasaa :keskita}]
-         (sort-by (juxt :etunimi :sukunimi :nimi) @paivystajat)]))))
+         (sort-by :alku @paivystajat)]))))
 
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]
