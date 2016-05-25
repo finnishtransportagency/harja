@@ -980,7 +980,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                 (for [{:keys [otsikko leveys nimi tasaa]} skeema]
                   ^{:key (str nimi)}
                   [:th.rivinumero {:width (or leveys "5%")
-                                   :class  (y/tasaus-luokka tasaa)} otsikko])
+                                   :class (y/tasaus-luokka tasaa)} otsikko])
                 (when-not piilota-toiminnot?
                   [:th.toiminnot {:width "40px"} " "])]]
 
@@ -1023,15 +1023,17 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                               (virheen-ohje kentan-virheet))
 
                                             (if voi-muokata?
-                                              [tee-kentta s (r/wrap
-                                                              arvo
-                                                              (fn [uusi]
-                                                                (if aseta
-                                                                  (muokkaa! muokatut-atom virheet
-                                                                            id (fn [rivi]
-                                                                                 (aseta rivi uusi)))
-                                                                  (muokkaa! muokatut-atom virheet id assoc nimi uusi))))]
-                                              [nayta-arvo s (vain-luku-atomina arvo)])]
+                                              [tee-kentta (assoc s :index i :muokataan? true)
+                                               (r/wrap
+                                                 arvo
+                                                 (fn [uusi]
+                                                   (if aseta
+                                                     (muokkaa! muokatut-atom virheet
+                                                               id (fn [rivi]
+                                                                    (aseta rivi uusi)))
+                                                     (muokkaa! muokatut-atom virheet id assoc nimi uusi))))]
+                                              [nayta-arvo (assoc s :index i :muokataan? false)
+                                               (vain-luku-atomina arvo)])]
 
                                            ^{:key (str nimi)}
                                            [:td {:class (str "ei-muokattava " tasaus-luokka)}
