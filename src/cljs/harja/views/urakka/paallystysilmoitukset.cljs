@@ -329,7 +329,7 @@
 
             [grid/muokkaus-grid
              {:otsikko "Tierekisteriosoitteet"
-              :tunniste :tie
+              :tunniste hash
               :voi-muokata? (do
                               (log "[PÄÄLLYSTYS] tila " (pr-str (:tila lomakedata-nyt)) " Päätös tekninen: " (pr-str (:paatos-tekninen-osa lomakedata-nyt)))
                               (and (not= :lukittu (:tila lomakedata-nyt))

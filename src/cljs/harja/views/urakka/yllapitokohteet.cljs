@@ -57,7 +57,7 @@
 
 ;; Ylläpitokohdeosien sarakkeiden leveydet
 (def nimi-leveys 20)
-(def toimenpide-leveys 20)
+(def toimenpide-leveys 15)
 
 (defn tierekisteriosoite-sarakkeet [perusleveys [nimi tie ajorata kaista aosa aet losa let]]
   (into []
@@ -110,36 +110,12 @@
       (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
               arvot))))
 
-(defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
-  (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
-  (let [haetut (into #{} (keys @tr-sijainnit-atom))]
-    ;; jos on tullut uusi TR osoite, haetaan sille sijainti
-    (doseq [[id rivi] (grid/hae-muokkaustila grid)]
-      (if (:poistettu rivi)
-        (swap! tr-virheet-atom dissoc id)
-        (let [osoite (tr-osoite rivi)]
-          (when (and osoite (not (haetut osoite)))
-            (go
-              (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
-              (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
-                (when (= (get (grid/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
-                  (if-let [virhe (when-not (vkm/loytyi? sijainti)
-                                   "Virheellinen TR-osoite")]
-                    (do (swap! tr-virheet-atom assoc id virhe)
-                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid/aseta-virhe! grid id kentta "Tarkista tie")))
-                    (do (swap! tr-virheet-atom dissoc id)
-                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid/poista-virhe! grid id kentta))
-                        (log "sain sijainnin " (clj->js sijainti))
-                        (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
-
 (defn yllapitokohdeosat [kohdeosat optiot]
   (let [[sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id @nav/valittu-urakka)
         grid-data (atom (zipmap (iterate inc 1) kohdeosat))
         toiminnot-komponentti (fn [_ index]
-                    [:div
+                    [:span
                      [:button.nappi-ensisijainen
                       {:on-click
                        (fn []
@@ -206,9 +182,33 @@
                        {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
                                                                (< index (- (count kohdeosat) 1)))}])
                     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
-                     {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
+                     {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
                       :komponentti toiminnot-komponentti}])))
           grid-data]]))))
+
+(defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
+  (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
+  (let [haetut (into #{} (keys @tr-sijainnit-atom))]
+    ;; jos on tullut uusi TR osoite, haetaan sille sijainti
+    (doseq [[id rivi] (grid/hae-muokkaustila grid)]
+      (if (:poistettu rivi)
+        (swap! tr-virheet-atom dissoc id)
+        (let [osoite (tr-osoite rivi)]
+          (when (and osoite (not (haetut osoite)))
+            (go
+              (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
+              (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
+                (when (= (get (grid/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
+                  (if-let [virhe (when-not (vkm/loytyi? sijainti)
+                                   "Virheellinen TR-osoite")]
+                    (do (swap! tr-virheet-atom assoc id virhe)
+                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+                          (grid/aseta-virhe! grid id kentta "Tarkista tie")))
+                    (do (swap! tr-virheet-atom dissoc id)
+                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+                          (grid/poista-virhe! grid id kentta))
+                        (log "sain sijainnin " (clj->js sijainti))
+                        (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
