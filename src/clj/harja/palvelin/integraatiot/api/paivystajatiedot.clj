@@ -23,8 +23,8 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.domain.puhelinnumero :as puhelinnumero]))
 
-(defn ulkoinen-id [jarjestelma id]
-  (str jarjestelma "/" id))
+(defn ulkoinen-id [kayttaja id]
+  (str (:kayttajanimi kayttaja) "/" id))
 
 (defn hae-jarjestelma [data]
   (get-in data [:otsikko :lahettaja :jarjestelma]))
@@ -79,8 +79,8 @@
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Tuntematon urakkatyyppi: %s" (:urakkatyyppi parametrit))})))
 
-(defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo id]} paivystaja-id jarjestelma]
-  (let [ulkoinen-id (ulkoinen-id jarjestelma id)]
+(defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo id]} paivystaja-id kirjaaja]
+  (let [ulkoinen-id (ulkoinen-id kirjaaja id)]
     (if (yhteyshenkilot/onko-olemassa-paivystys-ulkoisella-idlla? db ulkoinen-id)
       (do
         (log/debug "Päivitetään päivystys.")
@@ -116,14 +116,13 @@
         (:id (yhteyshenkilot/luo-yhteyshenkilo<! db etunimi sukunimi tyopuhelin matkapuhelin email
                                                  urakoitsija-id nil liviTunnus (str id)))))))
 
-(defn tallenna-paivystajatiedot [db urakka-id data]
+(defn tallenna-paivystajatiedot [db urakka-id kirjaaja data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
   (jdbc/with-db-transaction [transaktio db]
-    (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija transaktio urakka-id)))
-          jarjestelma (hae-jarjestelma data)]
+    (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija transaktio urakka-id)))]
       (doseq [paivystys (:paivystykset data)]
         (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]) urakoitsija)]
-          (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id jarjestelma))))))
+          (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id kirjaaja))))))
 
 (defn kirjaa-paivystajatiedot
   "Kirjaus toimii tällä hetkellä niin, että ulkoisen id:n omaavat päivystäjät päivitetään ja
@@ -133,7 +132,7 @@
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan päivystäjätiedot urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (tallenna-paivystajatiedot db urakka-id data)
+    (tallenna-paivystajatiedot db urakka-id kirjaaja data)
     (paivystajatiedot-sanoma/tee-onnistunut-kirjaus-vastaus)))
 
 (defn hae-paivystajatiedot-urakan-idlla [db urakka-id kayttaja pvm-vali]
@@ -158,7 +157,7 @@
 (defn poista-paivystykset [db data parametrit kayttaja] (let [{:keys [paivystysidt]} data
         jarjestelma (hae-jarjestelma data)
         urakka-id (Integer/parseInt (:id parametrit))
-        ulkoiset-idt (mapv #(ulkoinen-id jarjestelma %) paivystysidt)]
+        ulkoiset-idt (mapv #(ulkoinen-id kayttaja %) paivystysidt)]
     (validointi/tarkista-urakka db urakka-id)
     (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
     (log/debug "Poistettavat ulkoiset idt: " (pr-str ulkoiset-idt) " urakka " (:id parametrit))
