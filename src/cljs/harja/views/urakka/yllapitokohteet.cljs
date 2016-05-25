@@ -23,7 +23,8 @@
             [harja.ui.viesti :as viesti]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka.yhatuonti :as yha]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -169,96 +170,57 @@
                                                      (assoc :tr-loppuetaisyys nil)))]
     uudet-kohteet))
 
-(defn paivita-kohteen-kohdeosat [yllapitokohteet id uudet-kohdeosat]
-  (mapv
-    (fn [kohde]
-      (if (= (:id kohde) id)
-        (assoc kohde :kohdeosat uudet-kohdeosat)
-        kohde))
-    yllapitokohteet))
+(defn tallenna-kohdeosat [kohdeosat]
+  (log "[KOHDEOSAT] TODO Tallenna"))
 
-(defn yllapitokohdeosat [rivi yllapitokohteet-atom optiot]
-  (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
-        tr-virheet (atom {}) ;; virheelliset TR sijainnit
-        resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))]
+(defn yllapitokohdeosat [kohdeosat]
+  (let [grid-data (atom (zipmap (iterate inc 1) kohdeosat))]
     (komp/luo
-      (fn [{:keys [kohdeosat id] :as rivi} yllapitokohteet-atom optiot]
+      (fn [kohdeosat]
         [:div
-         [grid/grid
+         [grid/muokkaus-grid
           {:otsikko "Tierekisterikohteet"
-           :tyhja (if (empty? kohdeosat) "Tierekisterikohteita ei löydy")
            ;; YHA-sidotuille kohdeosille on toteutettu custom lisäys ja poistologiikka
-           :voi-lisata? (not (:yha-sidottu? optiot))
-           :voi-poistaa? (constantly (not (:yha-sidottu? optiot)))
-           :rivi-klikattu (fn [rivi]
-                            (log "KLIKKASIT: " (pr-str rivi))
-                            (when-let [viiva (some-> rivi :sijainti)]
-                              (nav/vaihda-kartan-koko! :L)
-                              (kartta/keskita-kartta-alueeseen! (geo/extent viiva))))
-           :tallenna #(go (let [urakka-id (:id @nav/valittu-urakka)
-                                [sopimus-id _] @u/valittu-sopimusnumero
-                                sijainnit @tr-sijainnit
-                                osat (into []
-                                           (map (fn [osa]
-                                                  (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
-                                           %)
-                                vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat! urakka-id sopimus-id (:id rivi) osat))]
-                            (if (k/virhe? vastaus)
-                              (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                              (do
-                                (log "[PAAL] ylläpitokohdeosat tallennettu: " (pr-str vastaus))
-                                (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-                                (resetoi-tr-tiedot)
-                                (yllapitokohteet/paivita-yllapitokohde! yllapitokohteet-atom id assoc :kohdeosat vastaus)))))
-           :peruuta #(resetoi-tr-tiedot)
-           :tunniste hash
-           :muutos (fn [grid]
-                     (let [paivitetyt-kohdeosat (kasittele-paivittyneet-kohdeosat (into [] (:kohdeosat rivi)))
-                           paivitetyt-yllapitokohteet (paivita-kohteen-kohdeosat @yllapitokohteet-atom
-                                                                                 (:id rivi)
-                                                                                 paivitetyt-kohdeosat)]
-                       (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
+           :voi-lisata? false
+           :piilota-toiminnot? true
+           :voi-poistaa? (constantly false)
+           :muutos #(let [uudet-kohteet (kasittele-paivittyneet-kohdeosat (into [] (vals @grid-data)))]
+                     (reset! grid-data (zipmap (iterate inc 1) uudet-kohteet)))}
           (into [] (remove
                      nil?
                      (concat
                        (tierekisteriosoite-sarakkeet
                          tr-leveys
                          [{:nimi :nimi}
-                          {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+                          {:nimi :tr-numero}
                           {:nimi :tr-ajorata}
                           {:nimi :tr-kaista}
                           {:nimi :tr-alkuosa :muokattava? (fn [_ index]
-                                                            (if (:yha-sidottu? optiot)
-                                                              (> index 0)
-                                                              true))}
+                                                            (> index 0))}
                           {:nimi :tr-alkuetaisyys :muokattava? (fn [_ index]
-                                                                 (if (:yha-sidottu? optiot)
-                                                                   (> index 0)
-                                                                   true))}
+                                                                 (> index 0))}
                           {:nimi :tr-loppuosa :muokattava? (fn [_ index]
-                                                             (if (:yha-sidottu? optiot)
-                                                               (< index (- (count kohdeosat) 1))
-                                                               true))}
+                                                             (< index (- (count kohdeosat) 1)))}
                           {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
-                                                                  (if (:yha-sidottu? optiot)
-                                                                    (< index (- (count kohdeosat) 1))
-                                                                    true))}])
+                                                                  (< index (- (count kohdeosat) 1)))}])
                        [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
-                        (when (:yha-sidottu? optiot)
-                          {:otsikko "" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
-                           :komponentti (fn [_ index muokataan?]
-                                          (when muokataan?
-                                            [:button.nappi-ensisijainen
-                                             {:on-click (fn []
-                                                          (let [paivitetyt-kohdeosat (lisaa-uusi-kohdeosa (into [] kohdeosat) index)
-                                                                paivitetyt-yllapitokohteet
-                                                                (paivita-kohteen-kohdeosat @yllapitokohteet-atom
-                                                                                           (:id rivi)
-                                                                                           paivitetyt-kohdeosat)]
-                                                            (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
-                                             (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]))})])))
-          kohdeosat]
-         [tr-virheilmoitus tr-virheet]]))))
+                        {:otsikko "Asdlol" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
+                           :komponentti (fn [_ index]
+                                          [:button.nappi-ensisijainen
+                                           #_{:on-click (fn []
+                                                        (let [paivitetyt-kohdeosat (lisaa-uusi-kohdeosa (into [] kohdeosat) index)
+                                                              paivitetyt-yllapitokohteet
+                                                              (paivita-kohteen-kohdeosat @yllapitokohteet-atom
+                                                                                         (:id rivi)
+                                                                                         paivitetyt-kohdeosat)]
+                                                          (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
+                                           (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")])}])))
+          grid-data]
+         [napit/palvelinkutsu-nappi
+          "Tallenna kohdeosat"
+          #(tallenna-kohdeosat (vals @grid-data))
+          {:luokka "nappi-ensisijainen"
+           :virheviesti "Tallentaminen epäonnistui."}]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
@@ -274,7 +236,7 @@
            :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :vetolaatikot (into {} (map (juxt :id
                                              (fn [rivi]
-                                               [yllapitokohdeosat rivi kohteet-atom optiot]))
+                                               [yllapitokohdeosat (into [] (:kohdeosat rivi))]))
                                        @kohteet-atom))
            :tallenna @tallenna
            :muutos (fn [grid]
