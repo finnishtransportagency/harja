@@ -142,12 +142,12 @@
     (log "Uudet kohteet: " (pr-str uudet-kohteet))
     uudet-kohteet))
 
-(defn yllapitokohdeosat [rivi yllapitokohteet-atom]
+(defn yllapitokohdeosat [rivi yllapitokohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))]
     (komp/luo
-      (fn [{:keys [kohdeosat id] :as rivi} yllapitokohteet-atom]
+      (fn [{:keys [kohdeosat id] :as rivi} yllapitokohteet-atom optiot]
         [:div
          [grid/grid
           {:otsikko "Tierekisterikohteet"
@@ -186,7 +186,7 @@
                      (tierekisteriosoite-sarakkeet
                        tr-leveys
                        [{:nimi :nimi}
-                        {:nimi :tr-numero}
+                        {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                         {:nimi :tr-ajorata}
                         {:nimi :tr-kaista}
                         {:nimi :tr-alkuosa}
@@ -211,7 +211,7 @@
            :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :vetolaatikot (into {} (map (juxt :id
                                              (fn [rivi]
-                                               [yllapitokohdeosat rivi kohteet-atom]))
+                                               [yllapitokohdeosat rivi kohteet-atom optiot]))
                                        @kohteet-atom))
            :tallenna @tallenna
            :muutos (fn [grid]
