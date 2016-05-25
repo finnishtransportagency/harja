@@ -183,7 +183,7 @@
            :pituus 16}
           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
            :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
-          {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm :fmt pvm/pvm :leveys 10
+          {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
            :validoi [[:ei-tyhja "Aseta alkupvm"]
                      (fn [alku rivi]
                        (let [loppu (:loppu rivi)]
@@ -191,7 +191,7 @@
                                     (t/before? loppu alku))
                            "Alkupvm ei voi olla lopun jälkeen.")))
                      ]}
-          {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm :fmt pvm/pvm :leveys 10
+          {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
            :validoi [[:ei-tyhja "Aseta loppupvm"]
                      (fn [loppu rivi]
                        (let [alku (:alku rivi)]
@@ -201,7 +201,7 @@
           {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
            :leveys 10
            :fmt fmt/totuus :tasaa :keskita}]
-         @paivystajat]))))
+         (sort-by :alku @paivystajat)]))))
 
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]
