@@ -137,10 +137,18 @@
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
 (defn kasittele-paivittyneet-kohdeosat [kohteet]
-  (let [uudet-kohteet (mapv
-                        #(assoc % :tr-numero 666) ; FIXME Logiikkaa tänne!
-                        kohteet)]
-    (log "Uudet kohteet: " (pr-str uudet-kohteet))
+  (let [kohteet (into [] (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohteet))
+        uudet-kohteet
+        ;; Kopioi kohteen N loppuosa kohtee N + 1 alkuosaksi
+        ; FIXME Pitäisi tunnistaa kumpaa muokattiin, jotta kopiointi toimii myös toiseen suuntaan
+        (into [] (map-indexed
+                   (fn [index kohde]
+                     (if (< index (- (count kohteet) 1))
+                       (-> kohde
+                            (assoc :tr-loppuosa (:tr-alkuosa (get kohteet (inc index))))
+                            (assoc :tr-loppuetaisyys (:tr-alkuetaisyys (get kohteet (inc index)))))
+                       kohde))
+                   kohteet))]
     uudet-kohteet))
 
 (defn yllapitokohdeosat [rivi yllapitokohteet-atom optiot]
