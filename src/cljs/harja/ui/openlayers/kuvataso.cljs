@@ -23,8 +23,7 @@
                 (let [[x1 y1 x2 y2] extent
                       uusi-url (apply karttakuva-url
                                       (concat  ["x1" x1 "y1" y1 "x2" x2 "y2" y2
-                                                "r" resolution "pr" pixel-ratio
-                                                "ts" (t/now)]
+                                                "r" resolution "pr" pixel-ratio]
                                                parametrit))]
                   (if (= uusi-url url)
                     [url image]
