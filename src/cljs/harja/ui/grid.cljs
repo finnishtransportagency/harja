@@ -828,28 +828,29 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   "Versio gridistä, jossa on vain muokkaustila. Tilan tulee olla muokkauksen vaatimassa {<id> <tiedot>} array mapissa.
   Tiedot tulee olla atomi tai wrapatty data, jota tietojen muokkaus itsessään manipuloi.
 
-Optiot on mappi optioita:
-  :muokkaa-footer  optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
-  :muutos          jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
-                   Parametrina Grid ohjauskahva
-  :uusi-rivi       jos annettu uuden rivin tiedot käsitellään tällä funktiolla
-  :voi-muokata?    jos false, tiedot eivät ole muokattavia ollenkaan
-  :voi-lisata?     jos false, uusia rivejä ei voi lisätä
-  :voi-kumota?     jos false, kumoa-nappia ei näytetä
-  :voi-poistaa?    funktio, joka palauttaa true tai false.
-  :rivinumerot?    Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
-  :jarjesta        jos annettu funktio, sortataan rivit tämän mukaan
+  Optiot on mappi optioita:
+  :muokkaa-footer     optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
+  :muutos             jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
+                      Parametrina Grid ohjauskahva
+  :uusi-rivi          jos annettu uuden rivin tiedot käsitellään tällä funktiolla
+  :voi-muokata?       jos false, tiedot eivät ole muokattavia ollenkaan
+  :voi-lisata?        jos false, uusia rivejä ei voi lisätä
+  :voi-kumota?        jos false, kumoa-nappia ei näytetä
+  :voi-poistaa?       funktio, joka palauttaa true tai false.
+  :rivinumerot?       Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
+  :jarjesta           jos annettu funktio, sortataan rivit tämän mukaan
+  :paneelikomponentit vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
   :piilota-toiminnot? boolean, piilotetaan toiminnot sarake jos true
-  :luokat          Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
-  :virheet         atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
-                   luodaan sisäisesti atomi virheille
-  :uusi-id         seuraavan uuden luotavan rivin id, jos ei anneta luodaan uusia id:tä
-                   sarjana -1, -2, -3, ...
-  :validoi-aina?   jos true, validoidaan tiedot aina renderissä (ei vain muutoksessa).
-                   Tämä on hyödyllinen, jos gridin tieto muuttuu ulkoisesta syystä.
+  :luokat             Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
+  :virheet            atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
+                      luodaan sisäisesti atomi virheille
+  :uusi-id            seuraavan uuden luotavan rivin id, jos ei anneta luodaan uusia id:tä
+                      sarjana -1, -2, -3, ...
+  :validoi-aina?      jos true, validoidaan tiedot aina renderissä (ei vain muutoksessa).
+                      Tämä on hyödyllinen, jos gridin tieto muuttuu ulkoisesta syystä.
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
-           voi-muokata? voi-lisata? jarjesta piilota-toiminnot?
+           voi-muokata? voi-lisata? jarjesta piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat validoi-aina?] :as opts} skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -935,7 +936,7 @@ Optiot on mappi optioita:
 
        :reagent-render
        (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota? rivi-klikattu rivinumerot?
-                    muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot uusi-id validoi-aina?] :as opts} skeema muokatut]
+                    muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot uusi-id paneelikomponentit validoi-aina?] :as opts} skeema muokatut]
          (let [virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
@@ -967,7 +968,10 @@ Optiot on mappi optioita:
                                                 (if uusi-id
                                                   {:id uusi-id}
                                                   {})))}
-                   (ikonit/livicon-plus) (or (:lisaa-rivi opts) "Lisää rivi")])])]
+                   (ikonit/livicon-plus) (or (:lisaa-rivi opts) "Lisää rivi")])
+                (when paneelikomponentit
+                  (for [komponentti paneelikomponentit]
+                    [komponentti]))])]
             [:div.panel-body
              [:table.grid
               [:thead
