@@ -151,6 +151,30 @@
                    kohteet))]
     uudet-kohteet))
 
+(defn lisaa-uusi-kohdeosa [kohteet index]
+  (let [kohteet (into [] kohteet)
+        index-kohde (get kohteet index)
+        uudet-kohteet (-> kohteet
+                          (conj {:nimi ""
+                                      :tr-numero (:tr-numero index-kohde)
+                                      :tr-alkuosa nil
+                                      :tr-alkuetaisyys nil
+                                      :tr-loppuosa (:tr-loppuosa index-kohde)
+                                      :tr-loppuetaisyys (:tr-loppuetaisyys index-kohde)
+                                      :toimenpide ""})
+                          (assoc kohteet index (-> index-kohde
+                                                   (assoc :tr-loppuetaisyys nil)
+                                                   (assoc :tr-loppuosa nil))))]
+    (into [] (sort-by tierekisteri-domain/tiekohteiden-jarjestys uudet-kohteet))))
+
+(defn paivita-kohteen-kohdeosat [yllapitokohteet id uudet-kohdeosat]
+  (mapv
+    (fn [kohde]
+      (if (= (:id kohde) id)
+        (assoc kohde :kohdeosat uudet-kohdeosat)
+        kohde))
+    yllapitokohteet))
+
 (defn yllapitokohdeosat [rivi yllapitokohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
@@ -187,12 +211,9 @@
            :peruuta #(resetoi-tr-tiedot)
            :muutos (fn [grid]
                      (let [paivitetyt-kohdeosat (kasittele-paivittyneet-kohdeosat (:kohdeosat rivi))
-                           paivitetyt-yllapitokohteet (mapv
-                                                        (fn [kohde]
-                                                          (if (= (:id kohde) (:id rivi))
-                                                            (assoc kohde :kohdeosat paivitetyt-kohdeosat)
-                                                            kohde))
-                                                        @yllapitokohteet-atom)]
+                           paivitetyt-yllapitokohteet (paivita-kohteen-kohdeosat @yllapitokohteet-atom
+                                                                                 (:id rivi)
+                                                                                 paivitetyt-kohdeosat)]
                        (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
           (into [] (remove
                      nil?
@@ -222,9 +243,16 @@
                        [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
                         (when (:yha-sidottu? optiot)
                           {:otsikko "" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
-                           :komponentti (fn [_ _ muokataan?]
+                           :komponentti (fn [_ index muokataan?]
                                           (when muokataan?
-                                            [:button.nappi-ensisijainen {:on-click #(log "Klikkasit")}
+                                            [:button.nappi-ensisijainen
+                                             {:on-click (fn []
+                                                          (let [paivitetyt-kohdeosat (lisaa-uusi-kohdeosa kohdeosat index)
+                                                                paivitetyt-yllapitokohteet
+                                                                (paivita-kohteen-kohdeosat @yllapitokohteet-atom
+                                                                                           (:id rivi)
+                                                                                           paivitetyt-kohdeosat)]
+                                                            (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
                                              (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]))})])))
           (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
          [tr-virheilmoitus tr-virheet]]))))
