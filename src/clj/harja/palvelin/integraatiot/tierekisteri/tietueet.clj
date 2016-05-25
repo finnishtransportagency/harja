@@ -17,13 +17,14 @@
          " & tietolajitunnisteella: " tietolaji
          " & voimassaolopäivämäärällä: " voimassaolopvm ".")))
 
-(defn hae-tietueet [db integraatioloki url tierekisteriosoitevali tietolaji voimassaolopvm]
-  (log/debug "Haetaan tietue tierekisteriosoitteella: " (pr-str tierekisteriosoitevali) ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
+(defn hae-tietueet [db integraatioloki url tierekisteriosoitevali tietolaji voimassaolopvm tilannepvm]
+  (log/debug "Haetaan tietue tierekisteriosoitteella: " (pr-str tierekisteriosoitevali)
+             ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
   (let [url (str url "/haetietueet")]
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "tierekisteri" "hae-tietueet"
       (fn [konteksti]
-        (let [kutsudata (kutsusanoma/muodosta-kutsu tierekisteriosoitevali tietolaji voimassaolopvm)
+        (let [kutsudata (kutsusanoma/muodosta-kutsu tierekisteriosoitevali tietolaji voimassaolopvm tilannepvm)
               otsikot {"Content-Type" "text/xml; charset=utf-8"}
               http-asetukset {:metodi :POST :url url :otsikot otsikot}
               {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]

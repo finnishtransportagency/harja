@@ -8,21 +8,22 @@
 
 (def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
-(defn muodosta-xml-sisalto [tierekisteriosoitevali tietolajitunniste voimassaolopvm]
+(defn muodosta-xml-sisalto [tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm]
   [:ns2:haeTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietueet"}
    [:tietolajitunniste tietolajitunniste]
    (when voimassaolopvm [:voimassaolopvm voimassaolopvm])
-   (into [:tie] (map (fn[[avain arvo]] [avain arvo]) tierekisteriosoitevali))])
+   [:tie
+    (map (fn [[avain arvo]] [avain arvo]) tierekisteriosoitevali)
+    [:tilannepvm tilannepvm]]])
 
-(defn muodosta-kutsu [tierekisteriosoitevali tietolajitunniste voimassaolopvm]
-  (let [sisalto (muodosta-xml-sisalto tierekisteriosoitevali tietolajitunniste voimassaolopvm)
+(defn muodosta-kutsu [tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm]
+  (let [sisalto (muodosta-xml-sisalto tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm)
         xml (xml/tee-xml-sanoma sisalto)]
-    (log/debug (pr-str xml))
     (if (xml/validoi +xsd-polku+ "haeTietueet.xsd" xml)
       xml
       (do
         (log/error "Tietueiden hakukutsua ei voida lähettää. Kutsu XML ei ole validi.")
         (throw+
-          {:type    :tietueiden-haku-epaonnistui
+          {:type :tietueiden-haku-epaonnistui
            :virheet [{:koodi :ei-validi-xml :viesti "Tietueiden hakukutsu Tierekisteriin ei ole validi"}]})))))
