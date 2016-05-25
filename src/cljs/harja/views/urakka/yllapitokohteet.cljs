@@ -219,7 +219,7 @@
                           {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
                                                                   (< index (- (count kohdeosat) 1)))}])
                        [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
-                        {:otsikko "Asdlol" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
+                        {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
                            :komponentti (fn [_ index]
                                           [:button.nappi-ensisijainen
                                            #_{:on-click (fn []
