@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:lisaaTietue xmlns:ns2="http://www.solita.fi/harja/tierekisteri/lisaaTietue">
+    <lisaaja>
+        <henkilo>Keijo Käsittelijä</henkilo>
+        <jarjestelma>FastMekka</jarjestelma>
+        <organisaatio>Asfaltia Oy</organisaatio>
+        <yTunnus>1234567-8</yTunnus>
+    </lisaaja>
+    <tietue>
+        <tunniste>HARJ951547ZK</tunniste>
+        <alkupvm>2015-05-22</alkupvm>
+        <sijainti>
+            <tie>
+                <numero>89</numero>
+                <aet>12</aet>
+                <aosa>1</aosa>
+                <ajr>0</ajr>
+                <puoli>1</puoli>
+                <tilannepvm>2016-01-01</tilannepvm>
+            </tie>
+        </sijainti>
+        <tietolaji>
+            <tietolajitunniste>tl505</tietolajitunniste>
+            <arvot>HARJ951547ZK        2                           HARJ951547ZK          01  </arvot>
+        </tietolaji>
+    </tietue>
+    <lisatty>2015-05-26+03:00</lisatty>
+</ns2:lisaaTietue>

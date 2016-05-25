@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns1="http://www.solita.fi/harja/tierekisteri/tietotyyppi"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/koodikuvaus"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/tietolajikentta"
+           xmlns="http://www.solita.fi/harja/tierekisteri/tietolajikentta"
+           version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietotyyppi" schemaLocation="tietotyyppi.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/koodikuvaus" schemaLocation="koodikuvaus.xsd"/>
+
+    <xs:complexType name="tietolajikentta">
+        <xs:sequence>
+            <xs:element minOccurs="0" name="kenttatunniste" type="xs:string"/>
+            <xs:element minOccurs="0" name="jarjestysnumero" type="xs:int"/>
+            <xs:element minOccurs="0" name="pituus" type="xs:int"/>
+            <xs:element minOccurs="0" name="pakollinen" type="xs:boolean"/>
+            <xs:element minOccurs="0" name="selite" type="xs:string"/>
+            <xs:element minOccurs="0" name="tietotyyppi" type="ns1:tietotyyppi"/>
+            <xs:element minOccurs="0" name="desimaalit" type="xs:int"/>
+            <xs:element minOccurs="0" name="alaraja" type="xs:int"/>
+            <xs:element minOccurs="0" name="ylaraja" type="xs:int"/>
+            <xs:element minOccurs="0" name="muutospvm" type="xs:date"/>
+            <xs:element minOccurs="0" maxOccurs="1" name="voimassaolo" type="voimassaolo"/>
+            <xs:element minOccurs="0" maxOccurs="1" name="koodisto" type="koodisto"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="voimassaolo">
+        <xs:sequence>
+            <xs:element minOccurs="0" name="alkupvm" type="xs:date"/>
+            <xs:element minOccurs="0" name="loppupvm" type="xs:date"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="koodisto">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="koodi" nillable="true" type="ns2:koodikuvaus"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

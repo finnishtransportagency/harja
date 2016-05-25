@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste" version="1.0">
+
+    <xs:simpleType name="tietolajitunniste">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="tl523"/>
+            <xs:enumeration value="tl501"/>
+            <xs:enumeration value="tl517"/>
+            <xs:enumeration value="tl507"/>
+            <xs:enumeration value="tl508"/>
+            <xs:enumeration value="tl506"/>
+            <xs:enumeration value="tl522"/>
+            <xs:enumeration value="tl513"/>
+            <xs:enumeration value="tl196"/>
+            <xs:enumeration value="tl519"/>
+            <xs:enumeration value="tl505"/>
+            <xs:enumeration value="tl195"/>
+            <xs:enumeration value="tl504"/>
+            <xs:enumeration value="tl198"/>
+            <xs:enumeration value="tl518"/>
+            <xs:enumeration value="tl514"/>
+            <xs:enumeration value="tl509"/>
+            <xs:enumeration value="tl515"/>
+            <xs:enumeration value="tl503"/>
+            <xs:enumeration value="tl510"/>
+            <xs:enumeration value="tl512"/>
+            <xs:enumeration value="tl165"/>
+            <xs:enumeration value="tl516"/>
+            <xs:enumeration value="tl511"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

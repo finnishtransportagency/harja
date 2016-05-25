@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:haeTietue xmlns:ns2="http://www.solita.fi/harja/tierekisteri/haeTietue">
+    <tunniste>HAR123456789</tunniste>
+    <tietolajitunniste>tl506</tietolajitunniste>
+</ns2:haeTietue>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:vastaus xmlns:ns2="http://www.solita.fi/harja/tierekisteri/vastaus">
+    <ns2:status>VIRHE</ns2:status>
+    <ns2:virheet>
+        <ns2:virhe>Tietueen tiedot ovat puutteelliset</ns2:virhe>
+    </ns2:virheet>
+</ns2:vastaus>

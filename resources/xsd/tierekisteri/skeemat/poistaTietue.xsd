@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ns1="http://www.solita.fi/harja/tierekisteri/suorittaja"
+           xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+           xmlns:ns3="http://www.solita.fi/harja/tierekisteri/tunniste"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/poistaTietue"
+           version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/suorittaja"
+               schemaLocation="suorittaja.xsd"/>
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+               schemaLocation="tietolajitunniste.xsd"/>
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tunniste"
+               schemaLocation="tunniste.xsd"/>
+
+    <xs:element name="poistaTietue">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="1" maxOccurs="1" name="poistaja" type="ns1:suorittaja"/>
+                <xs:element minOccurs="1" maxOccurs="1" name="tunniste" type="ns3:tunniste"/>
+                <xs:element minOccurs="1" maxOccurs="1" name="tietolajitunniste" type="ns2:tietolajitunniste"/>
+                <xs:element minOccurs="1" maxOccurs="1" name="poistettu" type="xs:date"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
