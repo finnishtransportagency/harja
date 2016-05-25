@@ -114,26 +114,28 @@
   (let [[sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id @nav/valittu-urakka)
         grid-data (atom (zipmap (iterate inc 1) kohdeosat))
-        toiminnot-komponentti (fn [_ index]
-                    [:span
-                     [:button.nappi-ensisijainen
-                      {:on-click
-                       (fn []
-                         (let [paivitetyt-kohdeosat
-                               (tiedot/lisaa-uusi-kohdeosa (into [] (vals @grid-data)) index)]
-                           (reset! grid-data
-                                   (zipmap (iterate inc 1)
-                                           paivitetyt-kohdeosat))))}
-                      (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
-                     [:button.nappi-ensisijainen
-                      {:on-click
-                       (fn []
-                         (let [paivitetyt-kohdeosat
-                               (tiedot/poista-kohdeosa (into [] (vals @grid-data)) index)]
-                           (reset! grid-data
-                                   (zipmap (iterate inc 1)
-                                           paivitetyt-kohdeosat))))}
-                      (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])]
+        toiminnot-komponentti
+        (fn [_ index]
+          [:span
+           [:button.nappi-ensisijainen
+            {:on-click
+             (fn []
+               (let [paivitetyt-kohdeosat
+                     (tiedot/lisaa-uusi-kohdeosa (into [] (vals @grid-data)) index)]
+                 (reset! grid-data
+                         (zipmap (iterate inc 1)
+                                 paivitetyt-kohdeosat))))}
+            (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
+           [:button.nappi-ensisijainen
+            {:on-click
+             ; FIXME Disabloi jos ainoa rivi, miten?
+             (fn []
+               (let [paivitetyt-kohdeosat
+                     (tiedot/poista-kohdeosa (into [] (vals @grid-data)) index)]
+                 (reset! grid-data
+                         (zipmap (iterate inc 1)
+                                 paivitetyt-kohdeosat))))}
+            (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])]
     (komp/luo
       (fn [kohdeosat {:keys [yllapitokohteet-atom
                              yllapitokohde-id] :as optiot}]
@@ -187,6 +189,7 @@
           grid-data]]))))
 
 (defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
+  ; FIXME Pitäisi ehkä jotenkin generisöidä?
   (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
   (let [haetut (into #{} (keys @tr-sijainnit-atom))]
     ;; jos on tullut uusi TR osoite, haetaan sille sijainti
