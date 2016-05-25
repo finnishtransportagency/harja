@@ -62,3 +62,21 @@
              :tr-loppuosa 3
              :tr-loppuetaisyys 15
              :toimenpide ""}]))))
+
+(deftest vanhan-kohteen-poistaminen-toimii
+  (let [poistettu-kohde-index-0 (yllapitokohteet/poista-kohdeosa kohdeosat 0)
+        poistettu-kohde-index-1 (yllapitokohteet/poista-kohdeosa kohdeosat 1)]
+    (is (= poistettu-kohde-index-0
+           [{:nimi "Laivaniemi 2"
+             :tr-numero 1
+             :tr-alkuosa 2
+             :tr-alkuetaisyys 100
+             :tr-loppuosa 3
+             :tr-loppuetaisyys 15}]))
+    (is (= poistettu-kohde-index-1
+           [{:nimi "Laivaniemi 2"
+             :tr-numero 1
+             :tr-alkuosa 2
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 3
+             :tr-loppuetaisyys 15}]))))
