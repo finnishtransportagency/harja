@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.api.json-esimerkkivalidoinnit-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.tyokalut.json-validointi :as json-validointi :refer [tee-validaattori]]
+            [harja.tyokalut.json-validointi :refer [tee-validaattori]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.json-esimerkit :as json-esimerkit]
             [clojure.java.io :as io]))
