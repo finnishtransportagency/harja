@@ -137,35 +137,36 @@
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
 (defn kasittele-paivittyneet-kohdeosat [kohteet]
-  (let [kohteet (into [] (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohteet))
-        uudet-kohteet
+  (let [uudet-kohteet
         ;; Kopioi kohteen N loppuosa kohtee N + 1 alkuosaksi
         ; FIXME Pitäisi tunnistaa kumpaa muokattiin, jotta kopiointi toimii myös toiseen suuntaan
         (into [] (map-indexed
                    (fn [index kohde]
                      (if (< index (- (count kohteet) 1))
                        (-> kohde
-                            (assoc :tr-loppuosa (:tr-alkuosa (get kohteet (inc index))))
-                            (assoc :tr-loppuetaisyys (:tr-alkuetaisyys (get kohteet (inc index)))))
+                           (assoc :tr-loppuosa (:tr-alkuosa (get kohteet (inc index))))
+                           (assoc :tr-loppuetaisyys (:tr-alkuetaisyys (get kohteet (inc index)))))
                        kohde))
                    kohteet))]
     uudet-kohteet))
 
-(defn lisaa-uusi-kohdeosa [kohteet index]
-  (let [kohteet (into [] kohteet)
-        index-kohde (get kohteet index)
-        uudet-kohteet (-> kohteet
-                          (conj {:nimi ""
-                                      :tr-numero (:tr-numero index-kohde)
-                                      :tr-alkuosa nil
-                                      :tr-alkuetaisyys nil
-                                      :tr-loppuosa (:tr-loppuosa index-kohde)
-                                      :tr-loppuetaisyys (:tr-loppuetaisyys index-kohde)
-                                      :toimenpide ""})
-                          (assoc kohteet index (-> index-kohde
-                                                   (assoc :tr-loppuetaisyys nil)
-                                                   (assoc :tr-loppuosa nil))))]
-    (into [] (sort-by tierekisteri-domain/tiekohteiden-jarjestys uudet-kohteet))))
+(defn lisaa-uusi-kohdeosa
+  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
+  [kohteet index]
+  (let [uudet-kohteet (into [] (concat
+                                 (take (inc index) kohteet)
+                                 [{:nimi ""
+                                  :tr-numero (:tr-numero (get kohteet index))
+                                  :tr-alkuosa nil
+                                  :tr-alkuetaisyys nil
+                                  :tr-loppuosa (:tr-loppuosa (get kohteet index))
+                                  :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index))
+                                  :toimenpide ""}]
+                                 (drop (inc index) kohteet)))
+        uudet-kohteet (assoc uudet-kohteet index (-> (get uudet-kohteet index)
+                                                     (assoc :tr-loppuosa nil)
+                                                     (assoc :tr-loppuetaisyys nil)))]
+    uudet-kohteet))
 
 (defn paivita-kohteen-kohdeosat [yllapitokohteet id uudet-kohdeosat]
   (mapv
@@ -209,8 +210,9 @@
                                 (resetoi-tr-tiedot)
                                 (yllapitokohteet/paivita-yllapitokohde! yllapitokohteet-atom id assoc :kohdeosat vastaus)))))
            :peruuta #(resetoi-tr-tiedot)
+           :tunniste hash
            :muutos (fn [grid]
-                     (let [paivitetyt-kohdeosat (kasittele-paivittyneet-kohdeosat (:kohdeosat rivi))
+                     (let [paivitetyt-kohdeosat (kasittele-paivittyneet-kohdeosat (into [] (:kohdeosat rivi)))
                            paivitetyt-yllapitokohteet (paivita-kohteen-kohdeosat @yllapitokohteet-atom
                                                                                  (:id rivi)
                                                                                  paivitetyt-kohdeosat)]
@@ -247,7 +249,7 @@
                                           (when muokataan?
                                             [:button.nappi-ensisijainen
                                              {:on-click (fn []
-                                                          (let [paivitetyt-kohdeosat (lisaa-uusi-kohdeosa kohdeosat index)
+                                                          (let [paivitetyt-kohdeosat (lisaa-uusi-kohdeosa (into [] kohdeosat) index)
                                                                 paivitetyt-yllapitokohteet
                                                                 (paivita-kohteen-kohdeosat @yllapitokohteet-atom
                                                                                            (:id rivi)
