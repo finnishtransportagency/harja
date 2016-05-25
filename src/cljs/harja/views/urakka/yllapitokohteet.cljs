@@ -189,10 +189,22 @@
                         {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                         {:nimi :tr-ajorata}
                         {:nimi :tr-kaista}
-                        {:nimi :tr-alkuosa}
-                        {:nimi :tr-alkuetaisyys}
-                        {:nimi :tr-loppuosa}
-                        {:nimi :tr-loppuetaisyys}])
+                        {:nimi :tr-alkuosa :muokattava? (fn [_ index]
+                                                          (if (:yha-sidottu? optiot)
+                                                            (> index 0)
+                                                            true))}
+                        {:nimi :tr-alkuetaisyys :muokattava? (fn [_ index]
+                                                               (if (:yha-sidottu? optiot)
+                                                                 (> index 0)
+                                                                 true))}
+                        {:nimi :tr-loppuosa :muokattava? (fn [_ index]
+                                                           (if (:yha-sidottu? optiot)
+                                                             (< index (- (count kohdeosat) 1))
+                                                             true))}
+                        {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
+                                                                (if (:yha-sidottu? optiot)
+                                                                  (< index (- (count kohdeosat) 1))
+                                                                  true))}])
                      [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}]))
           (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
          [tr-virheilmoitus tr-virheet]]))))

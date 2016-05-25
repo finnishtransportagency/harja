@@ -190,7 +190,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 (defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                               esta-poistaminen-tooltip piilota-toiminnot?
-                              fokus aseta-fokus! tulevat-rivit vetolaatikot]} skeema rivi]
+                              fokus aseta-fokus! tulevat-rivit vetolaatikot]}
+                      skeema rivi index]
   [:tr.muokataan {:class luokka}
    (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi] :as s} skeema]
       (if (= :vetolaatikon-tila tyyppi)
@@ -207,7 +208,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               tasaus-luokka (y/tasaus-luokka tasaa)
               fokus-id [id nimi]]
 
-          (if (or (nil? muokattava?) (muokattava? rivi))
+          (if (or (nil? muokattava?) (muokattava? rivi index))
             ^{:key (str nimi)}
             [:td {:class (str "muokattava " tasaus-luokka (cond
                                                             (not (empty? kentan-virheet)) " sisaltaa-virheen"
@@ -765,7 +766,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                     :aseta-fokus! #(reset! fokus %)
                                                                     :tulevat-rivit (tulevat-rivit i)
                                                                     :piilota-toiminnot? piilota-toiminnot?}
-                                                     skeema rivi]
+                                                     skeema rivi i]
                                                      (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                                             jarjestys))))))
 
