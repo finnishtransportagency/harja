@@ -18,7 +18,11 @@
             [harja.ui.napit :as napit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.yllapitokohteet :as tiedot]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.viesti :as viesti]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -164,10 +168,13 @@
                                                      (assoc :tr-loppuetaisyys nil)))]
     uudet-kohteet))
 
-(defn yllapitokohdeosat [kohdeosat yllapitokohde-id]
-  (let [grid-data (atom (zipmap (iterate inc 1) kohdeosat))]
+(defn yllapitokohdeosat [kohdeosat optiot]
+  (let [[sopimus-id _] @u/valittu-sopimusnumero
+        urakka-id (:id @nav/valittu-urakka)
+        grid-data (atom (zipmap (iterate inc 1) kohdeosat))]
     (komp/luo
-      (fn [kohdeosat]
+      (fn [kohdeosat {:keys [yllapitokohteet-atom
+                             yllapitokohde-id] :as optiot}]
         [:div
          [grid/muokkaus-grid
           {:otsikko "Tierekisterikohteet"
@@ -177,15 +184,21 @@
            :paneelikomponentit [(fn []
                                   [napit/palvelinkutsu-nappi
                                    [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-                                   #(let [urakka-id (:id @nav/valittu-urakka)
-                                          [sopimus-id _] @u/valittu-sopimusnumero]
-                                     (tiedot/tallenna-yllapitokohdeosat! urakka-id
+                                   ;; TODO Hae ja assoc sijainti (geometria) ennen tätä
+                                   #(tiedot/tallenna-yllapitokohdeosat! urakka-id
                                                                          sopimus-id
                                                                          yllapitokohde-id
-                                                                         (vals @grid-data)))
+                                                                         (vals @grid-data))
                                    {:luokka "nappi-myonteinen grid-tallenna"
-                                    :virheviesti "Tallentaminen epäonnistui."}])]
+                                    :virheviesti "Tallentaminen epäonnistui."
+                                    :kun-onnistuu (fn [vastaus]
+                                                    (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
+                                                    (urakka/lukitse-urakan-yha-sidonta! urakka-id)
+                                                    (yllapitokohteet/paivita-yllapitokohde!
+                                                      yllapitokohteet-atom yllapitokohde-id assoc :kohdeosat vastaus)
+                                                    (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
            :voi-poistaa? (constantly false)
+           :tunniste hash
            :muutos #(let [uudet-kohteet (kasittele-paivittyneet-kohdeosat (into [] (vals @grid-data)))]
                      (reset! grid-data (zipmap (iterate inc 1) uudet-kohteet)))}
           (into [] (remove
@@ -217,12 +230,7 @@
                                                                                          paivitetyt-kohdeosat)]
                                                           (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
                                            (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")])}])))
-          grid-data]
-         #_[napit/palvelinkutsu-nappi
-          "Tallenna kohdeosat"
-          #(tallenna-kohdeosat (vals @grid-data))
-          {:luokka "nappi-ensisijainen"
-           :virheviesti "Tallentaminen epäonnistui."}]]))))
+          grid-data]]))))
 
 (defn yllapitokohteet [kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
@@ -238,7 +246,10 @@
            :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :vetolaatikot (into {} (map (juxt :id
                                              (fn [rivi]
-                                               [yllapitokohdeosat (into [] (:kohdeosat rivi)) (:id rivi)]))
+                                               [yllapitokohdeosat
+                                                (into [] (:kohdeosat rivi))
+                                                {:yllapitokohde-id (:id rivi)
+                                                 :yllapitokohteet-atom kohteet-atom}]))
                                        @kohteet-atom))
            :tallenna @tallenna
            :muutos (fn [grid]
