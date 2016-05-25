@@ -22,7 +22,8 @@
             [harja.domain.paallystysilmoitus :as pot]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.urakka.yhatuonti :as yha])
+            [harja.tiedot.urakka.yhatuonti :as yha]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -185,30 +186,38 @@
                                                             kohde))
                                                         @yllapitokohteet-atom)]
                        (reset! yllapitokohteet-atom paivitetyt-yllapitokohteet)))}
-          (into [] (concat
-                     (tierekisteriosoite-sarakkeet
-                       tr-leveys
-                       [{:nimi :nimi}
-                        {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                        {:nimi :tr-ajorata}
-                        {:nimi :tr-kaista}
-                        {:nimi :tr-alkuosa :muokattava? (fn [_ index]
-                                                          (if (:yha-sidottu? optiot)
-                                                            (> index 0)
-                                                            true))}
-                        {:nimi :tr-alkuetaisyys :muokattava? (fn [_ index]
-                                                               (if (:yha-sidottu? optiot)
-                                                                 (> index 0)
-                                                                 true))}
-                        {:nimi :tr-loppuosa :muokattava? (fn [_ index]
-                                                           (if (:yha-sidottu? optiot)
-                                                             (< index (- (count kohdeosat) 1))
-                                                             true))}
-                        {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
-                                                                (if (:yha-sidottu? optiot)
-                                                                  (< index (- (count kohdeosat) 1))
-                                                                  true))}])
-                     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}]))
+          (into [] (remove
+                     nil?
+                     (concat
+                       (tierekisteriosoite-sarakkeet
+                         tr-leveys
+                         [{:nimi :nimi}
+                          {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+                          {:nimi :tr-ajorata}
+                          {:nimi :tr-kaista}
+                          {:nimi :tr-alkuosa :muokattava? (fn [_ index]
+                                                            (if (:yha-sidottu? optiot)
+                                                              (> index 0)
+                                                              true))}
+                          {:nimi :tr-alkuetaisyys :muokattava? (fn [_ index]
+                                                                 (if (:yha-sidottu? optiot)
+                                                                   (> index 0)
+                                                                   true))}
+                          {:nimi :tr-loppuosa :muokattava? (fn [_ index]
+                                                             (if (:yha-sidottu? optiot)
+                                                               (< index (- (count kohdeosat) 1))
+                                                               true))}
+                          {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
+                                                                  (if (:yha-sidottu? optiot)
+                                                                    (< index (- (count kohdeosat) 1))
+                                                                    true))}])
+                       [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
+                        (when (:yha-sidottu? optiot)
+                          {:otsikko "" :nimi :tr-muokkaus :tyyppi :komponentti :leveys tr-leveys
+                           :komponentti (fn [_ _ muokataan?]
+                                          (when muokataan?
+                                            [:button.nappi-ensisijainen {:on-click #(log "Klikkasit")}
+                                             (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]))})])))
           (sort-by tierekisteri-domain/tiekohteiden-jarjestys kohdeosat)]
          [tr-virheilmoitus tr-virheet]]))))
 

@@ -244,7 +244,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
              [tee-kentta (assoc s
                            :focus (= fokus fokus-id)
                            :on-focus #(aseta-fokus! fokus-id)
-                           :pituus-max (:pituus-max s))
+                           :pituus-max (:pituus-max s)
+                           :index index
+                           :muokataan? true)
               (r/wrap
                 arvo
                 (fn [uusi]
@@ -269,7 +271,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
                             vetolaatikot tallenna piilota-toiminnot? valittu-rivi
-                            mahdollista-rivin-valinta]} skeema rivi]
+                            mahdollista-rivin-valinta]} skeema rivi index]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(do
@@ -297,7 +299,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                         :oikea "grid-reunus-oikea"
                         nil))}
         (if (= tyyppi :komponentti)
-          (komponentti rivi)
+          (komponentti rivi index false)
           (let [haettu-arvo (if hae
                               (hae rivi)
                               (get rivi nimi))
@@ -806,7 +808,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                            :valittu-rivi valittu-rivi
                                                            :mahdollista-rivin-valinta mahdollista-rivin-valinta
                                                            :piilota-toiminnot? piilota-toiminnot?}
-                                              skeema rivi]
+                                              skeema rivi i]
                                               (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))])))
                                        rivit-jarjestetty)))))))]])
 
