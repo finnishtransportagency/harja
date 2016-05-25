@@ -148,7 +148,7 @@
            :paneelikomponentit [(fn []
                                   [napit/palvelinkutsu-nappi
                                    [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-                                   ;; TODO Hae ja assoc sijainti (geometria) ennen tätä
+                                   ;; TODO Hae ja assoc sijainti (geometria) ennen tätä (developista logiikka tähän)
                                    #(tiedot/tallenna-yllapitokohdeosat! urakka-id
                                                                         sopimus-id
                                                                         yllapitokohde-id

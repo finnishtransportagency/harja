@@ -74,7 +74,7 @@
              :tr-loppuosa 3
              :tr-loppuetaisyys 15}]))
     (is (= poistettu-kohde-index-1
-           [{:nimi "Laivaniemi 2"
+           [{:nimi "Laivaniemi 1"
              :tr-numero 1
              :tr-alkuosa 2
              :tr-alkuetaisyys 200

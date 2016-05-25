@@ -82,17 +82,19 @@
   "Poistaa valitun kohdeosan annetusta indeksistä. Pidentää edellistä kohdeosaa niin, että sen pituus täyttää
    poistetun kohdeosan jättämän alueen. Jos poistetaan ensimmäinen kohdeosa, pidennetään vastaavasti seuraava."
   [kohteet index]
-  (let [uudet-kohteet (if (> index 1)
+  (let [uudet-kohteet (if (>= index 1)
                         (-> kohteet
                             (assoc (dec index)
                                    (-> (get kohteet (dec index))
-                                       (assoc :tr-loppuosa (:tr-alkuosa (get kohteet index)))
-                                       (assoc :tr-loppuetaisyys (:tr-alkuetaisyys (get kohteet index)))))
+                                       (assoc :tr-loppuosa (:tr-loppuosa (get kohteet index)))
+                                       (assoc :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index)))))
                             (assoc index nil))
+                        ;; Poistetaan ensimmäinen kohdeosa
                         (-> kohteet
                             (assoc (inc index)
                                    (-> (get kohteet (inc index))
-                                       (assoc :tr-alkuosa (:tr-loppuosa (get kohteet index)))
-                                       (assoc :tr-alkuetaisyys (:tr-loppuetaisyys (get kohteet index)))))
-                            (assoc index nil)))]
+                                       (assoc :tr-alkuosa (:tr-alkuosa (get kohteet index)))
+                                       (assoc :tr-alkuetaisyys (:tr-alkuetaisyys (get kohteet index)))))
+                            (assoc index nil)))
+        uudet-kohteet (remove nil? uudet-kohteet)]
     uudet-kohteet))
