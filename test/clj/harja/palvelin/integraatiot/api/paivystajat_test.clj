@@ -128,17 +128,19 @@
 (defn- tee-testiyhteyshenkilo [ulkoinen-id]
   (u "INSERT INTO yhteyshenkilo (etunimi, sukunimi, ulkoinen_id)\nVALUES ('Pertti', 'Päivystäjä', '" ulkoinen-id "');"))
 
-(defn- tee-urakalle-paivystys [urakka ulkoinen-id paivystajan-ulkoinen-id]
-  (let [lausahdus (str "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo, ulkoinen_id) VALUES ('true','false',now(),now()," urakka ", (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" paivystajan-ulkoinen-id "'), '" ulkoinen-id "')")]
-    (u lausahdus)))
+(defn- tee-urakalle-paivystys [urakka ulkoinen-id paivystajan-ulkoinen-id kayttaja]
+  (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo, ulkoinen_id, luoja) "
+     "VALUES ('true','false',now(),now()," urakka ",
+     (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" paivystajan-ulkoinen-id "'), " ulkoinen-id
+     ", (SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'))"))
 
 (deftest paivystajatietojen-poisto-test
   (let [paivystys-id-1 123456789
         paivystys-id-2 987654321
         paivystys-id-3 657483920]
     (tee-testiyhteyshenkilo 9876543456)
-    (tee-urakalle-paivystys 4 (str "jarjestelma/" paivystys-id-1) 9876543456)
-    (tee-urakalle-paivystys 1 (str "jarjestelma/" paivystys-id-2) 9876543456)
+    (tee-urakalle-paivystys 4 paivystys-id-1 9876543456 kayttaja-yit)
+    (tee-urakalle-paivystys 1 paivystys-id-2 9876543456 kayttaja-yit)
     (is (= 2 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")
     (let [msg (cheshire/encode
                 {:otsikko {:lahettaja {:jarjestelma "jarjestelma"
