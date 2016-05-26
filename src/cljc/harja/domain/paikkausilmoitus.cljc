@@ -28,7 +28,7 @@
      :aet                        s/Int
      :losa                       s/Int
      :let                        s/Int
-     :paallysteen_leveys         s/Num
+     :paallysteen-leveys         s/Num
      :paikkausneliot             s/Num
      (s/optional-key :poistettu) s/Bool}]
 
@@ -36,7 +36,7 @@
    [{:suorite                         +paikkaustyo+
      (s/optional-key :yksikko)        s/Str
      (s/optional-key :maara)          s/Num
-     (s/optional-key :yks_hint_alv_0) s/Num
+     (s/optional-key :yks-hint-alv-0) s/Num
      (s/optional-key :takuupvm)       (s/maybe s/Inst)
      (s/optional-key :poistettu)      s/Bool}]})
 
@@ -44,5 +44,5 @@
 (defn laske-kokonaishinta [tyot]
   (reduce +
           (map
-            (fn [tyo] (* (:yks_hint_alv_0 tyo) (:maara tyo)))
+            (fn [tyo] (* (:yks-hint-alv-0 tyo) (:maara tyo)))
             tyot)))

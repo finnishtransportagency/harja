@@ -56,4 +56,7 @@
                      json-esimerkit/+paivystajatietojen-haku-vastaus+)))
 
   (is (nil? (validoi json-skeemat/tyokoneenseuranta-kirjaus
-                     json-esimerkit/+tyokoneenseuranta-kirjaus+))))
+                     json-esimerkit/+tyokoneenseuranta-kirjaus+)))
+
+  (is (nil? (validoi json-skeemat/paivystyksen-poisto
+                     json-esimerkit/+paivystyksen-poisto-kirjaus+))))

@@ -167,6 +167,7 @@
      :losa s/Int
      :let s/Int
      (s/optional-key :kohdeosa-id) (s/maybe s/Int)
+
      ; Osoitteelle tehdyt toimenpiteet
      (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
      (s/optional-key :raekoko) (s/maybe s/Int)
@@ -178,11 +179,9 @@
      (s/optional-key :pinta-ala) (s/maybe s/Num) ;; m2
      (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
      (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
-     (s/optional-key :poistettu) s/Bool}]
 
-   ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
-   :kiviaines
-   [{(s/optional-key :esiintyma) (s/maybe s/Str)
+     ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
+     (s/optional-key :esiintyma) (s/maybe s/Str)
      (s/optional-key :km-arvo) (s/maybe s/Str)
      (s/optional-key :muotoarvo) (s/maybe s/Str)
      (s/optional-key :sideainetyyppi) (s/maybe s/Str)
@@ -190,31 +189,31 @@
      (s/optional-key :lisaaineet) (s/maybe s/Str)
      (s/optional-key :poistettu) s/Bool}]
 
-   ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
-   ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
-   ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   :alustatoimet
-   [{:aosa s/Int
-     :aet s/Int
-     :losa s/Int
-     :let s/Int
-     (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
-     (s/optional-key :paksuus) (s/maybe s/Num) ;; cm
-     (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
-     (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
-     (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
-     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
-     (s/optional-key :poistettu) s/Bool}]
+  ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
+  ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
+  ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
+  :alustatoimet
+  [{:aosa s/Int
+    :aet s/Int
+    :losa s/Int
+    :let s/Int
+    (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
+    (s/optional-key :paksuus) (s/maybe s/Num) ;; cm
+    (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
+    (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
+    (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
+    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
+    (s/optional-key :poistettu) s/Bool}]
 
-   ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
-   :tyot
-   [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
-     :tyo s/Str
-     :tilattu-maara s/Num
-     :toteutunut-maara s/Num
-     :yksikko s/Str
-     :yksikkohinta s/Num
-     (s/optional-key :poistettu) s/Bool}]})
+  ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
+  :tyot
+  [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
+    :tyo s/Str
+    :tilattu-maara s/Num
+    :toteutunut-maara s/Num
+    :yksikko s/Str
+    :yksikkohinta s/Num
+    (s/optional-key :poistettu) s/Bool}] } )
 
 (defn laske-muutokset-kokonaishintaan
   "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."

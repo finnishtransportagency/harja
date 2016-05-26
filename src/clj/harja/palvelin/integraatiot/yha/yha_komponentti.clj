@@ -127,7 +127,7 @@
 
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
-  (hae-kohteet [this urakka-id])
+  (hae-kohteet [this urakka-id kayttajatunnus])
   (laheta-kohde! [this kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
@@ -178,7 +178,7 @@
               (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (kasittele-urakoiden-hakuvastaus body headers))))))
 
-(defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id]
+(defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id kayttajatunnus]
   (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "haeUrakanKohteet" yha-id))]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
@@ -187,11 +187,10 @@
         (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "yha" "kohteiden-haku"
           (fn [konteksti]
-            (let [parametrit (as-> {} p
-                                   (lisaa-http-parametri p "yha-id" yha-id)
-                                   (lisaa-http-parametri p "vuosi" (pvm/vuosi (pvm/nyt)))
-                                   ;; todo: hae käyttäjän livi-tunnus
-                                   (lisaa-http-parametri p "kayttaja" "kayttaja123"))
+            (let [parametrit (-> {}
+                                 (lisaa-http-parametri "yha-id" yha-id)
+                                 (lisaa-http-parametri "vuosi" (pvm/vuosi (pvm/nyt)))
+                                 (lisaa-http-parametri "kayttaja" kayttajatunnus))
                   http-asetukset {:metodi :GET :url url :parametrit parametrit}
                   {body :body headers :headers}
                   (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
@@ -215,8 +214,8 @@
 
   (hae-urakat [this yhatunniste sampotunniste vuosi]
     (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yhatunniste sampotunniste vuosi))
-  (hae-kohteet [this urakka-id]
-    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id))
+  (hae-kohteet [this urakka-id kayttajatunnus]
+    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
   (laheta-kohde! [this kohde-id]
     (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) kohde-id)))
 
