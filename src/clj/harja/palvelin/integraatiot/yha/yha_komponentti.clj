@@ -214,8 +214,8 @@
 
   (hae-urakat [this yhatunniste sampotunniste vuosi]
     (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yhatunniste sampotunniste vuosi))
-  (hae-kohteet [this urakka-id kayttaja-id]
-    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttaja-id))
+  (hae-kohteet [this urakka-id kayttajatunnus]
+    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
   (laheta-kohde! [this kohde-id]
     (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) kohde-id)))
 
