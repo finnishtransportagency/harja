@@ -4,7 +4,6 @@
             [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
             [cheshire.core :as cheshire]
             [harja.fmt :as fmt]))
 
@@ -18,7 +17,7 @@
                                              (api-paivystajatiedot/->Paivystajatiedot)
                                              [:http-palvelin :db :integraatioloki])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (defn hae-vapaa-yhteyshenkilo-ulkoinen-id []
   (let [id (rand-int 10000)
@@ -89,18 +88,16 @@
 
 (deftest hae-paivystajatiedot-puhelinnumerolla-aikavalilla
   (let [vastaus (api-tyokalut/get-kutsu
-                 ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"]
-                 kayttaja-jvh portti)
+                  ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"]
+                  kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (log/debug (:body vastaus))
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-puhelinnumerolla
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (log/debug (:body vastaus))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
     (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
 
@@ -131,21 +128,33 @@
 (defn- tee-testiyhteyshenkilo [ulkoinen-id]
   (u "INSERT INTO yhteyshenkilo (etunimi, sukunimi, ulkoinen_id)\nVALUES ('Pertti', 'Päivystäjä', '" ulkoinen-id "');"))
 
-(defn- tee-urakalle-paivystys [urakka ulkoinen-id]
-  (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES ('true','false',now(),now()," urakka ", (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" ulkoinen-id"'))"))
+(defn- tee-urakalle-paivystys [urakka ulkoinen-id paivystajan-ulkoinen-id kayttaja]
+  (u "INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo, ulkoinen_id, luoja) "
+     "VALUES ('true','false',now(),now()," urakka ",
+     (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '" paivystajan-ulkoinen-id "'), " ulkoinen-id
+     ", (SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'))"))
 
 (deftest paivystajatietojen-poisto-test
-  (tee-testiyhteyshenkilo 9876543456)
-  (tee-urakalle-paivystys 4 9876543456)
-  (tee-urakalle-paivystys 1 9876543456)
-  (is (= 2 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")
-  (let [msg (cheshire/encode {:paivystaja-idt [2 9876543456 4]})
-        vastaus (api-tyokalut/delete-kutsu ["/api/urakat/4/paivystajatiedot"] kayttaja-yit portti msg)
-        encodattu-body (cheshire/decode (:body vastaus) true)]
-    (is (= 200 (:status vastaus)))
-    (is (= (:viesti encodattu-body) "Päivystäjätiedot poistettu"))
-    (is (= [] (q "SELECT * FROM paivystys WHERE urakka=4 AND yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')")) "urakalta poistunut annettu paivystaja")
-    (is (= 1 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")))
+  (let [paivystys-id-1 123456789
+        paivystys-id-2 987654321
+        paivystys-id-3 657483920]
+    (tee-testiyhteyshenkilo 9876543456)
+    (tee-urakalle-paivystys 4 paivystys-id-1 9876543456 kayttaja-yit)
+    (tee-urakalle-paivystys 1 paivystys-id-2 9876543456 kayttaja-yit)
+    (is (= 2 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")
+    (let [msg (cheshire/encode
+                {:otsikko {:lahettaja {:jarjestelma "jarjestelma"
+                                       :organisaatio {:nimi "Urakoitsija"
+                                                      :ytunnus "1234567-8"}}
+                           :viestintunniste {:id 343}
+                           :lahetysaika "2015-01-03T12:00:00Z"}
+                 :paivystysidt [paivystys-id-1 paivystys-id-3]})
+          vastaus (api-tyokalut/delete-kutsu ["/api/urakat/4/paivystajatiedot"] kayttaja-yit portti msg)
+          encodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 200 (:status vastaus)))
+      (is (= (:ilmoitukset encodattu-body) "Päivystykset poistettu onnistuneesti"))
+      (is (= [] (q " SELECT * FROM paivystys WHERE urakka=4 AND yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456') ")) " urakalta poistunut annettu paivystaja ")
+      (is (= 1 (count (q " SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456') "))) " toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa "))))
 
 (deftest hae-tarkista-paivamaarakasittelyt
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/4/paivystajatiedot?paattyen=2016-09-30"] kayttaja-yit portti)]

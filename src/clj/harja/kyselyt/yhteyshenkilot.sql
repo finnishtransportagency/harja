@@ -19,14 +19,12 @@ FROM yhteyshenkilo y
   LEFT JOIN organisaatio org ON y.organisaatio = org.id
 WHERE yu.urakka = :urakka;
 
--- name: poista-urakan-paivystajatiedot!
--- Poistaa annetun urakan päivystäjätiedot
+-- name: poista-urakan-paivystykset!
+-- Poistaa annetun urakan päivystykset ulkoisella id:lla
 DELETE FROM paivystys
 WHERE urakka = :urakka AND
-      yhteyshenkilo IN
-      (SELECT id
-       FROM yhteyshenkilo
-       WHERE ulkoinen_id IN (:ulkoiset_idt));
+      luoja = :kayttaja_id AND
+      ulkoinen_id IN (:ulkoiset_idt);
 
 -- name: hae-urakan-paivystajat
 -- Hakee urakan päivystykset
@@ -36,6 +34,7 @@ SELECT
   p.varahenkilo,
   p.alku,
   p.loppu,
+  y.id        AS yhteyshenkilo_id,
   y.etunimi,
   y.sukunimi,
   y.sahkoposti,
@@ -67,6 +66,7 @@ SELECT
   p.varahenkilo,
   p.alku,
   p.loppu,
+  y.id        AS yhteyshenkilo_id,
   y.etunimi,
   y.sukunimi,
   y.sahkoposti,
@@ -128,9 +128,9 @@ INSERT INTO yhteyshenkilo_urakka (rooli, yhteyshenkilo, urakka) VALUES (:rooli, 
 -- name: paivita-yhteyshenkilo<!
 -- Päivittää yhteyshenkilön tiedot
 UPDATE yhteyshenkilo
-   SET etunimi  = :etunimi, sukunimi = :sukunimi,
-       tyopuhelin = :tyopuhelin, matkapuhelin = :matkapuhelin,
-       sahkoposti = :sahkoposti, organisaatio = :organisaatio
+SET etunimi  = :etunimi, sukunimi = :sukunimi,
+  tyopuhelin = :tyopuhelin, matkapuhelin = :matkapuhelin,
+  sahkoposti = :sahkoposti, organisaatio = :organisaatio
 WHERE id = :id;
 
 -- name: paivita-yhteyshenkilo-ulkoisella-idlla<!
@@ -163,8 +163,8 @@ WHERE id = (SELECT yhteyshenkilo
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
 INSERT INTO paivystys
-(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
-VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo);
+(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo, ulkoinen_id, luoja)
+VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo, :ulkoinen_id, :kayttaja_id);
 
 -- name: hae-paivystyksen-yhteyshenkilo-id
 -- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
@@ -186,6 +186,17 @@ SET alku        = :alku,
   varahenkilo   = :varahenkilo,
   vastuuhenkilo = :vastuuhenkilo
 WHERE yhteyshenkilo = :yhteyshenkilo_id;
+
+-- name: paivita-paivystys-ulkoisella-idlla<!
+-- Päivittää päivystyksen tiedot
+UPDATE paivystys
+SET alku        = :alku,
+  loppu         = :loppu,
+  varahenkilo   = :varahenkilo,
+  vastuuhenkilo = :vastuuhenkilo,
+  yhteyshenkilo = :yhteyshenkilo_id
+WHERE ulkoinen_id = :ulkoinen_id AND
+      luoja = :kayttaja_id;
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan Sampo id:llä
@@ -229,6 +240,13 @@ SELECT exists(
     FROM paivystys
     WHERE yhteyshenkilo = :yhteyshenkilo);
 
+-- name: onko-olemassa-paivystys-ulkoisella-idlla
+SELECT exists(
+    SELECT id
+    FROM paivystys
+    WHERE ulkoinen_id = :ulkoinen_id AND
+          luoja = :luoja_id);
+
 -- name: hae-urakan-taman-hetkiset-paivystajat
 SELECT
   yh.id,
@@ -267,14 +285,20 @@ WHERE (matkapuhelin = :puhelinnumero OR tyopuhelin = :puhelinnumero) AND
 LIMIT 1;
 
 -- name: hae-urakan-paivystaja-sahkopostilla
-SELECT y.id, y.etunimi, y.sukunimi,
-       y.matkapuhelin, y.tyopuhelin, y.sahkoposti,
-       o.ytunnus, o.nimi
-  FROM yhteyshenkilo y
-       JOIN paivystys p ON p.yhteyshenkilo = y.id
-       LEFT JOIN organisaatio o ON o.id = y.organisaatio
- WHERE p.urakka = :urakka AND
-       LOWER(sahkoposti) = LOWER(:sahkoposti)
+SELECT
+  y.id,
+  y.etunimi,
+  y.sukunimi,
+  y.matkapuhelin,
+  y.tyopuhelin,
+  y.sahkoposti,
+  o.ytunnus,
+  o.nimi
+FROM yhteyshenkilo y
+  JOIN paivystys p ON p.yhteyshenkilo = y.id
+  LEFT JOIN organisaatio o ON o.id = y.organisaatio
+WHERE p.urakka = :urakka AND
+      LOWER(sahkoposti) = LOWER(:sahkoposti)
 
 
 -- name: hae-yhteyshenkilo
