@@ -165,6 +165,7 @@ SELECT
   tm.id              AS tmid,
   t.lisatieto        AS toteuma_lisatieto,
   t.suorittajan_nimi AS toteuma_suorittaja,
+  k.jarjestelma         AS toteuma_jarjestelmanlisaama,
   t.sopimus
 FROM toteuma_materiaali tm
   INNER JOIN toteuma t
@@ -183,6 +184,8 @@ FROM toteuma_materiaali tm
     ON m.id = mk.materiaali
        AND mk.sopimus = :sopimus
        AND mk.poistettu IS NOT TRUE
+
+  LEFT JOIN kayttaja k ON k.id = t.luoja
 
 ORDER BY t.alkanut DESC;
 
