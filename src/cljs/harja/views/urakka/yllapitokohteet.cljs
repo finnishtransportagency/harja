@@ -120,20 +120,14 @@
           [:span
            [:button.nappi-ensisijainen
             {:on-click
-             (fn []
-               (let [paivitetyt-kohdeosat
-                     (tiedot/lisaa-uusi-kohdeosa (into [] (vals @grid-data)) index)]
-                 (grid/aseta-muokkaustila! g (zipmap (iterate inc 1)
-                                                     paivitetyt-kohdeosat))))}
+             #(grid/aseta-muokkaustila! g
+                                        (tiedot/lisaa-uusi-kohdeosa @grid-data (inc index)))}
             (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
            [:button.nappi-ensisijainen
             {:disabled (= 1 (count @grid-data))
              :on-click
-              (fn []
-               (let [paivitetyt-kohdeosat
-                     (tiedot/poista-kohdeosa (into [] (vals @grid-data)) index)]
-                 (grid/aseta-muokkaustila! g (zipmap (iterate inc 1)
-                                                     paivitetyt-kohdeosat))))}
+             #(grid/aseta-muokkaustila! g
+                                        (tiedot/poista-kohdeosa @grid-data (inc index)))}
             (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])]
 
     (komp/luo

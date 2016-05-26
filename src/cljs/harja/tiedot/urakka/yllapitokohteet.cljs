@@ -93,40 +93,59 @@
         rivit))))
 
 (defn lisaa-uusi-kohdeosa
-  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
-  [kohteet index]
-  (let [uudet-kohteet (into [] (concat
-                                 (take (inc index) kohteet)
-                                 [{:nimi ""
-                                   :tr-numero (:tr-numero (get kohteet index))
-                                   :tr-alkuosa nil
-                                   :tr-alkuetaisyys nil
-                                   :tr-loppuosa (:tr-loppuosa (get kohteet index))
-                                   :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index))
-                                   :toimenpide ""}]
-                                 (drop (inc index) kohteet)))
-        uudet-kohteet (assoc uudet-kohteet index (-> (get uudet-kohteet index)
-                                                     (assoc :tr-loppuosa nil)
-                                                     (assoc :tr-loppuetaisyys nil)))]
-    uudet-kohteet))
+  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
+  jälkeen tulevien osien avaimia yhdellä suuremmaksi."
+  [kohdeosat key]
+  (let [rivi (get kohdeosat key)
+        avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
+        uusi-rivi {:nimi ""
+                   :tr-numero (:tr-numero rivi)
+                   :tr-alkuosa nil
+                   :tr-alkuetaisyys nil
+                   :tr-loppuosa (:tr-loppuosa rivi)
+                   :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
+                   :toimenpide ""}]
+    (-> kohdeosat
+        (assoc-in [key :tr-loppuosa] nil)
+        (assoc-in [key :tr-loppuetaisyys] nil)
+        (assoc (inc key) uusi-rivi)
+        (merge (zipmap (map inc avaimet-jalkeen)
+                       (map #(get kohdeosat %) avaimet-jalkeen))))))
 
 (defn poista-kohdeosa
-  "Poistaa valitun kohdeosan annetusta indeksistä. Pidentää edellistä kohdeosaa niin, että sen pituus täyttää
+  "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus täyttää
    poistetun kohdeosan jättämän alueen. Jos poistetaan ensimmäinen kohdeosa, pidennetään vastaavasti seuraava."
-  [kohteet index]
-  (let [uudet-kohteet (if (>= index 1)
-                        (-> kohteet
-                            (assoc (dec index)
-                                   (-> (get kohteet (dec index))
-                                       (assoc :tr-loppuosa (:tr-loppuosa (get kohteet index)))
-                                       (assoc :tr-loppuetaisyys (:tr-loppuetaisyys (get kohteet index)))))
-                            (assoc index nil))
-                        ;; Poistetaan ensimmäinen kohdeosa
-                        (-> kohteet
-                            (assoc (inc index)
-                                   (-> (get kohteet (inc index))
-                                       (assoc :tr-alkuosa (:tr-alkuosa (get kohteet index)))
-                                       (assoc :tr-alkuetaisyys (:tr-alkuetaisyys (get kohteet index)))))
-                            (assoc index nil)))
-        uudet-kohteet (remove nil? uudet-kohteet)]
-    uudet-kohteet))
+  [kohdeosat key]
+  (let [avaimet (sort (keys kohdeosat))
+        avaimet-ennen (filter #(< % key) avaimet)
+        avaimet-jalkeen (filter #(> % key) avaimet)
+        ennen (when-not (empty? avaimet-ennen)
+                (get kohdeosat (last avaimet-ennen)))
+        kohdeosa (get kohdeosat key)
+        jalkeen (when-not (empty? avaimet-jalkeen)
+                  (get kohdeosat (first avaimet-jalkeen)))]
+    (cond
+      ;; Poistetaan ensimmäistä, aseta ensimmäisen alku seuraavan aluksi
+      (nil? ennen)
+      (merge {1 (merge jalkeen
+                       (select-keys kohdeosa [:tr-alkuosa :tr-alkuetaisyys]))}
+             (zipmap (iterate inc 2)
+                     (map #(get kohdeosat %) (rest avaimet-jalkeen))))
+
+      ;; Poistetaan viimeistä, aseta viimeisen loppu toiseksi viimeiseen
+      (nil? jalkeen)
+      (merge (zipmap (iterate inc 1)
+                     (map #(get kohdeosat %) (butlast avaimet-ennen)))
+             {(count avaimet-ennen)
+              (merge ennen
+                     (select-keys kohdeosa [:tr-loppuosa :tr-loppuetaisyys]))})
+
+      ;; Poistetaan rivi välistä, asetetaan tämän rivin loppuosa seuraavan alkuosaksi
+      :default
+      (merge (zipmap (iterate inc 1)
+                     (map #(get kohdeosat %) avaimet-ennen))
+             {(inc (count avaimet-ennen))
+              (merge jalkeen
+                     (select-keys kohdeosa [:tr-loppuosa :tr-loppuetaisyys]))}
+             (zipmap (iterate inc (+ 2 (count avaimet-ennen)))
+                     (map #(get kohdeosat %) (rest avaimet-jalkeen)))))))
