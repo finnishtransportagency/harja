@@ -23,7 +23,16 @@
                 (let [[x1 y1 x2 y2] extent
                       uusi-url (apply karttakuva-url
                                       (concat  ["x1" x1 "y1" y1 "x2" x2 "y2" y2
-                                                "r" resolution "pr" pixel-ratio]
+                                                "r" resolution "pr" pixel-ratio
+                                                "ts" (let [nyt (t/now)]
+                                                       (t/date-time
+                                                         (t/year nyt)
+                                                         (t/month nyt)
+                                                         (t/day nyt)
+                                                         (t/hour nyt)
+                                                         (t/minute nyt)
+                                                         (* 10 (int (/ (t/second nyt) 10)))
+                                                         0))]
                                                parametrit))]
                   (if (= uusi-url url)
                     [url image]
