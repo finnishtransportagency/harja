@@ -14,7 +14,8 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
-            [harja.tyokalut.merkkijono :as merkkijono])
+            [harja.tyokalut.merkkijono :as merkkijono]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -78,8 +79,8 @@
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
-        voimassaolopvm (.format (SimpleDateFormat. "yyyy-MM-dd") (.parse (SimpleDateFormat. "yyyy-MM-dd") (get parametrit "voimassaolopvm")))
-        tilannepvm (.format (SimpleDateFormat. "yyyy-MM-dd") (.parse (SimpleDateFormat. "yyyy-MM-dd") (get parametrit "tilannepvm")))]
+        voimassaolopvm (pvm/iso-8601->pvm (get parametrit "voimassaolopvm"))
+        tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite) " tilannepäivämäärällä: " tilannepvm)
     (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm tilannepvm)
@@ -107,7 +108,7 @@
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
     (tee-kirjausvastauksen-body
       {:id livitunniste
-      :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
+       :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri data kayttaja]
   (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
