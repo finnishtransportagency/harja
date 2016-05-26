@@ -22,7 +22,7 @@
     {:karttapaivamaara  (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)}
     (into {}
           (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
-          [:ajorata :kaista :aosa :aet :losa :let])))
+          [:ajorata :kaista :aosa :aet :losa :let :tienumero])))
 
 (defn lue-paallystystoimenpide [paallystystoimenpide]
   (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)

@@ -151,7 +151,7 @@
                   :aikataulu-paallystys-alku   (pvm/->pvm-aika "19.5.2016 12:00")
                   :aikataulu-paallystys-loppu   (pvm/->pvm-aika "20.5.2016 12:00")
                   :aikataulu-tiemerkinta-alku  nil
-                  :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2016")
+                  :aikataulu-tiemerkinta-loppu nil
                   :id                          1
                   :kohdenumero                 "L03"
                   :nimi                        "Leppäjärven ramppi"

@@ -11,56 +11,137 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.modal :as modal]
+            [harja.ui.lomake :as lomake]
+            [cljs-time.core :as t]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+
+
+(defn valmis-tiemerkintaan [kohde-id urakka-id]
+  (let [valmis-tiemerkintaan-lomake (atom nil)
+        valmis-tallennettavaksi? (reaction (some? (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)))]
+    (fn [kohde-id urakka-id]
+      [:button.nappi-ensisijainen.nappi-grid
+       {:type "button"
+        :on-click
+        (fn []
+          (modal/nayta!
+            {:otsikko "Merkintäänkö kohde valmiiksi tiemerkintään?"
+             :luokka "merkitse-valmiiksi-tiemerkintaan"
+             :sulje-fn #(reset! valmis-tiemerkintaan-lomake nil) ; FIXME ei toimi?
+             :footer [:span
+                      [:button.nappi-toissijainen
+                       {:type "button"
+                        :on-click #(do (.preventDefault %)
+                                       (reset! valmis-tiemerkintaan-lomake nil)
+                                       (modal/piilota!))}
+                       "Peruuta"]
+                      [napit/palvelinkutsu-nappi
+                       "Merkitse"
+                       #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
+                            (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
+                              kohde-id
+                              (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
+                              urakka-id
+                              (first @u/valittu-sopimusnumero)))
+                       {;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
+                        :luokka "nappi-myonteinen"
+                        :kun-onnistuu (fn [vastaus]
+                                        (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
+                                        (reset! tiedot/aikataulurivit vastaus)
+                                        (modal/piilota!))}]]}
+            [:div
+             [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]
+             [lomake/lomake {:otsikko ""
+                             :muokkaa! (fn [uusi-data]
+                                         (reset! valmis-tiemerkintaan-lomake uusi-data))}
+              [{:otsikko "Tiemerkinnän saa aloittaa"
+                :nimi :valmis-tiemerkintaan
+                :pakollinen? true
+                :tyyppi :pvm}]
+              @valmis-tiemerkintaan-lomake]]))}
+       "Aseta päivämäärä"])))
+
 (defn aikataulu
-  []
+  [urakka optiot]
   (komp/luo
     (komp/lippu tiedot/aikataulu-nakymassa?)
-      (fn []
-        (let [ur @nav/valittu-urakka
-              urakka-id (:id ur)
-              sopimus-id (first @u/valittu-sopimusnumero)
-              aikataulut @tiedot/aikataulurivit
-              paallystysurakoitsijana? #(oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu
-                                                                  urakka-id)
-              tiemerkintaurakoitsijana? #(oikeudet/urakat-aikataulu urakka-id "TM-valmis")
-              voi-tallentaa? (or paallystysurakoitsijana? tiemerkintaurakoitsijana?)]
-          (log "aikataulut: " (pr-str aikataulut))
-          [:div.aikataulu
-          [grid/grid
-           {:otsikko "Kohteiden aikataulu"
-            :voi-poistaa? (constantly false)
-            :piilota-toiminnot? true
-            :tallenna (if voi-tallentaa?
-                        #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id
-                                                                      sopimus-id
-                                                                      %)
-                        :ei-mahdollinen)}
-           [{:otsikko "Kohde\u00AD ID" :leveys "5%" :nimi :kohdenumero :tyyppi :string
-             :pituus-max 128 :muokattava? (constantly false)}
-            {:otsikko "Kohteen nimi" :leveys "10%" :nimi :nimi :tyyppi :string :pituus-max 128
-             :muokattava? (constantly false)}
-
-            {:otsikko "TR-osoite" :leveys "10%" :nimi :tr-osoite :tyyppi :string
-             :muokattava? (constantly false)}
-            {:otsikko "Pääll. aloitus\u00AD" :leveys "8%" :nimi :aikataulu-paallystys-alku
-             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-             :muokattava? paallystysurakoitsijana?}
-            {:otsikko "Pääll. valmis" :leveys "8%" :nimi :aikataulu-paallystys-loppu
-             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt :muokattava? paallystysurakoitsijana?}
-            {:otsikko     "Valmis tie\u00ADmerkin\u00ADtään" :leveys "7%"
-             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
-             :komponentti (fn [rivi]
-                            (if (not (:valmis-tiemerkintaan rivi))
-                              [:button.nappi-ensisijainen.nappi-grid
-                               {:type     "button"
-                                :on-click #(log "Painettu")} "Valmis"]
-                              [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]))}
-            {:otsikko "TM valmis" :leveys "8%" :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
-             :fmt pvm/pvm-opt :muokattava? tiemerkintaurakoitsijana?}
-            {:otsikko "Kohde valmis" :leveys "7%" :nimi :aikataulu-kohde-valmis :tyyppi :pvm
-             :fmt pvm/pvm-opt :muokattava? paallystysurakoitsijana?}]
-           @tiedot/aikataulurivit]]))))
+    (fn [urakka optiot]
+      (let [ur @nav/valittu-urakka
+            urakka-id (:id ur)
+            sopimus-id (first @u/valittu-sopimusnumero)
+            paallystysurakoitsijana? #(oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu
+                                                                urakka-id)
+            tiemerkintaurakoitsijana? #(oikeudet/urakat-aikataulu urakka-id "TM-valmis")
+            voi-tallentaa? (or paallystysurakoitsijana? tiemerkintaurakoitsijana?)]
+        [:div.aikataulu
+         [grid/grid
+          {:otsikko "Kohteiden aikataulu"
+           :voi-poistaa? (constantly false)
+           :piilota-toiminnot? true
+           :tallenna (if voi-tallentaa?
+                       #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id
+                                                                     sopimus-id
+                                                                     %)
+                       :ei-mahdollinen)}
+          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+            :pituus-max 128 :muokattava? (constantly false)}
+           {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
+            :muokattava? (constantly false)}
+           {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
+            :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
+           ; FIXME Tallennus epäonnistuu jos kellonaikaa ei anna
+           {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 10 :nimi :aikataulu-paallystys-alku
+            :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
+           {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 10 :nimi :aikataulu-paallystys-loppu
+            :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
+           (when (= (:nakyma optiot) :paallystys)
+             {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
+              :leveys 13 :nimi :suorittava-tiemerkintaurakka
+              :tyyppi :valinta
+              :fmt (fn [arvo]
+                     (:nimi (some
+                              #(when (= (:id %) arvo) %)
+                              @tiedot/tiemerkinnan-suorittavat-urakat)))
+              :valinta-arvo :id
+              :valinta-nayta #(if % (:nimi %) "- Valitse urakka -")
+              :valinnat @tiedot/tiemerkinnan-suorittavat-urakat
+              :nayta-ryhmat [:sama-hallintayksikko :eri-hallintayksikko]
+              :ryhmittely #(if (= (:hallintayksikko %) (:id (:hallintayksikko urakka)))
+                            :sama-hallintayksikko
+                            :eri-hallintayksikko)
+              :ryhman-otsikko #(case %
+                                :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
+                                :eri-hallintayksikko "Muut tiemerkintäurakat")
+              :muokattava? paallystysurakoitsijana?})
+           {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
+            :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
+            :komponentti (fn [rivi]
+                           (if (:valmis-tiemerkintaan rivi)
+                             [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]
+                             (if (= (:nakyma optiot) :paallystys)
+                               [valmis-tiemerkintaan (:id rivi) urakka-id]
+                               [:span "Ei"])))}
+           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
+            :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
+            :fmt pvm/pvm-opt :muokattava? (fn [rivi]
+                                            (and (= (:nakyma optiot) :tiemerkinta)
+                                                 tiemerkintaurakoitsijana?
+                                                 (:valmis-tiemerkintaan rivi)))}
+           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä val\u00ADmis"
+            :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
+            :fmt pvm/pvm-opt :muokattava? (fn [rivi]
+                                            (and (= (:nakyma optiot) :tiemerkinta)
+                                                 tiemerkintaurakoitsijana?
+                                                 (:valmis-tiemerkintaan rivi)))}
+           {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
+            :fmt pvm/pvm-opt
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}]
+          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))

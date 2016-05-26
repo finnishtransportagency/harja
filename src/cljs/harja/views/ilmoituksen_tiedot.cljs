@@ -7,11 +7,12 @@
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
                                               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-                                              kuittaustyypin-selite nayta-tierekisteriosoite]]
+                                              kuittaustyypin-selite]]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.tierekisteri :as tr-domain]))
 
 (defn ilmoitus [ilmoitus]
   [:div
@@ -20,7 +21,7 @@
     [:span
      [yleiset/tietoja {}
       "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-      "Sijainti: " (nayta-tierekisteriosoite (:tr ilmoitus))
+      "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
       "Otsikko: " (:otsikko ilmoitus)
       "Lyhyt selite: " (:lyhytselite ilmoitus)
       "Pitkä selite: " (when (:pitkaselite ilmoitus)

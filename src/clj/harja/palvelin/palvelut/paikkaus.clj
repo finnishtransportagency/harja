@@ -37,9 +37,9 @@
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [kohdetiedot (first (yllapitokohteet-q/hae-urakan-yllapitokohde db urakka-id paikkauskohde-id))
         _ (log/debug (pr-str kohdetiedot))
-        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen_mukaiset_tyot
+        kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen-mukaiset-tyot
                                                    :arvonvahennykset
-                                                   :bitumi_indeksi
+                                                   :bitumi-indeksi
                                                    :kaasuindeksi]))
         paikkausilmoitus (first (into []
                                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
@@ -71,11 +71,11 @@
             :paikkauskohde-id paikkauskohde-id
             :kommentit kommentit))))))
 
-(defn- paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]
+(defn- paivita-paikkausilmoitus [db user {:keys [id ilmoitustiedot aloituspvm valmispvm-kohde valmispvm-paikkaus paikkauskohde-id paatos perustelu kasittelyaika]}]
   (log/debug "Päivitetään vanha paikkaussilmoitus, jonka id: " paikkauskohde-id)
   (let [tila (if (= paatos :hyvaksytty)
                "lukittu"
-               (if (and valmispvm_kohde valmispvm_paikkaus) "valmis" "aloitettu"))
+               (if (and valmispvm-kohde valmispvm-paikkaus) "valmis" "aloitettu"))
         toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
@@ -86,8 +86,8 @@
                                  encoodattu-ilmoitustiedot
                                  toteutunut-hinta
                                  (konv/sql-date aloituspvm)
-                                 (konv/sql-date valmispvm_kohde)
-                                 (konv/sql-date valmispvm_paikkaus)
+                                 (konv/sql-date valmispvm-kohde)
+                                 (konv/sql-date valmispvm-paikkaus)
                                  (if paatos (name paatos))
                                  perustelu
                                  (konv/sql-date kasittelyaika)
@@ -95,11 +95,11 @@
                                  paikkauskohde-id))
   id)
 
-(defn- luo-paikkausilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm_kohde valmispvm_paikkaus paikkauskohde-id]}]
+(defn- luo-paikkausilmoitus [db user {:keys [ilmoitustiedot aloituspvm valmispvm-kohde valmispvm-paikkaus paikkauskohde-id]}]
   (log/debug "Luodaan uusi paikkausilmoitus.")
-  (log/debug "valmispvm_kohde: " (pr-str valmispvm_kohde))
-  (log/debug "valmispvm_paikkaus: " (pr-str valmispvm_paikkaus))
-  (let [tila (if (and valmispvm_kohde valmispvm_paikkaus) "valmis" "aloitettu")
+  (log/debug "valmispvm-kohde: " (pr-str valmispvm-kohde))
+  (log/debug "valmispvm-paikkaus: " (pr-str valmispvm-paikkaus))
+  (let [tila (if (and valmispvm-kohde valmispvm-paikkaus) "valmis" "aloitettu")
         toteutunut-hinta (paikkausilmoitus-domain/laske-kokonaishinta (:toteumat ilmoitustiedot))
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
@@ -111,8 +111,8 @@
                                    encoodattu-ilmoitustiedot
                                    toteutunut-hinta
                                    (konv/sql-date aloituspvm)
-                                   (konv/sql-date valmispvm_kohde)
-                                   (konv/sql-date valmispvm_paikkaus)
+                                   (konv/sql-date valmispvm-kohde)
+                                   (konv/sql-date valmispvm-paikkaus)
                                    (:id user)))))
 
 (defn- luo-tai-paivita-paikkausilmoitus [db user lomakedata paikkausilmoitus-kannassa]
@@ -120,8 +120,31 @@
     (paivita-paikkausilmoitus db user lomakedata)
     (luo-paikkausilmoitus db user lomakedata)))
 
+(defn- tarkista-paikkausilmoituksen-tallentamisoikeudet [user urakka-id
+                                                           uusi-paikkausilmoitus
+                                                           paikkausilmoitus-kannassa]
+  (let [kasittelytiedot-muuttuneet?
+        (fn [uudet-tiedot tiedot-kannassa]
+          (let [vertailtavat
+                [:paatos :perustelu :kasittelyaika]]
+            (not= (select-keys uudet-tiedot vertailtavat)
+                  (select-keys tiedot-kannassa vertailtavat))))]
+    ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä päätöstä.
+    ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
+    (if (kasittelytiedot-muuttuneet? uusi-paikkausilmoitus paikkausilmoitus-kannassa)
+      (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
+                             user urakka-id))
+
+    ;; Käyttöliittymässä on estetty lukitun paikkausilmoituksen muokkaaminen,
+    ;; mutta tehdään silti tarkistus
+    (log/debug "Tarkistetaan onko MINIPOT lukittu...")
+    (if (= :lukittu (:tila paikkausilmoitus-kannassa))
+      (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
+          (throw (RuntimeException. "Paikkausilmoitus on lukittu, ei voi päivittää!")))
+      (log/debug "MINIPOT ei ole lukittu, vaan " (:tila paikkausilmoitus-kannassa)))))
+
 (defn tallenna-paikkausilmoitus [db user {:keys [urakka-id sopimus-id paikkausilmoitus]}]
-  (log/debug "Käsitellään paikkausilmoitus: " paikkausilmoitus
+  (log/debug "Tallennetaan paikkausilmoitus: " paikkausilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
              ", paikkauskohde-id:" (:paikkauskohde-id paikkausilmoitus))
@@ -137,26 +160,12 @@
           paikkausilmoitus-kannassa (when-not (:uusi (meta paikkausilmoitus-kannassa))
                                       ;; Tunnistetaan uuden tallentaminen
                                       paikkausilmoitus-kannassa)]
+
       (log/debug "MINIPOT kannassa: " paikkausilmoitus-kannassa)
-
-      ;; Päätöstiedot lähetetään aina lomakkeen mukana, mutta vain urakanvalvoja saa muuttaa tehtyä
-      ;; päätöstä. Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
-      (if (or
-            (not (= (:paatos_tekninen_osa paikkausilmoitus-kannassa)
-                    (or (:paatos_tekninen_osa paikkausilmoitus) nil)))
-            (not (= (:perustelu paikkausilmoitus-kannassa)
-                    (or (:perustelu paikkausilmoitus) nil))))
-        (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
-                               user urakka-id))
-
-      ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,
-      ;; mutta tehdään silti tarkistus
-      ; FIXME Pura funktioksi kuten päällystyksessä
-      (log/debug "Tarkistetaan onko MINIPOT lukittu...")
-      (if (= :lukittu (:tila paikkausilmoitus-kannassa))
-        (do (log/debug "MINIPOT on lukittu, ei voi päivittää!")
-            (throw (RuntimeException. "Paikkausilmoitus on lukittu, ei voi päivittää!")))
-        (log/debug "MINIPOT ei ole lukittu, vaan " (:tila paikkausilmoitus-kannassa)))
+      (tarkista-paikkausilmoituksen-tallentamisoikeudet user
+                                                        urakka-id
+                                                        paikkausilmoitus
+                                                        paikkausilmoitus-kannassa)
 
       (let [paikkausilmoitus-id (luo-tai-paivita-paikkausilmoitus c user paikkausilmoitus
                                                                   paikkausilmoitus-kannassa)]

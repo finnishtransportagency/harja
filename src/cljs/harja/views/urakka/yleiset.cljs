@@ -28,9 +28,6 @@
             [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
-
-
 ;; hallintayksikkö myös
 ;; organisaatio = valinta siitä mitä on tietokannassa
 ;; sampoid

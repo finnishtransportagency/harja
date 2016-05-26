@@ -5,9 +5,9 @@
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
             [harja.domain.ilmoitukset :refer [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
-                                                 +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
-                                                 +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-                                                 kuittaustyypin-selite nayta-tierekisteriosoite]]
+                                              +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
+                                              +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
+                                              kuittaustyypin-selite]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -26,7 +26,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.views.ilmoituksen-tiedot :as it]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.domain.tierekisteri :as tr-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn pollauksen-merkki []
@@ -140,7 +141,7 @@
 
          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "15%"}
           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "15%"}
-          {:otsikko "Sijainti" :nimi :tierekisteri :hae #(nayta-tierekisteriosoite (:tr %)) :leveys "15%"}
+          {:otsikko "Sijainti" :nimi :tierekisteri :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %)) :leveys "15%"}
           {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %)) :leveys "15%"}
           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "15%"}
           {:otsikko "Tila" :nimi :tila :leveys "10%" :hae #(kuittaustyypin-selite (:tila %))}]
