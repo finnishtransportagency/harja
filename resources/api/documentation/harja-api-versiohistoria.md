@@ -1,10 +1,10 @@
-<b>Nykyinen versio: 0.1.5</b>
-<b>Julkaistu: 13.5.2016</b>
+<b>Nykyinen versio: 0.1.6</b>
+<b>Julkaistu: 20.5.2016</b>
 
 <b>Versiohistoria:</b>
 - Versionumero: 0.1.6. Julkaistu 20.5.2016:
     - Päivystyksille lisätty id kenttä. Yksittäinen päivystys voidaan nyt poistaa käyttäen samaa id:tä. Samoin päivitys onnistuu tätä kautta.
-    - Varusteiden lisäykseen, päivitykseen ja hakuun lisätty pakollisena kenttänä tilannepäivämäärä, jolla kerrotaan lähdejärjestelmän käyttävän tieverokon julkaisupäivämäärä, jotta sijainti voidaan kohdistaa oikealle verkolle.
+    - Varusteiden lisäykseen, päivitykseen ja hakuun lisätty pakollisena kenttänä tilannepäivämäärä, jolla kerrotaan lähdejärjestelmän käyttävän tieverkon julkaisupäivämäärä, jotta sijainti voidaan kohdistaa oikealle verkolle.
 - Versionumero: 0.1.5. Julkaistu 13.5.2016:
     - Tarkastuksessa on optionaalinen "laadunalitus" kenttä, jolla voidaan sanoa onko kyseessä
       laadun alitus vai ei. Jos kenttää ei ole, toimitaan vanhan päättelyn mukaan, jossa
