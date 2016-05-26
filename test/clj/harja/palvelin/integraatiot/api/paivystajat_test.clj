@@ -17,7 +17,7 @@
                                              (api-paivystajatiedot/->Paivystajatiedot)
                                              [:http-palvelin :db :integraatioloki])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (defn hae-vapaa-yhteyshenkilo-ulkoinen-id []
   (let [id (rand-int 10000)
