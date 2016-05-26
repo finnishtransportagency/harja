@@ -347,7 +347,7 @@ documentation:
                   schema: virhe-response
       delete:
         is: [secured]
-        description: Päivystäjätietojen poisto.
+        description: Päivystäjätietojen poisto. Poisto tehdään antamalla jokaisen poistettavan päivystyksen yksilöivä id.
         body:
           application/json:
             example: !include examples/paivystajatietojen-poisto-request.json
@@ -357,7 +357,7 @@ documentation:
               body:
                 application/json:
                   example: !include examples/paivystajatietojen-poisto-response.json
-                  schema: paivystajatietojen-poisto-response
+                  schema: kirjaus-response
              400:
               body:
                 application/json:
