@@ -23,6 +23,7 @@ WHERE yu.urakka = :urakka;
 -- Poistaa annetun urakan päivystykset ulkoisella id:lla
 DELETE FROM paivystys
 WHERE urakka = :urakka AND
+      luoja = :kayttaja_id AND
       ulkoinen_id IN (:ulkoiset_idt);
 
 -- name: hae-urakan-paivystajat
@@ -162,8 +163,8 @@ WHERE id = (SELECT yhteyshenkilo
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
 INSERT INTO paivystys
-(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo, ulkoinen_id)
-VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo, :ulkoinen_id);
+(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo, ulkoinen_id, luoja)
+VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo, :ulkoinen_id, :kayttaja_id);
 
 -- name: hae-paivystyksen-yhteyshenkilo-id
 -- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
@@ -194,7 +195,8 @@ SET alku        = :alku,
   varahenkilo   = :varahenkilo,
   vastuuhenkilo = :vastuuhenkilo,
   yhteyshenkilo = :yhteyshenkilo_id
-WHERE ulkoinen_id = :ulkoinen_id;
+WHERE ulkoinen_id = :ulkoinen_id AND
+      luoja = :kayttaja_id;
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan Sampo id:llä
@@ -242,7 +244,8 @@ SELECT exists(
 SELECT exists(
     SELECT id
     FROM paivystys
-    WHERE ulkoinen_id = :ulkoinen_id);
+    WHERE ulkoinen_id = :ulkoinen_id AND
+          luoja = :luoja_id);
 
 -- name: hae-urakan-taman-hetkiset-paivystajat
 SELECT

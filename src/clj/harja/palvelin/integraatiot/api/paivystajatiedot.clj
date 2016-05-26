@@ -23,12 +23,6 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.domain.puhelinnumero :as puhelinnumero]))
 
-(defn ulkoinen-id [kayttaja id]
-  (str (:kayttajanimi kayttaja) "/" id))
-
-(defn hae-jarjestelma [data]
-  (get-in data [:otsikko :lahettaja :jarjestelma]))
-
 (defn parsi-paivamaara [paivamaara]
   (when paivamaara
     (try
@@ -80,33 +74,35 @@
        :viesti (format "Tuntematon urakkatyyppi: %s" (:urakkatyyppi parametrit))})))
 
 (defn paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo id]} paivystaja-id kirjaaja]
-  (let [ulkoinen-id (ulkoinen-id kirjaaja id)]
-    (if (yhteyshenkilot/onko-olemassa-paivystys-ulkoisella-idlla? db ulkoinen-id)
-      (do
-        (log/debug "Päivitetään päivystys.")
-        (yhteyshenkilot/paivita-paivystys-ulkoisella-idlla<!
-          db
-          (aika-string->java-sql-date alku)
-          (aika-string->java-sql-date loppu)
-          varahenkilo
-          vastuuhenkilo
-          paivystaja-id
-          ulkoinen-id))
-      (do
-        (log/debug "Luodaan uusi päivystys.")
-        (yhteyshenkilot/luo-paivystys<! db
-                                        (aika-string->java-sql-date alku)
-                                        (aika-string->java-sql-date loppu)
-                                        urakka-id
-                                        paivystaja-id
-                                        varahenkilo
-                                        vastuuhenkilo
-                                        ulkoinen-id)))))
+  (if (yhteyshenkilot/onko-olemassa-paivystys-ulkoisella-idlla? db id (:id kirjaaja))
+    (do
+      (log/debug "Päivitetään päivystys.")
+      (yhteyshenkilot/paivita-paivystys-ulkoisella-idlla<!
+        db
+        (aika-string->java-sql-date alku)
+        (aika-string->java-sql-date loppu)
+        varahenkilo
+        vastuuhenkilo
+        paivystaja-id
+        id
+        (:id kirjaaja)))
+    (do
+      (log/debug "Luodaan uusi päivystys.")
+      (yhteyshenkilot/luo-paivystys<!
+        db
+        (aika-string->java-sql-date alku)
+        (aika-string->java-sql-date loppu)
+        urakka-id
+        paivystaja-id
+        varahenkilo
+        vastuuhenkilo
+        id
+        (:id kirjaaja)))))
 
 (defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]} urakoitsija-id]
   (let [matkapuhelin (puhelinnumero/kanonisoi matkapuhelin)
         tyopuhelin (puhelinnumero/kanonisoi tyopuhelin)]
-    (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
+    (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id) )
       (do
         (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
         (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email
@@ -154,14 +150,13 @@
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
     vastaus))
 
-(defn poista-paivystykset [db data parametrit kayttaja] (let [{:keys [paivystysidt]} data
-        jarjestelma (hae-jarjestelma data)
-        urakka-id (Integer/parseInt (:id parametrit))
-        ulkoiset-idt (mapv #(ulkoinen-id kayttaja %) paivystysidt)]
+(defn poista-paivystykset [db data parametrit kayttaja]
+  (let [{:keys [paivystysidt]} data
+        urakka-id (Integer/parseInt (:id parametrit))]
     (validointi/tarkista-urakka db urakka-id)
     (validointi/tarkista-oikeudet-urakan-paivystajatietoihin db urakka-id kayttaja)
-    (log/debug "Poistettavat ulkoiset idt: " (pr-str ulkoiset-idt) " urakka " (:id parametrit))
-    (yhteyshenkilot/poista-urakan-paivystykset! db urakka-id ulkoiset-idt)
+    (log/debug "Poistettavat ulkoiset idt: " (pr-str paivystysidt) " urakka " (:id parametrit))
+    (yhteyshenkilot/poista-urakan-paivystykset! db urakka-id (:id kayttaja) paivystysidt)
     (paivystajatiedot-sanoma/tee-onnistunut-poisto-vastaus)))
 
 (defn hae-paivystajatiedot-sijainnilla [db parametrit kayttaja]
