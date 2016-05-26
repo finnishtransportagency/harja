@@ -72,7 +72,7 @@
   (log "Näytetään popuppi" (pr-str tapahtuma))
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Toteuma"
-                                              [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                                              [["Aika" (pvm/pvm-aika (:alkanut tapahtuma)) "-" (pvm/pvm-aika (:paattynyt tapahtuma))]
                                                ["Suorittaja" (get-in tapahtuma [:suorittaja :nimi])]
                                                ["Tehtävät" (when (not-empty (:tehtavat tapahtuma))
                                                              (for [tehtava (:tehtavat tapahtuma)]
