@@ -164,7 +164,6 @@
               (if (k/virhe? vkm-kohteet)
                 {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
                  :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
-                ;; todo: yhdistämisen jälkeen täytyy tutkia kohteet joiden haku epäonnistui
                 (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
                       onnistuneet-kohteet (vec (filter #(not (:virhe %)) kohteet))
@@ -182,7 +181,9 @@
 
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
-   [:p "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
+   [:p
+    "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut."
+    "Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
    [:ul
     (for [kohde epaonnistuneet-kohteet]
       (let [tr (:tierekisteriosoitevali kohde)]
