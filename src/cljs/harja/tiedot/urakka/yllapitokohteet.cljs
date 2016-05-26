@@ -46,19 +46,51 @@
 (defn yha-kohde? [kohde]
   (some? (:yhaid kohde)))
 
-(defn kasittele-paivittyneet-kohdeosat [kohteet]
-  (let [uudet-kohteet
-        ;; Kopioi kohteen N loppuosa kohtee N + 1 alkuosaksi
-        ; FIXME Pitäisi tunnistaa kumpaa muokattiin, jotta kopiointi toimii myös toiseen suuntaan
-        (into [] (map-indexed
-                   (fn [index kohde]
-                     (if (< index (- (count kohteet) 1))
-                       (-> kohde
-                           (assoc :tr-loppuosa (:tr-alkuosa (get kohteet (inc index))))
-                           (assoc :tr-loppuetaisyys (:tr-alkuetaisyys (get kohteet (inc index)))))
-                       kohde))
-                   kohteet))]
-    uudet-kohteet))
+(def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
+(def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
+
+(defn kasittele-paivittyneet-kohdeosat
+  "Käsittelee päivittyneen kohdeosien muokkaus-grid datan. Sekä uudet ja vanhat
+  ovat mäppejä numerosta riviin. Oletetaan, että yksi avainten arvoista on muuttunut
+  käyttäjän tekemän editointioperaation johdosta.
+  Jos käyttäjä muokkasi alkuosaa, asetetaan mahdollisen edeltävän rivin loppuosa samaksi.
+  Jos käyttäjä muokkasi loppuosaa, asetetaaan seuraavan rivin alkuosa samaksi."
+  [vanhat uudet]
+  (let [riveja (count uudet)
+        [muokattu-vanha muokattu-uusi muokattu-key]
+        (some #(let [vanha (get vanhat %)
+                     uusi (get uudet %)]
+                 (when-not (= vanha uusi)
+                   [vanha uusi %]))
+              (keys uudet))
+
+        edellinen-key (when (> muokattu-key 1)
+                        (dec muokattu-key))
+        edellinen (when edellinen-key
+                    (get uudet edellinen-key))
+
+        seuraava-key (when (< muokattu-key riveja)
+                       (inc muokattu-key))
+        seuraava (when seuraava-key
+                   (get uudet seuraava-key))
+
+        alku-muutettu? (not= (alku muokattu-vanha) (alku muokattu-uusi))
+        loppu-muutettu? (not= (loppu muokattu-vanha) (loppu muokattu-uusi))]
+
+    (as-> uudet rivit
+      (if alku-muutettu?
+        (assoc rivit edellinen-key
+               (merge edellinen
+                      (zipmap [:tr-loppuosa :tr-loppuetaisyys]
+                              (alku muokattu-uusi))))
+        rivit)
+
+      (if loppu-muutettu?
+        (assoc rivit seuraava-key
+               (merge seuraava
+                      (zipmap [:tr-alkuosa :tr-alkuetaisyys]
+                              (loppu muokattu-uusi))))
+        rivit))))
 
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."

@@ -114,6 +114,7 @@
   (let [[sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id @nav/valittu-urakka)
         grid-data (atom (zipmap (iterate inc 1) kohdeosat))
+        g (grid/grid-ohjaus)
         toiminnot-komponentti
         (fn [_ index]
           [:span
@@ -122,71 +123,73 @@
              (fn []
                (let [paivitetyt-kohdeosat
                      (tiedot/lisaa-uusi-kohdeosa (into [] (vals @grid-data)) index)]
-                 (reset! grid-data
-                         (zipmap (iterate inc 1)
-                                 paivitetyt-kohdeosat))))}
+                 (grid/aseta-muokkaustila! g (zipmap (iterate inc 1)
+                                                     paivitetyt-kohdeosat))))}
             (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
            [:button.nappi-ensisijainen
-            {:on-click
-             ; FIXME Disabloi jos ainoa rivi, miten?
-             (fn []
+            {:disabled (= 1 (count @grid-data))
+             :on-click
+              (fn []
                (let [paivitetyt-kohdeosat
                      (tiedot/poista-kohdeosa (into [] (vals @grid-data)) index)]
-                 (reset! grid-data
-                         (zipmap (iterate inc 1)
-                                 paivitetyt-kohdeosat))))}
+                 (grid/aseta-muokkaustila! g (zipmap (iterate inc 1)
+                                                     paivitetyt-kohdeosat))))}
             (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])]
+
     (komp/luo
       (fn [kohdeosat {:keys [yllapitokohteet-atom
                              yllapitokohde-id] :as optiot}]
-        [:div
-         [grid/muokkaus-grid
-          {:otsikko "Tierekisterikohteet"
-           ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
-           :voi-lisata? false
-           :piilota-toiminnot? true
-           :paneelikomponentit [(fn []
-                                  [napit/palvelinkutsu-nappi
-                                   [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-                                   ;; TODO Hae ja assoc sijainti (geometria) ennen tätä (developista logiikka tähän)
-                                   #(tiedot/tallenna-yllapitokohdeosat! urakka-id
-                                                                        sopimus-id
-                                                                        yllapitokohde-id
-                                                                        (vals @grid-data))
-                                   {:luokka "nappi-myonteinen grid-tallenna"
-                                    :virheviesti "Tallentaminen epäonnistui."
-                                    :kun-onnistuu (fn [vastaus]
-                                                    (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
-                                                    (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-                                                    (yllapitokohteet/paivita-yllapitokohde!
-                                                      yllapitokohteet-atom yllapitokohde-id assoc :kohdeosat vastaus)
-                                                    (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
-           :voi-poistaa? (constantly false)
-           :tunniste hash
-           :muutos #(let [paivitetyt-kohdeosat (tiedot/kasittele-paivittyneet-kohdeosat (into [] (vals @grid-data)))]
-                     (reset! grid-data (zipmap (iterate inc 1) paivitetyt-kohdeosat)))}
-          (into []
-                (remove
-                  nil?
-                  (concat
+        (let [kohdeosia (count @grid-data)]
+          (log "KOHDEOSAT: " (pr-str kohdeosat))
+          [:div
+           [grid/muokkaus-grid
+            {:ohjaus g
+             :otsikko "Tierekisterikohteet"
+             ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
+             :voi-lisata? false
+             :piilota-toiminnot? true
+             :paneelikomponentit [(fn []
+                                    [napit/palvelinkutsu-nappi
+                                     [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+                                     ;; TODO Hae ja assoc sijainti (geometria) ennen tätä (developista logiikka tähän)
+                                     #(tiedot/tallenna-yllapitokohdeosat! urakka-id
+                                                                          sopimus-id
+                                                                          yllapitokohde-id
+                                                                          (vals @grid-data))
+                                     {:luokka "nappi-myonteinen grid-tallenna"
+                                      :virheviesti "Tallentaminen epäonnistui."
+                                      :kun-onnistuu (fn [vastaus]
+                                                      (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
+                                                      (urakka/lukitse-urakan-yha-sidonta! urakka-id)
+                                                      (yllapitokohteet/paivita-yllapitokohde!
+                                                       yllapitokohteet-atom yllapitokohde-id assoc :kohdeosat vastaus)
+                                                      (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
+             :voi-poistaa? (constantly false)
+             :tunniste hash}
+            (into []
+                  (remove
+                   nil?
+                   (concat
                     (tierekisteriosoite-sarakkeet
-                      tr-leveys
-                      [{:nimi :nimi}
-                       {:nimi :tr-numero}
-                       {:nimi :tr-ajorata}
-                       {:nimi :tr-kaista}
-                       {:nimi :tr-alkuosa :muokattava? (fn [_ index]
-                                                         (> index 0))}
-                       {:nimi :tr-alkuetaisyys :muokattava? (fn [_ index]
-                                                              (> index 0))}
-                       {:nimi :tr-loppuosa :muokattava? (fn [_ index]
-                                                          (< index (- (count kohdeosat) 1)))}
-                       {:nimi :tr-loppuetaisyys :muokattava? (fn [_ index]
-                                                               (< index (- (count kohdeosat) 1)))}])
+                     tr-leveys
+                     [{:nimi :nimi}
+                      {:nimi :tr-numero}
+                      {:nimi :tr-ajorata}
+                      {:nimi :tr-kaista}
+                      {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
+                                                        (pos? rivi))}
+                      {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
+                                                             (pos? rivi))}
+                      {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
+                                                         (< rivi (dec kohdeosia)))}
+                      {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
+                                                              (< rivi (dec kohdeosia)))}])
                     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
                      {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
                       :komponentti toiminnot-komponentti}])))
-          grid-data]]))))
+
+            (r/wrap @grid-data
+                    #(swap! grid-data tiedot/kasittele-paivittyneet-kohdeosat %))]])))))
 
 (defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
   ; FIXME Pitäisi ehkä jotenkin generisöidä?

@@ -50,6 +50,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (hae-muokkaustila [g] "Hakee tämänhetkisen muokkaustilan, joka on mäppi id:stä rivin tietoihin.")
 
+  (aseta-muokkaustila! [g muokkaustila] "Asettaa uuden muokkaustilan säilyttäen historian")
 
   (hae-virheet [g] "Hakee tämänhetkisen muokkaustilan mukaiset validointivirheet.")
 
@@ -89,6 +90,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
       (hae-muokkaustila [_]
         (hae-muokkaustila @gridi))
+
+      (aseta-muokkaustila! [_ tila]
+        (aseta-muokkaustila! @gridi tila))
 
       (hae-virheet [_]
         (hae-virheet @gridi))
@@ -877,6 +881,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                             (muutos this))))
                       (hae-muokkaustila [_]
                         @muokatut)
+                      (aseta-muokkaustila! [_ uusi-muokkaustila]
+                        (let [vanhat-tiedot @muokatut
+                              vanhat-virheet @virheet]
+                          (swap! historia conj [vanhat-tiedot vanhat-virheet])
+                          (reset! muokatut uusi-muokkaustila)
+                          ;; FIXME: validoi kaikki rivit, jotka eivät ole vanhassa
+                          ))
                       (hae-virheet [_]
                         @virheet)
                       (nollaa-historia! [_]
