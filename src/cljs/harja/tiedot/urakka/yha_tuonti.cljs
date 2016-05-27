@@ -188,7 +188,7 @@
     (for [kohde epaonnistuneet-kohteet]
       (let [tr (:tierekisteriosoitevali kohde)]
         [:li
-         "Tunnus: " (:tunnus kohde)
+         "Nimi: " (:nimi kohde)
          ", YHA id: " (:yha-id kohde)
          ", tierekisteriosoiteväli: " (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr)]))]])
 
