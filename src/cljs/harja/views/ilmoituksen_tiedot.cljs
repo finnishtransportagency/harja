@@ -23,8 +23,8 @@
       "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
       "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
       "Otsikko: " (:otsikko ilmoitus)
-      "Lyhyt selite: " (:lyhytselite ilmoitus)
-      "Pitkä selite: " (when (:pitkaselite ilmoitus)
+      "Paikan kuvaus: " (:paikankuvaus ilmoitus)
+      "Lisatieto:  " (when (:lisatieto ilmoitus)
                          [yleiset/pitka-teksti (:pitkaselite ilmoitus)])
       "Selitteet: " (parsi-selitteet (:selitteet ilmoitus))]
 

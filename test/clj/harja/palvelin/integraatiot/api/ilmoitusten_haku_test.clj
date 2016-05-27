@@ -27,35 +27,35 @@
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
     :tloik (component/using
-            (luo-tloik-komponentti)
+             (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat])))
 
 (use-fixtures :once jarjestelma-fixture)
 
 (def odotettu-ilmoitus
   {"ilmoittaja"
-                        {"sukunimi"     "Meikäläinen",
-                         "etunimi"      "Matti",
-                         "matkapuhelin" "08023394852",
-                         "tyopuhelin"   nil,
-                         "email"        "matti.meikalainen@palvelu.fi"},
-   "ilmoitustyyppi"     "toimenpidepyynto",
-   "otsikko"            "Korkeat vallit",
+   {"sukunimi" "Meikäläinen",
+    "etunimi" "Matti",
+    "matkapuhelin" "08023394852",
+    "tyopuhelin" nil,
+    "email" "matti.meikalainen@palvelu.fi"},
+   "ilmoitustyyppi" "toimenpidepyynto",
+   "otsikko" "Korkeat vallit",
    "yhteydenottopyynto" false,
-   "sijainti"           {"koordinaatit" {"x" 452935.0, "y" 7186873.0}},
+   "sijainti" {"koordinaatit" {"x" 452935.0, "y" 7186873.0}},
    "lahettaja"
-                        {"etunimi"      "Pekka",
-                         "sukunimi"     "Päivystäjä",
-                         "matkapuhelin" nil,
-                         "tyopuhelin"   nil,
-                         "email"        "pekka.paivystaja@livi.fi"},
-   "ilmoitettu"         "2015-09-29T11:49:45Z",
-   "ilmoitusid"         123456789,
+   {"etunimi" "Pekka",
+    "sukunimi" "Päivystäjä",
+    "matkapuhelin" nil,
+    "tyopuhelin" nil,
+    "email" "pekka.paivystaja@livi.fi"},
+   "ilmoitettu" "2015-09-29T11:49:45Z",
+   "ilmoitusid" 123456789,
    "selitteet"
-                        [{"selite" "auraustarve"} {"selite" "aurausvallitNakemaesteena"}],
-   "tienumero"          4,
-   "lyhytselite"        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.",
-   "pitkaselite"        "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
+   [{"selite" "auraustarve"} {"selite" "aurausvallitNakemaesteena"}],
+   "tienumero" 4,
+   "paikankuvaus" "Jossain",
+   "lisatieto" "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
 
 (deftest kuuntele-urakan-ilmoituksia
   (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
