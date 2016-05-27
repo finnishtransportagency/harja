@@ -8,75 +8,70 @@
     [harja.loki :refer [log]]))
 
 (def kohdeosat
-  [{:nimi "Laivaniemi 1"
-    :tr-numero 1
-    :tr-alkuosa 2
-    :tr-alkuetaisyys 100
-    :tr-loppuosa 2
-    :tr-loppuetaisyys 200}
-   {:nimi "Laivaniemi 2"
-    :tr-numero 1
-    :tr-alkuosa 2
-    :tr-alkuetaisyys 200
-    :tr-loppuosa 3
-    :tr-loppuetaisyys 15}])
+  {1 {:nimi "Laivaniemi 1"
+      :tr-numero 1
+      :tr-alkuosa 2
+      :tr-alkuetaisyys 100
+      :tr-loppuosa 2
+      :tr-loppuetaisyys 200}
+   2 {:nimi "Laivaniemi 2"
+      :tr-numero 1
+      :tr-alkuosa 2
+      :tr-alkuetaisyys 200
+      :tr-loppuosa 3
+      :tr-loppuetaisyys 15}
+   3 {:nimi "Laivaniemi 3"
+      :tr-numero 1
+      :tr-alkuosa 3
+      :tr-alkuetaisyys 15
+      :tr-loppuosa 3
+      :tr-loppuetaisyys 4242}})
 
-(deftest uuden-kohteen-lisaaminen-toimii
-  (let [uusi-kohde-index-0 (yllapitokohteet/lisaa-uusi-kohdeosa kohdeosat 0)
-        uusi-kohde-index-1 (yllapitokohteet/lisaa-uusi-kohdeosa kohdeosat 1)]
-    (is (= uusi-kohde-index-0
-           [{:nimi "Laivaniemi 1"
-             :tr-numero 1
-             :tr-alkuosa 2
-             :tr-alkuetaisyys 100
-             :tr-loppuosa nil
-             :tr-loppuetaisyys nil}
-            {:nimi "" :tr-numero 1
-             :tr-alkuosa nil
-             :tr-alkuetaisyys nil
-             :tr-loppuosa 2
-             :tr-loppuetaisyys 200
-             :toimenpide ""}
-            {:nimi "Laivaniemi 2"
-             :tr-numero 1
-             :tr-alkuosa 2
-             :tr-alkuetaisyys 200
-             :tr-loppuosa 3
-             :tr-loppuetaisyys 15}]))
-    (is (= uusi-kohde-index-1
-           [{:nimi "Laivaniemi 1"
-             :tr-numero 1
-             :tr-alkuosa 2
-             :tr-alkuetaisyys 100
-             :tr-loppuosa 2
-             :tr-loppuetaisyys 200}
-            {:nimi "Laivaniemi 2"
-             :tr-numero 1
-             :tr-alkuosa 2
-             :tr-alkuetaisyys 200
-             :tr-loppuosa nil
-             :tr-loppuetaisyys nil}
-            {:nimi "" :tr-numero 1
-             :tr-alkuosa nil
-             :tr-alkuetaisyys nil
-             :tr-loppuosa 3
-             :tr-loppuetaisyys 15
-             :toimenpide ""}]))))
+(def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
+(def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
 
-(deftest vanhan-kohteen-poistaminen-toimii
-  (let [poistettu-kohde-index-0 (yllapitokohteet/poista-kohdeosa kohdeosat 0)
-        poistettu-kohde-index-1 (yllapitokohteet/poista-kohdeosa kohdeosat 1)]
-    (is (= poistettu-kohde-index-0
-           [{:nimi "Laivaniemi 2"
-             :tr-numero 1
-             :tr-alkuosa 2
-             :tr-alkuetaisyys 100
-             :tr-loppuosa 3
-             :tr-loppuetaisyys 15}]))
-    (is (= poistettu-kohde-index-1
-           [{:nimi "Laivaniemi 1"
-             :tr-numero 1
-             :tr-alkuosa 2
-             :tr-alkuetaisyys 200
-             :tr-loppuosa 3
-             :tr-loppuetaisyys 15}]))))
+(defn avaimet [kohdeosat]
+  (into #{} (keys kohdeosat)))
+
+(deftest uuden-kohteen-lisaaminen
+  (let [vanhat-kohdeosat kohdeosat
+        uudet-kohdeosat (yllapitokohteet/lisaa-uusi-kohdeosa kohdeosat 1)]
+    (is (= #{1 2 3 4} (avaimet uudet-kohdeosat)))
+
+    (is (= (loppu (get vanhat-kohdeosat 1))
+           (loppu (get uudet-kohdeosat 2)))
+        "Rivin lisääminen siirtää loppuosa seuraavalle riville")
+
+    (is (= [nil nil]
+           (loppu (get uudet-kohdeosat 1))
+           (alku (get uudet-kohdeosat 2)))
+        "Rivin loppu ja seuraavan alku ovat tyhjiä lisäämisen jälkeen")))
+
+(deftest ensimmaisen-osan-poistaminen
+  (let [vanhat-kohdeosat kohdeosat
+        uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 1)]
+    (is (= #{1 2} (avaimet uudet-kohdeosat)))
+
+    (is (= (alku (get vanhat-kohdeosat 1))
+           (alku (get uudet-kohdeosat 1)))
+        "Alku pysyy samana vaikka ensimmäisen osan poistaa")
+
+    (is (= (loppu (get vanhat-kohdeosat 2))
+           (loppu (get uudet-kohdeosat 1)))
+        "Seuraavan rivin loppu siirtyy ensimmäiselle riville")))
+
+(deftest viimeisen-osan-poistaminen
+  (let [vanhat-kohdeosat kohdeosat
+        uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 3)]
+
+    (is (= #{1 2} (avaimet uudet-kohdeosat)))
+    (is (= (loppu (get uudet-kohdeosat 2))
+           (loppu (get vanhat-kohdeosat 3)))
+        "Loppu siirtyy edellisen rivin lopuksi")))
+
+(deftest valissa-olevan-osan-poistaminen
+  (let [vanhat-kohdeosat kohdeosat
+        uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 2)]
+    (is (= #{1 2} (avaimet uudet-kohdeosat)))
+    (is (= (loppu (get uudet-kohdeosat 1))
+           (alku (get vanhat-kohdeosat 3))))))

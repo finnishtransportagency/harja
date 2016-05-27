@@ -56,41 +56,42 @@
   Jos käyttäjä muokkasi alkuosaa, asetetaan mahdollisen edeltävän rivin loppuosa samaksi.
   Jos käyttäjä muokkasi loppuosaa, asetetaaan seuraavan rivin alkuosa samaksi."
   [vanhat uudet]
-  (let [riveja (count uudet)
-        [muokattu-vanha muokattu-uusi muokattu-key]
-        (some #(let [vanha (get vanhat %)
-                     uusi (get uudet %)]
-                 (when-not (= vanha uusi)
-                   [vanha uusi %]))
-              (keys uudet))
+  (if-not (= (count vanhat) (count uudet))
+    uudet
+    (let [riveja (count uudet)
+          [muokattu-vanha muokattu-uusi muokattu-key]
+          (some #(let [vanha (get vanhat %)
+                       uusi (get uudet %)]
+                   (when-not (= vanha uusi)
+                     [vanha uusi %]))
+                (keys uudet))
+          edellinen-key (when (> muokattu-key 1)
+                          (dec muokattu-key))
+          edellinen (when edellinen-key
+                      (get uudet edellinen-key))
 
-        edellinen-key (when (> muokattu-key 1)
-                        (dec muokattu-key))
-        edellinen (when edellinen-key
-                    (get uudet edellinen-key))
+          seuraava-key (when (< muokattu-key riveja)
+                         (inc muokattu-key))
+          seuraava (when seuraava-key
+                     (get uudet seuraava-key))
 
-        seuraava-key (when (< muokattu-key riveja)
-                       (inc muokattu-key))
-        seuraava (when seuraava-key
-                   (get uudet seuraava-key))
+          alku-muutettu? (not= (alku muokattu-vanha) (alku muokattu-uusi))
+          loppu-muutettu? (not= (loppu muokattu-vanha) (loppu muokattu-uusi))]
 
-        alku-muutettu? (not= (alku muokattu-vanha) (alku muokattu-uusi))
-        loppu-muutettu? (not= (loppu muokattu-vanha) (loppu muokattu-uusi))]
+      (as-> uudet rivit
+        (if alku-muutettu?
+          (assoc rivit edellinen-key
+                 (merge edellinen
+                        (zipmap [:tr-loppuosa :tr-loppuetaisyys]
+                                (alku muokattu-uusi))))
+          rivit)
 
-    (as-> uudet rivit
-      (if alku-muutettu?
-        (assoc rivit edellinen-key
-               (merge edellinen
-                      (zipmap [:tr-loppuosa :tr-loppuetaisyys]
-                              (alku muokattu-uusi))))
-        rivit)
-
-      (if loppu-muutettu?
-        (assoc rivit seuraava-key
-               (merge seuraava
-                      (zipmap [:tr-alkuosa :tr-alkuetaisyys]
-                              (loppu muokattu-uusi))))
-        rivit))))
+        (if loppu-muutettu?
+          (assoc rivit seuraava-key
+                 (merge seuraava
+                        (zipmap [:tr-alkuosa :tr-alkuetaisyys]
+                                (loppu muokattu-uusi))))
+          rivit)))))
 
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
@@ -113,8 +114,9 @@
                        (map #(get kohdeosat %) avaimet-jalkeen))))))
 
 (defn poista-kohdeosa
-  "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus täyttää
-   poistetun kohdeosan jättämän alueen. Jos poistetaan ensimmäinen kohdeosa, pidennetään vastaavasti seuraava."
+  "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus
+  täyttää poistetun kohdeosan jättämän alueen. Jos poistetaan ensimmäinen kohdeosa, pidennetään
+  vastaavasti seuraava."
   [kohdeosat key]
   (let [avaimet (sort (keys kohdeosat))
         avaimet-ennen (filter #(< % key) avaimet)

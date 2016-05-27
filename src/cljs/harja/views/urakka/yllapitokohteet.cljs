@@ -59,6 +59,30 @@
 (def nimi-leveys 20)
 (def toimenpide-leveys 15)
 
+(defn alkuosa-ei-lopun-jalkeen [aosa {losa :tr-loppuosa}]
+  (when (and aosa losa (> aosa losa))
+    "Alkuosan ei voi olla loppuosan jälkeen"))
+
+(defn alkuetaisyys-ei-lopun-jalkeen [alkuet {aosa :tr-alkuosa
+                                             losa :tr-loppuosa
+                                             loppuet :tr-loppuetaisyys}]
+  (when (and aosa losa alkuet loppuet
+             (= aosa losa)
+             (> alkuet loppuet))
+    "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
+
+(defn loppuosa-ei-alkua-ennen [losa {aosa :tr-alkuosa}]
+  (when (and aosa losa (< losa aosa))
+    "Loppuosa ei voi olla alkuosaa ennen"))
+
+(defn loppuetaisyys-ei-alkua-ennen [loppuet {aosa :tr-alkuosa
+                                             losa :tr-loppuosa
+                                             alkuet :tr-alkuetaisyys}]
+  (when (and aosa losa alkuet loppuet
+             (= aosa losa)
+             (< loppuet alkuet))
+    "Loppuetäisyys ei voi olla ennen alkuetäisyyttä"))
+
 (defn tierekisteriosoite-sarakkeet [perusleveys [nimi tie ajorata kaista aosa aet losa let]]
   (into []
         (remove
@@ -93,13 +117,17 @@
             :valinnat pot/+kaistat+
             :leveys perusleveys}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna alkuosa"]] :muokattava? (or (:muokattava? aosa) (constantly true))}
+            :validoi [[:ei-tyhja "Anna alkuosa"]
+                      alkuosa-ei-lopun-jalkeen] :muokattava? (or (:muokattava? aosa) (constantly true))}
            {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna alkuetäisyys"]] :muokattava? (or (:muokattava? aet) (constantly true))}
+            :validoi [[:ei-tyhja "Anna alkuetäisyys"]
+                      alkuetaisyys-ei-lopun-jalkeen] :muokattava? (or (:muokattava? aet) (constantly true))}
            {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna loppuosa"]] :muokattava? (or (:muokattava? losa) (constantly true))}
+            :validoi [[:ei-tyhja "Anna loppuosa"]
+                      loppuosa-ei-alkua-ennen] :muokattava? (or (:muokattava? losa) (constantly true))}
            {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna loppuetäisyys"]] :muokattava? (or (:muokattava? let) (constantly true))}
+            :validoi [[:ei-tyhja "Anna loppuetäisyys"]
+                      loppuetaisyys-ei-alkua-ennen] :muokattava? (or (:muokattava? let) (constantly true))}
            {:otsikko "Pit." :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
             :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}])))
 
@@ -129,7 +157,7 @@
              #(grid/aseta-muokkaustila! g
                                         (tiedot/poista-kohdeosa @grid-data (inc index)))}
             (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])]
-
+    (tarkkaile! "GRID-DATA " grid-data)
     (komp/luo
       (fn [kohdeosat {:keys [yllapitokohteet-atom
                              yllapitokohde-id] :as optiot}]
@@ -138,6 +166,8 @@
           [:div
            [grid/muokkaus-grid
             {:ohjaus g
+             :validoi-aina? true
+             :nayta-virheet? :fokus
              :otsikko "Tierekisterikohteet"
              ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
              :voi-lisata? false
