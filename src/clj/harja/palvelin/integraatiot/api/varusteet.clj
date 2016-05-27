@@ -53,6 +53,8 @@
      {:parametri "let"
       :tyyppi :int}
      {:parametri "voimassaolopvm"
+      :tyyppi :date}
+     {:parametri "tilannepvm"
       :tyyppi :date}]))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
@@ -61,7 +63,9 @@
     [{:parametri "tunniste"
       :tyyppi :string}
      {:parametri "tietolajitunniste"
-      :tyyppi :string}]))
+      :tyyppi :string}
+     {:parametri "tilannepvm"
+      :tyyppi :date}]))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
