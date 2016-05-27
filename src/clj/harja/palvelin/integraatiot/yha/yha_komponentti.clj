@@ -21,7 +21,7 @@
 <kohde>
 <yha-id>251041528</yha-id>
 <kohdetyyppi>paallystys</kohdetyyppi>
-<tunnus>kauhajoen suora</tunnus>
+<nimi>kauhajoen suora</nimi>
 <yllapitoluokka>3</yllapitoluokka>
 <keskimaarainen-vuorokausiliikenne>2509</keskimaarainen-vuorokausiliikenne>
 <nykyinen-paallyste>1</nykyinen-paallyste>
@@ -83,7 +83,7 @@
 <kohde>
 <yha-id>251603670</yha-id>
 <kohdetyyppi>paallystys</kohdetyyppi>
-<tunnus>asdf</tunnus>
+<nimi>asdf</nimi>
 <yllapitoluokka>1</yllapitoluokka>
 <keskimaarainen-vuorokausiliikenne>3107</keskimaarainen-vuorokausiliikenne>
 <nykyinen-paallyste>1</nykyinen-paallyste>
