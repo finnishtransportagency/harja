@@ -54,7 +54,7 @@
    "selitteet"
    [{"selite" "auraustarve"} {"selite" "aurausvallitNakemaesteena"}],
    "tienumero" 4,
-   "paikankuvaus" "Jossain",
+   "paikankuvaus" "Jossain kentällä.",
    "lisatieto" "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
 
 (deftest kuuntele-urakan-ilmoituksia
