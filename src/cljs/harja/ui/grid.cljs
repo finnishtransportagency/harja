@@ -1007,7 +1007,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               [:tbody
                (let [muokatut-atom muokatut
                      muokatut @muokatut]
-                 (log "MUOKATUT " (pr-str muokatut))
                  (if (every? :poistettu (vals muokatut))
                    [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
                    (let [kaikki-virheet @virheet]
