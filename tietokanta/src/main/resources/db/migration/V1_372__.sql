@@ -1,3 +1,2 @@
-ALTER TABLE ilmoitus
-RENAME COLUMN lyhytselite TO paikan_kuvaus,
-RENAME COLUMN pitkaselite TO lisatieto;
+ALTER TABLE ilmoitus RENAME COLUMN lyhytselite TO paikankuvaus;
+ALTER TABLE ilmoitus RENAME COLUMN pitkaselite TO lisatieto;

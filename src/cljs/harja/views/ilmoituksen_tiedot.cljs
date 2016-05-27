@@ -25,7 +25,7 @@
       "Otsikko: " (:otsikko ilmoitus)
       "Paikan kuvaus: " (:paikankuvaus ilmoitus)
       "Lisatieto:  " (when (:lisatieto ilmoitus)
-                         [yleiset/pitka-teksti (:pitkaselite ilmoitus)])
+                         [yleiset/pitka-teksti (:lisatieto ilmoitus)])
       "Selitteet: " (parsi-selitteet (:selitteet ilmoitus))]
 
      [:br]
