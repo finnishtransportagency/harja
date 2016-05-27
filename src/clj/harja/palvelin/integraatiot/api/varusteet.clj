@@ -53,8 +53,6 @@
      {:parametri "let"
       :tyyppi :int}
      {:parametri "voimassaolopvm"
-      :tyyppi :date}
-     {:parametri "tilannepvm"
       :tyyppi :date}]))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
@@ -92,9 +90,10 @@
 (defn hae-varuste [tierekisteri parametrit kayttaja]
   (tarkista-tietueen-haun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
-        tietolajitunniste (get parametrit "tietolajitunniste")]
+        tietolajitunniste (get parametrit "tietolajitunniste")
+        tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
-    (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
+    (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste tilannepvm)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata

@@ -15,7 +15,7 @@
    (when voimassaolopvm [:voimassaolopvm voimassaolopvm])
    [:tie
     (map (fn [[avain arvo]] [avain arvo]) tierekisteriosoitevali)
-    [:tilannepvm tilannepvm]]])
+    (when tilannepvm [:tilannepvm tilannepvm])]])
 
 (defn muodosta-kutsu [tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm]
   (let [sisalto (muodosta-xml-sisalto tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm)
