@@ -862,6 +862,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         viime-assoc (atom nil)                              ;; edellisen muokkauksen, jos se oli assoc-in, polku
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
+        fokus (atom nil)
         ohjaus-fn (fn [muokatut virheet]
                     (reify Grid
                       (lisaa-rivi! [this rivin-tiedot]
@@ -947,15 +948,19 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                            muokatut)))))
 
        :reagent-render
-       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota? rivi-klikattu rivinumerot?
-                    muokkaa-footer muokkaa-aina uusi-rivi tyhja vetolaatikot uusi-id paneelikomponentit validoi-aina?] :as opts} skeema muokatut]
-         (let [virheet (or (:virheet opts) virheet-atom)
+       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota?
+                    rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
+                    vetolaatikot uusi-id paneelikomponentit validoi-aina?
+                    nayta-virheet?] :as opts} skeema muokatut]
+         (let [nayta-virheet? (or nayta-virheet? :aina)
+               virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
                ohjaus (ohjaus-fn muokatut virheet)
                voi-muokata? (if (nil? voi-muokata?)
                               true
-                              voi-muokata?)]
+                              voi-muokata?)
+               nykyinen-fokus @fokus]
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 
@@ -999,6 +1004,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               [:tbody
                (let [muokatut-atom muokatut
                      muokatut @muokatut]
+                 (log "MUOKATUT " (pr-str muokatut))
                  (if (every? :poistettu (vals muokatut))
                    [:tr.tyhja [:td {:col-span (inc (count skeema))} tyhja]]
                    (let [kaikki-virheet @virheet]
@@ -1031,11 +1037,17 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                              tasaus-luokka
                                                              (when-not (empty? kentan-virheet)
                                                                " sisaltaa-virheen"))}
-                                            (when-not (empty? kentan-virheet)
+                                            (when (and (not (empty? kentan-virheet))
+                                                       (case nayta-virheet?
+                                                         :fokus (= nykyinen-fokus [i nimi])
+                                                         :aina true))
                                               (virheen-ohje kentan-virheet))
 
                                             (if voi-muokata?
-                                              [tee-kentta (assoc s :index i :muokataan? true)
+                                              [tee-kentta (assoc s
+                                                                 :index i
+                                                                 :muokataan? true
+                                                                 :on-focus #(reset! fokus [i nimi]))
                                                (r/wrap
                                                  arvo
                                                  (fn [uusi]
