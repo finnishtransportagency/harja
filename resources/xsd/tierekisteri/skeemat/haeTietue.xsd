@@ -15,6 +15,7 @@
             <xs:sequence>
                 <xs:element minOccurs="1" maxOccurs="1" name="tunniste" type="ns2:tunniste"/>
                 <xs:element minOccurs="1" maxOccurs="1" name="tietolajitunniste" type="ns1:tietolajitunniste"/>
+                <xs:element minOccurs="0" maxOccurs="0" name="tilannepvm" type="xs:date"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
