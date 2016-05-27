@@ -157,12 +157,10 @@
              #(grid/aseta-muokkaustila! g
                                         (tiedot/poista-kohdeosa @grid-data (inc index)))}
             (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])]
-    (tarkkaile! "GRID-DATA " grid-data)
     (komp/luo
       (fn [kohdeosat {:keys [yllapitokohteet-atom
                              yllapitokohde-id] :as optiot}]
         (let [kohdeosia (count @grid-data)]
-          (log "KOHDEOSAT: " (pr-str kohdeosat))
           [:div
            [grid/muokkaus-grid
             {:ohjaus g
