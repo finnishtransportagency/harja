@@ -494,9 +494,9 @@ documentation:
           required: true
           example: 2015-01-01
         tilannepvm:
-          description: Lähdejärjestelmän tieverkon version päivämäärä
+          description: Lähdejärjestelmän tieverkon version päivämäärä. Jos ei annettu, käyttää oletuksena kuluvan päivän tieverkkoa. Jos annettu, osoitteet palautetaan annetun päivämäärän verkolla.
           type: date
-          required: true
+          required: false
           example: 2015-01-01
         puoli:
           description: Tien puoli, jolta varusteet haetaan
@@ -561,6 +561,11 @@ documentation:
             description: Haettavan tietueen tietolajin tunniste
             type: string
             example: tl506
+          tilannepvm:
+            description: Lähdejärjestelmän tieverkon version päivämäärä. Jos ei annettu, käyttää oletuksena kuluvan päivän tieverkkoa. Jos annettu, osoitteet palautetaan annetun päivämäärän verkolla.
+            type: date
+            required: false
+            example: 2015-01-01
       responses:
         200:
           body:
