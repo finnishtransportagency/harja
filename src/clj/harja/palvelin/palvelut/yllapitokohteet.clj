@@ -63,15 +63,15 @@
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db user
-                                              {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
+   {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/kirjoita oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
   (jdbc/with-db-transaction [db db]
     (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
-          db
-          tiemerkintapvm
-          kohde-id
-          urakka-id)
+      db
+      tiemerkintapvm
+      kohde-id
+      urakka-id)
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 

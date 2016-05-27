@@ -24,7 +24,8 @@
             :aosa 3
             :aet 3
             :losa 3
-            :let 3}
+            :let 3
+            :tienumero 3}
            kohteen-tierekisteriosoite))
     (is (= {:karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
             :ajorata 0
@@ -32,7 +33,8 @@
             :aosa 3
             :aet 3
             :losa 3
-            :let 3}
+            :let 3
+            :tienumero 3}
            alikohteen-tierekisteriosoite))))
 
 (deftest tarkista-usean-urakan-hakuvastaus

@@ -8,6 +8,7 @@
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.ui.grid :refer [grid]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.ui.napit :as napit]
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
@@ -17,7 +18,7 @@
   [lomake/lomake {:otsikko "Urakan tiedot"
                   :muokkaa! (fn [uusi-data]
                               (reset! yha/hakulomake-data uusi-data))
-                  :footer [harja.ui.napit/palvelinkutsu-nappi
+                  :footer [napit/palvelinkutsu-nappi
                            "Hae"
                            #(yha/hae-yha-urakat (merge {:harja-urakka-id (:id urakka)} @yha/hakulomake-data))
                            {:luokka "nappi-ensisijainen"
@@ -71,7 +72,7 @@
      :komponentti (fn [rivi]
                     (if (:sidottu-urakkaan rivi)
                       [:span (str "Sidottu jo Harjan urakkaan: " (:sidottu-urakkaan rivi))]
-                      [harja.ui.napit/palvelinkutsu-nappi
+                      [napit/palvelinkutsu-nappi
                        "Sido"
                        #(do
                          (log "[YHA] Sidotaan Harja-urakka " (:id urakka) " yha-urakkaan: " (pr-str rivi))

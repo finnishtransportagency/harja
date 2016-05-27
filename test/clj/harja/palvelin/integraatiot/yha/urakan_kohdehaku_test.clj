@@ -147,7 +147,7 @@
   (let [urakka-id (hae-urakka-id)
         yha-id (hae-yha-id urakka-id)]
     (with-fake-http [{:url (tee-url yha-id) :method :get} 500]
-      (is (thrown? Exception (yha/hae-kohteet (:yha jarjestelma) yha-id))
+      (is (thrown? Exception (yha/hae-kohteet (:yha jarjestelma) yha-id ""))
           "Poikkeusta ei heitetty epäonnistuneesta kutsusta."))))
 
 ;; todo: palauta, kun oikea YHA-yhteys on saatu

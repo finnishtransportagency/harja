@@ -173,9 +173,10 @@
           sopimus-id @muhoksen-paikkausurakan-paasopimuksen-id
           paikkausilmoitus (-> (assoc minipot-testidata :paikkauskohde-id paikkauskohde-id)
                                  (assoc :paatos :hyvaksytty)
-                                 (assoc :perustelu "Yritän haxoroida ilmoituksen hyväksytyksi ilman oikeuksia. @:D"))]
+                                 (assoc :perustelu "Yritän muuttaa ilmoituksen hyväksytyksi ilman oikeuksia."))]
 
       (is (thrown? RuntimeException (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paikkausilmoitus +kayttaja-tero+ {:urakka-id          urakka-id
                                                                    :sopimus-id         sopimus-id
-                                                                   :paikkausilmoitus paikkausilmoitus}))))))
+                                                                   :paikkausilmoitus paikkausilmoitus}))
+          "Ilmoituksen hyväksyminen ilman oikeuksia ei saa onnistua"))))
