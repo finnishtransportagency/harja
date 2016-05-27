@@ -852,6 +852,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                       sarjana -1, -2, -3, ...
   :validoi-aina?      jos true, validoidaan tiedot aina renderissä (ei vain muutoksessa).
                       Tämä on hyödyllinen, jos gridin tieto muuttuu ulkoisesta syystä.
+  :nayta-virheet?     :aina (oletus) tai :fokus.
+                      Jos fokus, näytetään virheviesti vain fokusoidulle kentälle,
+                      virheen indikoiva punainen viiva näytetään silti aina.
   "
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta piilota-toiminnot? paneelikomponentit
