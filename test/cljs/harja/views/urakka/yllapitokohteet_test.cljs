@@ -72,6 +72,7 @@
 (deftest valissa-olevan-osan-poistaminen
   (let [vanhat-kohdeosat kohdeosat
         uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 2)]
+    (println "UUDET: " uudet-kohdeosat)
     (is (= #{1 2} (avaimet uudet-kohdeosat)))
-    (is (= (loppu (get uudet-kohdeosat 1))
-           (alku (get vanhat-kohdeosat 3))))))
+    (is (= (loppu (get uudet-kohdeosat 2))
+           (loppu (get vanhat-kohdeosat 3))))))

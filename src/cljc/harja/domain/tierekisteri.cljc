@@ -11,7 +11,7 @@
                     loppuet :tr-loppuetaisyys}]
    (when (every? integer? [aosa losa alkuet loppuet])
      (if (= aosa losa)
-       (- loppuet alkuet)
+       (Math/abs (- loppuet alkuet))
        (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
               osa (inc aosa)]
          (let [osan-pituus (get osien-pituudet osa 0)]
