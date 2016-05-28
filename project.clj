@@ -155,7 +155,8 @@
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
-            [lein-pdo "0.1.1"]]
+            [lein-pdo "0.1.1"]
+            [lein-doo "0.1.6"]]
 
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
@@ -176,8 +177,10 @@
                                  :output-dir    "target/cljs/test"
                                  :optimizations :none
                                  :pretty-print  true
-                                 :source-map    "target/cljs/test/test.js.map"
+                                 :source-map    true
+                                 :libs ["src/js/kuvataso.js"]
                                  :closure-output-charset "US-ASCII"
+                                 :main harja.runner
                                  }
                 :notify-command ["./run-karma.sh"]}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
