@@ -149,6 +149,6 @@
              {(inc (count avaimet-ennen))
               (merge jalkeen
                      (zipmap [:tr-alkuosa :tr-alkuetaisyys]
-                             (loppu kohdeosa)))}
+                             (alku kohdeosa)))}
              (zipmap (iterate inc (+ 2 (count avaimet-ennen)))
                      (map #(get kohdeosat %) (rest avaimet-jalkeen)))))))

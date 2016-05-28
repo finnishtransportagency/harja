@@ -10,16 +10,20 @@
                     losa :tr-loppuosa
                     loppuet :tr-loppuetaisyys}]
    (when (every? integer? [aosa losa alkuet loppuet])
-     (if (= aosa losa)
-       (Math/abs (- loppuet alkuet))
-       (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
-              osa (inc aosa)]
-         (let [osan-pituus (get osien-pituudet osa 0)]
-           (if (>= osa losa)
-             (+ pituus (Math/min loppuet osan-pituus))
+     (let [pit
+           (if (= aosa losa)
+             (Math/abs (- loppuet alkuet))
+             (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
+                    osa (inc aosa)]
+               (let [osan-pituus (get osien-pituudet osa 0)]
+                 (if (>= osa losa)
+                   (+ pituus (Math/min loppuet osan-pituus))
 
-             (recur (+ pituus osan-pituus)
-                    (inc osa)))))))))
+                   (recur (+ pituus osan-pituus)
+                          (inc osa))))))]
+       #_(println "A: " aosa " " alkuet " -- L: " losa " " loppuet
+                "  =>  " pit)
+       pit))))
 
 (defn tiekohteiden-jarjestys [kohde]
   ((juxt :tie :tr-numero :tienumero

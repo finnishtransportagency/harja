@@ -5,12 +5,14 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.pvm :refer [->pvm]]
 
-    [harja.loki :refer [log]]))
+    [harja.loki :refer [log]]
+    [harja.domain.tierekisteri :as tr]
+    [harja.tyokalut.functor :refer [fmap]]))
 
 (def kohdeosat
   {1 {:nimi "Laivaniemi 1"
       :tr-numero 1
-      :tr-alkuosa 2
+      :tr-alkuosa 1
       :tr-alkuetaisyys 100
       :tr-loppuosa 2
       :tr-loppuetaisyys 200}
@@ -26,6 +28,19 @@
       :tr-alkuetaisyys 15
       :tr-loppuosa 3
       :tr-loppuetaisyys 4242}})
+
+(def osien-pituus {1 6666
+                   2 7777
+                   3 5353})
+
+
+(defn pituus [osa]
+  (tr/laske-tien-pituus osien-pituus osa))
+
+(defn pituus-yht [kohdeosat]
+  (reduce +
+          (map pituus
+               (vals kohdeosat))))
 
 (def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
 (def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
@@ -58,7 +73,9 @@
 
     (is (= (loppu (get vanhat-kohdeosat 2))
            (loppu (get uudet-kohdeosat 1)))
-        "Seuraavan rivin loppu siirtyy ensimmäiselle riville")))
+        "Seuraavan rivin loppu siirtyy ensimmäiselle riville")
+    (is (= (pituus-yht vanhat-kohdeosat) (pituus-yht uudet-kohdeosat))
+        "Pilkkominen ja yhdistäminen ei muuta pituutta")))
 
 (deftest viimeisen-osan-poistaminen
   (let [vanhat-kohdeosat kohdeosat
@@ -67,12 +84,20 @@
     (is (= #{1 2} (avaimet uudet-kohdeosat)))
     (is (= (loppu (get uudet-kohdeosat 2))
            (loppu (get vanhat-kohdeosat 3)))
-        "Loppu siirtyy edellisen rivin lopuksi")))
+        "Loppu siirtyy edellisen rivin lopuksi")
+    (is (= (pituus-yht vanhat-kohdeosat) (pituus-yht uudet-kohdeosat))
+        "Pilkkominen ja yhdistäminen ei muuta pituutta")))
 
 (deftest valissa-olevan-osan-poistaminen
   (let [vanhat-kohdeosat kohdeosat
         uudet-kohdeosat (yllapitokohteet/poista-kohdeosa kohdeosat 2)]
-    (println "UUDET: " uudet-kohdeosat)
     (is (= #{1 2} (avaimet uudet-kohdeosat)))
+    (is (= (alku (get vanhat-kohdeosat 1))
+           (alku (get uudet-kohdeosat 1)))
+        "Ensimmäisen osan alku ei muutu")
+
     (is (= (loppu (get uudet-kohdeosat 2))
-           (loppu (get vanhat-kohdeosat 3))))))
+           (loppu (get vanhat-kohdeosat 3)))
+        "Loppu siirtyy yhdellä aiemmaksi")
+    (is (= (pituus-yht vanhat-kohdeosat) (pituus-yht uudet-kohdeosat))
+        "Pilkkominen ja yhdistäminen ei muuta pituutta")))
