@@ -9,8 +9,8 @@ SELECT
   i.valitetty,
   i.yhteydenottopyynto,
   i.otsikko,
-  i.lyhytselite,
-  i.pitkaselite,
+  i.paikankuvaus,
+  i.lisatieto,
   -- selitteet
   i.ilmoitustyyppi,
   i.selitteet,
@@ -88,7 +88,7 @@ WHERE
   (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
   -- Tarkasta vapaatekstihakuehto
-  (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.lyhytselite LIKE :teksti OR i.pitkaselite LIKE :teksti)) AND
+  (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.paikankuvaus LIKE :teksti OR i.lisatieto LIKE :teksti)) AND
 
   -- Tarkasta selitehakuehto
   (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite]))
@@ -99,8 +99,8 @@ SELECT
   ilmoitusid,
   ilmoitettu,
   yhteydenottopyynto,
-  lyhytselite,
-  pitkaselite,
+  paikankuvaus,
+  lisatieto,
   otsikko,
   ilmoitustyyppi,
   selitteet,
@@ -133,8 +133,8 @@ SELECT
   i.valitetty,
   i.yhteydenottopyynto,
   i.otsikko,
-  i.lyhytselite,
-  i.pitkaselite,
+  i.paikankuvaus,
+  i.lisatieto,
   i.selitteet,
 
   i.sijainti,
@@ -198,8 +198,8 @@ SELECT
   ilmoitusid,
   ilmoitettu,
   yhteydenottopyynto,
-  lyhytselite,
-  pitkaselite,
+  paikankuvaus,
+  lisatieto,
   otsikko,
   ilmoitustyyppi,
   selitteet,
@@ -238,8 +238,8 @@ INSERT INTO ilmoitus
  valitetty,
  yhteydenottopyynto,
  otsikko,
- lyhytselite,
- pitkaselite,
+ paikankuvaus,
+ lisatieto,
  ilmoitustyyppi,
  selitteet,
  urakkatyyppi)
@@ -250,8 +250,8 @@ VALUES
     :valitetty,
     :yhteydenottopyynto,
     :otsikko,
-    :lyhytselite,
-    :pitkaselite,
+    :paikankuvaus,
+    :lisatieto,
     :ilmoitustyyppi :: ilmoitustyyppi,
     :selitteet :: ilmoituksenselite [],
     :urakkatyyppi :: urakkatyyppi);
@@ -266,8 +266,8 @@ SET
   valitetty          = :valitetty,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
-  lyhytselite        = :lyhytselite,
-  pitkaselite        = :pitkaselite,
+  paikankuvaus        = :paikankuvaus,
+  lisatieto        = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet          = :selitteet :: ilmoituksenselite [],
   muokattu           = NOW()

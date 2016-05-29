@@ -23,7 +23,7 @@
        (when (:losa tie) [:losa (:losa tie)])
        (when (:ajr tie) [:ajr (:ajr tie)])
        (when (:puoli tie) [:puoli (:puoli tie)])
-       [:tilannepvm (:tilannepvm tietue)]]]
+       (when (:tilannepvm tietue) [:tilannepvm (:tilannepvm tietue)])]]
      [:tietolaji
       [:tietolajitunniste (get-in tietue [:tietolaji :tietolajitunniste])]
       [:arvot (get-in tietue [:tietolaji :arvot])]]]))

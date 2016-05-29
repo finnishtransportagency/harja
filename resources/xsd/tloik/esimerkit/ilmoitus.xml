@@ -6,8 +6,8 @@
     <ilmoitettu>2016-05-05T12:49:45</ilmoitettu>
     <urakkatyyppi>hoito</urakkatyyppi>
     <otsikko>Korkeat vallit</otsikko>
-    <lyhytSelite>Kuusamontien risteyksessä korkeat vallit.</lyhytSelite>
-    <pitkaSelite>Kuusamontien risteyksessä vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</pitkaSelite>
+    <paikanKuvaus>Kuusamontien risteyksessä</paikanKuvaus>
+    <lisatieto>Kuusamontien risteyksessä vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
     <yhteydenottopyynto>false</yhteydenottopyynto>
     <sijainti>
         <tienumero>4</tienumero>

@@ -91,12 +91,12 @@
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/otsikko",
                 "type": "string"
               },
-              "lyhytselite": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/lyhytselite",
+              "paikankuvaus": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/paikankuvaus",
                 "type": "string"
               },
-              "pitkaselite": {
-                "id": "urn:harja/ilmoitukset/0/ilmoitus/pitkaselite",
+              "lisatieto": {
+                "id": "urn:harja/ilmoitukset/0/ilmoitus/lisatieto",
                 "type": "string"
               }
             }

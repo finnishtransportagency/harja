@@ -49,7 +49,7 @@
                                     :losa   1
                                     :ajr    1
                                     :puoli  1}
-            vastausdata (tierekisteri/hae-tietueet (:tierekisteri jarjestelma) tierekisteriosoitevali "tl506" "2015-05-25")]
+            vastausdata (tierekisteri/hae-tietueet (:tierekisteri jarjestelma) tierekisteriosoitevali "tl506" "2015-05-25" "2015-05-25")]
         (is (true? (:onnistunut vastausdata)))
         (is (= 3 (count (:tietueet vastausdata))))
 

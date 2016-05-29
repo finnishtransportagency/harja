@@ -34,7 +34,7 @@
 (deftest hae-ilmoitukset-sarakkeet
   (let []
     (is (oikeat-sarakkeet-palvelussa?
-          [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :lyhytselite :pitkaselite
+          [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :paikankuvaus :lisatieto
            :ilmoitustyyppi :selitteet :urakkatyyppi :sijainti :uusinkuittaus :tila
 
            [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]

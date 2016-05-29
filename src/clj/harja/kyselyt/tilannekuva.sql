@@ -7,8 +7,8 @@ SELECT
   i.valitetty,
   i.yhteydenottopyynto,
   i.otsikko,
-  i.lyhytselite,
-  i.pitkaselite,
+  i.paikankuvaus,
+  i.lisatieto,
   -- selitteet
   i.ilmoitustyyppi,
   i.selitteet,

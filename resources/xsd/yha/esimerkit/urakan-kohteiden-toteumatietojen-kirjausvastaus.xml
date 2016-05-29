@@ -1,9 +1,10 @@
-<yha:urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
     <!--Optional:-->
-    <yha:virheet>
-        <yha:virhe>
-            <yha:kohde-yha-id>1</yha:kohde-yha-id>
-            <yha:selite>Jotain meni vikaan</yha:selite>
-        </yha:virhe>
-    </yha:virheet>
-</yha:urakan-kohteiden-toteumatietojen-kirjausvastaus>
+    <virheet>
+        <virhe>
+            <kohde-yha-id>1</kohde-yha-id>
+            <selite>Jotain meni vikaan</selite>
+        </virhe>
+    </virheet>
+</urakan-kohteiden-toteumatietojen-kirjausvastaus>

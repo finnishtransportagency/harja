@@ -67,13 +67,13 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
     [:table
      (for [[kentta arvo] [["Ilmoitettu" (:ilmoitettu ilmoitus)]
                           ["Otsikko" (:otsikko ilmoitus)]
-                          ["Lyhyt selite" (:lyhytselite ilmoitus)]
+                          ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
                           ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
                           ["Ilmoittaja" (apurit/nayta-henkilo (:ilmoittaja ilmoitus))]]]
        [:tr
         [:td [:b kentta]]
         [:td arvo]])]
-    [:blockquote (:pitkaselite ilmoitus)]
+    [:blockquote (:lisatieto ilmoitus)]
     (when-let [sijainti (:sijainti ilmoitus)]
       (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
         [:img {:src (format goole-static-map-url-template
