@@ -83,7 +83,7 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietue") vastaus-xml]
-      (let [vastausdata (tierekisteri/hae-tietue (:tierekisteri jarjestelma) "asdf" "tl506")
+      (let [vastausdata (tierekisteri/hae-tietue (:tierekisteri jarjestelma) "asdf" "tl506" "2015-05-25" )
             odotettu-tietue {:sijainti    {:koordinaatit {:x 0.0,
                                                           :y 0.0,
                                                           :z 0.0},
