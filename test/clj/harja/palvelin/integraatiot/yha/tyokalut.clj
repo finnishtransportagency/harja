@@ -79,7 +79,7 @@
       <kohde>
         <yha-id>3</yha-id>
         <kohdetyyppi>paikkaus</kohdetyyppi>
-        <tunnus>string</tunnus>
+        <nimi>string</nimi>
         <yllapitoluokka>1</yllapitoluokka>
         <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
         <nykyinen-paallyste>1</nykyinen-paallyste>
@@ -106,7 +106,7 @@
               <losa>3</losa>
               <let>3</let>
             </tierekisteriosoitevali>
-            <tunnus>A</tunnus>
+            <nimi>A</nimi>
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>
@@ -128,7 +128,7 @@
               <losa>3</losa>
               <let>3</let>
             </tierekisteriosoitevali>
-            <tunnus>B</tunnus>
+            <nimi>B</nimi>
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>

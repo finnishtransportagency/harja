@@ -24,7 +24,7 @@
     (:sahkoposti lahettaja)
     id))
 
-(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty otsikko paikankuvaus lisatieto yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   (ilmoitukset/paivita-ilmoitus!
     db
     urakka-id
@@ -33,8 +33,8 @@
     valitetty
     yhteydenottopyynto
     otsikko
-    lyhytselite
-    pitkaselite
+    paikankuvaus
+    lisatieto
     ilmoitustyyppi
     (str "{" (clojure.string/join "," (map name selitteet)) "}")
     id)
@@ -42,7 +42,7 @@
   (paivita-lahettaja db id lahettaja)
   (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id))
 
-(defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty urakkatyyppi otsikko lyhytselite pitkaselite yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
+(defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty urakkatyyppi otsikko paikankuvaus lisatieto yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   urakka-id
@@ -51,8 +51,8 @@
                   valitetty
                   yhteydenottopyynto
                   otsikko
-                  lyhytselite
-                  pitkaselite
+                  paikankuvaus
+                  lisatieto
                   ilmoitustyyppi
                   (str "{" (clojure.string/join "," (map name selitteet)) "}")
                   urakkatyyppi))]

@@ -6,15 +6,16 @@
             [hiccup.core :refer [html]])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(def +xsd-polku+ "xsd/tierekisteri/schemas/")
+(def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
-(defn muodosta-xml-sisalto [tunniste tietolajitunniste]
+(defn muodosta-xml-sisalto [tunniste tietolajitunniste tilannepvm]
   [:ns2:haeTietue {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietue"}
    [:tunniste tunniste]
-   [:tietolajitunniste tietolajitunniste]])
+   [:tietolajitunniste tietolajitunniste]
+   (when tilannepvm [:tilannepvm tilannepvm])])
 
-(defn muodosta-kutsu [tunniste tietolajitunniste]
-  (let [sisalto (muodosta-xml-sisalto tunniste tietolajitunniste)
+(defn muodosta-kutsu [tunniste tietolajitunniste tilannepvm]
+  (let [sisalto (muodosta-xml-sisalto tunniste tietolajitunniste tilannepvm)
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "haeTietue.xsd" xml)
       xml

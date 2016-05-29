@@ -55,13 +55,13 @@
     (str "Tietueen poisto palautti virheitä (URL: " url ")")))
 
 
-(defn hae-tietue [db integraatioloki url id tietolaji]
+(defn hae-tietue [db integraatioloki url id tietolaji tilannepvm]
   (log/debug "Haetaan tietue: " id ", joka kuuluu tietolajiin " tietolaji " Tierekisteristä.")
   (let [url (str url "/haetietue")]
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "tierekisteri" "hae-tietue"
       (fn [konteksti]
-        (let [kutsudata (haku-kutsusanoma/muodosta-kutsu id tietolaji)
+        (let [kutsudata (haku-kutsusanoma/muodosta-kutsu id tietolaji tilannepvm)
               http-asetukset (http-asetukset url)
               {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset  kutsudata)]
           (kasittele-tietueen-hakuvastaus url id tietolaji xml))))))

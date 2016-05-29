@@ -104,7 +104,9 @@
          :tiedoitus "Tiedotus"
          (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
        [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-        ["Selite" (:lyhytselite tapahtuma)]
+        ["Otsikko" (:otsikko tapahtuma)]
+        ["Paikan kuvaus" (:paikankuvaus tapahtuma)]
+        ["Lisätietoja" (:lisatieto tapahtuma)]
         ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
        {:linkki {:nimi     "Tarkemmat tiedot"
                  :on-click #(do

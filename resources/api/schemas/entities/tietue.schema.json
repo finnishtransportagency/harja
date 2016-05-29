@@ -42,6 +42,11 @@
       "type": "integer",
       "required": false
     },
+    "tilannepvm":{
+      "id": "urn:harja/tilannepvm",
+      "type": "date",
+      "required": true
+    },
     "sijainti": {
       "id": "urn:harja/sijainti",
       "type": "object",

@@ -52,8 +52,8 @@
                   :valitetty          (parsi-paivamaara (z/xml1-> data :valitetty z/text))
                   :urakkatyyppi       (z/xml1-> data :urakkatyyppi z/text)
                   :otsikko            (z/xml1-> data :otsikko z/text)
-                  :lyhytselite        (z/xml1-> data :lyhytSelite z/text)
-                  :pitkaselite        (z/xml1-> data :pitkaSelite z/text)
+                  :paikankuvaus        (z/xml1-> data :paikanKuvaus z/text)
+                  :lisatieto        (z/xml1-> data :lisatieto z/text)
                   :viesti-id          (z/xml1-> data :viestiId z/text)
                   :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :viestiId z/text)))
                   :ilmoittaja         (when-let [ilmoittaja (into {} (z/xml-> data :ilmoittaja lue-ilmoittaja))]

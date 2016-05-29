@@ -32,7 +32,7 @@
 
    :lisatty "2015-05-26+03:00"})
 
-(def +xsd+ "xsd/tierekisteri/schemas/")
+(def +xsd+ "xsd/tierekisteri/skeemat/")
 
 (deftest tarkista-kutsu
   (let [kutsu-xml (tietue-sanoma/muodosta-kutsu lisattava-testitietue)

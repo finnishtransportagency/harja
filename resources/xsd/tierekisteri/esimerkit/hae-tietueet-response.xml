@@ -28,6 +28,7 @@
                     <losa>1</losa>
                     <ajr>1</ajr>
                     <puoli>1</puoli>
+                    <tilannepvm>2016-01-01</tilannepvm>
                 </tie>
             </sijainti>
             <tietolaji>
@@ -61,6 +62,7 @@
                     <losa>1</losa>
                     <ajr>1</ajr>
                     <puoli>1</puoli>
+                    <tilannepvm>2016-01-01</tilannepvm>
                 </tie>
             </sijainti>
             <tietolaji>
@@ -94,6 +96,7 @@
                     <losa>1</losa>
                     <ajr>1</ajr>
                     <puoli>1</puoli>
+                    <tilannepvm>2016-01-01</tilannepvm>
                 </tie>
             </sijainti>
             <tietolaji>

@@ -14,7 +14,8 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
-            [harja.tyokalut.merkkijono :as merkkijono])
+            [harja.tyokalut.merkkijono :as merkkijono]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
@@ -52,6 +53,8 @@
      {:parametri "let"
       :tyyppi :int}
      {:parametri "voimassaolopvm"
+      :tyyppi :date}
+     {:parametri "tilannepvm"
       :tyyppi :date}]))
 
 (defn tarkista-tietueen-haun-parametrit [parametrit]
@@ -60,7 +63,9 @@
     [{:parametri "tunniste"
       :tyyppi :string}
      {:parametri "tietolajitunniste"
-      :tyyppi :string}]))
+      :tyyppi :string}
+     {:parametri "tilannepvm"
+      :tyyppi :date}]))
 
 (defn hae-tietolaji [tierekisteri parametrit kayttaja]
   (tarkista-tietolajihaun-parametrit parametrit)
@@ -76,10 +81,11 @@
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
         tietolajitunniste (get parametrit "tietolajitunniste")
-        voimassaolopvm (.format (SimpleDateFormat. "yyyy-MM-dd") (.parse (SimpleDateFormat. "yyyy-MM-dd") (get parametrit "voimassaolopvm")))]
+        voimassaolopvm (pvm/iso-8601->pvm (get parametrit "voimassaolopvm"))
+        tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
-               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite))
-    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm)
+               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite) " tilannepäivämäärällä: " tilannepvm)
+    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm tilannepvm)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
@@ -88,9 +94,10 @@
 (defn hae-varuste [tierekisteri parametrit kayttaja]
   (tarkista-tietueen-haun-parametrit parametrit)
   (let [tunniste (get parametrit "tunniste")
-        tietolajitunniste (get parametrit "tietolajitunniste")]
+        tietolajitunniste (get parametrit "tietolajitunniste")
+        tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
-    (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste)
+    (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste tilannepvm)
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
@@ -104,7 +111,7 @@
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
     (tee-kirjausvastauksen-body
       {:id livitunniste
-      :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
+       :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri data kayttaja]
   (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")

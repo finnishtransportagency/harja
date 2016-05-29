@@ -33,11 +33,10 @@
         (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla"))
       (let [vastaus (api-tyokalut/get-kutsu [virheellinen-kutsu] kayttaja portti)]
         (is (= 400 (:status vastaus)) "Haku puutteellisilla parametreillä palauttaa virheen")
-        (println (:body vastaus))
         (is (.contains (:body vastaus) oletettu-vastaus) "Vastaus sisältää oikean virheilmoitukset")))))
 
 (deftest tarkista-tietolajin-haku
-  (let [vastaus-xml "xsd/tierekisteri/examples/hae-tietolaji-response.xml"
+  (let [vastaus-xml "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"
         validi-kutsu "/api/varusteet/tietolaji?tunniste=tl506"
         virheellinen-kutsu "/api/varusteet/tietolaji"
         tierekisteri-resurssi "/haetietolaji"
@@ -45,16 +44,16 @@
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
 
 (deftest tarkista-tietueiden-haku
-  (let [vastaus-xml "xsd/tierekisteri/examples/hae-tietueet-response.xml"
-        validi-kutsu "/api/varusteet/haku?numero=3002&aet=2295&aosa=5&ajr=0&let=1&puoli=1&voimassaolopvm=2014-11-08&tietolajitunniste=tl506&losa=1"
+  (let [vastaus-xml "xsd/tierekisteri/esimerkit/hae-tietueet-response.xml"
+        validi-kutsu "/api/varusteet/haku?numero=3002&aet=2295&aosa=5&ajr=0&let=1&puoli=1&voimassaolopvm=2014-11-08&tilannepvm=2014-11-08&tietolajitunniste=tl506&losa=1"
         virheellinen-kutsu "/api/varusteet/haku"
         tierekisteri-resurssi "/haetietueet"
         oletettu-vastaus "Pakollista parametria: tietolajitunniste ei ole annettu"]
     (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
 
 (deftest tarkista-tietueen-haku
-  (let [vastaus-xml "xsd/tierekisteri/examples/hae-tietue-response.xml"
-        validi-kutsu "/api/varusteet/varuste?tunniste=Livi956991&tietolajitunniste=tl506"
+  (let [vastaus-xml "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"
+        validi-kutsu "/api/varusteet/varuste?tunniste=Livi956991&tietolajitunniste=tl506&tilannepvm=2014-11-08"
         virheellinen-kutsu "/api/varusteet/varuste"
         tierekisteri-resurssi "/haetietue"
         oletettu-vastaus "Pakollista parametria: tunniste ei ole annettu"]
@@ -62,7 +61,7 @@
 
 (deftest tarkista-usean-tietuen-palautuminen
   (let [vastaus-xml "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<ns2:vastaus xmlns:ns2=\"http://www.solita.fi/harja/tierekisteri/vastaus\">\n    <ns2:status>OK</ns2:status>\n    <ns2:tietueet>\n        <ns2:tietue>\n            <tunniste>1245rgfsd</tunniste>\n            <alkupvm>2015-03-03+02:00</alkupvm>\n            <loppupvm>2015-03-03+02:00</loppupvm>\n            <karttapvm>2015-03-03+02:00</karttapvm>\n            <piiri>1</piiri>\n            <kuntoluokka>1</kuntoluokka>\n            <urakka>100</urakka>\n            <sijainti>\n                <koordinaatit>\n                    <x>0</x>\n                    <y>0</y>\n                    <z>0</z>\n                </koordinaatit>\n                <linkki>\n                    <id>1</id>\n                    <marvo>10</marvo>\n                </linkki>\n                <tie>\n                    <numero>1</numero>\n                    <aet>1</aet>\n                    <aosa>1</aosa>\n                    <let>1</let>\n                    <losa>1</losa>\n                    <ajr>1</ajr>\n                    <puoli>1</puoli>\n                </tie>\n            </sijainti>\n            <tietolaji>\n                <tietolajitunniste>tl506</tietolajitunniste>\n                <arvot>9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40</arvot>\n            </tietolaji>\n        </ns2:tietue>\n        <ns2:tietue>\n            <tunniste>1245rgfsd</tunniste>\n            <alkupvm>2015-03-03+02:00</alkupvm>\n            <loppupvm>2015-03-03+02:00</loppupvm>\n            <karttapvm>2015-03-03+02:00</karttapvm>\n            <piiri>1</piiri>\n            <kuntoluokka>1</kuntoluokka>\n            <urakka>100</urakka>\n            <sijainti>\n                <koordinaatit>\n                    <x>0</x>\n                    <y>0</y>\n                    <z>0</z>\n                </koordinaatit>\n                <linkki>\n                    <id>1</id>\n                    <marvo>10</marvo>\n                </linkki>\n                <tie>\n                    <numero>1</numero>\n                    <aet>1</aet>\n                    <aosa>1</aosa>\n                    <let>1</let>\n                    <losa>1</losa>\n                    <ajr>1</ajr>\n                    <puoli>1</puoli>\n                </tie>\n            </sijainti>\n            <tietolaji>\n                <tietolajitunniste>tl506</tietolajitunniste>\n                <arvot>9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40</arvot>\n            </tietolaji>\n        </ns2:tietue>\n    </ns2:tietueet>\n</ns2:vastaus>\n"
-        kutsu "/api/varusteet/varuste?tunniste=Livi956991&tietolajitunniste=tl506"]
+        kutsu "/api/varusteet/varuste?tunniste=Livi956991&tietolajitunniste=tl506&tilannepvm=2014-11-08"]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietue") vastaus-xml
        (str "http://localhost:" portti kutsu) :allow]
@@ -72,7 +71,7 @@
         (is (= 2 (count (get vastauksen-data "varusteet"))) "Kutsu palautti oikein 2 varustetta")))))
 
 (deftest tarkista-tietueen-lisaaminen
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
         kutsu "/api/varusteet/varuste"
         kutsu-data (slurp (io/resource "api/examples/varusteen-lisays-request.json"))]
     (with-fake-http
@@ -83,7 +82,7 @@
         (is (.contains (:body vastaus) "Uusi varuste lisätty onnistuneesti tunnisteella:"))))))
 
 (deftest tarkista-tietueen-paivittaminen
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
         kutsu "/api/varusteet/varuste"
         kutsu-data (slurp (io/resource "api/examples/varusteen-paivitys-request.json"))]
     (with-fake-http
@@ -93,7 +92,7 @@
         (is (= 200 (:status vastaus)) "Tietueen paivitys onnistui")))))
 
 (deftest tarkista-tietueen-poistaminen
-  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/examples/ok-vastaus-response.xml"))
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
         kutsu "/api/varusteet/varuste"
         kutsu-data (slurp (io/resource "api/examples/varusteen-poisto-request.json"))]
     (with-fake-http
