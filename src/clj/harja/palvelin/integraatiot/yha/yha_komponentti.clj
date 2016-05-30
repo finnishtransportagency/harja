@@ -6,12 +6,15 @@
             [harja.palvelin.integraatiot.yha.sanomat.urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
             [harja.palvelin.integraatiot.yha.sanomat.urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
             [org.httpkit.fake :refer [with-fake-http]]
-            [harja.kyselyt.yha :as yha-tiedot]
+            [harja.kyselyt.yha :as q-yha-tiedot]
+            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
 (def +virhe-urakan-kohdehaussa+ ::yha-virhe-urakan-kohdehaussa)
+(def +virhe-kohteen-lahetyksessa+ ::yha-virhe-kohteen-lahetyksessa)
 
 ;; todo: poista kun saadaan oikea yhteys YHA:n
 (def +testi-urakan-kohdehakuvastaus+
@@ -128,7 +131,7 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
-  (laheta-kohde! [this kohde-id]))
+  (laheta-kohde! [this urakka-id kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
   (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
@@ -156,6 +159,10 @@
            :virheet {:virhe virhe}}))
       kohteet)))
 
+(defn kasittele-urakan-kohdelahetysvastaus [body headers]
+  ;; todo
+  )
+
 (defn lisaa-http-parametri [parametrit avain arvo]
   (if arvo
     (assoc parametrit avain arvo)
@@ -179,7 +186,7 @@
           (kasittele-urakoiden-hakuvastaus body headers))))))
 
 (defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id kayttajatunnus]
-  (if-let [yha-id (yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
+  (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "haeUrakanKohteet" yha-id))]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
       ;; todo: ota pois, kun saadaan yhteys toimimaan YHA:n
@@ -202,9 +209,29 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-(defn laheta-kohde-yhan [integraatioloki db url kohde-id]
-  ;; todo: toteuta
-  )
+(defn laheta-kohde-yhan [integraatioloki db url urakka-id kohde-id]
+  (log/debug (format "Lähetetään urakan (id: %s) kohde (id: %s) YHA:n URL:lla: %s." urakka-id kohde-id url))
+  (let [kohde (q-yllapitokohteet/hae-urakan-yllapitokohde db urakka-id kohde-id)
+        alikohteet (q-yllapitokohteet/hae-urakan-yllapitokohteen-yllapitokohdeosat db kohde-id)
+        paallystys-ilmoitus (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db kohde-id)
+        url (str url "toteumatiedot")]
+    (if kohde
+
+      (let
+        [kutsudata "nönnönöö"]
+        (integraatiotapahtuma/suorita-integraatio
+         db integraatioloki "yha" "kohteiden-lahetys"
+         (fn [konteksti]
+           (let [http-asetukset {:metodi :POST :url url}
+                 {body :body headers :headers}
+                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+             (kasittele-urakan-kohdelahetysvastaus body headers)))))
+
+      (let [virhe (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
+        (log/error virhe)
+        (throw+
+          {:type +virhe-kohteen-lahetyksessa+
+           :virheet {:virhe virhe}})))))
 
 
 (defrecord Yha [asetukset]
@@ -219,5 +246,5 @@
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
   (laheta-kohde! [this kohde-id]
-    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) kohde-id)))
+    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) urakka-id kohde-id)))
 
