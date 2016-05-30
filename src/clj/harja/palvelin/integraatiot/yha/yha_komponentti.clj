@@ -212,9 +212,9 @@
 
 (defn laheta-kohde-yhan [integraatioloki db url kohde-id]
   (log/debug (format "Lähetetään kohde (id: %s) YHA:n URL:lla: %s." kohde-id url))
-  (let [kohde (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+  (let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
         alikohteet (q-yllapitokohteet/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        paallystys-ilmoitus (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db kohde-id)
+        paallystys-ilmoitus (first (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db kohde-id))
         url (str url "toteumatiedot")]
     (if kohde
       (let

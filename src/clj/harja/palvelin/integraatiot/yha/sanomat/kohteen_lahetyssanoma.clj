@@ -5,7 +5,7 @@
 
 (def +xsd-polku+ "xsd/yha/")
 
-(defn tee-alikohteet []
+(defn tee-alikohteet [alikohteet]
   [:alikohteet
    [:alikohde
     [:yha-id "3"]
@@ -39,7 +39,7 @@
       [:lisa-aineet "string"]]]]]
   )
 
-(defn tee-alustalle-tehdyt-toimenpiteet []
+(defn tee-alustalle-tehdyt-toimenpiteet [paallystys-ilmoitus]
   [:alustalle-tehdyt-toimet
    [:alustalle-tehty-toimenpide
     [:tierekisteriosoitevali
@@ -58,7 +58,7 @@
     [:verkon-sijainti "1"]
     [:tekninen-toimenpide "4"]]])
 
-(defn tee-kohteet []
+(defn tee-kohteet [kohde alikohteet paallystys-ilmoitus]
   [:kohteet
    [:kohde
     [:yha-id "3"]
@@ -80,21 +80,21 @@
      [:aet "3"]
      [:losa "3"]
      [:let "3"]]
-    (tee-alustalle-tehdyt-toimenpiteet)
-    (tee-alikohteet)]])
+    (tee-alustalle-tehdyt-toimenpiteet paallystys-ilmoitus)
+    (tee-alikohteet alikohteet)]])
 
-(defn muodosta-sanoma []
+(defn muodosta-sanoma [kohde alikohteet paallystys-ilmoitus]
   [:urakan-kohteiden-toteumatietojen-kirjaus
    {:xmlns "http://www.liikennevirasto.fi/xsd/yha"}
    [:urakka
-    [:yha-id "3"]
-    [:harja-id "3"]
-    [:sampotunnus "string"]
-    [:tunnus "string"]
-    (tee-kohteet)]])
+    [:yha-id (:yha_urakka_id kohde)]
+    [:harja-id (:harja_urakka_id kohde)]
+    [:sampotunnus (:sampo_urakka_id kohde)]
+    [:tunnus (:yha_urakka_tunnus kohde)]
+    (tee-kohteet kohde alikohteet paallystys-ilmoitus)]])
 
 (defn muodosta [kohde alikohteet paallystys-ilmoitus]
-  (let [sisalto (muodosta-sanoma)
+  (let [sisalto (muodosta-sanoma kohde alikohteet paallystys-ilmoitus)
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "yha.xsd" xml)
       xml
