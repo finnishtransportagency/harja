@@ -10,7 +10,7 @@
             [clojure.string :as str]
             [cljs.core.async :refer [<!]]
             [harja.tyokalut.vkm :as vkm]
-            [harja.domain.tierekisteri :as tierekisteri-domain]
+            [harja.domain.tierekisteri :as tr]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.tiedot.urakka.yhatuonti :as yha]
@@ -142,7 +142,7 @@
             :muokattava? (or (:muokattava? let) (constantly true))}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
             :muokattava? (constantly false)
-            :hae (get pituus :hae tierekisteri-domain/laske-tien-pituus)}])))
+            :hae (get pituus :hae tr/laske-tien-pituus)}])))
 
 (defn tr-osoite [rivi]
   (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
@@ -151,15 +151,30 @@
       (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
               arvot))))
 
+(defn varmista-alku-ja-loppu [kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
+                                         alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys
+                                         :as kohde}]
+  (let [avaimet (sort (keys kohdeosat))
+        ensimmainen (first avaimet)
+        viimeinen (last avaimet)]
+    (as-> kohdeosat ko
+      (if (not= (tr/alku kohde) (tr/alku (get kohdeosat ensimmainen)))
+        (update-in ko [ensimmainen] merge {:tr-alkuosa aosa :tr-alkuetaisyys alkuet})
+        ko)
+      (if (not= (tr/loppu kohde) (tr/loppu (get kohdeosat viimeinen)))
+        (update-in ko [viimeinen] merge {:tr-loppuosa losa :tr-loppuetaisyys loppuet})
+        ko))))
+
 (defn yllapitokohdeosat [kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
                                     alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde}]
   (let [[sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id @nav/valittu-urakka)
-        grid-data (atom (if (empty? kohdeosat)
-                          {1 {:tr-numero tie
-                              :tr-alkuosa aosa :tr-alkuetaisyys alkuet
-                              :tr-loppuosa losa :tr-loppuetaisyys loppuet}}
-                          (zipmap (iterate inc 1) kohdeosat)))
+        grid-data (atom
+                   (if (empty? kohdeosat)
+                     {1 {:tr-numero tie
+                         :tr-alkuosa aosa :tr-alkuetaisyys alkuet
+                         :tr-loppuosa losa :tr-loppuetaisyys loppuet}}
+                     (varmista-alku-ja-loppu (zipmap (iterate inc 1) kohdeosat) kohde)))
         g (grid/grid-ohjaus)
         toiminnot-komponentti
         (fn [_ index]
@@ -179,7 +194,7 @@
         osa-olemassa #(when (and % (not (contains? @osan-pituus (js/parseInt %))))
                         (str "Tiellä " tie " ei ole osaa  " %))
         pituus (fn [tieosa]
-                 (tierekisteri-domain/laske-tien-pituus @osan-pituus tieosa))
+                 (tr/laske-tien-pituus @osan-pituus tieosa))
         osan-maksimipituus (fn [key]
                              (fn [et {osa key}]
                                (log "VALIDOI AET " et " OSA " osa  )
@@ -245,7 +260,7 @@
                       {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
                                                               (< rivi (dec kohdeosia)))
                        :validoi [(osan-maksimipituus :tr-loppuosa)]}
-                      {:hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)}])
+                      {:hae (partial tr/laske-tien-pituus @osan-pituus)}])
                     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
                      {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
                       :komponentti toiminnot-komponentti}])))
@@ -359,7 +374,7 @@
                                        (:arvonvahennykset rivi)
                                        (:bitumi-indeksi rivi)
                                        (:kaasuindeksi rivi)))}]))
-          (sort-by tierekisteri-domain/tiekohteiden-jarjestys @kohteet-atom)]
+          (sort-by tr/tiekohteiden-jarjestys @kohteet-atom)]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
