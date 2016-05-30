@@ -1,6 +1,5 @@
+sudo: required
 language: clojure
-services:
-  - postgresql
-before_script:
+before_install:
   - sh tietokanta/travis.sh
 script: lein testit
