@@ -9,7 +9,6 @@ Autentikointiin käytetään KOKAa.
 
 ## Hakemistorakenne ##
 
-Alustava
 Harja repon hakemistorakenne:
 
 - README                    (yleinen readme)
