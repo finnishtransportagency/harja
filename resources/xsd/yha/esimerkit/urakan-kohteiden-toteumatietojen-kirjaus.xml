@@ -70,7 +70,7 @@
                             <let>3</let>
                         </tierekisteriosoitevali>
                         <!--Optional:-->
-                        <nimi>A</nimi>
+                        <tunnus>A</tunnus>
                         <!--Optional:-->
                         <paallystystoimenpide>
                             <uusi-paallyste>1</uusi-paallyste>
