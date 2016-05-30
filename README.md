@@ -104,7 +104,6 @@ puhtaat -namespacessa määriteltyihin.
    <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
 </svg>")))
 
-
 ## Konvertoi SVG kuvia PNG:ksi
 
 Käytä inkscape sovellusta ilman UI:ta. Muista käyttää täysiä tiedostopolkuja:
