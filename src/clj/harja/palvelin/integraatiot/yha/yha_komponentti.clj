@@ -5,6 +5,7 @@
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.yha.sanomat.urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
             [harja.palvelin.integraatiot.yha.sanomat.urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
+            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.kyselyt.paallystys :as q-paallystys]
@@ -216,17 +217,15 @@
         paallystys-ilmoitus (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db kohde-id)
         url (str url "toteumatiedot")]
     (if kohde
-
       (let
-        [kutsudata "nönnönöö"]
+        [kutsudata (kohteen-lahetyssanoma/muodosta kohde alikohteet paallystys-ilmoitus)]
         (integraatiotapahtuma/suorita-integraatio
-         db integraatioloki "yha" "kohteiden-lahetys"
-         (fn [konteksti]
-           (let [http-asetukset {:metodi :POST :url url}
-                 {body :body headers :headers}
-                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-             (kasittele-urakan-kohdelahetysvastaus body headers)))))
-
+          db integraatioloki "yha" "kohteiden-lahetys"
+          (fn [konteksti]
+            (let [http-asetukset {:metodi :POST :url url}
+                  {body :body headers :headers}
+                  (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+              (kasittele-urakan-kohdelahetysvastaus body headers)))))
       (let [virhe (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
         (log/error virhe)
         (throw+
