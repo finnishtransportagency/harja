@@ -38,7 +38,6 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
-
 ## Integraatiot
 
 MULEsta on luovuttu, integraatiot suoraan backendistä.
