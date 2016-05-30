@@ -172,7 +172,8 @@
                                :recompile-dependents false
                                }}
                {:id             "test"
-                :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+                :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev"
+                                 "test/cljs" "test/doo"]
                 :compiler       {:output-to     "target/cljs/test/test.js"
                                  :output-dir    "target/cljs/test"
                                  :optimizations :none
