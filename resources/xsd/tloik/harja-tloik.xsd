@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--Created with Liquid XML Studio Developer Edition 9.1.11.3570 (http://www.liquid-technologies.com)-->
-<xs:schema
-        targetNamespace="http://www.liikennevirasto.fi/xsd/harja"
-        version="1.0"
-        xmlns="http://www.liikennevirasto.fi/xsd/harja"
-        xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema 
+    targetNamespace="http://www.liikennevirasto.fi/xsd/harja" 
+    version="1.0" 
+    xmlns="http://www.liikennevirasto.fi/xsd/harja"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xs:element name="ilmoitus">
         <xs:complexType>
             <xs:sequence>
@@ -15,8 +15,8 @@
                 <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
                 <xs:element name="urakkatyyppi" type="urakkatyyppi" minOccurs="1" maxOccurs="1" />
                 <xs:element name="otsikko" type="xs:string" minOccurs="0" />
-                <xs:element name="lyhytSelite" type="xs:string" minOccurs="0" />
-                <xs:element name="pitkaSelite" type="xs:string" minOccurs="0" />
+                <xs:element name="paikanKuvaus" type="xs:string" minOccurs="0" />
+                <xs:element name="lisatieto" type="xs:string" minOccurs="0" />
                 <xs:element name="yhteydenottopyynto" type="xs:boolean" minOccurs="0" />
                 <xs:element name="sijainti" type="sijainti" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoittaja" type="ilmoittaja" minOccurs="0" />

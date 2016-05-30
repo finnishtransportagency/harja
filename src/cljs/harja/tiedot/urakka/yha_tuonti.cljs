@@ -70,60 +70,68 @@
 (defn rakenna-tieosoitteet [kohteet]
   {:tieosoitteet
    (into []
-         (flatten
-           (mapv (fn [kohde]
+         (mapcat (fn [kohde]
                    (let [tr (:tierekisteriosoitevali kohde)]
-                     [{:tunniste (kohteen-alun-tunnus kohde)
-                       :tie (:tienumero tr)
-                       :osa (:aosa tr)
-                       :etaisyys (:aet tr)
-                       :ajorata (:ajorata tr)}
-                      {:tunniste (kohteen-lopun-tunnus kohde)
-                       :tie (:tienumero tr)
-                       :osa (:losa tr)
-                       :etaisyys (:let tr)
-                       :ajorata (:ajorata tr)}
-                      (mapv (fn [alikohde]
-                              (let [tr (:tierekisteriosoitevali alikohde)]
-                                [{:tunniste (alikohteen-alun-tunnus kohde alikohde)
-                                  :tie (:tienumero tr)
-                                  :osa (:aosa tr)
-                                  :etaisyys (:aet tr)
-                                  :ajorata (:ajorata tr)}
-                                 {:tunniste (alikohteen-lopun-tunnus kohde alikohde)
-                                  :tie (:tienumero tr)
-                                  :osa (:losa tr)
-                                  :etaisyys (:let tr)
-                                  :ajorata (:ajorata tr)}]))
-                            (:alikohteet kohde))]))
-                 kohteet)))})
+                     (concat
+                       [{:tunniste (kohteen-alun-tunnus kohde)
+                         :tie (:tienumero tr)
+                         :osa (:aosa tr)
+                         :etaisyys (:aet tr)
+                         :ajorata (:ajorata tr)}
+                        {:tunniste (kohteen-lopun-tunnus kohde)
+                         :tie (:tienumero tr)
+                         :osa (:losa tr)
+                         :etaisyys (:let tr)
+                         :ajorata (:ajorata tr)}]
+                       (mapcat (fn [alikohde]
+                                 (let [tr (:tierekisteriosoitevali alikohde)]
+                                   [{:tunniste (alikohteen-alun-tunnus kohde alikohde)
+                                     :tie (:tienumero tr)
+                                     :osa (:aosa tr)
+                                     :etaisyys (:aet tr)
+                                     :ajorata (:ajorata tr)}
+                                    {:tunniste (alikohteen-lopun-tunnus kohde alikohde)
+                                     :tie (:tienumero tr)
+                                     :osa (:losa tr)
+                                     :etaisyys (:let tr)
+                                     :ajorata (:ajorata tr)}]))
+                               (:alikohteet kohde)))))
+                 kohteet))})
 
 (defn paivita-osoitteen-osa [kohde osoite avain tunnus]
   (assoc-in kohde [:tierekisteriosoitevali avain]
-            (if-let [arvo (get osoite tunnus)]
-              arvo
-              (get-in kohde [:tierekisteriosoitevali avain]))))
+            (or (get osoite tunnus)
+                (get-in kohde [:tierekisteriosoitevali avain]))))
 
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
   (first (filter #(= hakutunnus (get % "tunniste")) (get vkm-kohteet "tieosoitteet"))))
 
-(defn paivita-tieosoite [kohde alkuosanosoite loppuosanosoite]
-  (-> kohde
-      (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
-      (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
-      (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
-      (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
-      (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
-      (paivita-osoitteen-osa loppuosanosoite :losa "osa")))
+(defn paivita-kohde [kohde alkuosanosoite loppuosanosoite virhe?]
+  (if virhe?
+    (assoc kohde :virhe true)
+    (-> kohde
+        (paivita-osoitteen-osa alkuosanosoite :tienumero "tie")
+        (paivita-osoitteen-osa alkuosanosoite :ajorata "ajorata")
+        (paivita-osoitteen-osa alkuosanosoite :aet "etaisyys")
+        (paivita-osoitteen-osa alkuosanosoite :aosa "osa")
+        (paivita-osoitteen-osa loppuosanosoite :let "etaisyys")
+        (paivita-osoitteen-osa loppuosanosoite :losa "osa"))))
+
+(defn vkm-virhe? [hakutunnus vkm-kohteet]
+  (some #(and (= hakutunnus (get % "tunniste"))
+              (not (= 1 (get % "palautusarvo"))))
+        (get vkm-kohteet "tieosoitteet")))
 
 (defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
   (mapv (fn [kohde]
           (let [alkuosanhakutunnus (kohteen-alun-tunnus kohde)
                 loppuosanhakutunnus (kohteen-lopun-tunnus kohde)
                 alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
-                loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
+                loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)
+                virhe? (or (vkm-virhe? alkuosanhakutunnus vkm-kohteet)
+                           (vkm-virhe? loppuosanhakutunnus vkm-kohteet))]
             (-> kohde
-                (paivita-tieosoite alkuosanosoite loppuosanosoite)
+                (paivita-kohde alkuosanosoite loppuosanosoite virhe?)
                 (assoc :alikohteet
                        (mapv
                          (fn [alikohde]
@@ -131,11 +139,11 @@
                                  loppuosanhakutunnus (alikohteen-lopun-tunnus kohde alikohde)
                                  alkuosanosoite (hae-vkm-osoite vkm-kohteet alkuosanhakutunnus)
                                  loppuosanosoite (hae-vkm-osoite vkm-kohteet loppuosanhakutunnus)]
-                             (paivita-tieosoite alikohde alkuosanosoite loppuosanosoite)))
+                             (paivita-kohde alikohde alkuosanosoite loppuosanosoite virhe?)))
                          (:alikohteet kohde))))))
         yha-kohteet))
 
-(def kohteiden-paivittaminen-kaynnissa? (atom false))
+(def yha-kohteiden-paivittaminen-kaynnissa? (atom false))
 
 (defn- hae-paivita-ja-tallenna-yllapitokohteet
   "Hakee YHA-kohteet, päivittää ne nykyiselle tieverkolle kutsumalla VMK-palvelua (viitekehysmuunnin)
@@ -152,28 +160,37 @@
                   tieosoitteet (rakenna-tieosoitteet uudet-yha-kohteet)
                   tilanne-pvm (:karttapaivamaara (:tierekisteriosoitevali (first uudet-yha-kohteet)))
                   vkm-kohteet (<! (vkm/muunna-tierekisteriosoitteet-eri-paivan-verkolle tieosoitteet tilanne-pvm (pvm/nyt)))]
+              (log "[YHA] VKM-kohteet: " (pr-str vkm-kohteet))
               (if (k/virhe? vkm-kohteet)
                 {:status :error :viesti "YHA:n kohteiden päivittäminen viitekehysmuuntimella epäonnistui."
                  :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
                 (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
+                      onnistuneet-kohteet (vec (filter #(not (:virhe %)) kohteet))
+                      epaonnistuneet-kohteet (vec (filter :virhe kohteet))
                       _ (log "[YHA] Tallennetaan uudet kohteet")
-                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
+                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id onnistuneet-kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
                      :koodi :kohteiden-tallentaminen-epaonnistui}
-                    ;; FIXME Tarkista epäonnistuneet VKM-kohteet ja palauta mappi:
-                    #_{:status :ok :epaonnistuneet-kohteet [] :yhatiedot yhatiedot
-                       :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}
-                    {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
-                     :koodi :kohteet-tallennettu})))))))))
+                    (if (empty? epaonnistuneet-kohteet)
+                      {:status :ok :uudet-kohteet (count uudet-yha-kohteet) :yhatiedot yhatiedot
+                       :koodi :kohteet-tallennettu}
+                      {:status :error :epaonnistuneet-kohteet epaonnistuneet-kohteet :yhatiedot yhatiedot
+                       :koodi :kohteiden-paivittaminen-vmklla-epaonnistui-osittain}))))))))))
 
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
-   [:p "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
+   [:p
+    "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut."
+    "Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
    [:ul
     (for [kohde epaonnistuneet-kohteet]
-      [:li (:tunniste kohde)])]])
+      (let [tr (:tierekisteriosoitevali kohde)]
+        [:li
+         "Nimi: " (:nimi kohde)
+         ", YHA id: " (:yha-id kohde)
+         ", tierekisteriosoiteväli: " (:tienumero tr) " / " (:aosa tr) " / " (:aet tr) " / " (:losa tr) " / " (:let tr)]))]])
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
@@ -186,7 +203,12 @@
              (:nayta-ilmoitus-ei-uusia-kohteita? optiot))
     (viesti/nayta! (:viesti vastaus) :success viesti/viestin-nayttoaika-lyhyt)))
 
-(defn- kasittele-epaonnistunut-kohteiden-paivitys [vastaus]
+(defn- kasittele-epaonnistunut-kohteiden-paivitys [vastaus harja-urakka-id]
+  (when (and
+          (some? (:yhatiedot vastaus))
+          (= (:id @nav/valittu-urakka) harja-urakka-id))
+    (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
+
   ;; Kohteiden osittain epäonnistunut päivittäminen näytetään modal-dialogissa
   (when (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :kohteiden-paivittaminen-vmklla-epaonnistui-osittain))
@@ -208,32 +230,33 @@
   ([harja-urakka-id] (paivita-yha-kohteet harja-urakka-id {}))
   ([harja-urakka-id optiot]
    (go
-     (reset! kohteiden-paivittaminen-kaynnissa? true)
+     (reset! yha-kohteiden-paivittaminen-kaynnissa? true)
      (let [vastaus (<! (hae-paivita-ja-tallenna-yllapitokohteet harja-urakka-id))]
-         (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
-         (reset! kohteiden-paivittaminen-kaynnissa? false)
-         (if (= (:status vastaus) :ok)
-           (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
-           (kasittele-epaonnistunut-kohteiden-paivitys vastaus))))))
-
+       (log "[YHA] Kohteet käsitelty, käsittelytiedot: " (pr-str vastaus))
+       (reset! yha-kohteiden-paivittaminen-kaynnissa? false)
+       (if (= (:status vastaus) :ok)
+         (kasittele-onnistunut-kohteiden-paivitys vastaus harja-urakka-id optiot)
+         (kasittele-epaonnistunut-kohteiden-paivitys vastaus harja-urakka-id))))))
 
 (defn paivita-kohdeluettelo [urakka oikeus]
-  [harja.ui.napit/palvelinkutsu-nappi
-   "Hae uudet YHA-kohteet"
-   #(do
-     (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
-     (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
-   {:luokka "nappi-ensisijainen"
-    :disabled (or (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
-                  @kohteiden-paivittaminen-kaynnissa?)
-    :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
-    :kun-onnistuu (fn [_]
-                    (log "[YHA] Kohdeluettelo päivitetty")
-                    (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
-                           (cljs-time.core/to-default-time-zone (t/now))))}])
+  (when-not @yha-kohteiden-paivittaminen-kaynnissa?
+    [harja.ui.napit/palvelinkutsu-nappi
+     "Hae uudet YHA-kohteet"
+     #(do
+       (log "[YHA] Päivitetään Harja-urakan " (:id urakka) " kohdeluettelo.")
+       (paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? true}))
+     {:luokka "nappi-ensisijainen"
+      :disabled (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja))
+      :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
+      :kun-onnistuu (fn [_]
+                      (log "[YHA] Kohdeluettelo päivitetty")
+                      (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
+                             (cljs-time.core/to-default-time-zone (t/now))))}]))
 
 (defn kohdeluettelo-paivitetty [urakka]
-  [:div (str "Kohdeluettelo päivitetty: "
-             (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
-               (pvm/pvm-aika kohdeluettelo-paivitetty)
-               "ei koskaan"))])
+  (if @yha-kohteiden-paivittaminen-kaynnissa?
+    [ajax-loader "Kohteiden päivitys käynnissä"]
+    [:div (str "Kohdeluettelo päivitetty: "
+               (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
+                 (pvm/pvm-aika kohdeluettelo-paivitetty)
+                 "ei koskaan"))]))

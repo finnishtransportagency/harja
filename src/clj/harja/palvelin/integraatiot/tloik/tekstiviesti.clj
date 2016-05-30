@@ -12,8 +12,9 @@
 
 (def +ilmoitusviesti+
   (str "Uusi toimenpidepyyntö: %s (id: %s, viestinumero: %s).\n\n"
-       "%s\n\n"
+       "Paikka: %s\n\n"
        "Selitteet: %s.\n\n"
+       "Lisätietoja: %s.\n\n"
        "Kuittauskoodit:\n"
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
@@ -111,15 +112,19 @@
         (let [paivystaja-id (:id paivystaja)
               ilmoitus-id (:ilmoitus-id ilmoitus)
               otsikko (:otsikko ilmoitus)
-              lyhytselite (:lyhytselite ilmoitus)
+              paikankuvaus (:paikankuvaus ilmoitus)
+              lisatietoja (if (:lisatieto ilmoitus)
+                            (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
+                            "")
               selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
               viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ilmoitus-id puhelinnumero)
               viesti (format +ilmoitusviesti+
                              otsikko
                              ilmoitus-id
                              viestinumero
-                             lyhytselite
+                             paikankuvaus
                              selitteet
+                             lisatietoja
                              viestinumero
                              viestinumero
                              viestinumero

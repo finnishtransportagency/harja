@@ -87,7 +87,7 @@
   [db yha user {:keys [urakka-id] :as tiedot}]
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (log/debug "Haetaan kohteet yhasta")
-  (let [yha-kohteet (yha/hae-kohteet yha urakka-id)
+  (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
         _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
         uudet-kohteet (suodata-olemassaolevat-kohteet db urakka-id yha-kohteet)
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]

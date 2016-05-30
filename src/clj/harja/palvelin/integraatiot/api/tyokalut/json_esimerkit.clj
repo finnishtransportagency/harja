@@ -40,5 +40,7 @@
 
 (def +paivystajatietojen-haku-vastaus+ "api/examples/paivystajatietojen-haku-response.json")
 (def +paivystajatietojen-kirjaus+ "api/examples/paivystajatietojen-kirjaus-request.json")
+(def +paivystyksen-poisto-kirjaus+ "api/examples/paivystyksen-poisto-request.json")
 
 (def +tyokoneenseuranta-kirjaus+ "api/examples/tyokoneenseurannan-kirjaus-request.json")
+

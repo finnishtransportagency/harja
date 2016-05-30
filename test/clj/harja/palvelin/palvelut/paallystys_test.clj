@@ -56,7 +56,13 @@
                                  :leveys 5
                                  :massamaara 7
                                  :pinta-ala 8
-                                 :edellinen-paallystetyyppi 1}
+                                 :edellinen-paallystetyyppi 1
+                                 :esiintyma "asd"
+                                 :km-arvo "asd"
+                                 :muotoarvo "asd"
+                                 :sideainetyyppi "asd"
+                                 :pitoisuus 54
+                                 :lisaaineet "asd"}
                                 {:nimi "Tie 555"
                                  :tie 555
                                  :aosa 2
@@ -74,14 +80,13 @@
                                  :massamaara 7
                                  :pinta-ala 8
                                  :edellinen-paallystetyyppi 1
-                                 :poistettu true}]
-
-                    :kiviaines [{:esiintyma "asd"
+                                 :esiintyma "asd"
                                  :km-arvo "asd"
                                  :muotoarvo "asd"
                                  :sideainetyyppi "asd"
                                  :pitoisuus 54
-                                 :lisaaineet "asd"}]
+                                 :lisaaineet "asd"
+                                 :poistettu true}]
 
                     :alustatoimet [{:aosa 2
                                     :aet 3

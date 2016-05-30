@@ -72,7 +72,7 @@
   (log "Näytetään popuppi" (pr-str tapahtuma))
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Toteuma"
-                                              [["Aika" (pvm/pvm (:alkanut tapahtuma)) "-" (pvm/pvm (:paattynyt tapahtuma))]
+                                              [["Aika" (pvm/pvm-aika (:alkanut tapahtuma)) "-" (pvm/pvm-aika (:paattynyt tapahtuma))]
                                                ["Suorittaja" (get-in tapahtuma [:suorittaja :nimi])]
                                                ["Tehtävät" (when (not-empty (:tehtavat tapahtuma))
                                                              (for [tehtava (:tehtavat tapahtuma)]
@@ -104,7 +104,9 @@
          :tiedoitus "Tiedotus"
          (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
        [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
-        ["Selite" (:lyhytselite tapahtuma)]
+        ["Otsikko" (:otsikko tapahtuma)]
+        ["Paikan kuvaus" (:paikankuvaus tapahtuma)]
+        ["Lisätietoja" (:lisatieto tapahtuma)]
         ["Kuittaukset" (count (:kuittaukset tapahtuma))]]
        {:linkki {:nimi     "Tarkemmat tiedot"
                  :on-click #(do

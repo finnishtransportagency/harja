@@ -5,7 +5,7 @@
             [hiccup.core :refer [html]]
             [clojure.data.zip.xml :as z]))
 
-(def +xsd-polku+ "xsd/tierekisteri/schemas/")
+(def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
 (defn onnistunut-vastaus? [data]
   (= "OK" (z/xml1-> data :ns2:status z/text)))

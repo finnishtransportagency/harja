@@ -58,9 +58,10 @@
           (fn [t _] (:tyyppi t)))
 
 (defmulti nayta-arvo
-          "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella. Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
+          "Tekee vain-luku näyttömuodon kentän arvosta tyypin perusteella.
+          Tämän tarkoituksena ei ole tuottaa 'disabled' tai 'read-only' elementtejä
+          vaan tekstimuotoinen kuvaus arvosta. Oletustoteutus muuntaa datan vain merkkijonoksi."
           (fn [t _] (:tyyppi t)))
-
 
 (defmethod nayta-arvo :default [_ data]
   [:span (str @data)])
@@ -381,33 +382,38 @@
          radiobuttonit))]))
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
-                                        valinnat valinnat-fn rivi on-focus jos-tyhja]} data]
+                                        valinnat valinnat-fn rivi on-focus jos-tyhja
+                                        nayta-ryhmat ryhmittely ryhman-otsikko]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
   (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))]
-    [livi-pudotusvalikko {:class      (str "alasveto-gridin-kentta " alasveto-luokka)
-                          :valinta    (if valinta-arvo
-                                        (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
-                                        nykyinen-arvo)
+    [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
+                          :valinta (if valinta-arvo
+                                     (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
+                                     nykyinen-arvo)
                           :valitse-fn #(reset! data
                                                (if valinta-arvo
                                                  (valinta-arvo %)
                                                  %))
-                          :on-focus   on-focus
-                          :format-fn  (if (empty? valinnat)
-                                        (constantly (or jos-tyhja "Ei valintoja"))
-                                        (or valinta-nayta str))}
+                          :nayta-ryhmat nayta-ryhmat
+                          :ryhmittely ryhmittely
+                          :ryhman-otsikko ryhman-otsikko
+                          :on-focus on-focus
+                          :format-fn (if (empty? valinnat)
+                                       (constantly (or jos-tyhja "Ei valintoja"))
+                                       (or (and valinta-nayta #(valinta-nayta % true)) str))}
      valinnat]))
 
-(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo valinnat valinnat-fn rivi hae]} data]
+(defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
+                                        valinnat valinnat-fn rivi hae]} data]
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))
         valinta (if valinta-arvo
                   (some #(when (= (valinta-arvo %) nykyinen-arvo) %) valinnat)
                   nykyinen-arvo)]
-    [:span (or ((or valinta-nayta str) valinta) valinta)]))
+    [:span (or ((or valinta-nayta str false) valinta) valinta)]))
 
 
 

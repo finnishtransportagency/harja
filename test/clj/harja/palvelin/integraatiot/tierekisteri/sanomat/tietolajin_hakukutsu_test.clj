@@ -4,7 +4,7 @@
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietolajin-hakukutsu :as tietolajin-hakukutsu])
   (:import (java.text SimpleDateFormat)))
 
-(def +xsd-polku+ "xsd/tierekisteri/schemas/")
+(def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
 (def +testi-xml+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<haeTietolaji><tietolajitunniste>tl506</tietolajitunniste></haeTietolaji>")
 

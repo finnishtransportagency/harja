@@ -21,8 +21,8 @@
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
-           (:import (java.util Calendar Date)
-                    (java.text SimpleDateFormat))))
+     (:import (java.util Calendar Date)
+              (java.text SimpleDateFormat))))
 
 
 #?(:cljs
@@ -89,14 +89,14 @@
   Backendissä palauttaa java.util.Daten"
   []
   #?(:cljs (DateTime.)
-     :clj  (Date.)))
+     :clj (Date.)))
 
 (defn luo-pvm
   "Frontissa palauttaa goog.date.Datetimen
   Backendissä palauttaa java.util.Daten"
   [vuosi kk pv]
   #?(:cljs (DateTime. vuosi kk pv 0 0 0 0)
-     :clj  (Date. (- vuosi 1900) kk pv)))
+     :clj (Date. (- vuosi 1900) kk pv)))
 
 (defn sama-pvm? [eka toka]
   (if-not (and eka toka)
@@ -172,10 +172,10 @@
 
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
-     :clj  (SimpleDateFormat. str)))
+     :clj (SimpleDateFormat. str)))
 (defn- formatoi [format date]
   #?(:cljs (df/unparse format date)
-     :clj  (.format format date)))
+     :clj (.format format date)))
 (defn parsi [format teksti]
   #?(:cljs (df/parse-local format teksti)
      :clj (.parse format teksti)))
@@ -283,7 +283,7 @@
     (try
       (parsi fi-pvm-aika (str/trim teksti-kellonaika-korjattu))
       (catch #?(:cljs js/Error
-                :clj  Exception) e
+                :clj Exception) e
         nil))))
 
 (defn ->pvm-aika-sek [teksti]
@@ -295,7 +295,7 @@
   (try
     (parsi fi-pvm-parse teksti)
     (catch #?(:cljs js/Error
-              :clj  Exception) e
+              :clj Exception) e
       nil)))
 
 (defn kuukauden-nimi [kk]
@@ -357,9 +357,9 @@
 
 (defn- d [x]
   #?(:cljs x
-     :clj  (if (instance? Date x)
-             (tc/from-date x)
-             x)))
+     :clj (if (instance? Date x)
+            (tc/from-date x)
+            x)))
 
 (defn vuosi
   "Palauttaa annetun DateTimen vuoden, esim 2015."
@@ -474,12 +474,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (assertoi-aikavalin-yksikko maksimi)
   (if (sama-tai-ennen?
         (t/plus alku (condp = yksikko
-                           :paiva
-                           (t/days n)
-                           :kuukausi
-                           (t/months n)
-                           :vuosi
-                           (t/years n)))
+                       :paiva
+                       (t/days n)
+                       :kuukausi
+                       (t/months n)
+                       :vuosi
+                       (t/years n)))
         loppu
         true)
     true
@@ -591,12 +591,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      [alkupvm loppupvm]
      (let [alku (l/to-local-date-time alkupvm)
            loppu (l/to-local-date-time loppupvm)
-           _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu )]
+           _ (log/debug "pvm kyseessä hoitokausi väli?" "alku " alku " loppu " loppu)]
        (and (= 1 (paiva alku))
             (= 1 (kuukausi alku))
             (= 31 (paiva loppu))
             (= 12 (kuukausi loppu))
-            (=  (vuosi alku) (vuosi loppu))))))
+            (= (vuosi alku) (vuosi loppu))))))
 
 #?(:clj
    (defn kuukautena-ja-vuonna
@@ -636,3 +636,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       0
       (t/in-days (t/interval (nth pvm-vector 1)
                              (nth pvm-vector 2))))))
+#?(:clj
+   (defn iso-8601->pvm
+     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi"
+     [teksti]
+     (let [format (SimpleDateFormat. "yyyy-MM-dd")]
+       (.format format (.parse format teksti)))))

@@ -66,9 +66,9 @@
                       (false? @paallystys/paallystysilmoituslomake-lukittu?))
         paatos-tekninen-osa
         (r/wrap {:paatos-tekninen
-                 (:paatos_tekninen_osa @paallystys/paallystysilmoitus-lomakedata)
+                 (:paatos-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
                  :perustelu-tekninen-osa
-                 (:perustelu_tekninen_osa @paallystys/paallystysilmoitus-lomakedata)
+                 (:perustelu-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
                  :kasittelyaika-tekninen-osa
                  (:kasittelyaika-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
@@ -187,7 +187,6 @@
       "Tallenna"
       #(let [lomake @paallystys/paallystysilmoitus-lomakedata
              lahetettava-data (-> (grid/poista-idt lomake [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-idt [:ilmoitustiedot :kiviaines])
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet])
                                   (grid/poista-idt [:ilmoitustiedot :tyot]))]
         (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str @paallystys/paallystysilmoitus-lomakedata))
@@ -208,7 +207,6 @@
         paallystystoimenpide-virheet (atom {})
         alustalle-tehdyt-toimet-virheet (atom {})
         toteutuneet-maarat-virheet (atom {})
-        kiviaines-virheet (atom {})
 
         valmis-tallennettavaksi?
         (reaction
@@ -216,7 +214,6 @@
                 paallystystoimenpide-virheet @paallystystoimenpide-virheet
                 alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
                 toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
-                kiviaines-virheet @kiviaines-virheet
                 tila (:tila @paallystys/paallystysilmoitus-lomakedata)
                 lomake-lukittu-muokkaukselta? @paallystys/paallystysilmoituslomake-lukittu?]
             (and
@@ -225,7 +222,6 @@
               (empty? paallystystoimenpide-virheet)
               (empty? alustalle-tehdyt-toimet-virheet)
               (empty? toteutuneet-maarat-virheet)
-              (empty? kiviaines-virheet)
               (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi?
         (reaction
@@ -254,26 +250,18 @@
                                                    (assoc :takuupvm (:takuupvm uusi-arvo))
                                                    (assoc :hinta (:hinta uusi-arvo))))))
 
-              ; Sisältää päällystystoimenpiteen tiedot, koska one-to-one -suhde.
+              ; Sisältää alikohteen päällystystoimenpiteen tiedot
               paallystystoimenpiteet
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot lomakedata-nyt)))
                       (fn [uusi-arvo]
                         (reset! paallystys/paallystysilmoitus-lomakedata
                                   (assoc-in lomakedata-nyt [:ilmoitustiedot :osoitteet]
                                             (grid/filteroi-uudet-poistetut uusi-arvo)))))
-
-              ; Kiviaines sisältää sideaineen, koska one-to-one -suhde
-              kiviaines
-              (r/wrap (zipmap (iterate inc 1) (:kiviaines (:ilmoitustiedot lomakedata-nyt)))
-                      (fn [uusi-arvo]
-                        (reset! paallystys/paallystysilmoitus-lomakedata
-                                (assoc-in @paallystys/paallystysilmoitus-lomakedata
-                                          [:ilmoitustiedot :kiviaines] (grid/filteroi-uudet-poistetut uusi-arvo)))))
               alustalle-tehdyt-toimet
               (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot lomakedata-nyt)))
                       (fn [uusi-arvo]
                         (reset! paallystys/paallystysilmoitus-lomakedata
-                                (assoc-in @paallystys/paallystysilmoitus-lomakedata
+                                (assoc-in lomakedata-nyt
                                           [:ilmoitustiedot :alustatoimet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
               toteutuneet-maarat
               (r/wrap (zipmap (iterate inc 1) (:tyot (:ilmoitustiedot lomakedata-nyt)))
@@ -378,37 +366,46 @@
                :nimi :paallystetyyppi
                :tyyppi :valinta
                :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
+               :valinta-nayta (fn [rivi muokattava?]
                                 (if rivi
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse päällyste -"))
+                                  (if muokattava?
+                                    "- Valitse päällyste -"
+                                    "")))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
-              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%"}
-              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero
+              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :tasaa :oikea}
+              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
-              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero}
+              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :tasaa :oikea}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
                :nimi :tyomenetelma
                :tyyppi :valinta
                :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
+               :valinta-nayta (fn [rivi muokattava?]
                                 (if rivi
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse menetelmä -"))
+                                  (if muokattava?
+                                    "- Valitse menetelmä -"
+                                    "")))
                :valinnat pot/+tyomenetelmat+
                :leveys "30%"}
-              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero}
-              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero}
-              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero}
+              {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
+               :tasaa :oikea}
+              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero
+               :tasaa :oikea}
+              {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
+               :tasaa :oikea}
               {:otsikko "Edellinen päällyste"
                :nimi :edellinen-paallystetyyppi
                :tyyppi :valinta
                :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
+               :valinta-nayta (fn [rivi muokattava?]
                                 (if rivi
                                   (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse päällyste -"))
+                                  (if muokattava?
+                                    "- Valitse päällyste -"
+                                    "")))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
               {:otsikko "Kuulamylly"
@@ -425,11 +422,15 @@
 
             [grid/muokkaus-grid
              {:otsikko "Kiviaines ja sideaine"
+              :rivinumerot? true
+              :validoi-aina? true
+              :voi-lisata? false
+              :voi-kumota? false
+              :voi-poistaa? (constantly false)
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos-tekninen-osa lomakedata-nyt))
                                  (false? @paallystys/paallystysilmoituslomake-lukittu?))
-              :virheet kiviaines-virheet
-              :uusi-id (inc (count @kiviaines))}
+              :virheet paallystystoimenpide-virheet}
              [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
                :leveys "30%"}
               {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
@@ -437,10 +438,10 @@
                :leveys "20%"}
               {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys "30%"
                :tyyppi :string :pituus-max 256}
-              {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero}
+              {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :tasaa :oikea}
               {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string
                :pituus-max 256}]
-             kiviaines]
+             paallystystoimenpiteet]
 
             [grid/muokkaus-grid
              {:otsikko "Alustalle tehdyt toimet"
@@ -449,15 +450,15 @@
                                  (false? @paallystys/paallystysilmoituslomake-lukittu?))
               :uusi-id (inc (count @alustalle-tehdyt-toimet))
               :virheet alustalle-tehdyt-toimet-virheet}
-             [{:otsikko "Alku\u00ADtieosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
-               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Alku\u00ADetäisyys" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADtieosa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Loppu\u00ADetäisyys" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero
+             [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
+               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
+               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
+               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
+               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
                :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
               {:otsikko "Käsittely\u00ADmenetelmä"
                :nimi :kasittelymenetelma
@@ -470,7 +471,7 @@
                :valinnat pot/+alustamenetelmat+
                :leveys "30%"}
               {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
-               :tyyppi :positiivinen-numero}
+               :tyyppi :positiivinen-numero :tasaa :oikea}
               {:otsikko "Verkko\u00ADtyyppi"
                :nimi :verkkotyyppi
                :tyyppi :valinta
@@ -523,15 +524,15 @@
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Yks." :nimi :yksikko :tyyppi :string :leveys "10%" :pituus-max 20
                :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero
+              {:otsikko "Tilattu määrä" :nimi :tilattu-maara :tyyppi :positiivinen-numero :tasaa :oikea
                :kokonaisosan-maara 6 :leveys "15%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%"
+              {:otsikko "Toteu\u00ADtunut määrä" :nimi :toteutunut-maara :leveys "15%" :tasaa :oikea
                :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Tieto puuttuu"]]}
               {:otsikko "Ero" :nimi :ero :leveys "15%" :tyyppi :numero :muokattava? (constantly false)
                :hae (fn [rivi] (- (:toteutunut-maara rivi) (:tilattu-maara rivi)))}
-              {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%"
+              {:otsikko "Yks.\u00ADhinta" :nimi :yksikkohinta :leveys "10%" :tasaa :oikea
                :tyyppi :positiivinen-numero :kokonaisosan-maara 4 :validoi [[:ei-tyhja "Tieto puuttuu"]]}
-              {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%"
+              {:otsikko "Muutos hintaan" :nimi :muutos-hintaan :leveys "15%" :tasaa :oikea
                :muokattava? (constantly false) :tyyppi :numero
                :hae (fn [rivi]
                       (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]

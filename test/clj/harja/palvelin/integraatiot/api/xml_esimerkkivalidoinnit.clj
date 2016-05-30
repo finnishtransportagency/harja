@@ -11,7 +11,7 @@
   (xml/validoi xsd-polku skeematiedosto (slurp (io/resource esimerkkipolku))))
 
 (deftest validoi-tierekisteri-xmlsanomat
-  (let [xsd-polku "xsd/tierekisteri/schemas/"]
+  (let [xsd-polku "xsd/tierekisteri/skeemat/"]
     (is (true? (validoi xsd-polku "haeTietolaji.xsd" xml-esimerkit/+hae-tietolaji-request+)))
     (is (true? (validoi xsd-polku "haeTietue.xsd" xml-esimerkit/+hae-tietue-request+)))
     (is (true? (validoi xsd-polku "haeTietueet.xsd" xml-esimerkit/+hae-tietueet-request+)))

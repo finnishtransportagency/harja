@@ -24,7 +24,8 @@
             :aosa 3
             :aet 3
             :losa 3
-            :let 3}
+            :let 3
+            :tienumero 3}
            kohteen-tierekisteriosoite))
     (is (= {:karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
             :ajorata 0
@@ -32,7 +33,8 @@
             :aosa 3
             :aet 3
             :losa 3
-            :let 3}
+            :let 3
+            :tienumero 3}
            alikohteen-tierekisteriosoite))))
 
 (deftest tarkista-usean-urakan-hakuvastaus
@@ -40,5 +42,5 @@
     (is (= 1 (count (:kohteet vastaus))))
     (is (= 3 (:yha-id (first (:kohteet vastaus)))))
     (is (= 2 (count (:alikohteet (first (:kohteet vastaus))))))
-    (is (= "A" (:tunnus (first (:alikohteet (first (:kohteet vastaus)))))))
-    (is (= "B" (:tunnus (second (:alikohteet (first (:kohteet vastaus)))))))))
+    (is (= "A" (:nimi (first (:alikohteet (first (:kohteet vastaus)))))))
+    (is (= "B" (:nimi (second (:alikohteet (first (:kohteet vastaus)))))))))

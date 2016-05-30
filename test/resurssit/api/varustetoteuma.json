@@ -43,6 +43,7 @@
       "tietolaji": "tl505",
       "toimenpide": "lisatty",
       "arvot": "----livitunniste----        2                           ----livitunniste----          01  ",
+      "tilannepvm": "2016-01-01T00:00:00Z",
       "sijainti": {
         "tie": {
           "numero": 89,

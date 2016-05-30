@@ -57,7 +57,8 @@ WHERE paikkauskohde = :id;
 
 -- name: luo-paikkausilmoitus<!
 -- Luo uuden paikkausilmoituksen
-INSERT INTO paikkausilmoitus (paikkauskohde, tila, ilmoitustiedot, toteutunut_hinta, aloituspvm, valmispvm_kohde, valmispvm_paikkaus, luotu, luoja, poistettu)
+INSERT INTO paikkausilmoitus (paikkauskohde, tila, ilmoitustiedot, toteutunut_hinta,
+                              aloituspvm, valmispvm_kohde, valmispvm_paikkaus, luotu, luoja, poistettu)
 VALUES (:paikkauskohde,
         :tila::paikkausilmoituksen_tila,
         :ilmoitustiedot::JSONB,

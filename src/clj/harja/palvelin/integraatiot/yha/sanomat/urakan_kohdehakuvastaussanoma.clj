@@ -22,7 +22,7 @@
     {:karttapaivamaara  (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)}
     (into {}
           (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
-          [:ajorata :kaista :aosa :aet :losa :let])))
+          [:ajorata :kaista :aosa :aet :losa :let :tienumero])))
 
 (defn lue-paallystystoimenpide [paallystystoimenpide]
   (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)
@@ -37,7 +37,7 @@
           (hash-map
             :yha-id (z/xml1-> alikohde :yha-id z/text xml/parsi-kokonaisluku)
             :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :tierekisteriosoitevali))
-            :tunnus (z/xml1-> alikohde :tunnus z/text)
+            :nimi (z/xml1-> alikohde :nimi z/text)
             :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)))
         (z/xml-> alikohteet :alikohde)))
 
@@ -45,7 +45,7 @@
   (mapv (fn [kohde]
           (hash-map :yha-id (z/xml1-> kohde :yha-id z/text xml/parsi-kokonaisluku)
                     :kohdetyyppi (z/xml1-> kohde :kohdetyyppi z/text keyword)
-                    :tunnus (z/xml1-> kohde :tunnus z/text)
+                    :nimi (z/xml1-> kohde :nimi z/text)
                     :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
                     :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
                     :nykyinen-paallyste (z/xml1-> kohde :nykyinen-paallyste z/text xml/parsi-kokonaisluku)
