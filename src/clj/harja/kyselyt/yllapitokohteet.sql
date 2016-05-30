@@ -288,12 +288,12 @@ SELECT EXISTS(SELECT id
 -- name: hae-yllapitokohde
 -- single? :true
 SELECT
-  u.id         AS harja_urakka_id,
-  u.nimi       AS harja_urakka_nimi,
-  u.sampoid    AS sampo_urakka_id,
-  yt.yhaid     AS yha_urakka_id,
-  yt.yhanimi   AS yha_urakka_nimi,
-  yt.yhatunnus AS yha_urakka_tunnus,
+  u.id                       AS harja_urakka_id,
+  u.nimi                     AS harja_urakka_nimi,
+  u.sampoid                  AS sampo_urakka_id,
+  yt.yhaid                   AS yha_urakka_id,
+  yt.yhanimi                 AS yha_urakka_nimi,
+  yt.yhatunnus               AS yha_urakka_tunnus,
   yk.id,
   yk.sopimus,
   yk.kohdenumero,
@@ -325,7 +325,10 @@ SELECT
   yk.nykyinen_paallyste,
   yk.tr_ajorata,
   yk.tr_kaista,
-  yk.suorittava_tiemerkintaurakka
+  yk.suorittava_tiemerkintaurakka,
+  (SELECT viimeisin_paivitys
+   FROM geometriapaivitys
+   WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohde yk
   JOIN urakka u ON yk.urakka = u.id
   JOIN yhatiedot yt ON u.id = yt.urakka
