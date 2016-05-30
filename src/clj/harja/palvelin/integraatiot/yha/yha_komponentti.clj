@@ -202,8 +202,10 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-(defn laheta-kohde-yhan [integraatioloki db url kohde-id])
-;; todo: toteuta
+(defn laheta-kohde-yhan [integraatioloki db url kohde-id]
+  ;; todo: toteuta
+  )
+
 
 (defrecord Yha [asetukset]
   component/Lifecycle
