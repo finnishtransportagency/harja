@@ -132,7 +132,7 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
-  (laheta-kohde [this urakka-id sopimus-id kohde-id]))
+  (laheta-kohde [this kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
   (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
@@ -226,7 +226,7 @@
                   {body :body headers :headers}
                   (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
               (kasittele-urakan-kohdelahetysvastaus body headers)))))
-      (let [virhe (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
+      (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
         (log/error virhe)
         (throw+
           {:type +virhe-kohteen-lahetyksessa+
@@ -244,6 +244,6 @@
     (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yhatunniste sampotunniste vuosi))
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
-  (laheta-kohde [this urakka-id sopimus-id kohde-id]
-    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) urakka-id sopimus-id kohde-id)))
+  (laheta-kohde [this kohde-id]
+    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) kohde-id)))
 
