@@ -57,14 +57,11 @@ popd
 
 msg "Deploy valmis palvelimelle $HARJA_ENV. Laitoin Harja Projekti HipChat-kanavalle tiedon asiasta."
 
+HIPCHAT_TOKEN=`cat .hipchat-token`
 # HipChat notifikaatio
 CONFIG="room_id=914801&from=deploy2.sh&color=purple"
 MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <a href=\"https://$HARJA_ENV\">$HARJA_ENV</a>"
-curl -d $CONFIG --data-urlencode "message=${MESSAGE}" 'https://api.hipchat.com/v1/rooms/message?auth_token=1c37e57158bf6a041a8a687b82e1bd&format=json'
-
-# Slack notifikaatio
-MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <https://$HARJA_ENV>"
-curl -d "payload={\"text\": \"${MESSAGE}\"}" https://hooks.slack.com/services/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
+curl -d $CONFIG --data-urlencode "message=${MESSAGE}" "https://api.hipchat.com/v1/rooms/message?auth_token=$HIPCHAT_TOKEN&format=json"
 
 END_TS=`date +%s`
 msg "Suorite kesti `echo "$END_TS-$START_TS"|bc` sekuntia."

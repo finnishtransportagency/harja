@@ -110,6 +110,6 @@
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti           {:url            "http://localhost:28080/sendsms"
                        :kayttajatunnus "solita-2"
-                       :salasana       "ne8aCrasesev"}
+                        :salasana       #=(slurp ".labyrintti-salasana")}
 
  }
