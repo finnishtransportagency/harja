@@ -1,5 +1,7 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma
-  (:require [harja.tyokalut.xml :as xml]))
+  (:require [harja.tyokalut.xml :as xml]
+            [taoensso.timbre :as log])
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/yha/")
 
