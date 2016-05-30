@@ -9,7 +9,6 @@ Autentikointiin käytetään KOKAa.
 
 ## Hakemistorakenne ##
 
-Alustava
 Harja repon hakemistorakenne:
 
 - README                    (yleinen readme)
@@ -38,7 +37,6 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
-
 ## Integraatiot
 
 MULEsta on luovuttu, integraatiot suoraan backendistä.
@@ -48,7 +46,6 @@ MULEsta on luovuttu, integraatiot suoraan backendistä.
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harja-repositorion kansiossa tietokanta
 
 Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
-
 
 ## Staging tietokannan sisällön muokkaus
 * Lisää itsellesi tiedosto ~/.ssh/config johon sisällöksi:
@@ -82,7 +79,6 @@ ssh -L7777:localhost:5432 harja-dfb1-stg
 </code>
  * Tee temput
 
-
 ## Autogeneroi nuolikuvat SVG:nä
 Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
 Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
@@ -107,7 +103,6 @@ puhtaat -namespacessa määriteltyihin.
 <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
    <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
 </svg>")))
-
 
 ## Konvertoi SVG kuvia PNG:ksi
 
