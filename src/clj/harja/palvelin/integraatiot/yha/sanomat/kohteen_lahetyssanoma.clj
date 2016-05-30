@@ -6,6 +6,14 @@
 
 (def +xsd-polku+ "xsd/yha/")
 
+(defn laske-hinta-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot muutoshinta bitumi-indeksi arvonvahennykset kaasuindeksi]}]
+  (reduce (fn [a b] (+ a (or b 0)))
+          0
+          [sopimuksen-mukaiset-tyot
+           muutoshinta
+           bitumi-indeksi
+           arvonvahennykset
+           kaasuindeksi]))
 
 (defn tee-tierekisteriosoitevali [osoite]
   [:tierekisteriosoitevali
@@ -32,7 +40,7 @@
      [:aet "3"]
      [:losa "3"]
      [:let "3"]]
-    [:nimi "A"]
+    [:tunnus "A"]
     [:paallystystoimenpide
      [:uusi-paallyste "1"]
      [:raekoko "87"]
@@ -49,8 +57,7 @@
       [:kiviaineksen-muotoarvo "string"]
       [:sideainetyyppi "21"]
       [:sideainepitoisuus "1000"]
-      [:lisa-aineet "string"]]]]]
-  )
+      [:lisa-aineet "string"]]]]])
 
 (defn tee-alustalle-tehdyt-toimenpiteet [paallystys-ilmoitus]
   [:alustalle-tehdyt-toimet
@@ -78,16 +85,15 @@
     [:harja-id (:id kohde)]
     [:kohdetyotyyppi (:tyyppi kohde)]
     [:nimi (:yhatunnus kohde)]
-    ;; todo: selvitä mistä löytyy
-    [:toiden-aloituspaivamaara "2007-10-26"]
-    ;; todo: selvitä mistä löytyy
-    [:paallystyksen-valmistumispaivamaara "2004-02-14"]
-    ;; todo: selvitä mistä löytyy
-    [:kohteen-valmistumispaivamaara "2018-11-01+02:00"]
-    ;; todo: selvitä mistä löytyy
-    [:takuupaivamaara "2013-05-22+03:00"]
-    ;; todo: selvitä mistä löytyy
-    [:toteutunuthinta "1000.00"]
+    (when (:aloituspvm paallystys-ilmoitus)
+      [:toiden-aloituspaivamaara (xml/parsi-paivamaara (:aloituspvm paallystys-ilmoitus))])
+    (when (:valmispvm-paallystys paallystys-ilmoitus)
+      [:paallystyksen-valmistumispaivamaara (xml/parsi-paivamaara (:valmispvm-paallystys paallystys-ilmoitus))])
+    (when (:valmispvm-kohde paallystys-ilmoitus)
+      [:kohteen-valmistumispaivamaara (xml/parsi-paivamaara (:valmispvm-kohde paallystys-ilmoitus))])
+    (when (:takuupvm paallystys-ilmoitus)
+      [:takuupaivamaara (xml/parsi-paivamaara (:takuupvm paallystys-ilmoitus))])
+    [:toteutunuthinta (laske-hinta-kokonaishinta paallystys-ilmoitus)]
     (tee-tierekisteriosoitevali kohde)
     (tee-alustalle-tehdyt-toimenpiteet paallystys-ilmoitus)
     (tee-alikohteet alikohteet)]])
