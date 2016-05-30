@@ -48,7 +48,6 @@ Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harj
 
 Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
 
-
 ## Staging tietokannan sisällön muokkaus
 * Lisää itsellesi tiedosto ~/.ssh/config johon sisällöksi:
 Host harja-*-test
@@ -80,7 +79,6 @@ ssh -L7777:localhost:5432 harja-dfb1-stg
     bash-4.2$ psql harja <br/>
 </code>
  * Tee temput
-
 
 ## Autogeneroi nuolikuvat SVG:nä
 Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
