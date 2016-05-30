@@ -106,11 +106,12 @@ datan kartalla esitettävässä muodossa.")
         karttakuvadata (hae-karttakuvadata lahteet user parametrit)
         kuva (kirjoita-kuva
               (luo-kuva parametrit karttakuvadata))]
-    {:status 200
-     :headers {"Content-Type" "image/png"
-               "Content-Length" (count kuva)
+    {:status  200
+     :headers {"cache-control"               "private, max-age=0, no-cache"
+               "Content-Type"                "image/png"
+               "Content-Length"              (count kuva)
                "Access-Control-Allow-Origin" "*"}
-     :body (java.io.ByteArrayInputStream. kuva)}))
+     :body    (java.io.ByteArrayInputStream. kuva)}))
 
 (defrecord Karttakuvat [lahteet]
   component/Lifecycle
