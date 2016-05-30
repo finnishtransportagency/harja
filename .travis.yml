@@ -1,0 +1,6 @@
+language: clojure
+services:
+  - postgresql
+before_script:
+  - sh tietokanta/travis.sh
+script: lein testit
