@@ -33,6 +33,3 @@
                        (catch js/Object o
                          (.log js/console "Virhe Less päivityksessä: " o))))
                   5000))
-
-
-

@@ -889,10 +889,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                         (let [vanhat-tiedot @muokatut
                               vanhat-virheet @virheet]
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
-                          (reset! muokatut uusi-muokkaustila)
-                          ;; FIXME: validoi kaikki rivit, jotka eivät ole vanhassa
-                          (log "ASETETTU MUOKKAUSTILA, avaimet: " (pr-str (keys uusi-muokkaustila)))
-                          ))
+                          (reset! muokatut uusi-muokkaustila)))
                       (hae-virheet [_]
                         @virheet)
                       (nollaa-historia! [_]
