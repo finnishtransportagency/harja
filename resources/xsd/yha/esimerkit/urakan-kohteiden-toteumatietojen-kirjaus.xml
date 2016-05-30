@@ -1,40 +1,26 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <urakan-kohteiden-toteumatietojen-kirjaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
-    <!--Zero or more repetitions:-->
     <urakka>
-        <yha-id>3</yha-id>
-        <harja-id>3</harja-id>
-        <sampotunnus>string</sampotunnus>
-        <tunnus>string</tunnus>
+        <yha-id>76745</yha-id>
+        <harja-id>5</harja-id>
+        <sampotunnus>4242523-TES2</sampotunnus>
+        <tunnus>YHA34434</tunnus>
         <kohteet>
-            <!--Zero or more repetitions:-->
             <kohde>
-                <yha-id>3</yha-id>
-                <harja-id>3</harja-id>
-                <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
-                <nimi>string</nimi>
-                <!--Optional:-->
-                <toiden-aloituspaivamaara>2007-10-26</toiden-aloituspaivamaara>
-                <!--Optional:-->
-                <paallystyksen-valmistumispaivamaara>2004-02-14</paallystyksen-valmistumispaivamaara>
-                <!--Optional:-->
-                <kohteen-valmistumispaivamaara>2018-11-01+02:00</kohteen-valmistumispaivamaara>
-                <!--Optional:-->
-                <takuupaivamaara>2013-05-22+03:00</takuupaivamaara>
-                <!--Optional:-->
-                <toteutunuthinta>1000.00</toteutunuthinta>
+                <harja-id>1</harja-id>
+                <kohdetyotyyppi>paallystys</kohdetyotyyppi>
+                <toteutunuthinta>7043.95</toteutunuthinta>
                 <tierekisteriosoitevali>
-                    <karttapaivamaara>2016-01-01+02:00</karttapaivamaara>
-                    <tienumero>3</tienumero>
-                    <ajorata>0</ajorata>
-                    <kaista>11</kaista>
-                    <aosa>3</aosa>
-                    <aet>3</aet>
-                    <losa>3</losa>
-                    <let>3</let>
+                    <karttapaivamaara>2016-05-30</karttapaivamaara>
+                    <tienumero>18652</tienumero>
+                    <ajorata>1</ajorata>
+                    <kaista>1</kaista>
+                    <aosa>1</aosa>
+                    <aet>5190</aet>
+                    <losa>1</losa>
+                    <let>3312</let>
                 </tierekisteriosoitevali>
                 <alustalle-tehdyt-toimet>
-                    <!--Zero or more repetitions:-->
                     <alustalle-tehty-toimenpide>
                         <tierekisteriosoitevali>
                             <karttapaivamaara>2016-01-01+02:00</karttapaivamaara>
@@ -55,37 +41,30 @@
                     </alustalle-tehty-toimenpide>
                 </alustalle-tehdyt-toimet>
                 <alikohteet>
-                    <!--Zero or more repetitions:-->
                     <alikohde>
-                        <yha-id>3</yha-id>
-                        <harja-id>3</harja-id>
+                        <harja-id>5</harja-id>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2016-01-01</karttapaivamaara>
-                            <tienumero>3</tienumero>
-                            <ajorata>0</ajorata>
-                            <kaista>22</kaista>
-                            <aosa>3</aosa>
-                            <aet>3</aet>
-                            <losa>3</losa>
-                            <let>3</let>
+                            <karttapaivamaara>2016-05-30</karttapaivamaara>
+                            <tienumero>18652</tienumero>
+                            <ajorata>1</ajorata>
+                            <kaista>1</kaista>
+                            <aosa>1</aosa>
+                            <aet>5190</aet>
+                            <losa>1</losa>
+                            <let>3312</let>
                         </tierekisteriosoitevali>
-                        <!--Optional:-->
-                        <tunnus>A</tunnus>
-                        <!--Optional:-->
+                        <tunnus>Laivaniemi 5</tunnus>
                         <paallystystoimenpide>
                             <uusi-paallyste>1</uusi-paallyste>
                             <raekoko>87</raekoko>
                             <kokonaismassamaara>100</kokonaismassamaara>
                             <rc-prosentti>12</rc-prosentti>
-                            <!--Optional:-->
                             <kuulamylly>4</kuulamylly>
                             <paallystetyomenetelma>21</paallystetyomenetelma>
                             <leveys>100</leveys>
                             <pinta-ala>100</pinta-ala>
                         </paallystystoimenpide>
-                        <!--Optional:-->
                         <materiaalit>
-                            <!--Zero or more repetitions:-->
                             <materiaali>
                                 <kiviainesesiintyman-nimi>string</kiviainesesiintyman-nimi>
                                 <kiviaineksen-km-arvo>string</kiviaineksen-km-arvo>

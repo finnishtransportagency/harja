@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma
   (:require [harja.tyokalut.xml :as xml]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tyokalut.merkkijono :as merkkijono])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/yha/")
@@ -26,38 +27,30 @@
    [:losa (:tr_loppuosa osoite)]
    [:let (:tr_loppuetaisyys osoite)]])
 
-(defn tee-alikohteet [alikohteet]
-  [:alikohteet
-   [:alikohde
-    [:yha-id "3"]
-    [:harja-id "3"]
-    [:tierekisteriosoitevali
-     [:karttapaivamaara "2016-01-01"]
-     [:tienumero "3"]
-     [:ajorata "0"]
-     [:kaista "22"]
-     [:aosa "3"]
-     [:aet "3"]
-     [:losa "3"]
-     [:let "3"]]
-    [:tunnus "A"]
-    [:paallystystoimenpide
-     [:uusi-paallyste "1"]
-     [:raekoko "87"]
-     [:kokonaismassamaara "100"]
-     [:rc-prosentti "12"]
-     [:kuulamylly "4"]
-     [:paallystetyomenetelma "21"]
-     [:leveys "100"]
-     [:pinta-ala "100"]]
-    [:materiaalit
-     [:materiaali
-      [:kiviainesesiintyman-nimi "string"]
-      [:kiviaineksen-km-arvo "string"]
-      [:kiviaineksen-muotoarvo "string"]
-      [:sideainetyyppi "21"]
-      [:sideainepitoisuus "1000"]
-      [:lisa-aineet "string"]]]]])
+(defn tee-alikohde [{:keys [yhaid id nimi] :as alikohde}]
+  [:alikohde
+   (when yhaid [:yha-id yhaid])
+   [:harja-id id]
+   (tee-tierekisteriosoitevali alikohde)
+   ;; todo: pitää tarkistaa pitäisikö tunnus tallentaa eri paikkaan.
+   [:tunnus (merkkijono/leikkaa 1 nimi)]
+   [:paallystystoimenpide
+    [:uusi-paallyste "1"]
+    [:raekoko "87"]
+    [:kokonaismassamaara "100"]
+    [:rc-prosentti "12"]
+    [:kuulamylly "4"]
+    [:paallystetyomenetelma "21"]
+    [:leveys "100"]
+    [:pinta-ala "100"]]
+   [:materiaalit
+    [:materiaali
+     [:kiviainesesiintyman-nimi "string"]
+     [:kiviaineksen-km-arvo "string"]
+     [:kiviaineksen-muotoarvo "string"]
+     [:sideainetyyppi "21"]
+     [:sideainepitoisuus "1000"]
+     [:lisa-aineet "string"]]]])
 
 (defn tee-alustalle-tehdyt-toimenpiteet [paallystys-ilmoitus]
   [:alustalle-tehdyt-toimet
@@ -78,25 +71,24 @@
     [:verkon-sijainti "1"]
     [:tekninen-toimenpide "4"]]])
 
-(defn tee-kohteet [kohde alikohteet paallystys-ilmoitus]
+(defn tee-kohteet [{:keys [yhaid id tyyppi yhatunnus] :as kohde}
+                   alikohteet
+                   {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm] :as paallystys-ilmoitus}]
   [:kohteet
    [:kohde
-    [:yha-id (:yhaid kohde)]
-    [:harja-id (:id kohde)]
-    [:kohdetyotyyppi (:tyyppi kohde)]
-    [:nimi (:yhatunnus kohde)]
-    (when (:aloituspvm paallystys-ilmoitus)
-      [:toiden-aloituspaivamaara (xml/parsi-paivamaara (:aloituspvm paallystys-ilmoitus))])
-    (when (:valmispvm-paallystys paallystys-ilmoitus)
-      [:paallystyksen-valmistumispaivamaara (xml/parsi-paivamaara (:valmispvm-paallystys paallystys-ilmoitus))])
-    (when (:valmispvm-kohde paallystys-ilmoitus)
-      [:kohteen-valmistumispaivamaara (xml/parsi-paivamaara (:valmispvm-kohde paallystys-ilmoitus))])
-    (when (:takuupvm paallystys-ilmoitus)
-      [:takuupaivamaara (xml/parsi-paivamaara (:takuupvm paallystys-ilmoitus))])
+    (when [:yha-id yhaid])
+    [:harja-id id]
+    [:kohdetyotyyppi tyyppi]
+    (when yhatunnus [:nimi yhatunnus])
+    (when aloituspvm [:toiden-aloituspaivamaara (xml/parsi-paivamaara aloituspvm)])
+    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-paallystys)])
+    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-kohde)])
+    (when takuupvm [:takuupaivamaara (xml/parsi-paivamaara takuupvm)])
     [:toteutunuthinta (laske-hinta-kokonaishinta paallystys-ilmoitus)]
     (tee-tierekisteriosoitevali kohde)
     (tee-alustalle-tehdyt-toimenpiteet paallystys-ilmoitus)
-    (tee-alikohteet alikohteet)]])
+    (when alikohteet
+      (reduce conj [:alikohteet] (mapv tee-alikohde alikohteet)))]])
 
 (defn muodosta-sanoma [kohde alikohteet paallystys-ilmoitus]
   [:urakan-kohteiden-toteumatietojen-kirjaus

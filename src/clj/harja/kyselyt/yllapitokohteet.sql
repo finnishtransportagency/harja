@@ -349,6 +349,9 @@ SELECT
   yhaid,
   tr_ajorata,
   tr_kaista,
-  toimenpide
+  toimenpide,
+  (SELECT viimeisin_paivitys
+   FROM geometriapaivitys
+   WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohdeosa
 WHERE yllapitokohde = :yllapitokohde;

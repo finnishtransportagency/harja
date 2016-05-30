@@ -2,7 +2,8 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma])
+            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def testikohde
@@ -79,12 +80,12 @@
    :sopimuksen-mukaiset-tyot 400M,
    :perustelu-tekninen-osa nil,
    :kaasuindeksi 0M,
-   :aloituspvm #inst"2005-11-13T22:00:00.000-00:00",
+   :aloituspvm nil,
    :kohdeosa_kaista 1,
    :bitumi-indeksi 4543.95M,
    :id 1,
    :kasittelyaika-tekninen-osa nil,
-   :takuupvm #inst"2005-12-19T22:00:00.000-00:00",
+   :takuupvm nil,
    :kohdeosa_id 5,
    :arvonvahennykset 100M,
    :valmispvm-paallystys nil,
