@@ -7,6 +7,8 @@ sudo apt-get update
 sudo apt-get install postgresql-9.5
 sudo apt-get install postgresql-9.5-postgis
 
+sudo /etc/init.d/postgresql start
+
 cd tietokanta
 psql -c "create database harja;" -U postgres
 psql -c "create extension postgis" -U postgres harja
