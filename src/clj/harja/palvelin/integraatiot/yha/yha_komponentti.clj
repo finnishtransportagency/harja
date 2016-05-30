@@ -132,7 +132,7 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
-  (laheta-kohde! [this urakka-id kohde-id]))
+  (laheta-kohde [this urakka-id sopimus-id kohde-id]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
   (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
@@ -210,10 +210,10 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-(defn laheta-kohde-yhan [integraatioloki db url urakka-id kohde-id]
-  (log/debug (format "Lähetetään urakan (id: %s) kohde (id: %s) YHA:n URL:lla: %s." urakka-id kohde-id url))
-  (let [kohde (q-yllapitokohteet/hae-urakan-yllapitokohde db urakka-id kohde-id)
-        alikohteet (q-yllapitokohteet/hae-urakan-yllapitokohteen-yllapitokohdeosat db kohde-id)
+(defn laheta-kohde-yhan [integraatioloki db url kohde-id]
+  (log/debug (format "Lähetetään kohde (id: %s) YHA:n URL:lla: %s." kohde-id url))
+  (let [kohde (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+        alikohteet (q-yllapitokohteet/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         paallystys-ilmoitus (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db kohde-id)
         url (str url "toteumatiedot")]
     (if kohde
@@ -244,6 +244,6 @@
     (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yhatunniste sampotunniste vuosi))
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
-  (laheta-kohde! [this kohde-id]
-    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) urakka-id kohde-id)))
+  (laheta-kohde [this urakka-id sopimus-id kohde-id]
+    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) urakka-id sopimus-id kohde-id)))
 
