@@ -10,6 +10,7 @@
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -20,7 +21,7 @@
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
-  (laheta-kohde [this kohde-id]))
+  (laheta-kohteet [this urakka-id kohde-idt]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
   (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
@@ -100,28 +101,38 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-(defn laheta-kohde-yhan [integraatioloki db url kohde-id]
-  (log/debug (format "Lähetetään kohde (id: %s) YHA:n URL:lla: %s." kohde-id url))
-  (let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-        alikohteet (q-yllapitokohteet/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        paallystys-ilmoitus (first (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db kohde-id))
-        url (str url "toteumatiedot")]
-    (if kohde
-      (let
-        [kutsudata (kohteen-lahetyssanoma/muodosta kohde alikohteet paallystys-ilmoitus)]
-        (integraatiotapahtuma/suorita-integraatio
-          db integraatioloki "yha" "kohteiden-lahetys"
-          (fn [konteksti]
-            (let [http-asetukset {:metodi :POST :url url}
-                  {body :body headers :headers}
-                  (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-              (kasittele-urakan-kohdelahetysvastaus body headers)))))
-      (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
-        (log/error virhe)
-        (throw+
-          {:type +virhe-kohteen-lahetyksessa+
-           :virheet {:virhe virhe}})))))
+(defn hae-kohteen-tiedot [db kohde-id]
+  (if-let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))]
+    (let [alikohteet (q-yllapitokohteet/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
+          paallystys-ilmoitus (first (q-paallystys/hae-urakan-paallystysilmoitus-paallystyskohteella db kohde-id))]
+      {:kohde kohde
+       :alikohteet alikohteet
+       :paallystys-ilmoitus paallystys-ilmoitus})
+    (let [virhe (format "Tuntematon kohde (id: %s)." kohde-id)]
+      (log/error virhe)
+      (throw+
+        {:type +virhe-kohteen-lahetyksessa+
+         :virheet {:virhe virhe}}))))
 
+(defn laheta-kohteet-yhan [integraatioloki db url urakka-id kohde-idt]
+  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
+  (if-let [urakka (q-yha-tiedot/hae-urakan-yhatiedot db urakka-id)]
+    (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db urakka-id))
+          kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
+          url (str url "toteumatiedot")
+          kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)]
+      (integraatiotapahtuma/suorita-integraatio
+        db integraatioloki "yha" "kohteiden-lahetys"
+        (fn [konteksti]
+          (let [http-asetukset {:metodi :POST :url url}
+                {body :body headers :headers}
+                (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+            (kasittele-urakan-kohdelahetysvastaus body headers)))))
+    (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
+      (log/error virhe)
+      (throw+
+        {:type +virhe-kohteen-lahetyksessa+
+         :virheet {:virhe virhe}}))))
 
 (defrecord Yha [asetukset]
   component/Lifecycle
@@ -134,6 +145,5 @@
     (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yhatunniste sampotunniste vuosi))
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
-  (laheta-kohde [this kohde-id]
-    (laheta-kohde-yhan (:integraatioloki this) (:db this) (:url asetukset) kohde-id)))
-
+  (laheta-kohteet [this urakka-id kohde-idt]
+    (laheta-kohteet-yhan (:integraatioloki this) (:db this) (:url asetukset) urakka-id kohde-idt)))

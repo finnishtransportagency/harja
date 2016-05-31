@@ -71,37 +71,39 @@
     [:verkon-sijainti "1"]
     [:tekninen-toimenpide "4"]]])
 
-(defn tee-kohteet [{:keys [yhaid id tyyppi yhatunnus] :as kohde}
-                   alikohteet
-                   {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm] :as paallystys-ilmoitus}]
-  [:kohteet
-   [:kohde
-    (when [:yha-id yhaid])
-    [:harja-id id]
-    [:kohdetyotyyppi tyyppi]
-    (when yhatunnus [:nimi yhatunnus])
-    (when aloituspvm [:toiden-aloituspaivamaara (xml/parsi-paivamaara aloituspvm)])
-    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-paallystys)])
-    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-kohde)])
-    (when takuupvm [:takuupaivamaara (xml/parsi-paivamaara takuupvm)])
-    [:toteutunuthinta (laske-hinta-kokonaishinta paallystys-ilmoitus)]
-    (tee-tierekisteriosoitevali kohde)
-    (tee-alustalle-tehdyt-toimenpiteet paallystys-ilmoitus)
-    (when alikohteet
-      (reduce conj [:alikohteet] (mapv tee-alikohde alikohteet)))]])
+(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus] :as kohde}
+                 alikohteet
+                 {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm] :as paallystys-ilmoitus}]
+  [:kohde
+   (when [:yha-id yhaid])
+   [:harja-id id]
+   [:kohdetyotyyppi tyyppi]
+   (when yhatunnus [:nimi yhatunnus])
+   (when aloituspvm [:toiden-aloituspaivamaara (xml/parsi-paivamaara aloituspvm)])
+   (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-paallystys)])
+   (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-kohde)])
+   (when takuupvm [:takuupaivamaara (xml/parsi-paivamaara takuupvm)])
+   [:toteutunuthinta (laske-hinta-kokonaishinta paallystys-ilmoitus)]
+   (tee-tierekisteriosoitevali kohde)
+   (tee-alustalle-tehdyt-toimenpiteet paallystys-ilmoitus)
+   (when alikohteet
+     (reduce conj [:alikohteet] (mapv tee-alikohde alikohteet)))])
 
-(defn muodosta-sanoma [kohde alikohteet paallystys-ilmoitus]
+(defn tee-kohteet [kohteet]
+  (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystys-ilmoitus %)) kohteet)))
+
+(defn muodosta-sanoma [urakka kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
    {:xmlns "http://www.liikennevirasto.fi/xsd/yha"}
    [:urakka
-    [:yha-id (:yha_urakka_id kohde)]
-    [:harja-id (:harja_urakka_id kohde)]
-    [:sampotunnus (:sampo_urakka_id kohde)]
-    [:tunnus (:yha_urakka_tunnus kohde)]
-    (tee-kohteet kohde alikohteet paallystys-ilmoitus)]])
+    [:yha-id (:yhaid urakka)]
+    [:harja-id (:harjaid urakka)]
+    [:sampotunnus (:sampoid urakka)]
+    [:tunnus (:yhatunnus urakka)]
+    (tee-kohteet kohteet)]])
 
-(defn muodosta [kohde alikohteet paallystys-ilmoitus]
-  (let [sisalto (muodosta-sanoma kohde alikohteet paallystys-ilmoitus)
+(defn muodosta [urakka kohteet]
+  (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
     ;; todo: poista
     (println xml)

@@ -2,8 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
-            [harja.pvm :as pvm])
+            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def testikohde
@@ -92,8 +91,13 @@
    :perustelu-taloudellinen-osa nil,
    :kasittelyaika-taloudellinen-osa nil})
 
+(def testikohteet
+  [{:kohde testikohde
+    :alikohteet testialikohteet
+    :paallystys-ilmoitus testipaallystys-ilmoitus}])
+
 (deftest tarkista-xmln-validius
-  (let [xml (kohteen-lahetyssanoma/muodosta testikohde testialikohteet testipaallystys-ilmoitus)]
+  (let [xml (kohteen-lahetyssanoma/muodosta testikohteet)]
     (is (xml/validoi "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
 
 (deftest tarkista-kokonaishinnan-laskenta
