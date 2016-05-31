@@ -12,12 +12,23 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpidekilometrit.sql")
 
-(defn muodosta-datarivit [alueet toteumat]
+(defn muodosta-datarivit [alueet hoitoluokat toteumat]
   (let [kilometrimaaraiset-toteumat (filter #(= (:yksikko %) "tiekm") toteumat)
-        kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat)]
+        kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat)
+        tehtava-nimet [] ; FIXME Setti löytyneitä tehtäviä tjsp.
+        ]
     (mapv
-      (fn [{:keys [toimenpidekoodi-nimi]}]
-        [toimenpidekoodi-nimi ])
+      ;; Tee rivi
+      (fn [{:keys [toimenpidekoodi-nimi yksikko]}]
+        (concat
+          [(str toimenpidekoodi-nimi " (" yksikko ")")]
+          (mapcat
+            (fn [_]
+              (mapv
+                (fn [_]
+                  "0")
+                hoitoluokat))
+            alueet)))
       toteumat)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
@@ -49,18 +60,24 @@
                   raportin-nimi alkupvm loppupvm)
         otsikkorivit (into [] (concat
                                 [{:otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}]
-                                (map (fn [{:keys [nimi]}]
-                                       {:otsikko nimi :tasaa :keskita})
-                                     talvihoitoluokat)
-                                [{:otsikko "" :sarakkeita 1}]))
-        datarivit (muodosta-datarivit naytettavat-alueet toteumat)]
+                                (mapcat
+                                  (fn [_]
+                                    (map (fn [{:keys [nimi]}]
+                                           {:otsikko nimi :tasaa :keskita})
+                                         talvihoitoluokat))
+                                  naytettavat-alueet)))
+        datarivit (muodosta-datarivit naytettavat-alueet hoitoluokat toteumat)]
     [:raportti {:nimi "Toimenpidekilometrit"
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko
                  :tyhja (if (empty? toteumat) "Ei raportoitavia tehtäviä.")
-                 :rivi-ennen [{:teksti "Alue" :sarakkeita 1}
-                              {:teksti "Urakka 1" :sarakkeita (count talvihoitoluokat)}
-                              {:teksti "Urakka 2" :sarakkeita (count talvihoitoluokat)}]
+                 :rivi-ennen (concat
+                               [{:teksti "Alue" :sarakkeita 1}]
+                               (mapv
+                                 (fn [{:keys [urakka-nimi hallintayksikko-nimi] :as alue}]
+                                   {:teksti (or urakka-nimi hallintayksikko-nimi)
+                                    :sarakkeita (count talvihoitoluokat)})
+                                     naytettavat-alueet))
                  :sheet-nimi raportin-nimi}
       otsikkorivit
       datarivit]]))
