@@ -12,24 +12,34 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpidekilometrit.sql")
 
+(defn alueen-hoitoluokkasarakkeet [alue hoitoluokat toteumat]
+  (mapv
+    (fn [hoitoluokka]
+      (let [sopivat-rivit []]
+        (reduce
+          (fn [tulos seuraava]
+            (+ tulos (or seuraava 0)))
+          0
+          (map :maara sopivat-rivit))))
+    hoitoluokat))
+
+(defn aluesarakkeet [alueet hoitoluokat toteumat]
+  (mapcat
+    (fn [alue]
+      (alueen-hoitoluokkasarakkeet alue hoitoluokat toteumat))
+    alueet))
+
 (defn muodosta-datarivit [alueet hoitoluokat toteumat]
   (let [kilometrimaaraiset-toteumat (filter #(= (:yksikko %) "tiekm") toteumat)
         kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat)
-        tehtava-nimet [] ; FIXME Setti löytyneitä tehtäviä tjsp.
-        ]
+        tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi toteumat)))]
+    ;; Tehdään rivi jokaista tehtävää kohden
     (mapv
-      ;; Tee rivi
       (fn [{:keys [toimenpidekoodi-nimi yksikko]}]
         (concat
           [(str toimenpidekoodi-nimi " (" yksikko ")")]
-          (mapcat
-            (fn [_]
-              (mapv
-                (fn [_]
-                  "0")
-                hoitoluokat))
-            alueet)))
-      toteumat)))
+          (aluesarakkeet alueet hoitoluokat toteumat)))
+      tehtava-nimet)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
                                hallintayksikko-id urakkatyyppi] :as parametrit}]
