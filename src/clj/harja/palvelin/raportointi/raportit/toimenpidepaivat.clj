@@ -42,14 +42,15 @@
                     (distinct (keep second (keys toimenpidepaivat)))
                     [:kaikki])
            :let [otsikko (str "Toimenpidepäivät aikavälillä "
-                              (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)
+                              (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) " (" paivia-aikavalilla " päivää)"
                               (when-not (= :kaikki urakka)
                                 (str ": " urakka)))
                  toimenpidepaivat (if (= :kaikki urakka)
                                   toimenpidepaivat
                                   (toimenpidepaivat-urakalle toimenpidepaivat urakka))]]
 
-       [:taulukko {:otsikko otsikko}
+       [:taulukko {:otsikko otsikko
+                   :sheet-nimi "Foobar"}
 
         (into []
               (concat
@@ -63,6 +64,6 @@
                (concat [tehtava]
                        (mapv (fn [hoitoluokka]
                                (let [hoitaluokan-tapahtumat (get luokittain (:numero hoitoluokka))]
-                                 (str (reduce + 0 (keep :lkm hoitaluokan-tapahtumat)) "/" paivia-aikavalilla)))
+                                 (reduce + 0 (keep :lkm hoitaluokan-tapahtumat))))
                              talvihoitoluokat)
-                       [(str (reduce + 0 (keep :lkm rivit)) "/" paivia-aikavalilla)])))])]))
+                       [(reduce + 0 (keep :lkm rivit))])))])]))
