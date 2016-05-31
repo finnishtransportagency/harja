@@ -9,7 +9,7 @@ sudo apt-get install postgresql-9.5-postgis
 
 sudo /etc/init.d/postgresql restart
 
-sudo tietokanta/travis_pg_conf.sh
+sudo sh tietokanta/travis_pg_conf.sh
 
 sudo /etc/init.d/postgresql restart
 
