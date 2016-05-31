@@ -182,7 +182,7 @@
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
    [:p
-    "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut."
+    "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. "
     "Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
    [:ul
     (for [kohde epaonnistuneet-kohteet]
