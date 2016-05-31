@@ -17,7 +17,7 @@
         kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat)]
     (mapv
       (fn [{:keys [toimenpidekoodi-nimi]}]
-        [{:teksti toimenpidekoodi-nimi}])
+        [toimenpidekoodi-nimi ])
       toteumat)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
