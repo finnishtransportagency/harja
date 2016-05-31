@@ -7,8 +7,11 @@ sudo apt-get update
 sudo apt-get install postgresql-9.5
 sudo apt-get install postgresql-9.5-postgis
 
-sudo echo "listen_addresses = '*'" >> /etc/postgresql/9.5/main/postgresql.conf
-/etc/init.d/postgresql restart
+sudo /etc/init.d/postgresql restart
+
+sudo tietokanta/travis_pg_conf.sh
+
+sudo /etc/init.d/postgresql restart
 
 
 echo "KATSOTAAN ONKO POSTGRES KÄYNNISSÄ"
