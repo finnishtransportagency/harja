@@ -7,6 +7,10 @@ sudo apt-get update
 sudo apt-get install postgresql-9.5
 sudo apt-get install postgresql-9.5-postgis
 
+echo "listen_addresses = '*'" >> /etc/postgresql/9.5/main/postgresql.conf
+/etc/init.d/postgresql restart
+
+
 echo "KATSOTAAN ONKO POSTGRES KÄYNNISSÄ"
 ps axf | grep postgres
 
