@@ -11,10 +11,10 @@ echo "KATSOTAAN ONKO POSTGRES KÄYNNISSÄ"
 ps axf | grep postgres
 
 echo "KATSOTAAN POSTGRES HAKEMISTOJA"
-ls /var/lib/pgsql/9.5/data
+ls /var/lib/postgresql/9.5/main
 
 echo "POSTGRES.CONF"
-cat /var/lib/pgsql/9.5/data/postgresql.conf
+cat /etc/postgresql/9.5/main/postgresql.conf
 
 
 
