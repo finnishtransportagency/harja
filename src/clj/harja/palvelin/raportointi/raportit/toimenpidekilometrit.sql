@@ -3,9 +3,9 @@ SELECT
   urakka,
   hallintayksikko,
   SUM(rt.maara) AS maara,
-  tpk.id   AS toimenpidekoodi_id,
-  tpk.nimi AS toimenpidekoodi_nimi,
-  yksikko  AS toimenpidekoodi_yksikko,
+  tpk.id   AS "toimenpidekoodi-id",
+  tpk.nimi AS "toimenpidekoodi-nimi",
+  yksikko  AS "toimenpidekoodi-yksikko",
   rp.talvihoitoluokka AS hoitoluokka
 FROM toteuma t
   JOIN urakka u ON t.urakka = u.id
@@ -22,7 +22,7 @@ WHERE (:urakka::INTEGER IS NULL OR t.urakka = :urakka)
       AND (:urakka::INTEGER IS NOT NULL OR
            (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                           u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
-      AND t.alkanut :: DATE BETWEEN :alku AND :loppu;
-t.tyyppi = 'kokonaishintainen'
+      AND t.alkanut :: DATE BETWEEN :alku AND :loppu
+AND t.tyyppi = 'kokonaishintainen'
 AND t.poistettu IS NOT TRUE
-GROUP BY urakka, hallintayksikko, toimenpidekoodi_id, talvihoitoluokka;
+GROUP BY urakka, hallintayksikko, tpk.id, talvihoitoluokka;

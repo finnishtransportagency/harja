@@ -12,8 +12,16 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpidekilometrit.sql")
 
+(defn muodosta-datarivit [alueet toteumat]
+  (let [kilometrimaaraiset-toteumat (filter #(= (:yksikko %) "tiekm") toteumat)
+        kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat)]
+    (mapv
+      (fn [{:keys [toimenpidekoodi-nimi]}]
+        [{:teksti toimenpidekoodi-nimi}])
+      toteumat)))
+
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
-                               hallintayksikko-id urakoittain?] :as parametrit}]
+                               hallintayksikko-id urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -21,12 +29,17 @@
                         ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
                         (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
         talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)
-        parametrit {:urakka urakka-id
-                    :hallintayksikko hallintayksikko-id
-                    :alkupvm alkupvm
-                    :loppupvm loppupvm
-                    :hoitoluokat hoitoluokat}
-        toimenpidekilometrit #_(hae-toimenpidekilometrit db parametrit urakoittain?) nil
+        naytettavat-alueet (yleinen/naytettavat-alueet db konteksti
+                                                       {:urakka urakka-id
+                                                        :hallintayksikko hallintayksikko-id
+                                                        :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                        :alku alkupvm
+                                                        :loppu loppupvm})
+        toteumat (hae-kokonaishintaiset-toteumat db {:urakka urakka-id
+                                                     :hallintayksikko hallintayksikko-id
+                                                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                     :alku alkupvm
+                                                     :loppu loppupvm})
         raportin-nimi "Toimenpidekilometrit"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -40,12 +53,12 @@
                                        {:otsikko nimi :tasaa :keskita})
                                      talvihoitoluokat)
                                 [{:otsikko "" :sarakkeita 1}]))
-        datarivit [["123"]]]
+        datarivit (muodosta-datarivit naytettavat-alueet toteumat)]
     [:raportti {:nimi "Toimenpidekilometrit"
                 :orientaatio :landscape}
      [:taulukko {:otsikko otsikko
-                 :tyhja (if (empty? toimenpidekilometrit) "Ei raportoitavia tehtäviä.")
-                 :rivi-ennen [{:teksti "" :sarakkeita 1}
+                 :tyhja (if (empty? toteumat) "Ei raportoitavia tehtäviä.")
+                 :rivi-ennen [{:teksti "Alue" :sarakkeita 1}
                               {:teksti "Urakka 1" :sarakkeita (count talvihoitoluokat)}
                               {:teksti "Urakka 2" :sarakkeita (count talvihoitoluokat)}]
                  :sheet-nimi raportin-nimi}
