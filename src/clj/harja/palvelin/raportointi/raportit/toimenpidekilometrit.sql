@@ -1,9 +1,8 @@
 -- name: hae-kokonaishintaiset-toteumat
 SELECT
-  alkanut,
   urakka,
   hallintayksikko,
-  maara,
+  SUM(maara),
   tpk.id   AS toimenpidekoodi_id,
   tpk.nimi AS toimenpidekoodi_nimi,
   yksikko  AS toimenpidekoodi_yksikko
@@ -22,4 +21,5 @@ WHERE (:urakka::INTEGER IS NULL OR t.urakka = :urakka)
                                           u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
       AND t.alkanut :: DATE BETWEEN :alku AND :loppu;
 AND t.tyyppi = 'kokonaishintainen'
-AND t.poistettu IS NOT TRUE;
+AND t.poistettu IS NOT TRUE
+GROUP BY urakka, hallintayksikko, toimenpidekoodi_id;
