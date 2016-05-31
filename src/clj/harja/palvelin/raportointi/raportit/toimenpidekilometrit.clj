@@ -40,7 +40,6 @@
                                        {:otsikko nimi :tasaa :keskita})
                                      talvihoitoluokat)
                                 [{:otsikko "" :sarakkeita 1}]))
-        _ (log/debug "Otsikkorivit: " (pr-str otsikkorivit))
         datarivit [["123"]]]
     [:raportti {:nimi "Toimenpidekilometrit"
                 :orientaatio :landscape}
