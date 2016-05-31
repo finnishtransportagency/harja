@@ -7,7 +7,13 @@ sudo apt-get update
 sudo apt-get install postgresql-9.5
 sudo apt-get install postgresql-9.5-postgis
 
-sudo /etc/init.d/postgresql start
+echo "KATSOTAAN ONKO POSTGRES KÄYNNISSÄ"
+ps axf | grep postgres
+
+echo "LINKATAAN tmp socket"
+ln -s /tmp/.s.PGSQL.5432 /var/run/postgresql/.s.PGSQL.5432
+
+
 
 sleep 5
 
