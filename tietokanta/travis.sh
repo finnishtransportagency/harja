@@ -10,8 +10,11 @@ sudo apt-get install postgresql-9.5-postgis
 echo "KATSOTAAN ONKO POSTGRES KÄYNNISSÄ"
 ps axf | grep postgres
 
-echo "LINKATAAN tmp socket"
-ln -s /tmp/.s.PGSQL.5432 /var/run/postgresql/.s.PGSQL.5432
+echo "KATSOTAAN POSTGRES HAKEMISTOJA"
+ls /var/lib/pgsql/9.5/data
+
+echo "POSTGRES.CONF"
+cat /var/lib/pgsql/9.5/data/postgresql.conf
 
 
 
