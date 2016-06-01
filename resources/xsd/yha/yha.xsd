@@ -206,7 +206,7 @@
             <xs:element name="takuupaivamaara" type="xs:date" minOccurs="0" maxOccurs="1"/>
             <xs:element name="toteutunuthinta" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="alustalle-tehdyt-toimet" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="alustalle-tehdyt-toimet" nillable="false" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                     <xs:sequence>
                         <xs:element name="alustalle-tehty-toimenpide" type="alustalle-tehty-toimenpide" minOccurs="0" maxOccurs="unbounded"/>

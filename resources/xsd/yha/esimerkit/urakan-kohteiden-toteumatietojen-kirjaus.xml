@@ -1,91 +1,90 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <urakan-kohteiden-toteumatietojen-kirjaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
-    <!--Zero or more repetitions:-->
     <urakka>
-        <yha-id>3</yha-id>
-        <harja-id>3</harja-id>
-        <sampotunnus>string</sampotunnus>
-        <tunnus>string</tunnus>
+        <yha-id>76745</yha-id>
+        <harja-id>5</harja-id>
+        <sampotunnus>4242523-TES2</sampotunnus>
+        <tunnus>YHA34434</tunnus>
         <kohteet>
-            <!--Zero or more repetitions:-->
             <kohde>
-                <yha-id>3</yha-id>
-                <harja-id>3</harja-id>
-                <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
-                <nimi>string</nimi>
-                <!--Optional:-->
-                <toiden-aloituspaivamaara>2007-10-26</toiden-aloituspaivamaara>
-                <!--Optional:-->
-                <paallystyksen-valmistumispaivamaara>2004-02-14</paallystyksen-valmistumispaivamaara>
-                <!--Optional:-->
-                <kohteen-valmistumispaivamaara>2018-11-01+02:00</kohteen-valmistumispaivamaara>
-                <!--Optional:-->
-                <takuupaivamaara>2013-05-22+03:00</takuupaivamaara>
-                <!--Optional:-->
-                <toteutunuthinta>1000.00</toteutunuthinta>
+                <harja-id>49</harja-id>
+                <kohdetyotyyppi>paallystys</kohdetyotyyppi>
+                <toiden-aloituspaivamaara>2016-06-01</toiden-aloituspaivamaara>
+                <paallystyksen-valmistumispaivamaara>2016-06-01</paallystyksen-valmistumispaivamaara>
+                <kohteen-valmistumispaivamaara>2016-06-01</kohteen-valmistumispaivamaara>
+                <takuupaivamaara>2016-06-01</takuupaivamaara>
+                <toteutunuthinta>234785</toteutunuthinta>
                 <tierekisteriosoitevali>
-                    <karttapaivamaara>2016-01-01+02:00</karttapaivamaara>
-                    <tienumero>3</tienumero>
+                    <karttapaivamaara>2016-06-01</karttapaivamaara>
+                    <tienumero>66</tienumero>
                     <ajorata>0</ajorata>
-                    <kaista>11</kaista>
-                    <aosa>3</aosa>
-                    <aet>3</aet>
-                    <losa>3</losa>
-                    <let>3</let>
+                    <kaista>1</kaista>
+                    <aosa>36</aosa>
+                    <aet>0</aet>
+                    <losa>41</losa>
+                    <let>2321</let>
                 </tierekisteriosoitevali>
-                <alustalle-tehdyt-toimet>
-                    <!--Zero or more repetitions:-->
-                    <alustalle-tehty-toimenpide>
-                        <tierekisteriosoitevali>
-                            <karttapaivamaara>2016-01-01+02:00</karttapaivamaara>
-                            <tienumero>3</tienumero>
-                            <ajorata>0</ajorata>
-                            <kaista>11</kaista>
-                            <aosa>3</aosa>
-                            <aet>3</aet>
-                            <losa>3</losa>
-                            <let>3</let>
-                        </tierekisteriosoitevali>
-                        <kasittelymenetelma>12</kasittelymenetelma>
-                        <kasittelypaksuus>100</kasittelypaksuus>
-                        <verkkotyyppi>4</verkkotyyppi>
-                        <verkon-tarkoitus>1</verkon-tarkoitus>
-                        <verkon-sijainti>1</verkon-sijainti>
-                        <tekninen-toimenpide>4</tekninen-toimenpide>
-                    </alustalle-tehty-toimenpide>
-                </alustalle-tehdyt-toimet>
                 <alikohteet>
-                    <!--Zero or more repetitions:-->
                     <alikohde>
-                        <yha-id>3</yha-id>
-                        <harja-id>3</harja-id>
+                        <yha-id>254915666</yha-id>
+                        <harja-id>59</harja-id>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2016-01-01</karttapaivamaara>
-                            <tienumero>3</tienumero>
+                            <karttapaivamaara>2016-06-01</karttapaivamaara>
+                            <tienumero>66</tienumero>
                             <ajorata>0</ajorata>
-                            <kaista>22</kaista>
-                            <aosa>3</aosa>
-                            <aet>3</aet>
-                            <losa>3</losa>
-                            <let>3</let>
+                            <kaista>1</kaista>
+                            <aosa>36</aosa>
+                            <aet>0</aet>
+                            <losa>41</losa>
+                            <let>0</let>
                         </tierekisteriosoitevali>
-                        <!--Optional:-->
-                        <tunnus>A</tunnus>
-                        <!--Optional:-->
+                        <tunnus></tunnus>
                         <paallystystoimenpide>
-                            <uusi-paallyste>1</uusi-paallyste>
-                            <raekoko>87</raekoko>
-                            <kokonaismassamaara>100</kokonaismassamaara>
-                            <rc-prosentti>12</rc-prosentti>
-                            <!--Optional:-->
-                            <kuulamylly>4</kuulamylly>
-                            <paallystetyomenetelma>21</paallystetyomenetelma>
-                            <leveys>100</leveys>
-                            <pinta-ala>100</pinta-ala>
+                            <uusi-paallyste>21</uusi-paallyste>
+                            <raekoko>11</raekoko>
+                            <kokonaismassamaara>1</kokonaismassamaara>
+                            <rc-prosentti>90</rc-prosentti>
+                            <kuulamylly>2</kuulamylly>
+                            <paallystetyomenetelma>31</paallystetyomenetelma>
+                            <leveys>11</leveys>
+                            <pinta-ala>11</pinta-ala>
                         </paallystystoimenpide>
-                        <!--Optional:-->
                         <materiaalit>
-                            <!--Zero or more repetitions:-->
+                            <materiaali>
+                                <kiviainesesiintyman-nimi>string</kiviainesesiintyman-nimi>
+                                <kiviaineksen-km-arvo>string</kiviaineksen-km-arvo>
+                                <kiviaineksen-muotoarvo>string</kiviaineksen-muotoarvo>
+                                <sideainetyyppi>21</sideainetyyppi>
+                                <sideainepitoisuus>1000</sideainepitoisuus>
+                                <lisa-aineet>string</lisa-aineet>
+                            </materiaali>
+                        </materiaalit>
+                    </alikohde>
+                    <alikohde>
+                        <yha-id>254915667</yha-id>
+                        <harja-id>60</harja-id>
+                        <tierekisteriosoitevali>
+                            <karttapaivamaara>2016-06-01</karttapaivamaara>
+                            <tienumero>66</tienumero>
+                            <ajorata>0</ajorata>
+                            <kaista>1</kaista>
+                            <aosa>41</aosa>
+                            <aet>0</aet>
+                            <losa>41</losa>
+                            <let>2321</let>
+                        </tierekisteriosoitevali>
+                        <tunnus></tunnus>
+                        <paallystystoimenpide>
+                            <uusi-paallyste>21</uusi-paallyste>
+                            <raekoko>33</raekoko>
+                            <kokonaismassamaara>22</kokonaismassamaara>
+                            <rc-prosentti>2</rc-prosentti>
+                            <kuulamylly>1</kuulamylly>
+                            <paallystetyomenetelma>21</paallystetyomenetelma>
+                            <leveys>2</leveys>
+                            <pinta-ala>1</pinta-ala>
+                        </paallystystoimenpide>
+                        <materiaalit>
                             <materiaali>
                                 <kiviainesesiintyman-nimi>string</kiviainesesiintyman-nimi>
                                 <kiviaineksen-km-arvo>string</kiviaineksen-km-arvo>

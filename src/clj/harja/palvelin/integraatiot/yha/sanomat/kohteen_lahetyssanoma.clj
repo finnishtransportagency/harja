@@ -50,28 +50,32 @@
      [:sideainepitoisuus "1000"]
      [:lisa-aineet "string"]]]])
 
-(defn tee-alustalle-tehdyt-toimenpiteet [paallystys-ilmoitus]
-  [:alustalle-tehdyt-toimet
-   [:alustalle-tehty-toimenpide
-    [:tierekisteriosoitevali
-     [:karttapaivamaara "2016-01-01+02:00"]
-     [:tienumero "3"]
-     [:ajorata "0"]
-     [:kaista "11"]
-     [:aosa "3"]
-     [:aet "3"]
-     [:losa "3"]
-     [:let "3"]]
-    [:kasittelymenetelma "12"]
-    [:kasittelypaksuus "100"]
-    [:verkkotyyppi "4"]
-    [:verkon-tarkoitus "1"]
-    [:verkon-sijainti "1"]
-    [:tekninen-toimenpide "4"]]])
+(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi aosa let verkon-tarkoitus kasittelymenetelma losa aet
+                                              tekninen-toimenpide paksuus verkon-sijainti karttapvm]}]
+  [:alustalle-tehty-toimenpide
+   [:tierekisteriosoitevali
+    ;; todo: hae oikea pvm
+    [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
+    ;; todo: täytyy lisätä frontille
+    [:tienumero "3"]
+    ;; todo: täytyy lisätä frontille
+    [:ajorata "0"]
+    ;; todo: täytyy lisätä frontille
+    [:kaista "11"]
+    [:aosa aosa]
+    [:aet aet]
+    [:losa losa]
+    [:let let]]
+   [:kasittelymenetelma kasittelymenetelma]
+   [:kasittelypaksuus paksuus]
+   [:verkkotyyppi verkkotyyppi]
+   [:verkon-tarkoitus verkon-tarkoitus]
+   [:verkon-sijainti verkon-sijainti]
+   [:tekninen-toimenpide tekninen-toimenpide]])
 
 (defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus] :as kohde}
                  alikohteet
-                 {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm] :as paallystys-ilmoitus}]
+                 {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
    (when [:yha-id yhaid])
    [:harja-id id]
@@ -83,9 +87,12 @@
    (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
    [:toteutunuthinta (laske-hinta-kokonaishinta paallystys-ilmoitus)]
    (tee-tierekisteriosoitevali kohde)
-   (tee-alustalle-tehdyt-toimenpiteet paallystys-ilmoitus)
+   (when (:alustatoimet ilmoitustiedot)
+     (reduce conj [:alustalle-tehdyt-toimet]
+             (mapv tee-alustalle-tehty-toimenpide (:alustatoimet ilmoitustiedot))))
    (when alikohteet
-     (reduce conj [:alikohteet] (mapv tee-alikohde alikohteet)))])
+     (reduce conj [:alikohteet]
+             (mapv tee-alikohde alikohteet)))])
 
 (defn muodosta-sanoma [urakka kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
