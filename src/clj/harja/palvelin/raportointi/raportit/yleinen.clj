@@ -5,7 +5,10 @@
              [format :as tf]
              [local :as l]]
             [harja.pvm :as pvm]
+            [jeesql.core :refer [defqueries]]
             [harja.kyselyt.hoitoluokat :as hoitoluokat]))
+
+(defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
@@ -145,3 +148,18 @@
 
 (defn sarakkeiden-maara [otsikot]
   (count otsikot))
+
+(defn naytettavat-alueet
+  "Palauttaa kontekstista riippuen kaikki hallintayksiköt tai urakat, jotka voidaan löytää annetuilla raportin
+   parametreilla.
+
+   Tätä tarvitaan esim. silloin kun haetaan toteumia hallintayksiköstä,
+   Normaalisti sellaisia urakoita, joilla ei ole toteumia, ei listata raportilla.
+   Yleensä kuitenkin halutaan nähdä hallintayksikön kaikki urakat, myös 'nollarivit',
+   joten tämän kyselyn avulla voidaan listata kaikki alueet, joita haku koskee."
+  [db konteksti parametrit]
+  (if (= konteksti :koko-maa)
+    (into []
+          (hae-kontekstin-hallintayksikot db))
+    (into []
+          (hae-kontekstin-urakat db parametrit))))

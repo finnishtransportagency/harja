@@ -7,7 +7,8 @@
             [ol.source.ImageStatic]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :refer [karttakuva-url]]
-            [harja.ui.openlayers.taso :refer [Taso]]))
+            [harja.ui.openlayers.taso :refer [Taso]]
+            [cljs-time.core :as t]))
 
 (defn- ol-kuva [extent resolution url]
   (ol.Image. extent resolution 1 nil url "use-credentials"
