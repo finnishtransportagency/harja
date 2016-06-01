@@ -18,6 +18,10 @@
 (def +virhe-urakan-kohdehaussa+ ::yha-virhe-urakan-kohdehaussa)
 (def +virhe-kohteen-lahetyksessa+ ::yha-virhe-kohteen-lahetyksessa)
 
+;; todo: poista kun saadaan oikea yhteys YHA:n
+(def +testi-urakan-kohdehakuvastaus+
+  "<urakan-kohdehakuvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">\n    <kohteet>\n        <kohde>\n            <yha-id>251041528</yha-id>\n            <kohdetyyppi>paallystys</kohdetyyppi>\n            <nimi>Testikohde 2</nimi>\n            <yllapitoluokka>3</yllapitoluokka>\n            <keskimaarainen-vuorokausiliikenne>2509</keskimaarainen-vuorokausiliikenne>\n            <nykyinen-paallyste>1</nykyinen-paallyste>\n            <tierekisteriosoitevali>\n                <karttapaivamaara>2016-01-01</karttapaivamaara>\n                <tienumero>66</tienumero>\n                <ajorata>0</ajorata>\n                <kaista>1</kaista>\n                <aosa>36</aosa>\n                <aet>0</aet>\n                <losa>41</losa>\n                <let>2321</let>\n            </tierekisteriosoitevali>\n            <alikohteet>\n                <alikohde>\n                    <yha-id>254915666</yha-id>\n                    <tierekisteriosoitevali>\n                        <karttapaivamaara>2016-01-01</karttapaivamaara>\n                        <tienumero>66</tienumero>\n                        <ajorata>0</ajorata>\n                        <kaista>1</kaista>\n                        <aosa>36</aosa>\n                        <aet>0</aet>\n                        <losa>41</losa>\n                        <let>0</let>\n                    </tierekisteriosoitevali>\n                    <tunnus>A</tunnus>\n                    <paallystystoimenpide>\n                        <uusi-paallyste>21</uusi-paallyste>\n                        <raekoko>12</raekoko>\n                        <kokonaismassamaara>2</kokonaismassamaara>\n                        <rc-prosentti>80</rc-prosentti>\n                        <kuulamylly>3</kuulamylly>\n                        <paallystetyomenetelma>31</paallystetyomenetelma>\n                    </paallystystoimenpide>\n                </alikohde>\n                <alikohde>\n                    <yha-id>254915667</yha-id>\n                    <tierekisteriosoitevali>\n                        <karttapaivamaara>2016-01-01</karttapaivamaara>\n                        <tienumero>66</tienumero>\n                        <ajorata>0</ajorata>\n                        <kaista>1</kaista>\n                        <aosa>41</aosa>\n                        <aet>0</aet>\n                        <losa>41</losa>\n                        <let>2321</let>\n                    </tierekisteriosoitevali>\n                    <tunnus>B</tunnus>\n                    <paallystystoimenpide>\n                        <uusi-paallyste>21</uusi-paallyste>\n                        <raekoko>10</raekoko>\n                        <kokonaismassamaara>1</kokonaismassamaara>\n                        <rc-prosentti>1</rc-prosentti>\n                        <kuulamylly>1</kuulamylly>\n                        <paallystetyomenetelma>21</paallystetyomenetelma>\n                    </paallystystoimenpide>\n                </alikohde>\n            </alikohteet>\n        </kohde>\n        <kohde>\n            <yha-id>251603670</yha-id>\n            <kohdetyyppi>paallystys</kohdetyyppi>\n            <nimi>Testikohde 1</nimi>\n            <yllapitoluokka>1</yllapitoluokka>\n            <keskimaarainen-vuorokausiliikenne>3107</keskimaarainen-vuorokausiliikenne>\n            <nykyinen-paallyste>1</nykyinen-paallyste>\n            <tierekisteriosoitevali>\n                <karttapaivamaara>2016-01-01</karttapaivamaara>\n                <tienumero>3</tienumero>\n                <ajorata>0</ajorata>\n                <kaista>1</kaista>\n                <aosa>230</aosa>\n                <aet>450</aet>\n                <losa>230</losa>\n                <let>460</let>\n            </tierekisteriosoitevali>\n            <alikohteet>\n                <alikohde>\n                    <yha-id>254915669</yha-id>\n                    <tierekisteriosoitevali>\n                        <karttapaivamaara>2016-01-01</karttapaivamaara>\n                        <tienumero>3</tienumero>\n                        <ajorata>0</ajorata>\n                        <kaista>1</kaista>\n                        <aosa>230</aosa>\n                        <aet>450</aet>\n                        <losa>230</losa>\n                        <let>460</let>\n                    </tierekisteriosoitevali>\n                    <tunnus>C</tunnus>\n                    <paallystystoimenpide>\n                        <uusi-paallyste>21</uusi-paallyste>\n                        <raekoko>10</raekoko>\n                        <kokonaismassamaara>1</kokonaismassamaara>\n                        <rc-prosentti>1</rc-prosentti>\n                        <kuulamylly>1</kuulamylly>\n                        <paallystetyomenetelma>21</paallystetyomenetelma>\n                    </paallystystoimenpide>\n                </alikohde>\n            </alikohteet>\n        </kohde>\n    </kohteet>\n</urakan-kohdehakuvastaus>")
+
 (defprotocol YllapidonUrakoidenHallinta
   (hae-urakat [this yhatunniste sampotunniste vuosi])
   (hae-kohteet [this urakka-id kayttajatunnus])
@@ -83,17 +87,19 @@
           yha-id 251604402]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
 
-      (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "yha" "kohteiden-haku"
-        (fn [konteksti]
-          (let [parametrit (-> {}
-                               (lisaa-http-parametri "yha-id" yha-id)
-                               (lisaa-http-parametri "vuosi" vuosi)
-                               (lisaa-http-parametri "kayttaja" kayttajatunnus))
-                http-asetukset {:metodi :GET :url url :parametrit parametrit}
-                {body :body headers :headers}
-                (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-            (kasittele-urakan-kohdehakuvastaus body headers)))))
+      ;; todo: ota pois, kun saadaan yhteys toimimaan YHA:n
+      (with-fake-http [url +testi-urakan-kohdehakuvastaus+]
+        (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "yha" "kohteiden-haku"
+          (fn [konteksti]
+            (let [parametrit (-> {}
+                                 (lisaa-http-parametri "yha-id" yha-id)
+                                 (lisaa-http-parametri "vuosi" vuosi)
+                                 (lisaa-http-parametri "kayttaja" kayttajatunnus))
+                  http-asetukset {:metodi :GET :url url :parametrit parametrit}
+                  {body :body headers :headers}
+                  (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+              (kasittele-urakan-kohdehakuvastaus body headers))))))
     (do
       (let [virhe (format "Urakan (id: %s) YHA-id:tä ei löydy tietokannasta. Kohteita ei voida hakea." urakka-id)]
         (log/error virhe)
