@@ -227,7 +227,7 @@
         (reaction
           (let [valmispvm-kohde (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata)
                 tila (:tila @paallystys/paallystysilmoitus-lomakedata)]
-            (log "[PÄÄLLYSTYS] valmis käsi " (pr-str valmispvm-kohde) (pr-str tila))
+            (log "[PÄÄLLYSTYS] valmis käsiteltäväksi " (pr-str valmispvm-kohde) (pr-str tila))
             (and tila
                  valmispvm-kohde
                  (not (= tila :aloitettu))
@@ -379,7 +379,8 @@
               {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :tasaa :oikea}
               {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
-              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :tasaa :oikea}
+              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :tasaa :oikea :pituus-max 100
+               :validoi [[:rajattu-numero 0 100]]}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
                :nimi :tyomenetelma
                :tyyppi :valinta
