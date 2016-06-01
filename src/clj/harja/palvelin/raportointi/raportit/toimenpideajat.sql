@@ -19,7 +19,7 @@ GROUP BY u.nimi, tpk.nimi, tunti, rp.talvihoitoluokka
 
 -- name: hae-toimenpidepaivien-lukumaarat
 SELECT
-  count(date_trunc('day', t.alkanut)) AS lkm,
+  count(DISTINCT(date_trunc('day', t.alkanut))) AS lkm,
   u.nimi as urakka,
   o.nimi as hallintayksikko,
   u.id as "urakka-id",

@@ -26,11 +26,10 @@
                                          (or (= (:urakka-id tpi) (:urakka-id alue))
                                              (= (:hallintayksikko-id tpi) (:hallintayksikko-id alue)))))
                                   toimenpiteet)
-                  _ (log/debug "Sopivat rivit: " (pr-str sopivat-rivit))
                   tulos (reduce + 0 (map :lkm sopivat-rivit))]
               tulos))
           hoitoluokat)]
-    (map #(fmt/desimaaliluku-opt % 1) (conj hoitoluokkasummat (reduce + hoitoluokkasummat)))))
+    (map #(fmt/desimaaliluku-opt % 1) hoitoluokkasummat)))
 
 (defn aluesarakkeet [alueet hoitoluokat tpi-nimi toimenpiteet]
   (conj
@@ -81,7 +80,7 @@
                  :rivi-ennen (concat [{:teksti "Alueet" :sarakkeita 1}]
                                      (map
                                        (fn [alue]
-                                         {:teksti (:nimi alue) :sarakkeita (+ 1 (count talvihoitoluokat))})
+                                         {:teksti (:nimi alue) :sarakkeita (count talvihoitoluokat)})
                                        naytettavat-alueet))}
 
       (into []
@@ -92,7 +91,5 @@
                            ;; Jokaiselle alueelle..
                            (count naytettavat-alueet)
                            ;; Tehdään sarakkeet hoitoluokille
-                           #(conj
-                             (mapv (fn [{nimi :nimi}] {:otsikko nimi :tasaa :oikea}) talvihoitoluokat)
-                             {:otsikko "Lkm" :tasaa :oikea}))))))
+                           #(mapv (fn [{nimi :nimi}] {:otsikko nimi :tasaa :oikea}) talvihoitoluokat))))))
       datarivit]]))
