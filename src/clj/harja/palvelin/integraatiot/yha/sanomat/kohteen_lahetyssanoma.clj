@@ -77,10 +77,10 @@
    [:harja-id id]
    [:kohdetyotyyppi tyyppi]
    (when yhatunnus [:nimi yhatunnus])
-   (when aloituspvm [:toiden-aloituspaivamaara (xml/parsi-paivamaara aloituspvm)])
-   (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-paallystys)])
-   (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/parsi-paivamaara valmispvm-kohde)])
-   (when takuupvm [:takuupaivamaara (xml/parsi-paivamaara takuupvm)])
+   (when aloituspvm [:toiden-aloituspaivamaara (xml/formatoi-paivamaara aloituspvm)])
+   (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])
+   (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
+   (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
    [:toteutunuthinta (laske-hinta-kokonaishinta paallystys-ilmoitus)]
    (tee-tierekisteriosoitevali kohde)
    (tee-alustalle-tehdyt-toimenpiteet paallystys-ilmoitus)
