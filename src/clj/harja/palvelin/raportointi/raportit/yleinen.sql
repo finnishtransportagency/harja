@@ -2,7 +2,7 @@
 -- Listaa kaikki ne urakat, joita haku koskee
 SELECT
   u.id           AS "urakka-id",
-  u.nimi         AS "urakka-nimi"
+  u.nimi         AS "nimi"
 FROM urakka u
 WHERE
   (:urakka :: INTEGER IS NULL OR u.id = :urakka)
@@ -19,8 +19,8 @@ ORDER BY nimi;
 -- Listaa kaikki ne hallintayksikot, joita haku koskee
 SELECT
   o.id           AS "hallintayksikko-id",
-  o.nimi         AS "hallintayksikko-nimi",
-  o.elynumero    AS "hallintayksikko-elynumero"
+  o.nimi         AS "nimi",
+  o.elynumero    AS "elynumero"
 FROM organisaatio o
 WHERE elynumero IS NOT NULL
 ORDER BY elynumero;

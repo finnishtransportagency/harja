@@ -220,21 +220,11 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        naytettavat-alueet (if (= konteksti :koko-maa)
-                             (into []
-                                   (map #(set/rename-keys % {:hallintayksikko_id :hallintayksikko-id
-                                                             :hallintayksikko_nimi :nimi
-                                                             :hallintayksikko_elynumero :hallintayksikko-elynumero}))
-                                   (hae-kontekstin-hallintayksikot db))
-                             (into []
-                                   (map #(set/rename-keys % {:urakka_id :urakka-id
-                                                             :urakka_nimi :nimi}))
-                                   (hae-kontekstin-urakat db
-                                                          {:urakka urakka-id
-                                                           :hallintayksikko hallintayksikko-id
-                                                           :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-                                                           :alku alkupvm
-                                                           :loppu loppupvm})))
+        naytettavat-alueet (yleinen/naytettavat-alueet db konteksti {:urakka urakka-id
+                                                                     :hallintayksikko hallintayksikko-id
+                                                                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                     :alku alkupvm
+                                                                     :loppu loppupvm})
         sanktiot-kannassa (into []
                                 (comp
                                   (map #(konv/string->keyword % :sakkoryhma))
@@ -251,7 +241,7 @@
                                     (mapv
                                       (fn [alue]
                                         {:otsikko (if (= konteksti :koko-maa)
-                                                    (str (:hallintayksikko-elynumero alue) " " (:nimi alue))
+                                                    (str (:elynumero alue) " " (:nimi alue))
                                                     (:nimi alue))
                                          :leveys 15})
                                       naytettavat-alueet)
