@@ -26,21 +26,21 @@
    [:losa (:tr_loppuosa osoite)]
    [:let (:tr_loppuetaisyys osoite)]])
 
-(defn tee-alikohde [{:keys [yhaid id tunnus] :as alikohde}]
+(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala] :as alikohde}]
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
    (tee-tierekisteriosoitevali alikohde)
    [:tunnus tunnus]
    [:paallystystoimenpide
-    [:uusi-paallyste "1"]
-    [:raekoko "87"]
-    [:kokonaismassamaara "100"]
-    [:rc-prosentti "12"]
-    [:kuulamylly "4"]
-    [:paallystetyomenetelma "21"]
-    [:leveys "100"]
-    [:pinta-ala "100"]]
+    [:uusi-paallyste paallystetyyppi]
+    [:raekoko raekoko]
+    [:kokonaismassamaara massa]
+    [:rc-prosentti rc%]
+    [:kuulamylly kuulamylly]
+    [:paallystetyomenetelma tyomenetelma]
+    [:leveys leveys]
+    [:pinta-ala pinta-ala]]
    [:materiaalit
     [:materiaali
      [:kiviainesesiintyman-nimi "string"]

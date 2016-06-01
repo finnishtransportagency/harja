@@ -67,7 +67,7 @@
     :tr_loppuosa 41,
     :raekoko 11,
     :tyomenetelma 31,
-    :rc% 190,
+    :rc% 90,
     :tr_numero 66,
     :paallystetyyppi 21,
     :id 59,
@@ -165,7 +165,7 @@
                                  :kuulamylly 2,
                                  :raekoko 11,
                                  :tyomenetelma 31,
-                                 :rc% 190,
+                                 :rc% 90,
                                  :paallystetyyppi 21,
                                  :km-arvo "klaösdkföa"}
                                 {:kohdeosa-id 60,
