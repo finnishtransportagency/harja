@@ -89,8 +89,8 @@
                  :rivi-ennen (concat
                                [{:teksti "Alue" :sarakkeita 1}]
                                (mapv
-                                 (fn [{:keys [urakka-nimi hallintayksikko-nimi] :as alue}]
-                                   {:teksti (or urakka-nimi hallintayksikko-nimi)
+                                 (fn [{:keys [nimi] :as alue}]
+                                   {:teksti nimi
                                     :sarakkeita (count talvihoitoluokat)})
                                      naytettavat-alueet))
                  :sheet-nimi raportin-nimi}
