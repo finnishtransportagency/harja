@@ -33,8 +33,6 @@
    :aikataulu_muokattu #inst"2016-05-30T04:27:46.161231000-00:00",
    :aikataulu_tiemerkinta_alku nil,
    :poistettu false,
-   :yha_urakka_tunnus "YHA34434",
-   :yha_urakka_nimi nil,
    :tr_loppuetaisyys 3312,
    :sampo_urakka_id "4242523-TES2",
    :tr_alkuetaisyys 5190,
@@ -96,8 +94,17 @@
     :alikohteet testialikohteet
     :paallystys-ilmoitus testipaallystys-ilmoitus}])
 
+(def testiurakka
+  {:yhatunnus "YHA34434",
+   :yhaid 76745,
+   :yhanimi "TESTIURAKKA",
+   :elyt ["KAS" "POS" "POP" "LAP"],
+   :vuodet 2016,
+   :harjaid 5,
+   :sampoid "4242523-TES2"})
+
 (deftest tarkista-xmln-validius
-  (let [xml (kohteen-lahetyssanoma/muodosta testikohteet)]
+  (let [xml (kohteen-lahetyssanoma/muodosta testiurakka testikohteet)]
     (is (xml/validoi "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
 
 (deftest tarkista-kokonaishinnan-laskenta

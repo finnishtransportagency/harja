@@ -90,7 +90,10 @@
      (reduce conj [:alikohteet] (mapv tee-alikohde alikohteet)))])
 
 (defn tee-kohteet [kohteet]
-  (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystys-ilmoitus %)) kohteet)))
+  (println kohteet)
+  (reduce conj [:kohteet] (mapv #(do
+                                  (println %)
+                                  (tee-kohde (:kohde %) (:alikohteet %) (:paallystys-ilmoitus %))) kohteet)))
 
 (defn muodosta-sanoma [urakka kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus

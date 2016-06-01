@@ -116,7 +116,7 @@
 
 (defn laheta-kohteet-yhan [integraatioloki db url urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
-  (if-let [urakka (q-yha-tiedot/hae-urakan-yhatiedot db urakka-id)]
+  (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db urakka-id))]
     (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db urakka-id))
           kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
           url (str url "toteumatiedot")
