@@ -383,7 +383,7 @@
               {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
               {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :tasaa :oikea :pituus-max 100
-               :validoi [[:rajattu-numero 0 100]]}
+               :validoi [[:rajattu-numero nil 100 0]]}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
                :nimi :tyomenetelma
                :tyyppi :valinta
