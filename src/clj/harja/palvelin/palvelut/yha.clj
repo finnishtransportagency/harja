@@ -137,7 +137,8 @@
                     tunnus yha-id alikohteet kohdetyyppi
                     yllapitoluokka
                     keskimaarainen_vuorokausiliikenne
-                    nykyinen-paallyste] :as kohde} kohteet]
+                    nykyinen-paallyste
+                    nimi] :as kohde} kohteet]
       (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
       (let [kohde (yha-q/luo-yllapitokohde<! c
                                              {:urakka urakka-id
@@ -153,12 +154,13 @@
                                               :tyyppi (name kohdetyyppi)
                                               :yllapitoluokka yllapitoluokka
                                               :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
-                                              :nykyinen_paallyste nykyinen-paallyste})]
-        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
+                                              :nykyinen_paallyste nykyinen-paallyste
+                                              :nimi nimi})]
+        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (yha-q/luo-yllapitokohdeosa<! c
                                         {:yllapitokohde (:id kohde)
-                                         :nimi tunnus
+                                         :nimi nimi
                                          :sijainti sijainti
                                          :tr_numero (:tienumero tierekisteriosoitevali)
                                          :tr_alkuosa (:aosa tierekisteriosoitevali)
