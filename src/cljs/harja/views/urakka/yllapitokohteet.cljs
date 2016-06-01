@@ -58,14 +58,15 @@
 ;; Ylläpitokohdeosien sarakkeiden leveydet
 (def nimi-leveys 20)
 (def toimenpide-leveys 20)
-(def tunnus-leveys 4)
 
-(defn tierekisteriosoite-sarakkeet [perusleveys [nimi tie ajorata kaista aosa aet losa let]]
+(defn tierekisteriosoite-sarakkeet [perusleveys [nimi tunnus tie ajorata kaista aosa aet losa let]]
   (into []
         (remove
           nil?
           [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
                        :leveys (+ perusleveys 5) :muokattava? (or (:muokattava? nimi) (constantly true))})
+           (when tunnus {:otsikko "Tunnus" :nimi (:nimi tunnus) :tyyppi :string :pituus-max 1
+                         :leveys 4 :muokattava? (or (:muokattava? tunnus) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
             :validoi [[:ei-tyhja "Anna tienumero"]] :muokattava? (or (:muokattava? tie) (constantly true))}
@@ -157,6 +158,7 @@
                                 sijainnit @tr-sijainnit
                                 osat (into []
                                            (map (fn [osa]
+                                                  (log "-----> OSA" (pr-str osa))
                                                   (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
                                            %)
                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohdeosat! urakka-id sopimus-id (:id rivi) osat))]
@@ -172,10 +174,10 @@
            :muutos (fn [grid]
                      (kasittele-tr-osoite grid tr-sijainnit tr-virheet))}
           (into [] (concat
-                     [{:otsikko "Tunnus" :nimi :tunnus :tyyppi :string :pituus-max 1 :leveys tunnus-leveys}]
                      (tierekisteriosoite-sarakkeet
                        tr-leveys
                        [{:nimi :nimi}
+                        {:nimi :tunnus}
                         {:nimi :tr-numero}
                         {:nimi :tr-ajorata}
                         {:nimi :tr-kaista}
@@ -221,6 +223,7 @@
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil
+                     nil
                      {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-ajorata :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-kaista :muokattava? (constantly (not (:yha-sidottu? optiot)))}

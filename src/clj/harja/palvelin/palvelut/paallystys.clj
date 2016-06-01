@@ -184,7 +184,7 @@
                                     (when kohdeosa-kannassa
                                       (log/debug "Poistetaan osoitteelta tien tiedot")
                                       (-> osoite
-                                          (dissoc :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
+                                          (dissoc :nimi :tunnus :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
                                           (assoc :kohdeosa-id (:id kohdeosa-kannassa))))))
                                 (:osoitteet ilmoitustiedot)))
         uudet-ilmoitustiedot (assoc ilmoitustiedot :osoitteet uudet-osoitteet)]

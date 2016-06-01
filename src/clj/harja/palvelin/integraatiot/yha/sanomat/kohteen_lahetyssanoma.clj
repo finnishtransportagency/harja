@@ -1,8 +1,7 @@
 (ns harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma
   (:require [harja.tyokalut.xml :as xml]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.merkkijono :as merkkijono])
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/yha/")
@@ -27,13 +26,12 @@
    [:losa (:tr_loppuosa osoite)]
    [:let (:tr_loppuetaisyys osoite)]])
 
-(defn tee-alikohde [{:keys [yhaid id nimi] :as alikohde}]
+(defn tee-alikohde [{:keys [yhaid id tunnus] :as alikohde}]
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
    (tee-tierekisteriosoitevali alikohde)
-   ;; todo: pitää tarkistaa pitäisikö tunnus tallentaa eri paikkaan.
-   [:tunnus (merkkijono/leikkaa 1 nimi)]
+   [:tunnus tunnus]
    [:paallystystoimenpide
     [:uusi-paallyste "1"]
     [:raekoko "87"]

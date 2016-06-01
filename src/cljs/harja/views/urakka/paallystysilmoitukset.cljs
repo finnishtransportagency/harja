@@ -257,6 +257,7 @@
                         (reset! paallystys/paallystysilmoitus-lomakedata
                                   (assoc-in lomakedata-nyt [:ilmoitustiedot :osoitteet]
                                             (grid/filteroi-uudet-poistetut uusi-arvo)))))
+              _ (log "----> " (pr-str lomakedata-nyt))
               alustalle-tehdyt-toimet
               (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot lomakedata-nyt)))
                       (fn [uusi-arvo]
@@ -342,6 +343,7 @@
              (yllapitokohteet/tierekisteriosoite-sarakkeet
                10
                [{:nimi :nimi}
+                {:nimi :tunnus}
                 {:nimi :tie}
                 {:nimi :ajorata}
                 {:nimi :kaista}

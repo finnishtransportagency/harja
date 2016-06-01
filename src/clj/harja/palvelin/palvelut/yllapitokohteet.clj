@@ -217,7 +217,7 @@
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide poistettu sijainti]}]
+                                         tr-kaista toimenpide poistettu sijainti] :as kohdeosa}]
 
   (if poistettu
     (do (log/debug "Poistetaan ylläpitokohdeosa")

@@ -6,60 +6,59 @@
   (:use [slingshot.slingshot :only [try+]]))
 
 (def testikohde
-  {:bitumi_indeksi 4543.95M,
-   :nykyinen_paallyste nil,
-   :yha_urakka_id 76745,
-   :kohdenumero "L03",
-   :sopimuksen_mukaiset_tyot 400M,
-   :harja_urakka_id 5,
+  {:bitumi_indeksi 0M,
+   :nykyinen_paallyste 1,
+   :kohdenumero nil,
+   :sopimuksen_mukaiset_tyot 0M,
    :keskimaarainen_vuorokausiliikenne nil,
    :tr_kaista 1,
-   :aikataulu_paallystys_alku #inst"2016-05-19T03:00:00.000000000-00:00",
-   :aikataulu_muokkaaja 2,
-   :karttapvm nil,
+   :aikataulu_paallystys_alku nil,
+   :aikataulu_muokkaaja nil,
+   :karttapvm #inst"2016-05-25T12:24:45.000000000-00:00",
    :aikataulu_kohde_valmis nil,
-   :nimi "Leppäjärven ramppi",
+   :nimi "Testikohde 1",
    :kaasuindeksi 0M,
-   :tr_loppuosa 1,
-   :valmis_tiemerkintaan #inst"2016-05-21T13:00:00.000000000-00:00",
+   :tr_loppuosa 230,
+   :valmis_tiemerkintaan nil,
    :suorittava_tiemerkintaurakka nil,
    :lahetysaika nil,
-   :aikataulu_paallystys_loppu #inst"2016-05-21T13:00:00.000000000-00:00",
-   :tr_numero 18652,
-   :harja_urakka_nimi "Muhoksen päällystysurakka",
-   :yllapitoluokka nil,
-   :id 1,
-   :sopimus 8,
-   :aikataulu_muokattu #inst"2016-05-30T04:27:46.161231000-00:00",
+   :aikataulu_paallystys_loppu nil,
+   :tr_numero 3,
+   :yllapitoluokka 1,
+   :id 39,
+   :sopimus 9,
+   :aikataulu_muokattu nil,
    :aikataulu_tiemerkinta_alku nil,
    :poistettu false,
-   :tr_loppuetaisyys 3312,
-   :sampo_urakka_id "4242523-TES2",
-   :tr_alkuetaisyys 5190,
-   :arvonvahennykset 100M,
+   :tr_loppuetaisyys 460,
+   :tr_alkuetaisyys 450,
+   :arvonvahennykset 0M,
    :yhatunnus nil,
    :aikataulu_tiemerkinta_loppu nil,
    :tyyppi "paallystys",
-   :tr_ajorata 1,
-   :tr_alkuosa 1,
-   :yhaid 1233534})
+   :tr_ajorata 0,
+   :tr_alkuosa 230,
+   :yhaid 251603670})
 
 (def testialikohteet
-  [{:yllapitokohde 1,
+  [{:yllapitokohde 39,
+    :sijainti nil,
     :tr_kaista 1,
-    :nimi "Laivaniemi 5",
-    :tr_loppuosa 1,
-    :tr_numero 18652,
-    :id 5,
+    :karttapvm #inst"2016-05-25T12:24:45.000000000-00:00",
+    :tunnus "C",
+    :nimi nil,
+    :tr_loppuosa 230,
+    :tr_numero 3,
+    :id 45,
     :poistettu false,
-    :tr_loppuetaisyys 3312,
-    :tr_alkuetaisyys 5190,
-    :tr_ajorata 1,
-    :tr_alkuosa 1,
+    :tr_loppuetaisyys 460,
+    :tr_alkuetaisyys 450,
+    :tr_ajorata 0,
+    :tr_alkuosa 230,
     :toimenpide nil,
-    :yhaid nil}])
+    :yhaid 254915669}])
 
-(def testipaallystys-ilmoitus
+(def testipaallystysilmoitus
   {:tila "aloitettu",
    :muutoshinta 2000M,
    :kohdenimi "Leppäjärven ramppi",
@@ -90,9 +89,9 @@
    :kasittelyaika-taloudellinen-osa nil})
 
 (def testikohteet
-  [{:kohde testikohde
-    :alikohteet testialikohteet
-    :paallystys-ilmoitus testipaallystys-ilmoitus}])
+  [{:kohde testikohde,
+    :alikohteet testialikohteet,
+    :paallystys-ilmoitus testipaallystysilmoitus}])
 
 (def testiurakka
   {:yhatunnus "YHA34434",
@@ -108,8 +107,8 @@
     (is (xml/validoi "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
 
 (deftest tarkista-kokonaishinnan-laskenta
-  (is (= 7043.95M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystys-ilmoitus))
+  (is (= 7043.95M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystysilmoitus))
       "Kokonaishinta laskettiin oikein testidataa vasten")
   (is (= 6643.95M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta
-                    (assoc testipaallystys-ilmoitus :sopimuksen-mukaiset-tyot nil)))
+                    (assoc testipaallystysilmoitus :sopimuksen-mukaiset-tyot nil)))
       "Kokonaishinta laskettiin oikein, kun joukossa on nil-arvoja"))
