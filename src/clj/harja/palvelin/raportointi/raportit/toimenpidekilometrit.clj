@@ -25,6 +25,7 @@
         (reduce
           (fn [tulos seuraava]
             (+ tulos (or seuraava 0)))
+          0
           (map :maara sopivat-rivit))))
     hoitoluokat))
 
