@@ -23,6 +23,8 @@ ls /var/lib/postgresql/9.5/main
 echo "POSTGRES.CONF"
 cat /etc/postgresql/9.5/main/postgresql.conf
 
+echo "PG HBA"
+cat /etc/postgresql/9.5/main/pg_hba.conf
 
 
 sleep 5
