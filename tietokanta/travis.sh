@@ -42,3 +42,5 @@ psql -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO harjatest;" -U p
 mvn compile -Ptravis flyway:migrate
 
 psql -U harjatest harjatest_template -X -q -a -l -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
+
+psql -U harjatest -c "CREATE DATABASE harjatest OWNER harjatest TEMPLATE harjatest_template;"
