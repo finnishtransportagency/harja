@@ -28,7 +28,7 @@
                       (+ tulos (or seuraava 0)))
                     0
                     (map :maara sopivat-rivit))
-            tulos-formatoitu (fmt/desimaaliluku-opt tulos)]
+            tulos-formatoitu (fmt/desimaaliluku-opt tulos 1)]
         tulos-formatoitu))
     hoitoluokat))
 
@@ -39,10 +39,7 @@
     alueet))
 
 (defn muodosta-datarivit [alueet hoitoluokat toteumat]
-  (let [kilometrimaaraiset-toteumat (filter #(= (:toimenpidekoodi-yksikko %) "tiekm") toteumat)
-        kappalemaaraiset-toteumat (filter #(= (:toimenpidekoodi-yksikko %) "kpl") toteumat) ; FIXME Halutaanko näitä nähdä?
-        tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi kilometrimaaraiset-toteumat)))]
-    ;; Tehdään rivi jokaista tehtävää kohden
+  (let [tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi toteumat)))]
     (mapv
       (fn [tehtava]
         (concat
