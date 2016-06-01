@@ -11,8 +11,6 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
-(defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
-
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
   (let [kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
