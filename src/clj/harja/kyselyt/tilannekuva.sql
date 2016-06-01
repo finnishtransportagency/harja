@@ -287,7 +287,8 @@ WHERE tt.poistettu IS NOT TRUE AND
 
 -- name: hae-toteumien-selitteet
 SELECT
-  DISTINCT(tt.toimenpidekoodi) AS toimenpidekoodi,
+  count(*) AS lukumaara,
+  tt.toimenpidekoodi AS toimenpidekoodi,
           (SELECT nimi
            FROM toimenpidekoodi tpk
            WHERE id = tt.toimenpidekoodi) AS toimenpide
@@ -301,7 +302,8 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
-      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
+      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+GROUP BY tt.toimenpidekoodi;
 
 
 -- name: hae-tyokoneet
