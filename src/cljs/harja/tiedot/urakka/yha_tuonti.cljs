@@ -166,10 +166,9 @@
                  :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
                 (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
-                      onnistuneet-kohteet (vec (filter #(not (:virhe %)) kohteet))
                       epaonnistuneet-kohteet (vec (filter :virhe kohteet))
                       _ (log "[YHA] Tallennetaan uudet kohteet")
-                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id onnistuneet-kohteet))]
+                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
                      :koodi :kohteiden-tallentaminen-epaonnistui}
@@ -182,8 +181,8 @@
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
    [:p
-    "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. "
-    "Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
+    "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. "
+    "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein."]
    [:ul
     (for [kohde epaonnistuneet-kohteet]
       (let [tr (:tierekisteriosoitevali kohde)]
