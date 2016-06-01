@@ -43,6 +43,10 @@
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
+
+   Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohteet-taulusta ja liitetään mukaan ilmoitukseen.
+   Jos kohdeosalle löytyy myös toimenpidetiedot päällystysilmoituksesta, myös ne liitetään mukaan.
+
    Huomaa, että vaikka päällystysilmoitusta ei olisi tehty, tämä kysely palauttaa joka tapauksessa
    kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi."
   [db user {:keys [urakka-id paallystyskohde-id]}]
@@ -229,7 +233,12 @@
           (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
       (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))))
 
-(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
+(defn tallenna-paallystysilmoitus
+  "Tallentaa päällystysilmoituksen tiedot kantaan.
+
+  Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne päivitetään
+  yllapitokohdeosa-tauluun. Tästä syystä kohdeosien tiedot poistetaan ilmoituksesta ennen tallennusta."
+  [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
   (log/debug "Tallennetaan päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
