@@ -12,33 +12,38 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpidekilometrit.sql")
 
-(defn alueen-hoitoluokkasarakkeet [alue hoitoluokat toteumat]
+(defn alueen-hoitoluokkasarakkeet [alue hoitoluokat tehtava toteumat]
   (mapv
     (fn [hoitoluokka]
-      (let [sopivat-rivit []]
+      (let [sopivat-rivit (filter
+                            (fn [toteuma]
+                              (and (= (:toimenpidekoodi-nimi toteuma) tehtava)
+                                   (= (:hoitoluokka toteuma) hoitoluokka)
+                                   (or (= (:urakka toteuma) (:urakka-id alue))
+                                       (= (:hallintayksikko toteuma) (:hallintayksikko-id alue)))))
+                            toteumat)]
         (reduce
           (fn [tulos seuraava]
             (+ tulos (or seuraava 0)))
-          0
           (map :maara sopivat-rivit))))
     hoitoluokat))
 
-(defn aluesarakkeet [alueet hoitoluokat toteumat]
+(defn aluesarakkeet [alueet hoitoluokat tehtava toteumat]
   (mapcat
     (fn [alue]
-      (alueen-hoitoluokkasarakkeet alue hoitoluokat toteumat))
+      (alueen-hoitoluokkasarakkeet alue hoitoluokat tehtava toteumat))
     alueet))
 
 (defn muodosta-datarivit [alueet hoitoluokat toteumat]
   (let [kilometrimaaraiset-toteumat (filter #(= (:yksikko %) "tiekm") toteumat)
-        kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat)
-        tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi toteumat)))]
+        kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat) ; FIXME Halutaanko näitä nähdä?
+        tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi kilometrimaaraiset-toteumat)))]
     ;; Tehdään rivi jokaista tehtävää kohden
     (mapv
-      (fn [{:keys [toimenpidekoodi-nimi yksikko]}]
+      (fn [{:keys [toimenpidekoodi-nimi yksikko] :as tehtava}]
         (concat
           [(str toimenpidekoodi-nimi " (" yksikko ")")]
-          (aluesarakkeet alueet hoitoluokat toteumat)))
+          (aluesarakkeet alueet hoitoluokat tehtava toteumat)))
       tehtava-nimet)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
