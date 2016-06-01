@@ -156,11 +156,12 @@
                                               :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                                               :nykyinen_paallyste nykyinen-paallyste
                                               :nimi nimi})]
-        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi] :as alikohde} alikohteet]
+        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (yha-q/luo-yllapitokohdeosa<! c
                                         {:yllapitokohde (:id kohde)
                                          :nimi nimi
+                                         :tunnus tunnus
                                          :sijainti sijainti
                                          :tr_numero (:tienumero tierekisteriosoitevali)
                                          :tr_alkuosa (:aosa tierekisteriosoitevali)

@@ -58,6 +58,7 @@
 ;; Ylläpitokohdeosien sarakkeiden leveydet
 (def nimi-leveys 20)
 (def toimenpide-leveys 20)
+(def tunnus-leveys 4)
 
 (defn tierekisteriosoite-sarakkeet [perusleveys [nimi tie ajorata kaista aosa aet losa let]]
   (into []
@@ -171,6 +172,7 @@
            :muutos (fn [grid]
                      (kasittele-tr-osoite grid tr-sijainnit tr-virheet))}
           (into [] (concat
+                     [{:otsikko "Tunnus" :nimi :tunnus :tyyppi :string :pituus-max 1 :leveys tunnus-leveys}]
                      (tierekisteriosoite-sarakkeet
                        tr-leveys
                        [{:nimi :nimi}

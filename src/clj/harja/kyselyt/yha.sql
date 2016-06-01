@@ -92,12 +92,13 @@ VALUES (
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
-INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti,
                               yhaid)
 VALUES (
   :yllapitokohde,
   :nimi,
+  :tunnus,
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,

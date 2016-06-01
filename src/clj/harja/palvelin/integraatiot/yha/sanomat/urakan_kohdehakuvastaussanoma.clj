@@ -37,7 +37,7 @@
           (hash-map
             :yha-id (z/xml1-> alikohde :yha-id z/text xml/parsi-kokonaisluku)
             :tierekisteriosoitevali (lue-tierekisteriosoitevali (z/xml1-> alikohde :tierekisteriosoitevali))
-            :nimi (z/xml1-> alikohde :tunnus z/text)
+            :tunnus (z/xml1-> alikohde :tunnus z/text)
             :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)))
         (z/xml-> alikohteet :alikohde)))
 

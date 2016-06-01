@@ -1,0 +1,1 @@
+ALTER TABLE yllapitokohdeosa ADD COLUMN tunnus VARCHAR(1);

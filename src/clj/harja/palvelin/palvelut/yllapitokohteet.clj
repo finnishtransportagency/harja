@@ -215,7 +215,7 @@
                                 (geo/geometry (geo/clj->pg sijainti))))))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
-                                 {:keys [id nimi tr-numero tr-alkuosa tr-alkuetaisyys
+                                 {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
                                          tr-kaista toimenpide poistettu sijainti]}]
 
@@ -226,6 +226,7 @@
     (do (log/debug "Päivitetään ylläpitokohdeosa")
         (q/paivita-yllapitokohdeosa<! db
                                       nimi
+                                      tunnus
                                       tr-numero
                                       tr-alkuosa
                                       tr-alkuetaisyys

@@ -53,6 +53,7 @@ WHERE urakka = :urakka AND id = :id;
 SELECT
   ypko.id,
   ypko.nimi,
+  ypko.tunnus,
   ypko.tr_numero        AS "tr-numero",
   ypko.tr_alkuosa       AS "tr-alkuosa",
   ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
@@ -149,6 +150,7 @@ VALUES (:yllapitokohde,
 UPDATE yllapitokohdeosa
 SET
   nimi             = :nimi,
+  tunnus           = :tunnus,
   tr_numero        = :tr_numero,
   tr_alkuosa       = :tr_alkuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
@@ -331,6 +333,7 @@ SELECT
   id,
   yllapitokohde,
   nimi,
+  tunnus,
   tr_numero,
   tr_alkuosa,
   tr_alkuetaisyys,
