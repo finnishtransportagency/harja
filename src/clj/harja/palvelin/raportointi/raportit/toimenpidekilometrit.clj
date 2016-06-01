@@ -44,9 +44,9 @@
         tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi kilometrimaaraiset-toteumat)))]
     ;; Tehdään rivi jokaista tehtävää kohden
     (mapv
-      (fn [{:keys [toimenpidekoodi-nimi yksikko] :as tehtava}]
+      (fn [tehtava]
         (concat
-          [(str toimenpidekoodi-nimi " (" yksikko ")")]
+          [tehtava]
           (aluesarakkeet alueet hoitoluokat tehtava toteumat)))
       tehtava-nimet)))
 
@@ -96,7 +96,7 @@
                                  (fn [{:keys [nimi] :as alue}]
                                    {:teksti nimi
                                     :sarakkeita (count talvihoitoluokat)})
-                                     naytettavat-alueet))
+                                 naytettavat-alueet))
                  :sheet-nimi raportin-nimi}
       otsikkorivit
       datarivit]]))
