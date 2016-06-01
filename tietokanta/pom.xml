@@ -74,7 +74,7 @@
 	<profile>
 	  <id>travis</id>
 	  <properties>
-	    <databaseUrl>jdbc:postgresql://localhost/harja</databaseUrl>
+	    <databaseUrl>jdbc:postgresql://localhost/harjatest_template</databaseUrl>
 	    <databaseUser>postgres</databaseUser>
 	  </properties>
 	</profile>
