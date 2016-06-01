@@ -6,8 +6,7 @@
              [local :as l]]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
-            [harja.kyselyt.hoitoluokat :as hoitoluokat]
-            [clojure.set :as set]))
+            [harja.kyselyt.hoitoluokat :as hoitoluokat]))
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
