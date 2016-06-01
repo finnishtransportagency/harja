@@ -35,8 +35,8 @@
     alueet))
 
 (defn muodosta-datarivit [alueet hoitoluokat toteumat]
-  (let [kilometrimaaraiset-toteumat (filter #(= (:yksikko %) "tiekm") toteumat)
-        kappalemaaraiset-toteumat (filter #(= (:yksikko %) "kpl") toteumat) ; FIXME Halutaanko näitä nähdä?
+  (let [kilometrimaaraiset-toteumat (filter #(= (:toimenpidekoodi-yksikko %) "tiekm") toteumat)
+        kappalemaaraiset-toteumat (filter #(= (:toimenpidekoodi-yksikko %) "kpl") toteumat) ; FIXME Halutaanko näitä nähdä?
         tehtava-nimet (into #{} (distinct (map :toimenpidekoodi-nimi kilometrimaaraiset-toteumat)))]
     ;; Tehdään rivi jokaista tehtävää kohden
     (mapv
