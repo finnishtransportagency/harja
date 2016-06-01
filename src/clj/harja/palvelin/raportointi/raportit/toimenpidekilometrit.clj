@@ -8,7 +8,8 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.hoitoluokat :as hoitoluokat]))
+            [harja.domain.hoitoluokat :as hoitoluokat]
+            [harja.fmt :as fmt]))
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpidekilometrit.sql")
 
@@ -21,12 +22,14 @@
                                    (= (:hoitoluokka toteuma) hoitoluokka)
                                    (or (= (:urakka toteuma) (:urakka-id alue))
                                        (= (:hallintayksikko toteuma) (:hallintayksikko-id alue)))))
-                            toteumat)]
-        (reduce
-          (fn [tulos seuraava]
-            (+ tulos (or seuraava 0)))
-          0
-          (map :maara sopivat-rivit))))
+                            toteumat)
+            tulos (reduce
+                    (fn [tulos seuraava]
+                      (+ tulos (or seuraava 0)))
+                    0
+                    (map :maara sopivat-rivit))
+            tulos-formatoitu (fmt/desimaaliluku-opt tulos)]
+        tulos-formatoitu))
     hoitoluokat))
 
 (defn aluesarakkeet [alueet hoitoluokat tehtava toteumat]
