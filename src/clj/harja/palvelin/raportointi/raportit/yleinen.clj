@@ -158,9 +158,9 @@
    Normaalisti sellaisia urakoita, joilla ei ole toteumia, ei listata raportilla.
    Yleensä kuitenkin halutaan nähdä hallintayksikön kaikki urakat, myös 'nollarivit',
    joten tämän kyselyn avulla voidaan listata kaikki alueet, joita haku koskee."
-  [db konteksti {:keys [urakka hallintayksikko urakkatyyppi alku loppu] :as parametrit}]
+  [db konteksti parametrit]
   (if (= konteksti :koko-maa)
     (into []
           (hae-kontekstin-hallintayksikot db))
     (into []
-          (hae-kontekstin-urakat db parametrit)))) ; FIXME Käytä tätä myös sanktiorapsassa
+          (hae-kontekstin-urakat db parametrit))))
