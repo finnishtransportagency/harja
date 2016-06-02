@@ -895,6 +895,17 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                       (nollaa-historia! [_]
                         (reset! historia []))
 
+                      (aseta-virhe! [_ rivin-id kentta virheteksti]
+                        (swap! virheet assoc-in [rivin-id kentta] [virheteksti]))
+                      (poista-virhe! [_ rivin-id kentta]
+                        (swap! virheet
+                               (fn [virheet]
+                                 (let [virheet (update-in virheet [rivin-id] dissoc kentta)]
+                                   (if (empty? (get virheet rivin-id))
+                                     (dissoc virheet rivin-id)
+                                     virheet)))))
+
+
                       (vetolaatikko-auki? [_ id]
                         (@vetolaatikot-auki id))
                       (avaa-vetolaatikko! [_ id]
