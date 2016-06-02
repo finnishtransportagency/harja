@@ -13,6 +13,7 @@ SELECT
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
    AND rp.talvihoitoluokka IN (:hoitoluokat)
+   AND u.tyyppi = :urakkatyyppi::urakkatyyppi
    AND (:urakka::integer IS NULL OR u.id = :urakka)
    AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
 GROUP BY u.nimi, tpk.nimi, tunti, rp.talvihoitoluokka
@@ -35,6 +36,7 @@ FROM toteuma t
 WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
       AND t.poistettu IS NOT TRUE
       AND rp.talvihoitoluokka IN (:hoitoluokat)
+      AND u.tyyppi = :urakkatyyppi::urakkatyyppi
       AND (:urakka::integer IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
 GROUP BY u.nimi, tpk.nimi, rp.talvihoitoluokka, o.nimi, u.id, o.id;
