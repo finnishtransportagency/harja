@@ -30,7 +30,7 @@
       (some #(= % 1) kuntoarvot)
       1
 
-      (and (> tien-pituus 20)
+      (and tien-pituus (> tien-pituus 20)
            (or (= (:hoitoluokka tarkastus) 2)
                (= (:hoitoluokka tarkastus) 3))
            (some #(= % 2) kuntoarvot))
