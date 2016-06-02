@@ -165,10 +165,37 @@
         (update-in ko [viimeinen] merge {:tr-loppuosa losa :tr-loppuetaisyys loppuet})
         ko))))
 
+(defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
+  (let [haetut (into #{} (keys @tr-sijainnit-atom))]
+    ;; jos on tullut uusi TR osoite, haetaan sille sijainti
+    (doseq [[id rivi] (grid/hae-muokkaustila grid)]
+      (if (:poistettu rivi)
+        (swap! tr-virheet-atom dissoc id)
+        (let [osoite (tr-osoite rivi)]
+          (when (and osoite (not (haetut osoite)))
+            (go
+              (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
+              (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
+                (when (= (get (grid/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
+                  (if-let [virhe (when-not (vkm/loytyi? sijainti)
+                                   "Virheellinen TR-osoite")]
+                    (do (swap! tr-virheet-atom assoc id virhe)
+                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+                          (grid/aseta-virhe! grid id kentta "Tarkista tie")))
+                    (do (swap! tr-virheet-atom dissoc id)
+                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+                          (grid/poista-virhe! grid id kentta))
+                        (log "sain sijainnin " (clj->js sijainti))
+                        (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
+
 (defn yllapitokohdeosat [kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
                                     alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde}
                          kohdeosat-paivitetty-fn]
-  (let [[sopimus-id _] @u/valittu-sopimusnumero
+  (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
+        tr-virheet (atom {}) ;; virheelliset TR sijainnit
+        resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))
+
+        [sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id @nav/valittu-urakka)
         grid-data (atom
                    (if (empty? kohdeosat)
@@ -198,7 +225,6 @@
                  (tr/laske-tien-pituus @osan-pituus tieosa))
         osan-maksimipituus (fn [key]
                              (fn [et {osa key}]
-                               (log "VALIDOI AET " et " OSA " osa  )
                                (when (integer? et)
                                  (when-let [pit (get @osan-pituus osa)]
                                    (when (> et pit)
@@ -212,6 +238,7 @@
           [:div
            [grid/muokkaus-grid
             {:ohjaus g
+             :muutos #(validoi-tr-osoite % tr-sijainnit tr-virheet)
              :validoi-aina? true
              :nayta-virheet? :fokus
              :otsikko "Tierekisterikohteet"
@@ -222,16 +249,22 @@
                                     [napit/palvelinkutsu-nappi
                                      [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
                                      ;; TODO Hae ja assoc sijainti (geometria) ennen tätä (developista logiikka tähän)
-                                     #(tiedot/tallenna-yllapitokohdeosat! urakka-id
-                                                                          sopimus-id
-                                                                          yllapitokohde-id
-                                                                          (vals @grid-data))
+                                     (let [sijainnit @tr-sijainnit
+                                           osat (into []
+                                                      (map (fn [osa]
+                                                             (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
+                                                      (vals @grid-data))]
+                                       #(tiedot/tallenna-yllapitokohdeosat! urakka-id
+                                                                            sopimus-id
+                                                                            yllapitokohde-id
+                                                                            osat))
                                      {:luokka "nappi-myonteinen grid-tallenna"
                                       :virheviesti "Tallentaminen epäonnistui."
                                       :kun-onnistuu (fn [vastaus]
                                                       (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
                                                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                                                       (kohdeosat-paivitetty-fn vastaus)
+                                                      (resetoi-tr-tiedot)
                                                       (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
              :voi-poistaa? (constantly false)
              :tunniste hash
@@ -268,30 +301,7 @@
             (r/wrap @grid-data
                     #(swap! grid-data tiedot/kasittele-paivittyneet-kohdeosat %))]])))))
 
-(defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
-  ; FIXME Pitäisi ehkä jotenkin generisöidä?
-  (log "VIRHEET:" (pr-str (grid/hae-virheet grid)))
-  (let [haetut (into #{} (keys @tr-sijainnit-atom))]
-    ;; jos on tullut uusi TR osoite, haetaan sille sijainti
-    (doseq [[id rivi] (grid/hae-muokkaustila grid)]
-      (if (:poistettu rivi)
-        (swap! tr-virheet-atom dissoc id)
-        (let [osoite (tr-osoite rivi)]
-          (when (and osoite (not (haetut osoite)))
-            (go
-              (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
-              (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
-                (when (= (get (grid/hae-muokkaustila grid) id) rivi) ;; ettei rivi ole uudestaan muuttunut
-                  (if-let [virhe (when-not (vkm/loytyi? sijainti)
-                                   "Virheellinen TR-osoite")]
-                    (do (swap! tr-virheet-atom assoc id virhe)
-                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid/aseta-virhe! grid id kentta "Tarkista tie")))
-                    (do (swap! tr-virheet-atom dissoc id)
-                        (doseq [kentta [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
-                          (grid/poista-virhe! grid id kentta))
-                        (log "sain sijainnin " (clj->js sijainti))
-                        (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
+
 
 (defn- aseta-uudet-kohdeosat [kohteet id kohdeosat]
   (let [rivi (some #(when (= (:id (nth kohteet %))
