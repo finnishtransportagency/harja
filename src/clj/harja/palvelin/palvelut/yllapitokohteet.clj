@@ -1,15 +1,21 @@
 (ns harja.palvelin.palvelut.yllapitokohteet
   "Ylläpitokohteiden palvelut"
-  (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log]
-            [harja.domain.skeema :refer [Toteuma validoi]]
-            [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.palvelut.yha :as yha]
-            [harja.kyselyt.yllapitokohteet :as q]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
+            [com.stuartsierra.component :as component]
+            [harja.domain
+             [oikeudet :as oikeudet]
+             [skeema :refer [Toteuma validoi]]
+             [tierekisteri :as tr]]
             [harja.geo :as geo]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.kyselyt
+             [konversio :as konv]
+             [yllapitokohteet :as q]]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer
+             [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut.yha :as yha]
+            [taoensso.timbre :as log]))
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
@@ -217,27 +223,23 @@
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide poistettu sijainti]}]
+                                         tr-kaista toimenpide sijainti]}]
 
-  (if poistettu
-    (do (log/debug "Poistetaan ylläpitokohdeosa")
-        (q/poista-yllapitokohdeosa! db id urakka-id)
-        nil)
-    (do (log/debug "Päivitetään ylläpitokohdeosa")
-        (q/paivita-yllapitokohdeosa<! db
-                                      nimi
-                                      tr-numero
-                                      tr-alkuosa
-                                      tr-alkuetaisyys
-                                      tr-loppuosa
-                                      tr-loppuetaisyys
-                                      tr-ajorata
-                                      tr-kaista
-                                      toimenpide
-                                      (when-not (empty? sijainti)
-                                        (geo/geometry (geo/clj->pg sijainti)))
-                                      id
-                                      urakka-id))))
+  (do (log/debug "Päivitetään ylläpitokohdeosa")
+      (q/paivita-yllapitokohdeosa<! db
+                                    nimi
+                                    tr-numero
+                                    tr-alkuosa
+                                    tr-alkuetaisyys
+                                    tr-loppuosa
+                                    tr-loppuetaisyys
+                                    tr-ajorata
+                                    tr-kaista
+                                    toimenpide
+                                    (when-not (empty? sijainti)
+                                      (geo/geometry (geo/clj->pg sijainti)))
+                                    id
+                                    urakka-id)))
 
 (defn tallenna-yllapitokohdeosa
   "Tallentaa yksittäisen ylläpitokohdeosan kantaan.
@@ -265,18 +267,33 @@
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
-    (doseq [osa osat]
-      (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
-      (if (and (:id osa) (not (neg? (:id osa))))
-        (paivita-yllapitokohdeosa c user urakka-id osa)
-        (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
-    (yha/paivita-yllapitourakan-geometriat c urakka-id)
-    (let [yllapitokohdeosat (hae-urakan-yllapitokohdeosat c user {:urakka-id urakka-id
-                                                                  :sopimus-id sopimus-id
-                                                                  :yllapitokohde-id yllapitokohde-id})]
-      (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-      yllapitokohdeosat)))
+
+    (let [hae-osat #(hae-urakan-yllapitokohdeosat c user
+                                                  {:urakka-id urakka-id
+                                                   :sopimus-id sopimus-id
+                                               :yllapitokohde-id yllapitokohde-id})
+          vanhat-osa-idt (into #{}
+                               (map :id)
+                               (hae-osat))
+          uudet-osa-idt (into #{}
+                              (keep :id)
+                              osat)
+          poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
+
+      (doseq [id poistuneet-osa-idt]
+        (q/poista-yllapitokohdeosa! c {:urakkaid urakka-id
+                                       :id id}))
+
+      (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
+      (doseq [osa osat]
+        (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
+        (if (and (:id osa) (not (neg? (:id osa))))
+          (paivita-yllapitokohdeosa c user urakka-id osa)
+          (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))
+      (yha/paivita-yllapitourakan-geometriat c urakka-id)
+      (let [yllapitokohdeosat (hae-osat)]
+        (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
+        (sort-by tr/tiekohteiden-jarjestys yllapitokohdeosat)))))
 
 
 (defrecord Yllapitokohteet []

@@ -166,7 +166,8 @@
         ko))))
 
 (defn yllapitokohdeosat [kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
-                                    alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde}]
+                                    alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde}
+                         kohdeosat-paivitetty-fn]
   (let [[sopimus-id _] @u/valittu-sopimusnumero
         urakka-id (:id @nav/valittu-urakka)
         grid-data (atom
@@ -203,10 +204,10 @@
                                    (when (> et pit)
                                      (str "Osan " osa " maksimietäisyys on " pit))))))]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
+    (log "OSAT NÄKYVIIN!")
     (komp/luo
      (fn [kohdeosat {yllapitokohde-id :id :as kohde}]
-       (log "KOHDE: " (pr-str kohde))
-       (log "PITUUDET: " (pr-str @osan-pituus))
+       (log "OSAT: " (pr-str @grid-data))
         (let [kohdeosia (count @grid-data)]
           [:div
            [grid/muokkaus-grid
@@ -230,8 +231,7 @@
                                       :kun-onnistuu (fn [vastaus]
                                                       (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
                                                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-                                                      #_(yllapitokohteet/paivita-yllapitokohde!
-                                                       yllapitokohteet-atom yllapitokohde-id assoc :kohdeosat vastaus)
+                                                      (kohdeosat-paivitetty-fn vastaus)
                                                       (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
              :voi-poistaa? (constantly false)
              :tunniste hash
@@ -293,6 +293,16 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
+(defn- aseta-uudet-kohdeosat [kohteet id kohdeosat]
+  (let [rivi (some #(when (= (:id (nth kohteet %))
+                             id)
+                      %)
+                   (range 0 (count kohteet)))]
+    (println "ASETA, rivi: " rivi ", kohdeosat: " kohdeosat)
+    (if rivi
+      (assoc-in kohteet [rivi :kohdeosat] kohdeosat)
+      kohteet)))
+
 (defn yllapitokohteet [kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
@@ -309,7 +319,11 @@
                                              (fn [rivi]
                                                [yllapitokohdeosat
                                                 (into [] (:kohdeosat rivi))
-                                                rivi]))
+                                                rivi
+                                                #(swap! kohteet-atom
+                                                        (fn [kohteet kohdeosat]
+                                                          (aseta-uudet-kohdeosat kohteet (:id rivi)
+                                                                                 kohdeosat)) %)]))
                                        @kohteet-atom))
            :tallenna @tallenna
            :muutos (fn [grid]
