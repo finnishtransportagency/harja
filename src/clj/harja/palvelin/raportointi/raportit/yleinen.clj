@@ -5,8 +5,7 @@
              [format :as tf]
              [local :as l]]
             [harja.pvm :as pvm]
-            [jeesql.core :refer [defqueries]]
-            [harja.kyselyt.hoitoluokat :as hoitoluokat]))
+            [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 

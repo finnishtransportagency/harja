@@ -205,6 +205,7 @@
 (defn paallystysilmoituslomake []
   (let [alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
+        kiviaines-virheet (atom {})
         alustalle-tehdyt-toimet-virheet (atom {})
         toteutuneet-maarat-virheet (atom {})
 
@@ -213,6 +214,7 @@
           (let [alikohteet-virheet @alikohteet-virheet
                 paallystystoimenpide-virheet @paallystystoimenpide-virheet
                 alustalle-tehdyt-toimet-virheet @alustalle-tehdyt-toimet-virheet
+                kiviaines-virheet @kiviaines-virheet
                 toteutuneet-maarat-virheet @toteutuneet-maarat-virheet
                 tila (:tila @paallystys/paallystysilmoitus-lomakedata)
                 lomake-lukittu-muokkaukselta? @paallystys/paallystysilmoituslomake-lukittu?]
@@ -221,6 +223,7 @@
               (empty? alikohteet-virheet)
               (empty? paallystystoimenpide-virheet)
               (empty? alustalle-tehdyt-toimet-virheet)
+              (empty? kiviaines-virheet)
               (empty? toteutuneet-maarat-virheet)
               (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi?
@@ -430,7 +433,7 @@
               :voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                  (not= :hyvaksytty (:paatos-tekninen-osa lomakedata-nyt))
                                  (false? @paallystys/paallystysilmoituslomake-lukittu?))
-              :virheet paallystystoimenpide-virheet}
+              :virheet kiviaines-virheet}
              [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
                :leveys "30%"}
               {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys "20%"}
