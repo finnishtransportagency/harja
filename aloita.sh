@@ -9,4 +9,4 @@ sh migrate_test.sh
 cd ..
 
 echo "Käynnistetään repl. Muista käynnistää myös fighweel!"
-lein do clean, repl
+lein do clean, compile, repl
