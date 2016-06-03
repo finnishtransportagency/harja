@@ -100,7 +100,7 @@
             :valinta-arvo :koodi
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (:koodi arvo) (if muokattava?
-                                                      "- Valitse ajorata -"
+                                                      "- Ajorata -"
                                                       "")))
             :valinnat pot/+ajoradat+
             :leveys perusleveys}
@@ -112,7 +112,7 @@
             :valinta-arvo :koodi
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (:koodi arvo) (if muokattava?
-                                                      "- Valitse kaista -"
+                                                      "- Kaista -"
                                                       "")))
             :valinnat pot/+kaistat+
             :leveys perusleveys}
@@ -140,8 +140,10 @@
                             loppuetaisyys-ei-alkua-ennen]
                            (:validoi let))
             :muokattava? (or (:muokattava? let) (constantly true))}
-           {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
-            :muokattava? (constantly false)}])))
+           (merge
+            {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
+             :muokattava? (constantly false)}
+            pituus)])))
 
 (defn tr-osoite [rivi]
   (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
