@@ -54,16 +54,15 @@
      [:lisa-aineet lisaaineet]]]])
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi aosa let verkon-tarkoitus kasittelymenetelma losa aet
-                                              tekninen-toimenpide paksuus verkon-sijainti karttapvm]}]
+                                              tekninen-toimenpide paksuus verkon-sijainti]}
+                                      tienumero karttapvm]
   [:alustalle-tehty-toimenpide
    [:tierekisteriosoitevali
-    ;; todo: hae oikea pvm
     [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
-    ;; todo: täytyy lisätä frontille
-    [:tienumero "3"]
-    ;; todo: täytyy lisätä frontille
+    [:tienumero tienumero]
+    ;; todo: täytyy tehdä valinnaiseksi xsd:n
     [:ajorata "0"]
-    ;; todo: täytyy lisätä frontille
+    ;; todo: täytyy tehdä valinnaiseksi xsd:n
     [:kaista "11"]
     [:aosa aosa]
     [:aet aet]
@@ -76,7 +75,7 @@
    [:verkon-sijainti verkon-sijainti]
    [:tekninen-toimenpide tekninen-toimenpide]])
 
-(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus] :as kohde}
+(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus tr_numero karttapvm] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
@@ -92,7 +91,8 @@
    (tee-tierekisteriosoitevali kohde)
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
-             (mapv tee-alustalle-tehty-toimenpide (:alustatoimet ilmoitustiedot))))
+             (mapv #(tee-alustalle-tehty-toimenpide % tr_numero karttapvm)
+                   (:alustatoimet ilmoitustiedot))))
    (when alikohteet
      (reduce conj [:alikohteet]
              (mapv tee-alikohde alikohteet)))])
