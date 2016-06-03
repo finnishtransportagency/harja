@@ -48,6 +48,9 @@
 (declare kasittele-yhteyskatkos)
 
 (defn- kasittele-palvelinvirhe [palvelu vastaus]
+  ;; Normaalitilanteessa ei pitäisi koskaan tulla ei oikeutta -virhettä. Voi tulla esim. jos frontin
+  ;; ja backendin oikeustarkistukset eivät ole yhteneväiset. Tällöin halutaan näyttää käyttäjälle tieto
+  ;; puutteellisista oikeuksista, jotta tiedetään virheen johtuvan nimenomaan oikeustarkistuksesta.
   (when (roolit/ei-oikeutta? (:response vastaus))
     (tapahtumat/julkaise! {:aihe :ei-oikeutta}))
 
