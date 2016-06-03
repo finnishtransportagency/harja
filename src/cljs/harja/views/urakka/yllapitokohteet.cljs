@@ -173,8 +173,10 @@
     (doseq [[id rivi] (grid/hae-muokkaustila grid)]
       (if (:poistettu rivi)
         (swap! tr-virheet-atom dissoc id)
-        (let [osoite (tr-osoite rivi)]
-          (when (and osoite (not (haetut osoite)))
+        (let [osoite (tr-osoite rivi)
+              virheet (grid/hae-virheet grid)]
+          (when (and osoite (not (haetut osoite))
+                     (empty? (get virheet id)))
             (go
               (log "Haetaan TR osoitteen sijainti: " (pr-str osoite))
               (let [sijainti (<! (vkm/tieosoite->viiva osoite))]
@@ -226,8 +228,16 @@
                                           (tiedot/poista-kohdeosa @grid-data (inc index)))}
               (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])
           osan-pituus (atom {})
-          osa-olemassa #(when (and % (not (contains? @osan-pituus (js/parseInt %))))
-                          (str "Tiellä " tie " ei ole osaa  " %))
+          osa-olemassa #(when-let [osa (and % (js/parseInt %))]
+                          (cond
+                            (< osa aosa)
+                            "Osa ei voi olla ennen kohteen alkua"
+
+                            (> osa losa)
+                            "Osa ei voi olla kohteen lopun jälkeen"
+
+                            (not (contains? @osan-pituus osa))
+                            (str "Tiellä " tie " ei ole osaa  " %)))
           pituus (fn [tieosa]
                    (tr/laske-tien-pituus @osan-pituus tieosa))
           osan-maksimipituus (fn [key]
