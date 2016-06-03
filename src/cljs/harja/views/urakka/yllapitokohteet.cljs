@@ -310,7 +310,6 @@
                              id)
                       %)
                    (range 0 (count kohteet)))]
-    (println "ASETA, rivi: " rivi ", kohdeosat: " kohdeosat)
     (if rivi
       (assoc-in kohteet [rivi :kohdeosat] kohdeosat)
       kohteet)))
