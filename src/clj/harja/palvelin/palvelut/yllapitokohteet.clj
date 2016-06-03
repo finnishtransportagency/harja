@@ -41,7 +41,8 @@
              ;; Hakee tieverkosta osien pituudet tielle
              (let [tie (:tr-numero (first osat))
                    osat (into #{}
-                              (mapcat (juxt :tr-alkuosa :tr-loppuosa))
+                              (comp (mapcat (juxt :tr-alkuosa :tr-loppuosa))
+                                    (remove nil?))
                               osat)
                    min-osa (reduce min 1 osat)
                    max-osa (reduce max 1 osat)]
