@@ -26,7 +26,8 @@
    [:losa (:tr_loppuosa osoite)]
    [:let (:tr_loppuetaisyys osoite)]])
 
-(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala] :as alikohde}]
+(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala
+                            esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus lisaaineet] :as alikohde}]
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
@@ -41,14 +42,16 @@
     [:paallystetyomenetelma tyomenetelma]
     [:leveys leveys]
     [:pinta-ala pinta-ala]]
+   ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
    [:materiaalit
     [:materiaali
-     [:kiviainesesiintyman-nimi "string"]
-     [:kiviaineksen-km-arvo "string"]
-     [:kiviaineksen-muotoarvo "string"]
-     [:sideainetyyppi "21"]
-     [:sideainepitoisuus "1000"]
-     [:lisa-aineet "string"]]]])
+     [:kiviainesesiintyman-nimi esiintyma]
+     [:kiviaineksen-km-arvo km-arvo]
+     [:kiviaineksen-muotoarvo muotoarvo]
+     ;; todo: sideainetyyppi täytyy muuttaa enumiksi kantaan ja frontille. ks. yha.xsd.
+     [:sideainetyyppi 1]
+     [:sideainepitoisuus pitoisuus]
+     [:lisa-aineet lisaaineet]]]])
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi aosa let verkon-tarkoitus kasittelymenetelma losa aet
                                               tekninen-toimenpide paksuus verkon-sijainti karttapvm]}]
