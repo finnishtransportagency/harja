@@ -203,6 +203,7 @@
                          :tr-loppuosa losa :tr-loppuetaisyys loppuet}}
                      (varmista-alku-ja-loppu (zipmap (iterate inc 1) kohdeosat)
                                              (tr/nouseva-jarjestys kohde))))
+        virheet (atom {})
         g (grid/grid-ohjaus)
         toiminnot-komponentti
         (fn [_ index]
@@ -236,6 +237,7 @@
           [:div
            [grid/muokkaus-grid
             {:ohjaus g
+             :virheet virheet
              :muutos #(validoi-tr-osoite % tr-sijainnit tr-virheet)
              :validoi-aina? true
              :nayta-virheet? :fokus
@@ -256,7 +258,8 @@
                                                                             sopimus-id
                                                                             yllapitokohde-id
                                                                             osat))
-                                     {:luokka "nappi-myonteinen grid-tallenna"
+                                     {:disabled (not (empty? @virheet))
+                                      :luokka "nappi-myonteinen grid-tallenna"
                                       :virheviesti "Tallentaminen epäonnistui."
                                       :kun-onnistuu (fn [vastaus]
                                                       (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))

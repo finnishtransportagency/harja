@@ -55,25 +55,38 @@
     :default
     osoite))
 
+(defn on-alku? [tie]
+  (and (integer? (:tr-alkuosa tie))
+       (integer? (:tr-alkuetaisyys tie))))
+
+(defn on-loppu? [tie]
+  (and (integer? (:tr-loppuosa tie))
+       (integer? (:tr-loppuetaisyys tie))))
+
+(defn on-alku-ja-loppu? [tie]
+  (and (on-alku? tie)
+       (on-loppu? tie)))
+
 (defn laske-tien-pituus
   ([tie] (laske-tien-pituus {} tie))
-  ([osien-pituudet {aosa :tr-alkuosa
-                    alkuet :tr-alkuetaisyys
-                    losa :tr-loppuosa
-                    loppuet :tr-loppuetaisyys}]
-   (when (every? integer? [aosa losa alkuet loppuet])
-     (if (= aosa losa)
-       (Math/abs (- loppuet alkuet))
-       (let [max-osa (reduce max 0 (keys osien-pituudet))
-             losa (min losa max-osa)]
-         (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
-                osa (inc aosa)]
-           (let [osan-pituus (get osien-pituudet osa 0)]
-             (if (>= osa losa)
-               (+ pituus (min loppuet osan-pituus))
+  ([osien-pituudet tie]
+   (when (on-alku-ja-loppu? tie)
+     (let [{aosa :tr-alkuosa
+            alkuet :tr-alkuetaisyys
+            losa :tr-loppuosa
+            loppuet :tr-loppuetaisyys} (nouseva-jarjestys tie)]
+       (if (= aosa losa)
+         (Math/abs (- loppuet alkuet))
+         (let [max-osa (reduce max 0 (keys osien-pituudet))
+               losa (min losa max-osa)]
+           (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
+                  osa (inc aosa)]
+             (let [osan-pituus (get osien-pituudet osa 0)]
+               (if (>= osa losa)
+                 (+ pituus (min loppuet osan-pituus))
 
-               (recur (+ pituus osan-pituus)
-                      (inc osa))))))))))
+                 (recur (+ pituus osan-pituus)
+                        (inc osa)))))))))))
 
 (defn tiekohteiden-jarjestys [kohde]
   ((juxt :tie :tr-numero :tienumero
