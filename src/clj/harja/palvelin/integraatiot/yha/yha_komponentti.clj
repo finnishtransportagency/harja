@@ -54,9 +54,14 @@
            :virheet {:virhe virhe}}))
       kohteet)))
 
-(defn kasittele-urakan-kohdelahetysvastaus [body headers]
-  ;; todo: jos onnistunut, merkitse kohde lähetetyksi
-  )
+(defn kasittele-urakan-kohdelahetysvastaus [db body headers kohde-idt]
+  ;; todo: tutki onko response onnistunut ja merkkaa sen perusteella lahetystiedot
+  (doseq [kohde-id kohde-idt]
+    (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
+      db
+      {:lahetetty (pvm/nyt)
+       :onnistunut true
+       :kohdeid kohde-id})))
 
 (defn lisaa-http-parametri [parametrit avain arvo]
   (if arvo
@@ -87,7 +92,6 @@
           ;; todo: poista pultattu urakan yha-id, kun CGI saa korjattua rajapinnan
           yha-id 251604402]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
-
       ;; todo: ota pois, kun saadaan yhteys toimimaan YHA:n
       (with-fake-http [url +testi-urakan-kohdehakuvastaus+]
         (integraatiotapahtuma/suorita-integraatio
@@ -147,7 +151,7 @@
           (let [http-asetukset {:metodi :POST :url url}
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-            (kasittele-urakan-kohdelahetysvastaus body headers)))))
+            (kasittele-urakan-kohdelahetysvastaus db body headers kohde-idt)))))
     (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
       (log/error virhe)
       (throw+

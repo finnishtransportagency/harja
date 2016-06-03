@@ -7,91 +7,73 @@
         <tunnus>YHA34434</tunnus>
         <kohteet>
             <kohde>
-                <harja-id>49</harja-id>
+                <harja-id>1</harja-id>
                 <kohdetyotyyppi>paallystys</kohdetyotyyppi>
-                <toiden-aloituspaivamaara>2016-06-01</toiden-aloituspaivamaara>
-                <paallystyksen-valmistumispaivamaara>2016-06-01</paallystyksen-valmistumispaivamaara>
-                <kohteen-valmistumispaivamaara>2016-06-01</kohteen-valmistumispaivamaara>
-                <takuupaivamaara>2016-06-01</takuupaivamaara>
-                <toteutunuthinta>234785</toteutunuthinta>
+                <toiden-aloituspaivamaara>2005-11-14</toiden-aloituspaivamaara>
+                <takuupaivamaara>2005-12-20</takuupaivamaara>
+                <toteutunuthinta>7043.95</toteutunuthinta>
                 <tierekisteriosoitevali>
-                    <karttapaivamaara>2016-06-01</karttapaivamaara>
-                    <tienumero>66</tienumero>
-                    <ajorata>0</ajorata>
-                    <kaista>1</kaista>
-                    <aosa>36</aosa>
-                    <aet>0</aet>
-                    <losa>41</losa>
-                    <let>2321</let>
+                    <karttapaivamaara>2016-06-03</karttapaivamaara>
+                    <tienumero>18652</tienumero>
+                    <ajorata></ajorata>
+                    <kaista></kaista>
+                    <aosa>1</aosa>
+                    <aet>5190</aet>
+                    <losa>1</losa>
+                    <let>3312</let>
                 </tierekisteriosoitevali>
+                <alustalle-tehdyt-toimet>
+                    <alustalle-tehty-toimenpide>
+                        <tierekisteriosoitevali>
+                            <karttapaivamaara>2016-06-03</karttapaivamaara>
+                            <tienumero>18652</tienumero>
+                            <ajorata>0</ajorata>
+                            <kaista>11</kaista>
+                            <aosa>22</aosa>
+                            <aet>3</aet>
+                            <losa>5</losa>
+                            <let>4785</let>
+                        </tierekisteriosoitevali>
+                        <kasittelymenetelma>13</kasittelymenetelma>
+                        <kasittelypaksuus>30</kasittelypaksuus>
+                        <verkkotyyppi>1</verkkotyyppi>
+                        <verkon-tarkoitus>1</verkon-tarkoitus>
+                        <verkon-sijainti>1</verkon-sijainti>
+                        <tekninen-toimenpide>2</tekninen-toimenpide>
+                    </alustalle-tehty-toimenpide>
+                </alustalle-tehdyt-toimet>
                 <alikohteet>
                     <alikohde>
-                        <yha-id>254915666</yha-id>
-                        <harja-id>59</harja-id>
+                        <harja-id>5</harja-id>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2016-06-01</karttapaivamaara>
-                            <tienumero>66</tienumero>
-                            <ajorata>0</ajorata>
-                            <kaista>1</kaista>
-                            <aosa>36</aosa>
-                            <aet>0</aet>
-                            <losa>41</losa>
-                            <let>0</let>
+                            <karttapaivamaara>2016-06-03</karttapaivamaara>
+                            <tienumero>18652</tienumero>
+                            <ajorata></ajorata>
+                            <kaista></kaista>
+                            <aosa>1</aosa>
+                            <aet>5190</aet>
+                            <losa>1</losa>
+                            <let>3312</let>
                         </tierekisteriosoitevali>
                         <tunnus></tunnus>
                         <paallystystoimenpide>
-                            <uusi-paallyste>21</uusi-paallyste>
-                            <raekoko>11</raekoko>
-                            <kokonaismassamaara>1</kokonaismassamaara>
-                            <rc-prosentti>90</rc-prosentti>
-                            <kuulamylly>2</kuulamylly>
-                            <paallystetyomenetelma>31</paallystetyomenetelma>
-                            <leveys>11</leveys>
-                            <pinta-ala>11</pinta-ala>
+                            <uusi-paallyste></uusi-paallyste>
+                            <raekoko></raekoko>
+                            <kokonaismassamaara></kokonaismassamaara>
+                            <rc-prosentti></rc-prosentti>
+                            <kuulamylly></kuulamylly>
+                            <paallystetyomenetelma></paallystetyomenetelma>
+                            <leveys></leveys>
+                            <pinta-ala></pinta-ala>
                         </paallystystoimenpide>
                         <materiaalit>
                             <materiaali>
-                                <kiviainesesiintyman-nimi>string</kiviainesesiintyman-nimi>
-                                <kiviaineksen-km-arvo>string</kiviaineksen-km-arvo>
-                                <kiviaineksen-muotoarvo>string</kiviaineksen-muotoarvo>
-                                <sideainetyyppi>21</sideainetyyppi>
-                                <sideainepitoisuus>1000</sideainepitoisuus>
-                                <lisa-aineet>string</lisa-aineet>
-                            </materiaali>
-                        </materiaalit>
-                    </alikohde>
-                    <alikohde>
-                        <yha-id>254915667</yha-id>
-                        <harja-id>60</harja-id>
-                        <tierekisteriosoitevali>
-                            <karttapaivamaara>2016-06-01</karttapaivamaara>
-                            <tienumero>66</tienumero>
-                            <ajorata>0</ajorata>
-                            <kaista>1</kaista>
-                            <aosa>41</aosa>
-                            <aet>0</aet>
-                            <losa>41</losa>
-                            <let>2321</let>
-                        </tierekisteriosoitevali>
-                        <tunnus></tunnus>
-                        <paallystystoimenpide>
-                            <uusi-paallyste>21</uusi-paallyste>
-                            <raekoko>33</raekoko>
-                            <kokonaismassamaara>22</kokonaismassamaara>
-                            <rc-prosentti>2</rc-prosentti>
-                            <kuulamylly>1</kuulamylly>
-                            <paallystetyomenetelma>21</paallystetyomenetelma>
-                            <leveys>2</leveys>
-                            <pinta-ala>1</pinta-ala>
-                        </paallystystoimenpide>
-                        <materiaalit>
-                            <materiaali>
-                                <kiviainesesiintyman-nimi>string</kiviainesesiintyman-nimi>
-                                <kiviaineksen-km-arvo>string</kiviaineksen-km-arvo>
-                                <kiviaineksen-muotoarvo>string</kiviaineksen-muotoarvo>
-                                <sideainetyyppi>21</sideainetyyppi>
-                                <sideainepitoisuus>1000</sideainepitoisuus>
-                                <lisa-aineet>string</lisa-aineet>
+                                <kiviainesesiintyman-nimi></kiviainesesiintyman-nimi>
+                                <kiviaineksen-km-arvo></kiviaineksen-km-arvo>
+                                <kiviaineksen-muotoarvo></kiviaineksen-muotoarvo>
+                                <sideainetyyppi>1</sideainetyyppi>
+                                <sideainepitoisuus></sideainepitoisuus>
+                                <lisa-aineet></lisa-aineet>
                             </materiaali>
                         </materiaalit>
                     </alikohde>

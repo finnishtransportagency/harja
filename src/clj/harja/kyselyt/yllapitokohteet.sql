@@ -350,3 +350,8 @@ SELECT
    WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohdeosa
 WHERE yllapitokohde = :yllapitokohde;
+
+-- name: merkitse-kohteen-lahetystiedot!
+UPDATE yllapitokohde
+SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut
+WHERE id = :kohdeid;
