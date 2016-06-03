@@ -91,7 +91,8 @@
                        :leveys (+ perusleveys 5) :muokattava? (or (:muokattava? nimi) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna tienumero"]] :muokattava? (or (:muokattava? tie) (constantly true))}
+            :validoi [[:ei-tyhja "Anna tienumero"]]
+            :muokattava? (or (:muokattava? tie) (constantly true))}
            {:otsikko "Ajo\u00ADrata"
             :nimi (:nimi ajorata)
             :muokattava? (or (:muokattava? ajorata) (constantly true))
@@ -285,7 +286,7 @@
                      (tierekisteriosoite-sarakkeet
                       tr-leveys
                       [{:nimi :nimi}
-                       {:nimi :tr-numero}
+                       {:nimi :tr-numero :muokattava? (constantly false)}
                        {:nimi :tr-ajorata}
                        {:nimi :tr-kaista}
                        {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
