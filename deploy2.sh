@@ -59,9 +59,9 @@ msg "Deploy valmis palvelimelle $HARJA_ENV. Laitoin Harja Projekti HipChat-kanav
 
 HIPCHAT_TOKEN=`cat .hipchat-token`
 # HipChat notifikaatio
-CONFIG="room_id=914801&from=deploy2.sh&color=purple"
+CONFIG="from=deploy2.sh&color=purple"
 MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <a href=\"https://$HARJA_ENV\">$HARJA_ENV</a>"
-curl -d $CONFIG --data-urlencode "message=${MESSAGE}" "https://api.hipchat.com/v1/rooms/message?auth_token=$HIPCHAT_TOKEN&format=json"
+curl -d $CONFIG --data-urlencode "message=${MESSAGE}" "https://api.hipchat.com/v2/room/914801/notification?auth_token=$HIPCHAT_TOKEN&format=json"
 
 END_TS=`date +%s`
 msg "Suorite kesti `echo "$END_TS-$START_TS"|bc` sekuntia."
