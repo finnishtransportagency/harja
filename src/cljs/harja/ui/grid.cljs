@@ -559,6 +559,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                  (reset! valittu-rivi nil)
                                  (reset! tallennus-kaynnissa false))
         aloita-muokkaus! (fn [tiedot]
+                           (reset! vetolaatikot-auki #{}) ; sulje vetolaatikot
                            (nollaa-muokkaustiedot!)
                            (reset! gridia-muokataan? true)
                            (loop [muok {}
