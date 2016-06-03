@@ -15,7 +15,9 @@
              :refer
              [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.yha :as yha]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.kyselyt.tieverkko :as tieverkko]))
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
@@ -32,7 +34,27 @@
                                                    kohdeosa-xf
                                                    (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                      db urakka-id sopimus-id (:id %))))))
-                        (q/hae-urakan-yllapitokohteet db urakka-id sopimus-id))]
+                        (q/hae-urakan-yllapitokohteet db urakka-id sopimus-id))
+          osien-pituudet-tielle
+          (fmap
+           (fn [osat]
+             ;; Hakee tieverkosta osien pituudet tielle
+             (let [tie (:tr-numero (first osat))
+                   osat (into #{}
+                              (mapcat (juxt :tr-alkuosa :tr-loppuosa))
+                              osat)
+                   min-osa (reduce min 1 osat)
+                   max-osa (reduce max 1 osat)]
+               (into {}
+                     (map (juxt :osa :pituus))
+                     (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
+           (group-by :tr-numero vastaus))
+
+          vastaus (mapv #(assoc %
+                                :pituus
+                                (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
+                        vastaus)]
+
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 

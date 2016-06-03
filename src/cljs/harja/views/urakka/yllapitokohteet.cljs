@@ -132,7 +132,7 @@
             :tasaa :oikea
             :validoi (into [[:ei-tyhja "Anna loppuosa"]
                             loppuosa-ei-alkua-ennen]
-                           (:validoit losa))
+                           (:validoi losa))
             :muokattava? (or (:muokattava? losa) (constantly true))}
            {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea
@@ -141,8 +141,7 @@
                            (:validoi let))
             :muokattava? (or (:muokattava? let) (constantly true))}
            {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
-            :muokattava? (constantly false)
-            :hae (get pituus :hae tr/laske-tien-pituus)}])))
+            :muokattava? (constantly false)}])))
 
 (defn tr-osoite [rivi]
   (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
@@ -202,7 +201,8 @@
                      {1 {:tr-numero tie
                          :tr-alkuosa aosa :tr-alkuetaisyys alkuet
                          :tr-loppuosa losa :tr-loppuetaisyys loppuet}}
-                     (varmista-alku-ja-loppu (zipmap (iterate inc 1) kohdeosat) kohde)))
+                     (varmista-alku-ja-loppu (zipmap (iterate inc 1) kohdeosat)
+                                             (tr/nouseva-jarjestys kohde))))
         g (grid/grid-ohjaus)
         toiminnot-komponentti
         (fn [_ index]
@@ -230,11 +230,9 @@
                                    (when (> et pit)
                                      (str "Osan " osa " maksimietäisyys on " pit))))))]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
-    (log "OSAT NÄKYVIIN!")
     (komp/luo
      (fn [kohdeosat {yllapitokohde-id :id :as kohde}]
-       (log "OSAT: " (pr-str @grid-data))
-        (let [kohdeosia (count @grid-data)]
+       (let [kohdeosia (count @grid-data)]
           [:div
            [grid/muokkaus-grid
             {:ohjaus g
@@ -248,11 +246,11 @@
              :paneelikomponentit [(fn []
                                     [napit/palvelinkutsu-nappi
                                      [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-                                     ;; TODO Hae ja assoc sijainti (geometria) ennen tätä (developista logiikka tähän)
                                      (let [sijainnit @tr-sijainnit
                                            osat (into []
                                                       (map (fn [osa]
-                                                             (assoc osa :sijainti (sijainnit (tr-osoite osa)))))
+                                                             (assoc osa :sijainti
+                                                                    (sijainnit (tr-osoite osa)))))
                                                       (vals @grid-data))]
                                        #(tiedot/tallenna-yllapitokohdeosat! urakka-id
                                                                             sopimus-id
@@ -265,7 +263,8 @@
                                                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                                                       (kohdeosat-paivitetty-fn vastaus)
                                                       (resetoi-tr-tiedot)
-                                                      (viesti/nayta! "Kohdeosat tallennettu." :success viesti/viestin-nayttoaika-keskipitka))}])]
+                                                      (viesti/nayta! "Kohdeosat tallennettu."
+                                                                     :success viesti/viestin-nayttoaika-keskipitka))}])]
              :voi-poistaa? (constantly false)
              :tunniste hash
              :muokkaa-footer (fn [g]

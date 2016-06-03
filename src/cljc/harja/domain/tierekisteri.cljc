@@ -34,6 +34,27 @@
         (and (= (:tr-loppuosa tie1) (:tr-loppuosa tie2))
              (> (:tr-loppuetaisyys tie1) (:tr-loppuetaisyys tie2))))))
 
+(defn nouseva-jarjestys
+  "Tarkistaa, että annettu osoite on nousevassa järjestyksessä (alku ennen loppua) ja
+  kääntää alkuosan ja loppuosan, jos ei ole. Palauttaa mahdollisesti muokatun osoitteen."
+  [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as osoite}]
+  (cond
+    (< tr-loppuosa tr-alkuosa)
+    (assoc osoite
+           :tr-alkuosa tr-loppuosa
+           :tr-alkuetaisyys tr-loppuetaisyys
+           :tr-loppuosa tr-alkuosa
+           :tr-loppuetaisyys tr-alkuetaisyys)
+
+    (and (= tr-loppuosa tr-alkuosa)
+         (< tr-loppuetaisyys tr-alkuetaisyys))
+    (assoc osoite
+           :tr-loppuetaisyys tr-alkuetaisyys
+           :tr-alkuetaisyys tr-loppuetaisyys)
+
+    :default
+    osoite))
+
 (defn laske-tien-pituus
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet {aosa :tr-alkuosa
@@ -41,20 +62,18 @@
                     losa :tr-loppuosa
                     loppuet :tr-loppuetaisyys}]
    (when (every? integer? [aosa losa alkuet loppuet])
-     (let [pit
-           (if (= aosa losa)
-             (Math/abs (- loppuet alkuet))
-             (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
-                    osa (inc aosa)]
-               (let [osan-pituus (get osien-pituudet osa 0)]
-                 (if (>= osa losa)
-                   (+ pituus (Math/min loppuet osan-pituus))
+     (if (= aosa losa)
+       (Math/abs (- loppuet alkuet))
+       (let [max-osa (reduce max 0 (keys osien-pituudet))
+             losa (min losa max-osa)]
+         (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
+                osa (inc aosa)]
+           (let [osan-pituus (get osien-pituudet osa 0)]
+             (if (>= osa losa)
+               (+ pituus (min loppuet osan-pituus))
 
-                   (recur (+ pituus osan-pituus)
-                          (inc osa))))))]
-       #_(println "A: " aosa " " alkuet " -- L: " losa " " loppuet
-                "  =>  " pit)
-       pit))))
+               (recur (+ pituus osan-pituus)
+                      (inc osa))))))))))
 
 (defn tiekohteiden-jarjestys [kohde]
   ((juxt :tie :tr-numero :tienumero
