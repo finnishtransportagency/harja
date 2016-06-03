@@ -1,0 +1,31 @@
+---
+- hosts: all
+  sudo: yes
+  tasks:
+    - name: Varmistetaan, että Harjan sovellushakemisto on olemassa
+      file: path=/opt/harja state=directory owner=harja group=harja mode="u=rwx,g=rwx,o=rx"
+      
+    - name: kirjoita serviced konfiguraatio
+      template: src=templates/centos7-service-template.j2 dest=/etc/systemd/system/harja-laadunseuranta.service mode=755
+      with_items:
+        - description: "Harja laadunseuranta"
+          start_file: /opt/harja/harja-laadunseuranta.sh
+          user_name: harja
+          user_group: harja
+          workingdir: /opt/harja
+      
+    - name: Kopioi viimeisin Harja laadunseuranta jar
+      copy: src="{{ item }}" dest=/opt/harja/harja-laadunseuranta-nightly.jar
+      with_fileglob:
+        - "../target/harja-laadunseuranta-*-standalone.jar"
+
+    - name: Kopioi sovelluksen konfiguraatio
+      template: src=templates/laadunseuranta_asetukset.edn dest=/opt/harja/laadunseuranta_asetukset.edn
+
+    - name: Kopioi käynnistysskripti
+      template: src=templates/harja_laadunseuranta.sh dest=/opt/harja/harja-laadunseuranta.sh mode=755
+      
+    - name: Käynnistä Harja laadunseuranta
+      sudo: yes
+      service: name=harja-laadunseuranta state=restarted
+      register: start

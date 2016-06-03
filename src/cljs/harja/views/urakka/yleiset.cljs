@@ -25,7 +25,8 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -73,9 +74,11 @@
                                     (> (:id %) 0))
                           (:id %)))
                   uudet-paivystajat)
-            res (sort-by :loppu (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat)))]
-        (reset! paivystajat res)
-        true)))
+            vastaus (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
+        (if (k/virhe? vastaus)
+          (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
+          (do (reset! paivystajat (sort-by :loppu vastaus))
+              true)))))
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
   (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) uusi-sopimustyyppi))]
@@ -120,22 +123,22 @@
       (fn [urakka-id]
         (let [kayttajat @kayttajat]
           [grid/grid
-           {:otsikko  "Urakkaan liitetyt käyttäjät"
+           {:otsikko "Urakkaan liitetyt käyttäjät"
             :tunniste :kayttajatunnus
-            :tyhja    (cond
-                        (nil? kayttajat)
-                        [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
+            :tyhja (cond
+                     (nil? kayttajat)
+                     [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
 
-                        (k/virhe? kayttajat)
-                        "Virhe haettaessa käyttäjiä FIM-palvelusta."
+                     (k/virhe? kayttajat)
+                     "Virhe haettaessa käyttäjiä FIM-palvelusta."
 
-                        :default
-                        "Ei urakkaan liitettyjä käyttäjiä.")}
+                     :default
+                     "Ei urakkaan liitettyjä käyttäjiä.")}
 
            [{:otsikko "Rooli" :nimi :roolit :fmt #(str/join ", " %) :tyyppi :string :leveys "15%"}
             {:otsikko "Organisaatio" :nimi :organisaatio :tyyppi :string :leveys "15%"}
             {:otsikko "Nimi" :nimi :nimi :hae #(str (:etunimi %) " " (:sukunimi %)) :tyyppi :string
-             :leveys  "25%"}
+             :leveys "25%"}
             {:otsikko "Puhelin" :nimi :puhelin :tyyppi :string :leveys "20%"}
             {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :string :leveys "25%"}]
            (if (k/virhe? kayttajat)
@@ -203,35 +206,35 @@
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]
     (komp/luo
-     (komp/kun-muuttuu #(swap! tallennus-kaynnissa
-                               (fn [k]
-                                 (if (= k (:id %))
-                                   k
-                                   false))))
-     (fn [ur]
-       [:span.takuuaika.inline
-        (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-          [:span
-           [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
-            (r/wrap (get-in ur [:takuu :loppupvm])
-                    #(do (reset! tallennus-kaynnissa (:id ur))
-                         (nav/paivita-urakka! (:id ur) assoc-in [:takuu :loppupvm] %)
-                         (go (reset! tallennus-kaynnissa
-                                     (if (k/virhe? (<! (urakka/aseta-takuu-loppupvm (:id ur) %)))
-                                       :virhe
-                                       false)))))]
-           (cond
-             (number? @tallennus-kaynnissa) [yleiset/ajax-loader-pieni]
-             (= :virhe @tallennus-kaynnissa) [:span (ikonit/livicon-warning-sign)]
-             :default nil)
-           (when (and
-                   (get-in ur [:takuu :loppupvm])
-                   (not (pvm/jalkeen? (get-in ur [:takuu :loppupvm]) (:loppupvm ur))))
-             (yleiset/vihje "Takuu päättyy yleensä urakan päättymisen jälkeen, tarkista päivämäärä"))]
-          [:span
-           (if-let [p (get-in ur [:takuu :loppupvm])]
-             (pvm/pvm p)
-             "Ei asetettu")])]))))
+      (komp/kun-muuttuu #(swap! tallennus-kaynnissa
+                                (fn [k]
+                                  (if (= k (:id %))
+                                    k
+                                    false))))
+      (fn [ur]
+        [:span.takuuaika.inline
+         (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+           [:span
+            [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
+             (r/wrap (get-in ur [:takuu :loppupvm])
+                     #(do (reset! tallennus-kaynnissa (:id ur))
+                          (nav/paivita-urakka! (:id ur) assoc-in [:takuu :loppupvm] %)
+                          (go (reset! tallennus-kaynnissa
+                                      (if (k/virhe? (<! (urakka/aseta-takuu-loppupvm (:id ur) %)))
+                                        :virhe
+                                        false)))))]
+            (cond
+              (number? @tallennus-kaynnissa) [yleiset/ajax-loader-pieni]
+              (= :virhe @tallennus-kaynnissa) [:span (ikonit/livicon-warning-sign)]
+              :default nil)
+            (when (and
+                    (get-in ur [:takuu :loppupvm])
+                    (not (pvm/jalkeen? (get-in ur [:takuu :loppupvm]) (:loppupvm ur))))
+              (yleiset/vihje "Takuu päättyy yleensä urakan päättymisen jälkeen, tarkista päivämäärä"))]
+           [:span
+            (if-let [p (get-in ur [:takuu :loppupvm])]
+              (pvm/pvm p)
+              "Ei asetettu")])]))))
 
 (defn yleiset-tiedot [ur]
   (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
@@ -258,7 +261,7 @@
         (str/join ", " (get-in ur [:yhatiedot :vuodet])))
       "YHA-sidonta:"
       (cond
-        (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?)  (not paallystys-tai-paikkausurakka-sidottu?))
+        (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) (not paallystys-tai-paikkausurakka-sidottu?))
         [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
         (and paallystys-tai-paikkausurakka? yha-tuontioikeus? (not paallystys-tai-paikkausurakka-sidottu?))
         [:span (when sidonta-lukittu? {:title sidonta-lukittu-vihje})
@@ -290,7 +293,7 @@
                                       :valitse-fn #(tallenna-sopimustyyppi ur %)
                                       :disabled (not kirjoitusoikeus?)}
          sopimus/+sopimustyypit+])
-      "Urakkatyyppi: "                                      ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
+      "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
       (when paallystys-tai-paikkausurakka?
         [:span {:title (cond sidonta-lukittu?
                              "Urakan sidonta on lukittu, urakkatyyppiä ei voi enää muuttaa."
@@ -298,12 +301,12 @@
                              "Vain urakanvalvoja voi muuttaa urakan tyyppiä"
                              :default nil)}
          [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
-                                      :valinta (:tyyppi ur)
-                                      :format-fn #(navigaatio/nayta-urakkatyyppi %)
-                                      :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                      :disabled (or (not yha-tuontioikeus?)
-                                                    sidonta-lukittu?)}
-         [:paallystys :paikkaus]]])]]))
+                                       :valinta (:tyyppi ur)
+                                       :format-fn #(navigaatio/nayta-urakkatyyppi %)
+                                       :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
+                                       :disabled (or (not yha-tuontioikeus?)
+                                                     sidonta-lukittu?)}
+          [:paallystys :paikkaus]]])]]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
@@ -318,8 +321,8 @@
       (komp/kun-muuttuu hae!)
       (fn [ur]
         [grid/grid
-         {:otsikko  "Yhteyshenkilöt"
-          :tyhja    "Ei yhteyshenkilöitä."
+         {:otsikko "Yhteyshenkilöt"
+          :tyhja "Ei yhteyshenkilöitä."
           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
                       #(tallenna-yhteyshenkilot ur yhteyshenkilot %))}
          [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
