@@ -220,7 +220,6 @@
                :valinnat      @tehtavat
                :valinta-arvo  :id
                :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
-               :jos-tyhja     "Toimenpiteelle ei ole suunniteltu yhtään tehtävää."
                :hae           (comp :id :toimenpidekoodi :tehtava)
                :aseta         (fn [rivi arvo]
                                 (-> rivi
