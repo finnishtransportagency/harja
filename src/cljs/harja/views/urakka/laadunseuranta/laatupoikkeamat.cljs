@@ -34,7 +34,6 @@
                      :kasitellyt "Käsitellyt (päätös tehty)"
                      :selvitys "Odottaa urakoitsijan selvitystä"
                      :omat "Minun kirjaamat / kommentoimat")}
-
       [:kaikki :selvitys :kasitellyt :omat]]
 
      [urakka-valinnat/aikavali]
