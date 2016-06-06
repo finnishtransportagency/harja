@@ -7,6 +7,7 @@
 
 (def viestin-nayttoaika-lyhyt 1500)
 (def viestin-nayttoaika-keskipitka 5000)
+(def viestin-nayttoaika-pitka 15000)
 (def viestin-oletusnayttoaika viestin-nayttoaika-lyhyt)
 
 ;; Viesti on reagent komponentti, joka näytetään.
@@ -38,20 +39,16 @@
            [:div.flash-viesti {:on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
             [:div.alert {:class (when luokka
                                   (+bootstrap-alert-classes+ luokka))}
-            viesti]]])
+             viesti]]])
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
-
-
 
 (defn nayta!
   ([viesti] (nayta! viesti :success))
   ([viesti luokka] (nayta! viesti luokka viestin-oletusnayttoaika))
   ([viesti luokka kesto]
-    (reset! viesti-sisalto {:viesti viesti
-                                    :luokka luokka
-                                    :nakyvissa? true
-                                    :kesto kesto})))
-
-(defn ^:export kokeile []
-  (nayta! "Kokeillaan viestiä!"))
+   (when-not (:nakyvissa? @viesti-sisalto)
+     (reset! viesti-sisalto {:viesti viesti
+                             :luokka luokka
+                             :nakyvissa? true
+                             :kesto kesto}))))

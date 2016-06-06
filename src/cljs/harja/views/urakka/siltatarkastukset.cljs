@@ -118,11 +118,11 @@
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
          [grid/grid
           {:otsikko       "Sillat"
-           :tyhja         (if (nil? @urakan-sillat) [ajax-loader "Siltoja haetaan..."] "Ei siltoja annetuilla kriteereillä.")
+           :tyhja         (if (nil? @urakan-sillat)
+                            [ajax-loader "Siltoja haetaan..."]
+                            "Ei siltoja annetuilla kriteereillä.")
            :rivi-klikattu #(reset! st/valittu-silta %)
-           :tunniste      :siltatunnus
-           }
-
+           :tunniste      :siltatunnus}
           ;; sarakkeet
           [{:otsikko "Silta" :nimi :siltanimi :leveys 35}
            {:otsikko "Silta\u00ADtunnus" :nimi :siltatunnus :leveys 13}

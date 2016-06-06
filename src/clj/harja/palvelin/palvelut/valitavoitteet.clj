@@ -25,13 +25,17 @@
 
 (defn tallenna! [db user {:keys [urakka-id valitavoitteet]}]
   (oikeudet/kirjoita oikeudet/urakat-valitavoitteet user urakka-id)
+  (log/debug "Tallenna välitavoitteet " (pr-str valitavoitteet))
   (jdbc/with-db-transaction [c db]
     ;; Poistetaan tietokannasta :poistettu merkityt
     (doseq [poistettava (filter :poistettu valitavoitteet)]
       (q/poista-valitavoite! c (:id user) urakka-id (:id poistettava)))
 
     ;; Luodaan uudet (FIXME: lisää kentät kun speksi valmis)
-    (doseq [{:keys [takaraja nimi]} (filter #(< (:id %) 0) valitavoitteet)]
+    (doseq [{:keys [takaraja nimi]} (filter
+                                      #(and (< (:id %) 0)
+                                            (not (:poistettu %)))
+                                            valitavoitteet)]
       (q/lisaa-valitavoite<! c {:urakka urakka-id
                                 :takaraja (konv/sql-date takaraja)
                                 :nimi nimi

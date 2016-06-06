@@ -155,7 +155,8 @@
             [codox "0.8.11"]
             [jonase/eastwood "0.2.3"]
             [lein-auto "0.1.2"]
-            [lein-pdo "0.1.1"]]
+            [lein-pdo "0.1.1"]
+            [lein-doo "0.1.6"]]
 
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
@@ -171,13 +172,16 @@
                                :recompile-dependents false
                                }}
                {:id             "test"
-                :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+                :source-paths   ["src/cljs" "src/cljc" "src/cljs-dev"
+                                 "test/cljs" "test/doo"]
                 :compiler       {:output-to     "target/cljs/test/test.js"
                                  :output-dir    "target/cljs/test"
                                  :optimizations :none
                                  :pretty-print  true
-                                 :source-map    "target/cljs/test/test.js.map"
+                                 :source-map    true
+                                 :libs ["src/js/kuvataso.js"]
                                  :closure-output-charset "US-ASCII"
+                                 :main harja.runner
                                  }
                 :notify-command ["./run-karma.sh"]}
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
@@ -234,12 +238,12 @@
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
+            "testit"             ["do" "clean," "deps," "test," "doo" "phantom" "test" "once"]
 
             ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt"                ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
             "sampo"               ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
             "gitlog"              ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
-            "testit"              ["with-profiles" "test" "do" "clean," "compile," "test"]
 
             "selainrepl"          ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]

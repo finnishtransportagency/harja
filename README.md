@@ -1,4 +1,4 @@
-# Liikenneviraston Harja järjestelmä #
+'# Liikenneviraston Harja järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
 client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
@@ -181,9 +181,12 @@ piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi
 luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
 
 Seuraavat headerit tuettuna:
+
 * OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
-* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit), esim "Jarjestelmavastaava"
-tai <urakan-SAMPO-ID>_ELY_Urakanvalvoja tai Urakoitisijan laatupäällikkö <urakoitsijan-ytunnus>_Laatupaallikko
+* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit). Esim:
+    * Järjestelmävastaava: Jarjestelmavastaava
+    * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
+    * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
 * OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto" tai "YIT Rakennus Oy"
 * OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
 * OAM_USER_FIRST_NAME: Etunimi
@@ -193,3 +196,8 @@ tai <urakan-SAMPO-ID>_ELY_Urakanvalvoja tai Urakoitisijan laatupäällikkö <ura
 
 Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
 jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
+
+# Fronttitestit
+
+Fronttitestit pyörivät figwheelin kautta.
+Ne voi ajaa myös komentorivillä komennolla "lein doo phantom test"

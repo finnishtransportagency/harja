@@ -21,7 +21,8 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot])
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -34,32 +35,30 @@
 (defn sanktion-tiedot
   []
   (let [muokattu (atom @tiedot/valittu-sanktio)
-        voi-muokata? @laatupoikkeamat/voi-kirjata?
-        ]
+        voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                               (:id @nav/valittu-urakka))]
     (fn []
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
-
-
-
        [lomake/lomake
         {:otsikko (if (:id @muokattu)
                     (if (:suorasanktio @muokattu)
                       "Muokkaa suoraa sanktiota"
                       "Muokkaa laatupoikkeaman kautta tehtyä sanktiota")
                     "Luo uusi suora sanktio")
-         :luokka   :horizontal
+         :luokka :horizontal
          :muokkaa! #(reset! muokattu %)
          :voi-muokata? voi-muokata?
-         :footer   [napit/palvelinkutsu-nappi
-                    "Tallenna sanktio"
-                    #(tiedot/tallenna-sanktio @muokattu)
-                    {:luokka       "nappi-ensisijainen"
-                     :ikoni        (ikonit/tallenna)
-                     :kun-onnistuu #(do
-                                     (tiedot/sanktion-tallennus-onnistui % @muokattu)
-                                     (reset! tiedot/valittu-sanktio nil))
-                     :disabled     (validoi-sanktio @muokattu)}]}
+         :footer [napit/palvelinkutsu-nappi
+                  "Tallenna sanktio"
+                  #(tiedot/tallenna-sanktio @muokattu)
+                  {:luokka "nappi-ensisijainen"
+                   :ikoni (ikonit/tallenna)
+                   :kun-onnistuu #(do
+                                   (tiedot/sanktion-tallennus-onnistui % @muokattu)
+                                   (reset! tiedot/valittu-sanktio nil))
+                   :disabled (or (not voi-muokata?)
+                                 (validoi-sanktio @muokattu))}]}
         [{:otsikko     "Tekijä" :nimi :tekijanimi
           :hae         (comp :tekijanimi :laatupoikkeama)
           :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
@@ -176,10 +175,10 @@
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))]
     [:div.sanktiot
     [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-    (when @laatupoikkeamat/voi-kirjata?
-      [:button.nappi-ensisijainen
-       {:on-click #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio))}
-       (ikonit/livicon-plus) " Lisää sanktio"])
+     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                     (:id @nav/valittu-urakka))
+       [napit/uusi "Lisää sanktio"
+        #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio))])
 
     [grid/grid
      {:otsikko       "Sanktiot"
@@ -192,7 +191,6 @@
       {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
       {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea}]
      sanktiot]]))
-
 
 (defn sanktiot []
   (komp/luo
