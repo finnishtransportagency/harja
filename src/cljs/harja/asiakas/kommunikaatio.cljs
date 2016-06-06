@@ -39,7 +39,7 @@
   "Tarkastaa onko vastaus tyhjä, sisältääkö se :failure, :virhe, tai :error avaimen, tai on EiOikeutta viesti"
   [vastaus]
   (or (nil? vastaus)
-      (roolit/ei-oikeutta? vastaus)
+      (roolit/ei-oikeutta? (:response vastaus))
       (and (map? vastaus)
            (some (partial contains? vastaus) [:failure :virhe :error]))))
 
@@ -48,6 +48,12 @@
 (declare kasittele-yhteyskatkos)
 
 (defn- kasittele-palvelinvirhe [palvelu vastaus]
+  ;; Normaalitilanteessa ei pitäisi koskaan tulla ei oikeutta -virhettä. Voi tulla esim. jos frontin
+  ;; ja backendin oikeustarkistukset eivät ole yhteneväiset. Tällöin halutaan näyttää käyttäjälle tieto
+  ;; puutteellisista oikeuksista, jotta tiedetään virheen johtuvan nimenomaan oikeustarkistuksesta.
+  (when (roolit/ei-oikeutta? (:response vastaus))
+    (tapahtumat/julkaise! {:aihe :ei-oikeutta}))
+
   (if (= 0 (:status vastaus))
     ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
     ;; PENDING: tässä tilanteessa voisimme jättää requestin pendaamaan ja yrittää sitä uudelleen
