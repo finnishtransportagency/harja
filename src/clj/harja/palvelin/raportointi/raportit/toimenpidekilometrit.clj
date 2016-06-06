@@ -23,11 +23,7 @@
                                    (or (= (:urakka toteuma) (:urakka-id alue))
                                        (= (:hallintayksikko toteuma) (:hallintayksikko-id alue)))))
                             toteumat)
-            tulos (reduce
-                    (fn [tulos seuraava]
-                      (+ tulos (or seuraava 0)))
-                    0
-                    (map :maara sopivat-rivit))
+            tulos (reduce + 0 (keep :maara sopivat-rivit))
             tulos-formatoitu (fmt/desimaaliluku-opt tulos 1)]
         tulos-formatoitu))
     hoitoluokat))
