@@ -7,6 +7,7 @@
 
 (def viestin-nayttoaika-lyhyt 1500)
 (def viestin-nayttoaika-keskipitka 5000)
+(def viestin-nayttoaika-pitka 15000)
 (def viestin-oletusnayttoaika viestin-nayttoaika-lyhyt)
 
 ;; Viesti on reagent komponentti, joka näytetään.

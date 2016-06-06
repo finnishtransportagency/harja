@@ -52,7 +52,8 @@
   ;; ja backendin oikeustarkistukset eivät ole yhteneväiset. Tällöin halutaan näyttää käyttäjälle tieto
   ;; puutteellisista oikeuksista, jotta tiedetään virheen johtuvan nimenomaan oikeustarkistuksesta.
   (when (roolit/ei-oikeutta? (:response vastaus))
-    (tapahtumat/julkaise! {:aihe :ei-oikeutta}))
+    (tapahtumat/julkaise! {:aihe :ei-oikeutta
+                           :viesti (str "Puutteelliset oikeudet kutsuttaessa palvelua " (pr-str palvelu))}))
 
   (if (= 0 (:status vastaus))
     ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki

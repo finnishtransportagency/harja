@@ -188,10 +188,10 @@
            (empty? (:organisaatioroolit kayttaja)))))
 
 (defn kuuntele-oikeusvirheita []
-  (t/kuuntele! :ei-oikeutta (fn [_]
-                              (viesti/nayta! "Puutteelliset oikeudet!"
+  (t/kuuntele! :ei-oikeutta (fn [tiedot]
+                              (viesti/nayta! (:viesti tiedot)
                                              :warning
-                                             viesti/viestin-nayttoaika-keskipitka))))
+                                             viesti/viestin-nayttoaika-pitka))))
 
 (defn main
   "Harjan UI:n pääkomponentti"
