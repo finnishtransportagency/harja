@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.tierek-haku
-  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tieverkko :as tv]
             [harja.geo :as geo]
@@ -13,7 +13,7 @@
 
 (defn hae-tr-pisteilla
   "params on mappi {:x1 .. :y1 .. :x2 .. :y2 ..}"
-  [db user params]
+  [db params]
   (when-let [tros (first (tv/hae-tr-osoite-valille db
                                                    (:x1 params) (:y1 params)
                                                    (:x2 params) (:y2 params)
@@ -22,13 +22,13 @@
 
 (defn hae-tr-pisteella
   "params on mappi {:x .. :y ..}"
-  [db user params]
+  [db params]
   (let [tros (first (tv/hae-tr-osoite db (:x params) (:y params) +treshold+))]
     (muunna-geometria tros)))
 
 (defn hae-tr-viiva
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
-  [db user params]
+  [db params]
   (log/debug "Haetaan viiva osoiteelle " (pr-str params))
   (let [korjattu-osoite params
         geom (tv/tierekisteriosoite-viivaksi db
@@ -42,7 +42,7 @@
 
 (defn hae-tr-piste
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
-  [db user params]
+  [db params]
   (log/debug "Haetaan piste osoitteelle: " (pr-str params))
   (let [geom (first (tv/tierekisteriosoite-pisteeksi db
                                                     (:numero params)
@@ -51,22 +51,40 @@
     (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
     (geo/pg->clj (:tierekisteriosoitteelle_piste geom))))
 
+(defn hae-osien-pituudet
+  "Hakee tierekisteriosien pituudet annetulle tielle ja osan välille.
+  Params mäpissä tulee olla :tie, :aosa ja :losa"
+  [db params]
+  (into {}
+        (map (juxt :osa :pituus))
+        (tv/hae-osien-pituudet db params)))
+
 (defrecord TierekisteriHaku []
   component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-tr-pisteilla (fn [user params]
-                                          (hae-tr-pisteilla (:db this) user params)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-tr-pisteella (fn [user params]
-                                          (hae-tr-pisteella (:db this) user params)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-tr-viivaksi (fn [user params]
-                                         (hae-tr-viiva (:db this) user params)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-tr-pisteeksi (fn [user params]
-                                         (hae-tr-piste (:db this) user params)))
+  (start [{:keys [http-palvelin db] :as this}]
+    (julkaise-palvelut
+     http-palvelin
+     :hae-tr-pisteilla (fn [_ params]
+                         (hae-tr-pisteilla db params))
+
+     :hae-tr-pisteella (fn [_ params]
+                         (hae-tr-pisteella db params))
+
+     :hae-tr-viivaksi (fn [_ params]
+                        (hae-tr-viiva db params))
+
+     :hae-tr-pisteeksi (fn [_ params]
+                         (hae-tr-piste db params))
+
+     :hae-tr-osien-pituudet (fn [_ params]
+                              (hae-osien-pituudet db params)))
+
     this)
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :hae-tr-pisteella)
+  (stop [{http :http-palvelin :as this}]
+    (poista-palvelut http
+                     :hae-tr-pisteilla
+                     :hae-tr-pisteella
+                     :hae-tr-viivaksi
+                     :hae-tr-pisteeksi
+                     :hae-osien-pituudet)
     this))

@@ -821,5 +821,5 @@
      [:span.loppuosa loppuosa] " / "
      [:span.loppuetaisyys loppuetaisyys]]))
 
-(defmethod tee-kentta :komponentti [{:keys [lomake? komponentti rivi]}]
-  (komponentti rivi))
+(defmethod tee-kentta :komponentti [{:keys [komponentti rivi index muokataan?]}]
+  (komponentti rivi index muokataan?))
