@@ -258,6 +258,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (doseq [[nimi funktio] (partition 2 palveluiden-nimet-ja-funktiot)]
     (julkaise-palvelu http nimi funktio)))
 
+(defn julkaise-palvelut [http & nimet-ja-palvelut]
+  (doseq [[nimi palvelu-fn] (partition 2 nimet-ja-palvelut)]
+    (julkaise-palvelu http nimi palvelu-fn)))
+
 (defn poista-palvelut [http & palvelut]
   (doseq [p palvelut]
     (poista-palvelu http p)))

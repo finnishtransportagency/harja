@@ -193,3 +193,9 @@ tai <urakan-SAMPO-ID>_ELY_Urakanvalvoja tai Urakoitisijan laatupäällikkö <ura
 
 Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
 jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
+
+
+# Fronttitestit
+
+Fronttitestit pyörivät figwheelin kautta.
+Ne voi ajaa myös komentorivillä komennolla "lein doo phantom test"

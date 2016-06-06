@@ -182,7 +182,9 @@
         (let [yht (q/luo-yhteyshenkilo<! c yhteyshenkilo)]
           (q/luo-paivystys<! c
                              (assoc paivystys
-                                    :yhteyshenkilo (:id yht))))
+                                    :yhteyshenkilo (:id yht)
+                                    :ulkoinen_id nil
+                                    :kayttaja_id (:id user))))
 
         ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
         (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p)

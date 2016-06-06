@@ -8,12 +8,12 @@
     [harja.ui.tierekisteri :as tierekisteri]))
 
 (deftest tien-pituus-laskettu-oikein
-  (let [tie1 {:aet 3 :let 5}
-        tie2 {:aet 5 :let 5}
-        tie3 {:aet 3 :let -100}
-        tie4 {:aet 1 :let 2}
-        tie5 {:aet 0 :let 1}
-        tie6 {:aet 1}]
+  (let [tie1 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys 5}
+        tie2 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 5 :tr-loppuetaisyys 5}
+        tie3 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys -100}
+        tie4 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1 :tr-loppuetaisyys 2}
+        tie5 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 0 :tr-loppuetaisyys 1}
+        tie6 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 1}]
     (is (= (tierekisteri-domain/laske-tien-pituus tie1) 2))
     (is (= (tierekisteri-domain/laske-tien-pituus tie2) 0))
     (is (= (tierekisteri-domain/laske-tien-pituus tie3) 103))

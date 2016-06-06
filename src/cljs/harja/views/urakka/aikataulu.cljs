@@ -83,6 +83,7 @@
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
+           :voi-lisata? false
            :piilota-toiminnot? true
            :tallenna (if voi-tallentaa?
                        #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id
