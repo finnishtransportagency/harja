@@ -24,3 +24,13 @@ SELECT
 FROM organisaatio o
 WHERE elynumero IS NOT NULL
 ORDER BY elynumero;
+
+
+-- name: hae-urakoiden-nimet
+SELECT id,nimi FROM urakka WHERE id IN (:urakka)
+
+-- name: hae-organisaatioiden-nimet
+SELECT id,nimi FROM organisaatio WHERE id IN (:organisaatio)
+
+-- name: hae-toimenpidekoodien-nimet
+SELECT id,nimi FROM toimenpidekoodi WHERE id IN (:toimenpidekoodi)
