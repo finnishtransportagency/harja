@@ -184,7 +184,7 @@ Seuraavat headerit tuettuna:
 
 * OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
 * OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit). Esim:
-    * "Jarjestelmavastaava"
+    * Järjestelmävastaava: Jarjestelmavastaava
     * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
     * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
 * OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto" tai "YIT Rakennus Oy"
