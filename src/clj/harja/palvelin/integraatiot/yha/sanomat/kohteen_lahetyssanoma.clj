@@ -19,7 +19,9 @@
   [:tierekisteriosoitevali
    [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapvm osoite) (:karttapvm osoite) (pvm/nyt)))]
    [:tienumero (:tr_numero osoite)]
+   ;; todo: pitää laittaa pakolliseksi frontille
    [:ajorata (:tr_ajorata osoite)]
+   ;; todo: pitää laittaa pakolliseksi frontille
    [:kaista (:tr_kaista osoite)]
    [:aosa (:tr_alkuosa osoite)]
    [:aet (:tr_alkuetaisyys osoite)]
@@ -34,22 +36,29 @@
    (tee-tierekisteriosoitevali alikohde)
    [:tunnus tunnus]
    [:paallystystoimenpide
+    ;; todo: merkittävä frontille pakolliseksi
     [:uusi-paallyste paallystetyyppi]
-    [:raekoko raekoko]
-    [:kokonaismassamaara massa]
-    [:rc-prosentti rc%]
-    [:kuulamylly kuulamylly]
-    [:paallystetyomenetelma tyomenetelma]
+    (when raekoko [:raekoko raekoko])
+    (when massa [:kokonaismassamaara massa])
+    (when rc% [:rc-prosentti rc%])
+    (when kuulamylly [:kuulamylly kuulamylly])
+    (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
+    ;; todo: merkittävä frontille pakolliseksi
     [:leveys leveys]
+    ;; todo: merkittävä frontille pakolliseksi
     [:pinta-ala pinta-ala]]
    ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
    [:materiaalit
     [:materiaali
+     ;; todo: pitää lisätä frontille pakollisena
      [:kiviainesesiintyman-nimi esiintyma]
+     ;; todo: pitää lisätä frontille pakollisena
      [:kiviaineksen-km-arvo km-arvo]
+     ;; todo: pitää lisätä frontille pakollisena
      [:kiviaineksen-muotoarvo muotoarvo]
      ;; todo: sideainetyyppi täytyy muuttaa enumiksi kantaan ja frontille. ks. yha.xsd.
      [:sideainetyyppi 1]
+     ;; todo: pitää lisätä frontille pakollisena
      [:sideainepitoisuus pitoisuus]
      [:lisa-aineet lisaaineet]]]])
 
