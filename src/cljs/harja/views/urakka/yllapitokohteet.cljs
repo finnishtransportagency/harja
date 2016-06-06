@@ -323,7 +323,8 @@
 
 
 (defn- aseta-uudet-kohdeosat [kohteet id kohdeosat]
-  (let [rivi (some #(when (= (:id (nth kohteet %))
+  (let [kohteet (vec kohteet)
+        rivi (some #(when (= (:id (nth kohteet %))
                              id)
                       %)
                    (range 0 (count kohteet)))]
