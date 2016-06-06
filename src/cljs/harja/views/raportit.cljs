@@ -563,10 +563,12 @@
   (let [v-ur @nav/valittu-urakka
         hae-urakan-tyot (fn [ur]
                           (log "[RAPORTTI] Haetaan urakan yks. hint. ja kok. hint. työt")
-                          (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
-                          (go (reset! u/urakan-yks-hint-tyot
-                                      (s/prosessoi-tyorivit ur
-                                                            (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
+                          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+                            (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
+                          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                            (go (reset! u/urakan-yks-hint-tyot
+                                       (s/prosessoi-tyorivit ur
+                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
 
     (when v-ur (hae-urakan-tyot @nav/valittu-urakka))
     (let [r @raportit/suoritettu-raportti]
