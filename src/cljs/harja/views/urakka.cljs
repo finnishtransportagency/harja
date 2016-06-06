@@ -100,7 +100,7 @@
      :laadunseuranta
      (when (valilehti-mahdollinen? :laadunseuranta ur)
        ^{:key "laadunseuranta"}
-       [laadunseuranta/laadunseuranta])
+       [laadunseuranta/laadunseuranta ur])
 
      "Välitavoitteet"
      :valitavoitteet
