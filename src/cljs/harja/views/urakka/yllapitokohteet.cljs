@@ -274,7 +274,8 @@
                                                                              sopimus-id
                                                                              yllapitokohde-id
                                                                              osat))
-                                      {:disabled (not (empty? @virheet))
+                                      {:disabled (do (log "VIRHEET: " (pr-str @virheet))
+                                                     (not (empty? @virheet)))
                                        :luokka "nappi-myonteinen grid-tallenna"
                                        :virheviesti "Tallentaminen epäonnistui."
                                        :kun-onnistuu (fn [vastaus]

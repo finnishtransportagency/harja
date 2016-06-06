@@ -999,8 +999,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                   {})))}
                    (ikonit/livicon-plus) (or (:lisaa-rivi opts) "Lisää rivi")])
                 (when paneelikomponentit
-                  (for [komponentti paneelikomponentit]
-                    [komponentti]))])]
+                  (map-indexed (fn [i komponentti]
+                                 ^{:key i}
+                                 [komponentti])
+                               paneelikomponentit))])]
             [:div.panel-body
              [:table.grid
               [:thead
