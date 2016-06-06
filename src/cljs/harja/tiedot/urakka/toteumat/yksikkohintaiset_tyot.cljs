@@ -77,6 +77,12 @@
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
+(defn uusi-yksikkohintainen-toteuma []
+  {:alkanut (pvm/nyt)
+   :paattynyt (pvm/nyt)
+   :suorittajan-nimi (:nimi @u/urakan-organisaatio)
+   :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio)})
+
 (defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
   (k/post! :urakan-yksikkohintaisten-toteumien-reitit
            {:urakka-id urakka-id
