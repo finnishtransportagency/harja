@@ -16,9 +16,12 @@
             [harja.ui.modal :as modal]
             [harja.ui.lomake :as lomake]
             [cljs-time.core :as t]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+(def tiemerkinta-oltava-valmiina-raja (t/days 14))
 
 (defn valmis-tiemerkintaan [kohde-id urakka-id]
   (let [valmis-tiemerkintaan-lomake (atom nil)
@@ -131,6 +134,11 @@
                              (if (= (:nakyma optiot) :paallystys)
                                [valmis-tiemerkintaan (:id rivi) urakka-id]
                                [:span "Ei"])))}
+           {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän ol\u00ADta\u00ADva val\u00ADmis"
+            :leveys 6 :nimi :aikataulu-tiemerkinta-oltava-valmis :tyyppi :pvm
+            :hae (fn [rivi] (let [valmis-tiemerkintaan (:valmis-tiemerkintaan rivi)]
+                              (when (some? valmis-tiemerkintaan)
+                                (fmt/pvm (t/plus valmis-tiemerkintaan tiemerkinta-oltava-valmiina-raja)))))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]
