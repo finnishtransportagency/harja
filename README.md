@@ -131,7 +131,7 @@ Yksinkertainen tapa ottaa pakattu dumppi:
 Tämä saattaa kuitenkin mystisesti kaatua kesken siirron.
 Vaihtoehtoinen tapa SCP:llä:
 
-Huom. voit olla välittämättä virheilmoituksesta: could not change directory to "/home/mikkoro": Permission denied. Kopiointi tehdään silti.
+Huom. voit olla välittämättä virheilmoituksesta: could not change directory to "/home/<tunnus>": Permission denied. Kopiointi tehdään silti.
 
 > ssh harja-db1-stg
 > sudo -u postgres pg_dump -v -Fc harja > /tmp/harja-stg-dump
