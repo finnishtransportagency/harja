@@ -1,4 +1,4 @@
-'# Liikenneviraston Harja järjestelmä #
+# Liikenneviraston Harja järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
 client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
