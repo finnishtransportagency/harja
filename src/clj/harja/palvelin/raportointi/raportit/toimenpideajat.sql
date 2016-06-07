@@ -20,11 +20,11 @@ GROUP BY u.nimi, tpk.nimi, tunti, rp.talvihoitoluokka
 
 -- name: hae-toimenpidepaivien-lukumaarat
 SELECT
-  t.alkanut::date as pvm, --count(distinct date_trunc('day', t.alkanut)) AS lkm,
   u.id as urakka,
   o.id as hallintayksikko,
   rt.toimenpidekoodi,
-  rp.talvihoitoluokka as luokka
+  rp.talvihoitoluokka as luokka,
+  COUNT(DISTINCT t.alkanut::date) as lkm
 FROM reittipiste rp
   JOIN toteuma t ON rp.toteuma = t.id
   JOIN urakka u ON t.urakka = u.id
@@ -36,3 +36,4 @@ WHERE rp.talvihoitoluokka IN (:hoitoluokat)
       AND u.tyyppi = :urakkatyyppi::urakkatyyppi
       AND (:urakka::integer IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+GROUP BY u.id, o.id, rt.toimenpidekoodi, rp.talvihoitoluokka

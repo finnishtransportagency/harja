@@ -164,6 +164,10 @@
     (into []
           (hae-kontekstin-urakat db parametrit))))
 
+(defn uniikit [avain rivit]
+  (into #{}
+        (map avain)
+        rivit))
 
 (defn laske-uniikit [avain-fn rivit]
   (loop [lkm 0

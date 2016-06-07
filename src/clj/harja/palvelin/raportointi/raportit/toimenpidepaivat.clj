@@ -35,67 +35,22 @@
                                {:organisaatio (into #{} (map :hallintayksikko) rivit)}))
         alue-nimi (if (= alue :urakka)
                     urakat
-                    hallintayksikot)]
+                    hallintayksikot)
+        alueet (sort (vals (if (= alue :urakka) urakat hallintayksikot)))]
 
-    {:alueet (sort (vals (if (= alue :urakka) urakat hallintayksikot)))
+    {:alueet alueet
      :toimenpiderivit (->> rivit
                            (group-by (comp toimenpidekoodit :toimenpidekoodi))
                            (fmap (fn [toimenpiderivit]
-                                   ;; Lasketaan transienteilla jokaiselle alueelle
-                                   ;; mäppi {hoitoluokka pvm-määrä}
-                                   (loop [alueet (transient {})
-                                          [rivi & rivit] toimenpiderivit]
-                                     (if-not rivi
-                                       ;; Muunnetaan {hoitoluokka #{pvm1 pvm2 ... pvmN}} arvo
-                                       ;; uniikkien päivämäärien lukumääräksi
-                                       (fmap #(fmap count %) (persistent! alueet))
+                                   (let [rivit-alueen-mukaan (group-by (comp alue-nimi alue) toimenpiderivit)]
+                                     (println "RIVIT-ALUEEN-MUKAAN: " (pr-str rivit-alueen-mukaan))
+                                     (into {}
+                                           (map (juxt identity #(into {}
+                                                                      (map (juxt :luokka :lkm))
+                                                                      (get rivit-alueen-mukaan %))))
+                                           alueet))))
+                           (sort-by first))}))
 
-                                       ;; Päivitetään alueen ja luokan mukaan päivämäärä
-                                       ;; oikeaan settiin
-                                       (let [nimi (alue-nimi (alue rivi))
-                                             luokka (:luokka rivi)
-                                             aluemaarat (get alueet nimi {})
-                                             pvmt (get aluemaarat luokka #{})]
-                                         (recur (assoc! alueet
-                                                        nimi (assoc aluemaarat luokka
-                                                                    (conj pvmt (:pvm rivi))))
-                                                rivit))))))
-                           (sort-by first))
-     :toimenpidekoodit toimenpidekoodit
-     :urakat urakat
-     :hallintayksikot hallintayksikot}))
-
-(defn alueen-hoitoluokkasarakkeet [alue hoitoluokat tpi-nimi toimenpiteet]
-  (let [hoitoluokkasummat
-        (mapv
-          (fn [hoitoluokka]
-            (let [sopivat-rivit (filter
-                                  (fn [tpi]
-                                    (and (= (:nimi tpi) tpi-nimi)
-                                         (= (:luokka tpi) (:numero hoitoluokka))
-                                         (or (= (:urakka-id tpi) (:urakka-id alue))
-                                             (= (:hallintayksikko-id tpi) (:hallintayksikko-id alue)))))
-                                  toimenpiteet)
-                  tulos (reduce + 0 (map :lkm sopivat-rivit))]
-              tulos))
-          hoitoluokat)]
-    (map #(fmt/desimaaliluku-opt % 1) hoitoluokkasummat)))
-
-(defn aluesarakkeet [alueet hoitoluokat tpi-nimi toimenpiteet]
-  (conj
-    (vec (mapcat
-           (fn [alue]
-             (alueen-hoitoluokkasarakkeet alue hoitoluokat tpi-nimi toimenpiteet))
-           alueet))))
-
-(defn muodosta-datarivit [alueet hoitoluokat toimenpiteet]
-  (let [toimenpiteiden-nimet (set (map :nimi toimenpiteet))]
-    (mapv
-      (fn [tpi-nimi]
-        (concat
-          [tpi-nimi]
-          (aluesarakkeet alueet hoitoluokat tpi-nimi toimenpiteet)))
-      toimenpiteiden-nimet)))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
                                hallintayksikko-id urakkatyyppi]}]
