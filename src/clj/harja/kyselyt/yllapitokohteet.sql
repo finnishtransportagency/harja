@@ -191,6 +191,7 @@ SELECT
   tr_loppuetaisyys             AS "tr-loppuetaisyys",
   tr_ajorata                   AS "tr-ajorata",
   tr_kaista                    AS "tr-kaista",
+  yllapitoluokka,
   suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka"
 FROM yllapitokohde
 WHERE
@@ -220,7 +221,8 @@ SELECT
   tr_loppuosa                 AS "tr-loppuosa",
   tr_loppuetaisyys            AS "tr-loppuetaisyys",
   tr_ajorata                  AS "tr-ajorata",
-  tr_kaista                   AS "tr-kaista"
+  tr_kaista                   AS "tr-kaista",
+  yllapitoluokka
 FROM yllapitokohde
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
