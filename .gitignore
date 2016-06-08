@@ -15,6 +15,7 @@ harja-stg-dump.sql
 harja-stg-dump
 harja-test-dump.sql
 harja-test-dump
+restored-stg-dump.sql
 tietokanta.tgz
 /resources/gitlog.edn
 .lein-failures
