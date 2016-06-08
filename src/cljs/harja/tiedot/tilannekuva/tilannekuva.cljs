@@ -84,7 +84,6 @@ hakutiheys-historiakuva 1200000)
                 tk/sorateiden-tasaus          false
                 tk/sorastus                   false
                 tk/harjaus                    false
-                tk/pinnan-tasaus              false
                 tk/paallysteiden-paikkaus     false
                 tk/paallysteiden-juotostyot   false
                 tk/siltojen-puhdistus         false
