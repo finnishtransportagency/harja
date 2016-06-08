@@ -136,6 +136,7 @@
                                [:span "Ei"])))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-valmis-viimeistaan :tyyppi :pvm
+            :muokattava? (constantly false)
             :hae (fn [rivi] (let [valmis-tiemerkintaan (:valmis-tiemerkintaan rivi)]
                               (when (some? valmis-tiemerkintaan)
                                 (fmt/pvm (t/plus valmis-tiemerkintaan tiemerkinta-oltava-valmiina-raja)))))}
