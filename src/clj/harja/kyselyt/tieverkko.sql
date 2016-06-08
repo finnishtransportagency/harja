@@ -5,9 +5,19 @@ INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, geometri
 
 -- name: hae-tr-osoite-valille
 -- hakee tierekisteriosoitteen kahden pisteen välille
-SELECT *
-FROM tierekisteriosoite_pisteille(ST_MakePoint(:x1, :y1) :: GEOMETRY,
-                                  ST_MakePoint(:x2, :y2) :: GEOMETRY, CAST(:treshold AS INTEGER)) AS tr_osoite;
+SELECT * FROM tierekisteriosoite_pisteille(
+  ST_MakePoint(:x1, :y1) :: GEOMETRY,
+  ST_MakePoint(:x2, :y2) :: GEOMETRY,
+  :threshold::INTEGER) AS tr_osoite;
+
+-- name: hae-tr-osoite-valille*
+-- hakee tierekisteriosoitteen kahden pisteen välille tai NULL jos ei löydy
+SELECT * FROM yrita_tierekisteriosoite_pisteille(
+  ST_MakePoint(:x1, :y1) :: GEOMETRY,
+  ST_MakePoint(:x2, :y2) :: GEOMETRY,
+  :threshold::INTEGER) AS tr_osoite;
+
+
 
 -- name: hae-tr-osoite
 -- hakee tierekisteriosoitteen yhdelle pisteelle
