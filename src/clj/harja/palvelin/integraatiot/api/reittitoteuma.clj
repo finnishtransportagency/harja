@@ -47,7 +47,7 @@
            :points [[x1 y1]
                     [x2 y2]]})))
 
-(defn- hae-reitit [db pisteet]
+(defn- hae-reitti [db pisteet]
   (as-> pisteet p
     (map (fn [[x y]]
            (str "POINT(" x " " y ")")) p)
@@ -61,7 +61,7 @@
   (->> reitti
        (sort-by (comp :aika :reittipiste))
        (map piste)
-       hae-reitit
+       (hae-reitti db)
        yhdista-viivat
        geo/clj->pg geo/geometry))
 
