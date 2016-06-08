@@ -13,7 +13,6 @@
 
 
 (defn hae-toimenpiderivit [db parametrit]
-  (println (pr-str parametrit))
   (let [alue (if (:hallintayksikko parametrit)
                :urakka
                :hallintayksikko)
@@ -43,7 +42,6 @@
                            (group-by (comp toimenpidekoodit :toimenpidekoodi))
                            (fmap (fn [toimenpiderivit]
                                    (let [rivit-alueen-mukaan (group-by (comp alue-nimi alue) toimenpiderivit)]
-                                     (println "RIVIT-ALUEEN-MUKAAN: " (pr-str rivit-alueen-mukaan))
                                      (into {}
                                            (map (juxt identity #(into {}
                                                                       (map (juxt :luokka :lkm))
