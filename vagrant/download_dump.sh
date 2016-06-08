@@ -12,33 +12,33 @@ then
     then
         if [ "$1" = "default" ];
         then
-            echo "Dumppi on ladattu $date, ladataan tuoreempi. (Aikaraja on $AIKARAJA minuuttia.)"
+            echo "[$(date +"%T")] Dumppi on ladattu $date, ladataan tuoreempi. (Aikaraja on $AIKARAJA minuuttia.)"
         else
-            read -p "Dumppi on ladattu $date, haluatko varmasti ladata uuden? [y N]" -n 1 -r
+            read -p "[$(date +"%T")] Dumppi on ladattu $date, haluatko varmasti ladata uuden? [y N]" -n 1 -r
             echo    # (optional) move to a new line
             if [[ $REPLY =~ ^[Yy]$ ]]
             then
-                echo "Selvä, ladataan uusin dump."
+                echo "[$(date +"%T")] Selvä, ladataan uusin dump."
             else
-                echo "Tyydytään vanhaan dumppiin."
+                echo "[$(date +"%T")] Tyydytään vanhaan dumppiin."
                 exit 0
             fi
         fi
     else
-        echo "Ladataan uusi staging dump."
+        echo "[$(date +"%T")] Ladataan uusi staging dump."
     fi
 else
-    echo "Pakotetaan uuden dumpin lataus. Vanha oli ladattu $date"
+    echo "[$(date +"%T")] Pakotetaan uuden dumpin lataus. Vanha oli ladattu $date"
 fi
 
-echo "\nAloitetaan staging dumpin lataus! Hae vaikka kahvia."
-echo "\n(Älä välitä 'Could not change directory to /home/tunnus: Permission denied' -virheestä"
+echo "\n[$(date +"%T")] Aloitetaan staging dumpin lataus! Hae vaikka kahvia."
+echo "[$(date +"%T")] (Älä välitä 'Could not change directory to /home/tunnus: Permission denied' -virheestä)"
 
 ssh harja-db1-stg "sudo -u postgres pg_dump -Fc --exclude-table-data=integraatioviesti --exclude-table-data=liite harja" > ../tietokanta/harja-stg-dump
 
-echo "\nDumppi ladattu. Puretaan dummpi .sql komennoiksi."
+echo "\n[$(date +"%T")] Dumppi ladattu. Puretaan dummpi .sql komennoiksi."
 
 # Jos muutat tätä, muuta sama rivi myös mount_dump.sh
 vagrant ssh -c "pg_restore -Fc -C /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
 
-echo "\nDumppi ladattu ja purettu!"
+echo "\n[$(date +"%T")] Dumppi ladattu ja purettu!"
