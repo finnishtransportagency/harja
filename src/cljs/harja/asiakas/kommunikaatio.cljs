@@ -15,7 +15,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (def +polku+ (let [host (.-host js/location)]
-               (if (or (gstr/startsWith host "10.10.")
+               (if (or (gstr/startsWith host "10.")
                        (#{"localhost" "localhost:3000" "localhost:8000"
                           "harja-test.solitaservices.fi"} host))
                  "/"
@@ -39,7 +39,7 @@
   "Tarkastaa onko vastaus tyhjä, sisältääkö se :failure, :virhe, tai :error avaimen, tai on EiOikeutta viesti"
   [vastaus]
   (or (nil? vastaus)
-      (roolit/ei-oikeutta? vastaus)
+      (roolit/ei-oikeutta? (:response vastaus))
       (and (map? vastaus)
            (some (partial contains? vastaus) [:failure :virhe :error]))))
 
@@ -48,6 +48,13 @@
 (declare kasittele-yhteyskatkos)
 
 (defn- kasittele-palvelinvirhe [palvelu vastaus]
+  ;; Normaalitilanteessa ei pitäisi koskaan tulla ei oikeutta -virhettä. Voi tulla esim. jos frontin
+  ;; ja backendin oikeustarkistukset eivät ole yhteneväiset. Tällöin halutaan näyttää käyttäjälle tieto
+  ;; puutteellisista oikeuksista, jotta tiedetään virheen johtuvan nimenomaan oikeustarkistuksesta.
+  (when (roolit/ei-oikeutta? (:response vastaus))
+    (tapahtumat/julkaise! {:aihe :ei-oikeutta
+                           :viesti (str "Puutteelliset oikeudet kutsuttaessa palvelua " (pr-str palvelu))}))
+
   (if (= 0 (:status vastaus))
     ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
     ;; PENDING: tässä tilanteessa voisimme jättää requestin pendaamaan ja yrittää sitä uudelleen

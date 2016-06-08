@@ -84,7 +84,6 @@ hakutiheys-historiakuva 1200000)
                 tk/sorateiden-tasaus          false
                 tk/sorastus                   false
                 tk/harjaus                    false
-                tk/pinnan-tasaus              false
                 tk/paallysteiden-paikkaus     false
                 tk/paallysteiden-juotostyot   false
                 tk/siltojen-puhdistus         false
@@ -135,7 +134,7 @@ hakutiheys-historiakuva 1200000)
     {:alku (if (= @valittu-tila :nykytilanne)
              (t/minus (pvm/nyt)
                       (t/hours @nykytilanteen-aikasuodattimen-arvo))
-             (first historiakuvan-aikavali))
+             (first @historiakuvan-aikavali))
      :loppu (if (= @valittu-tila :nykytilanne)
               (pvm/nyt)
               (second @historiakuvan-aikavali))}))

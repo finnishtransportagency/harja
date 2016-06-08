@@ -131,7 +131,7 @@ Yksinkertainen tapa ottaa pakattu dumppi:
 Tämä saattaa kuitenkin mystisesti kaatua kesken siirron.
 Vaihtoehtoinen tapa SCP:llä:
 
-Huom. voit olla välittämättä virheilmoituksesta: could not change directory to "/home/mikkoro": Permission denied. Kopiointi tehdään silti.
+Huom. voit olla välittämättä virheilmoituksesta: could not change directory to "/home/<tunnus>": Permission denied. Kopiointi tehdään silti.
 
 > ssh harja-db1-stg
 > sudo -u postgres pg_dump -v -Fc harja > /tmp/harja-stg-dump
@@ -181,9 +181,12 @@ piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi
 luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
 
 Seuraavat headerit tuettuna:
+
 * OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
-* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit), esim "Jarjestelmavastaava"
-tai <urakan-SAMPO-ID>_ELY_Urakanvalvoja tai Urakoitisijan laatupäällikkö <urakoitsijan-ytunnus>_Laatupaallikko
+* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit). Esim:
+    * Järjestelmävastaava: Jarjestelmavastaava
+    * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
+    * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
 * OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto" tai "YIT Rakennus Oy"
 * OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
 * OAM_USER_FIRST_NAME: Etunimi
@@ -193,3 +196,8 @@ tai <urakan-SAMPO-ID>_ELY_Urakanvalvoja tai Urakoitisijan laatupäällikkö <ura
 
 Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
 jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
+
+# Fronttitestit
+
+Fronttitestit pyörivät figwheelin kautta.
+Ne voi ajaa myös komentorivillä komennolla "lein doo phantom test"

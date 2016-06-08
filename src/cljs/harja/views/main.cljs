@@ -24,7 +24,9 @@
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.asiakas.tapahtumat :as t]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -185,10 +187,17 @@
            (empty? (:urakkaroolit kayttaja))
            (empty? (:organisaatioroolit kayttaja)))))
 
+(defn kuuntele-oikeusvirheita []
+  (t/kuuntele! :ei-oikeutta (fn [tiedot]
+                              (viesti/nayta! (:viesti tiedot)
+                                             :warning
+                                             viesti/viestin-nayttoaika-pitka))))
+
 (defn main
   "Harjan UI:n pääkomponentti"
   []
   (varoita-jos-vanha-ie)
+  (kuuntele-oikeusvirheita)
   (komp/luo
     (fn []
       (if @nav/render-lupa?

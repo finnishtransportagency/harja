@@ -1,2 +1,4 @@
-ALTER TABLE yllapitokohde ADD COLUMN lahetetty TIMESTAMP;
-ALTER TABLE yllapitokohde ADD COLUMN lahetys_onnistunut BOOLEAN;
+-- Lisää indeksit reittipistelle ja sen tehtäville/materiaaleille
+CREATE INDEX reittipiste_toteuma ON reittipiste (toteuma);
+CREATE INDEX reitti_tehtava_reittipiste ON reitti_tehtava (reittipiste);
+CREATE INDEX reitti_materiaali_reittipiste ON reitti_materiaali (reittipiste);

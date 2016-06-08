@@ -8,28 +8,33 @@
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.ui.komponentti :as komp]
+            [harja.loki :refer [log]]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.siltatarkastukset :as siltatarkastukset]))
 
-(defn laadunseuranta []
-  (let [ur @nav/valittu-urakka]
-    (komp/luo
-      (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
-      (fn []
-        [bs/tabs
-         {:style :tabs :classes "tabs-taso2"
-          :active (nav/valittu-valilehti-atom :laadunseuranta)}
+(defn laadunseuranta [ur]
+  (komp/luo
+    (komp/lippu urakka-laadunseuranta/laadunseurannassa?)
+    (fn [{:keys [id tyyppi] :as ur}]
+      [bs/tabs
+       {:style :tabs :classes "tabs-taso2"
+        :active (nav/valittu-valilehti-atom :laadunseuranta)}
 
-         "Tarkastukset" :tarkastukset
-         [tarkastukset/tarkastukset]
+       "Tarkastukset" :tarkastukset
+       (when (oikeudet/urakat-laadunseuranta-tarkastukset id)
+         [tarkastukset/tarkastukset])
 
-         "Laatupoikkeamat" :laatupoikkeamat
-         [laatupoikkeamat/laatupoikkeamat]
+       "Laatupoikkeamat" :laatupoikkeamat
+       (when (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
+         [laatupoikkeamat/laatupoikkeamat])
 
-         "Sanktiot" :sanktiot
-         [sanktiot/sanktiot]
+       "Sanktiot" :sanktiot
+       (when (oikeudet/urakat-laadunseuranta-sanktiot id)
+         [sanktiot/sanktiot])
 
-         "Siltatarkastukset" :siltatarkastukset
-         (when (= :hoito (:tyyppi ur))
-           ^{:key "siltatarkastukset"}
-           [siltatarkastukset/siltatarkastukset])]))))
+       "Siltatarkastukset" :siltatarkastukset
+       (when (and (= :hoito tyyppi)
+                  (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
+         ^{:key "siltatarkastukset"}
+         [siltatarkastukset/siltatarkastukset])])))
 

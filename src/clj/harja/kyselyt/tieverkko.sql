@@ -32,3 +32,10 @@ FROM tierekisteriosoitteelle_viiva(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER)
 -- hakee pisteen annetulle tierekisteriosoitteelle jossa ei ole loppuosaa
 SELECT *
 FROM tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER));
+
+-- name: hae-osien-pituudet
+-- Hakee osien pituudet annetulla välillä (inclusive)
+SELECT osa, max(tr_pituus) as pituus FROM tieverkko_paloina
+ WHERE tie = :tie AND
+       osa BETWEEN :aosa AND :losa
+GROUP BY osa;

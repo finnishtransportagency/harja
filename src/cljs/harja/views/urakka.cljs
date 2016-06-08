@@ -36,7 +36,7 @@
     :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo id) (= tyyppi :paikkaus))
     :laadunseuranta (oikeudet/urakat-laadunseuranta id)
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
-    :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= tyyppi :hoito))
+    :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta))))
@@ -48,10 +48,12 @@
         _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         hae-urakan-tyot (fn [ur]
-                          (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur))))
-                          (go (reset! u/urakan-yks-hint-tyot
-                                      (s/prosessoi-tyorivit ur
-                                                            (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))]
+                          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+                            (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
+                          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                            (go (reset! u/urakan-yks-hint-tyot
+                                       (s/prosessoi-tyorivit ur
+                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
 
     ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
     @u/valittu-toimenpideinstanssi
@@ -100,7 +102,7 @@
      :laadunseuranta
      (when (valilehti-mahdollinen? :laadunseuranta ur)
        ^{:key "laadunseuranta"}
-       [laadunseuranta/laadunseuranta])
+       [laadunseuranta/laadunseuranta ur])
 
      "Välitavoitteet"
      :valitavoitteet

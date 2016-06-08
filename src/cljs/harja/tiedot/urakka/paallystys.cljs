@@ -10,7 +10,8 @@
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka :as urakka])
+    [harja.tiedot.urakka :as urakka]
+    [harja.domain.tierekisteri :as tr-domain])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -21,7 +22,7 @@
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
-                                       :sopimus-id sopimus-id}))
+                                          :sopimus-id sopimus-id}))
 
 (defn hae-paallystysilmoitus-paallystyskohteella [urakka-id paallystyskohde-id]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:urakka-id urakka-id
@@ -40,7 +41,7 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id))))
 
-(defonce paallystysilmoitus-lomakedata (atom nil))          ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
+(defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
 (tarkkaile! "----> PÄÄLLYSTYSTILMOT" paallystysilmoitus-lomakedata)
 
@@ -59,15 +60,17 @@
 
 (def yhan-paallystyskohteet
   (reaction
-    (filter
-      yllapitokohteet/yha-kohde?
-      @yllapitokohteet)))
+    (let [yha-kohteet (filter
+                        yllapitokohteet/yha-kohde?
+                        @yllapitokohteet)]
+      (tr-domain/jarjesta-kohteiden-kohdeosat yha-kohteet))))
 
 (def harjan-paikkauskohteet
   (reaction
-    (filter
-      (comp not yllapitokohteet/yha-kohde?)
-      @yllapitokohteet)))
+    (let [ei-yha-kohteet (filter
+                           (comp not yllapitokohteet/yha-kohde?)
+                           @yllapitokohteet)]
+      (tr-domain/jarjesta-kohteiden-kohdeosat ei-yha-kohteet))))
 
 (def kohteet-yhteensa
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))

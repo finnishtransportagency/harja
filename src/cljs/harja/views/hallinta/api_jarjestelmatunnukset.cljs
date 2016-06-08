@@ -5,6 +5,7 @@
             [reagent.core :refer [atom]]
             [harja.ui.komponentti :as komp]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.yleiset :refer [ajax-loader]]
             [clojure.string :as str]
             [harja.loki :refer [log]]
             [harja.tiedot.urakoitsijat :refer [urakoitsijat]]
@@ -16,8 +17,9 @@
 (defonce nakymassa? (atom false))
 
 (defonce jarjestelmatunnukset
-  (reaction<! [_ @nakymassa?]
-              (k/post! :hae-jarjestelmatunnukset nil)))
+  (reaction<! [nakymassa? @nakymassa?]
+              (when nakymassa?
+                (k/post! :hae-jarjestelmatunnukset nil))))
 
 (defn- urakoitsijavalinnat []
   (distinct (map #(select-keys % [:id :nimi]) @urakoitsijat)))
@@ -35,7 +37,10 @@
    (fn []
      (let [ei-muokattava (constantly false)]
        [grid/grid {:otsikko "API järjestelmätunnukset"
-                   :tallenna tallenna}
+                   :tallenna tallenna
+                   :tyhja (if (nil? @jarjestelmatunnukset)
+                            [ajax-loader "Haetaan järjestelmätunnuksia..."]
+                            "Järjestelmätunnuksia ei löytynyt")}
         [{:otsikko "Käyttäjänimi"
           :nimi :kayttajanimi
           :tyyppi :string
@@ -60,8 +65,5 @@
           :leveys 5}
          {:otsikko "Kuvaus"
           :nimi :kuvaus :tyyppi :string
-          :leveys 5}
-         ]
-
-        @jarjestelmatunnukset
-        ]))))
+          :leveys 5}]
+        @jarjestelmatunnukset]))))

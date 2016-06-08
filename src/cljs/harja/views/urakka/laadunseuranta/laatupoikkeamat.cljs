@@ -22,7 +22,8 @@
 (defn laatupoikkeamalistaus
   "Listaa urakan laatupoikkeamat"
   []
-  (let [poikkeamat (reverse (sort-by :aika @laatupoikkeamat/urakan-laatupoikkeamat))]
+  (let [poikkeamat (when @laatupoikkeamat/urakan-laatupoikkeamat
+                     (reverse (sort-by :aika @laatupoikkeamat/urakan-laatupoikkeamat)))]
     [:div.laatupoikkeamat
      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
      [yleiset/pudotusvalikko
@@ -34,7 +35,6 @@
                      :kasitellyt "Käsitellyt (päätös tehty)"
                      :selvitys "Odottaa urakoitsijan selvitystä"
                      :omat "Minun kirjaamat / kommentoimat")}
-
       [:kaikki :selvitys :kasitellyt :omat]]
 
      [urakka-valinnat/aikavali]
@@ -44,7 +44,9 @@
 
      [grid/grid
       {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %))
-       :tyhja   "Ei laatupoikkeamia."}
+       :tyhja (if (nil? poikkeamat)
+                [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
+                "Ei laatupoikkeamia")}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
        {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1}
        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}

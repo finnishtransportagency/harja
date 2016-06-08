@@ -33,58 +33,58 @@
 
 (defn assosioi [rivit rivin-avain hakuehto valittu-sopimusnumero valittu-hoitokausi urakan-yks-hint-tyot]
   (map
-   (fn [rivi]
-     (assoc rivi rivin-avain
-            (hakuehto (first (filter
-                              (fn [tyo]
-                                (and (= (:sopimus tyo)
-                                        (first valittu-sopimusnumero))
-                                     (= (:tehtava tyo) (:tpk_id rivi))
-                                     (pvm/sama-pvm?
-                                      (:alkupvm tyo)
-                                      (first valittu-hoitokausi))))
-                              urakan-yks-hint-tyot)))))
-   rivit))
+    (fn [rivi]
+      (assoc rivi rivin-avain
+                  (hakuehto (first (filter
+                                     (fn [tyo]
+                                       (and (= (:sopimus tyo)
+                                               (first valittu-sopimusnumero))
+                                            (= (:tehtava tyo) (:tpk_id rivi))
+                                            (pvm/sama-pvm?
+                                              (:alkupvm tyo)
+                                              (first valittu-hoitokausi))))
+                                     urakan-yks-hint-tyot)))))
+    rivit))
 
 (defn- laske-toteutuneet-kustannukset [rivit]
   (map
-   (fn [rivi]
-     (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:maara rivi))))
-   rivit))
+    (fn [rivi]
+      (assoc rivi :hoitokauden-toteutuneet-kustannukset (* (:yksikkohinta rivi) (:maara rivi))))
+    rivit))
 
-(defn- laske-erotus [rivit]
+(defn- laske-kustannuserotus [rivit]
   (map
-   (fn [rivi]
-     (assoc rivi :kustannuserotus
-            (- (:hoitokauden-suunnitellut-kustannukset rivi)
-               (:hoitokauden-toteutuneet-kustannukset rivi))))
-   rivit))
+    (fn [rivi]
+      (assoc rivi :kustannuserotus
+                  (- (:hoitokauden-suunnitellut-kustannukset rivi)
+                     (:hoitokauden-toteutuneet-kustannukset rivi))))
+    rivit))
 
 (def yks-hint-tyot-tehtavittain
   (reaction
-   (let [assosioi (fn [rivit rivin-avain haettava-avain]
-                    (assosioi rivit rivin-avain haettava-avain @u/valittu-sopimusnumero
-                              @u/valittu-hoitokausi @u/urakan-yks-hint-tyot))]
-     (when @yks-hint-tehtavien-summat
-       (sort-by :nimi
-                (-> @yks-hint-tehtavien-summat
-                    (assosioi :yksikkohinta :yksikkohinta)
-                    (assosioi :hoitokauden-suunniteltu-maara :maara)
-                    (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
-                    (assosioi :yksikko :yksikko)
-                    (laske-toteutuneet-kustannukset)
-                    (laske-erotus)))))))
+    (let [assosioi (fn [rivit rivin-avain haettava-avain]
+                     (assosioi rivit rivin-avain haettava-avain @u/valittu-sopimusnumero
+                               @u/valittu-hoitokausi @u/urakan-yks-hint-tyot))]
+      (when @yks-hint-tehtavien-summat
+        (sort-by :nimi
+                 (-> @yks-hint-tehtavien-summat
+                     (assosioi :yksikkohinta :yksikkohinta)
+                     (assosioi :hoitokauden-suunniteltu-maara :maara)
+                     (assosioi :hoitokauden-suunnitellut-kustannukset :yhteensa)
+                     (assosioi :yksikko :yksikko)
+                     (laske-toteutuneet-kustannukset)
+                     (laske-kustannuserotus)))))))
 
 (defonce valittu-yksikkohintainen-toteuma (atom nil))
 
 (defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
   (k/post! :urakan-yksikkohintaisten-toteumien-reitit
-           {:urakka-id  urakka-id
+           {:urakka-id urakka-id
             :sopimus-id sopimus-id
-            :alkupvm    alkupvm
-            :loppupvm   loppupvm
+            :alkupvm alkupvm
+            :loppupvm loppupvm
             :toimenpide toimenpide
-            :tehtava    tehtava}))
+            :tehtava tehtava}))
 
 (def haetut-reitit
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

@@ -89,7 +89,6 @@
            koneellinen-niitto
            koneellinen-vesakonraivaus
            harjaus
-           pinnan-tasaus
            liikennemerkkien-puhdistus
            l-ja-p-alueiden-puhdistus
            siltojen-puhdistus

@@ -62,7 +62,7 @@
 
 (defn aikavali-nykypvm-taakse
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
-Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
+  Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   [urakka]
   (let [alkuvalinta (first aikavali-valinnat)
         [_ aikavali-fn] alkuvalinta

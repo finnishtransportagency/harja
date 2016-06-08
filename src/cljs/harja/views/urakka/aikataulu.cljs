@@ -20,8 +20,6 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-
-
 (defn valmis-tiemerkintaan [kohde-id urakka-id]
   (let [valmis-tiemerkintaan-lomake (atom nil)
         valmis-tallennettavaksi? (reaction (some? (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)))]
@@ -65,7 +63,7 @@
                 :pakollinen? true
                 :tyyppi :pvm}]
               @valmis-tiemerkintaan-lomake]]))}
-       "Aseta päivämäärä"])))
+       "Aseta päivä\u00ADmäärä"])))
 
 (defn aikataulu
   [urakka optiot]
@@ -83,6 +81,7 @@
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
            :voi-poistaa? (constantly false)
+           :voi-lisata? false
            :piilota-toiminnot? true
            :tallenna (if voi-tallentaa?
                        #(tiedot/tallenna-yllapitokohteiden-aikataulu urakka-id
@@ -95,6 +94,9 @@
             :muokattava? (constantly false)}
            {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
             :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
+           {:otsikko "Yl\u00ADlä\u00ADpi\u00ADto\u00ADluok\u00ADka"
+            :nimi :yllapitoluokka :tyyppi :numero :leveys 4
+            :muokattava? (constantly false)}
            ; FIXME Tallennus epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 10 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
