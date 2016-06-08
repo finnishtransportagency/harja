@@ -110,11 +110,11 @@
     (luo-reitti db reitti toteuma-id)))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [transaktio db]
+  (jdbc/with-db-transaction [c db]
     (when (:reittitoteuma data)
-      (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma data)))
+      (tallenna-yksittainen-reittitoteuma c urakka-id kirjaaja (:reittitoteuma data)))
     (doseq [pistetoteuma (:reittitoteumat data)]
-      (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma pistetoteuma)))))
+      (tallenna-yksittainen-reittitoteuma c urakka-id kirjaaja (:reittitoteuma pistetoteuma)))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
