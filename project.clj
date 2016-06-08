@@ -124,6 +124,9 @@
 
                  [com.cemerick/piggieback "0.2.1"]
                  [figwheel-sidecar "0.5.3"]
+
+                 ;; Performance metriikat
+                 [yleisradio/new-reliquary "1.0.0"]
                  ]
 
   :dev-dependencies [
