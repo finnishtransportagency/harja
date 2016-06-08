@@ -254,10 +254,6 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                       :tarkista-polku?   false
                       :ei-todennettava   ei-todennettava?})))
 
-(defn julkaise-palvelut [http & palveluiden-nimet-ja-funktiot]
-  (doseq [[nimi funktio] (partition 2 palveluiden-nimet-ja-funktiot)]
-    (julkaise-palvelu http nimi funktio)))
-
 (defn julkaise-palvelut [http & nimet-ja-palvelut]
   (doseq [[nimi palvelu-fn] (partition 2 nimet-ja-palvelut)]
     (julkaise-palvelu http nimi palvelu-fn)))
