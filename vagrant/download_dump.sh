@@ -32,11 +32,13 @@ else
 fi
 
 echo "\nAloitetaan staging dumpin lataus! Hae vaikka kahvia."
+echo "\n(Älä välitä 'Could not change directory to /home/tunnus: Permission denied' -virheestä"
 
-ssh harja-db1-stg "sudo -u postgres pg_dump -v -Fc --exclude-table-data=integraatioviesti --exclude-table-data=liite harja" > ../tietokanta/harja-stg-dump
+ssh harja-db1-stg "sudo -u postgres pg_dump -Fc --exclude-table-data=integraatioviesti --exclude-table-data=liite harja" > ../tietokanta/harja-stg-dump
 
 echo "\nDumppi ladattu. Puretaan dummpi .sql komennoiksi."
 
-vagrant ssh -c "pg_restore /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
+# Jos muutat tätä, muuta sama rivi myös mount_dump.sh
+vagrant ssh -c "pg_restore -Fc -C /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
 
 echo "\nDumppi ladattu ja purettu!"

@@ -9,7 +9,8 @@ fi
 
 # Varmistetaan, että dumppi on jo purettu.
 if [ ! -f ../tietokanta/restored-stg-dump.sql ]; then
-    vagrant ssh -c "pg_restore /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
+    # Jos muutat tätä, muuta sama rivi myös download_dump.sh
+    vagrant ssh -c "pg_restore -Fc -C /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
 fi
 
 date="$(stat -f "%Sm" ../tietokanta/restored-stg-dump.sql)"
@@ -17,6 +18,6 @@ date="$(stat -f "%Sm" ../tietokanta/restored-stg-dump.sql)"
 echo "\nOtetaan käyttöön staging dump. Dump on luotu: ${date}"
 echo "\n"
 
-svagrant ssh -c "sudo -u postgres psql -f /harja-tietokanta/drop_for_dump.sql && sudo -u postgres psql /harja-tietokanta/restored-stg-dump.sql"
+vagrant ssh -c "sudo -u postgres psql -f /harja-tietokanta/drop_before_restore.sql && sudo -u postgres psql -q -f /harja-tietokanta/restored-stg-dump.sql > /dev/null"
 
 echo "\nValmis!"
