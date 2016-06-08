@@ -16,9 +16,11 @@
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]])
-  (:import (org.postgresql.util PSQLException)))
+  (:import (org.postgresql.util PSQLException)
+           (org.postgis Point)))
 
 (defn- yhdista-viivat [viivat]
   {:type  :multiline
@@ -33,20 +35,33 @@
   [(get-in pistepari [:reittipiste :koordinaatit :x])
    (get-in pistepari [:reittipiste :koordinaatit :y])])
 
-(defn- hae-reitti [db [[x1 y1] [x2 y2]]]
-  (or (some-> (tieverkko/hae-tr-osoite-valille-ehka db x1 y1 x2 y2 250)
-              :geometria
-              geo/pg->clj)
-      (do (log/warn "Reittitoteuman pisteillä (x1:" x1 " y1: " y1 " & x2: " x2 " y2: " y2 " )"
-                    " ei ole yhteistä tietä. Tehdään linnuntie.")
-          {:type :line :points [[x1 y1] [x2 y2]]})))
+(defn- valin-geometria [{:keys [alku loppu geometria]}]
+  (or (and geometria (geo/pg->clj geometria))
+      (let [[x1 y1] (:coordinates (geo/pg->clj alku))
+            [x2 y2] (:coordinates (geo/pg->clj loppu))]
+        (log/warn "Reittitoteuman pisteillä"
+                  " (x1:" x1 " y1: " y1
+                  " & x2: " x2 " y2: " y2 " )"
+                  " ei ole yhteistä tietä. Tehdään linnuntie.")
+          {:type :line
+           :points [[x1 y1]
+                    [x2 y2]]})))
+
+(defn- hae-reitit [db pisteet]
+  (as-> pisteet p
+    (map (fn [[x y]]
+           (str "POINT(" x " " y ")")) p)
+    (str/join "," p)
+    (str "GEOMETRYCOLLECTION(" p ")")
+    (tieverkko/hae-tr-osoitteet-valeille db p 250)
+    (map valin-geometria p)
+    (yhdista-viivat p)))
 
 (defn luo-reitti-geometria [db reitti]
   (->> reitti
        (sort-by (comp :aika :reittipiste))
        (map piste)
-       (partition 2 1)
-       (map #(hae-reitti db %))
+       hae-reitit
        yhdista-viivat
        geo/clj->pg geo/geometry))
 

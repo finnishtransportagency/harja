@@ -17,6 +17,13 @@ SELECT * FROM yrita_tierekisteriosoite_pisteille(
   ST_MakePoint(:x2, :y2) :: GEOMETRY,
   :threshold::INTEGER) AS tr_osoite;
 
+-- name: hae-tr-osoitteet-valeille
+-- Hakee tierekisteriosoitteet annetuille pisteille.
+-- Pisteet on string WKT geometrycollection pointeja. Jokaisen
+-- kahden pisteen välille lasketaan osoite.
+SELECT * FROM
+  tierekisteriosoitteet_pisteille(ST_GeomFromText(:pisteet), :threshold::INTEGER)
+   as vali(alku geometry, loppu geometry, geometria geometry);
 
 
 -- name: hae-tr-osoite

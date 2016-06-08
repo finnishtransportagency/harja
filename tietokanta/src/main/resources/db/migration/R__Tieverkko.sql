@@ -182,6 +182,28 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION tierekisteriosoitteet_pisteille(
+  pisteet geometry,
+  threshold INTEGER) RETURNS SETOF RECORD AS $$
+DECLARE
+  alku geometry;
+  loppu geometry;
+  i INTEGER;
+  pisteita INTEGER;
+BEGIN
+  i := 1;
+  pisteita := ST_NumGeometries(pisteet);
+  WHILE i < pisteita LOOP
+    alku := ST_GeometryN(pisteet, i);
+    loppu := ST_GeometryN(pisteet, i+1);
+    --RAISE NOTICE 'alku: %, loppu: %', st_astext(alku), st_astext(loppu);
+    RETURN NEXT (alku, loppu,
+    	   	 (SELECT ytp.geometria
+	            FROM yrita_tierekisteriosoite_pisteille(alku, loppu, threshold) ytp));
+    i := i + 1;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
 
 -- kuvaus: tierekisteriosoittelle_viiva, kaistan päättely
 CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
