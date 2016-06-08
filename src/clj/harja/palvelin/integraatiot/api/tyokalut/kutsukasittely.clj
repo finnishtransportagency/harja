@@ -166,7 +166,7 @@
   (when (and (fn? skeema) (nil? body))
     (throw+ {:type virheet/+invalidi-json+
              :virheet [{:koodi virheet/+invalidi-json-koodi+
-                        :viesti (str "JSON on tyhjä")}]})))
+                        :viesti "JSON on tyhjä"}]})))
 
 (defn lue-kutsu
   "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu.
