@@ -25,6 +25,7 @@
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+    (println "VASTAUS: " (pr-str vastaus-lisays))
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
