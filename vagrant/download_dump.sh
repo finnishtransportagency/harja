@@ -20,7 +20,7 @@ then
             then
                 echo "Selvä, ladataan uusin dump."
             else
-                echo "Tyydytään muutaman päivän vanhaan dumppiin."
+                echo "Tyydytään vanhaan dumppiin."
                 exit 0
             fi
         fi
@@ -28,12 +28,12 @@ then
         echo "Ladataan uusi staging dump."
     fi
 else
-    echo "hoh"
+    echo "Pakotetaan uuden dumpin lataus. Vanha oli ladattu $date"
 fi
 
 echo "\nAloitetaan staging dumpin lataus! Hae vaikka kahvia."
 
-ssh harja-db1-stg "sudo -u postgres pg_dump -v -Fc -T integraatioviesti -T liite harja" > ../tietokanta/harja-stg-dump
+ssh harja-db1-stg "sudo -u postgres pg_dump -v -Fc --exclude-table-data=integraatioviesti --exclude-table-data=liite harja" > ../tietokanta/harja-stg-dump
 
 echo "\nDumppi ladattu. Puretaan dummpi .sql komennoiksi."
 
