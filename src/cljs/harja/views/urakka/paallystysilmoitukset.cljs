@@ -556,6 +556,9 @@
       (if-not (k/virhe? vastaus)
         (reset! paallystys/paallystysilmoitus-lomakedata vastaus)))))
 
+(defn laheta-kohde-yhan [kohde-id]
+  )
+
 (defn ilmoitusluettelo
   []
   (komp/luo
@@ -586,11 +589,20 @@
          {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
           :komponentti (fn [rivi]
                          (if (:tila rivi)
-                           [:button.nappi-toissijainen.nappi-grid
+                           [:button.nappi-ensisijainen.nappi-grid
                             {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                             [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                           [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
-                            [:span "Aloita päällystysilmoitus"]]))}]
+                           [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
+                            [:span "Aloita päällystysilmoitus"]]))}
+         {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
+          :komponentti (fn [rivi]
+                         [:button.nappi-ensisijainen.nappi-grid
+                          {:on-click #(laheta-kohde-yhan (:paallystyskohde-id rivi))}
+                          [:span (ikonit/livicon-arrow-right) " Laheta"]])}
+         {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :string :leveys 20
+          :hae (fn [rivi]
+                 ;todo: hae serveriltä lähetys aika ja tarkista onnistuiko vai eikö
+                 "toteutappa minut")}]
         (sort-by
           (juxt (fn [toteuma] (case (:tila toteuma)
                                 :lukittu 0
@@ -605,7 +617,14 @@
                                 :hyvaksytty 0
                                 :hylatty 1
                                 3)))
-          @paallystys/paallystysilmoitukset)]])))
+          @paallystys/paallystysilmoitukset)]
+
+       [:button.nappi-ensisijainen {; todo: tarkista onko yhtään rivejä ja laita classiksi disabled jos ei ole
+                                    :class                                                 ""
+                                    :on-click #(do (.preventDefault %)
+                                                   ;; todo kerää kaikki id:t ja lähetä
+                                                   )} "Lähetä kaikki YHA:n"]
+       ])))
 
 (defn paallystysilmoitukset []
   (komp/luo
