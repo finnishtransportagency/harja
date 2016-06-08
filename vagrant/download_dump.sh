@@ -32,11 +32,11 @@ else
 fi
 
 echo "\n[$(date +"%T")] Aloitetaan staging dumpin lataus! Hae vaikka kahvia."
-echo "[$(date +"%T")] (Älä välitä 'Could not change directory to /home/tunnus: Permission denied' -virheestä)"
+echo "[$(date +"%T")] (Älä välitä 'Could not change directory to /home/tunnus: Permission denied' -virheestä)\n"
 
 ssh harja-db1-stg "sudo -u postgres pg_dump -Fc --exclude-table-data=integraatioviesti --exclude-table-data=liite harja" > ../tietokanta/harja-stg-dump
 
-echo "\n[$(date +"%T")] Dumppi ladattu. Puretaan dummpi .sql komennoiksi."
+echo "\n[$(date +"%T")] Dumppi ladattu. Puretaan dummpi .sql komennoiksi.\n"
 
 # Jos muutat tätä, muuta sama rivi myös mount_dump.sh
 vagrant ssh -c "pg_restore -Fc -C /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
