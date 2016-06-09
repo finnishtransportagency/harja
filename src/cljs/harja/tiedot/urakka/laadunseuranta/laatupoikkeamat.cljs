@@ -38,6 +38,7 @@
                                   :loppu     loppupvm}))
 
 (defn hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle
+  "Hakee urakan ylläpitokohteet näytettäväksi laatupoikkeamalomakkeella."
   [urakka-id sopimus-id]
   (k/post! :urakan-yllapitokohteet-laatupoikkeamalomakkeelle
            {:urakka-id urakka-id
@@ -48,7 +49,7 @@
   perusteella. Palauttaa kaiken tiedon mitä laatupoikkeaman muokkausnäkymään
   tarvitaan."
   [urakka-id laatupoikkeama-id]
-  (k/post! :hae-laatupoikkeaman-tiedot {:urakka-id   urakka-id
+  (k/post! :hae-laatupoikkeaman-tiedot {:urakka-id urakka-id
                                   :laatupoikkeama-id laatupoikkeama-id}))
 
 (defn tallenna-laatupoikkeama [laatupoikkeama]
