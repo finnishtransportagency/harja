@@ -73,16 +73,6 @@
             (q/poista-indeksi! c
                                nimi vuosi kk))))
 
-      (let [vuodet (map :vuosi indeksit)
-            ensimmainen-vuosi (reduce min vuodet)
-            viimeinen-vuosi (reduce max vuodet)]
-        ;; Poista muistetut laskutusyhteenvedot kaikille urakoille, kun
-        ;; indeksejä muokataan. Poista muokattua indeksivuotta aiemman
-        ;; vuoden lokakuusta alkaen (hoitokauden vaihto).
-        (laskutusyhteenveto-q/poista-muistetut-laskutusyhteenvedot!
-         c {:urakka nil
-            :alkupvm (pvm/luo-pvm (- ensimmainen-vuosi 1) 9 1)
-            :loppupvm (pvm/luo-pvm viimeinen-vuosi 11 31)}))
       (hae-indeksit c user))))
 
 
