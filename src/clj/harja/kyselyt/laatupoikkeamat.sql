@@ -125,6 +125,7 @@ SELECT
   h.id,
   h.aika,
   h.kohde,
+  h.yllapitokohde,
   h.tekija,
   h.kuvaus,
   h.sijainti,
@@ -202,8 +203,15 @@ SET aika            = :aika,
   tr_loppuosa = :loppuosa,
   tr_alkuetaisyys = :alkuetaisyys,
   tr_loppuetaisyys = :loppuetaisyys,
+  yllapitokohde = :yllapitokohde,
   muokattu          = current_timestamp
-WHERE id = :id;
+WHERE id = :id
+AND urakka = :urakka;
+
+-- name: hae-yllapitokohteen-urakka-id
+SELECT
+  urakka AS id
+FROM yllapitokohde WHERE id = :id;
 
 -- name: luo-laatupoikkeama<!
 -- Luo uuden laatupoikkeaman annetuille perustiedoille. Luontivaiheessa ei
@@ -225,10 +233,11 @@ INTO laatupoikkeama
  tr_loppuosa,
  tr_alkuetaisyys,
  tr_loppuetaisyys,
+ yllapitokohde,
  ulkoinen_id)
 VALUES (:lahde::lahde, :urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
                  :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
-        :tr_loppuetaisyys, :ulkoinen_id);
+        :tr_loppuetaisyys, :yllapitokohde, :ulkoinen_id);
 
 -- name: kirjaa-laatupoikkeaman-paatos!
 -- Kirjaa havainnolle päätöksen.
