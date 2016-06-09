@@ -59,6 +59,15 @@
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
+(defn hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle [db user {:keys [urakka-id sopimus-id]}]
+  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
+  (jdbc/with-db-transaction [db db]
+    (let [vastaus (q/hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle db urakka-id sopimus-id)]
+      (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
+      vastaus)))
+
 (defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
   (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
@@ -327,6 +336,9 @@
       (julkaise-palvelu http :urakan-yllapitokohteet
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohteet db user tiedot)))
+      (julkaise-palvelu http :urakan-yllapitokohteet-laatupoikkeamalomakkeelle
+                        (fn [user tiedot]
+                          (hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle db user tiedot)))
       (julkaise-palvelu http :urakan-yllapitokohdeosat
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohdeosat db user tiedot)))

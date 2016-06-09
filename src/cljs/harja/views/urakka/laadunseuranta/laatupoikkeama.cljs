@@ -231,12 +231,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :palstoja 1
                 :pakollinen? true
                 :muokattava? muokattava?
-                :valinnat [1 2 3]
+                :valinnat (:yllapitokohteet optiot)
                 :jos-tyhja "Ei valittavia kohteita"
+                :valinta-arvo :id
                 :valinta-nayta (fn [arvo muokattava?]
-                                 (if arvo (str arvo) (if muokattava?
-                                                       "- Valitse kohde -"
-                                                       "")))
+                                 (if arvo (str (:kohdenumero arvo) " " (:nimi arvo))
+                                          (if muokattava?
+                                            "- Valitse kohde -"
+                                            "")))
                 :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
                {:otsikko "Kohde" :tyyppi :string :nimi :kohde
                 :palstoja 1

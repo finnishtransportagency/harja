@@ -72,5 +72,7 @@
      [:span.laatupoikkeamat
       [kartta/kartan-paikka]
       (if @laatupoikkeamat/valittu-laatupoikkeama
-        [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama optiot]
+        [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama
+         (merge optiot
+                {:yllapitokohteet @laatupoikkeamat/urakan-yllapitokohteet})]
         [laatupoikkeamalistaus optiot])])))

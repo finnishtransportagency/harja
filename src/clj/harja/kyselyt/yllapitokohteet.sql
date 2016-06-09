@@ -35,6 +35,18 @@ WHERE
   AND sopimus = :sopimus
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle
+-- Hakee urakan kaikki yllapitokohteet, listaten vain minimaalisen määrän tietoa
+SELECT
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi
+FROM yllapitokohde ypk
+WHERE
+  urakka = :urakka
+  AND sopimus = :sopimus
+  AND ypk.poistettu IS NOT TRUE;
+
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
 SELECT
