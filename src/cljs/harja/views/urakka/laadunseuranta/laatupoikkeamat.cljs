@@ -12,7 +12,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
             [harja.domain.laadunseuranta :refer [validi-laatupoikkeama?]]
-            [harja.views.urakka.laadunseuranta.laatupoikkeama :refer [laatupoikkeama laatupoikkeamalomake]]
+            [harja.views.urakka.laadunseuranta.laatupoikkeama :refer [laatupoikkeamalomake]]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -21,7 +21,7 @@
 
 (defn laatupoikkeamalistaus
   "Listaa urakan laatupoikkeamat"
-  []
+  [optiot]
   (let [poikkeamat (when @laatupoikkeamat/urakan-laatupoikkeamat
                      (reverse (sort-by :aika @laatupoikkeamat/urakan-laatupoikkeamat)))]
     [:div.laatupoikkeamat
@@ -59,7 +59,7 @@
   [laatupoikkeama]
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
-(defn laatupoikkeamat []
+(defn laatupoikkeamat [optiot]
   (komp/luo
     (komp/lippu lp-kartalla/karttataso-laatupoikkeamat)
     (komp/kuuntelija :laatupoikkeama-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %2)))
@@ -68,9 +68,9 @@
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (fn []
+    (fn [optiot]
      [:span.laatupoikkeamat
       [kartta/kartan-paikka]
       (if @laatupoikkeamat/valittu-laatupoikkeama
-        [laatupoikkeamalomake {} laatupoikkeamat/valittu-laatupoikkeama]
-        [laatupoikkeamalistaus])])))
+        [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama optiot]
+        [laatupoikkeamalistaus optiot])])))

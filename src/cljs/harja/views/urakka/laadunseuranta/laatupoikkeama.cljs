@@ -182,15 +182,16 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
            {:validoi [[:ei-tyhja viesti]]
             :pakollinen? true})))
 
-(defn laatupoikkeamalomake [asetukset laatupoikkeama]
+(defn laatupoikkeamalomake
+  ([laatupoikkeama] (laatupoikkeamalomake laatupoikkeama {}))
+  ([laatupoikkeama optiot]
   (let [sanktio-virheet (atom {})
         muokattava? (constantly (not (paatos? @laatupoikkeama)))]
     (komp/luo
-      (fn [asetukset laatupoikkeama]
+      (fn [laatupoikkeama optiot]
         (let [uusi? (not (:id @laatupoikkeama))
               sanktion-validointi (partial lisaa-sanktion-validointi
                                            #(sanktiotietoja-annettu? @laatupoikkeama))]
-
           [:div.laatupoikkeama
            [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
 
@@ -222,12 +223,26 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :huomauta [[:urakan-aikana-ja-hoitokaudella]]
               :palstoja 1}
 
-
-             {:otsikko "Kohde" :tyyppi :string :nimi :kohde
-              :palstoja 1
-              :pakollinen? true
-              :muokattava? muokattava?
-              :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
+             (if (or
+                   (= (:nakyma optiot) :paallystys)
+                   (= (:nakyma optiot) :paikkaus)
+                   (= (:nakyma optiot) :tiemerkinta))
+               {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
+                :palstoja 1
+                :pakollinen? true
+                :muokattava? muokattava?
+                :valinnat [1 2 3]
+                :jos-tyhja "Ei valittavia kohteita"
+                :valinta-nayta (fn [arvo muokattava?]
+                                 (if arvo (str arvo) (if muokattava?
+                                                       "- Valitse kohde -"
+                                                       "")))
+                :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
+               {:otsikko "Kohde" :tyyppi :string :nimi :kohde
+                :palstoja 1
+                :pakollinen? true
+                :muokattava? muokattava?
+                :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
 
              {:otsikko "Tekijä" :nimi :tekija
               :uusi-rivi? true
@@ -369,17 +384,4 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                     (tallenna-laatupoikkeama @laatupoikkeama)
                                     (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
                                   {:ikoni (ikonit/livicon-arrow-left)}]})))]
-            @laatupoikkeama]])))))
-
-(defn laatupoikkeama []
-  (komp/luo
-    (komp/lippu lp-kartalla/karttataso-laatupoikkeamat)
-    (komp/ulos (kartta/kuuntele-valittua! laatupoikkeamat/valittu-laatupoikkeama))
-    (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :M))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (fn []
-      [:span.laatupoikkeamat
-       [kartta/kartan-paikka]
-       [laatupoikkeamalomake {} laatupoikkeamat/valittu-laatupoikkeama]])))
+            @laatupoikkeama]]))))))
