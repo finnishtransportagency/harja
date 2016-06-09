@@ -179,11 +179,20 @@
     (log/debug "Geometria päivitetty.")
     (hae-urakan-yha-tiedot c urakka-id)))
 
+(defn laheta-kohteet-yhan
+  "Lähettää annetut kohteet teknisine tietoineen YHA:n."
+  [integraatioloki yha db user urakka-id kohde-idt]
+  ;; todo: onko tämä oikeus ok?
+  (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
+  (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
+  (yha/laheta-kohteet-yhan yha integraatioloki db urakka-id kohde-idt))
+
 (defrecord Yha []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)
+          integraatioloki (:integraatioloki this)
           yha (:yha-integraatio this)]
       (julkaise-palvelu http :sido-yha-urakka-harja-urakkaan
                         (fn [user tiedot]
@@ -196,7 +205,10 @@
                           (hae-yha-kohteet db yha user tiedot)))
       (julkaise-palvelu http :tallenna-uudet-yha-kohteet
                         (fn [user tiedot]
-                          (tallenna-uudet-yha-kohteet db user tiedot))))
+                          (tallenna-uudet-yha-kohteet db user tiedot)))
+      (julkaise-palvelu http :laheta-kohteet-yhan
+                        (fn [user urakka-id kohde-idt]
+                          (laheta-kohteet-yhan integraatioloki yha db user urakka-id kohde-idt))))
     this)
   (stop [this]
     (poista-palvelut
