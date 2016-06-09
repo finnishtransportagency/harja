@@ -33,9 +33,15 @@
 (defn tallenna-laatupoikkeama
   "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja
    päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
-  [laatupoikkeama]
-  (let [laatupoikkeama (assoc laatupoikkeama
-                         :sanktiot (vals (:sanktiot laatupoikkeama)))]
+  [laatupoikkeama nakyma]
+  (let [laatupoikkeama (as-> laatupoikkeama lp
+                           (assoc lp :sanktiot (vals (:sanktiot lp)))
+                             ;; Varmistetaan, että tietyssä näkymäkontekstissa tallennetaan vain näkymän
+                             ;; sisältämät asiat (esim. on mahdollista vaihtaa koko valittu urakka päällystyksestä
+                             ;; hoitoon, ja emme halua että hoidon lomakkeessa tallentuu myös ylläpitokohde)
+                             (if (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])
+                               (dissoc lp :kohde)
+                               (dissoc lp :yllapitokohde)))]
     (go
       (let [tulos (<! (laatupoikkeamat/tallenna-laatupoikkeama laatupoikkeama))]
         (if (k/virhe? tulos)
@@ -210,7 +216,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                         :default
                         "Tallenna laatupoikkeama")
 
-                      #(tallenna-laatupoikkeama @laatupoikkeama)
+                      #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
                       {:ikoni (ikonit/tallenna)
                        :disabled (validoi-laatupoikkeama @laatupoikkeama)
                        :virheviesti "Laatupoikkeaman tallennus epäonnistui"
@@ -384,7 +390,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :komponentti [napit/yleinen
                                   "Avaa tarkastus"
                                   (fn []
-                                    (tallenna-laatupoikkeama @laatupoikkeama)
+                                    (tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
                                     (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
                                   {:ikoni (ikonit/livicon-arrow-left)}]})))]
             @laatupoikkeama]]))))))
