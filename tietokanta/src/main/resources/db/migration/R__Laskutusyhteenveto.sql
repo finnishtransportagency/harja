@@ -893,6 +893,7 @@ BEGIN
 
   END LOOP;
 
+  RAISE NOTICE 'tallennetaan cacheen';
   -- Tallenna cacheen ajettu laskutusyhteenveto
   -- Jos indeksit tai urakan toteumat muuttuvat, pitää niiden transaktioiden
   -- poistaa myös cache
