@@ -12,7 +12,8 @@ then
     then
         if [ "$1" = "default" ];
         then
-            echo "[$(date +"%T")] Dumppi on ladattu $date, ladataan tuoreempi. (Aikaraja on $AIKARAJA minuuttia.)"
+            echo "[$(date +"%T")] Dumppi on ladattu $date, ei ladata turhaan tuoreempaa. (Aikaraja on $AIKARAJA minuuttia.)"
+            exit 0
         else
             read -p "[$(date +"%T")] Dumppi on ladattu $date, haluatko varmasti ladata uuden? [y N]" -n 1 -r
             echo
