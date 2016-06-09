@@ -596,7 +596,7 @@
           :komponentti (fn [rivi]
                          [yha/laheta-kohteet-yhan
                           oikeudet/urakat-kohdeluettelo-paallystyskohteet
-                          (:id @nav/valittu-urakka)
+                          @nav/valittu-urakka
                           [(:paallystyskohde-id rivi)]])}
          {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :string :leveys 20
           :hae (fn [rivi]
@@ -619,7 +619,7 @@
           @paallystys/paallystysilmoitukset)]
        [yha/laheta-kohteet-yhan
         oikeudet/urakat-kohdeluettelo-paallystyskohteet
-        (:id @nav/valittu-urakka)
+        @nav/valittu-urakka
         (mapv :paallystyskohde-id @paallystys/paallystysilmoitukset)]])))
 
 (defn paallystysilmoitukset []

@@ -262,6 +262,7 @@
                  "ei koskaan"))]))
 
 (defn laheta-kohteet-yhan [oikeus urakka kohde-idt]
+  (log "----> adsfa" (pr-str urakka))
   (let [kohteita (count kohde-idt)
         urakka-id (:id urakka)]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
@@ -272,8 +273,8 @@
            "Lähetä kaikki kohteet YHA:n"
            ""))
        #(do
-         (log "[YHA] Lähetetään urakan (id: " urakka-id ") kohteet (id:t " kohde-idt ") YHA:n")
-         (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :kohdMuuta lähetyse-idt kohde-idt}))
+         (log "[YHA] Lähetetään urakan (id:" urakka-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
+         (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :kohde-idt kohde-idt}))
        {:luokka "nappi-ensisijainen"
         :disabled (or (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja)))
