@@ -33,3 +33,26 @@ CREATE TRIGGER tg_poista_muistetut_laskutusyht_ind
   ON indeksi
   FOR EACH ROW
   EXECUTE PROCEDURE poista_muistetut_laskutusyht_ind();
+
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_tot() RETURNS trigger AS $$
+DECLARE
+  alku DATE;
+  loppu DATE;
+BEGIN
+  alku := date_trunc('month', NEW.alkanut);
+  loppu := alku + interval '31 days';
+  RAISE NOTICE 'Poistetaan urakan % muistetut laskutusyhteenvedot % - %', NEW.urakka, alku, loppu;
+  DELETE FROM laskutusyhteenveto_cache
+   WHERE urakka = NEW.urakka
+     AND alkupvm >= alku
+     AND loppupvm <= loppu;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_poista_muistetut_laskutusyht_tot
+  AFTER INSERT OR UPDATE
+  ON toteuma
+  FOR EACH ROW
+  WHEN (NEW.tyyppi != 'kokonaishintainen'::toteumatyyppi)
+  EXECUTE PROCEDURE poista_muistetut_laskutusyht_tot();
