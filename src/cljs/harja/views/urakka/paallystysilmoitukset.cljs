@@ -31,7 +31,8 @@
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.yhatuonti :as yha])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -258,8 +259,8 @@
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot lomakedata-nyt)))
                       (fn [uusi-arvo]
                         (reset! paallystys/paallystysilmoitus-lomakedata
-                                  (assoc-in lomakedata-nyt [:ilmoitustiedot :osoitteet]
-                                            (grid/filteroi-uudet-poistetut uusi-arvo)))))
+                                (assoc-in lomakedata-nyt [:ilmoitustiedot :osoitteet]
+                                          (grid/filteroi-uudet-poistetut uusi-arvo)))))
               _ (log "----> " (pr-str lomakedata-nyt))
               alustalle-tehdyt-toimet
               (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot lomakedata-nyt)))
@@ -556,9 +557,6 @@
       (if-not (k/virhe? vastaus)
         (reset! paallystys/paallystysilmoitus-lomakedata vastaus)))))
 
-(defn laheta-kohde-yhan [kohde-id]
-  )
-
 (defn ilmoitusluettelo
   []
   (komp/luo
@@ -594,11 +592,12 @@
                             [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                            [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                             [:span "Aloita päällystysilmoitus"]]))}
-         {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
+         {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 11 :tyyppi :komponentti
           :komponentti (fn [rivi]
-                         [:button.nappi-ensisijainen.nappi-grid
-                          {:on-click #(laheta-kohde-yhan (:paallystyskohde-id rivi))}
-                          [:span (ikonit/livicon-arrow-right) " Laheta"]])}
+                         [yha/laheta-kohteet-yhan
+                          oikeudet/urakat-kohdeluettelo-paallystyskohteet
+                          (:id @nav/valittu-urakka)
+                          [(:paallystyskohde-id rivi)]])}
          {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :string :leveys 20
           :hae (fn [rivi]
                  ;todo: hae serveriltä lähetys aika ja tarkista onnistuiko vai eikö
@@ -618,13 +617,10 @@
                                 :hylatty 1
                                 3)))
           @paallystys/paallystysilmoitukset)]
-
-       [:button.nappi-ensisijainen {; todo: tarkista onko yhtään rivejä ja laita classiksi disabled jos ei ole
-                                    :class                                                 ""
-                                    :on-click #(do (.preventDefault %)
-                                                   ;; todo kerää kaikki id:t ja lähetä
-                                                   )} "Lähetä kaikki YHA:n"]
-       ])))
+       [yha/laheta-kohteet-yhan
+        oikeudet/urakat-kohdeluettelo-paallystyskohteet
+        (:id @nav/valittu-urakka)
+        (mapv :paallystyskohde-id @paallystys/paallystysilmoitukset)]])))
 
 (defn paallystysilmoitukset []
   (komp/luo

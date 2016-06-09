@@ -13,7 +13,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.pvm :as pvm]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -259,3 +260,26 @@
                (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
                  (pvm/pvm-aika kohdeluettelo-paivitetty)
                  "ei koskaan"))]))
+
+(defn laheta-kohteet-yhan [oikeus urakka kohde-idt]
+  (let [kohteita (count kohde-idt)
+        urakka-id (:id urakka)]
+    (when-not @yha-kohteiden-paivittaminen-kaynnissa?
+      [harja.ui.napit/palvelinkutsu-nappi
+       (if (= 1 kohteita)
+         [:span (ikonit/livicon-arrow-right) " Laheta"]
+         (if (< 1 kohteita)
+           "Lähetä kaikki kohteet YHA:n"
+           ""))
+       #(do
+         (log "[YHA] Lähetetään urakan (id: " urakka-id ") kohteet (id:t " kohde-idt ") YHA:n")
+         (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :kohdMuuta lähetyse-idt kohde-idt}))
+       {:luokka "nappi-ensisijainen"
+        :disabled (or (empty? kohde-idt)
+                      (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja)))
+        :virheviesti "Kohteiden lähettäminen epäonnistui."
+        :kun-onnistuu (fn [_]
+                        (log "[YHA] Kohteet lähetetty YHA:n")
+                        ;; todo: päivitä lähetystiedot kohteille
+                        #_(swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
+                                 (cljs-time.core/to-default-time-zone (t/now))))}])))
