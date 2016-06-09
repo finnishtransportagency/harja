@@ -8,15 +8,20 @@ CREATE TABLE laskutusyhteenveto_cache (
 
 CREATE INDEX laskutusyhteenveto_urakka ON laskutusyhteenveto_cache (urakka);
 
+-- Poista muistetut laskutusyhteenvedot kun indeksejä muokataan
 CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_ind() RETURNS trigger AS $$
 DECLARE
   alku DATE;
   loppu DATE;
 BEGIN
   IF NEW.kuukausi >= 10 THEN
+    -- Jos kuukausi on: loka - joulu, poista tästä seuraavan vuoden
+    -- syyskuuhun asti (nykyisen hoitokauden loppuun)
     alku := make_date(NEW.vuosi, 10, 1);
     loppu := make_date(NEW.vuosi+1, 9, 30);
   ELSE
+    -- Jos kuukausi on: tammi - syys, poista edellisen vuoden
+    -- lokakuusta tämän vuoden syyskuuhun asti
     alku := make_date(NEW.vuosi-1, 10, 1);
     loppu := make_date(NEW.vuosi, 9, 30);
   END IF;
@@ -34,6 +39,9 @@ CREATE TRIGGER tg_poista_muistetut_laskutusyht_ind
   FOR EACH ROW
   EXECUTE PROCEDURE poista_muistetut_laskutusyht_ind();
 
+-- Poista muistetut laskutusyhteenvedot kun toteuma muuttuu.
+-- Kun toteuma, joka ei ole kokonaishintaista työtä, muuttuu,
+-- poista sen toteumakuukauden laskutusyhteenveto.
 CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_tot() RETURNS trigger AS $$
 DECLARE
   alku DATE;
@@ -57,6 +65,7 @@ CREATE TRIGGER tg_poista_muistetut_laskutusyht_tot
   WHEN (NEW.tyyppi != 'kokonaishintainen'::toteumatyyppi)
   EXECUTE PROCEDURE poista_muistetut_laskutusyht_tot();
 
+-- Kun sanktio muuttuu, poista sen perintäpäivän kuukauden laskutusyhteenveto
 CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_sanktio() RETURNS trigger AS $$
 DECLARE
  alku DATE;
