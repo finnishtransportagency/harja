@@ -43,8 +43,8 @@ SELECT
   ypk.nimi
 FROM yllapitokohde ypk
 WHERE
-  urakka = :urakka
-  AND sopimus = :sopimus
+  ((urakka = :urakka AND sopimus = :sopimus)
+   OR suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohde

@@ -216,6 +216,11 @@ SELECT
   urakka AS id
 FROM yllapitokohde WHERE id = :id;
 
+-- name: hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+SELECT
+  suorittava_tiemerkintaurakka AS id
+FROM yllapitokohde WHERE id = :id;
+
 -- name: luo-laatupoikkeama<!
 -- Luo uuden laatupoikkeaman annetuille perustiedoille. Luontivaiheessa ei
 -- voi antaa päätöstietoja.
