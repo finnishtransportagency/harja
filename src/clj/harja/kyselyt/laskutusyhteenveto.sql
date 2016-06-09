@@ -18,8 +18,7 @@ SELECT * FROM laske_hoitokauden_asiakastyytyvaisyysbonus(
 -- Poistaa muistetut laskutusyhteenvedot annetulle aikavälille.
 -- Jos urakka on annettu, poistaa vain siltä urakalta. Muussa tapauksessa
 -- poistaa kaikilta urakoilta.
-DELETE
-  FROM laskutusyhteenveto_cache
- WHERE (:urakka IS NULL OR urakka = :urakka) AND
-       alkupvm >= :alkupvm AND
-       loppupvm <= :loppupvm
+DELETE FROM laskutusyhteenveto_cache
+ WHERE (:urakka::INTEGER IS NULL OR urakka = :urakka) AND
+       alkupvm >= :alkupvm::date AND
+       loppupvm <= :loppupvm::date
