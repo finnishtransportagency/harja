@@ -19,4 +19,23 @@ echo "\n[$(date +"%T")] Otetaan käyttöön staging dump. Dump on luotu: ${date}
 
 vagrant ssh -c "sudo -u postgres psql -f /harja-tietokanta/drop_before_restore.sql && sudo -u postgres psql -q -f /harja-tietokanta/restored-stg-dump.sql > /dev/null"
 
-echo "\n[$(date +"%T")] Valmis!"
+echo "\n[$(date +"%T")] Dumppi ajettu sisään."
+
+if [ -n "$1" ];
+then
+    echo "[$(date +"%T")] Annoit skriptille parametrin. Ajetaan migrate.sh\n"
+    sh migrate.sh > /dev/null
+    echo "\n[$(date +"%T")] Valmis!"
+else
+    read -p "[$(date +"%T")] Ajetaanko migrate.sh (data ei katoa)? [Y n]" -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]
+    then
+        echo "[$(date +"%T")] Homma on hoidettu!"
+    else
+        echo "[$(date +"%T")] Ajetaan migrate.sh\n"
+        sh migrate.sh > /dev/null
+        echo "\n[$(date +"%T")] Se oli siinä!"
+    fi
+fi
+
