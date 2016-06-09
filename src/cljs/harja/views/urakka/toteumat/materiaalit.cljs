@@ -252,7 +252,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
             :hae     (comp pvm/pvm :alkanut :toteuma)
             :muokattava? (constantly false)}
            {:otsikko "Määrä"
-            :muokattava? (comp not :jarjestelmanlisaama)
+            :muokattava? (comp not :jarjestelmanlisaama :toteuma)
             :nimi :toteuman_maara
             :tyyppi :positiivinen-numero
             :hae (comp :maara :toteuma)

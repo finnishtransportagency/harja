@@ -41,8 +41,6 @@
     service: name=nginx state=restarted enabled=yes
   - name: Create working directory
     file: path=/harja state=directory mode=0777
-  - name: Copy Deus private key
-    copy: src=keys/id_rsa_harjavagrant dest=/harja/id_rsa_harjavagrant
   - name: Checkout harja-tietokanta
     sudo: yes
     sudo_user: postgres
