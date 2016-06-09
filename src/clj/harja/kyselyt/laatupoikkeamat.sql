@@ -12,10 +12,13 @@ SELECT
   h.paatos                           AS paatos_paatos,
   h.kasittelytapa                    AS paatos_kasittelytapa,
   h.kuvaus,
-  h.sijainti
+  h.sijainti,
+  ypk.kohdenumero AS yllapitokohdenumero,
+  ypk.nimi AS yllapitokohdenimi
 FROM laatupoikkeama h
   JOIN kayttaja k ON h.luoja = k.id
   LEFT JOIN sanktio s ON h.id = s.laatupoikkeama
+  LEFT JOIN yllapitokohde ypk ON h.yllapitokohde = ypk.id
 WHERE h.urakka = :urakka
       AND h.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)

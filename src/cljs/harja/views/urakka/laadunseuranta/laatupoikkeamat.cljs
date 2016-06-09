@@ -48,7 +48,15 @@
                 [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
                 "Ei laatupoikkeamia")}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-       {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1}
+       (if (or (= :paallystys (:nakyma optiot))
+               (= :paikkaus (:nakyma optiot))
+               (= :tiemerkinta (:nakyma optiot)))
+         {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1
+          :hae (fn [rivi]
+                 (str (:yllapitokohdenumero rivi)
+                               " "
+                               (:yllapitokohdenimi rivi)))}
+         {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
        {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
        {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}] ;; Päätös
