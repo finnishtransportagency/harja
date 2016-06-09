@@ -62,7 +62,6 @@
        (sort-by (comp :aika :reittipiste))
        (map piste)
        (hae-reitti db)
-       yhdista-viivat
        geo/clj->pg geo/geometry))
 
 (defn tee-onnistunut-vastaus []
