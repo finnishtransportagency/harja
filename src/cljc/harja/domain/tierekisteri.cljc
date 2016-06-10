@@ -96,30 +96,39 @@
 (defn tierekisteriosoite-tekstina
   ([tr] (tierekisteriosoite-tekstina tr {}))
   ([tr optiot]
-  (let [tie-sana (if (nil? (:tie-sana? optiot))
-                   "Tie "
-                   (if (:tie-sana? optiot) "Tie " nil))
-        tie (or (:numero tr) (:tr-numero tr) (:tie tr))
-        aosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr))
-        aet (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr))
-        losa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr))
-        let (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr))]
-    (if tie
-      (str tie-sana
-           tie " / "
-           aosa " / "
-           aet
-           (when (and let losa) " / " losa " / " let))
-      (str "Ei tierekisteriosoitetta")))))
+   (let [tie-sana (let [sana "Tie "]
+                    (if (nil? (:nayta-teksti-tie? optiot))
+                      sana
+                      (when (:nayta-teksti-tie? optiot) sana)))
+         tie (or (:numero tr) (:tr-numero tr) (:tie tr))
+         alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr))
+         alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr))
+         loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr))
+         loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr))
+         ei-tierekisteriosoitetta (let [lause "Ei tierekisteriosoitetta"]
+                                    (if (nil? (:nayta-teksti-ei-tr-osoitetta? optiot))
+                                      lause
+                                      (when (:nayta-teksti-ei-tr-osoitetta? optiot) lause)))]
+     ;; Muodosta teksti
+     (str (if tie
+            (str tie-sana
+                 tie " / "
+                 alkuosa " / "
+                 alkuetaisyys
+                 (when (and loppuetaisyys loppuosa) " / " loppuosa " / " loppuetaisyys))
+            ei-tierekisteriosoitetta)))))
+
 
 (defn yllapitokohde-tekstina
   ([kohde] (yllapitokohde-tekstina kohde {}))
   ([kohde optiot]
-  (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
-        nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
-        osoite (when (:osoite? optiot)
-                 (str " (" (tierekisteriosoite-tekstina kohde optiot) ")"))]
-    (str kohdenumero " " nimi osoite))))
+   (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
+         nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
+         osoite (when (:osoite? optiot)
+                  (let [tr-osoite (tierekisteriosoite-tekstina kohde optiot)]
+                    (when-not (empty? tr-osoite)
+                      (str " (" tr-osoite ")"))))]
+     (str kohdenumero " " nimi osoite))))
 
 (defn jarjesta-kohteiden-kohdeosat [kohteet]
   (mapv

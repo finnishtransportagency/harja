@@ -55,8 +55,14 @@
                (= :tiemerkinta (:nakyma optiot)))
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1
           :hae (fn [rivi]
-                 (tierekisteri/yllapitokohde-tekstina rivi))}
+                 (tierekisteri/yllapitokohde-tekstina rivi {:osoite? true
+                                                            :nayta-teksti-tie? false
+                                                            :nayta-teksti-ei-tr-osoitetta? false}))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
+       {:otsikko "TR-osoite"
+        :nimi :tr
+        :leveys 2
+        :fmt tierekisteri/tierekisteriosoite-tekstina}
        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
        {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
        {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}] ;; Päätös

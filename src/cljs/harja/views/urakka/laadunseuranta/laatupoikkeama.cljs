@@ -247,8 +247,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :jos-tyhja "Ei valittavia kohteita"
                  :valinta-arvo :id
                  :valinta-nayta (fn [arvo muokattava?]
-                                  (if arvo (tierekisteri/yllapitokohde-tekstina arvo {:osoite? true
-                                                                                      :tie-sana? false})
+                                  (if arvo (tierekisteri/yllapitokohde-tekstina arvo
+                                                                                {:osoite? true
+                                                                                 :nayta-teksti-ei-tr-osoitetta? false
+                                                                                 :nayta-teksti-tie? false})
                                            (if muokattava?
                                              "- Valitse kohde -"
                                              "")))
