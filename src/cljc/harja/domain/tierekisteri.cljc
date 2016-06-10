@@ -1,7 +1,7 @@
 (ns harja.domain.tierekisteri
   (:require [schema.core :as s]
             [clojure.string :as str]
-            #?@(:cljs [[harja.loki :refer [log]]])))
+    #?@(:cljs [[harja.loki :refer [log]]])))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (:tr-numero tie1) (:tr-numero tie2)))
@@ -41,16 +41,16 @@
   (cond
     (< tr-loppuosa tr-alkuosa)
     (assoc osoite
-           :tr-alkuosa tr-loppuosa
-           :tr-alkuetaisyys tr-loppuetaisyys
-           :tr-loppuosa tr-alkuosa
-           :tr-loppuetaisyys tr-alkuetaisyys)
+      :tr-alkuosa tr-loppuosa
+      :tr-alkuetaisyys tr-loppuetaisyys
+      :tr-loppuosa tr-alkuosa
+      :tr-loppuetaisyys tr-alkuetaisyys)
 
     (and (= tr-loppuosa tr-alkuosa)
          (< tr-loppuetaisyys tr-alkuetaisyys))
     (assoc osoite
-           :tr-loppuetaisyys tr-alkuetaisyys
-           :tr-alkuetaisyys tr-loppuetaisyys)
+      :tr-loppuetaisyys tr-alkuetaisyys
+      :tr-alkuetaisyys tr-loppuetaisyys)
 
     :default
     osoite))
@@ -90,26 +90,39 @@
 
 (defn tiekohteiden-jarjestys [kohde]
   ((juxt :tie :tr-numero :tienumero
-        :aosa :tr-alkuosa
-        :aet :tr-alkuetaisyys) kohde))
+         :aosa :tr-alkuosa
+         :aet :tr-alkuetaisyys) kohde))
 
 (defn tierekisteriosoite-tekstina
-  [tr]
-  (let [tie (or (:numero tr) (:tr-numero tr))
-        aosa (or (:alkuosa tr) (:tr-alkuosa tr))
-        aet (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr))
-        losa (or (:loppuosa tr) (:tr-loppuosa tr))
-        let (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr))]
+  ([tr] (tierekisteriosoite-tekstina tr {}))
+  ([tr optiot]
+  (let [tie-sana (if (nil? (:tie-sana? optiot))
+                   "Tie "
+                   (if (:tie-sana? optiot) "Tie " nil))
+        tie (or (:numero tr) (:tr-numero tr) (:tie tr))
+        aosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr))
+        aet (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr))
+        losa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr))
+        let (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr))]
     (if tie
-      (str "Tie " tie " / "
+      (str tie-sana
+           tie " / "
            aosa " / "
-           aet " / "
-           losa " / "
-           let)
-      (str "Ei tierekisteriosoitetta"))))
+           aet
+           (when (and let losa) " / " losa " / " let))
+      (str "Ei tierekisteriosoitetta")))))
+
+(defn yllapitokohde-tekstina
+  ([kohde] (yllapitokohde-tekstina kohde {}))
+  ([kohde optiot]
+  (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
+        nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
+        osoite (when (:osoite? optiot)
+                 (str " (" (tierekisteriosoite-tekstina kohde optiot) ")"))]
+    (str kohdenumero " " nimi osoite))))
 
 (defn jarjesta-kohteiden-kohdeosat [kohteet]
   (mapv
     (fn [kohde]
       (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
-      kohteet))
+    kohteet))

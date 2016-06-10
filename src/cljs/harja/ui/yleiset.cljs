@@ -466,18 +466,6 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +ei-sidota-indeksiin+
   "Ei sidota indeksiin")
 
-(defn tierekisteriosoite
-  ([numero alkuosa alkuetaisyys] (tierekisteriosoite numero alkuosa alkuetaisyys nil nil))
-  ([numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
-   [:span.tierekisteriosoite
-    [:span.tie "Tie " numero] " / "
-    [:span.alkuosa alkuosa] " / "
-    [:span.alkuetaisyys alkuetaisyys]
-    (when (and loppuosa loppuetaisyys)
-      [:span
-       " / " [:span.loppuosa loppuosa]
-       " / " [:span.loppuetaisyys loppuetaisyys]])]))
-
 (defn vihje
   ([teksti] (vihje teksti nil))
   ([teksti luokka]

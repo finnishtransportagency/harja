@@ -2,7 +2,7 @@
 -- Hakee urakan tarkastukset aikavälin perusteella
 SELECT
   t.id,
-  sopimus,
+  t.sopimus,
   t.aika,
   t.tr_numero,
   t.tr_alkuosa,
@@ -14,6 +14,8 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
+  ypk.kohdenumero AS yllapitokohdenumero,
+  ypk.nimi AS yllapitokohdenimi,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
@@ -25,6 +27,7 @@ SELECT
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)

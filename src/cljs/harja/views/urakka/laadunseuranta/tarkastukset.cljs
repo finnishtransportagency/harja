@@ -8,6 +8,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.tiedot.istunto :as istunto]
+            [harja.domain.tierekisteri :as tierekisteri]
 
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
@@ -109,13 +110,16 @@
          {:otsikko "Tyyppi"
           :nimi :tyyppi :fmt tarkastukset/+tarkastustyyppi->nimi+ :leveys 1}
 
-         {:otsikko "TR osoite"
+         (when (or (= :paallystys (:nakyma optiot))
+                 (= :paikkaus (:nakyma optiot))
+                 (= :tiemerkinta (:nakyma optiot)))
+           {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
+            :hae (fn [rivi]
+                   (tierekisteri/yllapitokohde-tekstina rivi))})
+         {:otsikko "TR-osoite"
           :nimi :tr
           :leveys 2
-          :fmt #(apply yleiset/tierekisteriosoite
-                       (map (fn [kentta] (get % kentta))
-                            [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]))}
-
+          :fmt tierekisteri/tierekisteriosoite-tekstina}
          {:otsikko "Havainnot"
           :nimi :havainnot
           :leveys 4
@@ -253,7 +257,8 @@
             :jos-tyhja "Ei valittavia kohteita"
             :valinta-arvo :id
             :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo (str (:kohdenumero arvo) " " (:nimi arvo))
+                             (if arvo (tierekisteri/yllapitokohde-tekstina arvo {:osoite? true
+                                                                                 :tie-sana? false})
                                       (if muokattava?
                                         "- Valitse kohde -"
                                         "")))

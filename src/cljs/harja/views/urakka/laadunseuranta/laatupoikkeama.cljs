@@ -21,7 +21,8 @@
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
             [harja.tiedot.navigaatio.reitit :as reitit]
-            [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma])
+            [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -246,7 +247,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :jos-tyhja "Ei valittavia kohteita"
                  :valinta-arvo :id
                  :valinta-nayta (fn [arvo muokattava?]
-                                  (if arvo (str (:kohdenumero arvo) " " (:nimi arvo))
+                                  (if arvo (tierekisteri/yllapitokohde-tekstina arvo {:osoite? true
+                                                                                      :tie-sana? false})
                                            (if muokattava?
                                              "- Valitse kohde -"
                                              "")))

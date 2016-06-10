@@ -15,7 +15,8 @@
             [harja.views.urakka.laadunseuranta.laatupoikkeama :refer [laatupoikkeamalomake]]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -54,9 +55,7 @@
                (= :tiemerkinta (:nakyma optiot)))
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1
           :hae (fn [rivi]
-                 (str (:yllapitokohdenumero rivi)
-                               " "
-                               (:yllapitokohdenimi rivi)))}
+                 (tierekisteri/yllapitokohde-tekstina rivi))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
        {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}

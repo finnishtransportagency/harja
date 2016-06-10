@@ -77,7 +77,7 @@
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
   (jdbc/with-db-transaction [db db]
-    (let [vastaus (q/hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle db urakka-id sopimus-id)]
+    (let [vastaus (q/hae-urakan-yllapitokohteet-lomakkeelle db urakka-id sopimus-id)]
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
