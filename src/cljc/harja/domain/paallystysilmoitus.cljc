@@ -120,6 +120,35 @@
   "Kaistavalinta koodilla"
   (apply s/enum (map :koodi +kaistat+)))
 
+(def +sideainetyypit+
+  "Sideainetyypit"
+  [{:nimi "1" :koodi 1}
+   {:nimi "2" :koodi 2}
+   {:nimi "3" :koodi 3}
+   {:nimi "4" :koodi 4}
+   {:nimi "5" :koodi 5}
+   {:nimi "6" :koodi 6}
+   {:nimi "7" :koodi 7}
+   {:nimi "8" :koodi 8}
+   {:nimi "9" :koodi 9}
+   {:nimi "10" :koodi 10}
+   {:nimi "11" :koodi 11}
+   {:nimi "12" :koodi 12}
+   {:nimi "13" :koodi 13}
+   {:nimi "14" :koodi 14}
+   {:nimi "15" :koodi 15}
+   {:nimi "16" :koodi 16}
+   {:nimi "17" :koodi 17}
+   {:nimi "18" :koodi 18}
+   {:nimi "19" :koodi 19}
+   {:nimi "20" :koodi 20}
+   {:nimi "21" :koodi 21}
+   {:nimi "22" :koodi 22}])
+
+(def +sideainetyyppi+
+  "Sideainetyypin valinta koodilla"
+  (apply s/enum (map :koodi +sideainetyypit+)))
+
 (def +verkon-tarkoitukset+
   [{:nimi "Pituushalkeamien ehkäisy" :koodi 1}
    {:nimi "Muiden routavaurioiden ehkäisy" :koodi 2}
@@ -172,12 +201,12 @@
      ; Osoitteelle tehdyt toimenpiteet
      (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
      (s/optional-key :raekoko) (s/maybe s/Int)
-     (s/optional-key :massa) (s/maybe s/Num) ;; kg/m2
+     (s/optional-key :massa) (s/maybe s/Num)                ;; kg/m2
      (s/optional-key :rc%) (s/maybe s/Int)
      (s/optional-key :tyomenetelma) (s/maybe +tyomenetelma+) ;; koodisto "työmenetelmä"
-     (s/optional-key :leveys) (s/maybe s/Num) ;; metriä, esim. 4,2
-     (s/optional-key :massamaara) (s/maybe s/Num) ;; tonnia
-     (s/optional-key :pinta-ala) (s/maybe s/Num) ;; m2
+     (s/optional-key :leveys) (s/maybe s/Num)               ;; metriä, esim. 4,2
+     (s/optional-key :massamaara) (s/maybe s/Num)           ;; tonnia
+     (s/optional-key :pinta-ala) (s/maybe s/Num)            ;; m2
      (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
      (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
 
@@ -185,36 +214,36 @@
      (s/optional-key :esiintyma) (s/maybe s/Str)
      (s/optional-key :km-arvo) (s/maybe s/Str)
      (s/optional-key :muotoarvo) (s/maybe s/Str)
-     (s/optional-key :sideainetyyppi) (s/maybe s/Str)
+     (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
      (s/optional-key :pitoisuus) (s/maybe s/Num)
      (s/optional-key :lisaaineet) (s/maybe s/Str)
      (s/optional-key :poistettu) s/Bool}]
 
-  ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
-  ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
-  ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-  :alustatoimet
-  [{:aosa s/Int
-    :aet s/Int
-    :losa s/Int
-    :let s/Int
-    (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
-    (s/optional-key :paksuus) (s/maybe s/Num) ;; cm
-    (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
-    (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
-    (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
-    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
-    (s/optional-key :poistettu) s/Bool}]
+   ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
+   ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
+   ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
+   :alustatoimet
+   [{:aosa s/Int
+     :aet s/Int
+     :losa s/Int
+     :let s/Int
+     (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
+     (s/optional-key :paksuus) (s/maybe s/Num)              ;; cm
+     (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
+     (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
+     (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
+     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
+     (s/optional-key :poistettu) s/Bool}]
 
-  ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
-  :tyot
-  [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
-    :tyo s/Str
-    :tilattu-maara s/Num
-    :toteutunut-maara s/Num
-    :yksikko s/Str
-    :yksikkohinta s/Num
-    (s/optional-key :poistettu) s/Bool}] } )
+   ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
+   :tyot
+   [{:tyyppi +paallystystyon-tyyppi+                        ;; +paallystystyon-tyyppi+ skeemasta
+     :tyo s/Str
+     :tilattu-maara s/Num
+     :toteutunut-maara s/Num
+     :yksikko s/Str
+     :yksikkohinta s/Num
+     (s/optional-key :poistettu) s/Bool}]})
 
 (defn laske-muutokset-kokonaishintaan
   "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."

@@ -443,7 +443,13 @@
               {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
                :leveys "20%"}
               {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys "30%"
-               :tyyppi :string :pituus-max 256}
+               :tyyppi :valinta
+               :valinta-arvo :koodi
+               :valinta-nayta (fn [rivi]
+                                (if rivi
+                                  (:nimi rivi)
+                                  "- Valitse sideainetyyppi -"))
+               :valinnat (conj pot/+sideainetyypit+ {:nimi "Ei sideainetyyppi" :lyhenne "Ei sideainetyyppiä" :koodi nil})}
               {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :tasaa :oikea}
               {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string
                :pituus-max 256}]

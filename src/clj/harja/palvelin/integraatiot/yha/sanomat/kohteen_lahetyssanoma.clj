@@ -36,31 +36,24 @@
    (tee-tierekisteriosoitevali alikohde)
    [:tunnus tunnus]
    [:paallystystoimenpide
-    ;; todo: merkittävä frontille pakolliseksi
-    [:uusi-paallyste paallystetyyppi]
+    (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
     (when raekoko [:raekoko raekoko])
     (when massa [:kokonaismassamaara massa])
     (when rc% [:rc-prosentti rc%])
     (when kuulamylly [:kuulamylly kuulamylly])
     (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
-    ;; todo: merkittävä xsd:n valinnaiseksi
-    [:leveys leveys]
-    ;; todo: merkittävä frontille pakolliseksi
-    [:pinta-ala pinta-ala]]
-   ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
-   [:materiaalit
-    [:materiaali
-     ;; todo: pitää lisätä frontille pakollisena
-     [:kiviainesesiintyman-nimi esiintyma]
-     ;; todo: pitää lisätä frontille pakollisena
-     [:kiviaineksen-km-arvo km-arvo]
-     ;; todo: pitää lisätä frontille pakollisena
-     [:kiviaineksen-muotoarvo muotoarvo]
-     ;; todo: sideainetyyppi täytyy muuttaa enumiksi kantaan ja frontille. ks. yha.xsd.
-     [:sideainetyyppi 1]
-     ;; todo: pitää lisätä frontille pakollisena
-     [:sideainepitoisuus pitoisuus]
-     [:lisa-aineet lisaaineet]]]])
+    (when leveys [:leveys leveys])
+    (when [:pinta-ala pinta-ala])] pinta-ala]
+  ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
+  [:materiaalit
+   [:materiaali
+    (when esiintyma [:kiviainesesiintyman-nimi esiintyma])
+    (when km-arvo [:kiviaineksen-km-arvo km-arvo])
+    (when muotoarvo [:kiviaineksen-muotoarvo muotoarvo])
+    ;; todo: sideainetyyppi täytyy muuttaa enumiksi kantaan ja frontille. ks. yha.xsd.
+    [:sideainetyyppi sideainetyyppi]
+    (when pitoisuus [:sideainepitoisuus pitoisuus])
+    [:lisa-aineet lisaaineet]]])
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi aosa let verkon-tarkoitus kasittelymenetelma losa aet
                                               tekninen-toimenpide paksuus verkon-sijainti]}
@@ -69,10 +62,6 @@
    [:tierekisteriosoitevali
     [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
     [:tienumero tienumero]
-    ;; todo: täytyy tehdä valinnaiseksi xsd:n
-    [:ajorata "0"]
-    ;; todo: täytyy tehdä valinnaiseksi xsd:n
-    [:kaista "11"]
     [:aosa aosa]
     [:aet aet]
     [:losa losa]

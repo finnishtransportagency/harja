@@ -15,12 +15,12 @@
             <tierekisteriosoitevali>
                 <karttapaivamaara>2016-01-01</karttapaivamaara>
                 <tienumero>3</tienumero>
-                <ajorata>0</ajorata>
-                <kaista>11</kaista>
                 <aosa>3</aosa>
                 <aet>3</aet>
                 <losa>3</losa>
                 <let>3</let>
+                <ajorata>0</ajorata>
+                <kaista>11</kaista>
             </tierekisteriosoitevali>
             <alikohteet>
                 <!--Zero or more repetitions:-->
@@ -29,12 +29,12 @@
                     <tierekisteriosoitevali>
                         <karttapaivamaara>2016-01-01</karttapaivamaara>
                         <tienumero>3</tienumero>
-                        <ajorata>0</ajorata>
-                        <kaista>11</kaista>
                         <aosa>3</aosa>
                         <aet>3</aet>
                         <losa>3</losa>
                         <let>3</let>
+                        <ajorata>0</ajorata>
+                        <kaista>11</kaista>
                     </tierekisteriosoitevali>
                     <tunnus>A</tunnus>
                     <!--Optional:-->
