@@ -14,8 +14,13 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
-  ypk.kohdenumero AS yllapitokohdenumero,
-  ypk.nimi AS yllapitokohdenimi,
+  ypk.tr_numero        AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero      AS yllapitokohde_numero,
+  ypk.nimi             AS yllapitokohde_nimi,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli

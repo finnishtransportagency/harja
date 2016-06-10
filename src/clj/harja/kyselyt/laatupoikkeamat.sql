@@ -17,9 +17,13 @@ SELECT
   lp.tr_alkuetaisyys,
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
-  lp.sijainti,
-  ypk.kohdenumero                    AS yllapitokohdenumero,
-  ypk.nimi                           AS yllapitokohdenimi
+  ypk.tr_numero        AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero      AS yllapitokohde_numero,
+  ypk.nimi             AS yllapitokohde_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   LEFT JOIN sanktio s ON lp.id = s.laatupoikkeama

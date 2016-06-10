@@ -115,8 +115,9 @@
                  (= :tiemerkinta (:nakyma optiot)))
            {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
             :hae (fn [rivi]
-                   (tierekisteri/yllapitokohde-tekstina rivi
-                                                        {:osoite (:tr rivi)
+                   (tierekisteri/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                         :nimi (get-in rivi [:yllapitokohde :nimi])}
+                                                        {:osoite (get-in rivi [:yllapitokohde :tr])
                                                          :nayta-teksti-tie? false
                                                          :nayta-teksti-ei-tr-osoitetta? false}))})
          {:otsikko "TR-osoite"
