@@ -32,13 +32,26 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +tarkastustyyppi+ [:tiesto :talvihoito :soratie :laatu])
+(def +tarkastustyyppi-hoidolle+ [:tiesto :talvihoito :soratie :laatu])
+(def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
 
-(defn tarkastustyypit-tekijalle [tekija]
+(defn tarkastustyypit-hoidon-tekijalle [tekija]
   (case tekija
     :tilaaja [:laatu]
     :urakoitsija [:tiesto :talvihoito :soratie]
-    +tarkastustyyppi+))
+    +tarkastustyyppi-hoidolle+))
+
+(defn tarkastustyypit-urakkatyypille-ja-tekijalle [urakkatyyppi tekija]
+  (if (some #(= urakkatyyppi %) [:paallystys :paikkaus :tiemerkinta])
+    ;; FIXME Ei vielä varmaa tietoa meneekö tarkastustyypit ylläpidon puolella näin vai pitääkö
+    ;; tekijäkin huomioida. Toistaiseksi mennään tällä.
+    +tarkastustyyppi-yllapidolle+
+    (tarkastustyypit-hoidon-tekijalle tekija)))
+
+(defn tarkastustyypit-urakkatyypille [urakkatyyppi]
+  (if (some #(= urakkatyyppi %) [:paallystys :paikkaus :tiemerkinta])
+    +tarkastustyyppi-yllapidolle+
+    +tarkastustyyppi-hoidolle+))
 
 (defn uusi-tarkastus []
   {:uusi? true
@@ -66,13 +79,8 @@
        [:span.label-ja-kentta
         [:span.kentan-otsikko "Tyyppi"]
         [:div.kentta
-         [tee-kentta {:tyyppi :valinta :valinnat (conj +tarkastustyyppi+ nil)
-                      :valinta-nayta #(case %
-                                       nil "Kaikki"
-                                       :tiesto "Tiestötarkastukset"
-                                       :talvihoito "Kelitarkastukset"
-                                       :soratie "Soratien tarkastukset"
-                                       :laatu "Laaduntarkastus")}
+         [tee-kentta {:tyyppi :valinta :valinnat (conj (tarkastustyypit-urakkatyypille (:tyyppi urakka)) nil)
+                      :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "Kaikki")}
           tarkastukset/tarkastustyyppi]]]
 
        [:span.label-ja-kentta
@@ -213,6 +221,7 @@
 
 (defn tarkastuslomake [tarkastus-atom optiot]
   (let [urakka-id (:id @nav/valittu-urakka)
+        urakkatyyppi (:tyyppi @nav/valittu-urakka)
         tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
@@ -270,13 +279,8 @@
          {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
           :pakollinen? true
           :tyyppi :valinta
-          :valinnat (tarkastustyypit-tekijalle (:tekija tarkastus))
-          :valinta-nayta #(case %
-                           :tiesto "Tiestötarkastus"
-                           :talvihoito "Kelitarkastus"
-                           :soratie "Soratien tarkastus"
-                           :laatu "Laaduntarkastus"
-                           "- valitse -")
+          :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
+          :valinta-nayta #(or (tarkastukset/+tarkastustyyppi->nimi+ %) "- valitse -")
           :palstoja 1}
 
          {:tyyppi :tierekisteriosoite
