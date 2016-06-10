@@ -88,11 +88,6 @@
                  (recur (+ pituus osan-pituus)
                         (inc osa)))))))))))
 
-(defn tiekohteiden-jarjestys [kohde]
-  ((juxt :tie :tr-numero :tienumero
-         :aosa :tr-alkuosa
-         :aet :tr-alkuetaisyys) kohde))
-
 (defn tierekisteriosoite-tekstina
   "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
    Jos losa tai let puuttuu, ei näytetä niitä.
@@ -140,7 +135,14 @@
                       (str " (" tr-osoite ")"))))]
      (str kohdenumero " " nimi osoite))))
 
-(defn jarjesta-kohteiden-kohdeosat [kohteet]
+(defn tiekohteiden-jarjestys [kohde]
+  ((juxt :tie :tr-numero :tienumero
+         :aosa :tr-alkuosa
+         :aet :tr-alkuetaisyys) kohde))
+
+(defn jarjesta-kohteiden-kohdeosa
+  "Palauttaa kohteet tieosoitteen mukaisessa järjestyksessä"
+  [kohteet]
   (mapv
     (fn [kohde]
       (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
