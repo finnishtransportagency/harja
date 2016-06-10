@@ -12,31 +12,39 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn kayttajan-urakat-aikavalilta
-  "Palauttaa parametrien mukaiset urakoiden id:t vektorissa."
-  ([db user] (kayttajan-urakat-aikavalilta db user nil nil nil nil (pvm/nyt) (pvm/nyt)))
-  ([db user urakka-id urakoitsija urakkatyyppi hallintayksikko alku loppu]
+  "Palauttaa vektorin mäppejä. Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
+  ([db user oikeus] (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikko alku loppu]
 
-   (let [alku (or alku (pvm/nyt))
-         loppu (or loppu (pvm/nyt))]
-     (cond
-      (vector? urakka-id) urakka-id
-      (not (nil? urakka-id)) [urakka-id]
+   (konv/sarakkeet-vektoriin
+     (into []
+          (comp
+            (map konv/alaviiva->rakenne)
+            (filter (fn [{:keys [urakka_id]}]
+                      (oikeudet/voi-lukea? oikeus urakka_id user))))
 
-      (roolit/lukuoikeus-kaikkiin-urakoihin? user)
-      (mapv :id
-            (q/hae-kaikki-urakat-aikavalilla
-             db (konv/sql-date alku) (konv/sql-date loppu)
-             (when urakoitsija urakoitsija)
-             (when urakkatyyppi (name urakkatyyppi)) hallintayksikko))
+          (let [alku (or alku (pvm/nyt))
+                loppu (or loppu (pvm/nyt))]
+            (cond
+              (not (nil? urakka-id))
+              (q/hae-urakoiden-organisaatiotiedot db urakka-id)
 
-      :else
-      (mapv :urakka_id
-            (kayttajat-q/hae-kayttajan-urakat-aikavalilta
-             db (:id user)
-             (konv/sql-date alku) (konv/sql-date loppu)
-             (when urakoitsija urakoitsija)
-             (when urakkatyyppi (name urakkatyyppi))
-             hallintayksikko))))))
+              (roolit/lukuoikeus-kaikkiin-urakoihin? user)
+              (q/hae-kaikki-urakat-aikavalilla
+                db (konv/sql-date alku) (konv/sql-date loppu)
+                (when urakoitsija urakoitsija)
+                (when urakkatyyppi (name urakkatyyppi)) hallintayksikko)
+
+              :else
+              (kayttajat-q/hae-kayttajan-urakat-aikavalilta
+                db (:id user)
+                (konv/sql-date alku) (konv/sql-date loppu)
+                (when urakoitsija urakoitsija)
+                (when urakkatyyppi (name urakkatyyppi))
+                hallintayksikko))))
+     {:urakka :urakat}
+     (comp :id :hallintayksikko))))
 
 (defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y))]
