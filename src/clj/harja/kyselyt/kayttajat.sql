@@ -189,7 +189,7 @@ WHERE kayttaja = :kayttaja AND
       (u.loppupvm IS NULL AND u.alkupvm < :loppu) AND
       (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
       (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
-      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
+      (:hallintayksikko :: INTEGER IS NULL OR u.hallintayksikko IN (:hallintayksikko));
 
 
 -- name: lisaa-urakka-rooli<!

@@ -15,7 +15,7 @@
   "Palauttaa vektorin mäppejä. Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   ([db user oikeus] (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
-  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikko alku loppu]
+  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
 
    (konv/sarakkeet-vektoriin
      (into []
@@ -25,7 +25,11 @@
                       (oikeudet/voi-lukea? oikeus urakka_id user))))
 
           (let [alku (or alku (pvm/nyt))
-                loppu (or loppu (pvm/nyt))]
+                loppu (or loppu (pvm/nyt))
+                hallintayksikot (cond
+                                  (nil? hallintayksikot) nil
+                                  (vector? hallintayksikot) hallintayksikot
+                                  :else [hallintayksikot])]
             (cond
               (not (nil? urakka-id))
               (q/hae-urakoiden-organisaatiotiedot db urakka-id)
@@ -34,7 +38,7 @@
               (q/hae-kaikki-urakat-aikavalilla
                 db (konv/sql-date alku) (konv/sql-date loppu)
                 (when urakoitsija urakoitsija)
-                (when urakkatyyppi (name urakkatyyppi)) hallintayksikko)
+                (when urakkatyyppi (name urakkatyyppi)) hallintayksikot)
 
               :else
               (kayttajat-q/hae-kayttajan-urakat-aikavalilta
@@ -42,7 +46,7 @@
                 (konv/sql-date alku) (konv/sql-date loppu)
                 (when urakoitsija urakoitsija)
                 (when urakkatyyppi (name urakkatyyppi))
-                hallintayksikko))))
+                hallintayksikot))))
      {:urakka :urakat}
      (comp :id :hallintayksikko))))
 
