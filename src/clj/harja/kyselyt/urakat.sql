@@ -52,17 +52,6 @@ SELECT
   yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   u.takuu_loppupvm,
-  (SELECT EXISTS(SELECT id
-                     FROM paallystysilmoitus
-                     WHERE paallystyskohde IN (SELECT id
-                                               FROM yllapitokohde
-                                               WHERE urakka = u.id)))
-  OR
-  (SELECT EXISTS(SELECT id
-                     FROM paikkausilmoitus
-                     WHERE paikkauskohde IN (SELECT id
-                                             FROM yllapitokohde
-                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,

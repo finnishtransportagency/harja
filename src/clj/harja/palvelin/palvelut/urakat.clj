@@ -81,8 +81,6 @@
 
         ;; Käsitellään päällystysurakan tiedot
 
-        (map #(assoc % :sisaltaa-ilmoituksia? (:sisaltaa_ilmoituksia %)))
-
         (map #(konv/array->vec % :yha_elyt))
         (map #(konv/array->vec % :yha_vuodet))
 
@@ -101,7 +99,7 @@
         (map #(dissoc %
                       :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
                       :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
-                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet :sisaltaa_ilmoituksia
+                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
                       :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
