@@ -39,6 +39,55 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
+## Kehitysympäristön pystyttäminen
+
+### Kehitystyökalut
+
+Asenna Leiningen:
+http://leiningen.org/
+
+Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8
+
+### VirtualBox
+
+Käynnistä VirtualBox<br/>
+<code>
+cd vagrant<br/>
+vagrant up
+</code>
+
+Jos vagrant up epäonnistuu, aja ensin:<br/>
+<code>
+vagrant box add geerlingguy/centos7 https://github.com/tommy-muehle/puppet-vagrant-boxes/releases/download/1.1.0/centos-7.0-x86_64.box
+</code>
+
+VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaksi eri kantaa:
+- **harja** - Varsinaista kehitystyötä varten
+- **harjatest** - Testit ajetaan tätä kantaa vasten
+
+Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
+
+### Kääntäminen
+
+Siirry projektin juureen. Käännä backend & käynnistä REPL:<br/>
+<code>
+lein do clean, compile, repl
+</code>
+
+Käännä frontend ja käynnistä Figwheel:<br/>
+<code>
+lein figwheel
+</code>
+
+Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000
+
+### Kehitystyötä helpottavat työkalut
+
+- **migrate_test.sh** pystyttää testikannan uudelleen
+- **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
+- **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
+- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
+
 ## Integraatiot
 
 MULEsta on luovuttu, integraatiot suoraan backendistä.
@@ -50,6 +99,7 @@ Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harj
 Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
 
 ## Staging tietokannan sisällön muokkaus
+
 * Lisää itsellesi tiedosto ~/.ssh/config johon sisällöksi:
 Host harja-*-test
   ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
