@@ -238,8 +238,7 @@
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :reload-clj-files false
-             :reload-dependents false}
+             :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
