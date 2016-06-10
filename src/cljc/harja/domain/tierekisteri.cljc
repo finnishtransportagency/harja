@@ -135,7 +135,9 @@
                       (str " (" tr-osoite ")"))))]
      (str kohdenumero " " nimi osoite))))
 
-(defn tiekohteiden-jarjestys [kohde]
+(defn tiekohteiden-jarjestys
+  "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
+  [kohde]
   ((juxt :tie :tr-numero :tienumero
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
