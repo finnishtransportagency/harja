@@ -10,7 +10,9 @@ SELECT
   sopimuksen_mukaiset_tyot  AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset,
   bitumi_indeksi AS "bitumi-indeksi",
-  kaasuindeksi
+  kaasuindeksi,
+  lahetetty,
+  lahetys_onnistunut AS "lahetys-onnistunut"
 FROM yllapitokohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
   AND pi.poistettu IS NOT TRUE

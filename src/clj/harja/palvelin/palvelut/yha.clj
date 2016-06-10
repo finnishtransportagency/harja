@@ -8,17 +8,17 @@
             [harja.kyselyt.yha :as yha-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.paallystys :as paallystys-q]
             [harja.domain.oikeudet :as oikeudet]
             [cheshire.core :as cheshire]))
-
-(defn paivita-yllapitourakan-geometriat [db urakka-id]
-  (log/info "Päivitetään urakan " urakka-id " geometriat.")
-  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
+
+(defn paivita-yllapitourakan-geometriat [db urakka-id]
+  (log/info "Päivitetään urakan " urakka-id " geometriat.")
+  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/info "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
@@ -181,18 +181,21 @@
 
 (defn laheta-kohteet-yhan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
-  [yha user urakka-id kohde-idt]
+  [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
   ;; todo: onko tämä oikeus ok?
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
-  (yha/laheta-kohteet yha urakka-id kohde-idt))
+  (yha/laheta-kohteet yha urakka-id kohde-idt)
+  (let [paivitetyt-ilmoitukset (paallystys-q/hae-ja-kasittele-urakan-paallystysilmoitukset  db urakka-id sopimus-id)]
+    ;; todo: ei toimi. jatka tästä.
+    (println "-----> " paivitetyt-ilmoitukset)
+    paivitetyt-ilmoitukset))
 
 (defrecord Yha []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)
-          integraatioloki (:integraatioloki this)
           yha (:yha-integraatio this)]
       (julkaise-palvelu http :sido-yha-urakka-harja-urakkaan
                         (fn [user tiedot]
@@ -208,7 +211,7 @@
                           (tallenna-uudet-yha-kohteet db user tiedot)))
       (julkaise-palvelu http :laheta-kohteet-yhan
                         (fn [user data]
-                          (laheta-kohteet-yhan yha user (:urakka-id data) (:kohde-idt data)))))
+                          (laheta-kohteet-yhan db yha user data))))
     this)
   (stop [this]
     (poista-palvelut

@@ -17,9 +17,8 @@
             [harja.palvelin.palvelut.yha :as yha]
             [taoensso.timbre :as log]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.kyselyt.tieverkko :as tieverkko]))
-
-(def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
+            [harja.kyselyt.tieverkko :as tieverkko]
+            [harja.kyselyt.paallystys :as paallystys-q]))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
@@ -31,7 +30,7 @@
                               (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
                               (map #(assoc % :kohdeosat
                                              (into []
-                                                   kohdeosa-xf
+                                                   paallystys-q/kohdeosa-xf
                                                    (q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                      db urakka-id sopimus-id (:id %))))))
                         (q/hae-urakan-yllapitokohteet db urakka-id sopimus-id))
@@ -64,7 +63,7 @@
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (let [vastaus (into []
-                      kohdeosa-xf
+                      paallystys-q/kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id yllapitokohde-id))]
     (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))

@@ -44,15 +44,15 @@
     (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
     (when leveys [:leveys leveys])
     (when pinta-ala [:pinta-ala pinta-ala])]
-  ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
-  [:materiaalit
-   [:materiaali
-    (when esiintyma [:kiviainesesiintyman-nimi esiintyma])
-    (when km-arvo [:kiviaineksen-km-arvo km-arvo])
-    (when muotoarvo [:kiviaineksen-muotoarvo muotoarvo])
-    [:sideainetyyppi sideainetyyppi]
-    (when pitoisuus [:sideainepitoisuus pitoisuus])
-    [:lisa-aineet lisaaineet]]]])
+   ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
+   [:materiaalit
+    [:materiaali
+     (when esiintyma [:kiviainesesiintyman-nimi esiintyma])
+     (when km-arvo [:kiviaineksen-km-arvo km-arvo])
+     (when muotoarvo [:kiviaineksen-muotoarvo muotoarvo])
+     (when sideainetyyppi [:sideainetyyppi sideainetyyppi])
+     (when pitoisuus [:sideainepitoisuus pitoisuus])
+     [:lisa-aineet lisaaineet]]]])
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi aosa let verkon-tarkoitus kasittelymenetelma losa aet
                                               tekninen-toimenpide paksuus verkon-sijainti]}

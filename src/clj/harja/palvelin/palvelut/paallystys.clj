@@ -9,7 +9,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yha :as yha]
@@ -27,17 +26,7 @@
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [vastaus (into []
-                      (comp
-                        (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
-                                                                [:paatos-tekninen-osa]
-                                                                [:tila]]))
-                        (map #(assoc % :kohdeosat
-                                       (into []
-                                             yllapitokohteet/kohdeosa-xf
-                                             (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db urakka-id sopimus-id (:paallystyskohde-id %))))))
-                      (q/hae-urakan-paallystysilmoitukset db urakka-id sopimus-id))]
+  (let [vastaus (q/hae-ja-kasittele-urakan-paallystysilmoitukset  db urakka-id sopimus-id)]
     (log/debug "Päällystysilmoitukset saatu: " (pr-str vastaus))
     vastaus))
 

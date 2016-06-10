@@ -564,6 +564,7 @@
 
 (defn ilmoitusluettelo
   []
+
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
     (komp/kuuntelija :avaa-paallystysilmoitus
@@ -572,62 +573,65 @@
 
 
     (fn []
-      [:div
-       [:h3 "Päällystysilmoitukset"]
-       [grid/grid
-        {:otsikko ""
-         :tyhja (if (nil? @paallystys/paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-         :tunniste :kohdenumero}
-        [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
-         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-         {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
-          :hae (fn [rivi]
-                 (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
-         {:otsikko "Päätös, tekninen" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys 20
-          :komponentti (fn [rivi]
-                         (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
-         {:otsikko "Päätös, taloudel\u00ADlinen" :nimi :paatos-taloudellinen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys 20
-          :komponentti (fn [rivi]
-                         (paallystys-ja-paikkaus/nayta-paatos (:paatos-taloudellinen-osa rivi)))}
-         {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
-          :komponentti (fn [rivi]
-                         (if (:tila rivi)
-                           [:button.nappi-ensisijainen.nappi-grid
-                            {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
-                            [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                           [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
-                            [:span "Aloita päällystysilmoitus"]]))}
-         {;; todo: piilota muilta urakoilta kuin päällystys ja paikkaus
-          :otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 11 :tyyppi :komponentti
-          :komponentti (fn [rivi]
-                         [yha/laheta-kohteet-yhan
-                          oikeudet/urakat-kohdeluettelo-paallystyskohteet
-                          @nav/valittu-urakka
-                          [rivi]])}
-         {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :string :leveys 20
-          :hae (fn [rivi]
-                 ;todo: hae serveriltä lähetys aika ja tarkista onnistuiko vai eikö
-                 "toteutappa minut")}]
-        (sort-by
-          (juxt (fn [toteuma] (case (:tila toteuma)
-                                :lukittu 0
-                                :valmis 1
-                                :aloitettu 3
-                                4))
-                (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                                :hyvaksytty 0
-                                :hylatty 1
-                                3))
-                (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
-                                :hyvaksytty 0
-                                :hylatty 1
-                                3)))
-          @paallystys/paallystysilmoitukset)]
-       ;; todo: piilota muilta urakoilta kuin päällystys ja paikkaus
-       [yha/laheta-kohteet-yhan
-        oikeudet/urakat-kohdeluettelo-paallystyskohteet
-        @nav/valittu-urakka
-        @paallystys/paallystysilmoitukset]])))
+      (let [urakka-id (:id @nav/valittu-urakka)
+            sopimus-id (first @u/valittu-sopimusnumero)]
+        [:div
+         [:h3 "Päällystysilmoitukset"]
+         [grid/grid
+          {:otsikko ""
+           :tyhja (if (nil? @paallystys/paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+           :tunniste hash}
+          [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+           {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+           {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
+            :hae (fn [rivi]
+                   (paallystys-ja-paikkaus/nayta-tila (:tila rivi)))}
+           {:otsikko "Päätös, tekninen" :nimi :paatos-tekninen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys 20
+            :komponentti (fn [rivi]
+                           (paallystys-ja-paikkaus/nayta-paatos (:paatos-tekninen-osa rivi)))}
+           {:otsikko "Päätös, taloudel\u00ADlinen" :nimi :paatos-taloudellinen-osa :muokattava? (constantly false) :tyyppi :komponentti :leveys 20
+            :komponentti (fn [rivi]
+                           (paallystys-ja-paikkaus/nayta-paatos (:paatos-taloudellinen-osa rivi)))}
+           {:otsikko "Päällystys\u00ADilmoitus" :nimi :paallystysilmoitus :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           (if (:tila rivi)
+                             [:button.nappi-ensisijainen.nappi-grid
+                              {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
+                              [:span (ikonit/eye-open) " Päällystysilmoitus"]]
+                             [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
+                              [:span "Aloita päällystysilmoitus"]]))}
+           {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 11 :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           [yha/laheta-kohteet-yhan
+                            oikeudet/urakat-kohdeluettelo-paallystyskohteet
+                            urakka-id
+                            sopimus-id
+                            [rivi]])}
+           {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :string :leveys 20
+            :hae (fn [rivi]
+                   ;todo: hae serveriltä lähetys aika ja tarkista onnistuiko vai eikö
+                   "toteutappa minut")}]
+          (sort-by
+            (juxt (fn [toteuma] (case (:tila toteuma)
+                                  :lukittu 0
+                                  :valmis 1
+                                  :aloitettu 3
+                                  4))
+                  (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                                  :hyvaksytty 0
+                                  :hylatty 1
+                                  3))
+                  (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
+                                  :hyvaksytty 0
+                                  :hylatty 1
+                                  3)))
+            @paallystys/paallystysilmoitukset)]
+         ;; todo: piilota muilta urakoilta kuin päällystys ja paikkaus
+         [yha/laheta-kohteet-yhan
+          oikeudet/urakat-kohdeluettelo-paallystyskohteet
+          urakka-id
+          sopimus-id
+          @paallystys/paallystysilmoitukset]]))))
 
 (defn paallystysilmoitukset []
   (komp/luo

@@ -14,7 +14,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.pvm :as pvm]
             [harja.ui.modal :as modal]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -261,24 +262,20 @@
                  (pvm/pvm-aika kohdeluettelo-paivitetty)
                  "ei koskaan"))]))
 
-(defn laheta-kohteet-yhan [oikeus urakka paallystysilmoitukset]
-  (let [kohde-idt (mapv :paallystyskohde-id (filter :tila paallystysilmoitukset))
-        urakka-id (:id urakka)]
-    (log kohde-idt)
+(defn laheta-kohteet-yhan [oikeus urakka-id sopimus-id paallystysilmoitukset]
+  (let [kohde-idt (mapv :paallystyskohde-id (filter :tila paallystysilmoitukset))]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
          [:span (ikonit/livicon-arrow-right) " Laheta"]
          "Lähetä kaikki kohteet YHA:n")
        #(do
-         (log "[YHA] Lähetetään urakan (id:" urakka-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
-         (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :kohde-idt kohde-idt}))
+         (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
+         (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt}))
        {:luokka "nappi-grid nappi-ensisijainen"
         :disabled (or (empty? kohde-idt)
-                      (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja)))
+                      (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
         :virheviesti "Kohteiden lähettäminen epäonnistui."
-        :kun-onnistuu (fn [_]
-                        (log "[YHA] Kohteet lähetetty YHA:n")
-                        ;; todo: päivitä lähetystiedot kohteille
-                        #_(swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
-                                 (cljs-time.core/to-default-time-zone (t/now))))}])))
+        :kun-onnistuu (fn [paivitetyt-ilmoitukset]
+                        (log "[YHA] Kohteet lähetetty YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
+                        (reset! paallystys/paallystysilmoitukset paivitetyt-ilmoitukset))}])))
