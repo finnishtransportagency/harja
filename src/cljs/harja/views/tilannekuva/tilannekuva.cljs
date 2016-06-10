@@ -139,6 +139,20 @@
                       suodattimet-atom
                       (conj ryhma-polku elementti)]))])]))))
 
+(defn aluesuodattimet []
+  [:div#tk-aluevalikko
+   [:span#tk-alueotsikko "Näytä alueilta:"]
+   [:div#tk-aluevaihtoehdot
+    [checkbox-suodatinryhma "Uusimaa" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Varsinais-Suomi" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Kaakkois-Suomi" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Pirkamnmaa" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Pohjois-Savo" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Keski-Suomi" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Etelä-Pohjanmaa" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Pohjois-Pohjanmaa ja Kainuu" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
+    [checkbox-suodatinryhma "Lappi" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]])
+
 (defn aikasuodattimet []
   [:div#tk-paavalikko
    [:span "Näytä seuraavat aikavälillä (max. yksi vuosi):"]
@@ -176,7 +190,8 @@
            [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
          (when (= :nykytilanne @tiedot/valittu-tila)
            [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
-         [aikasuodattimet]]))))
+         [aikasuodattimet]
+         [aluesuodattimet]]))))
 
 (def hallintapaneeli (atom {1 {:auki true :otsikko "Hallintapaneeli" :sisalto [suodattimet]}}))
 
