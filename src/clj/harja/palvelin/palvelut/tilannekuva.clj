@@ -298,29 +298,21 @@
       (tulosta-virhe! (name osio) e)
       nil)))
 
+(defn hae-urakat [db user tiedot]
+  (urakat/kayttajan-urakat-aikavalilta
+    db user (if (:nykytilanne? tiedot)
+              oikeudet/tilannekuva-nykytilanne
+              oikeudet/tilannekuva-historia)
+    nil (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+    nil (:alku tiedot) (:loppu tiedot)))
+
 (defn hae-tilannekuvaan
   ([db user tiedot]
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
-   (let [urakat (map :id
-                     (mapcat :urakat
-                             (urakat/kayttajan-urakat-aikavalilta
-                               db user (if (:nykytilanne? tiedot)
-                                         oikeudet/tilannekuva-nykytilanne
-                                         oikeudet/tilannekuva-historia)
-                               (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-                               (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))))]
-
-     ;; Teoriassa on mahdollista, että käyttäjälle ei (näillä parametreilla)
-     ;; palauteta yhtään urakkaa.
-     ;; Tällöin voitaisiin hakea kaikki "julkiset" asiat, esim ilmoitukset joita
-     ;; ei ole sidottu mihinkään urakkaan. Käytännössä tästä syntyy ongelmia
-     ;; kyselyissä, sillä tuntuu olevan erittäin vaikeaa tehdä kyselyä, joka esim.
-     ;; palauttaa ilmoituksen jos a) ilmoitus ei kuulu mihinkään urakkaan
-     ;; TAI b) ilmoitus kuuluu listassa olevaan urakkaan _jos lista urakoita ei ole
-     ;; tyhjä_. i.urakka IN (:urakat) epäonnistuu, jos annettu lista on tyhjä.
-     (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
+   (let [urakat (:urakat tiedot)]
      (when-not (empty? urakat)
+       (log/debug "Haetaan tilannekuvaan sisältöä urakoista: " (pr-str urakat))
        (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
          (into {}
                (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
@@ -358,6 +350,9 @@
     (julkaise-palvelu http :hae-tilannekuvaan
                       (fn [user tiedot]
                         (hae-tilannekuvaan db user tiedot)))
+    (julkaise-palvelu http :hae-urakat-tilannekuvaan
+                      (fn [user tiedot]
+                        (hae-urakat db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva
       ;; Viitataan var kautta funktioon, jotta sen voi RPELissä määritellä uudestaan
@@ -366,6 +361,7 @@
 
   (stop [{karttakuvat :karttakuvat :as this}]
     (poista-palvelut (:http-palvelin this)
-                     :hae-tilannekuvaan)
+                     :hae-tilannekuvaan
+                     :hae-urakat-tilannekuvaan)
     (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva)
     this))
