@@ -9,4 +9,4 @@ fi
 
 sh download_dump.sh $1
 
-sh mount_dump.sh
+sh mount_dump.sh $1

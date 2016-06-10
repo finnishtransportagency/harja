@@ -108,8 +108,13 @@
      (Point. (first c) (second c))))
 
 #?(:clj
+   (defn geometry-collection [geometriat]
+     (GeometryCollection. (into-array Geometry geometriat))))
+
+#?(:clj
    (defn geometry [g]
      (PGgeometry. g)))
+
 
 #?(:clj
    (defmacro muunna-pg-tulokset
