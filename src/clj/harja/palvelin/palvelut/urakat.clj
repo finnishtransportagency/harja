@@ -108,13 +108,16 @@
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
   (if-not organisaatio
     []
-    (into []
-          urakka-xf
-          (q/listaa-urakat-hallintayksikolle db
-                                             {:hallintayksikko hallintayksikko-id
-                                              :kayttajan_org_id (:id organisaatio)
-                                              :kayttajan_org_tyyppi (name (:tyyppi organisaatio))
-                                              :sallitut_urakat (oikeudet/kayttajan-urakat user)}))))
+    (let [urakat (oikeudet/kayttajan-urakat user)]
+      (into []
+            urakka-xf
+            (q/listaa-urakat-hallintayksikolle db
+                                               {:hallintayksikko hallintayksikko-id
+                                                :kayttajan_org_id (:id organisaatio)
+                                                :kayttajan_org_tyyppi (name (:tyyppi organisaatio))
+                                                :sallitut_urakat (if (empty? urakat)
+                                                                   [-1]
+                                                                   urakat)})))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
