@@ -158,8 +158,8 @@
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet
-   [{(s/optional-key :nimi) s/Str
-     (s/optional-key :tunnus) s/Str
+   [{(s/optional-key :nimi) (s/maybe s/Str)
+     (s/optional-key :tunnus) (s/maybe s/Str)
      :tie s/Int
      (s/optional-key :ajorata) (s/maybe +ajorata+)
      (s/optional-key :kaista) (s/maybe +kaista+)

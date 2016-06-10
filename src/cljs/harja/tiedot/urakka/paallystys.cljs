@@ -43,8 +43,6 @@
 
 (defonce paallystysilmoitus-lomakedata (atom nil)) ; Vastaa rakenteeltaan päällystysilmoitus-taulun sisältöä
 
-(tarkkaile! "----> PÄÄLLYSTYSTILMOT" paallystysilmoitus-lomakedata)
-
 (def paallystysilmoituslomake-lukittu? (reaction (let [_ @lukko/nykyinen-lukko]
                                                    (lukko/nykyinen-nakyma-lukittu?))))
 

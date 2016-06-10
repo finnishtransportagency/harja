@@ -175,6 +175,7 @@
                                            :yllapitokohde-id yllapitokohde-id
                                            :osa {:id (:kohdeosa-id osoite)
                                                  :nimi (:nimi osoite)
+                                                 :tunnus (:tunnus osoite)
                                                  :tr-numero (:tie osoite)
                                                  :tr-alkuosa (:aosa osoite)
                                                  :tr-alkuetaisyys (:aet osoite)

@@ -261,7 +261,6 @@
                         (reset! paallystys/paallystysilmoitus-lomakedata
                                 (assoc-in lomakedata-nyt [:ilmoitustiedot :osoitteet]
                                           (grid/filteroi-uudet-poistetut uusi-arvo)))))
-              _ (log "----> " (pr-str lomakedata-nyt))
               alustalle-tehdyt-toimet
               (r/wrap (zipmap (iterate inc 1) (:alustatoimet (:ilmoitustiedot lomakedata-nyt)))
                       (fn [uusi-arvo]
@@ -598,7 +597,7 @@
                          [yha/laheta-kohteet-yhan
                           oikeudet/urakat-kohdeluettelo-paallystyskohteet
                           @nav/valittu-urakka
-                          [(:paallystyskohde-id rivi)]])}
+                          [rivi]])}
          {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :string :leveys 20
           :hae (fn [rivi]
                  ;todo: hae serveriltä lähetys aika ja tarkista onnistuiko vai eikö
@@ -622,7 +621,7 @@
        [yha/laheta-kohteet-yhan
         oikeudet/urakat-kohdeluettelo-paallystyskohteet
         @nav/valittu-urakka
-        (mapv :paallystyskohde-id @paallystys/paallystysilmoitukset)]])))
+        @paallystys/paallystysilmoitukset]])))
 
 (defn paallystysilmoitukset []
   (komp/luo

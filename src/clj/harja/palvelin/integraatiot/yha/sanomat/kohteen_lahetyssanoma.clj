@@ -43,7 +43,7 @@
     (when rc% [:rc-prosentti rc%])
     (when kuulamylly [:kuulamylly kuulamylly])
     (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
-    ;; todo: merkittävä frontille pakolliseksi
+    ;; todo: merkittävä xsd:n valinnaiseksi
     [:leveys leveys]
     ;; todo: merkittävä frontille pakolliseksi
     [:pinta-ala pinta-ala]]

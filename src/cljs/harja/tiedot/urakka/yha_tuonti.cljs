@@ -261,21 +261,19 @@
                  (pvm/pvm-aika kohdeluettelo-paivitetty)
                  "ei koskaan"))]))
 
-(defn laheta-kohteet-yhan [oikeus urakka kohde-idt]
-  (log "----> adsfa" (pr-str urakka))
-  (let [kohteita (count kohde-idt)
+(defn laheta-kohteet-yhan [oikeus urakka paallystysilmoitukset]
+  (let [kohde-idt (mapv :paallystyskohde-id (filter :tila paallystysilmoitukset))
         urakka-id (:id urakka)]
+    (log kohde-idt)
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
-       (if (= 1 kohteita)
+       (if (= 1 (count paallystysilmoitukset))
          [:span (ikonit/livicon-arrow-right) " Laheta"]
-         (if (< 1 kohteita)
-           "Lähetä kaikki kohteet YHA:n"
-           ""))
+         "Lähetä kaikki kohteet YHA:n")
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
          (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :kohde-idt kohde-idt}))
-       {:luokka "nappi-ensisijainen grid-nappi"
+       {:luokka "nappi-grid nappi-ensisijainen"
         :disabled (or (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja)))
         :virheviesti "Kohteiden lähettäminen epäonnistui."
