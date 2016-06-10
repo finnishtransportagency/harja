@@ -124,7 +124,7 @@
   ([kohde optiot]
    (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
          nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
-         osoite (when (:osoite? optiot)
+         osoite (when (:nayta-osoite? optiot)
                   (let [tr-osoite (tierekisteriosoite-tekstina kohde optiot)]
                     (when-not (empty? tr-osoite)
                       (str " (" tr-osoite ")"))))]

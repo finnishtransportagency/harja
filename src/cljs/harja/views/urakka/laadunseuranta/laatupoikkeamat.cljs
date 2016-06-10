@@ -55,7 +55,7 @@
                (= :tiemerkinta (:nakyma optiot)))
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1
           :hae (fn [rivi]
-                 (tierekisteri/yllapitokohde-tekstina rivi {:osoite? true
+                 (tierekisteri/yllapitokohde-tekstina rivi {:nayta-osoite? true
                                                             :nayta-teksti-tie? false
                                                             :nayta-teksti-ei-tr-osoitetta? false}))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})

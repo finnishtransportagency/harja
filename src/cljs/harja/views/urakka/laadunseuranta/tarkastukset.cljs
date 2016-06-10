@@ -115,7 +115,7 @@
                  (= :tiemerkinta (:nakyma optiot)))
            {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
             :hae (fn [rivi]
-                   (tierekisteri/yllapitokohde-tekstina rivi {:osoite? true
+                   (tierekisteri/yllapitokohde-tekstina rivi {:nayta-osoite? true
                                                               :nayta-teksti-tie? false
                                                               :nayta-teksti-ei-tr-osoitetta? false}))})
          {:otsikko "TR-osoite"
@@ -260,7 +260,7 @@
             :valinta-arvo :id
             :valinta-nayta (fn [arvo muokattava?]
                              (if arvo (tierekisteri/yllapitokohde-tekstina arvo
-                                                                           {:osoite? true
+                                                                           {:nayta-osoite? true
                                                                             :nayta-teksti-ei-tr-osoitetta? false
                                                                             :nayta-teksti-tie? false})
                                       (if muokattava?

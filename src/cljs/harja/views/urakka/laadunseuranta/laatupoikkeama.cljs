@@ -248,7 +248,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :valinta-arvo :id
                  :valinta-nayta (fn [arvo muokattava?]
                                   (if arvo (tierekisteri/yllapitokohde-tekstina arvo
-                                                                                {:osoite? true
+                                                                                {:nayta-osoite? true
                                                                                  :nayta-teksti-ei-tr-osoitetta? false
                                                                                  :nayta-teksti-tie? false})
                                            (if muokattava?
