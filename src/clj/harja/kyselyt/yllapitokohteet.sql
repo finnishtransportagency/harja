@@ -52,7 +52,8 @@ FROM yllapitokohde ypk
 WHERE
   ((urakka = :urakka AND sopimus = :sopimus)
    OR suorittava_tiemerkintaurakka = :urakka)
-  AND ypk.poistettu IS NOT TRUE;
+  AND ypk.poistettu IS NOT TRUE
+ORDER BY tr_numero, tr_alkuosa, tr_alkuetaisyys;
 
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
