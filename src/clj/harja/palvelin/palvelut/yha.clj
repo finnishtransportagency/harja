@@ -181,11 +181,11 @@
 
 (defn laheta-kohteet-yhan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
-  [integraatioloki yha db user urakka-id kohde-idt]
+  [yha user urakka-id kohde-idt]
   ;; todo: onko tämä oikeus ok?
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
-  (yha/laheta-kohteet-yhan yha integraatioloki db urakka-id kohde-idt))
+  (yha/laheta-kohteet yha urakka-id kohde-idt))
 
 (defrecord Yha []
   component/Lifecycle
@@ -207,11 +207,15 @@
                         (fn [user tiedot]
                           (tallenna-uudet-yha-kohteet db user tiedot)))
       (julkaise-palvelu http :laheta-kohteet-yhan
-                        (fn [user urakka-id kohde-idt]
-                          (laheta-kohteet-yhan integraatioloki yha db user urakka-id kohde-idt))))
+                        (fn [user data]
+                          (laheta-kohteet-yhan yha user (:urakka-id data) (:kohde-idt data)))))
     this)
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :sido-yha-urakka-harja-urakkaan)
+      :sido-yha-urakka-harja-urakkaan
+      :hae-urakat-yhasta
+      :hae-yha-kohteet
+      :tallenna-uudet-yha-kohteet
+      :laheta-kohteet-yhan)
     this))

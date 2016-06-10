@@ -592,7 +592,8 @@
                             [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                            [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                             [:span "Aloita päällystysilmoitus"]]))}
-         {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 11 :tyyppi :komponentti
+         {;; todo: piilota muilta urakoilta kuin päällystys ja paikkaus
+          :otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 11 :tyyppi :komponentti
           :komponentti (fn [rivi]
                          [yha/laheta-kohteet-yhan
                           oikeudet/urakat-kohdeluettelo-paallystyskohteet
@@ -617,6 +618,7 @@
                                 :hylatty 1
                                 3)))
           @paallystys/paallystysilmoitukset)]
+       ;; todo: piilota muilta urakoilta kuin päällystys ja paikkaus
        [yha/laheta-kohteet-yhan
         oikeudet/urakat-kohdeluettelo-paallystyskohteet
         @nav/valittu-urakka

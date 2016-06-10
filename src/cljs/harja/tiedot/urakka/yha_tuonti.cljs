@@ -275,7 +275,7 @@
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
          (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :kohde-idt kohde-idt}))
-       {:luokka "nappi-ensisijainen"
+       {:luokka "nappi-ensisijainen grid-nappi"
         :disabled (or (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus (:id urakka) @istunto/kayttaja)))
         :virheviesti "Kohteiden lähettäminen epäonnistui."
