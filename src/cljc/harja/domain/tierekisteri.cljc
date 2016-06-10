@@ -94,6 +94,12 @@
          :aet :tr-alkuetaisyys) kohde))
 
 (defn tierekisteriosoite-tekstina
+  "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
+   Jos losa tai let puuttuu, ei näytetä niitä.
+
+   Optiot on mappi, jossa voi olla arvot:
+   nayta-teksti-ei-tr-osoitetta?        Näyttää tekstin jos TR-osoite puuttuu. Oletus true.
+   nayta-teksti-tie?                    Näyttää sanan 'Tie' osoitteen edessä. Oletus true."
   ([tr] (tierekisteriosoite-tekstina tr {}))
   ([tr optiot]
    (let [tie-sana (let [sana "Tie "]
@@ -120,6 +126,10 @@
 
 
 (defn yllapitokohde-tekstina
+  "Näyttää ylläpitokohteen kohdenumeron ja nimen.
+
+  Optiot on map, jossa voi olla arvot:
+  nayta-osoite?           Näyttää osoitteen sulkeissa kohteen tietojen perässä sulkeissa, jos osoite löytyy."
   ([kohde] (yllapitokohde-tekstina kohde {}))
   ([kohde optiot]
    (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
