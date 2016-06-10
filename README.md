@@ -156,8 +156,10 @@ Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
 ## Tietokantadumpin ottaminen omalle koneelle
 
+```
 cd vagrant
 sh fresh_dump.sh
+```
 
 ## Kirjautuminen
 
