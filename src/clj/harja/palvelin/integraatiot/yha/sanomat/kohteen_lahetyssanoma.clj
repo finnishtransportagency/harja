@@ -19,14 +19,14 @@
   [:tierekisteriosoitevali
    [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapvm osoite) (:karttapvm osoite) (pvm/nyt)))]
    [:tienumero (:tr_numero osoite)]
-   ;; todo: pitää laittaa pakolliseksi frontille
-   [:ajorata (:tr_ajorata osoite)]
-   ;; todo: pitää laittaa pakolliseksi frontille
-   [:kaista (:tr_kaista osoite)]
    [:aosa (:tr_alkuosa osoite)]
    [:aet (:tr_alkuetaisyys osoite)]
    [:losa (:tr_loppuosa osoite)]
-   [:let (:tr_loppuetaisyys osoite)]])
+   [:let (:tr_loppuetaisyys osoite)]
+   ;; todo: pitää laittaa pakolliseksi frontille
+   [:ajorata (:tr_ajorata osoite)]
+   ;; todo: pitää laittaa pakolliseksi frontille
+   [:kaista (:tr_kaista osoite)]])
 
 (defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala
                             esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus lisaaineet] :as alikohde}]
@@ -43,17 +43,16 @@
     (when kuulamylly [:kuulamylly kuulamylly])
     (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
     (when leveys [:leveys leveys])
-    (when [:pinta-ala pinta-ala])] pinta-ala]
+    (when pinta-ala [:pinta-ala pinta-ala])]
   ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
   [:materiaalit
    [:materiaali
     (when esiintyma [:kiviainesesiintyman-nimi esiintyma])
     (when km-arvo [:kiviaineksen-km-arvo km-arvo])
     (when muotoarvo [:kiviaineksen-muotoarvo muotoarvo])
-    ;; todo: sideainetyyppi täytyy muuttaa enumiksi kantaan ja frontille. ks. yha.xsd.
     [:sideainetyyppi sideainetyyppi]
     (when pitoisuus [:sideainepitoisuus pitoisuus])
-    [:lisa-aineet lisaaineet]]])
+    [:lisa-aineet lisaaineet]]]])
 
 (defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi aosa let verkon-tarkoitus kasittelymenetelma losa aet
                                               tekninen-toimenpide paksuus verkon-sijainti]}
