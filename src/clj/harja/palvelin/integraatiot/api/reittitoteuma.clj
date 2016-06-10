@@ -16,9 +16,11 @@
             [clojure.java.jdbc :as jdbc]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]])
-  (:import (org.postgresql.util PSQLException)))
+  (:import (org.postgresql.util PSQLException)
+           (org.postgis Point)))
 
 (defn- yhdista-viivat [viivat]
   {:type  :multiline
@@ -33,21 +35,33 @@
   [(get-in pistepari [:reittipiste :koordinaatit :x])
    (get-in pistepari [:reittipiste :koordinaatit :y])])
 
-(defn- hae-reitti [db [[x1 y1] [x2 y2]]]
-  (try
-    (geo/pg->clj (:geometria (first (tieverkko/hae-tr-osoite-valille db x1 y1 x2 y2 250))))
-    (catch PSQLException e
-      (log/warn "Reittitoteuman pisteillä (x1:" x1 " y1: " y1 " & x2: " x2 " y2: " y2 " )"
-                " ei ole yhteistä tietä. Tehdään linnuntie.")
-      {:type :line :points [[x1 y1] [x2 y2]]})))
+(defn- valin-geometria [{:keys [alku loppu geometria]}]
+  (or (and geometria (geo/pg->clj geometria))
+      (let [[x1 y1] (:coordinates (geo/pg->clj alku))
+            [x2 y2] (:coordinates (geo/pg->clj loppu))]
+        (log/warn "Reittitoteuman pisteillä"
+                  " (x1:" x1 " y1: " y1
+                  " & x2: " x2 " y2: " y2 " )"
+                  " ei ole yhteistä tietä. Tehdään linnuntie.")
+          {:type :line
+           :points [[x1 y1]
+                    [x2 y2]]})))
+
+(defn- hae-reitti [db pisteet]
+  (as-> pisteet p
+    (map (fn [[x y]]
+           (str "POINT(" x " " y ")")) p)
+    (str/join "," p)
+    (str "GEOMETRYCOLLECTION(" p ")")
+    (tieverkko/hae-tieviivat-pisteille db p 250)
+    (map valin-geometria p)
+    (yhdista-viivat p)))
 
 (defn luo-reitti-geometria [db reitti]
   (->> reitti
        (sort-by (comp :aika :reittipiste))
        (map piste)
-       (partition 2 1)
-       (map #(hae-reitti db %))
-       yhdista-viivat
+       (hae-reitti db)
        geo/clj->pg geo/geometry))
 
 (defn tee-onnistunut-vastaus []
@@ -110,11 +124,11 @@
     (luo-reitti db reitti toteuma-id)))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [transaktio db]
+  (jdbc/with-db-transaction [c db]
     (when (:reittitoteuma data)
-      (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma data)))
+      (tallenna-yksittainen-reittitoteuma c urakka-id kirjaaja (:reittitoteuma data)))
     (doseq [pistetoteuma (:reittitoteumat data)]
-      (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma pistetoteuma)))))
+      (tallenna-yksittainen-reittitoteuma c urakka-id kirjaaja (:reittitoteuma pistetoteuma)))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
