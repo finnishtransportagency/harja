@@ -7,7 +7,7 @@
 (defn- validit-optiot? [optiot]
   (or (nil? optiot)
       (and (have? map? optiot)
-           (every? #{:odota :nil-kun-haku-kaynnissa?} (keys optiot)))))
+           (every? #{:odota :nil-kun-haku-kaynnissa? :arvo-alussa} (keys optiot)))))
 
 (defmacro reaction<!
   "Asynkroninen reaktio (esim. serveriltä haku). Haun tulee palauttaa kanava (tai nil).
@@ -35,7 +35,7 @@
         nimi-symbolit (vec (take (count bindings) (repeatedly #(gensym "ARG"))))
         nimet (mapv first bindings)]
     `(let [odota# ~(or (get asetukset :odota) 20)
-           arvo# (reagent.core/atom nil)
+           arvo# (reagent.core/atom ~(or (get asetukset :arvo-alussa) nil))
            parametrit-ch# (cljs.core.async/chan)
            paivita# (reagent.core/atom 0)
            nil-kun-haku-kaynnissa?# ~(or (get asetukset :nil-kun-haku-kaynnissa?) false)]
