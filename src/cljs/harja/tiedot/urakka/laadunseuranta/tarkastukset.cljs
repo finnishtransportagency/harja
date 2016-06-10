@@ -26,9 +26,12 @@
 
 (defn tallenna-tarkastus
   "Tallentaa tarkastuksen urakalle."
-  [urakka-id tarkastus]
+  [urakka-id tarkastus nakyma]
   (k/post! :tallenna-tarkastus {:urakka-id urakka-id
-                                :tarkastus tarkastus}))
+                                :tarkastus (as-> tarkastus t
+                                                 (if-not (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])
+                                                   (dissoc t :yllapitokohde)
+                                                   t))}))
 
 (defn hae-urakan-tarkastukset
   "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."

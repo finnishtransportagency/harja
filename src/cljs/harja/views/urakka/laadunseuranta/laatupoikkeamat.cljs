@@ -14,7 +14,8 @@
             [harja.domain.laadunseuranta :refer [validi-laatupoikkeama?]]
             [harja.views.urakka.laadunseuranta.laatupoikkeama :refer [laatupoikkeamalomake]]
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -82,5 +83,5 @@
       (if @laatupoikkeamat/valittu-laatupoikkeama
         [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama
          (merge optiot
-                {:yllapitokohteet @laatupoikkeamat/urakan-yllapitokohteet})]
+                {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet})]
         [laatupoikkeamalistaus optiot])])))

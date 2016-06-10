@@ -293,3 +293,14 @@ SELECT EXISTS(SELECT id
 SELECT EXISTS(SELECT id
               FROM paikkausilmoitus
               WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;
+
+
+-- name: hae-yllapitokohteen-urakka-id
+SELECT
+  urakka AS id
+FROM yllapitokohde WHERE id = :id;
+
+-- name: hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+SELECT
+  suorittava_tiemerkintaurakka AS id
+FROM yllapitokohde WHERE id = :id;

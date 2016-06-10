@@ -3,14 +3,11 @@
 
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
-
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.urakat :as urakat-q]
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -24,7 +21,6 @@
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.pvm :as pvm]
             [harja.domain.oikeudet :as oikeudet]))
 
 (def laatupoikkeama-xf
@@ -77,7 +73,6 @@
                                   uniikit (map (fn [[_ vektori]] (first vektori)) (group-by :id tietokannasta-nostetut))
                                   tulos (into [] laatupoikkeama-xf uniikit)]
                               tulos)))
-
 
 (defn hae-laatupoikkeaman-tiedot
   "Hakee yhden laatupoikkeaman kaiken tiedon muokkausnäkymää varten: laatupoikkeaman perustiedot, kommentit ja liitteet, päätös ja sanktiot.

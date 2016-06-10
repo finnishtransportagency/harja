@@ -37,13 +37,6 @@
                                   :alku      alkupvm
                                   :loppu     loppupvm}))
 
-(defn hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle
-  "Hakee urakan ylläpitokohteet näytettäväksi laatupoikkeamalomakkeella."
-  [urakka-id sopimus-id]
-  (k/post! :urakan-yllapitokohteet-laatupoikkeamalomakkeelle
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id}))
-
 (defn hae-laatupoikkeaman-tiedot
   "Hakee urakan laatupoikkeaman tiedot urakan id:n ja laatupoikkeaman id:n
   perusteella. Palauttaa kaiken tiedon mitä laatupoikkeaman muokkausnäkymään
@@ -75,18 +68,6 @@
 (defn uusi-laatupoikkeama []
   {:tekija (roolit/osapuoli @istunto/kayttaja (:id @nav/valittu-urakka))
    :aika (pvm/nyt)})
-
-(def urakan-yllapitokohteet
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               urakka-tyyppi (:tyyppi @nav/valittu-urakka)
-               [sopimus-id _] @u/valittu-sopimusnumero
-               laadunseurannassa? @laadunseuranta/laadunseurannassa?]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and (or (= :paallystys urakka-tyyppi)
-                             (= :paikkaus urakka-tyyppi)
-                             (= :tiemerkinta urakka-tyyppi))
-                         laadunseurannassa? urakka-id sopimus-id)
-                (hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle urakka-id sopimus-id))))
 
 (defonce valittu-laatupoikkeama
          (reaction<! [id @valittu-laatupoikkeama-id]

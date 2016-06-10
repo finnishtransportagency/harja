@@ -201,7 +201,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                            #(sanktiotietoja-annettu? @laatupoikkeama))]
           (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
                      (nil? (:yllapitokohteet optiot)))
-            [ajax-loader "Ladataan..."] ;; Pakko odottaa, että saadaan ylläpitokohteet haettua.
+            [ajax-loader "Ladataan..."]
             [:div.laatupoikkeama
             [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
 

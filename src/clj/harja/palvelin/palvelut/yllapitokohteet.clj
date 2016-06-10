@@ -21,6 +21,19 @@
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
+(defn tarkista-yllapitokohteen-urakka [db urakka-id yllapitokohde]
+  "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
+   suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
+  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db yllapitokohde)))
+        kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                           db
+                                                           yllapitokohde)))]
+    (when (and (not= kohteen-urakka urakka-id)
+               (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
+      (throw (RuntimeException. (str "Ylläpitokohde " yllapitokohde " ei kuulu valittuun urakkaan "
+                                     urakka-id " vaan urakkaan " kohteen-urakka
+                                     ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
+
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)

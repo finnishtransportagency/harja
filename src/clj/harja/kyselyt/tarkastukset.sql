@@ -49,6 +49,7 @@ SELECT
   t.havainnot,
   t.laadunalitus,
   t.luoja,
+  t.yllapitokohde,
   o.nimi        AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma,
@@ -98,10 +99,10 @@ ORDER BY l.luotu ASC;
 INSERT
 INTO tarkastus
 (lahde, urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus)
+ sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde)
 VALUES (:lahde::lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
                  :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
-        :havainnot, :laadunalitus);
+        :havainnot, :laadunalitus, :yllapitokohde);
 
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot
@@ -118,7 +119,8 @@ SET aika           = :aika,
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp,
   havainnot        = :havainnot,
-  laadunalitus     = :laadunalitus
+  laadunalitus     = :laadunalitus,
+  yllapitokohde    = :yllapitokohde
 WHERE urakka = :urakka AND id = :id;
 
 -- name: luo-talvihoitomittaus<!
