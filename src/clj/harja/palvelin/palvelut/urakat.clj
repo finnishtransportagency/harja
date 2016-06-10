@@ -117,7 +117,7 @@
                                                 :kayttajan_org_tyyppi (name (:tyyppi organisaatio))
                                                 :sallitut_urakat (if (empty? urakat)
                                                                    ;; Jos ei urakoita, annetaan
-                                                                   ;; dummy, jotta ei IN toimii
+                                                                   ;; dummy, jotta IN toimii
                                                                    [-1]
                                                                    urakat)})))))
 
