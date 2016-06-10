@@ -174,9 +174,15 @@ FROM kayttaja_urakka_rooli
 WHERE kayttaja = :kayttaja AND poistettu = FALSE
 
 -- name: hae-kayttajan-urakat-aikavalilta
-SELECT urakka AS urakka_id
+SELECT
+  urakka AS urakka_id,
+  u.nimi AS urakka_nimi,
+  u.tyyppi AS urakka_tyyppi,
+  o.id AS hallintayksikko_id,
+  o.nimi AS hallintayksikko_nimi
 FROM kayttaja_urakka_rooli
   LEFT JOIN urakka u ON urakka = u.id
+  JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE kayttaja = :kayttaja AND
       poistettu IS NOT TRUE AND
       (u.loppupvm > :alku AND u.alkupvm < :loppu) OR
