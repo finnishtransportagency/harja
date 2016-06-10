@@ -17,10 +17,12 @@ SELECT * FROM yrita_tierekisteriosoite_pisteille(
   ST_MakePoint(:x2, :y2) :: GEOMETRY,
   :threshold::INTEGER) AS tr_osoite;
 
--- name: hae-tr-osoitteet-valeille
--- Hakee tierekisteriosoitteet annetuille pisteille.
+-- name: hae-tieviivat-pisteille
+-- Hakee tieverkolle projisoidut viivat annetuille pisteille.
 -- Pisteet on string WKT geometrycollection pointeja. Jokaisen
--- kahden pisteen välille lasketaan osoite.
+-- kahden pisteen välille lasketaan osoite. Palauttaa
+-- alkupisteen, loppupisteen ja viivan geometrian. Jos viivaa
+-- ei löydy, palauttaa NULL geometriana.
 SELECT * FROM
   tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold::INTEGER)
    as vali(alku geometry, loppu geometry, geometria geometry);

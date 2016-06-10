@@ -53,7 +53,7 @@
            (str "POINT(" x " " y ")")) p)
     (str/join "," p)
     (str "GEOMETRYCOLLECTION(" p ")")
-    (tieverkko/hae-tr-osoitteet-valeille db p 250)
+    (tieverkko/hae-tieviivat-pisteille db p 250)
     (map valin-geometria p)
     (yhdista-viivat p)))
 
