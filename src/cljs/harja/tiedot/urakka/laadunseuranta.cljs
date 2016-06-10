@@ -13,14 +13,14 @@
 
 (defonce laadunseurannassa? (atom false))
 
-(defn hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle
+(defn hae-urakan-yllapitokohteet-lomakkeelle
   "Hakee urakan ylläpitokohteet näytettäväksi laatupoikkeamalomakkeella."
   [urakka-id sopimus-id]
-  (k/post! :urakan-yllapitokohteet-laatupoikkeamalomakkeelle
+  (k/post! :urakan-yllapitokohteet-lomakkeelle
            {:urakka-id urakka-id
             :sopimus-id sopimus-id}))
 
-(def urakan-yllapitokohteet
+(def urakan-yllapitokohteet-lomakkeelle
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                urakka-tyyppi (:tyyppi @nav/valittu-urakka)
                [sopimus-id _] @u/valittu-sopimusnumero
@@ -30,4 +30,4 @@
                              (= :paikkaus urakka-tyyppi)
                              (= :tiemerkinta urakka-tyyppi))
                          laadunseurannassa? urakka-id sopimus-id)
-                (hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle urakka-id sopimus-id))))
+                (hae-urakan-yllapitokohteet-lomakkeelle urakka-id sopimus-id))))

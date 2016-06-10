@@ -365,5 +365,5 @@
        (if @tarkastukset/valittu-tarkastus
          [tarkastuslomake tarkastukset/valittu-tarkastus
           (merge optiot
-                 {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet})]
+                 {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
          [tarkastuslistaus optiot])])))

@@ -83,5 +83,5 @@
       (if @laatupoikkeamat/valittu-laatupoikkeama
         [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama
          (merge optiot
-                {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet})]
+                {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
         [laatupoikkeamalistaus optiot])])))

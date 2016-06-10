@@ -72,7 +72,7 @@
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
-(defn hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle [db user {:keys [urakka-id sopimus-id]}]
+(defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
@@ -349,9 +349,9 @@
       (julkaise-palvelu http :urakan-yllapitokohteet
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohteet db user tiedot)))
-      (julkaise-palvelu http :urakan-yllapitokohteet-laatupoikkeamalomakkeelle
+      (julkaise-palvelu http :urakan-yllapitokohteet-lomakkeelle
                         (fn [user tiedot]
-                          (hae-urakan-yllapitokohteet-laatupoikkeamalomakkeelle db user tiedot)))
+                          (hae-urakan-yllapitokohteet-lomakkeelle db user tiedot)))
       (julkaise-palvelu http :urakan-yllapitokohdeosat
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohdeosat db user tiedot)))
