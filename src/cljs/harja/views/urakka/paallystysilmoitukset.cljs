@@ -32,7 +32,8 @@
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka.yhatuonti :as yha])
+            [harja.tiedot.urakka.yhatuonti :as yha]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -607,10 +608,13 @@
                             urakka-id
                             sopimus-id
                             [rivi]])}
-           {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :string :leveys 20
-            :hae (fn [rivi]
-                   ;todo: hae serveriltä lähetys aika ja tarkista onnistuiko vai eikö
-                   "toteutappa minut")}]
+           {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti :leveys 35
+            :komponentti (fn [rivi]
+                   (if (:lahetetty rivi)
+                     (if (:lahetys-onnistunut rivi)
+                       [:span.maksuera-lahetetty (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
+                       [:span.maksuera-virhe (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
+                     [:span "Ei lähetetty"]))}]
           (sort-by
             (juxt (fn [toteuma] (case (:tila toteuma)
                                   :lukittu 0

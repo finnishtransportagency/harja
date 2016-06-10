@@ -26,12 +26,12 @@
                 <tierekisteriosoitevali>
                     <karttapaivamaara>2016-01-01+02:00</karttapaivamaara>
                     <tienumero>3</tienumero>
-                    <ajorata>0</ajorata>
-                    <kaista>11</kaista>
                     <aosa>3</aosa>
                     <aet>3</aet>
                     <losa>3</losa>
                     <let>3</let>
+                    <ajorata>0</ajorata>
+                    <kaista>11</kaista>
                 </tierekisteriosoitevali>
                 <alustalle-tehdyt-toimet>
                     <!--Zero or more repetitions:-->
