@@ -21,7 +21,8 @@
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]
             [harja.transit :as transit]
-            [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]))
+            [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -301,10 +302,14 @@
   ([db user tiedot]
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
-   (let [urakat (urakat/kayttajan-urakat-aikavalilta
-                  db user
-                  (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-                  (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))]
+   (let [urakat (map :id
+                     (mapcat :urakat
+                             (urakat/kayttajan-urakat-aikavalilta
+                               db user (if (:nykytilanne? tiedot)
+                                         oikeudet/tilannekuva-nykytilanne
+                                         oikeudet/tilannekuva-historia)
+                               (:urakka-id tiedot) (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+                               (:hallintayksikko tiedot) (:alku tiedot) (:loppu tiedot))))]
 
      ;; Teoriassa on mahdollista, että käyttäjälle ei (näillä parametreilla)
      ;; palauteta yhtään urakkaa.
@@ -314,9 +319,9 @@
      ;; palauttaa ilmoituksen jos a) ilmoitus ei kuulu mihinkään urakkaan
      ;; TAI b) ilmoitus kuuluu listassa olevaan urakkaan _jos lista urakoita ei ole
      ;; tyhjä_. i.urakka IN (:urakat) epäonnistuu, jos annettu lista on tyhjä.
+     (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
      (when-not (empty? urakat)
        (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
-         (log/debug "Löydettiin tilannekuvaan sisältöä urakoista: " (pr-str urakat))
          (into {}
                (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
                osiot))))))
