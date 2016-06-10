@@ -22,7 +22,7 @@ SELECT * FROM yrita_tierekisteriosoite_pisteille(
 -- Pisteet on string WKT geometrycollection pointeja. Jokaisen
 -- kahden pisteen välille lasketaan osoite.
 SELECT * FROM
-  tierekisteriosoitteet_pisteille(ST_GeomFromText(:pisteet), :threshold::INTEGER)
+  tieviivat_pisteille(ST_GeomFromText(:pisteet), :threshold::INTEGER)
    as vali(alku geometry, loppu geometry, geometria geometry);
 
 

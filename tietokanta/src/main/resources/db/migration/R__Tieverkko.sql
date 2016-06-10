@@ -182,7 +182,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION tierekisteriosoitteet_pisteille(
+-- Hakee annetuille pisteille (geometrycollection) viivan jokaiselle
+-- pistevälille. Palauttaa jokaiselle välille alkupisteen, loppupisteen
+-- ja tieverkolle projisoidun geometrian. Jos projisoitua geometriaa ei
+-- löydy, palautetaan NULL.
+CREATE OR REPLACE FUNCTION tieviivat_pisteille(
   pisteet geometry,
   threshold INTEGER) RETURNS SETOF RECORD AS $$
 DECLARE
