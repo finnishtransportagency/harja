@@ -140,23 +140,23 @@
 
 (defn laheta-kohteet-yhan [integraatioloki db url urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
-  (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-    (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
-          kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
-          url (str url "toteumatiedot")
-          kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)]
-      (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "yha" "kohteiden-lahetys"
-        (fn [konteksti]
-          (let [http-asetukset {:metodi :POST :url url}
-                {body :body headers :headers}
-                (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-            (kasittele-urakan-kohdelahetysvastaus db body headers kohde-idt)))))
-    (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
-      (log/error virhe)
-      (throw+
-        {:type +virhe-kohteen-lahetyksessa+
-         :virheet {:virhe virhe}}))))
+  (integraatiotapahtuma/suorita-integraatio
+    db integraatioloki "yha" "kohteiden-lahetys"
+    (fn [konteksti]
+      (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
+        (let [urakka (assoc urakka :harjaid urakka-id :sampoid (q-urakat/hae-urakan-sampo-id db {:urakka urakka-id}))
+              kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
+              url (str url "toteumatiedot")
+              kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
+              http-asetukset {:metodi :POST :url url}
+              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
+          (kasittele-urakan-kohdelahetysvastaus db body headers kohde-idt))
+
+        (let [virhe (format "Urakan (id: %s) YHA-tietoja ei löydy." urakka-id)]
+          (log/error virhe)
+          (throw+
+            {:type +virhe-kohteen-lahetyksessa+
+             :virheet {:virhe virhe}}))))))
 
 (defrecord Yha [asetukset]
   component/Lifecycle
