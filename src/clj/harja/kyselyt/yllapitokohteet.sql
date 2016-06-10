@@ -41,13 +41,13 @@ SELECT
   ypk.id,
   ypk.kohdenumero,
   ypk.nimi,
-  ypko.tr_numero        AS "tr-numero",
-  ypko.tr_alkuosa       AS "tr-alkuosa",
-  ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
-  ypko.tr_loppuosa      AS "tr-loppuosa",
-  ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
-  ypko.tr_ajorata       AS "tr-ajorata",
-  ypko.tr_kaista        AS "tr-kaista"
+  ypk.tr_numero        AS "tr-numero",
+  ypk.tr_alkuosa       AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa      AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypk.tr_ajorata       AS "tr-ajorata",
+  ypk.tr_kaista        AS "tr-kaista"
 FROM yllapitokohde ypk
 WHERE
   ((urakka = :urakka AND sopimus = :sopimus)

@@ -115,9 +115,10 @@
                  (= :tiemerkinta (:nakyma optiot)))
            {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
             :hae (fn [rivi]
-                   (tierekisteri/yllapitokohde-tekstina rivi {:nayta-osoite? true
-                                                              :nayta-teksti-tie? false
-                                                              :nayta-teksti-ei-tr-osoitetta? false}))})
+                   (tierekisteri/yllapitokohde-tekstina rivi
+                                                        {:osoite (:tr rivi)
+                                                         :nayta-teksti-tie? false
+                                                         :nayta-teksti-ei-tr-osoitetta? false}))})
          {:otsikko "TR-osoite"
           :nimi :tr
           :leveys 2
@@ -259,10 +260,7 @@
             :jos-tyhja "Ei valittavia kohteita"
             :valinta-arvo :id
             :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo (tierekisteri/yllapitokohde-tekstina arvo
-                                                                           {:nayta-osoite? true
-                                                                            :nayta-teksti-ei-tr-osoitetta? false
-                                                                            :nayta-teksti-tie? false})
+                             (if arvo (tierekisteri/yllapitokohde-tekstina arvo {:osoite arvo})
                                       (if muokattava?
                                         "- Valitse kohde -"
                                         "")))
