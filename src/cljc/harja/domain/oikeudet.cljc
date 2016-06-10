@@ -185,3 +185,6 @@
 
 (defn roolin-kuvaus [rooli]
   (:kuvaus (get roolit rooli)))
+
+(defn kayttajan-urakat [{urakkaroolit :urakkaroolit}]
+  (into #{} (keys urakkaroolit)))
