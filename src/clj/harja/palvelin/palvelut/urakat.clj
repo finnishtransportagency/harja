@@ -104,14 +104,17 @@
                       :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet :sisaltaa_ilmoituksia
                       :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
 
-(defn hallintayksikon-urakat [db user hallintayksikko-id]
-  ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
+(defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
-  (into []
-        urakka-xf
-        (q/listaa-urakat-hallintayksikolle db hallintayksikko-id
-                                           (name (get-in user [:organisaatio :tyyppi]))
-                                           (get-in user [:organisaatio :id]))))
+  (if-not organisaatio
+    []
+    (into []
+          urakka-xf
+          (q/listaa-urakat-hallintayksikolle db
+                                             {:hallintayksikko hallintayksikko-id
+                                              :kayttajan_org_id (:id organisaatio)
+                                              :kayttajan_org_tyyppi (name (:tyyppi organisaatio))
+                                              :sallitut_urakat (oikeudet/kayttajan-urakat user)}))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)
