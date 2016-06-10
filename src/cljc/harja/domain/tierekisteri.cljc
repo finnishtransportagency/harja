@@ -140,7 +140,7 @@
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
 
-(defn jarjesta-kohteiden-kohdeosa
+(defn jarjesta-kohteiden-kohdeosat
   "Palauttaa kohteet tieosoitteen mukaisessa järjestyksessä"
   [kohteet]
   (mapv
