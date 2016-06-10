@@ -98,9 +98,9 @@
   ([tr] (tierekisteriosoite-tekstina tr {}))
   ([tr optiot]
    (let [tie-sana (let [sana "Tie "]
-                    (if (nil? (:nayta-teksti-tie? optiot))
+                    (if (nil? (:teksti-tie? optiot))
                       sana
-                      (when (:nayta-teksti-tie? optiot) sana)))
+                      (when (:teksti-tie? optiot) sana)))
          tie (or (:numero tr) (:tr-numero tr) (:tie tr))
          alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr))
          alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr))
