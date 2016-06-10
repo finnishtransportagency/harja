@@ -53,9 +53,9 @@
        (if (or (= :paallystys (:nakyma optiot))
                (= :paikkaus (:nakyma optiot))
                (= :tiemerkinta (:nakyma optiot)))
-         {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1
+         {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
-                 (tierekisteri/yllapitokohde-tekstina rivi {:osoite rivi
+                 (tierekisteri/yllapitokohde-tekstina rivi {:osoite (:tr rivi)
                                                             :nayta-teksti-tie? false
                                                             :nayta-teksti-ei-tr-osoitetta? false}))}
          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
