@@ -93,8 +93,8 @@
    Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään
 
    Optiot on mappi, jossa voi olla arvot:
-   nayta-teksti-ei-tr-osoitetta?        Näyttää tekstin jos TR-osoite puuttuu. Oletus true.
-   nayta-teksti-tie?                    Näyttää sanan 'Tie' osoitteen edessä. Oletus true."
+   teksti-ei-tr-osoitetta?        Näyttää tekstin jos TR-osoite puuttuu. Oletus true.
+   teksti-tie?                    Näyttää sanan 'Tie' osoitteen edessä. Oletus true."
   ([tr] (tierekisteriosoite-tekstina tr {}))
   ([tr optiot]
    (let [tie-sana (let [sana "Tie "]
@@ -107,9 +107,9 @@
          loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr))
          loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr))
          ei-tierekisteriosoitetta (let [lause "Ei tierekisteriosoitetta"]
-                                    (if (nil? (:nayta-teksti-ei-tr-osoitetta? optiot))
+                                    (if (nil? (:teksti-ei-tr-osoitetta? optiot))
                                       lause
-                                      (when (:nayta-teksti-ei-tr-osoitetta? optiot) lause)))]
+                                      (when (:teksti-ei-tr-osoitetta? optiot) lause)))]
      ;; Muodosta teksti
      (str (if tie
             (str tie-sana
@@ -132,8 +132,8 @@
    (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
          nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
          osoite (when-let [osoite (:osoite optiot)]
-                  (let [tr-osoite (tierekisteriosoite-tekstina osoite {:nayta-teksti-ei-tr-osoitetta? false
-                                                                       :nayta-teksti-tie? false})]
+                  (let [tr-osoite (tierekisteriosoite-tekstina osoite {:teksti-ei-tr-osoitetta? false
+                                                                       :teksti-tie? false})]
                     (when-not (empty? tr-osoite)
                       (str " (" tr-osoite ")"))))]
      (str kohdenumero " " nimi osoite))))
