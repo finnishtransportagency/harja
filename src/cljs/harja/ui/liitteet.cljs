@@ -113,7 +113,7 @@
   uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
   uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
   grid?                           Jos true, optimoidaan näytettäväksi gridissä"
-  [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom urakka-id grid?]}]
+  [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid?]}]
   [:span
    ;; Näytä olemassaolevat liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
