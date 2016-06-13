@@ -12,7 +12,8 @@ SELECT
   bitumi_indeksi AS "bitumi-indeksi",
   kaasuindeksi,
   lahetetty,
-  lahetys_onnistunut AS "lahetys-onnistunut"
+  lahetys_onnistunut AS "lahetys-onnistunut",
+  lahetysvirhe
 FROM yllapitokohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
   AND pi.poistettu IS NOT TRUE

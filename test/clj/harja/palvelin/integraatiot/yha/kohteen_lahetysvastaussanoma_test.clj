@@ -1,7 +1,6 @@
 (ns harja.palvelin.integraatiot.yha.urakoiden-hakuvastaussanoma-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma])
   (:use [slingshot.slingshot :only [try+]]))
 

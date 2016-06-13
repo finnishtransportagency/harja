@@ -626,13 +626,13 @@
            :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
            :tunniste hash}
           [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-           {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-           {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti :leveys 35
+           {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 30}
+           {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti :leveys 50
             :komponentti (fn [rivi]
                            (if (:lahetetty rivi)
                              (if (:lahetys-onnistunut rivi)
                                [:span.maksuera-lahetetty (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
-                               [:span.maksuera-virhe (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
+                               [:span.maksuera-virhe (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
                              [:span "Ei lähetetty"]))}
            {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
             :komponentti (fn [rivi]

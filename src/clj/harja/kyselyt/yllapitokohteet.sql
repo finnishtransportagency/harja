@@ -355,5 +355,5 @@ WHERE yllapitokohde = :yllapitokohde;
 
 -- name: merkitse-kohteen-lahetystiedot!
 UPDATE yllapitokohde
-SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut
+SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
 WHERE id = :kohdeid;
