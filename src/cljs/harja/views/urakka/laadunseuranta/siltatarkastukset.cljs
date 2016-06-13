@@ -167,21 +167,20 @@
     +valitse-tulos+))
 
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
-  ;; fixme: sarakkeiden prosentuaaliset leveydet saatava vektorin pituuden mukaan skaalautuvaksi?
   (into []
         (concat
-          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"} 
-           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-           {:otsikko       "Tulos " :nimi :tulos :leveys "20%"
+          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys 5} 
+           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys 40}
+           {:otsikko       "Tulos " :nimi :tulos :leveys 20
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D"]
             :fmt           #(kohdetuloksen-teksti %)}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}]
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
                    :nimi    (pvm/pvm (:tarkastusaika tarkastus))
-                   :leveys "5%"
+                   :leveys 5
                    :tyyppi :string :muokattava? (constantly false)})
                 muut-tarkastukset))))
 
