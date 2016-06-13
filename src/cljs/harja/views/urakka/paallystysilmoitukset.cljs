@@ -563,6 +563,23 @@
       (if-not (k/virhe? vastaus)
         (reset! paallystys/paallystysilmoitus-lomakedata vastaus)))))
 
+(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset]
+  (sort-by
+    (juxt (fn [toteuma] (case (:tila toteuma)
+                          :lukittu 0
+                          :valmis 1
+                          :aloitettu 3
+                          4))
+          (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                          :hyvaksytty 0
+                          :hylatty 1
+                          3))
+          (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
+                          :hyvaksytty 0
+                          :hylatty 1
+                          3)))
+    paallystysilmoitukset))
+
 (defn ilmoitusluettelo
   []
 
@@ -575,12 +592,13 @@
 
     (fn []
       (let [urakka-id (:id @nav/valittu-urakka)
-            sopimus-id (first @u/valittu-sopimusnumero)]
+            sopimus-id (first @u/valittu-sopimusnumero)
+            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset)]
         [:div
          [:h3 "Päällystysilmoitukset"]
          [grid/grid
           {:otsikko ""
-           :tyhja (if (nil? @paallystys/paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+           :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
            :tunniste hash}
           [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
@@ -600,36 +618,30 @@
                               {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                               [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                              [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
-                              [:span "Aloita päällystysilmoitus"]]))}
-           {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
-            :komponentti (fn [rivi]
-                           [yha/laheta-kohteet-yhan
-                            oikeudet/urakat-kohdeluettelo-paallystyskohteet
-                            urakka-id
-                            sopimus-id
-                            [rivi]])}
+                              [:span "Aloita päällystysilmoitus"]]))}]
+          paallystysilmoitukset]
+         [:h3 "YHA-lähetykset"]
+         [grid/grid
+          {:otsikko ""
+           :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
+           :tunniste hash}
+          [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
+           {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
            {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti :leveys 35
             :komponentti (fn [rivi]
                            (if (:lahetetty rivi)
                              (if (:lahetys-onnistunut rivi)
                                [:span.maksuera-lahetetty (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
                                [:span.maksuera-virhe (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
-                             [:span "Ei lähetetty"]))}]
-          (sort-by
-            (juxt (fn [toteuma] (case (:tila toteuma)
-                                  :lukittu 0
-                                  :valmis 1
-                                  :aloitettu 3
-                                  4))
-                  (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                                  :hyvaksytty 0
-                                  :hylatty 1
-                                  3))
-                  (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
-                                  :hyvaksytty 0
-                                  :hylatty 1
-                                  3)))
-            @paallystys/paallystysilmoitukset)]
+                             [:span "Ei lähetetty"]))}
+           {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           [yha/laheta-kohteet-yhan
+                            oikeudet/urakat-kohdeluettelo-paallystyskohteet
+                            urakka-id
+                            sopimus-id
+                            [rivi]])}]
+          paallystysilmoitukset]
          ;; todo: piilota muilta urakoilta kuin päällystys ja paikkaus
          [yha/laheta-kohteet-yhan
           oikeudet/urakat-kohdeluettelo-paallystyskohteet

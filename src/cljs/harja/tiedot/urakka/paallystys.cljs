@@ -100,3 +100,6 @@
                                            (:kohdeosat kohde))))
                            (keep #(and (:sijainti %) %))
                            (map #(assoc % :tyyppi-kartalla :paallystys))))))))
+
+(defonce yha-lahetys-kaynnissa?
+         (atom false))

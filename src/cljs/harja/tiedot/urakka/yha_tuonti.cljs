@@ -271,9 +271,13 @@
          "Lähetä kaikki kohteet YHA:n")
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
-         (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt}))
+         (reset! @paallystys/yha-lahetys-kaynnissa? true)
+         (let [vastaus (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt})]
+           (reset! @paallystys/yha-lahetys-kaynnissa? false)
+           vastaus))
        {:luokka "nappi-grid nappi-ensisijainen"
-        :disabled (or (empty? kohde-idt)
+        :disabled (or @paallystys/yha-lahetys-kaynnissa?
+                      (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
         :virheviesti "Kohteiden lähettäminen epäonnistui."
         :kun-onnistuu (fn [paivitetyt-ilmoitukset]
