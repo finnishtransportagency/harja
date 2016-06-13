@@ -153,16 +153,46 @@ hakutiheys-historiakuva 1200000)
               (pvm/nyt)
               (second @historiakuvan-aikavali))}))
 
-(defn- valitse-urakka? [urakka-id hy-id]
+(defn- hyt-joiden-urakoilla-ei-arvoa [boolean-arvo]
+  (into #{}
+        (keep
+          (fn [[nimi urakat]]
+            (when-not (empty? urakat)
+              (when-not (some
+                          (fn [[suodatin valittu?]]
+                            (= valittu? boolean-arvo))
+                          urakat)
+                nimi)))
+          (:alueet @suodattimet))))
+
+(def hallintayksikot-joista-kaikki-valittu (partial hyt-joiden-urakoilla-ei-arvoa false))
+(def hallintayksikot-joista-ei-mitaan-valittu (partial hyt-joiden-urakoilla-ei-arvoa true))
+
+(defn- valitse-urakka? [urakka-id hallintayksikko]
   (let [valittu-urakka (:id @valittu-urakka-tilannekuvaan-tullessa)
         valittu-hallintayksikko (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)]
     (cond
+      ;; Valitse urakka, jos se kuuluu hallintayksikköön, joista käyttäjä on valinnut
+      ;; kaikki urakat
+      ((hallintayksikot-joista-kaikki-valittu) (:nimi hallintayksikko))
+      true
+
+      ;; Älä ikinä valitse urakkaa, jos se kuuluu hallintayksikköön, josta käyttäjä
+      ;; ei ole valinnut yhtään urakkaa (kaiki on false!)
+      ((hallintayksikot-joista-ei-mitaan-valittu) (:nimi hallintayksikko))
+      false
+
+      ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
+      ;; tarkasta, onko tämä urakka se
       valittu-urakka
       (= urakka-id valittu-urakka)
 
+      ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
+      ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
       valittu-hallintayksikko
-      (= valittu-hallintayksikko hy-id)
+      (= valittu-hallintayksikko (:id hallintayksikko))
 
+      ;; Sisään tultaessa oli valittuna "koko maa", eli kaikki uudet urakat valitaan
       :else
       true)))
 
@@ -173,22 +203,39 @@ hakutiheys-historiakuva 1200000)
                                                             :nykytilanne? (= :nykytilanne tila)})))]
         (into {}
               (map
-                (fn [hy]
-                  {(get-in hy [:hallintayksikko :nimi])
+                (fn [aluekokonaisuus]
+                  {(get-in aluekokonaisuus [:hallintayksikko :nimi])
                    (into {}
                          (map
                            (fn [{:keys [id nimi]}]
-                             [(tk/->Suodatin id (keyword (clojure.string/replace nimi " " "_")) nimi)
-                              (valitse-urakka? id (get-in hy [:hallintayksikko :id]))])
-                           (:urakat hy)))})
+                             [(tk/->Suodatin id
+                                             (-> nimi
+                                                 (clojure.string/replace " " "_")
+                                                 (clojure.string/replace "," "_")
+                                                 (clojure.string/replace "(" "_")
+                                                 (clojure.string/replace ")" "_")
+                                                 (keyword))
+                                             nimi)
+                              (valitse-urakka? id (:hallintayksikko aluekokonaisuus))])
+                           (:urakat aluekokonaisuus)))})
                 tulos)))))
 
 (defn yhdista-aluesuodattimet [vanhat uudet]
   ;; Yhdistetään kaksi mäppiä, joka sisältää mäppiä
-  ;; Mergen jälkimmäinen parametri ylikirjoittaa edellisen
-  ;; ts., jos jokin suodatin löytyy jo vanhoista, käytetään aina vanhoissa tiedoissa
-  ;; olevaa arvoa (eli onko valittu vai ei)
-  (merge-with merge uudet vanhat))
+  ;; Otetaan pelkästään kentät uudesta mäpistä,
+  ;; mutta jos avaimelle löytyy arvo vanhoista tiedoista, käytetään sitä.
+  (into {}
+        (map
+          (fn [[hallintayksikko urakat]]
+            [hallintayksikko
+             (into {}
+                   (map
+                     (fn [[suodatin valittu?]]
+                       (let [vanha-arvo (get-in vanhat [hallintayksikko suodatin])
+                             arvo (if-not (nil? vanha-arvo) vanha-arvo valittu?)]
+                         [suodatin arvo]))
+                     urakat))])
+          uudet)))
 
 (def uudet-aluesuodattimet
   (reaction<! [tila @valittu-tila
