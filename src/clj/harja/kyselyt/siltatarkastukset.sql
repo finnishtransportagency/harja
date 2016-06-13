@@ -288,3 +288,7 @@ SELECT exists(SELECT id
               WHERE silta = :silta AND
                     ulkoinen_id != :ulkoinen_id AND
                     tarkastusaika = :tarkastusaika);
+
+-- name: lisaa-liite-siltatarkastuskohteelle<!
+INSERT INTO siltatarkastus_kohde_liite (siltatarkastus, kohde, liite)
+    VALUES (:siltatarkastus, :kohde, :liite);
