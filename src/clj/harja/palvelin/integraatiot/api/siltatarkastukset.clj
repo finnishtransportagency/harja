@@ -19,7 +19,8 @@
   {"eiToimenpiteita" "A"
    "puhdistettava" "B"
    "urakanKunnostettava" "C"
-   "korjausOhjelmoitava" "D"})
+   "korjausOhjelmoitava" "D"
+   "eiPade" "-"})
 
 (def api-kohde->numero
   {;; Alusrakenne
