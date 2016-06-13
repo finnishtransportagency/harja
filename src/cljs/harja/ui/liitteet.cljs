@@ -78,7 +78,7 @@ Optiot voi sisältää:
        (if-let [edistyminen @edistyminen]
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
-          [:div.file-upload.nappi-toissijainen
+          [:div {:class (str "file-upload nappi-toissijainen " (when (:grid? opts) "nappi-grid"))}
            [:span (ikonit/livicon-upload) (if @tiedosto
                                     " Vaihda liite"
                                     (str " " (or nappi-teksti "Valitse tiedosto")))]
