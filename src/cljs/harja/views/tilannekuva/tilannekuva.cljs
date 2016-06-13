@@ -18,7 +18,8 @@
             [harja.ui.checkbox :as checkbox]
             [harja.ui.on-off-valinta :as on-off]
             [harja.domain.tilannekuva :as tk]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
@@ -140,18 +141,34 @@
                       (conj ryhma-polku elementti)]))])]))))
 
 (defn aluesuodattimet []
-  [:div#tk-aluevalikko
-   [:span#tk-alueotsikko "Näytä alueilta:"]
-   [:div#tk-aluevaihtoehdot
-    [checkbox-suodatinryhma "Uusimaa" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Varsinais-Suomi" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Kaakkois-Suomi" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Pirkamnmaa" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Pohjois-Savo" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Keski-Suomi" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Etelä-Pohjanmaa" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Pohjois-Pohjanmaa ja Kainuu" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]
-    [checkbox-suodatinryhma "Lappi" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]])
+  (let [nimet (set (keys tiedot/oletusalueet))
+        uusimaa "Uusimaa"
+        varsinais-suomi "Varsinais-Suomi"
+        kaakkois-suomi "Kaakkois-Suomi"
+        pirkanmaa "Pirkanmaa"
+        pohjois-savo "Pohjois-Savo"
+        keski-suomi "Keski-Suomi"
+        etela-pohjanmaa "Etelä-Pohjanmaa"
+        pohjois-pohjanmaa "Pohjois-Pohjanmaa ja Kainuu"
+        lappi "Lappi"]
+    (assert (not (some nil? (map nimet [uusimaa varsinais-suomi kaakkois-suomi
+                                        pirkanmaa pohjois-savo keski-suomi
+                                        etela-pohjanmaa pohjois-pohjanmaa lappi])))
+            "Tilannekuvan alueiden pudotusvalikkojen otsikoissa taitaa olla kirjoitusvirhe.")
+    (komp/luo
+      (fn []
+        [:div#tk-aluevalikko
+         [:span#tk-alueotsikko "Näytä alueilta:"]
+         [:div#tk-aluevaihtoehdot
+          [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
+          [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
+          [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
+          [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
+          [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
+          [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
+          [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
+          [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
+          [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]]]))))
 
 (defn aikasuodattimet []
   [:div#tk-paavalikko
@@ -199,9 +216,13 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (reset! kartta/pida-geometriat-nakyvilla? false)
-                           (kartta/aseta-paivitetaan-karttaa-tila! true))
+                           (kartta/aseta-paivitetaan-karttaa-tila! true)
+                           (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
+                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko))
                       #(do (reset! kartta/pida-geometriat-nakyvilla? true)
-                           (kartta/aseta-paivitetaan-karttaa-tila! false)))
+                           (kartta/aseta-paivitetaan-karttaa-tila! false)
+                           (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
+                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)))
     (komp/kuuntelija [:toteuma-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu

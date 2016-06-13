@@ -37,15 +37,20 @@ hakutiheys-historiakuva 1200000)
 (def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
 (def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 
-(def aluesuodattimet (atom {"Varsinais-Suomi"             {},
-                            "Etelä-Pohjanmaa"             {},
-                            "Pohjois-Savo"                {},
-                            "Lappi"                       {},
-                            "Kaakkois-Suomi"              {},
-                            "Pirkanmaa"                   {},
-                            "Uusimaa"                     {},
-                            "Pohjois-Pohjanmaa ja Kainuu" {},
-                            "Keski-Suomi"                 {}}))
+(def oletusalueet {"Varsinais-Suomi"             {},
+                   "Etelä-Pohjanmaa"             {},
+                   "Pohjois-Savo"                {},
+                   "Lappi"                       {},
+                   "Kaakkois-Suomi"              {},
+                   "Pirkanmaa"                   {},
+                   "Uusimaa"                     {},
+                   "Pohjois-Pohjanmaa ja Kainuu" {},
+                   "Keski-Suomi"                 {}})
+
+(def aluesuodattimet (atom oletusalueet))
+
+(def valittu-urakka-tilannekuvaan-tullessa (atom nil))
+(def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
@@ -149,8 +154,8 @@ hakutiheys-historiakuva 1200000)
               (second @historiakuvan-aikavali))}))
 
 (defn- valitse-urakka? [urakka-id hy-id]
-  (let [valittu-urakka (:id @nav/valittu-urakka)
-        valittu-hallintayksikko (:id @nav/valittu-hallintayksikko)]
+  (let [valittu-urakka (:id @valittu-urakka-tilannekuvaan-tullessa)
+        valittu-hallintayksikko (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)]
     (cond
       valittu-urakka
       (= urakka-id valittu-urakka)
@@ -187,13 +192,13 @@ hakutiheys-historiakuva 1200000)
 
 (def uudet-aluesuodattimet
   (reaction<! [tila @valittu-tila
-               urakoitsija @nav/valittu-urakoitsija
-               urakkatyyppi @nav/valittu-urakkatyyppi
+               nakymassa? @nakymassa?
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
-              (go (let [tulos (<! (hae-aluesuodattimet tila urakoitsija urakkatyyppi))]
-                    (swap! aluesuodattimet yhdista-aluesuodattimet tulos)
-                    tulos))))
+              (go (when nakymassa?
+                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/valittu-urakkatyyppi))]
+                     (swap! aluesuodattimet yhdista-aluesuodattimet tulos)
+                     tulos)))))
 
 (defonce hakuparametrit
   (reaction
