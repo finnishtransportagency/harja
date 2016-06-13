@@ -134,3 +134,27 @@ CREATE TRIGGER tg_poista_muistetut_laskutusyht_kht
  ON kokonaishintainen_tyo
  FOR EACH ROW
  EXECUTE PROCEDURE poista_muistetut_laskutusyht_kht();
+
+
+-- Jos suolasakon parametrit muuttuvat, poistetaan hoitokauden laskutusyhteenvedot
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_suola() RETURNS trigger AS $$
+DECLARE
+  alku DATE;
+  loppu DATE;
+BEGIN
+  alku := make_date(NEW.hoitokauden_alkuvuosi, 10, 1);
+  loppu := make_date(NEW.hoitokauden_alkuvuosi+1, 9, 30);
+  DELETE
+    FROM laskutusyhteenveto_cache
+   WHERE urakka = NEW.urakka
+     AND alkupvm >= alku
+     AND loppupvm <= loppu;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_poista_muistetut_laskutusyht_suola
+ AFTER INSERT OR UPDATE
+ ON suolasakko
+ FOR EACH ROW
+ EXECUTE PROCEDURE poista_muistetut_laskutusyht_suola();
