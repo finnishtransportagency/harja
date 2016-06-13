@@ -67,7 +67,7 @@
   (log/debug format "YHA palautti urakokan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)]
     (doseq [kohde kohteet]
-      (let [kohde-id  (:id (:kohde kohde))
+      (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
             virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) (:virheet vastaus)))
             onnistunut? (nil? virhe)
@@ -75,7 +75,7 @@
         (if onnistunut?
           (log/info (format "Kohteen (id: %s) lähetys onnistui." kohde-id))
           (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti)))
-§        (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
+        (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
           {:lahetetty (pvm/nyt)
            :onnistunut onnistunut?
