@@ -177,7 +177,7 @@
             :valinnat      ["A" "B" "C" "D"]
             :fmt           #(kohdetuloksen-teksti %)}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}
-           {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+           #_{:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
             :komponentti (fn [rivi index]
                            ; FIXME Näytä paremmin
                            (doseq [liite (:liitteet rivi)]

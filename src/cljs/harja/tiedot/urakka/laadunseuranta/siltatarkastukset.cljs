@@ -67,7 +67,7 @@
 (defonce valittu-silta (atom nil))
 
 (defonce valitun-sillan-tarkastukset
-  (reaction<! [urakka-id (:id @nav/valittu-urakka))
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
                vs @valittu-silta]
               {:nil-kun-haku-kaynnissa? true}
               (when vs
