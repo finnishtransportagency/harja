@@ -23,9 +23,7 @@
    [:aet (:tr_alkuetaisyys osoite)]
    [:losa (:tr_loppuosa osoite)]
    [:let (:tr_loppuetaisyys osoite)]
-   ;; todo: pitää laittaa pakolliseksi frontille
    [:ajorata (:tr_ajorata osoite)]
-   ;; todo: pitää laittaa pakolliseksi frontille
    [:kaista (:tr_kaista osoite)]])
 
 (defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala
@@ -107,8 +105,6 @@
 (defn muodosta [urakka kohteet]
   (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
-    ;; todo: poista
-    (println xml)
     (if (xml/validoi +xsd-polku+ "yha.xsd" xml)
       xml
       (let [virheviesti "Kohdetta ei voi lähettää YHA:n. XML ei ole validia."]

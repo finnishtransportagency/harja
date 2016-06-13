@@ -271,9 +271,9 @@
          "Lähetä kaikki kohteet YHA:n")
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
-         (reset! @paallystys/yha-lahetys-kaynnissa? true)
+         (reset! paallystys/yha-lahetys-kaynnissa? true)
          (let [vastaus (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt})]
-           (reset! @paallystys/yha-lahetys-kaynnissa? false)
+           (reset! paallystys/yha-lahetys-kaynnissa? false)
            vastaus))
        {:luokka "nappi-grid nappi-ensisijainen"
         :disabled (or @paallystys/yha-lahetys-kaynnissa?

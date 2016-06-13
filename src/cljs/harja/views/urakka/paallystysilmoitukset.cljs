@@ -642,7 +642,6 @@
                             sopimus-id
                             [rivi]])}]
           paallystysilmoitukset]
-         ;; todo: piilota muilta urakoilta kuin päällystys ja paikkaus
          [yha/laheta-kohteet-yhan
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id

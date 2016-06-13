@@ -187,8 +187,6 @@
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
   (yha/laheta-kohteet yha urakka-id kohde-idt)
   (let [paivitetyt-ilmoitukset (paallystys-q/hae-ja-kasittele-urakan-paallystysilmoitukset  db urakka-id sopimus-id)]
-    ;; todo: ei toimi. jatka tästä.
-    (println "-----> " paivitetyt-ilmoitukset)
     paivitetyt-ilmoitukset))
 
 (defrecord Yha []
