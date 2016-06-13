@@ -46,6 +46,7 @@
          {:on-click #(kommentoi! @uusi-kommentti)
           :disabled (str/blank? (:kommentti @uusi-kommentti))}
          "Tallenna kommentti"])
-      (when voi-liittaa [liitteet/lisaa-liite {:urakka-id (:id @nav/valittu-urakka)
-                                               :liite-ladattu #(swap! uusi-kommentti assoc :liite %)
-                                               :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")}])])])
+      (when voi-liittaa [liitteet/lisaa-liite
+                         (:id @nav/valittu-urakka)
+                         {:liite-ladattu #(swap! uusi-kommentti assoc :liite %)
+                          :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")}])])])

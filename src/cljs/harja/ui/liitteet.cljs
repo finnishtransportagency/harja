@@ -60,26 +60,24 @@
   tiedoston lataamisesta.
 
   Optiot voi sisältää:
-  urakka-id          Urakan id, jolle liite lisätään (pakollinen)
   nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
   liite-ladattu      Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
                      Parametriksi annetaan mäppi, jossa liitteen tiedot:
                      :id, :nimi, :tyyppi, :pikkukuva-url, :url"
-  [opts]
+  [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil)
         ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         edistyminen (atom nil)
         virheviesti (atom nil)]
-
-    (fn [{:keys [liite-ladattu nappi-teksti urakka-id] :as opts}]
+    (fn [{:keys [liite-ladattu nappi-teksti grid?] :as opts}]
       [:span
        (if-let [tiedosto @tiedosto]
          [liitetiedosto tiedosto]) ;; Tiedosto ladattu palvelimelle, näytetään se
        (if-let [edistyminen @edistyminen]
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
-          [:div {:class (str "file-upload nappi-toissijainen " (when (:grid? opts) "nappi-grid"))}
+          [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))}
            [yleiset/ikoni-ja-teksti
             (ikonit/livicon-upload)
             (if @tiedosto
@@ -97,7 +95,8 @@
                                   (do
                                     (reset! edistyminen nil)
                                     (reset! virheviesti nil)
-                                    (liite-ladattu (reset! tiedosto ed)))
+                                    (when liite-ladattu
+                                      (liite-ladattu (reset! tiedosto ed))))
                                   (do
                                     (log "Virhe: " (pr-str ed))
                                     (reset! edistyminen nil)
@@ -111,10 +110,10 @@
 
   Optiot voi sisältää:
   urakka-id                       Urakka, jolle id ollaan lisäämässä (pakollinen)
-  uusi-liite-teksti                 Teksti uuden liitteen lisäämisen nappiin
-  uusi-liite-atom                   Atomi, johon uuden liitteen tiedot tallennetaan
-  grid?                             Jos true, optimoidaan näytettäväksi gridissä"
-  [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id grid?]} liitteet]
+  uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
+  uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
+  grid?                           Jos true, optimoidaan näytettäväksi gridissä"
+  [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom urakka-id grid?]}]
   [:span
    ;; Näytä olemassaolevat liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -124,7 +123,6 @@
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
-       [lisaa-liite {:urakka-id urakka-id
-                     :liite-ladattu #(reset! uusi-liite-atom %)
-                     :nappi-teksti uusi-liite-teksti
-                     :grid? grid?}]))])
+       [lisaa-liite urakka-id {:liite-ladattu #(reset! uusi-liite-atom %)
+                               :nappi-teksti uusi-liite-teksti
+                               :grid? grid?}]))])

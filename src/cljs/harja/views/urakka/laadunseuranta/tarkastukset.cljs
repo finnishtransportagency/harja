@@ -296,11 +296,12 @@
        (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
          {:otsikko     "Liitteet" :nimi :liitteet
           :tyyppi      :komponentti
-          :komponentti [liitteet/liitteet {:urakka-id         urakka-id
-                                           :uusi-liite-atom   (r/wrap (:uusi-liite tarkastus)
-                                                                      #(swap! tarkastus-atom assoc :uusi-liite %))
-                                           :uusi-liite-teksti "Lisää liite tarkastukseen"}
-                        (:liitteet tarkastus)]})
+          :komponentti [liitteet/liitteet
+                        urakka-id
+                        (:liitteet tarkastus)
+                        {:uusi-liite-atom   (r/wrap (:uusi-liite tarkastus)
+                                                    #(swap! tarkastus-atom assoc :uusi-liite %))
+                         :uusi-liite-teksti "Lisää liite tarkastukseen"}]})
        (when voi-kirjoittaa?
          {:rivi?       true
           :uusi-rivi?  true
