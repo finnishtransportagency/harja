@@ -176,7 +176,12 @@
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D"]
             :fmt           #(kohdetuloksen-teksti %)}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}]
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}
+           {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+            :komponentti (fn [rivi index]
+                           ; FIXME Näytä paremmin
+                           (doseq [liite (:liitteet rivi)]
+                             [:span "Jännä liite"]))}]
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
                    :nimi    (pvm/pvm (:tarkastusaika tarkastus))

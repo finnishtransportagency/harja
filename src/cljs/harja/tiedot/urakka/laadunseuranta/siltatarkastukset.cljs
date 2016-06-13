@@ -15,8 +15,8 @@
                    ))
 
 
-(defn hae-sillan-tarkastukset [silta-id]
-  (k/post! :hae-sillan-tarkastukset silta-id))
+(defn hae-sillan-tarkastukset [urakka-id silta-id]
+  (k/post! :hae-sillan-tarkastukset urakka-id silta-id))
 
 (defn tallenna-siltatarkastus!
   [siltatarkastus]
@@ -67,10 +67,11 @@
 (defonce valittu-silta (atom nil))
 
 (defonce valitun-sillan-tarkastukset
-  (reaction<! [vs @valittu-silta]
+  (reaction<! [urakka-id (:id @nav/valittu-urakka))
+               vs @valittu-silta]
               {:nil-kun-haku-kaynnissa? true}
               (when vs
-                (hae-sillan-tarkastukset (:id vs)))))
+                (hae-sillan-tarkastukset urakka-id (:id vs)))))
 
 (defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
 

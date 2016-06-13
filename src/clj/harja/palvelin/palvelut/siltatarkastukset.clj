@@ -152,8 +152,8 @@
                         (fn [user {:keys [urakka-id listaus]}]
                           (hae-urakan-sillat db user urakka-id listaus)))
       (julkaise-palvelu http :hae-sillan-tarkastukset
-                        (fn [user silta-id]
-                          (hae-sillan-tarkastukset db user silta-id)))
+                        (fn [user urakka-id silta-id]
+                          (hae-sillan-tarkastukset db user urakka-id silta-id)))
       (julkaise-palvelu http :tallenna-siltatarkastus
                         (fn [user tiedot]
                           (tallenna-siltatarkastus! db user tiedot)))
