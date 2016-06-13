@@ -1,6 +1,9 @@
 -- Siltatarkastuksen kohteelle liite
-CREATE TABLE siltatarkastuskohde_liite (
-  siltatarkastuskohde INTEGER REFERENCES siltatarkastuskohde (id),
+CREATE TABLE siltatarkastus_kohde_liite (
+  siltatarkastus INTEGER REFERENCES siltatarkastus (id),
+  kohde smallint, -- tarkastuskohteen numero, esim. 12 Liikuntasaumalaitteiden siisteys,
   liite INTEGER REFERENCES liite (id)
 );
 COMMENT ON TABLE tarkastus_liite IS 'Siltatarkastuksen kohteeseen liittyvät liitteet';
+
+ALTER TABLE siltatarkastus_kohde_liite ADD CONSTRAINT uniikki_siltatarkastus_kohde_liite UNIQUE (siltatarkastus, kohde);
