@@ -50,7 +50,7 @@
    (fn []
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
-           muokattava? (comp not :koneellinen)
+           muokattava? (comp not true? :koneellinen)
            listaus  (reverse (sort-by :alkanut @toteumat))]
        [:div.suolatoteumat
         [kartta/kartan-paikka]
