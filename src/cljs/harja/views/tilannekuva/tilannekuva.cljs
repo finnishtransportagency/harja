@@ -98,7 +98,7 @@
                                       :osittain-valittu)))]
     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
       (let [ryhman-elementtien-avaimet (or (get-in tiedot/jarjestys ryhma-polku)
-                                           (keys (get-in @suodattimet-atom ryhma-polku)))
+                                           (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
             auki? (fn [] (or @oma-auki-tila
                              (and kokoelma-atom
                                   (= otsikko @kokoelma-atom))))]
@@ -217,6 +217,7 @@
     (komp/lippu tiedot/nakymassa? tilannekuva-kartalla/karttataso-tilannekuva istunto/ajastin-taukotilassa?)
     (komp/sisaan-ulos #(do (reset! kartta/pida-geometriat-nakyvilla? false)
                            (kartta/aseta-paivitetaan-karttaa-tila! true)
+                           (reset! tiedot/aluesuodattimet tiedot/oletusalueet)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
                            (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko))
                       #(do (reset! kartta/pida-geometriat-nakyvilla? true)
