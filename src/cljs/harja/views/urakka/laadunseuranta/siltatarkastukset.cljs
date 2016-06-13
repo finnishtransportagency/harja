@@ -1,4 +1,4 @@
-(ns harja.views.urakka.siltatarkastukset
+(ns harja.views.urakka.laadunseuranta.siltatarkastukset
   "Urakan 'Siltatarkastukset' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
@@ -43,8 +43,7 @@
                      "Ei tietoa tarkastajasta")]
     (if tarkastuksia?
       (str aika " (" tarkastaja ")")
-      "Ei tarkastuksia"))
-  )
+      "Ei tarkastuksia")))
 
 (defn paivita-valittu-silta []
   (let [silta @st/valittu-silta
@@ -141,8 +140,6 @@
                        :urakassa-korjatut [kohdesarake kohteet true]
                        [kohdesarake kohteet]))})]
           (jarjesta-sillat @urakan-sillat)]]))))
-
-
 
 (defn ryhmittele-sillantarkastuskohteet
   "Ryhmittelee sillantarkastuskohteet"
@@ -243,7 +240,6 @@
         (reset! st/valitun-sillan-tarkastukset res)
         (paivita-valittu-silta))))
 
-
 (defn sillan-tarkastukset []
   (komp/luo
     (fn []
@@ -315,7 +311,6 @@
 
 (defn uuden-siltatarkastusten-rivit [uusi-tarkastus]
   (siltatarkastusten-rivit uusi-tarkastus []))
-
 
 (defn uuden-tarkastuksen-syottaminen []
   (let [uusi-tarkastus (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
