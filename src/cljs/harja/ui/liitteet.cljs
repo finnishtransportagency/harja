@@ -7,7 +7,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [harja.tietoturva.liitteet :as t-liitteet]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn naytettava-liite?
@@ -43,9 +44,9 @@
        [:span
         (if (naytettava-liite? liite)
           [:a.klikattava {:on-click #(modal/nayta!
-                                         {:otsikko (str "Liite: " (:nimi liite))
-                                          :leveys "80%"}
-                                         (liitekuva-modalissa liite))}
+                                      {:otsikko (str "Liite: " (:nimi liite))
+                                       :leveys "80%"}
+                                      (liitekuva-modalissa liite))}
            (inc index)]
           [:a {:href (k/liite-url (:id liite))
                :target "_blank"}
@@ -53,17 +54,17 @@
         [:span " "]])
      liitteet)])
 
-(defn liite
+(defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
-Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
-tiedoston lataamisesta.
+  Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
+  tiedoston lataamisesta.
 
-Optiot voi sisältää:
-  :urakka-id         urakan id, jolle liite lisätään
-  :liite-ladattu     Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
-                     Parametriksi annetaan mäppi, jossa liitteen tiedot: :id,
-                     :nimi, :tyyppi, :pikkukuva-url, :url. "
-
+  Optiot voi sisältää:
+  urakka-id          Urakan id, jolle liite lisätään (pakollinen)
+  nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
+  liite-ladattu      Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
+                     Parametriksi annetaan mäppi, jossa liitteen tiedot:
+                     :id, :nimi, :tyyppi, :pikkukuva-url, :url"
   [opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil)
@@ -71,7 +72,7 @@ Optiot voi sisältää:
         edistyminen (atom nil)
         virheviesti (atom nil)]
 
-    (fn [{:keys [liite-ladattu nappi-teksti] :as opts}]
+    (fn [{:keys [liite-ladattu nappi-teksti urakka-id] :as opts}]
       [:span
        (if-let [tiedosto @tiedosto]
          [liitetiedosto tiedosto]) ;; Tiedosto ladattu palvelimelle, näytetään se
@@ -79,12 +80,14 @@ Optiot voi sisältää:
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
           [:div {:class (str "file-upload nappi-toissijainen " (when (:grid? opts) "nappi-grid"))}
-           [:span (ikonit/livicon-upload) (if @tiedosto
-                                    " Vaihda liite"
-                                    (str " " (or nappi-teksti "Valitse tiedosto")))]
+           [yleiset/ikoni-ja-teksti
+            (ikonit/livicon-upload)
+            (if @tiedosto
+              "Vaihda liite"
+              (or nappi-teksti "Lisää liite"))]
            [:input.upload
-            {:type      "file"
-             :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
+            {:type "file"
+             :on-change #(let [ch (k/laheta-liite! (.-target %) urakka-id)]
                           (go
                             (loop [ed (<! ch)]
                               (if (number? ed)
@@ -103,7 +106,15 @@ Optiot voi sisältää:
                                                                (str " (" (:viesti ed) ")"))))))))))}]]
           [:div.liite-virheviesti @virheviesti]])])))
 
-(defn liitteet [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id]} liitteet]
+(defn liitteet
+  "Listaa liitteet ja näyttää Lisää liite -napin.
+
+  Optiot voi sisältää:
+  urakka-id                       Urakka, jolle id ollaan lisäämässä (pakollinen)
+  uusi-liite-teksti                 Teksti uuden liitteen lisäämisen nappiin (oletuksena 'Lisää liite')
+  uusi-liite-atom                   Atomi, johon uuden liitteen tiedot tallennetaan
+  grid?                             Jos true, optimoidaan näytettäväksi gridissä"
+  [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id grid?]} liitteet]
   [:span
    ;; Näytä olemassaolevat liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -113,6 +124,7 @@ Optiot voi sisältää:
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
-       [liite {:urakka-id     urakka-id
-               :liite-ladattu #(reset! uusi-liite-atom %)
-               :nappi-teksti  (or uusi-liite-teksti "Lisää liite")}]))])
+       [lisaa-liite {:urakka-id urakka-id
+                     :liite-ladattu #(reset! uusi-liite-atom %)
+                     :nappi-teksti (or uusi-liite-teksti "Lisää liite")
+                     :grid? grid?}]))])
