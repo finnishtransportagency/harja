@@ -154,9 +154,9 @@
                     (20 21 22 23 24) "Siltapaikan rakenteet"
                     "Tuntematon kohdenumero."))
         otsikon-mukaan (group-by otsikko kohderivit)]
-    (mapcat (fn [[otsikko rivit]]
-              (concat [(grid/otsikko otsikko)] rivit))
-            (seq otsikon-mukaan))))
+    (into [] (mapcat (fn [[otsikko rivit]]
+               (concat [(grid/otsikko otsikko)] rivit))
+             (seq otsikon-mukaan)))))
 
 (defn kohdetuloksen-teksti [kirjain]
   (case kirjain
@@ -180,7 +180,7 @@
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
                    :nimi    (pvm/pvm (:tarkastusaika tarkastus))
-                   :leveys 51
+                   :leveys 5
                    :tyyppi :string :muokattava? (constantly false)})
                 muut-tarkastukset))))
 
@@ -199,12 +199,11 @@
         (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
         (reset! st/valittu-tarkastus res))))
 
-
-
 (defn tallenna-uusi-siltatarkastus! [lomake taulukon-rivit]
   (go (let [kohteet-mapissa (into {}
                                   (map (fn [rivi]
-                                         [(:kohdenro rivi) [(:tulos rivi) (:lisatieto rivi)]])
+                                         (log "[SILTA] Rivi: " (pr-str rivi))
+                                         [(:kohdenro rivi) [(:tulos rivi) (:lisatieto rivi) (:uusi-liite rivi)]])
                                        taulukon-rivit))
             uusi-tarkastus (assoc lomake :kohteet kohteet-mapissa)
             res (<! (st/tallenna-siltatarkastus! uusi-tarkastus))
@@ -382,12 +381,18 @@
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 30
             :pituus-max 255}
            {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
-            :komponentti (fn [rivi]
+            :komponentti (fn [rivi index]
                            [liitteet/liitteet
                             (:id @nav/valittu-urakka)
                             (:liitteet @taulukon-rivit)
-                            {:uusi-liite-atom (r/wrap (:uusi-liite @taulukon-rivit)
-                                                      #(swap! taulukon-rivit assoc :uusi-liite %))
+                            {:uusi-liite-atom (r/wrap
+                                                (atom nil)
+                                                (fn [uusi-arvo]
+                                                  (log "[SILTA] assoc taulukon riveihin " (pr-str @taulukon-rivit) " indeksiin " index " uusi arvo: " (pr-str (assoc rivi :uusi-liite uusi-arvo)))
+                                                  (reset! taulukon-rivit
+                                                          (assoc @taulukon-rivit
+                                                            index
+                                                            (assoc rivi :uusi-liite uusi-arvo)))))
                              :grid? true}])}]
           @taulukon-rivit]
 
