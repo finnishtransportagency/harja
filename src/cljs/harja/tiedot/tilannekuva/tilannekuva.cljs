@@ -11,7 +11,8 @@
             [harja.pvm :as pvm]
             [cljs-time.core :as t]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.tilannekuva :as tk])
+            [harja.domain.tilannekuva :as tk]
+            [reagent.core :as r])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -47,66 +48,63 @@ hakutiheys-historiakuva 1200000)
                    "Pohjois-Pohjanmaa ja Kainuu" {},
                    "Keski-Suomi"                 {}})
 
-(def aluesuodattimet (atom oletusalueet))
-
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 (def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
 
 ;; Kartassa säilötään suodattimien tila, valittu / ei valittu.
 (defonce suodattimet
-         (reaction
-           (merge
-             {:yllapito        {tk/paallystys false
-                                       tk/paikkaus   false}
-                     :ilmoitukset     {:tyypit {tk/tpp false
-                                                tk/tur false
-                                                tk/urk false}
-                                       :tilat  ilmoitusten-tilat-nykytilanteessa}
-                     :turvallisuus    {tk/turvallisuuspoikkeamat false}
-                     :laatupoikkeamat {tk/laatupoikkeama-tilaaja     false
-                                       tk/laatupoikkeama-urakoitsija false
-                                       tk/laatupoikkeama-konsultti   false}
-                     :tarkastukset    {tk/tarkastus-tiesto     false
-                                       tk/tarkastus-talvihoito false
-                                       tk/tarkastus-soratie    false
-                                       tk/tarkastus-laatu      false}
-                     ;; Näiden pitää osua työkoneen enumeihin
-                     ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
-                     ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
-                     ;; tekoa halutaan seurana livenä, niin arvot on täällä valmiiksi
-                     ;; copypastettavissa..
-                     :talvi           {tk/auraus-ja-sohjonpoisto          false
-                                       tk/suolaus                         false
-                                       tk/pistehiekoitus                  false
-                                       tk/linjahiekoitus                  false
-                                       tk/lumivallien-madaltaminen        false
-                                       tk/sulamisveden-haittojen-torjunta false
-                                       tk/liuossuolaus                    false
-                                       tk/aurausviitoitus-ja-kinostimet   false
-                                       tk/lumensiirto                     false
-                                       tk/paannejaan-poisto               false
-                                       tk/muu                             false
+         (atom
+           {:yllapito        {tk/paallystys false
+                              tk/paikkaus   false}
+            :ilmoitukset     {:tyypit {tk/tpp false
+                                       tk/tur false
+                                       tk/urk false}
+                              :tilat  ilmoitusten-tilat-nykytilanteessa}
+            :turvallisuus    {tk/turvallisuuspoikkeamat false}
+            :laatupoikkeamat {tk/laatupoikkeama-tilaaja     false
+                              tk/laatupoikkeama-urakoitsija false
+                              tk/laatupoikkeama-konsultti   false}
+            :tarkastukset    {tk/tarkastus-tiesto     false
+                              tk/tarkastus-talvihoito false
+                              tk/tarkastus-soratie    false
+                              tk/tarkastus-laatu      false}
+            ;; Näiden pitää osua työkoneen enumeihin
+            ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
+            ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
+            ;; tekoa halutaan seurana livenä, niin arvot on täällä valmiiksi
+            ;; copypastettavissa..
+            :talvi           {tk/auraus-ja-sohjonpoisto          false
+                              tk/suolaus                         false
+                              tk/pistehiekoitus                  false
+                              tk/linjahiekoitus                  false
+                              tk/lumivallien-madaltaminen        false
+                              tk/sulamisveden-haittojen-torjunta false
+                              tk/liuossuolaus                    false
+                              tk/aurausviitoitus-ja-kinostimet   false
+                              tk/lumensiirto                     false
+                              tk/paannejaan-poisto               false
+                              tk/muu                             false
 
-                                       ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne
-                                       ;; mailissaan pyysi, että pinnan tasaus tulee myös
-                                       ;; talvitoimenpiteisiin. Maili liittyi suodattimien
-                                       ;; järjestykseen. Pyysin tarkennusta, mutta
-                                       ;; päätin commitoida tämän talteen ettei vaan pääse unohtumaan.
-                                       tk/pinnan-tasaus                   false}
-                     :kesa            {tk/koneellinen-niitto         false
-                                       tk/koneellinen-vesakonraivaus false
-                                       tk/liikennemerkkien-puhdistus false
-                                       tk/sorateiden-muokkaushoylays false
-                                       tk/sorateiden-polynsidonta    false
-                                       tk/sorateiden-tasaus          false
-                                       tk/sorastus                   false
-                                       tk/harjaus                    false
-                                       tk/paallysteiden-paikkaus     false
-                                       tk/paallysteiden-juotostyot   false
-                                       tk/siltojen-puhdistus         false
-                                       tk/l-ja-p-alueiden-puhdistus  false
-                                       tk/muu                        false}}
-             {:alueet @aluesuodattimet})))
+                              ;; Pinnan tasaus on mielestämme kesätoimenpide, mutta Anne
+                              ;; mailissaan pyysi, että pinnan tasaus tulee myös
+                              ;; talvitoimenpiteisiin. Maili liittyi suodattimien
+                              ;; järjestykseen. Pyysin tarkennusta, mutta
+                              ;; päätin commitoida tämän talteen ettei vaan pääse unohtumaan.
+                              tk/pinnan-tasaus                   false}
+            :kesa            {tk/koneellinen-niitto         false
+                              tk/koneellinen-vesakonraivaus false
+                              tk/liikennemerkkien-puhdistus false
+                              tk/sorateiden-muokkaushoylays false
+                              tk/sorateiden-polynsidonta    false
+                              tk/sorateiden-tasaus          false
+                              tk/sorastus                   false
+                              tk/harjaus                    false
+                              tk/paallysteiden-paikkaus     false
+                              tk/paallysteiden-juotostyot   false
+                              tk/siltojen-puhdistus         false
+                              tk/l-ja-p-alueiden-puhdistus  false
+                              tk/muu                        false}
+            :alueet oletusalueet}))
 
 (def jarjestys tk/jarjestys)
 
@@ -153,48 +151,63 @@ hakutiheys-historiakuva 1200000)
               (pvm/nyt)
               (second @historiakuvan-aikavali))}))
 
-(defn- hyt-joiden-urakoilla-ei-arvoa [boolean-arvo]
-  (into #{}
-        (keep
-          (fn [[nimi urakat]]
-            (when-not (empty? urakat)
-              (when-not (some
-                          (fn [[suodatin valittu?]]
-                            (= valittu? boolean-arvo))
-                          urakat)
-                nimi)))
-          (:alueet @suodattimet))))
-
-(def hallintayksikot-joista-kaikki-valittu (partial hyt-joiden-urakoilla-ei-arvoa false))
-(def hallintayksikot-joista-ei-mitaan-valittu (partial hyt-joiden-urakoilla-ei-arvoa true))
+(def hyt-joiden-urakoilla-ei-arvoa
+  ;; Uusimmassa reagentissa tulee funktio r/track, jolla tämä
+  ;; olisi hoitunut paljon mukavemmin, mutta onnistuu kai tämä näinkin
+  (reaction
+    (let [funktio (fn [boolean-arvo]
+                    (into #{}
+                         (keep
+                           (fn [[nimi urakat]]
+                             (when-not (empty? urakat)
+                               (when-not (some
+                                           (fn [[suodatin valittu?]]
+                                             (= valittu? boolean-arvo))
+                                           urakat)
+                                 nimi)))
+                           (:alueet @suodattimet))))]
+      {true (funktio true)
+       false (funktio false)})))
 
 (defn- valitse-urakka? [urakka-id hallintayksikko]
   (let [valittu-urakka (:id @valittu-urakka-tilannekuvaan-tullessa)
-        valittu-hallintayksikko (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)]
+        valittu-hallintayksikko (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)
+        hallintayksikot-joista-ei-mitaan-valittu (get @hyt-joiden-urakoilla-ei-arvoa true)
+        hallintayksikot-joista-kaikki-valittu (get @hyt-joiden-urakoilla-ei-arvoa false)]
     (cond
       ;; Valitse urakka, jos se kuuluu hallintayksikköön, joista käyttäjä on valinnut
       ;; kaikki urakat
-      ((hallintayksikot-joista-kaikki-valittu) (:nimi hallintayksikko))
-      true
+      (hallintayksikot-joista-kaikki-valittu (:nimi hallintayksikko))
+      (do
+        #_(log (:nimi hallintayksikko) " on hy, joista kaikki on valittu!")
+        true)
 
       ;; Älä ikinä valitse urakkaa, jos se kuuluu hallintayksikköön, josta käyttäjä
       ;; ei ole valinnut yhtään urakkaa (kaiki on false!)
-      ((hallintayksikot-joista-ei-mitaan-valittu) (:nimi hallintayksikko))
-      false
+      (hallintayksikot-joista-ei-mitaan-valittu (:nimi hallintayksikko))
+      (do
+        #_(log (:nimi hallintayksikko) " on hy, joista ei ole mitään valittu!")
+        false)
 
       ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
       ;; tarkasta, onko tämä urakka se
       valittu-urakka
-      (= urakka-id valittu-urakka)
+      (do
+        #_(log "Murupolun kautta on valittu urakka; onko tämä se urakka? " (= urakka-id valittu-urakka))
+        (= urakka-id valittu-urakka))
 
       ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
       ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
       valittu-hallintayksikko
-      (= valittu-hallintayksikko (:id hallintayksikko))
+      (do
+        #_(log "Murupolun kautta on valittu hy; onko tämä se hy? " (= valittu-hallintayksikko (:id hallintayksikko)))
+        (= valittu-hallintayksikko (:id hallintayksikko)))
 
       ;; Sisään tultaessa oli valittuna "koko maa", eli kaikki uudet urakat valitaan
       :else
-      true)))
+      (do
+        #_(log "Koko maa valittu! :)")
+        true))))
 
 (defn- hae-aluesuodattimet [tila urakoitsija urakkatyyppi]
   (go (let [tulos (<! (k/post! :hae-urakat-tilannekuvaan (aikaparametrilla
@@ -243,8 +256,9 @@ hakutiheys-historiakuva 1200000)
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
               (go (when nakymassa?
-                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/valittu-urakkatyyppi))]
-                     (swap! aluesuodattimet yhdista-aluesuodattimet tulos)
+                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/valittu-urakkatyyppi))
+                          yhdistetyt (yhdista-aluesuodattimet (:alueet @suodattimet) tulos)]
+                     (swap! suodattimet assoc :alueet yhdistetyt)
                      tulos)))))
 
 (defonce hakuparametrit
