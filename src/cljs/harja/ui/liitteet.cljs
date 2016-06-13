@@ -60,6 +60,7 @@
   tiedoston lataamisesta.
 
   Optiot voi sisältää:
+  grid?              Jos true, optimoidaan näytettäväksi gridissä
   nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
   liite-ladattu      Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
                      Parametriksi annetaan mäppi, jossa liitteen tiedot:
@@ -124,5 +125,5 @@
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
        [lisaa-liite urakka-id {:liite-ladattu #(reset! uusi-liite-atom %)
-                               :nappi-teksti uusi-liite-teksti
+                               :uusi-liite-teksti uusi-liite-teksti
                                :grid? grid?}]))])
