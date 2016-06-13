@@ -610,15 +610,19 @@
    paallystysilmoitukset])
 
 (defn nayta-lahetystiedot [rivi]
-  (if (:lahetetty rivi)
-    (if (:lahetys-onnistunut rivi)
-      [:span.maksuera-lahetetty
-       (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
-      [:span.maksuera-virhe
-       (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
-    [:span "Ei lähetetty"]))
+  ;; todo: selvitä miten tämän saa toimimaan
+  ;;(if @paallystys/yha-lahetys-kaynnissa?
+   ;; [:span.maksuera-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
+    (if (:lahetetty rivi)
+      (if (:lahetys-onnistunut rivi)
+        [:span.maksuera-lahetetty
+         (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
+        [:span.maksuera-virhe
+         (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
+      [:span "Ei lähetetty"]))
+;;)
 
-(defn yha-lahetykset-taulukko [paallystysilmoitukset]
+(defn yha-lahetykset-taulukko [urakka-id sopimus-id paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
@@ -653,7 +657,7 @@
          [:h3 "Päällystysilmoitukset"]
          (paallystysilmoitukset-taulukko paallystysilmoitukset)
          [:h3 "YHA-lähetykset"]
-         (yha-lahetykset-taulukko paallystysilmoitukset)
+         (yha-lahetykset-taulukko urakka-id sopimus-id paallystysilmoitukset)
          [yha/laheta-kohteet-yhaan
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id

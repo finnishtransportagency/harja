@@ -281,5 +281,9 @@
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
         :virheviesti "Kohteiden lähettäminen epäonnistui."
         :kun-onnistuu (fn [paivitetyt-ilmoitukset]
-                        (log "[YHA] Kohteet lähetetty YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
+                        (if (every? #(or (:lahetys-onnistunut %) (nil? (:lahetys-onnistunut %))) paivitetyt-ilmoitukset)
+                          (do (log "[YHA] Kohteet lähetetty YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
+                              (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success))
+                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
+                              (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)))
                         (reset! paallystys/paallystysilmoitukset paivitetyt-ilmoitukset))}])))
