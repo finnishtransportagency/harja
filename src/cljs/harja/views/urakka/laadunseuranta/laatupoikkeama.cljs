@@ -279,7 +279,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  {:otsikko "" :nimi :kommentit :tyyppi :komponentti
                   :komponentti [kommentit/kommentit {:voi-kommentoida? true
                                                      :voi-liittaa true
-                                                     :liita-nappi-teksti " Lisää liite kommenttiin"
                                                      :placeholder "Kirjoita kommentti..."
                                                      :uusi-kommentti (r/wrap (:uusi-kommentti @laatupoikkeama)
                                                                              #(swap! laatupoikkeama assoc :uusi-kommentti %))}

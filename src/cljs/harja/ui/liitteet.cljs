@@ -111,7 +111,7 @@
 
   Optiot voi sisältää:
   urakka-id                       Urakka, jolle id ollaan lisäämässä (pakollinen)
-  uusi-liite-teksti                 Teksti uuden liitteen lisäämisen nappiin (oletuksena 'Lisää liite')
+  uusi-liite-teksti                 Teksti uuden liitteen lisäämisen nappiin
   uusi-liite-atom                   Atomi, johon uuden liitteen tiedot tallennetaan
   grid?                             Jos true, optimoidaan näytettäväksi gridissä"
   [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id grid?]} liitteet]
@@ -126,5 +126,5 @@
      (when uusi-liite-atom
        [lisaa-liite {:urakka-id urakka-id
                      :liite-ladattu #(reset! uusi-liite-atom %)
-                     :nappi-teksti (or uusi-liite-teksti "Lisää liite")
+                     :nappi-teksti uusi-liite-teksti
                      :grid? grid?}]))])

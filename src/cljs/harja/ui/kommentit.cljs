@@ -48,4 +48,4 @@
          "Tallenna kommentti"])
       (when voi-liittaa [liitteet/lisaa-liite {:urakka-id (:id @nav/valittu-urakka)
                                                :liite-ladattu #(swap! uusi-kommentti assoc :liite %)
-                                               :nappi-teksti liita-nappi-teksti}])])])
+                                               :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")}])])])
