@@ -383,7 +383,12 @@
             :pituus-max 255}
            {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
             :komponentti (fn [rivi]
-                           [liitteet/liite {:grid? true}])}]
+                           [liitteet/liitteet
+                            (:id @nav/valittu-urakka)
+                            (:liitteet @taulukon-rivit)
+                            {:uusi-liite-atom (r/wrap (:uusi-liite @taulukon-rivit)
+                                                      #(swap! taulukon-rivit assoc :uusi-liite %))
+                             :grid? true}])}]
           @taulukon-rivit]
 
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
