@@ -271,15 +271,14 @@
          "Lähetä kaikki kohteet YHA:n")
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
-         (reset! paallystys/yha-lahetys-kaynnissa? true)
-         (let [vastaus (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt})]
-           (reset! paallystys/yha-lahetys-kaynnissa? false)
-           vastaus))
+         (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
+         (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt}))
        {:luokka "nappi-grid nappi-ensisijainen"
-        :disabled (or @paallystys/yha-lahetys-kaynnissa?
+        :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
                       (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
         :virheviesti "Kohteiden lähettäminen epäonnistui."
+        :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
         :kun-onnistuu (fn [paivitetyt-ilmoitukset]
                         (if (every? #(or (:lahetys-onnistunut %) (nil? (:lahetys-onnistunut %))) paivitetyt-ilmoitukset)
                           (do (log "[YHA] Kohteet lähetetty YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))

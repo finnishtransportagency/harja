@@ -75,7 +75,7 @@
         (if onnistunut?
           (log/info (format "Kohteen (id: %s) lähetys onnistui." kohde-id))
           (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti)))
-        (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
+§        (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
           {:lahetetty (pvm/nyt)
            :onnistunut onnistunut?

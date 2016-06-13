@@ -611,16 +611,16 @@
 
 (defn nayta-lahetystiedot [rivi]
   ;; todo: selvitä miten tämän saa toimimaan
-  ;;(if @paallystys/yha-lahetys-kaynnissa?
-   ;; [:span.maksuera-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
+  (log "----> " (pr-str rivi))
+  (if (some #(= % (:paallystyskohde-id rivi)) @paallystys/kohteet-yha-lahetyksessa)
+    [:span.maksuera-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
     (if (:lahetetty rivi)
       (if (:lahetys-onnistunut rivi)
         [:span.maksuera-lahetetty
          (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
         [:span.maksuera-virhe
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
-      [:span "Ei lähetetty"]))
-;;)
+      [:span "Ei lähetetty"])))
 
 (defn yha-lahetykset-taulukko [urakka-id sopimus-id paallystysilmoitukset]
   [grid/grid
@@ -631,8 +631,7 @@
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 30}
     {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 50
-     :komponentti (fn [rivi]
-                    (nayta-lahetystiedot rivi))}
+     :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
     {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/laheta-kohteet-yhaan
