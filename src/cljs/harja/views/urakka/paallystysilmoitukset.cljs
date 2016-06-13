@@ -582,7 +582,7 @@
           {:otsikko ""
            :tyhja (if (nil? @paallystys/paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
            :tunniste hash}
-          [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+          [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
            {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
            {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
             :hae (fn [rivi]
@@ -601,20 +601,20 @@
                               [:span (ikonit/eye-open) " Päällystysilmoitus"]]
                              [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                               [:span "Aloita päällystysilmoitus"]]))}
-           {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 11 :tyyppi :komponentti
+           {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
             :komponentti (fn [rivi]
                            [yha/laheta-kohteet-yhan
                             oikeudet/urakat-kohdeluettelo-paallystyskohteet
                             urakka-id
                             sopimus-id
                             [rivi]])}
-           {:otsikko "Edellinen lahetys" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti :leveys 35
+           {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti :leveys 35
             :komponentti (fn [rivi]
-                   (if (:lahetetty rivi)
-                     (if (:lahetys-onnistunut rivi)
-                       [:span.maksuera-lahetetty (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
-                       [:span.maksuera-virhe (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
-                     [:span "Ei lähetetty"]))}]
+                           (if (:lahetetty rivi)
+                             (if (:lahetys-onnistunut rivi)
+                               [:span.maksuera-lahetetty (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
+                               [:span.maksuera-virhe (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)))])
+                             [:span "Ei lähetetty"]))}]
           (sort-by
             (juxt (fn [toteuma] (case (:tila toteuma)
                                   :lukittu 0

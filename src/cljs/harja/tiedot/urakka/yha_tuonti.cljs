@@ -267,7 +267,7 @@
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
-         [:span (ikonit/livicon-arrow-right) " Laheta"]
+         [:span "Laheta " (ikonit/livicon-arrow-right)]
          "Lähetä kaikki kohteet YHA:n")
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
