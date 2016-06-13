@@ -16,7 +16,7 @@
                   :kohteet
                   (into {}
                         (map (fn [kohde]
-                               (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$"
+                               (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|-):(.*)$"
                                                                          kohde)]
                                  [(Integer/parseInt nro) [tulos lisatieto]]))
                              kohteet)))

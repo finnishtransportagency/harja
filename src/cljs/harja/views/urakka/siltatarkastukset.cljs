@@ -375,7 +375,7 @@
             :validoi       [[:ei-tyhja "Anna kohteen tulos"]]
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
-            :valinnat      ["A" "B" "C" "D"]
+            :valinnat      ["A" "B" "C" "D" "-"]
             :fmt           #(kohdetuloksen-teksti %)
             ; Tarjoa alaspäin kopiointia vain arvolle A - ei toimenpiteitä
             :tayta-alas?   #(= "A" %)
