@@ -20,7 +20,9 @@
    "puhdistettava" "B"
    "urakanKunnostettava" "C"
    "korjausOhjelmoitava" "D"
-   "eiPade" "-"})
+   "eiPade" "-"
+   ;; Tyhjä string tulkitaan arvoksi eiPade (eli -)
+   "" "-"})
 
 (def api-kohde->numero
   {;; Alusrakenne
