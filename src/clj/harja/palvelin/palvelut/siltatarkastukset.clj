@@ -86,8 +86,8 @@
 
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
-  [db user silta-id]
-  ;; FIXME: tarkista oikeudet
+  [db user urakka-id silta-id]
+  (oikeudet/lue oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (into []
         kohteet-xf
         (q/hae-sillan-tarkastukset db silta-id)))
@@ -141,7 +141,7 @@
   (jdbc/with-db-transaction [c db]
     (do
       (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
-    (hae-sillan-tarkastukset c user silta-id)))
+    (hae-sillan-tarkastukset c user urakka-id silta-id)))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
