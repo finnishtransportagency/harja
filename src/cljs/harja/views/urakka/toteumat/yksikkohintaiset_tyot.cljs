@@ -180,13 +180,7 @@
   yksikköhintaiset tehtävät ovat omassa ja muut tiedot omassa atomissa.
   Kun lomake tallennetaan, tiedot yhdistetään näistä atomeista yhdeksi kokonaisuudeksi."
   []
-  (let [lomake-toteuma (atom (if (empty? @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
-                               (if @u/urakan-organisaatio
-                                 (assoc @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
-                                        :suorittajan-nimi (:nimi @u/urakan-organisaatio)
-                                        :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio))
-                                 @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
-                               @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma))
+  (let [lomake-toteuma (atom @yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma)
         lomake-tehtavat (atom (into {}
                                     (map (fn [[id tehtava]]
                                            [id (assoc tehtava :tehtava
@@ -369,8 +363,7 @@
          [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
          [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
-                                              {:alkanut (pvm/nyt)
-                                               :paattynyt (pvm/nyt)})
+                                              (yksikkohintaiset-tyot/uusi-yksikkohintainen-toteuma))
           {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka)))}]
 
          [grid/grid

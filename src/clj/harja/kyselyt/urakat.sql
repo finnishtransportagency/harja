@@ -52,17 +52,6 @@ SELECT
   yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   u.takuu_loppupvm,
-  (SELECT EXISTS(SELECT id
-                     FROM paallystysilmoitus
-                     WHERE paallystyskohde IN (SELECT id
-                                               FROM yllapitokohde
-                                               WHERE urakka = u.id)))
-  OR
-  (SELECT EXISTS(SELECT id
-                     FROM paikkausilmoitus
-                     WHERE paikkauskohde IN (SELECT id
-                                             FROM yllapitokohde
-                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -74,10 +63,11 @@ FROM urakka u
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE hallintayksikko = :hallintayksikko
-      AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+  AND (u.id IN (:sallitut_urakat)
+       OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-               :kayttajan_org_id = urk.id));
+               :kayttajan_org_id = urk.id)));
 
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.

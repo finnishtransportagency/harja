@@ -1,5 +1,7 @@
 # Liikenneviraston Harja järjestelmä #
 
+[![Build Status](https://travis-ci.org/finnishtransportagency/harja.svg?branch=develop)](https://travis-ci.org/finnishtransportagency/harja)
+
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
 client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
 
@@ -37,9 +39,54 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
-## Integraatiot
+## Kehitysympäristön pystyttäminen
 
-MULEsta on luovuttu, integraatiot suoraan backendistä.
+### Kehitystyökalut
+
+Asenna Leiningen:
+http://leiningen.org/
+
+Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8
+
+### VirtualBox
+
+Käynnistä VirtualBox<br/>
+<code>
+cd vagrant<br/>
+vagrant up
+</code>
+
+Jos vagrant up epäonnistuu, aja ensin:<br/>
+<code>
+vagrant box add geerlingguy/centos7 https://github.com/tommy-muehle/puppet-vagrant-boxes/releases/download/1.1.0/centos-7.0-x86_64.box
+</code>
+
+VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaksi eri kantaa:
+- **harja** - Varsinaista kehitystyötä varten
+- **harjatest** - Testit ajetaan tätä kantaa vasten
+
+Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
+
+### Kääntäminen
+
+Siirry projektin juureen. Käännä backend & käynnistä REPL:<br/>
+<code>
+lein do clean, compile, repl
+</code>
+
+Käännä frontend ja käynnistä Figwheel:<br/>
+<code>
+lein figwheel
+</code>
+
+Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000
+
+### Kehitystyötä helpottavat työkalut
+
+- **migrate_test.sh** pystyttää testikannan uudelleen
+- **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
+- **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
+- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten. Suorittaa testit ennen deployaamista.
 
 ## Tietokanta
 
@@ -48,6 +95,7 @@ Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harj
 Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
 
 ## Staging tietokannan sisällön muokkaus
+
 * Lisää itsellesi tiedosto ~/.ssh/config johon sisällöksi:
 Host harja-*-test
   ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
@@ -64,20 +112,6 @@ Host harja-*-stg
 ssh -L7777:localhost:5432 harja-dfb1-stg
  * Luo yhteys esim. käyttämäsi IDE:n avulla,
     * tietokanta: harja, username: flyway salasana: kysy tutuilta
-
-## Testipalvelimen tietokannan päivitys, vanha ja huono tapa, mutta säilyköön ohje jälkipolville:
- * Avaa VPN putki <br/>
- <code>
-    ssh harja-jenkins.solitaservices.fi
-    [jarnova@harja-jenkins ~]$ sudo bash <br/>
-    [root@harja-jenkins jarnova]# su jenkins <br/>
-    bash-4.2$ ssh harja-db1-test <br/>
-    Last login: Mon Mar 16 15:23:22 2015 from 172.17.238.100 <br/>
-    [jenkins@harja-db1-test ~]$ sudo bash <br/>
-    [root@harja-db1-test jenkins]# su postgres <br/>
-    bash-4.2$ psql harja <br/>
-</code>
- * Tee temput
 
 ## Autogeneroi nuolikuvat SVG:nä
 Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
@@ -122,52 +156,10 @@ Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
 ## Tietokantadumpin ottaminen omalle koneelle
 
-### STG
-
-Yksinkertainen tapa ottaa pakattu dumppi:
-
-> ssh harja-db1-stg "sudo -u postgres pg_dump -v -Fc -T integraatioviesti -T liite harja" > tietokanta/harja-stg-dump
-
-Tämä saattaa kuitenkin mystisesti kaatua kesken siirron.
-Vaihtoehtoinen tapa SCP:llä:
-
-Huom. voit olla välittämättä virheilmoituksesta: could not change directory to "/home/<tunnus>": Permission denied. Kopiointi tehdään silti.
-
-> ssh harja-db1-stg
-> sudo -u postgres pg_dump -v -Fc harja > /tmp/harja-stg-dump
-> mv /tmp/harja-stg-dump /home/<omatunnus>/harja-stg-dump
-> exit
-> scp <omatunnus>@harja-db1-stg:/home/<omatunnus>/harja-stg-dump /Users/<omatunnus>/Desktop/harja-stg-dump
-
-Käy poistamassa dumppi kotihakemistostasi
-
-Dumppi on nyt siirretty työpöydällesi. Siirrä se haluamaasi paikkaan.
-
-### harja-test
-
-Harja-test dumpin voi ottaa samalla logiikalla:
-
-> ssh -L 7778:localhost:5432 harja-db1-test
-> sudo -u postgres pg_dump harja > /tmp/harja-stg-dump.sql
-> mv /tmp/harja-test-dump.sql /home/<omatunnus>/harja-test-dump.sql
-> exit
-> scp <omatunnus>@harja-db1-test:/home/<omatunnus>/harja-test-dump.sql /Users/<omatunnus>/Desktop/harja-test-dump.sql
-> kopioi dumppi harja/tietokanta kansioon
-
-### Dumpin käyttöönotto
-
-Sulje oma REPL ettei yhteyksiä vagrant kantaan ole.
-Mene vagrant-kansioon ja aja komennot:
-
-> vagrant ssh
-> sudo -u postgres psql
-> (sulje kaikki kantaa käyttävät sovellukset)
-> drop database harja;
-> create database harja;
-> poistu <ctrl-d>
-> pg_restore -Fc -C /harja-tietokanta/harja-stg-dump | sudo -u postgres psql
-
-Valmis!
+```
+cd vagrant
+sh fresh_dump.sh
+```
 
 ## Kirjautuminen
 
