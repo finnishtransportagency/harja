@@ -9,6 +9,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.tierekisteri :refer [tieosoite]]
+            [harja.ui.liitteet :as liitteet]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.siltatarkastukset :as st]
@@ -42,8 +43,7 @@
                      "Ei tietoa tarkastajasta")]
     (if tarkastuksia?
       (str aika " (" tarkastaja ")")
-      "Ei tarkastuksia"))
-  )
+      "Ei tarkastuksia")))
 
 (defn paivita-valittu-silta []
   (let [silta @st/valittu-silta
@@ -180,7 +180,7 @@
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
                    :nimi    (pvm/pvm (:tarkastusaika tarkastus))
-                   :leveys 5
+                   :leveys 51
                    :tyyppi :string :muokattava? (constantly false)})
                 muut-tarkastukset))))
 
@@ -364,9 +364,9 @@
                            (reset! taulukon-rivit (vals (grid/hae-muokkaustila g))))}
 
           ;; sarakkeet
-          [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false) :leveys "5%"}
-           {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-           {:otsikko       "Tulos" :nimi :tulos :leveys "20%"
+          [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false) :leveys 5}
+           {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false) :leveys 40}
+           {:otsikko       "Tulos" :nimi :tulos :leveys 20
             :validoi       [[:ei-tyhja "Anna kohteen tulos"]]
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
@@ -379,8 +379,11 @@
                                        (assoc tama-rivi :tulos (:tulos lahtorivi)))
             :kelluta-tayta-nappi true}
            ;; Lisätiedon maksimipituus tietokantasarakkeesta jonka tyyppi varchar(255)
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "30%"
-            :pituus-max 255}]
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 30
+            :pituus-max 255}
+           {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
+            :komponentti (fn [rivi]
+                           [liitteet/liite])}]
           @taulukon-rivit]
 
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
