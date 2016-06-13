@@ -10,17 +10,18 @@
 
 ;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi
 (def kohteet-xf
-  (map (fn [rivi]
-         (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
-           (assoc rivi
-                  :kohteet
-                  (into {}
-                        (map (fn [kohde]
-                               (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$"
-                                                                         kohde)]
-                                 [(Integer/parseInt nro) [tulos lisatieto]]))
-                             kohteet)))
-           rivi))))
+  (comp (map konv/alaviiva->rakenne)
+        (map (fn [rivi]
+               (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
+                 (assoc rivi
+                   :kohteet
+                   (into {}
+                         (map (fn [kohde]
+                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D):(.*)$"
+                                                                          kohde)]
+                                  [(Integer/parseInt nro) [tulos lisatieto]]))
+                              kohteet)))
+                 rivi)))))
 
 (defn hae-urakan-sillat
   "Hakee annetun urakan alueen sillat sekä niiden viimeisimmän tarkastuspäivän ja tarkastajan.
@@ -77,21 +78,22 @@
                               (= (:rikki_nyt %) 0))))
           (q/hae-urakan-sillat-korjatut db urakka-id))))
 
-
-
 (defn hae-siltatarkastus [db id]
-  (first (into []
-               kohteet-xf
-               (q/hae-siltatarkastus db id))))
+  (first (konv/sarakkeet-vektoriin
+           (into []
+                 kohteet-xf
+                 (q/hae-siltatarkastus db id))
+           {:liite :liitteet})))
 
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
-  [db user urakka-id silta-id]
+  [db user {:keys [urakka-id silta-id] :as tiedot}]
   (oikeudet/lue oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
-  (into []
-        kohteet-xf
-        (q/hae-sillan-tarkastukset db silta-id)))
-
+  (konv/sarakkeet-vektoriin
+    (into []
+          kohteet-xf
+          (q/hae-sillan-tarkastukset db silta-id))
+    {:liite :liitteet}))
 
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"
@@ -141,7 +143,8 @@
   (jdbc/with-db-transaction [c db]
     (do
       (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
-    (hae-sillan-tarkastukset c user urakka-id silta-id)))
+    (hae-sillan-tarkastukset c user {:urakka-id urakka-id
+                                     :silta-id silta-id})))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
@@ -152,8 +155,8 @@
                         (fn [user {:keys [urakka-id listaus]}]
                           (hae-urakan-sillat db user urakka-id listaus)))
       (julkaise-palvelu http :hae-sillan-tarkastukset
-                        (fn [user urakka-id silta-id]
-                          (hae-sillan-tarkastukset db user urakka-id silta-id)))
+                        (fn [user tiedot]
+                          (hae-sillan-tarkastukset db user tiedot)))
       (julkaise-palvelu http :tallenna-siltatarkastus
                         (fn [user tiedot]
                           (tallenna-siltatarkastus! db user tiedot)))
