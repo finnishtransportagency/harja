@@ -290,7 +290,6 @@ SELECT EXISTS(SELECT id
               WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;
 
 -- name: hae-yllapitokohde
--- single? :true
 SELECT
   id,
   sopimus,

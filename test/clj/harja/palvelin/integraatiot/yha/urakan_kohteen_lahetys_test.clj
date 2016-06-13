@@ -32,7 +32,7 @@
 (defn tyhjenna-kohteen-lahetystiedot [kohde-id]
   (u (format "UPDATE kohde SET lahetetty = NULL, lahetys_onnistunut = NULL WHERE id = %s" kohde-id)))
 
-(deftest tarkista-turvallisuuspoikkeaman-lahetys
+(deftest tarkista-yllapitokohteen-lahetys
   (let [kohde-id 1
         urakka-id (hae-urakka-id 1)
         url (tee-url)]

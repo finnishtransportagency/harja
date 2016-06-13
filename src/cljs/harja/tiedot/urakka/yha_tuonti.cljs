@@ -262,7 +262,7 @@
                  (pvm/pvm-aika kohdeluettelo-paivitetty)
                  "ei koskaan"))]))
 
-(defn laheta-kohteet-yhan [oikeus urakka-id sopimus-id paallystysilmoitukset]
+(defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id paallystysilmoitukset]
   (let [kohde-idt (mapv :paallystyskohde-id (filter :tila paallystysilmoitukset))]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
@@ -272,7 +272,7 @@
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
          (reset! paallystys/yha-lahetys-kaynnissa? true)
-         (let [vastaus (k/post! :laheta-kohteet-yhan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt})]
+         (let [vastaus (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt})]
            (reset! paallystys/yha-lahetys-kaynnissa? false)
            vastaus))
        {:luokka "nappi-grid nappi-ensisijainen"

@@ -9,7 +9,7 @@
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
-(defn hae-ja-kasittele-urakan-paallystysilmoitukset [db urakka-id sopimus-id]
+(defn hae-urakan-paallystysilmoitukset-kohteineen[db urakka-id sopimus-id]
   (into []
         (comp
           (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]

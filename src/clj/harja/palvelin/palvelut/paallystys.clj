@@ -26,7 +26,7 @@
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [vastaus (q/hae-ja-kasittele-urakan-paallystysilmoitukset  db urakka-id sopimus-id)]
+  (let [vastaus (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
     (log/debug "Päällystysilmoitukset saatu: " (pr-str vastaus))
     vastaus))
 

@@ -179,14 +179,14 @@
     (log/debug "Geometria päivitetty.")
     (hae-urakan-yha-tiedot c urakka-id)))
 
-(defn laheta-kohteet-yhan
+(defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
   ;; todo: onko tämä oikeus ok?
   (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
   (yha/laheta-kohteet yha urakka-id kohde-idt)
-  (let [paivitetyt-ilmoitukset (paallystys-q/hae-ja-kasittele-urakan-paallystysilmoitukset  db urakka-id sopimus-id)]
+  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
     paivitetyt-ilmoitukset))
 
 (defrecord Yha []
@@ -207,9 +207,9 @@
       (julkaise-palvelu http :tallenna-uudet-yha-kohteet
                         (fn [user tiedot]
                           (tallenna-uudet-yha-kohteet db user tiedot)))
-      (julkaise-palvelu http :laheta-kohteet-yhan
+      (julkaise-palvelu http :laheta-kohteet-yhaan
                         (fn [user data]
-                          (laheta-kohteet-yhan db yha user data))))
+                          (laheta-kohteet-yhaan db yha user data))))
     this)
   (stop [this]
     (poista-palvelut
@@ -218,5 +218,5 @@
       :hae-urakat-yhasta
       :hae-yha-kohteet
       :tallenna-uudet-yha-kohteet
-      :laheta-kohteet-yhan)
+      :laheta-kohteet-yhaan)
     this))

@@ -157,7 +157,7 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-(defn laheta-kohteet-yhan [integraatioloki db url urakka-id kohde-idt]
+(defn laheta-kohteet-yhaan [integraatioloki db url urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
   ;; todo: poista kun saadaan oikea yhteys YHA:n
   (with-fake-http [(str url "toteumatiedot") +epaonnistunut-urakan-kohteen-lahetysvastaus+]
@@ -191,4 +191,4 @@
   (hae-kohteet [this urakka-id kayttajatunnus]
     (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
   (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-yhan (:integraatioloki this) (:db this) (:url asetukset) urakka-id kohde-idt)))
+    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) (:url asetukset) urakka-id kohde-idt)))

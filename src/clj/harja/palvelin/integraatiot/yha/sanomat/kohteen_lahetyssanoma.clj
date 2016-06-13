@@ -92,14 +92,14 @@
      (reduce conj [:alikohteet]
              (mapv tee-alikohde alikohteet)))])
 
-(defn muodosta-sanoma [urakka kohteet]
+(defn muodosta-sanoma [{:keys [yhaid harjaid sampoid yhatunnus]} kohteet]
   [:urakan-kohteiden-toteumatietojen-kirjaus
    {:xmlns "http://www.liikennevirasto.fi/xsd/yha"}
    [:urakka
-    [:yha-id (:yhaid urakka)]
-    [:harja-id (:harjaid urakka)]
-    [:sampotunnus (:sampoid urakka)]
-    [:tunnus (:yhatunnus urakka)]
+    [:yha-id yhaid]
+    [:harja-id harjaid]
+    [:sampotunnus sampoid]
+    [:tunnus yhatunnus]
     (reduce conj [:kohteet] (mapv #(tee-kohde (:kohde %) (:alikohteet %) (:paallystys-ilmoitus %)) kohteet))]])
 
 (defn muodosta [urakka kohteet]
