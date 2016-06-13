@@ -310,7 +310,10 @@
   ([db user tiedot]
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
-   (let [urakat (:urakat tiedot)]
+   (let [urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
+                                               oikeudet/tilannekuva-nykytilanne
+                                               oikeudet/tilannekuva-historia) % user)
+                        (:urakat tiedot))]
      (when-not (empty? urakat)
        (log/debug "Haetaan tilannekuvaan sisältöä urakoista: " (pr-str urakat))
        (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
