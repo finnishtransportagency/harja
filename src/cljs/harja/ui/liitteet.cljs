@@ -71,7 +71,7 @@
         ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         edistyminen (atom nil)
         virheviesti (atom nil)]
-    (fn [{:keys [liite-ladattu nappi-teksti grid?] :as opts}]
+    (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid?] :as opts}]
       [:span
        (if-let [tiedosto @tiedosto]
          [liitetiedosto tiedosto]) ;; Tiedosto ladattu palvelimelle, näytetään se
@@ -125,5 +125,5 @@
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
        [lisaa-liite urakka-id {:liite-ladattu #(reset! uusi-liite-atom %)
-                               :uusi-liite-teksti uusi-liite-teksti
+                               :nappi-teksti uusi-liite-teksti
                                :grid? grid?}]))])
