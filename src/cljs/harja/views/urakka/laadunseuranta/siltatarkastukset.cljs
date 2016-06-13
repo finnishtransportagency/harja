@@ -1,4 +1,4 @@
-(ns harja.views.urakka.siltatarkastukset
+(ns harja.views.urakka.laadunseuranta.siltatarkastukset
   "Urakan 'Siltatarkastukset' välilehti:"
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
