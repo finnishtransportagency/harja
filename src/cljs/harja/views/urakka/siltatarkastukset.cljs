@@ -23,7 +23,8 @@
             [clojure.string :as str]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.ui.napit :as napit]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -164,6 +165,7 @@
     "B" "B - puhdistettava"
     "C" "C - urakan kunnostettava"
     "D" "D - korjaus ohjelmoitava"
+    "-" "Ei päde tähän siltaan"
     +valitse-tulos+))
 
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
@@ -175,7 +177,7 @@
            {:otsikko       "Tulos " :nimi :tulos :leveys "20%"
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
-            :valinnat      ["A" "B" "C" "D"]
+            :valinnat      ["A" "B" "C" "D" "-"]
             :fmt           #(kohdetuloksen-teksti %)}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
           (mapv (fn [tarkastus]
@@ -192,13 +194,15 @@
                                        taulukon-rivit))
             tallennettava-tarkastus (assoc @st/valittu-tarkastus :kohteet kohteet-mapissa
                                                                  :urakka-id (:id @nav/valittu-urakka))
-            res (<! (st/tallenna-siltatarkastus! tallennettava-tarkastus))
-            muut-tarkastukset (filter (fn [tarkastus]
-                                        (not (= (:id tarkastus) (:id res))))
-                                      @st/valitun-sillan-tarkastukset)
-            kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge muut-tarkastukset res)))]
-        (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
-        (reset! st/valittu-tarkastus res))))
+            vastaus (<! (st/tallenna-siltatarkastus! tallennettava-tarkastus))]
+        (if (k/virhe? vastaus)
+          (viesti/nayta! "Siltatarkastuksen päivittäminen epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+          (let [muut-tarkastukset (filter (fn [tarkastus]
+                                            (not (= (:id tarkastus) (:id vastaus))))
+                                          @st/valitun-sillan-tarkastukset)
+                kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge muut-tarkastukset vastaus)))]
+            (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
+            (reset! st/valittu-tarkastus vastaus))))))
 
 
 
