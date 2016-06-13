@@ -176,12 +176,14 @@
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D"]
             :fmt           #(kohdetuloksen-teksti %)}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}
-           #_{:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 25}
+           {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
             :komponentti (fn [rivi index]
                            ; FIXME Näytä paremmin
-                           (doseq [liite (:liitteet rivi)]
-                             [:span "Jännä liite"]))}]
+                           (log "[SILTA] grid liitteet: " (pr-str (:liitteet rivi)))
+                           [:div
+                             (for [liite (:liitteet rivi)]
+                              [:span "Jännä liite"])])}]
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
                    :nimi    (pvm/pvm (:tarkastusaika tarkastus))
@@ -207,7 +209,6 @@
 (defn tallenna-uusi-siltatarkastus! [lomake taulukon-rivit]
   (go (let [kohteet-mapissa (into {}
                                   (map (fn [rivi]
-                                         (log "[SILTA] Rivi: " (pr-str rivi))
                                          [(:kohdenro rivi) [(:tulos rivi) (:lisatieto rivi) (:uusi-liite rivi)]])
                                        taulukon-rivit))
             uusi-tarkastus (assoc lomake :kohteet kohteet-mapissa)
@@ -224,10 +225,12 @@
   (ryhmittele-sillantarkastuskohteet
     (mapv (fn [kohdenro]
             (merge
-              {:kohdenro  kohdenro
-               :kohde     (st/siltatarkastuskohteen-nimi kohdenro)
-               :tulos     (first (get (:kohteet valittu-tarkastus) kohdenro))
-               :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))}
+              {:kohdenro kohdenro
+               :kohde (st/siltatarkastuskohteen-nimi kohdenro)
+               :tulos (first (get (:kohteet valittu-tarkastus) kohdenro))
+               :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))
+               :liitteet (filterv #(= (:kohde %) kohdenro)
+                                  (:liitteet valittu-tarkastus))}
               (into {}
                     (map (fn [tarkastus]
                           [(pvm/pvm (:tarkastusaika tarkastus))
@@ -241,7 +244,6 @@
             res (<! (st/poista-siltatarkastus! (:id silta) (:id tarkastus)))]
         (reset! st/valitun-sillan-tarkastukset res)
         (paivita-valittu-silta))))
-
 
 (defn sillan-tarkastukset []
   (komp/luo
@@ -393,6 +395,7 @@
                             {:uusi-liite-atom (r/wrap
                                                 (atom nil)
                                                 (fn [uusi-arvo]
+                                                  ; FIXME Kaatuu jos valitsee toimenpiteen ensin???
                                                   (log "[SILTA] assoc taulukon riveihin " (pr-str @taulukon-rivit) " indeksiin " index " uusi arvo: " (pr-str (assoc rivi :uusi-liite uusi-arvo)))
                                                   (reset! taulukon-rivit
                                                           (assoc @taulukon-rivit
