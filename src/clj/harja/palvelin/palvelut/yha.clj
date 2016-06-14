@@ -8,17 +8,17 @@
             [harja.kyselyt.yha :as yha-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.paallystys :as paallystys-q]
             [harja.domain.oikeudet :as oikeudet]
             [cheshire.core :as cheshire]))
-
-(defn paivita-yllapitourakan-geometriat [db urakka-id]
-  (log/info "Päivitetään urakan " urakka-id " geometriat.")
-  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
   (yha-q/lukitse-urakan-yha-sidonta<! db {:urakka urakka-id}))
+
+(defn paivita-yllapitourakan-geometriat [db urakka-id]
+  (log/info "Päivitetään urakan " urakka-id " geometriat.")
+  (yha-q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
 
 (defn- lisaa-urakalle-yha-tiedot [db user urakka-id {:keys [yhatunnus yhaid yhanimi elyt vuodet] :as yha-tiedot}]
   (log/info "Lisätään YHA-tiedot urakalle " urakka-id ", yhatunnus: " yhatunnus " ja yhaid: " yhaid)
@@ -137,7 +137,8 @@
                     tunnus yha-id alikohteet kohdetyyppi
                     yllapitoluokka
                     keskimaarainen_vuorokausiliikenne
-                    nykyinen-paallyste] :as kohde} kohteet]
+                    nykyinen-paallyste
+                    nimi] :as kohde} kohteet]
       (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
       (let [kohde (yha-q/luo-yllapitokohde<! c
                                              {:urakka urakka-id
@@ -153,12 +154,14 @@
                                               :tyyppi (name kohdetyyppi)
                                               :yllapitoluokka yllapitoluokka
                                               :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
-                                              :nykyinen_paallyste nykyinen-paallyste})]
-        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id] :as alikohde} alikohteet]
+                                              :nykyinen_paallyste nykyinen-paallyste
+                                              :nimi nimi})]
+        (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
           (yha-q/luo-yllapitokohdeosa<! c
                                         {:yllapitokohde (:id kohde)
-                                         :nimi tunnus
+                                         :nimi nimi
+                                         :tunnus tunnus
                                          :sijainti sijainti
                                          :tr_numero (:tienumero tierekisteriosoitevali)
                                          :tr_alkuosa (:aosa tierekisteriosoitevali)
@@ -175,6 +178,16 @@
     (paivita-yllapitourakan-geometriat c urakka-id)
     (log/debug "Geometria päivitetty.")
     (hae-urakan-yha-tiedot c urakka-id)))
+
+(defn laheta-kohteet-yhaan
+  "Lähettää annetut kohteet teknisine tietoineen YHA:n."
+  [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
+  ;; todo: onko tämä oikeus ok?
+  (oikeudet/on-muu-oikeus? "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
+  (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
+  (yha/laheta-kohteet yha urakka-id kohde-idt)
+  (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
+    paivitetyt-ilmoitukset))
 
 (defrecord Yha []
   component/Lifecycle
@@ -193,10 +206,17 @@
                           (hae-yha-kohteet db yha user tiedot)))
       (julkaise-palvelu http :tallenna-uudet-yha-kohteet
                         (fn [user tiedot]
-                          (tallenna-uudet-yha-kohteet db user tiedot))))
+                          (tallenna-uudet-yha-kohteet db user tiedot)))
+      (julkaise-palvelu http :laheta-kohteet-yhaan
+                        (fn [user data]
+                          (laheta-kohteet-yhaan db yha user data))))
     this)
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :sido-yha-urakka-harja-urakkaan)
+      :sido-yha-urakka-harja-urakkaan
+      :hae-urakat-yhasta
+      :hae-yha-kohteet
+      :tallenna-uudet-yha-kohteet
+      :laheta-kohteet-yhaan)
     this))
