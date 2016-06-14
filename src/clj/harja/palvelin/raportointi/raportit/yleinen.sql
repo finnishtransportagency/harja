@@ -20,7 +20,7 @@ ORDER BY nimi;
 SELECT
   o.id           AS "hallintayksikko-id",
   o.nimi         AS "nimi",
-  o.elynumero    AS "elynumero"
+  lpad(cast(elynumero as varchar), 2, '0') AS "elynumero"
 FROM organisaatio o
 WHERE elynumero IS NOT NULL
 ORDER BY elynumero;
