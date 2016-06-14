@@ -110,7 +110,7 @@
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
     ;; Data on uniikkia jos sama arvo esiintyy taulukossa vain kerran
-    (when (and (not (empty? data))
+    (when (and (not (nil? data))
                (> (count (get rivit-arvoittain data)) 1))
       viesti)))
 
