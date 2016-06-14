@@ -284,7 +284,7 @@ button {
     background-color: rgb(208,0,5);
 }
 
-@keyframes nappula-flash {  
+@keyframes nappula-flash {
     0% { background-color: red; }
     100%   { background-color: #000; }
 }
@@ -364,6 +364,14 @@ button {
     text-align: center;
 }
 
+.tarkastusajon-luonti-dialog nav.disabled {
+    color: gray;
+}
+
+.tarkastusajon-luonti-dialog nav.disabled:after {
+    content: " (tulossa)";
+}
+
 /* ---------- havaintolomake ---------- */
 .havaintolomake-container {
     position: absolute;
@@ -441,7 +449,7 @@ button {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    
+
     font-size: 18px;
     width: 190px;
     height: 27px;
