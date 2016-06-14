@@ -435,7 +435,7 @@ WHERE u.id = :id;
 
 -- name: hae-urakan-sampo-id
 -- single?: true
-SELECT sampoid FROM urakka where id = :urakka
+SELECT sampoid FROM urakka where id = :urakka;
 
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka

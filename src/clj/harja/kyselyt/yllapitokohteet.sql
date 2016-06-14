@@ -53,6 +53,7 @@ WHERE urakka = :urakka AND id = :id;
 SELECT
   ypko.id,
   ypko.nimi,
+  ypko.tunnus,
   ypko.tr_numero        AS "tr-numero",
   ypko.tr_alkuosa       AS "tr-alkuosa",
   ypko.tr_alkuetaisyys  AS "tr-alkuetaisyys",
@@ -149,6 +150,7 @@ VALUES (:yllapitokohde,
 UPDATE yllapitokohdeosa
 SET
   nimi             = :nimi,
+  tunnus           = :tunnus,
   tr_numero        = :tr_numero,
   tr_alkuosa       = :tr_alkuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
@@ -159,14 +161,18 @@ SET
   toimenpide       = :toimenpide,
   sijainti         = :sijainti
 WHERE id = :id
-      AND yllapitokohde IN (SELECT id FROM yllapitokohde WHERE urakka = :urakkaid);
+      AND yllapitokohde IN (SELECT id
+                            FROM yllapitokohde
+                            WHERE urakka = :urakkaid);
 
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan
 UPDATE yllapitokohdeosa
 SET poistettu = TRUE
 WHERE id = :id
-      AND yllapitokohde IN (SELECT id FROM yllapitokohde WHERE urakka = :urakkaid);
+      AND yllapitokohde IN (SELECT id
+                            FROM yllapitokohde
+                            WHERE urakka = :urakkaid);
 
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
@@ -254,13 +260,14 @@ SET
   aikataulu_muokkaaja          = :aikataulu_muokkaaja,
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
 WHERE id = :id
-AND urakka = :urakkaid;
+      AND urakka = :urakkaid;
 
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
-UPDATE yllapitokohde SET
+UPDATE yllapitokohde
+SET
   valmis_tiemerkintaan = :valmis_tiemerkintaan
 WHERE id = :id
-AND urakka = :urakkaid;
+      AND urakka = :urakkaid;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
@@ -271,7 +278,7 @@ SET
   aikataulu_muokattu          = NOW(),
   aikataulu_muokkaaja         = :aikataulu_muokkaaja
 WHERE id = :id
-AND suorittava_tiemerkintaurakka = :urakkaid;
+      AND suorittava_tiemerkintaurakka = :urakkaid;
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
@@ -281,3 +288,71 @@ SELECT EXISTS(SELECT id
 SELECT EXISTS(SELECT id
               FROM paikkausilmoitus
               WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;
+
+-- name: hae-yllapitokohde
+SELECT
+  id,
+  sopimus,
+  kohdenumero,
+  nimi,
+  sopimuksen_mukaiset_tyot,
+  arvonvahennykset,
+  bitumi_indeksi,
+  kaasuindeksi,
+  poistettu,
+  aikataulu_paallystys_alku,
+  aikataulu_paallystys_loppu,
+  aikataulu_tiemerkinta_alku,
+  aikataulu_tiemerkinta_loppu,
+  aikataulu_kohde_valmis,
+  aikataulu_muokattu,
+  aikataulu_muokkaaja,
+  valmis_tiemerkintaan,
+  tr_numero,
+  tr_alkuosa,
+  tr_alkuetaisyys,
+  tr_loppuosa,
+  tr_loppuetaisyys,
+  tyyppi,
+  yhatunnus,
+  yhaid,
+  yllapitoluokka,
+  lahetysaika,
+  keskimaarainen_vuorokausiliikenne,
+  nykyinen_paallyste,
+  tr_ajorata,
+  tr_kaista,
+  suorittava_tiemerkintaurakka,
+  (SELECT viimeisin_paivitys
+   FROM geometriapaivitys
+   WHERE nimi = 'tieverkko') AS karttapvm
+FROM yllapitokohde
+WHERE id = :id;
+
+-- name: hae-yllapitokohteen-kohdeosat
+SELECT
+  id,
+  yllapitokohde,
+  nimi,
+  tunnus,
+  tr_numero,
+  tr_alkuosa,
+  tr_alkuetaisyys,
+  tr_loppuosa,
+  tr_loppuetaisyys,
+  poistettu,
+  sijainti,
+  yhaid,
+  tr_ajorata,
+  tr_kaista,
+  toimenpide,
+  (SELECT viimeisin_paivitys
+   FROM geometriapaivitys
+   WHERE nimi = 'tieverkko') AS karttapvm
+FROM yllapitokohdeosa
+WHERE yllapitokohde = :yllapitokohde;
+
+-- name: merkitse-kohteen-lahetystiedot!
+UPDATE yllapitokohde
+SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
+WHERE id = :kohdeid;
