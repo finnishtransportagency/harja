@@ -31,7 +31,7 @@ FROM reittipiste rp
   JOIN organisaatio o ON u.hallintayksikko = o.id
   JOIN reitti_tehtava rt ON rt.reittipiste = rp.id
 WHERE rp.talvihoitoluokka IN (:hoitoluokat)
-      AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+      AND (t.alkanut BETWEEN :alku AND :loppu)
       AND t.poistettu IS NOT TRUE
       AND u.tyyppi = :urakkatyyppi::urakkatyyppi
       AND (:urakka::integer IS NULL OR u.id = :urakka)

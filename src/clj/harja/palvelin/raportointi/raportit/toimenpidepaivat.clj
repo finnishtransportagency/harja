@@ -12,31 +12,29 @@
 (defqueries "harja/palvelin/raportointi/raportit/toimenpideajat.sql")
 
 
-(defn hae-toimenpiderivit [db parametrit]
-  (let [alue (if (:hallintayksikko parametrit)
+(defn hae-toimenpiderivit [db konteksti parametrit]
+  (let [alue (if (#{:urakka :hallintayksikko} konteksti)
                :urakka
                :hallintayksikko)
         rivit (hae-toimenpidepaivien-lukumaarat db parametrit)
-        toimenpidekoodit (into {}
-                               (map (juxt :id :nimi))
-                               (yleinen/hae-toimenpidekoodien-nimet
-                                db
-                                {:toimenpidekoodi
-                                 (into #{} (map :toimenpidekoodi) rivit)}))
-        urakat (into {}
-                     (map (juxt :id :nimi))
-                     (yleinen/hae-urakoiden-nimet db
-                                                  {:urakka (into #{} (map :urakka) rivit)}))
-        hallintayksikot (into {}
-                              (map (juxt :id :nimi))
-                              (yleinen/hae-organisaatioiden-nimet
-                               db
-                               {:organisaatio (into #{} (map :hallintayksikko) rivit)}))
-        alue-nimi (if (= alue :urakka)
-                    urakat
-                    hallintayksikot)
-        alueet (sort (vals (if (= alue :urakka) urakat hallintayksikot)))]
-
+        toimenpidekoodit (if (empty? rivit)
+                           {}
+                           (into {}
+                                 (map (juxt :id :nimi))
+                                 (yleinen/hae-toimenpidekoodien-nimet
+                                  db
+                                  {:toimenpidekoodi
+                                   (into #{} (map :toimenpidekoodi) rivit)})))
+        naytettavat-alueet (yleinen/naytettavat-alueet db konteksti parametrit)
+        alueet (sort (map (if (= alue :urakka)
+                            :nimi
+                            #(str (:elynumero %) " " (:nimi %)))
+                          naytettavat-alueet))
+        alue-nimi (into {}
+                        (map (if (= alue :urakka)
+                               (juxt :urakka-id :nimi)
+                               (juxt :hallintayksikko-id #(str (:elynumero %) " " (:nimi %)))))
+                        naytettavat-alueet)]
     {:alueet alueet
      :toimenpiderivit (->> rivit
                            (group-by (comp toimenpidekoodit :toimenpidekoodi))
@@ -58,14 +56,14 @@
         talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)
         parametrit {:urakka          urakka-id
                     :hallintayksikko hallintayksikko-id
-                    :alkupvm         alkupvm
-                    :loppupvm        loppupvm
+                    :alku         alkupvm
+                    :loppu        loppupvm
                     :hoitoluokat     hoitoluokat
                     :urakkatyyppi    (name urakkatyyppi)}
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        {:keys [alueet toimenpiderivit]} (hae-toimenpiderivit db parametrit)
+        {:keys [alueet toimenpiderivit]} (hae-toimenpiderivit db konteksti parametrit)
         paivia-aikavalilla (pvm/aikavali-paivina alkupvm loppupvm)]
     [:raportti {:nimi        "Monenako päivänä toimenpidettä on tehty aikavälillä"
                 :orientaatio :landscape}
