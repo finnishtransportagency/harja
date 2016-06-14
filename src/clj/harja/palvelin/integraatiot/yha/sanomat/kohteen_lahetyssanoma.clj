@@ -33,15 +33,17 @@
    [:harja-id id]
    (tee-tierekisteriosoitevali alikohde)
    [:tunnus tunnus]
-   [:paallystystoimenpide
-    (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
-    (when raekoko [:raekoko raekoko])
-    (when massa [:kokonaismassamaara massa])
-    (when rc% [:rc-prosentti rc%])
-    (when kuulamylly [:kuulamylly kuulamylly])
-    (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
-    (when leveys [:leveys leveys])
-    (when pinta-ala [:pinta-ala pinta-ala])]
+   (when
+     (or paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala)
+     [:paallystystoimenpide
+      (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
+      (when raekoko [:raekoko raekoko])
+      (when massa [:kokonaismassamaara massa])
+      (when rc% [:rc-prosentti rc%])
+      (when kuulamylly [:kuulamylly kuulamylly])
+      (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
+      (when leveys [:leveys leveys])
+      (when pinta-ala [:pinta-ala pinta-ala])])
    ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
    [:materiaalit
     [:materiaali

@@ -30,7 +30,7 @@
      :lahetys_onnistunut (second tila)}))
 
 (defn tyhjenna-kohteen-lahetystiedot [kohde-id]
-  (u (format "UPDATE kohde SET lahetetty = NULL, lahetys_onnistunut = NULL WHERE id = %s" kohde-id)))
+  (u (format "UPDATE yllapitokohde SET lahetetty = NULL, lahetys_onnistunut = NULL WHERE id = %s" kohde-id)))
 
 (deftest tarkista-yllapitokohteen-lahetys
   (let [kohde-id 1
