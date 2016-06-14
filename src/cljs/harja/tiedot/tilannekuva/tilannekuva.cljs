@@ -2,6 +2,7 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.fmt :as format]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.asiakas.kommunikaatio :as k]
             [harja.views.kartta :as kartta]
@@ -19,6 +20,11 @@
 
 (defonce nakymassa? (atom false))
 (defonce valittu-tila (atom :nykytilanne))
+
+(def
+  ^{:doc   "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
+   :const true}
+  urakan-nimen-pituus 39)
 
 (def ^{:doc   "Aika joka odotetaan ennen uusien tietojen hakemista, kun
  parametrit muuttuvat"
@@ -228,7 +234,7 @@ hakutiheys-historiakuva 1200000)
                                                  (clojure.string/replace "(" "_")
                                                  (clojure.string/replace ")" "_")
                                                  (keyword))
-                                             nimi)
+                                             (format/lyhennetty-urakan-nimi nimi urakan-nimen-pituus))
                               (valitse-urakka? id (:hallintayksikko aluekokonaisuus))])
                            (:urakat aluekokonaisuus)))})
                 tulos)))))
