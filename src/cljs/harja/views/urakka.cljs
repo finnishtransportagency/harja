@@ -36,7 +36,7 @@
     :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo id) (= tyyppi :paikkaus))
     :laadunseuranta (oikeudet/urakat-laadunseuranta id)
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
-    :turvallisuuspoikkeamat (and (oikeudet/urakat-turvallisuus id) (= tyyppi :hoito))
+    :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta))))

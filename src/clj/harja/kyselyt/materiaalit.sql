@@ -180,11 +180,6 @@ FROM toteuma_materiaali tm
   INNER JOIN materiaalikoodi m
     ON tm.materiaalikoodi = m.id
 
-  LEFT JOIN materiaalin_kaytto mk
-    ON m.id = mk.materiaali
-       AND mk.sopimus = :sopimus
-       AND mk.poistettu IS NOT TRUE
-
   LEFT JOIN kayttaja k ON k.id = t.luoja
 
 ORDER BY t.alkanut DESC;

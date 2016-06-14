@@ -162,16 +162,23 @@
   (log/error (format "Resurssin: %s kutsussa tapahtui autentikaatiovirhe: %s" resurssi virheet))
   (tee-sisainen-autentikaatiovirhevastaus virheet))
 
+(defn tarkista-tyhja-kutsu [skeema body]
+  (when (and (fn? skeema) (nil? body))
+    (throw+ {:type virheet/+invalidi-json+
+             :virheet [{:koodi virheet/+invalidi-json-koodi+
+                        :viesti "JSON on tyhjä"}]})))
+
 (defn lue-kutsu
-  "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu. Muille kutsuille palauttaa arvon nil.
+  "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu.
+  Muille kutsuille palauttaa arvon nil.
   Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
   (log/debug "Luetaan kutsua")
-  (when (and body
-             (or (= :post (:request-method request))
-                 (= :put (:request-method request))
-                 (= :delete (:request-method request))))
+  (when (or (= :post (:request-method request))
+            (= :put (:request-method request))
+            (= :delete (:request-method request)))
+    (tarkista-tyhja-kutsu skeema body)
     (if (fn? skeema)
       (skeema body)
       (json/validoi skeema body))

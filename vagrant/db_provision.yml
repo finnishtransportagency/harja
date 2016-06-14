@@ -41,16 +41,12 @@
     service: name=nginx state=restarted enabled=yes
   - name: Create working directory
     file: path=/harja state=directory mode=0777
-  - name: Copy Deus private key
-    copy: src=keys/id_rsa_harjavagrant dest=/harja/id_rsa_harjavagrant
   - name: Checkout harja-tietokanta
     sudo: yes
     sudo_user: postgres
-    git: repo=deveo@deus.solita.fi:Solita/projects/harja/repositories/git/harja
+    git: repo=https://github.com/finnishtransportagency/harja.git
          dest=/harja/checkout
          version=develop
-         key_file=/harja/id_rsa_harjavagrant
-         accept_hostkey=yes
   - name: Install database template
     command: sh kanta_template.sh
     sudo: yes

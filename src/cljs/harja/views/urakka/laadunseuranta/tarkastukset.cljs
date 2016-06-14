@@ -30,8 +30,6 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-
-
 (def +tarkastustyyppi+ [:tiesto :talvihoito :soratie :laatu])
 
 (defn tarkastustyypit-tekijalle [tekija]

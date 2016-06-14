@@ -8,7 +8,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
@@ -123,13 +124,15 @@
                         (concat [urakka]
                                 (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                                   (for [m materiaaliotsikot]
-                                    (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
+                                    (fmt/desimaaliluku-opt
+                                      (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m)))))))))
 
                 ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
                 (when (not (empty? toteumat))
                   [(concat ["Yhteensä"]
                            (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                              (for [m materiaaliotsikot]
-                               (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))))]]))
+                               (fmt/desimaaliluku-opt
+                                 (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m)))))))]))))]]))
 
     

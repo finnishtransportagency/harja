@@ -81,8 +81,6 @@
 
         ;; Käsitellään päällystysurakan tiedot
 
-        (map #(assoc % :sisaltaa-ilmoituksia? (:sisaltaa_ilmoituksia %)))
-
         (map #(konv/array->vec % :yha_elyt))
         (map #(konv/array->vec % :yha_vuodet))
 
@@ -101,17 +99,25 @@
         (map #(dissoc %
                       :urakoitsija_id :urakoitsija_nimi :urakoitsija_ytunnus
                       :hallintayksikko_id :hallintayksikko_nimi :hallintayksikko_lyhenne
-                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet :sisaltaa_ilmoituksia
+                      :yha_yhatunnus :yha_yhaid :yha_yhanimi :yha_elyt :yha_vuodet
                       :yha_kohdeluettelo_paivitetty :yha_sidonta_lukittu :takuu_loppupvm))))
 
-(defn hallintayksikon-urakat [db user hallintayksikko-id]
-  ;; PENDING: Mistä tiedetään kuka saa katso vai saako perustiedot nähdä kuka vaan (julkista tietoa)?
+(defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
-  (into []
-        urakka-xf
-        (q/listaa-urakat-hallintayksikolle db hallintayksikko-id
-                                           (name (get-in user [:organisaatio :tyyppi]))
-                                           (get-in user [:organisaatio :id]))))
+  (if-not organisaatio
+    []
+    (let [urakat (oikeudet/kayttajan-urakat user)]
+      (into []
+            urakka-xf
+            (q/listaa-urakat-hallintayksikolle db
+                                               {:hallintayksikko hallintayksikko-id
+                                                :kayttajan_org_id (:id organisaatio)
+                                                :kayttajan_org_tyyppi (name (:tyyppi organisaatio))
+                                                :sallitut_urakat (if (empty? urakat)
+                                                                   ;; Jos ei urakoita, annetaan
+                                                                   ;; dummy, jotta IN toimii
+                                                                   [-1]
+                                                                   urakat)})))))
 
 (defn hae-urakoita [db user teksti]
   (log/debug "Haetaan urakoita tekstihaulla: " teksti)

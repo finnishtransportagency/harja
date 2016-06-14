@@ -18,7 +18,9 @@
             [harja.transit :as transit]
             [harja.domain.roolit]
 
-            [slingshot.slingshot :refer [try+ throw+]])
+            [slingshot.slingshot :refer [try+ throw+]]
+
+            [new-reliquary.core :as nr])
   (:import (java.text SimpleDateFormat)
            (java.io ByteArrayInputStream ByteArrayOutputStream)))
 
@@ -219,24 +221,32 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
-    (if (:ring-kasittelija? optiot)
-      (swap! sessiottomat-kasittelijat conj {:nimi nimi
-                                             :fn   (if (= false (:tarkista-polku? optiot))
-                                                     palvelu-fn
-                                                     (ring-kasittelija nimi palvelu-fn))
-                                             :ei-todennettava (:ei-todennettava optiot)})
-      (let [ar (arityt palvelu-fn)
-            liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
-        (when liikaa-parametreja
-          (log/fatal "Palvelufunktiolla on oltava 1 parametri (GET: user) tai 2 parametria (POST: user payload), oli: " liikaa-parametreja))
-        (when (ar 2)
-          ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
-          (swap! kasittelijat
-                 conj {:nimi nimi :fn (transit-post-kasittelija nimi palvelu-fn optiot)}))
-        (when (ar 1)
-          ;; GET metodi, vain käyttäjätiedot parametrina
-          (swap! kasittelijat
-                 conj {:nimi nimi :fn (transit-get-kasittelija nimi palvelu-fn optiot)})))))
+    (let [ar (arityt palvelu-fn)
+          transaktio-fn (if (get optiot :trace true)
+                          (fn [& args]
+                            (nr/with-newrelic-transaction
+                              (or (:kategoria optiot) "Backend palvelut")
+                              (str nimi)
+                              {}
+                              #(apply palvelu-fn args)))
+                          palvelu-fn)]
+      (if (:ring-kasittelija? optiot)
+        (swap! sessiottomat-kasittelijat conj {:nimi nimi
+                                               :fn   (if (= false (:tarkista-polku? optiot))
+                                                       transaktio-fn
+                                                       (ring-kasittelija nimi transaktio-fn))
+                                               :ei-todennettava (:ei-todennettava optiot)})
+        (do
+          (when-let [liikaa-parametreja (some #(when (or (= 0 %) (> % 2)) %) ar)]
+            (log/fatal "Palvelufunktiolla on oltava 1 parametri (GET: user) tai 2 parametria (POST: user payload), oli: " liikaa-parametreja))
+          (when (ar 2)
+            ;; POST metodi, kutsutaan kutsusta parsitulla EDN objektilla
+            (swap! kasittelijat
+                   conj {:nimi nimi :fn (transit-post-kasittelija nimi transaktio-fn optiot)}))
+          (when (ar 1)
+            ;; GET metodi, vain käyttäjätiedot parametrina
+            (swap! kasittelijat
+                   conj {:nimi nimi :fn (transit-get-kasittelija nimi transaktio-fn optiot)}))))))
 
   (poista-palvelu [this nimi]
     (swap! kasittelijat
@@ -253,10 +263,6 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                      {:ring-kasittelija? true
                       :tarkista-polku?   false
                       :ei-todennettava   ei-todennettava?})))
-
-(defn julkaise-palvelut [http & palveluiden-nimet-ja-funktiot]
-  (doseq [[nimi funktio] (partition 2 palveluiden-nimet-ja-funktiot)]
-    (julkaise-palvelu http nimi funktio)))
 
 (defn julkaise-palvelut [http & nimet-ja-palvelut]
   (doseq [[nimi palvelu-fn] (partition 2 nimet-ja-palvelut)]
