@@ -209,11 +209,11 @@ hakutiheys-historiakuva 1200000)
         #_(log "Murupolun kautta on valittu hy; onko tämä se hy? " (= valittu-hallintayksikko (:id hallintayksikko)))
         (= valittu-hallintayksikko (:id hallintayksikko)))
 
-      ;; Sisään tultaessa oli valittuna "koko maa", eli kaikki uudet urakat valitaan
+      ;; Sisään tultaessa oli valittuna "koko maa"
       :else
       (do
         #_(log "Koko maa valittu! :)")
-        true))))
+        false))))
 
 (defn- hae-aluesuodattimet [tila urakoitsija urakkatyyppi]
   (go (let [tulos (<! (k/post! :hae-urakat-tilannekuvaan (aikaparametrilla
