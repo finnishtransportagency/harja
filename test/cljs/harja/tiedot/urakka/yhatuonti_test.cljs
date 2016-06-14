@@ -48,8 +48,7 @@
                              :tienumero 3},
     :tunnus "2",
     :yha-id 5,
-    :yllapitoluokka 1}
-   ])
+    :yllapitoluokka 1}])
 
 (def vkm-data
   {"tieosoitteet" [{"ajorata" 0, "palautusarvo" 1, "osa" 1, "etaisyys" 2, "tie" 20, "tunniste" "kohde-1-alku"}
