@@ -1,0 +1,67 @@
+<b>Nykyinen versio: 0.1.6</b>
+<b>Julkaistu: 20.5.2016</b>
+
+<b>Versiohistoria:</b>
+- Versionumero: 0.1.6. Julkaistu 20.5.2016:
+    - Päivystyksille lisätty id kenttä. Yksittäinen päivystys voidaan nyt poistaa käyttäen samaa id:tä. Samoin päivitys onnistuu tätä kautta.
+    - Varusteiden lisäykseen, päivitykseen ja hakuihin lisätty pakollisena kenttänä tilannepäivämäärä, jolla kerrotaan lähdejärjestelmän käyttävän tieverkon julkaisupäivämäärä, jotta sijainti voidaan kohdistaa oikealle verkolle. Haut palauttavat myös osoitteet tälle verkolle muunnettuna.
+- Versionumero: 0.1.5. Julkaistu 13.5.2016:
+    - Tarkastuksessa on optionaalinen "laadunalitus" kenttä, jolla voidaan sanoa onko kyseessä
+      laadun alitus vai ei. Jos kenttää ei ole, toimitaan vanhan päättelyn mukaan, jossa
+      havainnot tekstin mukaan päätellään tieto.
+- Versionumero: 0.1.4. Julkaistu 4.5.2016:
+    - Mahdollisuus poistaa urakan haluttujen päivystäjien päivystykset.
+- Versionumero: 0.1.3. Julkaistu 18.4.2016
+    - Tuki gzipatuille payloadeille.
+- Versionumero: 0.1.2. Julkaistu 29.3.2016
+    - Turvallisuuspoikkeaman muotoa on korjattu.
+- Versionumero: 0.1.1. Julkaistu 24.3.2016
+    - Turvallisuuspoikkeaman ammatin kirjaaminen tietystä enum-joukosta. Jos annetaan vaihtoehto muu_tyontekija, voidaan antaa tarkempi kuvaus ammatista. Muussa tapauksessa selitettä ei tallenneta.
+    - Turvallisuuspoikkeaman aiheutuneiden vammojen kirjaaminen tietystä enum-joukosta entisen vapaatekstin sijaan
+    - Turvallisuuspoikkeaman uusi kirjattava tieto: aiheutuneet seuraukset (vapaateksti)
+    - Turvallisuuspoikkeaman uusi kirjattava tieto: vahingoittuneet ruumiinosat (enum-joukko)
+    - Turvallisuuspoikkeaman uusi kirjattava tieto: jatkuuko sairauspoissaolo (true tai false)
+- Versionumero: 0.1.0. Julkaistu 17.3.2016
+    - Uusi turvallisuuspoikkeamatyyppi: muu
+- Versionumero: 0.0.9. Julkaistu 11.2.2016
+    - Varustetoteumilta poistettu tarkastuspäivämäärä
+    - Turvallisuuspoikkeamalle vaihdettu uudet tyyppi-arvot, yksi tai useampi: tyotapaturma, vaaratilanne, turvallisuushavainto
+    - Turvallisuuspoikkeama vastaanottaa vahinkoluokittelun, yksi tai useampi: henkilovahinko, omaisuusvahinko, ymparistovahinko
+    - Turvallisuuspoikkeama vastaanottaa vakavuusastee: vakava tai lieva
+- Versionumero: 0.0.8. Julkaistu: 9.2.2016
+    - Pistetoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "pistetoteumat" avaimen alle
+    - Reittitoteumia on mahdollista kirjata useampi kerralla sisällyttämällä kirjattavat toteumat JSONissa "reittitoteumat" avaimen alle
+    - Muutokset ovat taaksepäinyhteensopivia, eli toteumia on edelleen mahdollista kirjata myös yksi samalla tavalla kuin aiemmin.
+- Versionumero: 0.0.7. Julkaistu: 27.1.2016
+    - Siltatunnus lisätty siltatarkastuksiin
+- Versionumero: 0.0.6. Julkaistu: 11.12.2015 . Muutokset:
+    - Soratie-, talvihoito- ja tiestötarkastus rajapinnat on refaktoroitu vastaamaan uutta tietomallia
+    - Vanha havainto rajapinta on muutettu laatupoikkeama rajapinnaksi
+- Versionumero: 0.0.5. Julkaistu: 30.11.2015 . Muutokset:
+    - Ilmoitusten haut siirretty urakoiden alle. Kaksi erillistä operaatiota ilmoitusten reaaliaikaiselle haulle ja massahaulle viimeisen id:n jälkeen.
+    - Päivystäjätietojen haku toteutettu kolmena eri GET-palveluna: haku urakka id:llä, sijainnilla tai puhelinnumerolla
+    - Toteumalle merkitty pakolliseksi alkamis- ja päättymisaika
+    - Reittipisteelle merkitty pakolliseksi antaa aika
+    - Totemien kirjaamisesta muutettu materiaalien ja tehtävien yksiköt enumin sijasta tekstiksi. Käytettävät arvot yksiköille & materiaaleille otetaan jatkossa urakan tietojen hausta.
+    - Lisätty urakoiden haun vastaukseen kirjausyksiköt tehtäville & kaikki materiaalit
+    - Lisätty uusi toteumatyyppi vahingonkorvaus reitti, piste & varustetoteumille
+    - Tyokoneseurannasta poistettu sopimus id.
+    - Varusterajapinta päivitetty vastaamaan tierekisterin rajapintaa
+    - Urakoiden hakuun lisätty alueurakkanumero
+    - Tarkennettu urakan haun vastausta. Kertoo nyt urakan sopimusten yksikkö- ja kokonaishintaiset tehtävät listassa, joita voidaan käyttää kirjaaman toteumia.
+    - Kirjattu tarkennuksia API:n operaatioiden kuvauksiin.
+    - Suunta lisätty työkone seurantaan. Suunta annetaan astelukuna.
+    - Tietolajien haku varusteille päivitetty. Tietolajit haetaan yksi kerrallaan Tierekisteristä.
+    - Poikkeamat poistetu rajapinnasta
+    - Muutoksia varusterajapintaan
+    - Haetaan vain yksi tietolaji kerrallaan
+- Versionumero: 0.0.4. Julkaistu: 14.7.2015. Muutokset:
+    - Toteumien materiaalien ja tehtävien määrää muutettu vastaamaan nykyistä tietomallia
+- Versionumero: 0.0.3. Julkaistu: 8.7.2015. Muutokset:
+    - Tiestö-, soratie- ja talvihoitotarkastusten payloadit yksinkertaistettu
+- Versionumero: 0.0.2. Julkaistu: 10.6.2015. Muutokset:
+    - Poistettu päivystäjätietojen haku
+    - Lisätty tielupien haku
+    - Lisätty tietyö ilmoituksen kirjaus
+- Versionumero: 0.0.1. Julkaistu: 9.6.2015. Muutokset:
+    - Ensimmäinen versio julkaistu
