@@ -2,13 +2,9 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.toimenpidekoodit :as q]
-            [harja.kyselyt.urakat :as urakat-q]
             [clojure.java.jdbc :as jdbc]
-            [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]))
-
-
 
 (defn hae-toimenpidekoodit
   "Palauttaa toimenpidekoodit listana"
@@ -19,13 +15,14 @@
 
 (defn lisaa-toimenpidekoodi
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
-  [db user {:keys [nimi emo yksikko hinnoittelu] :as rivi}]
-  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (konv/seq->array hinnoittelu) (:id user))]
+  [db user {:keys [nimi emo yksikko hinnoittelu api-seuranta] :as rivi}]
+  (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (konv/seq->array hinnoittelu) api-seuranta (:id user))]
     {:taso              4
      :emo               emo
      :nimi              nimi
      :yksikko           yksikko
      :hinnoittelu       hinnoittelu
+     :apiseuranta       api-seuranta
      :id                (:id luotu)}))
 
 (defn poista-toimenpidekoodi
@@ -36,8 +33,8 @@
 (defn muokkaa-toimenpidekoodi
   "Muokkaa toimenpidekoodin nimeä ja yksikköä. Palauttaa true jos muokkaus tehtiin, false muuten."
 
-  [db user {:keys [nimi emo yksikko id hinnoittelu] :as rivi}]
-  (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko (konv/seq->array hinnoittelu) id)))
+  [db user {:keys [nimi emo yksikko id hinnoittelu api-seuranta] :as rivi}]
+  (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko (konv/seq->array hinnoittelu) api-seuranta id)))
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
   (oikeudet/kirjoita oikeudet/hallinta-tehtavat user)
