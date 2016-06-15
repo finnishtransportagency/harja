@@ -130,7 +130,7 @@
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
             :komponentti (fn [rivi]
                            (if (:valmis-tiemerkintaan rivi)
-                             [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]
+                             [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
                              (if (= (:nakyma optiot) :paallystys)
                                [valmis-tiemerkintaan (:id rivi) urakka-id]
                                [:span "Ei"])))}
