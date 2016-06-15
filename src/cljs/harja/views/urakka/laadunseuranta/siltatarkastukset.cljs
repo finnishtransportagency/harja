@@ -350,9 +350,10 @@
                             #(swap! muokattava-tarkastus
                                     assoc :kohteet
                                     (fmap (juxt :tulos :lisatieto) %)))
-            taulukon-riveilla-tulos (= (count (vals tarkastusrivit))
-                                       (count (filter #(not (nil? (:tulos %)))
-                                                      (vals tarkastusrivit))))
+            riveja (count (vals tarkastusrivit))
+            riveja-taytetty (count (filter #(not (nil? (:tulos %)))
+                                           (vals tarkastusrivit)))
+            taulukon-riveilla-tulos (= riveja riveja-taytetty)
             voi-tallentaa? (and (lomake/voi-tallentaa? @muokattava-tarkastus)
                                 taulukon-riveilla-tulos)]
         [:div.uusi-siltatarkastus
@@ -382,6 +383,7 @@
            :piilota-toiminnot? true
            :voi-lisata?  false
            :voi-poistaa? (constantly false)
+           :jarjesta :kohdenro
            :valiotsikot siltatarkastuksen-valiotsikot}
 
           ;; sarakkeet
@@ -425,7 +427,9 @@
                         (reset! tallennus-kaynnissa false)))))}
           (ikonit/tallenna) " Tallenna tarkastus"]
          (when (not voi-tallentaa?)
-           [:span.napin-vinkki "Täytä kaikki tiedot ennen tallennusta"])]))))
+           [:span.napin-vinkki
+            (str riveja-taytetty " / " riveja) " kohdetta täytetty. "
+            "Täytä kaikki tiedot ennen tallennusta"])]))))
 
 (defn siltatarkastukset []
 
