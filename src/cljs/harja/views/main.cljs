@@ -54,7 +54,7 @@
 
 (defn- mobiiliselain? []
   (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-        [#".*android.*" #".*iPad.*"]))
+        [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
   [bs/navbar {}

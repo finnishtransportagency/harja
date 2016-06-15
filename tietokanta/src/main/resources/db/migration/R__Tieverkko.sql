@@ -174,7 +174,7 @@ CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteille(
 DECLARE
   osoite tr_osoite;
 BEGIN
-    osoite := yrita_tierekisteriosoite_pisteille(p1, p2, threshold);
+    osoite := yrita_tierekisteriosoite_pisteille(alkupiste, loppupiste, treshold);
     IF osoite IS NULL THEN
       RAISE EXCEPTION 'pisteillä ei yhteistä tietä';
     END IF;
