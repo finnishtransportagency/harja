@@ -10,7 +10,10 @@ SELECT
   sopimuksen_mukaiset_tyot  AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset,
   bitumi_indeksi AS "bitumi-indeksi",
-  kaasuindeksi
+  kaasuindeksi,
+  lahetetty,
+  lahetys_onnistunut AS "lahetys-onnistunut",
+  lahetysvirhe
 FROM yllapitokohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
   AND pi.poistettu IS NOT TRUE
@@ -34,9 +37,9 @@ SELECT
   takuupvm,
   ypk.nimi                        AS kohdenimi,
   ypk.kohdenumero,
-  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypk.sopimuksen_mukaiset_tyot    AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
-  ypk.bitumi_indeksi AS "bitumi-indeksi",
+  ypk.bitumi_indeksi              AS "bitumi-indeksi",
   ypk.kaasuindeksi,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "paatos-tekninen-osa",
@@ -47,6 +50,7 @@ SELECT
   kasittelyaika_taloudellinen_osa AS "kasittelyaika-taloudellinen-osa",
   ypko.id                         AS kohdeosa_id,
   ypko.nimi                       AS kohdeosa_nimi,
+  ypko.tunnus                     AS kohdeosa_tunnus,
   ypko.tr_numero                  AS kohdeosa_tie,
   ypko.tr_alkuosa                 AS kohdeosa_aosa,
   ypko.tr_alkuetaisyys            AS kohdeosa_aet,
