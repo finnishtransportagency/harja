@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.1.6</b>
+<b>Nykyinen versio: 0.1.7</b>
 <b>Julkaistu: 20.5.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.1.7. Julkaistu 15.6.2016:
+    - Urakkahaku palauttaa kokonaishintaiset ja yksikköhintaiset tehtävät omassa elementissään. Tehtävät ovat jatkossa vakiojoukko, jonka Harjan pääkäyttäjä määrittää ja näin ollen eivät enää ole riippuvaisia urakkakohtaisista suunnitelmatiedoista.
 - Versionumero: 0.1.6. Julkaistu 20.5.2016:
     - Päivystyksille lisätty id kenttä. Yksittäinen päivystys voidaan nyt poistaa käyttäen samaa id:tä. Samoin päivitys onnistuu tätä kautta.
     - Varusteiden lisäykseen, päivitykseen ja hakuihin lisätty pakollisena kenttänä tilannepäivämäärä, jolla kerrotaan lähdejärjestelmän käyttävän tieverkon julkaisupäivämäärä, jotta sijainti voidaan kohdistaa oikealle verkolle. Haut palauttavat myös osoitteet tälle verkolle muunnettuna.
