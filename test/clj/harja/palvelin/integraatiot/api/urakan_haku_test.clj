@@ -29,12 +29,11 @@
     (is (>= (count (get-in encoodattu-body [:urakka :sopimukset])) 1))
     (is (not-empty (get-in encoodattu-body [:urakka :tiedot :alueurakkanumero])))
 
-    (let [kokonaishintaiset (get-in (first (get-in encoodattu-body [:urakka :sopimukset]))
-                                    [:sopimus :toteumakirjauskohteet :kokonaishintaiset])
-          yksikkohintaiset (get-in (first (get-in encoodattu-body [:urakka :sopimukset]))
-                                   [:sopimus :toteumakirjauskohteet :yksikkohintaiset])]
-      (is (= 12 (count kokonaishintaiset)))
-      (is (= 2 (count yksikkohintaiset)))
+    (let [kokonaishintaiset (get-in encoodattu-body [:urakka :tehtavat :kokonaishintaiset])
+          yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
+      ;; todo: kun saadaan oikeat listat, täytyy asettaa tarkistamaan, että oikeat tehtävät palautuvat
+      (is (= 0 (count kokonaishintaiset)))
+      (is (= 0 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
