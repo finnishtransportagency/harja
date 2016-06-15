@@ -631,7 +631,10 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
                     korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
-           (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+           (let [_ (log "SKEEMA ENNEN: " (pr-str (map (juxt :nimi :leveys) skeema)))
+                 skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+                 _ (log "SKEEMA LEVEYS JÄLKEEN: " (pr-str (map (juxt :nimi :leveys) skeema)))
+
                  colspan (if (or piilota-toiminnot? (nil? tallenna))
                            (count skeema)
                            (inc (count skeema)))

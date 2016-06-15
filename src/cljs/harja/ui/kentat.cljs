@@ -289,20 +289,30 @@
   (let [arvo (or valinta-arvo identity)
         nayta (or valinta-nayta str)
         nykyinen-arvo @data]
-    [:span.radiovalinnat
-     (doall
-       (map-indexed (fn [i valinta]
-                      (let [otsikko (nayta valinta)
-                            arvo (arvo valinta)]
-                        ^{:key otsikko}
-                        [:span.radiovalinta
-                         [:input {:type      "radio"
-                                  :value i
-                                  :checked   (= nykyinen-arvo arvo)
-                                  :on-change #(reset! data arvo)}]
-                         [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
-                          otsikko]]))
-                    valinnat))]))
+    (if-let [valinta (and (= 1 (count valinnat))
+                          (first valinnat))]
+      (let [arvo (arvo valinta)]
+        [:span
+         [:input {:type      "radio"
+                  :value 1
+                  :checked   (= nykyinen-arvo arvo)
+                  :on-change #(reset! data arvo)}]
+         [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
+          (nayta valinta)]])
+      [:span.radiovalinnat
+       (doall
+        (map-indexed (fn [i valinta]
+                       (let [otsikko (nayta valinta)
+                             arvo (arvo valinta)]
+                         ^{:key otsikko}
+                         [:span.radiovalinta
+                          [:input {:type      "radio"
+                                   :value i
+                                   :checked   (= nykyinen-arvo arvo)
+                                   :on-change #(reset! data arvo)}]
+                          [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
+                           otsikko]]))
+                     valinnat))])))
 
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])

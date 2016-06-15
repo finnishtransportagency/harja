@@ -166,21 +166,20 @@
     +valitse-tulos+))
 
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
-  ;; fixme: sarakkeiden prosentuaaliset leveydet saatava vektorin pituuden mukaan skaalautuvaksi?
   (into []
         (concat
-          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys "5%"} 
-           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-           {:otsikko       "Tulos " :nimi :tulos :leveys "20%"
+          [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys 3} 
+           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys 20}
+           {:otsikko       "Tulos " :nimi :tulos :leveys 10
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D" "-"]
             :fmt           #(kohdetuloksen-teksti %)}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "20%"}]
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}]
           (mapv (fn [tarkastus]
                   {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
                    :nimi    (pvm/pvm (:tarkastusaika tarkastus))
-                   :leveys "5%"
+                   :leveys 5
                    :tyyppi :string :muokattava? (constantly false)})
                 muut-tarkastukset))))
 
@@ -295,6 +294,7 @@
                            (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
                            "Sillan tarkastus")
            :tyhja        "Sillasta ei ole tarkastuksia Harjassa"
+           :piilota-toiminnot? true
            :tunniste     :kohdenro
            :voi-lisata?  false
            :voi-poistaa? (constantly false)
@@ -364,23 +364,41 @@
                            (reset! taulukon-rivit (vals (grid/hae-muokkaustila g))))}
 
           ;; sarakkeet
-          [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false) :leveys "5%"}
-           {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
-           {:otsikko       "Tulos" :nimi :tulos :leveys "20%"
-            :validoi       [[:ei-tyhja "Anna kohteen tulos"]]
-            :tyyppi        :valinta :valinta-arvo identity
-            :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
-            :valinnat      ["A" "B" "C" "D" "-"]
-            :fmt           #(kohdetuloksen-teksti %)
-            ; Tarjoa alaspäin kopiointia vain arvolle A - ei toimenpiteitä
-            :tayta-alas?   #(= "A" %)
-            :tayta-tooltip "Kopioi sama tulos seuraavillekin kohteille"
-            :tayta-fn (fn [lahtorivi tama-rivi]
-                                       (assoc tama-rivi :tulos (:tulos lahtorivi)))
-            :kelluta-tayta-nappi true}
-           ;; Lisätiedon maksimipituus tietokantasarakkeesta jonka tyyppi varchar(255)
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "30%"
-            :pituus-max 255}]
+          (into [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false)
+                  :leveys 5}
+                 {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false)
+                  :leveys 40}]
+
+                (concat
+                 (for [tulos ["A" "B" "C" "D" "-"]]
+                   {:otsikko (if (= tulos "-")
+                               (ikonit/ban-circle)
+                               tulos)
+                    :tasaa :keskita
+                    :nimi (str "tulos-" tulos) :leveys 4
+                    :tyyppi :radio
+                    :valinnat [tulos]
+                    :valinta-nayta (constantly "")
+                    ;; group
+                    :hae :tulos
+                    :aseta #(assoc %1 :tulos %2)
+                    })
+
+                 #_{:otsikko       "Tulos" :nimi :tulos :leveys 20
+                  :validoi       [[:ei-tyhja "Anna kohteen tulos"]]
+                  :tyyppi        :valinta :valinta-arvo identity
+                  :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
+                  :valinnat      ["A" "B" "C" "D" "-"]
+                  :fmt           #(kohdetuloksen-teksti %)
+                                        ; Tarjoa alaspäin kopiointia vain arvolle A - ei toimenpiteitä
+                  :tayta-alas?   #(= "A" %)
+                  :tayta-tooltip "Kopioi sama tulos seuraavillekin kohteille"
+                  :tayta-fn (fn [lahtorivi tama-rivi]
+                              (assoc tama-rivi :tulos (:tulos lahtorivi)))
+                    :kelluta-tayta-nappi true}
+
+                 [{:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 30
+                   :pituus-max 255}]))
           @taulukon-rivit]
 
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
