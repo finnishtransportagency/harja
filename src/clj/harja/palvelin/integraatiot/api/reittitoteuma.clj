@@ -111,24 +111,24 @@
 (defn tallenna-yksittainen-reittitoteuma [db urakka-id kirjaaja reittitoteuma]
   (let [reitti (:reitti reittitoteuma)
         toteuma (:toteuma reittitoteuma)
-        toteuma (assoc toteuma :reitti (luo-reitti-geometria db reitti))
-        toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
-    (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-    (log/debug "Aloitetaan toteuman tehtävien tallennus")
-    (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
-    (log/debug "Aloitetaan toteuman materiaalien tallennus")
-    (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id)
-    (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
-    (poista-toteuman-reitti db toteuma-id)
-    (log/debug "Aloitetaan reitin tallennus")
-    (luo-reitti db reitti toteuma-id)))
+        toteuma (assoc toteuma :reitti (luo-reitti-geometria db reitti))]
+    (jdbc/with-db-transaction [db db]
+      (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+        (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
+        (log/debug "Aloitetaan toteuman tehtävien tallennus")
+        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+        (log/debug "Aloitetaan toteuman materiaalien tallennus")
+        (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id)
+        (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
+        (poista-toteuman-reitti db toteuma-id)
+        (log/debug "Aloitetaan reitin tallennus")
+        (luo-reitti db reitti toteuma-id)))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [c db]
-    (when (:reittitoteuma data)
-      (tallenna-yksittainen-reittitoteuma c urakka-id kirjaaja (:reittitoteuma data)))
-    (doseq [pistetoteuma (:reittitoteumat data)]
-      (tallenna-yksittainen-reittitoteuma c urakka-id kirjaaja (:reittitoteuma pistetoteuma)))))
+  (when (:reittitoteuma data)
+    (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma data)))
+  (doseq [pistetoteuma (:reittitoteumat data)]
+    (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma pistetoteuma))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]

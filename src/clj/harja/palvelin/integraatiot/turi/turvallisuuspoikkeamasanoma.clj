@@ -27,7 +27,7 @@
              (mapv #(vector
                      :turi:korjaava-toimenpide
                      [:turi:kuvaus (:kuvaus %)]
-                     [:turi:suoritettu (when (:suoritettu %) (xml/formatoi-aikaleima (:suoritettu %)))]
+                     [:turi:suoritettu (when (:suoritettu %) (xml/formatoi-paivamaara (:suoritettu %)))]
                      [:turi:vastaavahenkilo
                       [:turi:etunimi (:vastaavahenkilo %)]
                       [:turi:sukunimi (:vastaavahenkilo %)]]) korjaavat-toimenpiteet)))))
