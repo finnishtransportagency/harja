@@ -60,3 +60,25 @@ WHERE id = (SELECT emo
 SELECT exists(SELECT id
               FROM toimenpidekoodi
               WHERE koodi = :toimenpidekoodi);
+
+-- name: hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat
+SELECT
+  tpk.id,
+  tpk.nimi,
+  tpk.yksikko
+FROM toimenpidekoodi tpk
+WHERE
+  NOT tpk.poistettu AND
+  tpk.api_seuranta AND
+  tpk.hinnoittelu @> '{yksikkohintainen}';
+
+-- name: hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat
+SELECT
+  tpk.id,
+  tpk.nimi,
+  tpk.yksikko
+FROM toimenpidekoodi tpk
+WHERE
+  NOT tpk.poistettu AND
+  tpk.api_seuranta AND
+  tpk.hinnoittelu @> '{kokonaishintainen}';
