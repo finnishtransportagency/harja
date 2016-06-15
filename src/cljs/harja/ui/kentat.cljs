@@ -509,7 +509,6 @@
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (let [p @data]
-           (log "RECEIVED PROPS")
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))
