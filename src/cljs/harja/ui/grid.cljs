@@ -1026,14 +1026,15 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                    (let [kaikki-virheet @virheet]
                      (doall
                        (mapcat
-                         #(keep identity %)
-                         (map-indexed
+                        identity
+                         (keep-indexed
                            (fn [i [id rivi]]
                              (let [rivin-virheet (get kaikki-virheet id)
                                    otsikko (valiotsikot id)]
                                (when-not (:poistettu rivi)
                                  (into (if otsikko
-                                         [[:tr.otsikko
+                                         [^{:key (str "otsikko" i)}
+                                          [:tr.otsikko
                                            [:td {:colSpan colspan}
                                             (:teksti otsikko)]]]
                                          [])
