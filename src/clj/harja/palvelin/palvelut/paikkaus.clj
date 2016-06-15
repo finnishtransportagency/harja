@@ -12,6 +12,7 @@
             [harja.palvelin.palvelut.yha :as yha]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.kyselyt.paallystys :as paallystys-q]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [harja.domain.oikeudet :as oikeudet]
@@ -24,7 +25,7 @@
                         (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
                         (map #(assoc % :kohdeosat
                                        (into []
-                                             yllapitokohteet/kohdeosa-xf
+                                             paallystys-q/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
                                                db urakka-id sopimus-id (:paikkauskohde-id %))))))
                       (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id))]

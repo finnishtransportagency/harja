@@ -187,7 +187,7 @@
          [:div.tarkastusajon-luonti-dialog-container
           [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia paata-ajo paattaminen-peruttu]])
 
-       (when @s/palautettava-tarkastusajo
+       (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
          [:div.tarkastusajon-luonti-dialog-container
           [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi jatka-ajoa pakota-ajon-lopetus]])
        

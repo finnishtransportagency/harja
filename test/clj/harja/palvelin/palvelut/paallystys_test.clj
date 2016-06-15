@@ -60,7 +60,7 @@
                                  :esiintyma "asd"
                                  :km-arvo "asd"
                                  :muotoarvo "asd"
-                                 :sideainetyyppi "asd"
+                                 :sideainetyyppi 1
                                  :pitoisuus 54
                                  :lisaaineet "asd"}
                                 {:nimi "Tie 555"
@@ -83,7 +83,7 @@
                                  :esiintyma "asd"
                                  :km-arvo "asd"
                                  :muotoarvo "asd"
-                                 :sideainetyyppi "asd"
+                                 :sideainetyyppi 1
                                  :pitoisuus 54
                                  :lisaaineet "asd"
                                  :poistettu true}]

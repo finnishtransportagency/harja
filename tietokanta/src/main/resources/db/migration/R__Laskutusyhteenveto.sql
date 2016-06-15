@@ -119,7 +119,29 @@ DECLARE
   lampotilat RECORD;
   lampotila_puuttuu BOOLEAN;
 
+  cache laskutusyhteenveto_rivi[];
+  rivi laskutusyhteenveto_rivi;
 BEGIN
+
+  -- Katsotaan löytyykö laskutusyhteenveto jo cachesta
+  SELECT
+    INTO cache rivit
+    FROM laskutusyhteenveto_cache c
+   WHERE c.urakka = ur
+     AND c.alkupvm = aikavali_alkupvm
+     AND c.loppupvm = aikavali_loppupvm;
+
+  IF cache IS NOT NULL THEN
+    RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
+    FOREACH rivi IN ARRAY cache
+    LOOP
+      RETURN NEXT rivi;
+    END LOOP;
+    RETURN;
+  END IF;
+
+  cache := ARRAY[]::laskutusyhteenveto_rivi[];
+
   -- Päätellään indeksilaskennan perustiedot
   SELECT INTO urakan_alkuvuosi EXTRACT(year from alkupvm) FROM urakka WHERE id = ur;
 
@@ -842,32 +864,41 @@ BEGIN
     ', t.nimi;
     RAISE NOTICE 'Toistuva migraatio R_Laskutusyhteenveto.sql valmis.';
 
-    RETURN NEXT (t.nimi, t.tuotekoodi, t.tpi, perusluku,
-                         kaikki_paitsi_kht_laskutettu_ind_korotus, kaikki_laskutettu_ind_korotus,
-                         kaikki_paitsi_kht_laskutetaan_ind_korotus, kaikki_laskutetaan_ind_korotus,
-                         kaikki_paitsi_kht_laskutettu, kaikki_laskutettu,
-                         kaikki_paitsi_kht_laskutetaan, kaikki_laskutetaan,
-                                                        kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
-                                                        kht_laskutetaan, kht_laskutetaan_ind_korotettuna, kht_laskutetaan_ind_korotus,
-                                                        yht_laskutettu, yht_laskutettu_ind_korotettuna, yht_laskutettu_ind_korotus,
-      yht_laskutetaan, yht_laskutetaan_ind_korotettuna, yht_laskutetaan_ind_korotus,
-      sakot_laskutettu, sakot_laskutettu_ind_korotettuna, sakot_laskutettu_ind_korotus,
-      sakot_laskutetaan, sakot_laskutetaan_ind_korotettuna, sakot_laskutetaan_ind_korotus,
-      suolasakot_laskutettu, suolasakot_laskutettu_ind_korotettuna, suolasakot_laskutettu_ind_korotus,
-                             suolasakot_laskutetaan, suolasakot_laskutetaan_ind_korotettuna, suolasakot_laskutetaan_ind_korotus,
-                             muutostyot_laskutettu, muutostyot_laskutettu_ind_korotettuna, muutostyot_laskutettu_ind_korotus,
-                             muutostyot_laskutetaan, muutostyot_laskutetaan_ind_korotettuna, muutostyot_laskutetaan_ind_korotus,
-                                                                                             akilliset_hoitotyot_laskutettu, akilliset_hoitotyot_laskutettu_ind_korotettuna, akilliset_hoitotyot_laskutettu_ind_korotus,
-                                                                                             akilliset_hoitotyot_laskutetaan, akilliset_hoitotyot_laskutetaan_ind_korotettuna, akilliset_hoitotyot_laskutetaan_ind_korotus,
-                                                                                             erilliskustannukset_laskutettu, erilliskustannukset_laskutettu_ind_korotettuna, erilliskustannukset_laskutettu_ind_korotus,
-                 erilliskustannukset_laskutetaan, erilliskustannukset_laskutetaan_ind_korotettuna, erilliskustannukset_laskutetaan_ind_korotus,
-                 bonukset_laskutettu, bonukset_laskutettu_ind_korotettuna, bonukset_laskutettu_ind_korotus,
-                 bonukset_laskutetaan, bonukset_laskutetaan_ind_korotettuna, bonukset_laskutetaan_ind_korotus,
-                 suolasakko_kaytossa, lampotila_puuttuu
+    rivi := (t.nimi, t.tuotekoodi, t.tpi, perusluku,
+             kaikki_paitsi_kht_laskutettu_ind_korotus, kaikki_laskutettu_ind_korotus,
+	     kaikki_paitsi_kht_laskutetaan_ind_korotus, kaikki_laskutetaan_ind_korotus,
+	     kaikki_paitsi_kht_laskutettu, kaikki_laskutettu,
+             kaikki_paitsi_kht_laskutetaan, kaikki_laskutetaan,
+             kht_laskutettu, kht_laskutettu_ind_korotettuna, kht_laskutettu_ind_korotus,
+ 	     kht_laskutetaan, kht_laskutetaan_ind_korotettuna, kht_laskutetaan_ind_korotus,
+ 	     yht_laskutettu, yht_laskutettu_ind_korotettuna, yht_laskutettu_ind_korotus,
+ 	     yht_laskutetaan, yht_laskutetaan_ind_korotettuna, yht_laskutetaan_ind_korotus,
+ 	     sakot_laskutettu, sakot_laskutettu_ind_korotettuna, sakot_laskutettu_ind_korotus,
+ 	     sakot_laskutetaan, sakot_laskutetaan_ind_korotettuna, sakot_laskutetaan_ind_korotus,
+ 	     suolasakot_laskutettu, suolasakot_laskutettu_ind_korotettuna, suolasakot_laskutettu_ind_korotus,
+ 	     suolasakot_laskutetaan, suolasakot_laskutetaan_ind_korotettuna, suolasakot_laskutetaan_ind_korotus,
+ 	     muutostyot_laskutettu, muutostyot_laskutettu_ind_korotettuna, muutostyot_laskutettu_ind_korotus,
+ 	     muutostyot_laskutetaan, muutostyot_laskutetaan_ind_korotettuna, muutostyot_laskutetaan_ind_korotus,
+ 	     akilliset_hoitotyot_laskutettu, akilliset_hoitotyot_laskutettu_ind_korotettuna, akilliset_hoitotyot_laskutettu_ind_korotus,
+ 	     akilliset_hoitotyot_laskutetaan, akilliset_hoitotyot_laskutetaan_ind_korotettuna, akilliset_hoitotyot_laskutetaan_ind_korotus,
+ 	     erilliskustannukset_laskutettu, erilliskustannukset_laskutettu_ind_korotettuna, erilliskustannukset_laskutettu_ind_korotus,
+ 	     erilliskustannukset_laskutetaan, erilliskustannukset_laskutetaan_ind_korotettuna, erilliskustannukset_laskutetaan_ind_korotus,
+ 	     bonukset_laskutettu, bonukset_laskutettu_ind_korotettuna, bonukset_laskutettu_ind_korotus,
+ 	     bonukset_laskutetaan, bonukset_laskutetaan_ind_korotettuna, bonukset_laskutetaan_ind_korotus,
+ 	     suolasakko_kaytossa, lampotila_puuttuu
     );
 
+    cache := cache || rivi;
+    RETURN NEXT rivi;
 
   END LOOP;
+
+  RAISE NOTICE 'tallennetaan cacheen';
+  -- Tallenna cacheen ajettu laskutusyhteenveto
+  -- Jos indeksit tai urakan toteumat muuttuvat, pitää niiden transaktioiden
+  -- poistaa myös cache
+  INSERT INTO laskutusyhteenveto_cache (urakka, alkupvm, loppupvm, rivit)
+  VALUES (ur, aikavali_alkupvm, aikavali_loppupvm, cache);
 
 END;
 $$ LANGUAGE plpgsql;

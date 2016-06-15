@@ -83,12 +83,14 @@
              (< loppuet alkuet))
     "Loppuetäisyys ei voi olla ennen alkuetäisyyttä"))
 
-(defn tierekisteriosoite-sarakkeet [perusleveys [nimi tie ajorata kaista aosa aet losa let pituus]]
+(defn tierekisteriosoite-sarakkeet [perusleveys [nimi tunnus tie ajorata kaista aosa aet losa let pituus]]
   (into []
         (remove
           nil?
           [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
                        :leveys (+ perusleveys 5) :muokattava? (or (:muokattava? nimi) (constantly true))})
+           (when tunnus {:otsikko "Tunnus" :nimi (:nimi tunnus) :tyyppi :string :pituus-max 1
+                         :leveys 4 :muokattava? (or (:muokattava? tunnus) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
             :validoi [[:ei-tyhja "Anna tienumero"]]
@@ -297,6 +299,7 @@
                      (tierekisteriosoite-sarakkeet
                       tr-leveys
                       [{:nimi :nimi}
+                       {:nimi :tunnus}
                        {:nimi :tr-numero :muokattava? (constantly false)}
                        {:nimi :tr-ajorata}
                        {:nimi :tr-kaista}
@@ -373,6 +376,7 @@
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil
+                     nil
                      {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-ajorata}
                      {:nimi :tr-kaista}
