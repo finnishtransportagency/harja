@@ -50,9 +50,6 @@
       (poista-toimenpidekoodi c user id))
     (hae-toimenpidekoodit c user)))
 
-
-
-
 (defrecord Toimenpidekoodit []
   component/Lifecycle
   (start [this]

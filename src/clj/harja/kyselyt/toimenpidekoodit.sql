@@ -8,7 +8,8 @@ SELECT
   taso,
   yksikko,
   jarjestys,
-  hinnoittelu
+  hinnoittelu,
+  api_seuranta as "api-seuranta"
 FROM toimenpidekoodi
 WHERE poistettu = FALSE;
 
