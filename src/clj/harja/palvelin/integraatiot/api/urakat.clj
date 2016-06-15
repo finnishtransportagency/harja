@@ -15,23 +15,18 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn muodosta-tehtavat [tehtavat]
-  (mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data) :yksikko (:yksikko data)}}) tehtavat))
-
-(defn muodosta-toteumakirjauskohteet [sopimus yksikkohintaiset-tehtavat kokonaishintaiset-tehtavat]
-  (assoc sopimus :toteumakirjauskohteet (merge
-                                          {:yksikkohintaiset (muodosta-tehtavat yksikkohintaiset-tehtavat)}
-                                          {:kokonaishintaiset (muodosta-tehtavat kokonaishintaiset-tehtavat)})))
+(defn hae-tehtavat [db]
+  (let [yksikkohintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat db)
+        kokonaishintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat db)
+        tee-tehtavat #(mapv (fn [data] {:tehtava {:id (:id data) :selite (:nimi data) :yksikko (:yksikko data)}}) %)]
+    (merge
+      {:yksikkohintaiset (tee-tehtavat yksikkohintaiset-tehtavat)}
+      {:kokonaishintaiset (tee-tehtavat kokonaishintaiset-tehtavat)})))
 
 (defn hae-urakan-sopimukset [db urakka-id]
   (let [sopimukset (q-urakat/hae-urakan-sopimukset db urakka-id)]
     (for [sopimus sopimukset]
-      ;; todo: tee tehtäville oma payload, joka on irrallaan sopimuksista
-      (let [yksikkohintaiset-tehtavat ( q-toimenpidekoodit/hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat db)
-            kokonaishintaiset-tehtavat ( q-toimenpidekoodit/hae-apin-kautta-seurattavat-kokonaishintaiset-tehtavat db)]
-        {:sopimus (muodosta-toteumakirjauskohteet sopimus
-                                                  yksikkohintaiset-tehtavat
-                                                  kokonaishintaiset-tehtavat)}))))
+      {:sopimus sopimus})))
 
 (defn hae-materiaalit [db]
   (let [materiaalit (q-materiaalit/hae-kaikki-materiaalit db)]
@@ -47,7 +42,8 @@
   {:urakka
    {:tiedot (urakan-tiedot urakka)
     :sopimukset (hae-urakan-sopimukset db id)
-    :materiaalit (hae-materiaalit db)}})
+    :materiaalit (hae-materiaalit db)
+    :tehtavat (hae-tehtavat db)}})
 
 (defn muodosta-vastaus-organisaation-urakoiden-haulle [urakat]
   {:urakat (mapv (fn [urakka] {:urakka {:tiedot (urakan-tiedot urakka)}}) urakat)})
