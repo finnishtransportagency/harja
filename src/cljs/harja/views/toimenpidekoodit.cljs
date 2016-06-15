@@ -11,7 +11,8 @@
             [harja.ui.grid :as grid]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :as yleiset]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -59,8 +60,8 @@
                           (:id %)))
                   uudet-tehtavat)
             res (<! (k/post! :tallenna-tehtavat
-                             {:lisattavat   lisattavat
-                              :muokattavat  muokattavat
+                             {:lisattavat lisattavat
+                              :muokattavat muokattavat
                               :poistettavat poistettavat}))]
         (resetoi-koodit res))))
 
@@ -102,7 +103,7 @@
           [:select#taso1 {:on-change #(do (reset! valittu-taso1 (valinnan-koodi %))
                                           (reset! valittu-taso2 nil)
                                           (reset! valittu-taso3 nil))
-                          :value     (str (:id @valittu-taso1))}
+                          :value (str (:id @valittu-taso1))}
            [:option {:value ""} "-- Valitse 1. taso --"]
            (for [tpk (get koodit-tasoittain 1)]
              ^{:key (:id tpk)}
@@ -110,7 +111,7 @@
          [:div.input-group
           [:select#taso2 {:on-change #(do (reset! valittu-taso2 (valinnan-koodi %))
                                           (reset! valittu-taso3 nil))
-                          :value     (str (:id @valittu-taso2))}
+                          :value (str (:id @valittu-taso2))}
            [:option {:value ""} "-- Valitse 2. taso --"]
            (when-let [emo1 (:id taso1)]
              (for [tpk (filter #(= (:emo %) emo1) (get koodit-tasoittain 2))]
@@ -118,7 +119,7 @@
                [:option {:value (:id tpk)} (str (:koodi tpk) " " (:nimi tpk))]))]]
          [:div.input-group
           [:select#taso3 {:on-change #(reset! valittu-taso3 (valinnan-koodi %))
-                          :value     (str (:id @valittu-taso3))}
+                          :value (str (:id @valittu-taso3))}
            [:option {:value ""} "-- Valitse 3. taso --"]
            (when-let [emo2 (:id taso2)]
              (for [tpk (filter #(= (:emo %) emo2) (get koodit-tasoittain 3))]
@@ -131,8 +132,8 @@
            (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))
                  _ (log "tehtävät " (pr-str tehtavat))]
              [grid/grid
-              {:otsikko  "Tehtävät"
-               :tyhja    (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+              {:otsikko "Tehtävät"
+               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
                :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-tehtavat)
                            #(tallenna-tehtavat tehtavat %)
                            :ei-mahdollinen)
@@ -143,11 +144,12 @@
                {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys "15%"
                 :valinnat +hinnoittelu-valinnat+
                 :valinta-nayta hinnoittelun-nimet
-                :fmt     #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}]
-              (sort-by (juxt :hinnoittelu :nimi) tehtavat)]))
-         ]))
+                :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
+               {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox :leveys "15%" :fmt fmt/totuus
+                :tasaa :keskita}]
+              (sort-by (juxt :hinnoittelu :nimi) tehtavat)]))]))
 
-    {:displayName         "toimenpidekoodit"
+    {:displayName "toimenpidekoodit"
      :component-did-mount (fn [this]
                             (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
                                   (resetoi-koodit res))))}))
