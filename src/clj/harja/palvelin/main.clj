@@ -309,7 +309,9 @@
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
-                     [:http-palvelin :db :karttakuvat])
+                     {:db :db-replica
+                      :http-palvelin :http-palvelin
+                      :karttakuvat :karttakuvat})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
