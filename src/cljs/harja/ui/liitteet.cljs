@@ -110,7 +110,6 @@
   "Listaa liitteet ja näyttää Lisää liite -napin.
 
   Optiot voi sisältää:
-  urakka-id                       Urakka, jolle id ollaan lisäämässä (pakollinen)
   uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
   uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
   grid?                           Jos true, optimoidaan näytettäväksi gridissä"
