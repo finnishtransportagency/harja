@@ -22,11 +22,11 @@
 
        "Tarkastukset" :tarkastukset
        (when (oikeudet/urakat-laadunseuranta-tarkastukset id)
-         [tarkastukset/tarkastukset])
+         [tarkastukset/tarkastukset {:nakyma tyyppi}])
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
-         [laatupoikkeamat/laatupoikkeamat])
+         [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi}])
 
        "Sanktiot" :sanktiot
        (when (oikeudet/urakat-laadunseuranta-sanktiot id)

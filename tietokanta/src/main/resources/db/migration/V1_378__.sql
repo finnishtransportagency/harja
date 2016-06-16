@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+-- Siltatarkastuksen kohteelle liite
+CREATE TABLE siltatarkastus_kohde_liite (
+  siltatarkastus INTEGER REFERENCES siltatarkastus (id),
+  kohde smallint, -- tarkastuskohteen numero, esim. 12 Liikuntasaumalaitteiden siisteys,
+  liite INTEGER REFERENCES liite (id)
+);
+COMMENT ON TABLE tarkastus_liite IS 'Siltatarkastuksen kohteeseen liittyvät liitteet';
+=======
 -- Laatupoikkeamalle ja tarkastukselle viittaus ylläpitokohteeseen.
 -- Uudet tarkastustyypit
 ALTER TABLE laatupoikkeama ADD COLUMN yllapitokohde INTEGER REFERENCES yllapitokohde(id);
@@ -19,3 +28,4 @@ UPDATE vakiohavainto SET tarkastustyyppi = _tarkastustyyppi::text::tarkastustyyp
 ALTER TABLE vakiohavainto DROP COLUMN _tarkastustyyppi;
 
 DROP TYPE _tartyyppi;
+>>>>>>> develop
