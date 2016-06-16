@@ -206,11 +206,8 @@
             :tyyppi :string}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15}
            {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
-            :komponentti (fn [rivi index]
-                           ; FIXME Näytä paremmin
-                           [:div
-                            (for [liite (:liitteet rivi)]
-                              [:span "Jännä liite"])])}]
+            :komponentti (fn [rivi]
+                           [liitteet/liitteet-ikoneina (:liitteet rivi)])}]
           (muut-tarkastukset-sarakkeet muut-tarkastukset))))
 
 (defn tallenna-siltatarkastus! [tarkastus]

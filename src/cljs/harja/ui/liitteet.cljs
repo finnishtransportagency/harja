@@ -34,10 +34,10 @@
       [:span.liite-nimi (:nimi tiedosto)]]
      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
 
-(defn liitelistaus
+(defn liitteet-numeroina
   "Listaa liitteet numeroina. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
   [liitteet]
-  [:div.liitelistaus
+  [:div.liitteet-numeroina
    (map-indexed
      (fn [index liite]
        ^{:key (:id liite)}
@@ -51,6 +51,26 @@
           [:a {:href (k/liite-url (:id liite))
                :target "_blank"}
            (inc index)])
+        [:span " "]])
+     liitteet)])
+
+(defn liitteet-ikoneina
+  "Listaa liitteet ikoneita. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
+  [liitteet]
+  [:div.liitteet-ikoneina
+   (map
+     (fn [liite]
+       ^{:key (:id liite)}
+       [:span
+        (if (naytettava-liite? liite)
+          [:a.klikattava {:on-click #(modal/nayta!
+                                      {:otsikko (str "Liite: " (:nimi liite))
+                                       :leveys "80%"}
+                                      (liitekuva-modalissa liite))}
+           (ikonit/file)]
+          [:a {:href (k/liite-url (:id liite))
+               :target "_blank"}
+           (ikonit/file)])
         [:span " "]])
      liitteet)])
 
