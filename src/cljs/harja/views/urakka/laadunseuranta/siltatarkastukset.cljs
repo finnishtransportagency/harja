@@ -201,8 +201,7 @@
                                 liitteet (:liitteet sarake-arvo)]
                             [:div
                              [:span (str toimenpide " ")]
-                             [liitteet/liitteet-ikoneina liitteet]]))
-           :muokattava? (constantly false)})
+                             [liitteet/liitteet-ikoneina liitteet]]))})
         muut-tarkastukset))
 
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
@@ -327,7 +326,9 @@
 
           @siltatarkastusrivit]]))))
 
-(defn tarkastuksen-muokkauslomake [muokattava-tarkastus]
+(defn tarkastuksen-muokkauslomake
+  "Lomake uuden tarkastuksen luomiseen ja vanhan muokkaamiseen"
+  [muokattava-tarkastus]
   (let [tallennus-kaynnissa (atom false)
         muut-tarkastukset @st/valitun-sillan-tarkastukset
 
@@ -375,7 +376,6 @@
            {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
             :tyyppi :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
-
           tarkastus]
 
          [grid/muokkaus-grid
