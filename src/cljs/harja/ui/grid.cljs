@@ -974,7 +974,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                voi-muokata? (if (nil? voi-muokata?)
                               true
                               voi-muokata?)
-               nykyinen-fokus @fokus]
+               nykyinen-fokus @fokus
+               valiotsikot (or valiotsikot {})]
            (when-let [ohj (:ohjaus opts)]
              (aseta-grid ohj ohjaus))
 
