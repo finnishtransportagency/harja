@@ -157,7 +157,7 @@
          [:br]
          (let [tehtavat (filter #(true? (:api-seuranta %)) (get koodit-tasoittain 4))]
            [grid/grid
-            {:otsikko "API:n kautta seurattavat tehtävät"
+            {:otsikko "API:n kautta seurattavat toteumatehtävät"
              :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
              :piilota-toiminnot? true
              :tunniste :id}
