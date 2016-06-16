@@ -317,13 +317,17 @@
         olemassa-olevat-tarkastus-pvmt
         (reaction (into #{}
                         (map :tarkastusaika)
-                        @st/valitun-sillan-tarkastukset))]
+                        @st/valitun-sillan-tarkastukset))
+        otsikko (if-not (:id @muokattava-tarkastus)
+                  "Luo uusi siltatarkastus"
+                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
 
     (fn [muokattava-tarkastus]
-      (let [tarkastusrivit (dissoc
+      (let [tarkastus @muokattava-tarkastus
+            tarkastusrivit (dissoc
                             (into {}
                                   (map (juxt :kohdenro identity))
-                                  (siltatarkastusten-rivit @muokattava-tarkastus muut-tarkastukset))
+                                  (siltatarkastusten-rivit tarkastus muut-tarkastukset))
                             nil)
             taulukon-rivit (r/wrap
                             tarkastusrivit
@@ -334,12 +338,12 @@
             riveja-taytetty (count (filter #(not (nil? (:tulos %)))
                                            (vals tarkastusrivit)))
             taulukon-riveilla-tulos (= riveja riveja-taytetty)
-            voi-tallentaa? (and (lomake/voi-tallentaa? @muokattava-tarkastus)
+            voi-tallentaa? (and (lomake/voi-tallentaa? tarkastus)
                                 taulukon-riveilla-tulos)]
         [:div.uusi-siltatarkastus
          [napit/takaisin "Palaa tallentamatta" #(reset! muokattava-tarkastus nil)]
 
-         [lomake {:otsikko "Luo uusi siltatarkastus"
+         [lomake {:otsikko otsikko
                   :muokkaa! (fn [uusi]
                               (reset! muokattava-tarkastus uusi))}
           [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
@@ -355,10 +359,10 @@
             :tyyppi :string :pituus-max 128
             :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
 
-          @muokattava-tarkastus]
+          tarkastus]
 
          [grid/muokkaus-grid
-          {:otsikko      "Uusi sillan tarkastus"
+          {:otsikko      otsikko
            :tunniste :kohdenro
            :piilota-toiminnot? true
            :voi-lisata?  false
@@ -396,7 +400,7 @@
            :on-click
            #(do (.preventDefault %)
                 (reset! tallennus-kaynnissa true)
-                (go (let [res (<! (tallenna-siltatarkastus! @muokattava-tarkastus))]
+                (go (let [res (<! (tallenna-siltatarkastus! tarkastus))]
                       (if res
                         ;; Tallennus ok
                         (do (viesti/nayta! "Siltatarkastus tallennettu")
