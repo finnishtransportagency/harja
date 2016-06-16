@@ -205,7 +205,7 @@
            {:otsikko "Tulos " :nimi :tulos :leveys 10 :fmt kohdetuloksen-teksti
             :tyyppi :string}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15}
-           {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+           {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 3
             :komponentti (fn [rivi]
                            [liitteet/liitteet-ikoneina (:liitteet rivi)])}]
           (muut-tarkastukset-sarakkeet muut-tarkastukset))))

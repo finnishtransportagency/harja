@@ -48,7 +48,7 @@
                                        :leveys "80%"}
                                       (liitekuva-modalissa liite))}
            (inc index)]
-          [:a {:href (k/liite-url (:id liite))
+          [:a.klikattava {:href (k/liite-url (:id liite))
                :target "_blank"}
            (inc index)])
         [:span " "]])
@@ -57,6 +57,7 @@
 (defn liitteet-ikoneina
   "Listaa liitteet ikoneita. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
   [liitteet]
+  ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
   [:div.liitteet-ikoneina
    (map
      (fn [liite]
@@ -68,7 +69,7 @@
                                        :leveys "80%"}
                                       (liitekuva-modalissa liite))}
            (ikonit/file)]
-          [:a {:href (k/liite-url (:id liite))
+          [:a.klikattava {:href (k/liite-url (:id liite))
                :target "_blank"}
            (ikonit/file)])
         [:span " "]])
