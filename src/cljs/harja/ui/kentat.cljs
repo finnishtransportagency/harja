@@ -291,14 +291,17 @@
         nykyinen-arvo @data]
     (if-let [valinta (and (= 1 (count valinnat))
                           (first valinnat))]
-      (let [arvo (arvo valinta)]
-        [:span
+      (let [arvo (arvo valinta)
+            valitse #(reset! data arvo)
+            label (nayta valinta)]
+        [:span {:style {:width "100%" :height "100%" :display "inline-block"}
+                :on-click valitse}
          [:input {:type      "radio"
                   :value 1
                   :checked   (= nykyinen-arvo arvo)
-                  :on-change #(reset! data arvo)}]
-         [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
-          (nayta valinta)]])
+                  :on-change valitse}]
+         (when-not (str/blank? label)
+           [:span.radiovalinta-label.klikattava {:on-click valitse} label])])
       [:span.radiovalinnat
        (doall
         (map-indexed (fn [i valinta]
