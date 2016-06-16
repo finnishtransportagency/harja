@@ -202,11 +202,8 @@
         (concat
           [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys 3} 
            {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys 15}
-           {:otsikko       "Tulos " :nimi :tulos :leveys 10
-            :tyyppi        :valinta :valinta-arvo identity
-            :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
-            :valinnat      ["A" "B" "C" "D" "-"]
-            :fmt           #(kohdetuloksen-teksti %)}
+           {:otsikko "Tulos " :nimi :tulos :leveys 10 :fmt kohdetuloksen-teksti
+            :tyyppi :string}
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15}
            {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
             :komponentti (fn [rivi index]
