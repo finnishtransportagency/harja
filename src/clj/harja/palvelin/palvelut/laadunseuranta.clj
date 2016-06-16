@@ -313,12 +313,19 @@
       (let [laatupoikkeama {:sijainti (:sijainti tarkastus)
                             :kuvaus (:havainnot tarkastus)
                             :aika (:aika tarkastus)
+                            :yllapitokohde (:yllapitokohde tarkastus)
                             :tr (:tr tarkastus)
                             :urakka urakka-id
                             :tekija (:tekija tarkastus)}
             laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)]
-        (tarkastukset/liita-tarkastukselle-laatupoikkeama<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
-        (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
+        (tarkastukset/liita-tarkastukselle-laatupoikkeama<!
+          db
+          {:tarkastus tarkastus-id
+           :laatupoikkeama laatupoikkeama-id})
+        (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<!
+          db
+          {:tarkastus tarkastus-id
+           :laatupoikkeama laatupoikkeama-id})
         laatupoikkeama-id))))
 
 (defrecord Laadunseuranta []
