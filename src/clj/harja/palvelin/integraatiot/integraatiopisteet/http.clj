@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [new-reliquary.core :as nr])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net ConnectException)
            (org.httpkit.client TimeoutException)))
@@ -69,21 +70,25 @@
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
   ;; todo: instrumentoi new reliciin
-  (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s"
-                     metodi url metodi kutsudata otsikot parametrit))
+  (nr/with-newrelic-transaction
+    "HTTP integraatiopiste"
+    (str ":http-integraatiopiste-" (lokittaja :avain))
+    #(do
+      (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s"
+                         metodi url metodi kutsudata otsikot parametrit))
 
-  (let [sisaltotyyppi (get otsikot " Content-Type ")]
-    (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
+      (let [sisaltotyyppi (get otsikot " Content-Type ")]
+        (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
 
-    (let [{:keys [status body error headers]}
-          (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata)
-          lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
-      (log/debug (format " Palvelu palautti: tila: %s , otsikot: %s , data: %s" status headers body))
+        (let [{:keys [status body error headers]}
+              (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata)
+              lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
+          (log/debug (format " Palvelu palautti: tila: %s , otsikot: %s , data: %s" status headers body))
 
-      (if (or error
-              (not (= 200 status)))
-        (kasittele-virhe lokittaja lokiviesti tapahtuma-id url error)
-        (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers)))))
+          (if (or error
+                  (not (= 200 status)))
+            (kasittele-virhe lokittaja lokiviesti tapahtuma-id url error)
+            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers)))))))
 
 (defprotocol HttpIntegraatiopiste
   (GET
