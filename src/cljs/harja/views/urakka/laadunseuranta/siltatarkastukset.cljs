@@ -209,26 +209,7 @@
            {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}]
           (muut-tarkastukset-sarakkeet muut-tarkastukset))))
 
-(defn paivita-siltatarkastus! [taulukon-rivit]
-  (go (let [kohteet-mapissa (into {}
-                                  (map (fn [rivi]
-                                         [(:kohdenro rivi) [(:tulos rivi) (:lisatieto rivi)]])
-                                       taulukon-rivit))
-            tallennettava-tarkastus (assoc @st/valittu-tarkastus :kohteet kohteet-mapissa
-                                                                 :urakka-id (:id @nav/valittu-urakka))
-            vastaus (<! (st/tallenna-siltatarkastus! tallennettava-tarkastus))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Siltatarkastuksen päivittäminen epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-          (let [muut-tarkastukset (filter (fn [tarkastus]
-                                            (not (= (:id tarkastus) (:id vastaus))))
-                                          @st/valitun-sillan-tarkastukset)
-                kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge muut-tarkastukset vastaus)))]
-            (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
-            (reset! st/valittu-tarkastus vastaus))))))
-
-
-
-(defn tallenna-uusi-siltatarkastus! [tarkastus]
+(defn tallenna-siltatarkastus! [tarkastus]
   (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))
             olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
             kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
@@ -415,7 +396,7 @@
            :on-click
            #(do (.preventDefault %)
                 (reset! tallennus-kaynnissa true)
-                (go (let [res (<! (tallenna-uusi-siltatarkastus! @muokattava-tarkastus))]
+                (go (let [res (<! (tallenna-siltatarkastus! @muokattava-tarkastus))]
                       (if res
                         ;; Tallennus ok
                         (do (viesti/nayta! "Siltatarkastus tallennettu")
