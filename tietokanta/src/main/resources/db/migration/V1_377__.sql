@@ -5,5 +5,3 @@ CREATE TABLE siltatarkastus_kohde_liite (
   liite INTEGER REFERENCES liite (id)
 );
 COMMENT ON TABLE tarkastus_liite IS 'Siltatarkastuksen kohteeseen liittyvät liitteet';
-
-ALTER TABLE siltatarkastus_kohde_liite ADD CONSTRAINT uniikki_siltatarkastus_kohde_liite UNIQUE (siltatarkastus, kohde);
