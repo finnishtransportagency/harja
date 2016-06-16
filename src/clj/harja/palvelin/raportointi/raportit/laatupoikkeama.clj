@@ -1,3 +1,4 @@
+
 (ns harja.palvelin.raportointi.raportit.laatupoikkeama
   (:require [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]

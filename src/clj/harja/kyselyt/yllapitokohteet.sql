@@ -35,6 +35,26 @@ WHERE
   AND sopimus = :sopimus
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-yllapitokohteet-lomakkeelle
+-- Hakee urakan kaikki yllapitokohteet, listaten vain minimaalisen määrän tietoa
+SELECT
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.tr_numero        AS "tr-numero",
+  ypk.tr_alkuosa       AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa      AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
+  ypk.tr_ajorata       AS "tr-ajorata",
+  ypk.tr_kaista        AS "tr-kaista"
+FROM yllapitokohde ypk
+WHERE
+  ((urakka = :urakka AND sopimus = :sopimus)
+   OR suorittava_tiemerkintaurakka = :urakka)
+  AND ypk.poistettu IS NOT TRUE
+ORDER BY tr_numero, tr_alkuosa, tr_alkuetaisyys;
+
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
 SELECT
@@ -288,6 +308,16 @@ SELECT EXISTS(SELECT id
 SELECT EXISTS(SELECT id
               FROM paikkausilmoitus
               WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;
+
+-- name: hae-yllapitokohteen-urakka-id
+SELECT
+  urakka AS id
+FROM yllapitokohde WHERE id = :id;
+
+-- name: hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+SELECT
+  suorittava_tiemerkintaurakka AS id
+FROM yllapitokohde WHERE id = :id;
 
 -- name: hae-yllapitokohde
 SELECT

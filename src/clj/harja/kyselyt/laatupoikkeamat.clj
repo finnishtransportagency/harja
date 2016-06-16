@@ -2,6 +2,8 @@
   "Laatupoikkeamiin liittyvät tietokantakyselyt"
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]
+            [taoensso.timbre :as log]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.geo :as geo]))
 
 (defqueries "harja/kyselyt/laatupoikkeamat.sql"
@@ -12,11 +14,16 @@
 
 (defn luo-tai-paivita-laatupoikkeama
   "Luo uuden laatupoikkeaman tai päivittää olemassaolevan laatupoikkeaman perustiedot. Palauttaa laatupoikkeaman id:n."
-  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus sijainti tr]}]
+  [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus sijainti tr yllapitokohde]}]
   (let [{:keys [numero alkuosa loppuosa alkuetaisyys loppuetaisyys]} tr]
+    (when yllapitokohde
+      (yllapitokohteet/tarkista-yllapitokohteen-urakka db urakka yllapitokohde))
     (if id
-     (do (paivita-laatupoikkeaman-perustiedot<! db
-                                                (konv/sql-timestamp aika) (when tekija (name tekija)) kohde
+     (do
+       (paivita-laatupoikkeaman-perustiedot<! db
+                                                (konv/sql-timestamp aika)
+                                                (when tekija (name tekija))
+                                                kohde
                                                 (if selvitys-pyydetty true false)
                                                 (:id user)
                                                 kuvaus
@@ -26,22 +33,25 @@
                                                 loppuosa
                                                 alkuetaisyys
                                                 loppuetaisyys
-                                                id)
+                                                yllapitokohde
+                                                id
+                                                urakka)
          id)
 
      (:id (luo-laatupoikkeama<! db
-                                "harja-ui"
-                                urakka
-                                (konv/sql-timestamp aika)
-                                (when tekija (name tekija))
-                                kohde
-                                (if selvitys-pyydetty true false)
-                                (:id user)
-                                kuvaus
-                                (when sijainti (geo/geometry (geo/clj->pg sijainti)))
-                                numero
-                                alkuosa
-                                loppuosa
-                                alkuetaisyys
-                                loppuetaisyys
-                                nil)))))
+                                 "harja-ui"
+                                 urakka
+                                 (konv/sql-timestamp aika)
+                                 (when tekija (name tekija))
+                                 kohde
+                                 (if selvitys-pyydetty true false)
+                                 (:id user)
+                                 kuvaus
+                                 (when sijainti (geo/geometry (geo/clj->pg sijainti)))
+                                 numero
+                                 alkuosa
+                                 loppuosa
+                                 alkuetaisyys
+                                 loppuetaisyys
+                                 yllapitokohde
+                                 nil)))))
