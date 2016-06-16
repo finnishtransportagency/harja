@@ -88,6 +88,21 @@
    ["kokonaishintainen" "muutoshintainen"]
    ["kokonaishintainen" "yksikkohintainen" "muutoshintainen"]])
 
+(defn hae-emo [kaikki-tehtavat tehtava]
+  (second (first (filter #(= (:id (second %))
+                             (or (:emo tehtava)
+                                 (:emo (second tehtava))))
+                         kaikki-tehtavat))))
+
+(defn rakenna-tasot [kaikki-tehtavat tehtavat]
+  (map
+    (fn [tehtava]
+      (let [taso3 (hae-emo kaikki-tehtavat tehtava)
+            taso2 (hae-emo kaikki-tehtavat taso3)
+            taso1 (hae-emo kaikki-tehtavat taso2)]
+        (assoc tehtava :tasot (str "1. " (:nimi taso1) ", 2. " (:nimi taso2) ", 3. " (:nimi taso3)))))
+    tehtavat))
+
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
   (with-meta
@@ -155,17 +170,18 @@
              [:span (str " Valitse taso nähdäksesi tehtävät")]]])
 
          [:br]
-         (let [tehtavat (filter #(true? (:api-seuranta %)) (get koodit-tasoittain 4))]
+         (let [tehtavat (rakenna-tasot kaikki-koodit (filter #(true? (:api-seuranta %)) (get koodit-tasoittain 4)))]
            [grid/grid
             {:otsikko "API:n kautta seurattavat toteumatehtävät"
              :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
              :piilota-toiminnot? true
              :tunniste :id}
 
-            [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "30"}
-             {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "40%"}
-             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "15%"}
-             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys "15%"
+            [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
+             {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
+             {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
+             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}
+             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys "20%"
               :valinnat +hinnoittelu-valinnat+
               :valinta-nayta hinnoittelun-nimet
               :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}]
