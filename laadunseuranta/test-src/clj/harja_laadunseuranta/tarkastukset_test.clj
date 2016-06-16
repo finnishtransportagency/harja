@@ -89,7 +89,7 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
-(deftest tarkastus-jossa-kaannytaan-ympari
+#_(deftest tarkastus-jossa-kaannytaan-ympari
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi (lisaa-reittimerkinnoille-mockattu-tieosoite testidata/tarkastus-jossa-kaannytaan-ympari))]
     ;; Muunnettu määrällisesti oikein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))

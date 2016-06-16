@@ -270,7 +270,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                           (map :nimi)
                                           (validointi/puuttuvat-pakolliset-kentat tiedot
                                                                                   kaikki-skeemat))]
-    (log "UUDET-TIEDOT: " (pr-str tiedot))
     (assoc tiedot
            ::virheet kaikki-virheet
            ::varoitukset kaikki-varoitukset
