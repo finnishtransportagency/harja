@@ -66,6 +66,10 @@
     (paivita-toteuma db urakka-id kirjaaja toteuma)
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
 
+(defn paivita-toteuman-reitti [db toteuma-id reitti]
+  (toteumat/paivita-toteuman-reitti! db {:id toteuma-id
+                                         :reitti reitti}))
+
 (defn tallenna-sijainti [db sijainti aika toteuma-id]
   (log/debug "Tuhotaan toteuman " toteuma-id " vanha sijainti")
   (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id)

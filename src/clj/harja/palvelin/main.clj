@@ -334,7 +334,7 @@
                           [:http-palvelin :db :integraatioloki])
       :api-reittitoteuma (component/using
                            (api-reittitoteuma/->Reittitoteuma)
-                           [:http-palvelin :db :integraatioloki])
+                           [:http-palvelin :db :db-replica :integraatioloki])
       :api-varustetoteuma (component/using
                             (api-varustetoteuma/->Varustetoteuma)
                             [:http-palvelin :db :tierekisteri :integraatioloki])
