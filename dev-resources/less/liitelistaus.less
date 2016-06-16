@@ -4,9 +4,17 @@
   background-color: @valkoinen;
   z-index: 100;
   text-align: left;
-  padding: 2px;
   white-space: nowrap;
 
-  > li {
+  > li > a {
+    display: block;
+    padding: 3px;
+  }
+
+  > li > a:hover {
+    background-color: @sininen5;
+    color: @valkoinen;
+    width: 100%;
+    text-decoration: none;
   }
 }
