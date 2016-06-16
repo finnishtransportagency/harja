@@ -41,9 +41,10 @@
   ;; PENDING: Ei ole optimaalista, että sillat ovat "point", jotka
   ;; piirretään tietyllä radiuksella... ikoni olisi hyvä saada.
   (let [sillan-koko (* 0.003 koko)]
-    (into []
-          (map #(assoc-in % [:alue :radius] sillan-koko))
-          sillat)))
+    (when sillat
+      (into []
+            (map #(assoc-in % [:alue :radius] sillan-koko))
+            sillat))))
 
 (def sillat-kartalla
   (reaction (skaalaa-sillat-zoom-tason-mukaan
