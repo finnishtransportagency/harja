@@ -75,6 +75,22 @@
         [:span " "]])
      liitteet)])
 
+(defn liitteet-listalla [liitteet]
+  [:ul.livi-alasvetolista.liitelistaus
+   (doall
+     (for [liite liitteet]
+       ^{:key (hash liite)}
+       [:li.harja-alasvetolistaitemi
+        (if (naytettava-liite? liite)
+          [:a.klikattava {:on-click #(modal/nayta!
+                                      {:otsikko (str "Liite: " (:nimi liite))
+                                       :leveys "80%"}
+                                      (liitekuva-modalissa liite))}
+           (:nimi liite)]
+          [:a.klikattava {:href (k/liite-url (:id liite))
+                          :target "_blank"}
+           (:nimi liite)])]))])
+
 (defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
   Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta

@@ -142,8 +142,7 @@
                                               :korjaus-ohjelmoitava "Korjaus ohjelmoitava (D)"
                                               "Kaikki")
                                 :valitse-fn #(reset! sillat/listaus %)
-                                :class      "suunnittelu-alasveto"
-                                }
+                                :class      "suunnittelu-alasveto"}
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
          [grid/grid
           {:otsikko       "Sillat"
@@ -188,6 +187,25 @@
     "-" "Ei päde tähän siltaan"
     +valitse-tulos+))
 
+(defn tarkastustulos-ja-liitteet
+  "Komponentti vanhan tarkastuksen tuloksen ja liitteiden näyttämiselle. Liite on ikoni, jota klikkaamalla
+   aukeaa lista tarkastukselle lisätyistä liitteistä."
+  [tulos liitteet]
+  (let [lista-auki? (atom false)]
+    (komp/luo
+      (komp/klikattu-ulkopuolelle #(reset! lista-auki? false))
+      (fn [tulos liitteet]
+       [:div.siltatarkastus-tulos-ja-liite
+        [:div.tulos (str tulos " ")]
+        (when-not (empty? liitteet)
+          [:div.liite
+           [:a.klikattava
+            {:on-click (fn []
+                         (swap! lista-auki? not))}
+            (ikonit/file)]])
+        (when @lista-auki?
+          [liitteet/liitteet-listalla liitteet])]))))
+
 (defn muut-tarkastukset-sarakkeet [muut-tarkastukset]
   (mapv (fn [tarkastus]
           {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
@@ -197,11 +215,9 @@
            :tyyppi :komponentti
            :komponentti (fn [rivi]
                           (let [sarake-arvo (get rivi (pvm/pvm (:tarkastusaika tarkastus)))
-                                toimenpide (:toimenpide sarake-arvo)
+                                tulos (:tulos sarake-arvo)
                                 liitteet (:liitteet sarake-arvo)]
-                            [:div
-                             [:span (str toimenpide " ")]
-                             [liitteet/liitteet-ikoneina liitteet]]))})
+                            [tarkastustulos-ja-liitteet tulos liitteet]))})
         muut-tarkastukset))
 
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
@@ -238,12 +254,11 @@
                :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))
                :liitteet (filterv #(= (:kohde %) kohdenro)
                                   (:liitteet valittu-tarkastus))}
-              ;; Muut tarkastukset (avain on tarkastuspvm ja arvo mappi, jossa toimenpide ja liitteet)
+              ;; Muut tarkastukset (avain on tarkastuspvm ja arvo mappi, jossa tulos ja liitteet)
               (into {}
                     (map (fn [tarkastus]
-                           (log "[SILTA] Muu  tarkastus: " (pr-str tarkastus))
                           [(pvm/pvm (:tarkastusaika tarkastus))
-                           {:toimenpide (first (get (:kohteet tarkastus) kohdenro))
+                           {:tulos (first (get (:kohteet tarkastus) kohdenro))
                             :liitteet (filterv #(= (:kohde %) kohdenro)
                                                (:liitteet tarkastus))}])
                          muut-tarkastukset))))
