@@ -11,8 +11,7 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   ))
+                   [reagent.ratom :refer [reaction run!]]))
 
 
 (defn hae-sillan-tarkastukset [urakka-id silta-id]

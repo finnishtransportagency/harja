@@ -25,7 +25,8 @@
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.tyokalut.functor :refer [fmap]])
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.ui.liitteet :as liitteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -389,7 +390,21 @@
                     :hae :tulos
                     :aseta #(assoc %1 :tulos %2)})
                  [{:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15
-                   :pituus-max 255}]
+                   :pituus-max 255}
+                  {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
+                   :komponentti (fn [rivi index]
+                                  [liitteet/liitteet
+                                   (:id @nav/valittu-urakka)
+                                   (:liitteet @taulukon-rivit)
+                                   {:uusi-liite-atom (r/wrap
+                                                       (atom nil)
+                                                       (fn [uusi-arvo]
+                                                         (log "[SILTA] assoc taulukon riveihin " (pr-str @taulukon-rivit) " indeksiin " index " uusi arvo: " (pr-str (assoc rivi :uusi-liite uusi-arvo)))
+                                                         (reset! taulukon-rivit
+                                                                 (assoc @taulukon-rivit
+                                                                   index
+                                                                   (assoc rivi :uusi-liite uusi-arvo)))))
+                                    :grid? true}])}]
                  (muut-tarkastukset-sarakkeet muut-tarkastukset)))
           taulukon-rivit]
 
