@@ -73,7 +73,6 @@
               (when vs
                 (hae-sillan-tarkastukset urakka-id (:id vs)))))
 
-(tarkkaile! "[SILTA] Sillan tarkastukset:" valitun-sillan-tarkastukset)
 
 (defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
 

@@ -208,7 +208,6 @@
            {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
             :komponentti (fn [rivi index]
                            ; FIXME Näytä paremmin
-                           (log "[SILTA] grid liitteet: " (pr-str (:liitteet rivi)))
                            [:div
                             (for [liite (:liitteet rivi)]
                               [:span "Jännä liite"])])}]
@@ -228,10 +227,12 @@
   (ryhmittele-sillantarkastuskohteet
     (mapv (fn [kohdenro]
             (merge
-              {:kohdenro  kohdenro
-               :kohde     (st/siltatarkastuskohteen-nimi kohdenro)
-               :tulos     (first (get (:kohteet valittu-tarkastus) kohdenro))
-               :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))}
+              {:kohdenro kohdenro
+               :kohde (st/siltatarkastuskohteen-nimi kohdenro)
+               :tulos (first (get (:kohteet valittu-tarkastus) kohdenro))
+               :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))
+               :liitteet (filterv #(= (:kohde %) kohdenro)
+                                  (:liitteet valittu-tarkastus))}
               (into {}
                     (map (fn [tarkastus]
                           [(pvm/pvm (:tarkastusaika tarkastus))
@@ -325,8 +326,8 @@
                         @st/valitun-sillan-tarkastukset))
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
-                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
-
+                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
+        uudet-liitteet (atom nil)]
     (fn [muokattava-tarkastus]
       (let [tarkastus @muokattava-tarkastus
             tarkastusrivit (dissoc
@@ -339,7 +340,6 @@
                             #(swap! muokattava-tarkastus
                                     assoc :kohteet
                                     (fmap (juxt :tulos :lisatieto) %)))
-            uudet-liitteet (atom nil)
             riveja (count (vals tarkastusrivit))
             riveja-taytetty (count (filter #(not (nil? (:tulos %)))
                                            (vals tarkastusrivit)))
