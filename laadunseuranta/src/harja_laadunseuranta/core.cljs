@@ -42,8 +42,11 @@
     
     (reset! sovellus/idxdb (<! (reitintallennus/tietokannan-alustus)))
 
-    (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(reset! sovellus/palautettava-tarkastusajo %))
-
+    (reitintallennus/palauta-tarkastusajo @sovellus/idxdb #(do
+                                                             (reset! sovellus/palautettava-tarkastusajo %)
+                                                             (when (= "?relogin=true" js/window.location.search)
+                                                               (main/jatka-ajoa))))
+        
     (reitintallennus/paivita-lahettamattomien-maara @sovellus/idxdb asetukset/+pollausvali+ sovellus/lahettamattomia)
     
     (reitintallennus/kaynnista-reitinlahetys asetukset/+pollausvali+ @sovellus/idxdb comms/laheta-tapahtumat!)

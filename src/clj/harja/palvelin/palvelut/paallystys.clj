@@ -9,7 +9,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as q]
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yha :as yha]
@@ -27,74 +26,68 @@
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
-  (let [vastaus (into []
-                      (comp
-                        (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
-                                                                [:paatos-tekninen-osa]
-                                                                [:tila]]))
-                        (map #(assoc % :kohdeosat
-                                       (into []
-                                             yllapitokohteet/kohdeosa-xf
-                                             (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db urakka-id sopimus-id (:paallystyskohde-id %))))))
-                      (q/hae-urakan-paallystysilmoitukset db urakka-id sopimus-id))]
+  (let [vastaus (q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]
     (log/debug "Päällystysilmoitukset saatu: " (pr-str vastaus))
     vastaus))
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
+
+   Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohteet-taulusta ja liitetään mukaan ilmoitukseen.
+   Jos kohdeosalle löytyy myös toimenpidetiedot päällystysilmoituksesta, myös ne liitetään mukaan.
+
    Huomaa, että vaikka päällystysilmoitusta ei olisi tehty, tämä kysely palauttaa joka tapauksessa
    kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi."
   [db user {:keys [urakka-id paallystyskohde-id]}]
   (log/debug "Haetaan urakan päällystysilmoitus, jonka päällystyskohde-id " paallystyskohde-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (let [paallystysilmoitus (into []
-                                     (comp (map konv/alaviiva->rakenne)
-                                           (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                           (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                           (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
-                                                                                   [:paatos-tekninen-osa]
-                                                                                   [:tila]])))
-                                     (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
-            paallystysilmoitus (first (konv/sarakkeet-vektoriin
-                                        paallystysilmoitus
-                                        {:kohdeosa :kohdeosat}
-                                        :id))
-            ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
-            ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-            paallystysilmoitus (-> paallystysilmoitus
-                                   (assoc-in
-                                     [:ilmoitustiedot :osoitteet]
-                                     (mapv
-                                       (fn [kohdeosa]
-                                         ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
-                                         (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                                (some
-                                                  (fn [paallystystoimenpide]
-                                                    (when (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide))
-                                                      paallystystoimenpide))
-                                                  (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))
-                                       (sort-by tierekisteri-domain/tiekohteiden-jarjestys (:kohdeosat paallystysilmoitus))))
-                                   (dissoc :kohdeosat))
-            kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
-                                                              :arvonvahennykset
-                                                              :bitumi-indeksi
-                                                              :kaasuindeksi]))]
-        (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
-        (log/debug "Haetaan kommentit...")
-        (let [kommentit (into []
-                              (comp (map konv/alaviiva->rakenne)
-                                    (map (fn [{:keys [liite] :as kommentti}]
-                                           (if (:id
-                                                 liite)
-                                             kommentti
-                                             (dissoc kommentti :liite)))))
-                              (q/hae-paallystysilmoituksen-kommentit db (:id paallystysilmoitus)))]
-          (log/debug "Kommentit saatu: " kommentit)
-          (assoc paallystysilmoitus
-            :kokonaishinta kokonaishinta
-            :paallystyskohde-id paallystyskohde-id
-            :kommentit kommentit))))
+                                 (comp (map konv/alaviiva->rakenne)
+                                       (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                                       (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
+                                       (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
+                                                                               [:paatos-tekninen-osa]
+                                                                               [:tila]])))
+                                 (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
+        paallystysilmoitus (first (konv/sarakkeet-vektoriin
+                                    paallystysilmoitus
+                                    {:kohdeosa :kohdeosat}
+                                    :id))
+        ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
+        ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
+        paallystysilmoitus (-> paallystysilmoitus
+                               (assoc-in
+                                 [:ilmoitustiedot :osoitteet]
+                                 (mapv
+                                   (fn [kohdeosa]
+                                     ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
+                                     (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
+                                            (some
+                                              (fn [paallystystoimenpide]
+                                                (when (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide))
+                                                  paallystystoimenpide))
+                                              (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))
+                                   (sort-by tierekisteri-domain/tiekohteiden-jarjestys (:kohdeosat paallystysilmoitus))))
+                               (dissoc :kohdeosat))
+        kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
+                                                          :arvonvahennykset
+                                                          :bitumi-indeksi
+                                                          :kaasuindeksi]))]
+    (log/debug "Päällystysilmoitus kasattu: " (pr-str paallystysilmoitus))
+    (log/debug "Haetaan kommentit...")
+    (let [kommentit (into []
+                          (comp (map konv/alaviiva->rakenne)
+                                (map (fn [{:keys [liite] :as kommentti}]
+                                       (if (:id
+                                             liite)
+                                         kommentti
+                                         (dissoc kommentti :liite)))))
+                          (q/hae-paallystysilmoituksen-kommentit db (:id paallystysilmoitus)))]
+      (log/debug "Kommentit saatu: " kommentit)
+      (assoc paallystysilmoitus
+        :kokonaishinta kokonaishinta
+        :paallystyskohde-id paallystyskohde-id
+        :kommentit kommentit))))
 
 (defn- paivita-paallystysilmoitus
   [db user
@@ -171,6 +164,7 @@
                                            :yllapitokohde-id yllapitokohde-id
                                            :osa {:id (:kohdeosa-id osoite)
                                                  :nimi (:nimi osoite)
+                                                 :tunnus (:tunnus osoite)
                                                  :tr-numero (:tie osoite)
                                                  :tr-alkuosa (:aosa osoite)
                                                  :tr-alkuetaisyys (:aet osoite)
@@ -184,7 +178,7 @@
                                     (when kohdeosa-kannassa
                                       (log/debug "Poistetaan osoitteelta tien tiedot")
                                       (-> osoite
-                                          (dissoc :nimi :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
+                                          (dissoc :nimi :tunnus :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
                                           (assoc :kohdeosa-id (:id kohdeosa-kannassa))))))
                                 (:osoitteet ilmoitustiedot)))
         uudet-ilmoitustiedot (assoc ilmoitustiedot :osoitteet uudet-osoitteet)]
@@ -229,7 +223,12 @@
           (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
       (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa)))))
 
-(defn tallenna-paallystysilmoitus [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
+(defn tallenna-paallystysilmoitus
+  "Tallentaa päällystysilmoituksen tiedot kantaan.
+
+  Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne päivitetään
+  yllapitokohdeosa-tauluun. Tästä syystä kohdeosien tiedot poistetaan ilmoituksesta ennen tallennusta."
+  [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
   (log/debug "Tallennetaan päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id

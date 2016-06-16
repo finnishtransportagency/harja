@@ -134,7 +134,7 @@
 
                      ;; Testaus
                      [prismatic/dommy "1.1.0"]
-                     [org.clojure/test.check "0.8.1"]
+                     [org.clojure/test.check "0.9.0"]
                      ]
 
 
@@ -237,7 +237,8 @@
 
 
   ;; Clientin reload ja REPL
-  :figwheel {:server-port 3449}
+  :figwheel {:server-port 3449
+             :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
