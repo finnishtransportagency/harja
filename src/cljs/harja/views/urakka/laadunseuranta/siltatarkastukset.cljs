@@ -189,22 +189,24 @@
 
 (defn tarkastustulos-ja-liitteet
   "Komponentti vanhan tarkastuksen tuloksen ja liitteiden näyttämiselle. Liite on ikoni, jota klikkaamalla
-   aukeaa lista tarkastukselle lisätyistä liitteistä."
+   liite avataan. Jos liitteitä on useita, aukeaa lista tarkastukselle lisätyistä liitteistä."
   [tulos liitteet]
   (let [lista-auki? (atom false)]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! lista-auki? false))
       (fn [tulos liitteet]
-       [:div.siltatarkastus-tulos-ja-liite
-        [:div.tulos (str tulos " ")]
-        (when-not (empty? liitteet)
-          [:div.liite
-           [:a.klikattava
-            {:on-click (fn []
-                         (swap! lista-auki? not))}
-            (ikonit/file)]])
-        (when @lista-auki?
-          [liitteet/liitteet-listalla liitteet])]))))
+        [:div.siltatarkastus-tulos-ja-liite
+         [:div.tulos (str tulos " ")]
+         [:div.liite
+          (cond (= (count liitteet) 1)
+                [liitteet/liite-linkki (first liitteet) (ikonit/file)]
+                (> (count liitteet) 1)
+                [:a.klikattava
+                 {:on-click (fn []
+                              (swap! lista-auki? not))}
+                 (ikonit/file)])]
+         (when @lista-auki?
+           [liitteet/liitteet-listalla liitteet])]))))
 
 (defn muut-tarkastukset-sarakkeet [muut-tarkastukset]
   (mapv (fn [tarkastus]

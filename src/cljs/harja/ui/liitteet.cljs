@@ -34,6 +34,19 @@
       [:span.liite-nimi (:nimi tiedosto)]]
      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
 
+(defn liite-linkki [liite teksti]
+  (if (naytettava-liite? liite)
+    [:a.klikattava {:title (:nimi liite)
+                    :on-click #(modal/nayta!
+                                {:otsikko (str "Liite: " (:nimi liite))
+                                 :leveys "80%"}
+                                (liitekuva-modalissa liite))}
+     teksti]
+    [:a.klikattava {:title (:nimi liite)
+                    :href (k/liite-url (:id liite))
+                    :target "_blank"}
+     teksti]))
+
 (defn liitteet-numeroina
   "Listaa liitteet numeroina. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
   [liitteet]
@@ -42,15 +55,7 @@
      (fn [index liite]
        ^{:key (:id liite)}
        [:span
-        (if (naytettava-liite? liite)
-          [:a.klikattava {:on-click #(modal/nayta!
-                                      {:otsikko (str "Liite: " (:nimi liite))
-                                       :leveys "80%"}
-                                      (liitekuva-modalissa liite))}
-           (inc index)]
-          [:a.klikattava {:href (k/liite-url (:id liite))
-               :target "_blank"}
-           (inc index)])
+        [liite-linkki liite (inc index)]
         [:span " "]])
      liitteet)])
 
@@ -63,15 +68,7 @@
      (fn [liite]
        ^{:key (:id liite)}
        [:span
-        (if (naytettava-liite? liite)
-          [:a.klikattava {:on-click #(modal/nayta!
-                                      {:otsikko (str "Liite: " (:nimi liite))
-                                       :leveys "80%"}
-                                      (liitekuva-modalissa liite))}
-           (ikonit/file)]
-          [:a.klikattava {:href (k/liite-url (:id liite))
-               :target "_blank"}
-           (ikonit/file)])
+        [liite-linkki liite (ikonit/file)]
         [:span " "]])
      liitteet)])
 
@@ -81,15 +78,7 @@
      (for [liite liitteet]
        ^{:key (hash liite)}
        [:li.harja-alasvetolistaitemi
-        (if (naytettava-liite? liite)
-          [:a.klikattava {:on-click #(modal/nayta!
-                                      {:otsikko (str "Liite: " (:nimi liite))
-                                       :leveys "80%"}
-                                      (liitekuva-modalissa liite))}
-           (:nimi liite)]
-          [:a.klikattava {:href (k/liite-url (:id liite))
-                          :target "_blank"}
-           (:nimi liite)])]))])
+        [liite-linkki liite (:nimi liite)]]))])
 
 (defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
