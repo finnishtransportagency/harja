@@ -147,7 +147,24 @@
                 :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
                {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox :leveys "15%" :fmt fmt/totuus
                 :tasaa :keskita}]
-              (sort-by (juxt :hinnoittelu :nimi) tehtavat)]))]))
+              (sort-by (juxt :hinnoittelu :nimi) tehtavat)]))
+
+         [:br]
+         (let [tehtavat (filter #(true? (:api-seuranta %)) (get koodit-tasoittain 4))]
+           [grid/grid
+            {:otsikko "API:n kautta seurattavat tehtävät"
+             :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+             :piilota-toiminnot? true
+             :tunniste :id}
+
+            [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "30"}
+             {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "40%"}
+             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "15%"}
+             {:otsikko "Hinnoittelu" :nimi :hinnoittelu :tyyppi :valinta :leveys "15%"
+              :valinnat +hinnoittelu-valinnat+
+              :valinta-nayta hinnoittelun-nimet
+              :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}]
+            (sort-by (juxt :hinnoittelu :nimi) tehtavat)])]))
 
     {:displayName "toimenpidekoodit"
      :component-did-mount (fn [this]
