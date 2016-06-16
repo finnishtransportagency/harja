@@ -10,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.siltatarkastukset :as siltatarkastukset]))
+            [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]))
 
 (defn laadunseuranta [ur]
   (komp/luo

@@ -57,6 +57,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
         z-index: 10;
         height: @livitaulukon-input-korkeus;
       }
+      input[type="radio"] {
+        width: auto;
+      }
       .kombo {
         width: 75%; // jotta caret näkyisi samalla rivillä (flexbox tähän?)
       }
@@ -76,7 +79,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
         .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
       }
       .virhe {
-        .virhe-tai-varoitus-grid(@vaara, @valkoinen);
+        .virhe-tai-varoitus-grid(@vaara
+	, @valkoinen);
       }
       .huomautus {
         .virhe-tai-varoitus-grid(@huomautus, @valkoinen);

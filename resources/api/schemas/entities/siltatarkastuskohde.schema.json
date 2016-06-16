@@ -10,7 +10,9 @@
         "eiToimenpiteita",
         "puhdistettava",
         "urakanKunnostettava",
-        "korjausOhjelmoitava"
+        "korjausOhjelmoitava",
+        "eiPade",
+        ""
       ]
     },
     "lisatietoja": {
