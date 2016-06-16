@@ -3,7 +3,7 @@
     [cljs-time.core :as t]
     [cljs.test :as test :refer-macros [deftest is]]
 
-    [harja.views.urakka.siltatarkastukset :as testattava]
+    [harja.views.urakka.laadunseuranta.siltatarkastukset :as testattava]
     [harja.pvm :refer [->pvm] :as pvm]
     [harja.loki :refer [log]]))
 
