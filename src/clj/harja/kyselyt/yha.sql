@@ -63,12 +63,14 @@ WHERE yt.yhaid IN (:yhaidt);
 -- name: luo-yllapitokohde<!
 INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
-  tr_ajorata, tr_kaista,
+ tr_ajorata, tr_kaista,
  yhatunnus, yhaid, tyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne, nykyinen_paallyste,
-sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+ sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi)
 VALUES (
   :urakka,
-  (SELECT id FROM sopimus WHERE paasopimus IS NULL AND urakka = :urakka),
+  (SELECT id
+   FROM sopimus
+   WHERE paasopimus IS NULL AND urakka = :urakka),
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
@@ -78,23 +80,25 @@ VALUES (
   :tr_kaista,
   :yhatunnus,
   :yhaid,
-  :tyyppi::yllapitokohdetyyppi,
+  :tyyppi :: yllapitokohdetyyppi,
   :yllapitoluokka,
   :keskimaarainen_vuorokausiliikenne,
   :nykyinen_paallyste,
   0,
   0,
   0,
-  0);
+  0,
+  :nimi);
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
-INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti,
                               yhaid)
 VALUES (
   :yllapitokohde,
   :nimi,
+  :tunnus,
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
