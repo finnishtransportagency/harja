@@ -77,9 +77,9 @@
         silta-id (:id silta)
         edellinen-tarkastus (first @st/valitun-sillan-tarkastukset)
         paivitetty-silta
-                                 (assoc silta
-                                   :tarkastusaika (:tarkastusaika edellinen-tarkastus)
-                                   :tarkastaja (:tarkastaja edellinen-tarkastus))]
+        (assoc silta
+          :tarkastusaika (:tarkastusaika edellinen-tarkastus)
+          :tarkastaja (:tarkastaja edellinen-tarkastus))]
     (reset! st/valittu-silta paivitetty-silta)
     (sillat/paivita-silta! silta-id (constantly paivitetty-silta))))
 
@@ -191,10 +191,18 @@
 (defn muut-tarkastukset-sarakkeet [muut-tarkastukset]
   (mapv (fn [tarkastus]
           {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
-           :nimi    (pvm/pvm (:tarkastusaika tarkastus))
+           :nimi (pvm/pvm (:tarkastusaika tarkastus))
            :leveys 2
            :tasaa :keskita
-           :tyyppi :string :muokattava? (constantly false)})
+           :tyyppi :komponentti
+           :komponentti (fn [rivi]
+                          (let [sarake-arvo (get rivi (pvm/pvm (:tarkastusaika tarkastus)))
+                                toimenpide (:toimenpide sarake-arvo)
+                                liitteet (:liitteet sarake-arvo)]
+                            [:div
+                             [:span (str toimenpide " ")]
+                             [liitteet/liitteet-ikoneina liitteet]]))
+           :muokattava? (constantly false)})
         muut-tarkastukset))
 
 (defn siltatarkastuksen-sarakkeet [muut-tarkastukset]
@@ -224,16 +232,21 @@
   (ryhmittele-sillantarkastuskohteet
     (mapv (fn [kohdenro]
             (merge
+              ;; Valittu tarkastus
               {:kohdenro kohdenro
                :kohde (st/siltatarkastuskohteen-nimi kohdenro)
                :tulos (first (get (:kohteet valittu-tarkastus) kohdenro))
                :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))
                :liitteet (filterv #(= (:kohde %) kohdenro)
                                   (:liitteet valittu-tarkastus))}
+              ;; Muut tarkastukset (avain on tarkastuspvm ja arvo mappi, jossa toimenpide ja liitteet)
               (into {}
                     (map (fn [tarkastus]
+                           (log "[SILTA] Muu  tarkastus: " (pr-str tarkastus))
                           [(pvm/pvm (:tarkastusaika tarkastus))
-                           (first (get (:kohteet tarkastus) kohdenro))])
+                           {:toimenpide (first (get (:kohteet tarkastus) kohdenro))
+                            :liitteet (filterv #(= (:kohde %) kohdenro)
+                                               (:liitteet tarkastus))}])
                          muut-tarkastukset))))
           (range 1 25))))
 
@@ -275,7 +288,8 @@
                                                 muut @muut-tarkastukset]
                                             (if tark
                                               (siltatarkastusten-rivit tark muut)
-                                              [])))]
+                                              [])))
+            _ (tarkkaile! "[SILTA] Siltarivit: " siltatarkastusrivit)]
         [:div.siltatarkastukset
          [napit/takaisin "Takaisin siltaluetteloon" #(reset! st/valittu-silta nil)]
 

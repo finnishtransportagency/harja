@@ -73,7 +73,6 @@
               (when vs
                 (hae-sillan-tarkastukset urakka-id (:id vs)))))
 
-
 (defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
 
 (defn uusi-tarkastus [silta ur]

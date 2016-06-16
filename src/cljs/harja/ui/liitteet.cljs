@@ -58,7 +58,7 @@
   "Listaa liitteet ikoneita. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
   [liitteet]
   ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
-  [:div.liitteet-ikoneina
+  [:span.liitteet-ikoneina
    (map
      (fn [liite]
        ^{:key (:id liite)}
