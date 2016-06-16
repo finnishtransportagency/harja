@@ -128,7 +128,7 @@
            ]]
 
          [:br]
-         (when-let [emo3 (:id taso3)]
+         (if-let [emo3 (:id taso3)]
            (let [tehtavat (filter #(= (:emo %) emo3) (get koodit-tasoittain 4))
                  _ (log "tehtävät " (pr-str tehtavat))]
              [grid/grid
@@ -147,7 +147,12 @@
                 :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
                {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox :leveys "15%" :fmt fmt/totuus
                 :tasaa :keskita}]
-              (sort-by (juxt :hinnoittelu :nimi) tehtavat)]))
+              (sort-by (juxt :hinnoittelu :nimi) tehtavat)])
+           [:div {:class
+                  (str "inline-block lomake-vihje")}
+            [:div.vihjeen-sisalto
+             (harja.ui.ikonit/livicon-info-sign)
+             [:span (str " Valitse taso nähdäksesi tehtävät")]]])
 
          [:br]
          (let [tehtavat (filter #(true? (:api-seuranta %)) (get koodit-tasoittain 4))]
