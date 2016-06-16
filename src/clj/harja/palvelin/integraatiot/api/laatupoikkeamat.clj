@@ -53,6 +53,7 @@
              (:losa tr-osoite)
              (:aet tr-osoite)
              (:let tr-osoite)
+             nil
              (:id tunniste))))))
 
 (defn tallenna-kommentit [db laatupoikkeama-id kirjaaja kommentit]

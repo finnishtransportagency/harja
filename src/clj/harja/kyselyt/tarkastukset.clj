@@ -2,7 +2,8 @@
   (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet])
   (:import (org.postgis PGgeometry)))
 
 (defqueries "harja/kyselyt/tarkastukset.sql"
@@ -11,8 +12,10 @@
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
   [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti
-                             ulkoinen-id havainnot laadunalitus] :as tarkastus}]
-  (log/info "tarkastus: " tarkastus)
+                             ulkoinen-id havainnot laadunalitus yllapitokohde] :as tarkastus}]
+  (log/debug "Tallenna tai päivitä urakan " urakka-id " tarkastus: " tarkastus)
+  (when yllapitokohde
+    (yllapitokohteet/tarkista-yllapitokohteen-urakka db urakka-id yllapitokohde))
   (let [sijainti (if (instance? PGgeometry sijainti)
                    sijainti
                    (and sijainti (geo/geometry (geo/clj->pg sijainti))))]
@@ -25,14 +28,14 @@
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr)
                               (:loppuosa tr) (:loppuetaisyys tr)
                               sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id
-                              havainnot laadunalitus)))
+                              havainnot laadunalitus yllapitokohde)))
 
       (do (log/debug (format "Päivitetään tarkastus id: %s " id))
           (paivita-tarkastus! db
                               (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
                               sijainti tarkastaja (name tyyppi) (:id user)
-                              havainnot laadunalitus
+                              havainnot laadunalitus yllapitokohde
                               urakka-id id)
           id))))
 
