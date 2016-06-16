@@ -73,6 +73,10 @@
   (nr/with-newrelic-transaction
     "HTTP integraatiopiste"
     (str ":http-integraatiopiste-" (lokittaja :avain))
+    {:url url
+     :metodi metodi
+     :otsikot otsikot
+     :parametrit parametrit}
     #(do
       (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s"
                          metodi url metodi kutsudata otsikot parametrit))
