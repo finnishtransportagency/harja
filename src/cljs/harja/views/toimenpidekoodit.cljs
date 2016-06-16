@@ -185,7 +185,7 @@
               :valinnat +hinnoittelu-valinnat+
               :valinta-nayta hinnoittelun-nimet
               :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}]
-            (sort-by (juxt :hinnoittelu :nimi) tehtavat)])]))
+            (sort-by (juxt :hinnoittelu :id :nimi) tehtavat)])]))
 
     {:displayName "toimenpidekoodit"
      :component-did-mount (fn [this]
