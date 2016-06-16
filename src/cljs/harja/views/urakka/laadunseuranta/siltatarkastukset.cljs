@@ -201,13 +201,20 @@
   (into []
         (concat
           [{:otsikko "#" :nimi :kohdenro  :tyyppi :string :muokattava? (constantly false) :leveys 3} 
-           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys 20}
+           {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys 15}
            {:otsikko       "Tulos " :nimi :tulos :leveys 10
             :tyyppi        :valinta :valinta-arvo identity
             :valinta-nayta #(if (nil? %) +valitse-tulos+ (kohdetuloksen-teksti %))
             :valinnat      ["A" "B" "C" "D" "-"]
             :fmt           #(kohdetuloksen-teksti %)}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 20}]
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15}
+           {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+            :komponentti (fn [rivi index]
+                           ; FIXME Näytä paremmin
+                           (log "[SILTA] grid liitteet: " (pr-str (:liitteet rivi)))
+                           [:div
+                            (for [liite (:liitteet rivi)]
+                              [:span "Jännä liite"])])}]
           (muut-tarkastukset-sarakkeet muut-tarkastukset))))
 
 (defn tallenna-siltatarkastus! [tarkastus]
@@ -311,7 +318,7 @@
 
           @siltatarkastusrivit]]))))
 
-(defn uuden-tarkastuksen-syottaminen [muokattava-tarkastus]
+(defn tarkastuksen-muokkauslomake [muokattava-tarkastus]
   (let [tallennus-kaynnissa (atom false)
         muut-tarkastukset @st/valitun-sillan-tarkastukset
 
@@ -335,6 +342,7 @@
                             #(swap! muokattava-tarkastus
                                     assoc :kohteet
                                     (fmap (juxt :tulos :lisatieto) %)))
+            uudet-liitteet (atom nil)
             riveja (count (vals tarkastusrivit))
             riveja-taytetty (count (filter #(not (nil? (:tulos %)))
                                            (vals tarkastusrivit)))
@@ -392,18 +400,14 @@
                  [{:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15
                    :pituus-max 255}
                   {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
-                   :komponentti (fn [rivi index]
+                   :komponentti (fn [rivi]
                                   [liitteet/liitteet
                                    (:id @nav/valittu-urakka)
                                    (:liitteet @taulukon-rivit)
-                                   {:uusi-liite-atom (r/wrap
-                                                       (atom nil)
+                                   {:uusi-liite-atom (r/wrap nil
                                                        (fn [uusi-arvo]
-                                                         (log "[SILTA] assoc taulukon riveihin " (pr-str @taulukon-rivit) " indeksiin " index " uusi arvo: " (pr-str (assoc rivi :uusi-liite uusi-arvo)))
-                                                         (reset! taulukon-rivit
-                                                                 (assoc @taulukon-rivit
-                                                                   index
-                                                                   (assoc rivi :uusi-liite uusi-arvo)))))
+                                                         (reset! uudet-liitteet
+                                                                 (assoc @uudet-liitteet (:kohdenro rivi) uusi-arvo))))
                                     :grid? true}])}]
                  (muut-tarkastukset-sarakkeet muut-tarkastukset)))
           taulukon-rivit]
@@ -415,7 +419,8 @@
            :on-click
            #(do (.preventDefault %)
                 (reset! tallennus-kaynnissa true)
-                (go (let [res (<! (tallenna-siltatarkastus! tarkastus))]
+                (go (let [tarkastukset-ja-uudet-liitteet (assoc tarkastus :uudet-liitteet @uudet-liitteet)
+                          res (<! (tallenna-siltatarkastus! tarkastukset-ja-uudet-liitteet))]
                       (if res
                         ;; Tallennus ok
                         (do (viesti/nayta! "Siltatarkastus tallennettu")
@@ -442,7 +447,7 @@
                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn []
       (if @muokattava-tarkastus
-        [uuden-tarkastuksen-syottaminen muokattava-tarkastus]
+        [tarkastuksen-muokkauslomake muokattava-tarkastus]
         (if-let [vs @st/valittu-silta]
           [sillan-tarkastukset vs]
           [sillat])))))

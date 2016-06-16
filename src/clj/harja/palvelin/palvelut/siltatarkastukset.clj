@@ -111,17 +111,16 @@
     (assoc luotu-tarkastus
       :kohteet kohteet)))
 
-(defn tallenna-siltatarkastuksen-liitteet [db tarkastus {:keys [kohteet] :as siltatarkastus}]
-  (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str kohteet))
-  (doseq [[id [_ _ uusi-liite]] kohteet]
-    (when uusi-liite
-      (log/debug "Tallenna liite: " (pr-str (:nimi uusi-liite)))
-      (q/lisaa-liite-siltatarkastuskohteelle<! db (:id tarkastus) id (:id uusi-liite))))
+(defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
+  (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str uudet-liitteet))
+  (doseq [[kohdenumero uusi-liite] uudet-liitteet]
+    (log/debug "Tallenna liite: " (pr-str (:nimi uusi-liite)))
+    (q/lisaa-liite-siltatarkastuskohteelle<! db (:id tarkastus) kohdenumero (:id uusi-liite)))
   (log/debug "Liitteet tallennettu!"))
 
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
-  [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
+  [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet uudet-liitteet] :as siltatarkastus}]
   (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (log/debug "Tallennetaan kohteet: " (pr-str kohteet))
   (jdbc/with-db-transaction [db db]
@@ -133,7 +132,7 @@
                       ;; ja sen kohteet
                       (luo-siltatarkastus db user siltatarkastus))]
       (log/debug "Kohteet tallennettu!")
-      (tallenna-siltatarkastuksen-liitteet db tarkastus siltatarkastus)
+      (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
       (hae-siltatarkastus db (:id tarkastus)))))
 
 (defn poista-siltatarkastus!
