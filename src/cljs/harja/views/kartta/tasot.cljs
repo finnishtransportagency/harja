@@ -92,17 +92,21 @@
                v-ur @nav/valittu-urakka
                sivu @nav/valittu-sivu]
            (cond
-             ;; Tilannekuvassa ja ilmoituksissa ei haluta näyttää navigointiin
+             ;; Näillä sivuilla ei ikinä näytetä organisaatiorajoja
+             (#{:tilannekuva} sivu)
+             nil
+             
+             ;; Ilmoituksissa ei haluta näyttää navigointiin
              ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
              ;; valittu, voidaan näyttää sen rajat.
-             (and (#{:tilannekuva :ilmoitukset} sivu) (nil? v-hal))
+             (and (#{:ilmoitukset} sivu) (nil? v-hal))
              nil
 
-             (and (#{:tilannekuva :ilmoitukset} sivu)
+             (and (#{:ilmoitukset} sivu)
                   (nil? @nav/valittu-urakka))
              [(assoc v-hal :valittu true)]
 
-             (and (#{:tilannekuva :ilmoitukset} sivu) @nav/valittu-urakka)
+             (and (#{:ilmoitukset} sivu) @nav/valittu-urakka)
              [(assoc v-ur :valittu true)]
 
              ;; Ei valittua hallintayksikköä, näytetään hallintayksiköt
