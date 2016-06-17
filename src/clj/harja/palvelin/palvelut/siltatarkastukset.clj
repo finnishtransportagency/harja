@@ -58,8 +58,8 @@
     (into []
           (comp (geo/muunna-pg-tulokset :alue)
                 kohteet-xf
-                (filter #(and (not= (:rikki_ennen %) 0)
-                              (= (:rikki_nyt %) 0))))
+                (filter #(and (not= (:rikki-ennen %) 0)
+                              (= (:rikki-nyt %) 0))))
           (q/hae-urakan-sillat-korjatut db urakka-id))
 
     ;; DEPRECATED
@@ -74,8 +74,8 @@
     (into []
           (comp (geo/muunna-pg-tulokset :alue)
                 kohteet-xf
-                (filter #(and (not= (:rikki_ennen %) 0)
-                              (= (:rikki_nyt %) 0))))
+                (filter #(and (not= (:rikki-ennen %) 0)
+                              (= (:rikki-nyt %) 0))))
           (q/hae-urakan-sillat-korjatut db urakka-id))))
 
 (defn hae-siltatarkastus [db id]

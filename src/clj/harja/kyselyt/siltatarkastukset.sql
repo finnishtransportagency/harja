@@ -107,14 +107,14 @@ WHERE s.id IN (SELECT silta
 SELECT
   (SELECT COUNT(k1.kohde)
    FROM siltatarkastuskohde k1
-   WHERE k1.siltatarkastus = st1.id AND (tulos = 'B' OR tulos = 'C')) AS rikki_ennen,
+   WHERE k1.siltatarkastus = st1.id AND (tulos = 'B' OR tulos = 'C')) AS "rikki-ennen",
   (SELECT array_agg(concat(k1.kohde, '=', k1.tulos, ':'))
    FROM siltatarkastuskohde k1
    WHERE k1.siltatarkastus = st1.id AND (tulos = 'B' OR tulos = 'C'))
                                                                       AS kohteet,
   (SELECT COUNT(k2.kohde)
    FROM siltatarkastuskohde k2
-   WHERE k2.siltatarkastus = st2.id AND (tulos = 'B' OR tulos = 'C')) AS rikki_nyt,
+   WHERE k2.siltatarkastus = st2.id AND (tulos = 'B' OR tulos = 'C')) AS "rikki-nyt",
   s.id,
   s.siltanimi,
   s.siltatunnus,
