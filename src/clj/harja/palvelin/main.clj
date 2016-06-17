@@ -185,7 +185,8 @@
 
       :raportointi (component/using
                      (raportointi/luo-raportointi)
-                     {:db :db-replica
+                     {:db-replica :db-replica
+                      :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
 
