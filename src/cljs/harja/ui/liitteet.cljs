@@ -16,7 +16,9 @@
   "Kertoo, voidaanko liite näyttää käyttäjälle modaalissa (esim. kuvat)
    vai onko tarkoitus tarjota puhdas latauslinkki"
   [liite]
-  (zero? (.indexOf (:tyyppi liite) "image/")))
+  (if liite
+    (zero? (.indexOf (:tyyppi liite) "image/"))
+    false))
 
 (defn liitekuva-modalissa [liite]
   [:img.kuva-modalissa {:src (k/liite-url (:id liite))}])
