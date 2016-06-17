@@ -90,12 +90,14 @@
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (let [vastaus (into []
                       paallystys-q/kohdeosa-xf
-                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db urakka-id sopimus-id yllapitokohde-id))]
+                      (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:urakka urakka-id
+                                                                          :sopimus sopimus-id
+                                                                          :yllapitokohde yllapitokohde-id}))]
     (log/debug "Ylläpitokohdeosat saatu: " (pr-str vastaus))
     vastaus))
 
 (defn- hae-urakkatyyppi [db urakka-id]
-  (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
+  (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakkaid urakka-id})))))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
@@ -106,7 +108,7 @@
       :paallystys
       (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id})
       :tiemerkinta
-      (q/hae-tiemerkintaurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id}))))
+      (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id}))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
