@@ -8,7 +8,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tietoturva.liitteet :as t-liitteet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn naytettava-liite?
@@ -111,8 +112,9 @@
         virheviesti (atom nil)]
     (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid?] :as opts}]
       [:span
+       ;; Tiedosto ladattu palvelimelle, näytetään se
        (if-let [tiedosto @tiedosto]
-         [liitetiedosto tiedosto]) ;; Tiedosto ladattu palvelimelle, näytetään se
+         (if-not grid? [liitetiedosto tiedosto]))
        (if-let [edistyminen @edistyminen]
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
@@ -120,7 +122,9 @@
            [yleiset/ikoni-ja-teksti
             (ikonit/livicon-upload)
             (if @tiedosto
-              "Vaihda liite"
+              (if grid?
+                (str "Vaihda " (fmt/leikkaa-merkkijono (:nimi @tiedosto) 25 {:pisteet? true}))
+                "Vaihda liite")
               (or nappi-teksti "Lisää liite"))]
            [:input.upload
             {:type "file"

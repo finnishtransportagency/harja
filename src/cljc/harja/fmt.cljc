@@ -202,3 +202,16 @@
   (if arvo
     "Kyllä"
     "Ei"))
+
+(defn leikkaa-merkkijono
+  "Näyttää annetusta merkkijonosta korkeintaan pituuden määrän merkkejä.
+
+  Optiot mappi, jossa voi olla arvot:
+  pisteet?      Näyttää kolme pistettä tekstin lopussa. Oletus false."
+  ([merkkijono pituus] (leikkaa-merkkijono merkkijono pituus {}))
+  ([merkkijono pituus {:keys [pisteet?] :as optiot}]
+  (when merkkijono
+    (let [tulos (subs merkkijono 0 (min (count merkkijono) pituus))]
+      (if pisteet?
+        (str tulos "...")
+        tulos)))))
