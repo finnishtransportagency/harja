@@ -35,15 +35,16 @@
                  m)) {} toimenpideajat))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
-                               hallintayksikko-id urakoittain?] :as parametrit}]
+                               hallintayksikko-id urakoittain? urakkatyyppi] :as parametrit}]
   (let [hoitoluokat (or hoitoluokat
                         ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
                         (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
-        parametrit {:urakka urakka-id
+        parametrit {:urakka          urakka-id
                     :hallintayksikko hallintayksikko-id
-                    :alkupvm alkupvm
-                    :loppupvm loppupvm
-                    :hoitoluokat hoitoluokat}
+                    :alkupvm         alkupvm
+                    :loppupvm        loppupvm
+                    :hoitoluokat     hoitoluokat
+                    :urakkatyyppi    (name urakkatyyppi)}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
         talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)
         tehtava-leveys 12
