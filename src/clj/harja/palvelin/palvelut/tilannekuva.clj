@@ -299,12 +299,11 @@
       nil)))
 
 (defn hae-urakat [db user tiedot]
-  (urakat/kayttajan-urakat-aikavalilta
-    db user (if (:nykytilanne? tiedot)
-              oikeudet/tilannekuva-nykytilanne
-              oikeudet/tilannekuva-historia)
-    nil (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-    nil (:alku tiedot) (:loppu tiedot)))
+  (urakat/kayttajan-urakat-aikavalilta-alueineen db user (if (:nykytilanne? tiedot)
+                                                           oikeudet/tilannekuva-nykytilanne
+                                                           oikeudet/tilannekuva-historia)
+                                                 nil (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+                                                 nil (:alku tiedot) (:loppu tiedot)))
 
 (defn hae-tilannekuvaan
   ([db user tiedot]

@@ -20,9 +20,9 @@
    (konv/sarakkeet-vektoriin
      (into []
           (comp
-            (map konv/alaviiva->rakenne)
             (filter (fn [{:keys [urakka_id]}]
-                      (oikeudet/voi-lukea? oikeus urakka_id user))))
+                      (oikeudet/voi-lukea? oikeus urakka_id user)))
+            (map konv/alaviiva->rakenne))
 
           (let [alku (or alku (pvm/nyt))
                 loppu (or loppu (pvm/nyt))
@@ -49,6 +49,39 @@
                 hallintayksikot))))
      {:urakka :urakat}
      (comp :id :hallintayksikko))))
+
+(defn urakoiden-alueet
+  [db user oikeus urakka-idt]
+  (into []
+        (comp
+          (filter (fn [{:keys [urakka_id]}]
+                    (oikeudet/voi-lukea? oikeus urakka_id user)))
+          (harja.geo/muunna-pg-tulokset :urakka_alue)
+          (harja.geo/muunna-pg-tulokset :alueurakka_alue)
+          (map konv/alaviiva->rakenne))
+        (q/hae-urakoiden-geometriat db urakka-idt)))
+
+(defn kayttajan-urakat-aikavalilta-alueineen
+  ([db user oikeus] (kayttajan-urakat-aikavalilta-alueineen db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+   (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeus urakka-id urakoitsija urakkatyyppi
+                                                         hallintayksikot alku loppu)
+         urakka-idt (mapcat
+                      (fn [aluekokonaisuus]
+                        (map :id (:urakat aluekokonaisuus)))
+                      aluekokonaisuudet)
+         urakat-alueineen (into {} (map
+                                     (fn [ur]
+                                       [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
+                                                                      (get-in ur [:alueurakka :alue]))])
+                                     (urakoiden-alueet db user oikeus urakka-idt)))]
+     (mapv
+       (fn [au]
+         (assoc au :urakat (mapv
+                             (fn [urakka]
+                               (assoc urakka :alue (get urakat-alueineen (:id urakka))))
+                             (:urakat au))))
+       aluekokonaisuudet))))
 
 (defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y))]

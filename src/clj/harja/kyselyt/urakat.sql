@@ -449,6 +449,16 @@ FROM urakka u
   JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id = :id;
 
+-- name: hae-urakoiden-geometriat
+SELECT
+  u.alue AS urakka_alue,
+  u.id AS urakka_id,
+  alueurakka.alue AS alueurakka_alue
+FROM urakka u
+  JOIN hanke ON u.hanke = hanke.id
+  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+WHERE u.id IN (:idt);
+
 -- name: hae-urakan-sampo-id
 -- single?: true
 SELECT sampoid FROM urakka where id = :urakka;
