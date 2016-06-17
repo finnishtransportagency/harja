@@ -29,6 +29,7 @@
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
             [harja.palvelin.raportointi.raportit.toimenpideajat]
+            [harja.palvelin.raportointi.raportit.toimenpidepaivat]
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
             [harja.domain.oikeudet :as oikeudet]
             [new-reliquary.core :as nr]))
