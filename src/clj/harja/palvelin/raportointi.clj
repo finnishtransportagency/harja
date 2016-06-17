@@ -127,7 +127,7 @@
   (suorita-raportti [{db :db
                       db-replica :db-replica
                       :as this} kayttaja {:keys [nimi konteksti parametrit]
-                                                 :as suorituksen-tiedot}]
+                                          :as suorituksen-tiedot}]
     (nr/with-newrelic-transaction
       "Raportin suoritus"
       (str nimi)
@@ -139,7 +139,8 @@
                     " parametreilla " parametrit)
          (binding [*raportin-suoritus* this]
            ((:suorita suoritettava-raportti)
-            (if (tarvitsee-write-tietokannan nimi)
+            (if (or (nil? db-replica)
+                    (tarvitsee-write-tietokannan nimi))
               db
               db-replica)
             kayttaja
