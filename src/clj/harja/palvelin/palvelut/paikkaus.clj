@@ -10,7 +10,6 @@
             [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
             [harja.kyselyt.paikkaus :as q]
             [harja.palvelin.palvelut.yha :as yha]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as paallystys-q]
             [cheshire.core :as cheshire]
@@ -27,7 +26,9 @@
                                        (into []
                                              paallystys-q/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db urakka-id sopimus-id (:paikkauskohde-id %))))))
+                                               db {:urakka urakka-id
+                                                   :sopimus sopimus-id
+                                                   :yllapitokohde (:paikkauskohde-id %)})))))
                       (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
