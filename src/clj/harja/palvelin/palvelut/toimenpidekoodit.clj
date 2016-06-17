@@ -4,7 +4,10 @@
             [harja.kyselyt.toimenpidekoodit :as q]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.konversio :as konv]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.roolit :as roolit]
+            [cheshire.core :as cheshire]
+            [clojure.java.io :as io]))
 
 (defn hae-toimenpidekoodit
   "Palauttaa toimenpidekoodit listana"
@@ -17,13 +20,13 @@
   "Lisää toimenpidekoodin, sisään tulevassa koodissa on oltava :nimi, :emo ja :yksikko. Emon on oltava 3. tason koodi."
   [db user {:keys [nimi emo yksikko hinnoittelu api-seuranta] :as rivi}]
   (let [luotu (q/lisaa-toimenpidekoodi<! db nimi emo yksikko (konv/seq->array hinnoittelu) api-seuranta (:id user))]
-    {:taso              4
-     :emo               emo
-     :nimi              nimi
-     :yksikko           yksikko
-     :hinnoittelu       hinnoittelu
-     :apiseuranta       api-seuranta
-     :id                (:id luotu)}))
+    {:taso 4
+     :emo emo
+     :nimi nimi
+     :yksikko yksikko
+     :hinnoittelu hinnoittelu
+     :apiseuranta api-seuranta
+     :id (:id luotu)}))
 
 (defn poista-toimenpidekoodi
   "Merkitsee toimenpidekoodin poistetuksi. Palauttaa true jos koodi merkittiin poistetuksi, false muuten."
@@ -47,21 +50,35 @@
       (poista-toimenpidekoodi c user id))
     (hae-toimenpidekoodit c user)))
 
+(defn hae-reaaliaikaseurannan-tehtavat [kayttaja]
+  (let [json (clojure.walk/keywordize-keys
+               (cheshire/decode
+                 (slurp (io/resource "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json"))))
+        tehtavat (get-in json [:properties :havainnot :items :properties :havainto :properties :suoritettavatTehtavat
+                               :items :enum])]
+    (mapv #(hash-map :nimi %) tehtavat)))
+
 (defrecord Toimenpidekoodit []
   component/Lifecycle
   (start [this]
     (doto (:http-palvelin this)
-      (julkaise-palvelu :hae-toimenpidekoodit
-                        (fn [kayttaja]
-                          (hae-toimenpidekoodit (:db this) kayttaja))
-                        {:last-modified (fn [user]
-                                          (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
       (julkaise-palvelu
-        :tallenna-tehtavat (fn [user tiedot]
-                             (tallenna-tehtavat (:db this) user tiedot))))
+        :hae-toimenpidekoodit
+        (fn [kayttaja]
+          (hae-toimenpidekoodit (:db this) kayttaja))
+        {:last-modified (fn [user]
+                          (:muokattu (first (q/viimeisin-muokkauspvm (:db this)))))})
+      (julkaise-palvelu
+        :tallenna-tehtavat
+        (fn [user tiedot]
+          (tallenna-tehtavat (:db this) user tiedot)))
+      (julkaise-palvelu
+        :hae-reaaliaikaseurannan-tehtavat
+        (fn [kayttaja]
+          (hae-reaaliaikaseurannan-tehtavat kayttaja))))
     this)
 
   (stop [this]
-    (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat]]
+    (doseq [p [:hae-toimenpidekoodit :tallenna-tehtavat :hae-reaaliaikaseurannan-tehtavat]]
       (poista-palvelu (:http-palvelin this) p))
     this))

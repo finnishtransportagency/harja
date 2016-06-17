@@ -4,17 +4,14 @@
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [harja.ui.bootstrap :as bs]
-            [harja.tiedot.toimenpidekoodit :refer [koodit]]
+            [harja.tiedot.toimenpidekoodit :refer [koodit tyokoneiden-reaaliaikaseuranna-tehtavat]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.domain.roolit :as roolit]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
 
 (comment
   (add-watch koodit ::debug (fn [_ _ old new]
@@ -33,6 +30,10 @@
       (reset! koodit acc)
       (recur (assoc acc (:id tpk) tpk)
              tpkt))))
+
+(defn resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat [tehtavat]
+  (reset! tyokoneiden-reaaliaikaseuranna-tehtavat tehtavat))
+
 
 (defn tallenna-tehtavat [tehtavat uudet-tehtavat]
   (go (let [lisattavat
@@ -185,9 +186,21 @@
               :valinnat +hinnoittelu-valinnat+
               :valinta-nayta hinnoittelun-nimet
               :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}]
-            (sort-by (juxt :hinnoittelu :id :nimi) tehtavat)])]))
+            (sort-by (juxt :hinnoittelu :id :nimi) tehtavat)])
+         (let [tehtavat @tyokoneiden-reaaliaikaseuranna-tehtavat
+               _ (log "---> " (pr-str tehtavat))]
+           [grid/grid
+            {:otsikko "API:n kautta seurattavat työkoneiden reaaliaikaseurannan tehtävät"
+             :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
+             :piilota-toiminnot? true
+             :tunniste :id}
+            [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}]
+            (sort-by :nimi tehtavat)])]))
 
     {:displayName "toimenpidekoodit"
-     :component-did-mount (fn [this]
-                            (go (let [res (<! (k/get! :hae-toimenpidekoodit))]
-                                  (resetoi-koodit res))))}))
+     :component-did-mount
+     (fn [this]
+       (go (let [toimenpidekoodit (<! (k/get! :hae-toimenpidekoodit))
+                 tyokoneiden-reaaliaikaseuranna-tehtavat (<! (k/get! :hae-reaaliaikaseurannan-tehtavat))]
+             (resetoi-koodit toimenpidekoodit)
+             (resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat tyokoneiden-reaaliaikaseuranna-tehtavat))))}))

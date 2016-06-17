@@ -9,3 +9,5 @@
 
 (def koodit "id->koodi mäppäys kaikista toimenpidekoodeista" (atom nil))
 
+(def tyokoneiden-reaaliaikaseuranna-tehtavat "työkoneiden reaaliaikaseurannan seurattavat tehtävät" (atom nil))
+
