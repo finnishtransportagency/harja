@@ -92,14 +92,14 @@
   (konv/sarakkeet-vektoriin
     (into []
           kohteet-xf
-          (q/hae-sillan-tarkastukset db silta-id))
+          (q/hae-sillan-tarkastukset db silta-id urakka-id))
     {:liite :liitteet}))
 
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"
-  [db {:keys [id kohteet] :as siltatarkastus}]
+  [db urakka-id {:keys [id kohteet] :as siltatarkastus}]
   (doseq [[kohde [tulos lisatieto]] kohteet]
-    (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde))
+    (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde urakka-id))
   siltatarkastus)
 
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
@@ -126,7 +126,7 @@
   (jdbc/with-db-transaction [db db]
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
-                      (paivita-siltatarkastuksen-kohteet! db siltatarkastus)
+                      (paivita-siltatarkastuksen-kohteet! db urakka-id siltatarkastus)
 
                       ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
                       ;; ja sen kohteet
@@ -141,7 +141,7 @@
   (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (jdbc/with-db-transaction [c db]
     (do
-      (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
+      (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id urakka-id)))
     (hae-sillan-tarkastukset c user {:urakka-id urakka-id
                                      :silta-id silta-id})))
 

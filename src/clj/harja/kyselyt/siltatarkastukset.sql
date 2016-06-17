@@ -159,7 +159,9 @@ SELECT
 FROM siltatarkastus st
   LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
   LEFT JOIN liite ON skl.liite = liite.id
-WHERE silta = :silta AND poistettu = FALSE
+WHERE silta = :silta
+      AND poistettu = FALSE
+      AND st.urakka = :urakka
 ORDER BY tarkastusaika DESC;
 
 -- name: hae-siltatarkastus
@@ -187,7 +189,8 @@ SELECT
 FROM siltatarkastus st
   LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
   LEFT JOIN liite ON skl.liite = liite.id
-WHERE st.id = :id AND poistettu = FALSE;
+WHERE st.id = :id
+      AND poistettu = FALSE;
 
 -- name: hae-siltatarkastus-ulkoisella-idlla-ja-luojalla
 -- Hakee yhden siltatarkastuksen ulkoisella id:llä ja luojalla
@@ -233,7 +236,7 @@ INTO siltatarkastus
 VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, FALSE,
         :ulkoinen_id, :lahde::lahde);
 
--- name: paivita-siltatarkastus<!
+-- name: paivita-siltatarkastus-ulkoisella-idlla<!
 -- Päivittää siltatarkastuksen
 UPDATE siltatarkastus
 SET silta       = :silta,
@@ -258,7 +261,9 @@ WHERE siltatarkastus = ANY(:siltatarkastus_idt);
 -- Päivittää olemassaolevan siltatarkastuksen kohteet
 UPDATE siltatarkastuskohde
 SET tulos = :tulos, lisatieto = :lisatieto
-WHERE siltatarkastus = :siltatarkastus AND kohde = :kohde;
+WHERE siltatarkastus = :siltatarkastus
+      AND kohde = :kohde
+      AND (SELECT urakka FROM siltatarkastus WHERE id = :siltatarkastus) = :urakka;
 
 -- name: luo-siltatarkastuksen-kohde<!
 -- Luo siltatarkastukselle uuden kohteet
@@ -271,7 +276,8 @@ VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde);
 -- Merkitsee annetun siltatarkastuksen poistetuksi
 UPDATE siltatarkastus
 SET poistettu = TRUE
-WHERE id = :id;
+WHERE id = :id
+      AND urakka = :urakka;
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
