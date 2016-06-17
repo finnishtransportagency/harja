@@ -43,16 +43,22 @@
 
 (defn liite-linkki
   "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
-   Näytettävät liitteet avataan modaalissa, muutan tarjotaan normaali latauslinkki."
-  [liite teksti]
+   Näytettävät liitteet avataan modaalissa, muutan tarjotaan normaali latauslinkki.
+
+   Optiot:
+   nayta-tooltip?     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)"
+  ([liite teksti] (liite-linkki liite teksti {}))
+  ([liite teksti {:keys [nayta-tooltip?] :as optiot}]
   (if (naytettava-liite? liite)
-    [:a.klikattava {:title (:nimi liite)
+    [:a.klikattava {:title (if (nil? nayta-tooltip?)
+                             (:nimi liite)
+                             (when nayta-tooltip? (:nimi liite)))
                     :on-click #(nayta-liite-modalissa liite)}
      teksti]
     [:a.klikattava {:title (:nimi liite)
                     :href (k/liite-url (:id liite))
                     :target "_blank"}
-     teksti]))
+     teksti])))
 
 (defn liitteet-numeroina
   "Listaa liitteet numeroina."
@@ -93,7 +99,10 @@
      (for [liite liitteet]
        ^{:key (hash liite)}
        [:li.harja-alasvetolistaitemi
-        [liite-linkki liite (:nimi liite)]]))])
+        [liite-linkki
+         liite
+         (:nimi liite)
+         {:nayta-tooltip? false}]]))])
 
 (defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
