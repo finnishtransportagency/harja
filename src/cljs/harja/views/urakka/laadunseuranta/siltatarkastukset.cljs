@@ -317,13 +317,14 @@
            [livi-pudotusvalikko {:valinta    @st/valittu-tarkastus
                                  ;;\u2014 on väliviivan unikoodi
                                  :format-fn  #(tarkastuksen-tekija-ja-aika %)
-                                 :valitse-fn #(reset! st/valittu-tarkastus %)
-                                 }
+                                 :valitse-fn #(reset! st/valittu-tarkastus %)}
             @st/valitun-sillan-tarkastukset]]
 
-          [:button.nappi-ensisijainen {:on-click #(muokkaa-tarkastusta! @st/valittu-tarkastus)}
+          [:button.nappi-ensisijainen {:on-click #(muokkaa-tarkastusta! @st/valittu-tarkastus)
+                                       :disabled (empty? @siltatarkastusrivit)}
            (ikonit/livicon-pen) " Muokkaa tarkastusta"]
-          [:button.nappi-kielteinen {:on-click varmista-siltatarkastuksen-poisto}
+          [:button.nappi-kielteinen {:on-click varmista-siltatarkastuksen-poisto
+                                     :disabled (empty? @siltatarkastusrivit)}
            (ikonit/livicon-trash) " Poista tarkastus"]
           [napit/uusi "Uusi tarkastus" #(uusi-tarkastus! (conj @muut-tarkastukset
                                                                @st/valittu-tarkastus))]]
