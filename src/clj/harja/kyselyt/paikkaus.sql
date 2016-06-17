@@ -97,3 +97,16 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää paikkausilmoitukseen uuden kommentin
 INSERT INTO paikkausilmoitus_kommentti (ilmoitus, kommentti) VALUES (:paikkausilmoitus, :kommentti);
+
+-- name: hae-urakan-yllapitokohde
+-- Hakee urakan yksittäisen ylläpitokohteen
+SELECT
+  id,
+  kohdenumero,
+  nimi,
+  sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  arvonvahennykset,
+  bitumi_indeksi           AS "bitumi-indeksi",
+  kaasuindeksi
+FROM yllapitokohde
+WHERE urakka = :urakka AND id = :id;

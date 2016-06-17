@@ -36,7 +36,8 @@
 (defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
-  (let [kohdetiedot (first (yllapitokohteet-q/hae-urakan-yllapitokohde db urakka-id paikkauskohde-id))
+  (let [;; FIXME Voisi joinata suoraan kun ilmoitus haetaan. Pitää refactoroida kun palataan paikkausjuttuihin
+        kohdetiedot (first (q/hae-urakan-yllapitokohde db urakka-id paikkauskohde-id))
         _ (log/debug (pr-str kohdetiedot))
         kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen-mukaiset-tyot
                                                    :arvonvahennykset
