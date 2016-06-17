@@ -17,8 +17,14 @@
   (zero? (.indexOf (:tyyppi liite) "image/")))
 
 (defn liitekuva-modalissa [liite]
-  [:div.liite-ikkuna
-   [:img {:src (k/liite-url (:id liite))}]])
+  [:img.kuva-modalissa {:src (k/liite-url (:id liite))}])
+
+(defn- nayta-liite-modalissa [liite]
+  (modal/nayta!
+    {:otsikko (str "Liite: " (:nimi liite))
+     :leveys "80%"
+     :luokka "kuva-modal"}
+    (liitekuva-modalissa liite)))
 
 (defn liitetiedosto
   "Näyttää liitteen pikkukuvan ja nimen. Näytettävä liite avataan modalissa, muuten tarjotaan normaali latauslinkki."
@@ -27,20 +33,14 @@
    (if (naytettava-liite? tiedosto)
      [:span
       [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                  :on-click #(modal/nayta!
-                                              {:otsikko (str "Liite: " (:nimi tiedosto))
-                                               :leveys "80%"}
-                                              (liitekuva-modalissa tiedosto))}]
+                                  :on-click #(nayta-liite-modalissa tiedosto)}]
       [:span.liite-nimi (:nimi tiedosto)]]
      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
 
 (defn liite-linkki [liite teksti]
   (if (naytettava-liite? liite)
     [:a.klikattava {:title (:nimi liite)
-                    :on-click #(modal/nayta!
-                                {:otsikko (str "Liite: " (:nimi liite))
-                                 :leveys "80%"}
-                                (liitekuva-modalissa liite))}
+                    :on-click #(nayta-liite-modalissa liite)}
      teksti]
     [:a.klikattava {:title (:nimi liite)
                     :href (k/liite-url (:id liite))
