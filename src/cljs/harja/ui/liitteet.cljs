@@ -12,7 +12,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn naytettava-liite?
-  "Kertoo, voidaanko liite näyttää käyttäjälle esim. modaalissa vai onko tarkoitus tarjota puhdas latauslinkki"
+  "Kertoo, voidaanko liite näyttää käyttäjälle modaalissa (esim. kuvat)
+   vai onko tarkoitus tarjota puhdas latauslinkki"
   [liite]
   (zero? (.indexOf (:tyyppi liite) "image/")))
 
@@ -27,7 +28,7 @@
     (liitekuva-modalissa liite)))
 
 (defn liitetiedosto
-  "Näyttää liitteen pikkukuvan ja nimen. Näytettävä liite avataan modalissa, muuten tarjotaan normaali latauslinkki."
+  "Näyttää liitteen pikkukuvan ja nimen."
   [tiedosto]
   [:div.liite
    (if (naytettava-liite? tiedosto)
@@ -37,7 +38,10 @@
       [:span.liite-nimi (:nimi tiedosto)]]
      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
 
-(defn liite-linkki [liite teksti]
+(defn liite-linkki
+  "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
+   Näytettävät liitteet avataan modaalissa, muutan tarjotaan normaali latauslinkki."
+  [liite teksti]
   (if (naytettava-liite? liite)
     [:a.klikattava {:title (:nimi liite)
                     :on-click #(nayta-liite-modalissa liite)}
@@ -48,7 +52,7 @@
      teksti]))
 
 (defn liitteet-numeroina
-  "Listaa liitteet numeroina. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
+  "Listaa liitteet numeroina."
   [liitteet]
   [:div.liitteet-numeroina
    (map-indexed
@@ -59,20 +63,28 @@
         [:span " "]])
      liitteet)])
 
-(defn liitteet-ikoneina
-  "Listaa liitteet ikoneita. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
-  [liitteet]
+(defn liite-ikonina
+  "Näyttää liitteen ikonina."
   ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
+  [liite]
+  [:span
+   [liite-linkki liite (ikonit/file)]
+   [:span " "]])
+
+(defn liitteet-ikoneina
+  "Listaa liitteet ikoneita."
+  [liitteet]
   [:span.liitteet-ikoneina
    (map
      (fn [liite]
        ^{:key (:id liite)}
-       [:span
-        [liite-linkki liite (ikonit/file)]
-        [:span " "]])
+       [liite-ikonina liite])
      liitteet)])
 
-(defn liitteet-listalla [liitteet]
+(defn liitteet-listalla
+  "Listaa liitteet leijuvalla listalla."
+  ;; PENDING Voisi ehkä generisöidä yleisluontoiseksi 'minilistaksi', mutta toistaiseksi ei käytetä muualla.
+  [liitteet]
   [:ul.livi-alasvetolista.liitelistaus
    (doall
      (for [liite liitteet]
