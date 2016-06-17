@@ -401,7 +401,7 @@
                     :leveys nykyinen-paallyste-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                    {:otsikko "In\u00ADdek\u00ADsin ku\u00ADvaus"
-                    :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys}
+                    :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys :pituus-max 2048}
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
