@@ -212,7 +212,7 @@
   (mapv (fn [tarkastus]
           {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
            :nimi (pvm/pvm (:tarkastusaika tarkastus))
-           :leveys 2
+           :leveys 2.5
            :tasaa :keskita
            :tyyppi :komponentti
            :komponentti (fn [rivi]
@@ -229,7 +229,7 @@
            {:otsikko "Kohde" :nimi :kohde  :tyyppi :string :muokattava? (constantly false) :leveys 15}
            {:otsikko "Tulos " :nimi :tulos :leveys 10 :fmt kohdetuloksen-teksti
             :tyyppi :string}
-           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15}
+           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10}
            {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 3
             :komponentti (fn [rivi]
                            [liitteet/liitteet-ikoneina (:liitteet rivi)])}]
@@ -422,9 +422,9 @@
                     :valinta-nayta (constantly "")
                     :hae :tulos
                     :aseta #(assoc %1 :tulos %2)})
-                 [{:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 15
+                 [{:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10
                    :pituus-max 255}
-                  {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
+                  {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
                    :komponentti (fn [rivi]
                                   [liitteet/liitteet
                                    (:id @nav/valittu-urakka)
