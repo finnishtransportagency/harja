@@ -61,6 +61,12 @@ SELECT exists(SELECT id
               FROM toimenpidekoodi
               WHERE koodi = :toimenpidekoodi);
 
+-- name: onko-olemassa-idlla?
+-- single?: true
+SELECT exists(SELECT id
+              FROM toimenpidekoodi
+              WHERE id = :id);
+
 -- name: hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat
 SELECT
   tpk.id,
