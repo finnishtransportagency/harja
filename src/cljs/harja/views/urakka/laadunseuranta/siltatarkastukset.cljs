@@ -322,7 +322,7 @@
             @st/valitun-sillan-tarkastukset]]
 
           [:button.nappi-ensisijainen {:on-click #(muokkaa-tarkastusta! @st/valittu-tarkastus)}
-           (ikonit/livicon-pen) " Muokkaa tarkastuksta"]
+           (ikonit/livicon-pen) " Muokkaa tarkastusta"]
           [:button.nappi-kielteinen {:on-click varmista-siltatarkastuksen-poisto}
            (ikonit/livicon-trash) " Poista tarkastus"]
           [napit/uusi "Uusi tarkastus" #(uusi-tarkastus! (conj @muut-tarkastukset
