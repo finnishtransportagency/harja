@@ -3,21 +3,33 @@
 -- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
 -- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
-  h.id,
-  h.aika,
-  h.kohde,
-  h.tekija,
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.tekija,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  h.kasittelyaika                    AS paatos_kasittelyaika,
-  h.paatos                           AS paatos_paatos,
-  h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.kuvaus,
-  h.sijainti
-FROM laatupoikkeama h
-  JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON h.id = s.laatupoikkeama
-WHERE h.urakka = :urakka
-      AND h.poistettu IS NOT TRUE
+  lp.kasittelyaika                   AS paatos_kasittelyaika,
+  lp.paatos                          AS paatos_paatos,
+  lp.kasittelytapa                   AS paatos_kasittelytapa,
+  lp.kuvaus,
+  lp.tr_numero,
+  lp.tr_alkuosa,
+  lp.tr_alkuetaisyys,
+  lp.tr_loppuosa,
+  lp.tr_loppuetaisyys,
+  ypk.tr_numero        AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero      AS yllapitokohde_numero,
+  ypk.nimi             AS yllapitokohde_nimi
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  LEFT JOIN sanktio s ON lp.id = s.laatupoikkeama
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+WHERE lp.urakka = :urakka
+      AND lp.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND s.suorasanktio IS NOT TRUE;
 
@@ -26,29 +38,29 @@ WHERE h.urakka = :urakka
 -- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
 -- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
-  h.id,
-  h.aika,
-  h.kohde,
-  h.tekija,
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.tekija,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  h.kasittelyaika                    AS paatos_kasittelyaika,
-  h.paatos                           AS paatos_paatos,
-  h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.kuvaus,
-  h.sijainti,
+  lp.kasittelyaika                   AS paatos_kasittelyaika,
+  lp.paatos                          AS paatos_paatos,
+  lp.kasittelytapa                   AS paatos_kasittelytapa,
+  lp.kuvaus,
+  lp.sijainti,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
                   FROM laatupoikkeama_kommentti hk
-                  WHERE hk.laatupoikkeama = h.id)
+                  WHERE hk.laatupoikkeama = lp.id)
    ORDER BY luotu ASC
    OFFSET 0
    LIMIT 1)                          AS kommentti
-FROM laatupoikkeama h
-  JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
-WHERE h.urakka = :urakka
-      AND h.poistettu IS NOT TRUE
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+WHERE lp.urakka = :urakka
+      AND lp.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND selvitys_pyydetty = TRUE AND selvitys_annettu = FALSE
       AND s.suorasanktio IS NOT TRUE;
@@ -56,29 +68,29 @@ WHERE h.urakka = :urakka
 -- name: hae-kasitellyt-laatupoikkeamat
 -- Hakee listaukseen kaikki urakan laatupoikkeamat, jotka on käsitelty.
 SELECT
-  h.id,
-  h.aika,
-  h.kohde,
-  h.tekija,
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.tekija,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  h.kasittelyaika                    AS paatos_kasittelyaika,
-  h.paatos                           AS paatos_paatos,
-  h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.kuvaus,
-  h.sijainti,
+  lp.kasittelyaika                   AS paatos_kasittelyaika,
+  lp.paatos                          AS paatos_paatos,
+  lp.kasittelytapa                   AS paatos_kasittelytapa,
+  lp.kuvaus,
+  lp.sijainti,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
                   FROM laatupoikkeama_kommentti hk
-                  WHERE hk.laatupoikkeama = h.id)
+                  WHERE hk.laatupoikkeama = lp.id)
    ORDER BY luotu ASC
    OFFSET 0
    LIMIT 1)                          AS kommentti
-FROM laatupoikkeama h
-  JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
-WHERE h.urakka = :urakka
-      AND h.poistettu IS NOT TRUE
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+WHERE lp.urakka = :urakka
+      AND lp.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
       AND paatos IS NOT NULL
       AND s.suorasanktio IS NOT TRUE;
@@ -88,33 +100,33 @@ WHERE h.urakka = :urakka
 -- Ei palauta laatupoikkeamia, joiden sanktio on suorasanktio - eli sanktio on tehty suoraan Sanktiot-
 -- välilehden kautta, ja laatupoikkeama on luotu käytännössä vain tietomallin vaatimusten vuoksi.
 SELECT
-  h.id,
-  h.aika,
-  h.kohde,
-  h.tekija,
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.tekija,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  h.kasittelyaika                    AS paatos_kasittelyaika,
-  h.paatos                           AS paatos_paatos,
-  h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.kuvaus,
-  h.sijainti,
+  lp.kasittelyaika                   AS paatos_kasittelyaika,
+  lp.paatos                          AS paatos_paatos,
+  lp.kasittelytapa                   AS paatos_kasittelytapa,
+  lp.kuvaus,
+  lp.sijainti,
   (SELECT k.kommentti
    FROM kommentti k
    WHERE k.id IN (SELECT hk.kommentti
                   FROM laatupoikkeama_kommentti hk
-                  WHERE hk.laatupoikkeama = h.id)
+                  WHERE hk.laatupoikkeama = lp.id)
    ORDER BY luotu ASC
    OFFSET 0
    LIMIT 1)                          AS kommentti
-FROM laatupoikkeama h
-  JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN sanktio s ON s.laatupoikkeama = h.id
-WHERE h.urakka = :urakka
-      AND h.poistettu IS NOT TRUE
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+WHERE lp.urakka = :urakka
+      AND lp.poistettu IS NOT TRUE
       AND (aika >= :alku AND aika <= :loppu)
-      AND (h.luoja = :kayttaja OR
-           h.id IN (SELECT hk.laatupoikkeama
-                    FROM laatupoikkeama_kommentti hk JOIN kommentti k ON hk.kommentti = k.id
+      AND (lp.luoja = :kayttaja OR
+           lp.id IN (SELECT hk.laatupoikkeama
+                     FROM laatupoikkeama_kommentti hk JOIN kommentti k ON hk.kommentti = k.id
                     WHERE k.luoja = :kayttaja))
       AND s.suorasanktio IS NOT TRUE;
 
@@ -122,31 +134,32 @@ WHERE h.urakka = :urakka
 -- name: hae-laatupoikkeaman-tiedot
 -- Hakee laatupoikkeaman tiedot muokkausnäkymiin.
 SELECT
-  h.id,
-  h.aika,
-  h.kohde,
-  h.tekija,
-  h.kuvaus,
-  h.sijainti,
+  lp.id,
+  lp.aika,
+  lp.kohde,
+  lp.yllapitokohde,
+  lp.tekija,
+  lp.kuvaus,
+  lp.sijainti,
   CONCAT(k.etunimi, ' ', k.sukunimi) AS tekijanimi,
-  h.kasittelyaika                    AS paatos_kasittelyaika,
-  h.paatos                           AS paatos_paatos,
-  h.kasittelytapa                    AS paatos_kasittelytapa,
-  h.perustelu                        AS paatos_perustelu,
-  h.muu_kasittelytapa                AS paatos_muukasittelytapa,
-  h.selvitys_pyydetty                AS selvityspyydetty,
-  h.tr_numero,
-  h.tr_alkuosa,
-  h.tr_alkuetaisyys,
-  h.tr_loppuosa,
-  h.tr_loppuetaisyys,
+  lp.kasittelyaika                    AS paatos_kasittelyaika,
+  lp.paatos                           AS paatos_paatos,
+  lp.kasittelytapa                    AS paatos_kasittelytapa,
+  lp.perustelu                        AS paatos_perustelu,
+  lp.muu_kasittelytapa                AS paatos_muukasittelytapa,
+  lp.selvitys_pyydetty                AS selvityspyydetty,
+  lp.tr_numero,
+  lp.tr_alkuosa,
+  lp.tr_alkuetaisyys,
+  lp.tr_loppuosa,
+  lp.tr_loppuetaisyys,
   tl.tarkastus                       AS tarkastusid
-FROM laatupoikkeama h
-  JOIN kayttaja k ON h.luoja = k.id
-  LEFT JOIN tarkastus_laatupoikkeama tl on h.id = tl.laatupoikkeama
-WHERE h.urakka = :urakka
-      AND h.poistettu IS NOT TRUE
-      AND h.id = :id;
+FROM laatupoikkeama lp
+  JOIN kayttaja k ON lp.luoja = k.id
+  LEFT JOIN tarkastus_laatupoikkeama tl on lp.id = tl.laatupoikkeama
+WHERE lp.urakka = :urakka
+      AND lp.poistettu IS NOT TRUE
+      AND lp.id = :id;
 
 -- name: hae-laatupoikkeaman-kommentit
 -- Hakee annetun laatupoikkeaman kaikki kommentit (joita ei ole poistettu) sekä
@@ -202,8 +215,10 @@ SET aika            = :aika,
   tr_loppuosa = :loppuosa,
   tr_alkuetaisyys = :alkuetaisyys,
   tr_loppuetaisyys = :loppuetaisyys,
+  yllapitokohde = :yllapitokohde,
   muokattu          = current_timestamp
-WHERE id = :id;
+WHERE id = :id
+AND urakka = :urakka;
 
 -- name: luo-laatupoikkeama<!
 -- Luo uuden laatupoikkeaman annetuille perustiedoille. Luontivaiheessa ei
@@ -225,10 +240,11 @@ INTO laatupoikkeama
  tr_loppuosa,
  tr_alkuetaisyys,
  tr_loppuetaisyys,
+ yllapitokohde,
  ulkoinen_id)
 VALUES (:lahde::lahde, :urakka, :aika, :tekija :: osapuoli, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
                  :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
-        :tr_loppuetaisyys, :ulkoinen_id);
+        :tr_loppuetaisyys, :yllapitokohde, :ulkoinen_id);
 
 -- name: kirjaa-laatupoikkeaman-paatos!
 -- Kirjaa havainnolle päätöksen.

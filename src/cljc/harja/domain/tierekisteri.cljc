@@ -1,7 +1,7 @@
 (ns harja.domain.tierekisteri
   (:require [schema.core :as s]
             [clojure.string :as str]
-            #?@(:cljs [[harja.loki :refer [log]]])))
+    #?@(:cljs [[harja.loki :refer [log]]])))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (:tr-numero tie1) (:tr-numero tie2)))
@@ -41,16 +41,16 @@
   (cond
     (< tr-loppuosa tr-alkuosa)
     (assoc osoite
-           :tr-alkuosa tr-loppuosa
-           :tr-alkuetaisyys tr-loppuetaisyys
-           :tr-loppuosa tr-alkuosa
-           :tr-loppuetaisyys tr-alkuetaisyys)
+      :tr-alkuosa tr-loppuosa
+      :tr-alkuetaisyys tr-loppuetaisyys
+      :tr-loppuosa tr-alkuosa
+      :tr-loppuetaisyys tr-alkuetaisyys)
 
     (and (= tr-loppuosa tr-alkuosa)
          (< tr-loppuetaisyys tr-alkuetaisyys))
     (assoc osoite
-           :tr-loppuetaisyys tr-alkuetaisyys
-           :tr-alkuetaisyys tr-loppuetaisyys)
+      :tr-loppuetaisyys tr-alkuetaisyys
+      :tr-alkuetaisyys tr-loppuetaisyys)
 
     :default
     osoite))
@@ -88,28 +88,67 @@
                  (recur (+ pituus osan-pituus)
                         (inc osa)))))))))))
 
-(defn tiekohteiden-jarjestys [kohde]
-  ((juxt :tie :tr-numero :tienumero
-        :aosa :tr-alkuosa
-        :aet :tr-alkuetaisyys) kohde))
-
 (defn tierekisteriosoite-tekstina
-  [tr]
-  (let [tie (or (:numero tr) (:tr-numero tr))
-        aosa (or (:alkuosa tr) (:tr-alkuosa tr))
-        aet (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr))
-        losa (or (:loppuosa tr) (:tr-loppuosa tr))
-        let (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr))]
-    (if tie
-      (str "Tie " tie " / "
-           aosa " / "
-           aet " / "
-           losa " / "
-           let)
-      (str "Ei tierekisteriosoitetta"))))
+  "Näyttää tierekisteriosoitteen muodossa tie / aosa / aet / losa / let
+   Vähintään tie, aosa ja aet tulee löytyä osoitteesta, jotta se näytetään
 
-(defn jarjesta-kohteiden-kohdeosat [kohteet]
+   Optiot on mappi, jossa voi olla arvot:
+   teksti-ei-tr-osoitetta?        Näyttää tekstin jos TR-osoite puuttuu. Oletus true.
+   teksti-tie?                    Näyttää sanan 'Tie' osoitteen edessä. Oletus true."
+  ([tr] (tierekisteriosoite-tekstina tr {}))
+  ([tr optiot]
+   (let [tie-sana (let [sana "Tie "]
+                    (if (nil? (:teksti-tie? optiot))
+                      sana
+                      (when (:teksti-tie? optiot) sana)))
+         tie (or (:numero tr) (:tr-numero tr) (:tie tr))
+         alkuosa (or (:alkuosa tr) (:tr-alkuosa tr) (:aosa tr))
+         alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr))
+         loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr))
+         loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr))
+         ei-tierekisteriosoitetta (let [lause "Ei tierekisteriosoitetta"]
+                                    (if (nil? (:teksti-ei-tr-osoitetta? optiot))
+                                      lause
+                                      (when (:teksti-ei-tr-osoitetta? optiot) lause)))]
+     ;; Muodosta teksti
+     (str (if tie
+            (str tie-sana
+                 tie " / "
+                 alkuosa " / "
+                 alkuetaisyys
+                 (when loppuosa (str " / " loppuosa))
+                 (when loppuetaisyys (str " / " loppuetaisyys)))
+            ei-tierekisteriosoitetta)))))
+
+
+(defn yllapitokohde-tekstina
+  "Näyttää ylläpitokohteen kohdenumeron ja nimen.
+
+  Optiot on map, jossa voi olla arvot:
+  osoite              Kohteen tierekisteriosoite.
+                      Näytetään sulkeissa kohteen tietojen perässä sulkeissa, jos löytyy."
+  ([kohde] (yllapitokohde-tekstina kohde {}))
+  ([kohde optiot]
+   (let [kohdenumero (or (:kohdenumero kohde) (:yllapitokohdenumero kohde))
+         nimi (or (:nimi kohde) (:yllapitokohdenimi kohde))
+         osoite (when-let [osoite (:osoite optiot)]
+                  (let [tr-osoite (tierekisteriosoite-tekstina osoite {:teksti-ei-tr-osoitetta? false
+                                                                       :teksti-tie? false})]
+                    (when-not (empty? tr-osoite)
+                      (str " (" tr-osoite ")"))))]
+     (str kohdenumero " " nimi osoite))))
+
+(defn tiekohteiden-jarjestys
+  "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
+  [kohde]
+  ((juxt :tie :tr-numero :tienumero
+         :aosa :tr-alkuosa
+         :aet :tr-alkuetaisyys) kohde))
+
+(defn jarjesta-kohteiden-kohdeosat
+  "Palauttaa kohteet tieosoitteen mukaisessa järjestyksessä"
+  [kohteet]
   (mapv
     (fn [kohde]
       (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
-      kohteet))
+    kohteet))

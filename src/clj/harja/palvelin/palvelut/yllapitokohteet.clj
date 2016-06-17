@@ -20,6 +20,19 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.paallystys :as paallystys-q]))
 
+(defn tarkista-yllapitokohteen-urakka [db urakka-id yllapitokohde]
+  "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
+   suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
+  (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db yllapitokohde)))
+        kohteen-suorittava-tiemerkintaurakka (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                           db
+                                                           yllapitokohde)))]
+    (when (and (not= kohteen-urakka urakka-id)
+               (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
+      (throw (RuntimeException. (str "Ylläpitokohde " yllapitokohde " ei kuulu valittuun urakkaan "
+                                     urakka-id " vaan urakkaan " kohteen-urakka
+                                     ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
+
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
@@ -55,6 +68,15 @@
                                 (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                         vastaus)]
 
+      (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
+      vastaus)))
+
+(defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
+  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
+  (jdbc/with-db-transaction [db db]
+    (let [vastaus (q/hae-urakan-yllapitokohteet-lomakkeelle db urakka-id sopimus-id)]
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
       vastaus)))
 
@@ -327,6 +349,9 @@
       (julkaise-palvelu http :urakan-yllapitokohteet
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohteet db user tiedot)))
+      (julkaise-palvelu http :urakan-yllapitokohteet-lomakkeelle
+                        (fn [user tiedot]
+                          (hae-urakan-yllapitokohteet-lomakkeelle db user tiedot)))
       (julkaise-palvelu http :urakan-yllapitokohdeosat
                         (fn [user tiedot]
                           (hae-urakan-yllapitokohdeosat db user tiedot)))

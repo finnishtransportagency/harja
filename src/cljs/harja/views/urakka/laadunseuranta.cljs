@@ -10,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.siltatarkastukset :as siltatarkastukset]))
+            [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]))
 
 (defn laadunseuranta [ur]
   (komp/luo
@@ -22,11 +22,11 @@
 
        "Tarkastukset" :tarkastukset
        (when (oikeudet/urakat-laadunseuranta-tarkastukset id)
-         [tarkastukset/tarkastukset])
+         [tarkastukset/tarkastukset {:nakyma tyyppi}])
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (oikeudet/urakat-laadunseuranta-laatupoikkeamat id)
-         [laatupoikkeamat/laatupoikkeamat])
+         [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi}])
 
        "Sanktiot" :sanktiot
        (when (oikeudet/urakat-laadunseuranta-sanktiot id)

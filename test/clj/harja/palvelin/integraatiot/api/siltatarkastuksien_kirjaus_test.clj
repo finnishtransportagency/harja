@@ -27,7 +27,7 @@
         odotettu-kohdetulos (fn [kohde]
                               (case kohde
                                 ; Alusrakenne
-                                1 "A" 2 "A" 3 "A"
+                                1 "-" 2 "A" 3 "A"
                                 ; Päällysrakenne
                                 4 "B" 5 "A" 6 "A" 7 "A" 8 "A" 9 "C" 10 "A"
                                 ; Varusteet ja laitteet
