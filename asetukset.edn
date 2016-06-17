@@ -57,7 +57,7 @@
 
  :turi                 {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/"
                         :kayttajatunnus "testi"
-                        :salasana "6fO6GntBmkek"
+                        :salasana #=(slurp ".turi-salasana")
                         :paivittainen-lahetysaika [15 49 00]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
