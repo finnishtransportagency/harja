@@ -41,11 +41,12 @@
 
 ;; Ylläpitokohteiden sarakkeiden leveydet
 (def haitari-leveys 5)
-(def id-leveys 10)
+(def id-leveys 6)
 (def kohde-leveys 15)
 (def kvl-leveys 5)
 (def yllapitoluokka-leveys 5)
 (def nykyinen-paallyste-leveys 8)
+(def indeksin-kuvaus-leveys 8)
 (def tr-leveys 8)
 (def tarjoushinta-leveys 10)
 (def muutoshinta-leveys 10)
@@ -106,7 +107,7 @@
                                                       "- Ajorata -"
                                                       "")))
             :valinnat pot/+ajoradat+
-            :leveys perusleveys}
+            :leveys (- perusleveys 2)}
            {:otsikko "Kais\u00ADta"
             :muokattava? (or (:muokattava? kaista) (constantly true))
             :nimi (:nimi kaista)
@@ -118,7 +119,7 @@
                                                       "- Kaista -"
                                                       "")))
             :valinnat pot/+kaistat+
-            :leveys perusleveys}
+            :leveys (- perusleveys 2)}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea
             :validoi (into [[:ei-tyhja "Anna alkuosa"]
@@ -399,6 +400,8 @@
                     :valinta-nayta :nimi
                     :leveys nykyinen-paallyste-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+                   {:otsikko "In\u00ADdek\u00ADsin ku\u00ADvaus"
+                    :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys}
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
@@ -465,6 +468,7 @@
       {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :nykyinen-paallyste :tyyppi :string :leveys nykyinen-paallyste-leveys}
+      {:otsikko "" :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys}
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot :fmt fmt/euro-opt :tyyppi :numero
          :leveys tarjoushinta-leveys :tasaa :oikea})
