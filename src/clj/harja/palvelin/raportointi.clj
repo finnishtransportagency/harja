@@ -50,6 +50,8 @@
   (jdbc/query (:db *raportin-suoritus*)
               haku-ja-parametrit))
 
+(def tarvitsee-write-tietokannan #{:laskutusyhteenveto})
+
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id]
                                            :as parametrit} raportti]
   (assoc-in raportti
@@ -122,7 +124,9 @@
             {}))))
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
-  (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit]
+  (suorita-raportti [{db :db
+                      db-replica :db-replica
+                      :as this} kayttaja {:keys [nimi konteksti parametrit]
                                                  :as suorituksen-tiedot}]
     (nr/with-newrelic-transaction
       "Raportin suoritus"
@@ -134,7 +138,11 @@
          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                     " parametreilla " parametrit)
          (binding [*raportin-suoritus* this]
-           ((:suorita suoritettava-raportti) db kayttaja
+           ((:suorita suoritettava-raportti)
+            (if (tarvitsee-write-tietokannan nimi)
+              db
+              db-replica)
+            kayttaja
             (condp = konteksti
               "urakka" (assoc parametrit
                               :urakka-id (:urakka-id suorituksen-tiedot))
