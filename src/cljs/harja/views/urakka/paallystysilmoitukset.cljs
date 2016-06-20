@@ -66,6 +66,30 @@
                                                @istunto/kayttaja)
                       (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
                       (false? @paallystys/paallystysilmoituslomake-lukittu?))
+        asiatarkastus
+        (r/wrap {:asiatarkastus-tarkastusaika
+                 (:asiatarkastus-tarkastusaika @paallystys/paallystysilmoitus-lomakedata)
+                 :asiatarkastus-tarkastaja
+                 (:asiatarkastus-tarkastaja @paallystys/paallystysilmoitus-lomakedata)
+                 :asiatarkastus-tekninen-osa
+                 (:asiatarkastus-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
+                 :asiatarkastus-taloudellinen-osa
+                 (:asiatarkastus-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)
+                 :asiatarkastus-kommentit
+                 (:asiatarkastus-kommentit @paallystys/paallystysilmoitus-lomakedata)}
+                (fn [uusi-arvo]
+                  (swap! paallystys/paallystysilmoitus-lomakedata
+                         #(-> %
+                              (assoc :asiatarkastus-tarkastusaika
+                                     (:asiatarkastus-tarkastusaika uusi-arvo))
+                              (assoc :asiatarkastus-tarkastaja
+                                     (:asiatarkastus-tarkastaja uusi-arvo))
+                              (assoc :asiatarkastus-tekninen-osa
+                                     (:asiatarkastus-tekninen-osa uusi-arvo))
+                              (assoc :asiatarkastus-taloudellinen-osa
+                                     (:asiatarkastus-taloudellinen-osa uusi-arvo))
+                              (assoc :asiatarkastus-kommentit
+                                     (:asiatarkastus-kommentit uusi-arvo))))))
         paatos-tekninen-osa
         (r/wrap {:paatos-tekninen
                  (:paatos-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
@@ -101,6 +125,39 @@
 
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
+       [:h3 "Asiatarkastus"]
+
+       [lomake/lomake
+        {:otsikko ""
+         :muokkaa! (fn [uusi]
+                     (reset! asiatarkastus uusi))
+         :voi-muokata? muokattava?}
+        [{:otsikko "Tarkastettu"
+          :nimi :asiatarkastus-tarkastusaika
+          :tyyppi :pvm
+          :validoi [[:ei-tyhja "Anna tarkastuspäivämäärä"]
+                    [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata) "Tarkastus ei voi olla ennen valmistumista"]]}
+         {:otsikko "Tarkastaja"
+          :nimi :asiatarkastus-tarkastaja
+          :tyyppi :string
+          :validoi [[:ei-tyhja "Anna tarkastaja"]]
+          :pituus-max 1024}
+         {:teksti "Tekninen osa tarkastettu"
+          :nimi :asiatarkastus-tekninen-osa
+          :tyyppi :checkbox
+          :fmt fmt/totuus}
+         {:teksti "Taloudellinen osa tarkastettu"
+          :nimi :asiatarkastus-taloudellinen-osa
+          :tyyppi :checkbox
+          :fmt fmt/totuus}
+         {:otsikko "Kommentit"
+          :nimi :asiatarkastus-kommentit
+          :tyyppi :text
+          :koko [60 3]
+          :pituus-max 4096
+          :palstoja 2}]
+        @asiatarkastus]
+
        [:h3 "Käsittely"]
 
        [lomake/lomake
@@ -131,7 +188,6 @@
             :palstoja 2
             :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})]
         @paatos-tekninen-osa]
-
 
        [lomake/lomake
         {:otsikko "Taloudellinen osa"
