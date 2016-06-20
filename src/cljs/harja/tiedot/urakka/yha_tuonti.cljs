@@ -263,7 +263,9 @@
                  "ei koskaan"))]))
 
 (defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id paallystysilmoitukset]
-  (let [kohde-idt (mapv :paallystyskohde-id (filter :tila paallystysilmoitukset))]
+  (let [kohde-idt (mapv :paallystyskohde-id (filter #(and (= :valmis (:tila %))
+                                                          (= :hyvaksytty (:paatos-tekninen-osa %)))
+                                                    paallystysilmoitukset))]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
