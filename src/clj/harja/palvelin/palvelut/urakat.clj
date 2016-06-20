@@ -11,6 +11,8 @@
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]))
 
+(def ^{:const true} oletus-toleranssi 50)
+
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä. Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
@@ -51,7 +53,7 @@
      (comp :id :hallintayksikko))))
 
 (defn urakoiden-alueet
-  [db user oikeus urakka-idt]
+  [db user oikeus urakka-idt toleranssi]
   (into []
         (comp
           (filter (fn [{:keys [urakka_id]}]
@@ -59,11 +61,15 @@
           (harja.geo/muunna-pg-tulokset :urakka_alue)
           (harja.geo/muunna-pg-tulokset :alueurakka_alue)
           (map konv/alaviiva->rakenne))
-        (q/hae-urakoiden-geometriat db urakka-idt)))
+        (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt)))
 
 (defn kayttajan-urakat-aikavalilta-alueineen
+  "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan vielä niiden geometriat."
   ([db user oikeus] (kayttajan-urakat-aikavalilta-alueineen db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
   ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+   (kayttajan-urakat-aikavalilta-alueineen db user oikeus urakka-id urakoitsija urakkatyyppi
+                                           hallintayksikot alku loppu oletus-toleranssi))
+  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu toleranssi]
    (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeus urakka-id urakoitsija urakkatyyppi
                                                          hallintayksikot alku loppu)
          urakka-idt (mapcat
@@ -74,7 +80,7 @@
                                      (fn [ur]
                                        [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
                                                                       (get-in ur [:alueurakka :alue]))])
-                                     (urakoiden-alueet db user oikeus urakka-idt)))]
+                                     (urakoiden-alueet db user oikeus urakka-idt toleranssi)))]
      (mapv
        (fn [au]
          (assoc au :urakat (mapv
