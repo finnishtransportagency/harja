@@ -163,14 +163,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             :top    "auto"})))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]
-  (let [auki (atom false)
+  (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
                                                   (maarita-pudotusvalikon-max-korkeus
                                                     this max-korkeus avautumissuunta))]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! auki false))
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
                            EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
@@ -188,9 +188,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               lista-item (fn [vaihtoehto]
                            [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
                             (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                (reset! auki false)
+                                                                (reset! auki? false)
                                                                 nil))])]
-          [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
+          [:div.dropdown.livi-alasveto {:class (str class " " (when @auki? "open"))}
            [:button.nappi-alasveto
             {:class       (when disabled "disabled")
              :type        "button"
@@ -198,7 +198,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :title       title
              :on-click    #(do
                             (when-not (empty? vaihtoehdot)
-                              (swap! auki not)
+                              (swap! auki? not)
                             nil))
              :on-focus    on-focus
              :on-key-down #(let [kc (.-keyCode %)]
@@ -232,7 +232,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                           (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
                                         13                  ;; enter
-                                        (reset! auki false)))))
+                                        (reset! auki? false)))))
 
                                 (do
                                   (reset! term (char kc))
@@ -241,7 +241,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                                  (.toLowerCase @term)) 0))
                                                                   vaihtoehdot))]
                                     (valitse-fn itemi)
-                                    (reset! auki false)))) nil))}
+                                    (reset! auki? false)))) nil))}
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
@@ -264,6 +264,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:span
    ikoni
    [:span (str " " teksti)]])
+
+(defn teksti-ja-ikoni [teksti ikoni]
+  [:span
+   [:span (str teksti " ")]
+   ikoni])
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto

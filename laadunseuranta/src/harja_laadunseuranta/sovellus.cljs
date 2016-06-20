@@ -8,6 +8,7 @@
   {:tallennus-kaynnissa false
    :tallennustilaa-muutetaan false
    :kayttajanimi nil
+   :kayttajatunnus nil
    :sijainti {:nykyinen nil
               :edellinen nil}
    :palautettava-tarkastusajo nil
@@ -29,7 +30,7 @@
    :polyavyys nil
    :alustettu false
    :gps-tuettu false
-   :nayta-kiinteistorajat true
+   :nayta-kiinteistorajat false
    :tr-tiedot-nakyvissa false
    :tr-tiedot {:tr-osoite {:tie 20
                            :aosa 1
@@ -65,6 +66,7 @@
 (def lahettamattomia (reagent/cursor sovellus [:lahettamattomia]))
 
 (def kayttajanimi (reagent/cursor sovellus [:kayttajanimi]))
+(def kayttajatunnus (reagent/cursor sovellus [:kayttajatunnus]))
 
 (def kirjaamassa-havaintoa (reagent/cursor sovellus [:kirjaamassa-havaintoa]))
 (def kirjaamassa-yleishavaintoa (reagent/cursor sovellus [:kirjaamassa-yleishavaintoa]))
@@ -180,3 +182,7 @@
 (defn tarkastusajo-seis! []
   (swap! sovellus tarkastusajo-seis))
 
+(def beta-kayttajat #{"A018983" "K870689"})
+
+(defn kesatarkastus-beta? []
+  (beta-kayttajat @kayttajatunnus))

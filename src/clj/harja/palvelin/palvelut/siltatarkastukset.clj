@@ -10,21 +10,22 @@
 
 ;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi
 (def kohteet-xf
-  (map (fn [rivi]
-         (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
-           (assoc rivi
-                  :kohteet
-                  (into {}
-                        (map (fn [kohde]
-                               (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|-):(.*)$"
-                                                                         kohde)]
-                                 [(Integer/parseInt nro) [tulos lisatieto]]))
-                             kohteet)))
-           rivi))))
+  (comp (map konv/alaviiva->rakenne)
+        (map (fn [rivi]
+               (if-let [kohteet (:kohteet (konv/array->vec rivi :kohteet))]
+                 (assoc rivi
+                   :kohteet
+                   (into {}
+                         (map (fn [kohde]
+                                (let [[_ nro tulos lisatieto] (re-matches #"^(\d+)=(A|B|C|D|-):(.*)$"
+                                                                          kohde)]
+                                  [(Integer/parseInt nro) [tulos lisatieto]]))
+                              kohteet)))
+                 rivi)))))
 
 (defn hae-urakan-sillat
   "Hakee annetun urakan alueen sillat sekä niiden viimeisimmän tarkastuspäivän ja tarkastajan.
-Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
+  Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 
   :kaikki    hakee kaikki sillat (ei kohteita mukana)
   :puutteet  hakee sillat, joilla on viimeisimmässä tarkastuksessa puutteuta
@@ -57,8 +58,8 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
     (into []
           (comp (geo/muunna-pg-tulokset :alue)
                 kohteet-xf
-                (filter #(and (not= (:rikki_ennen %) 0)
-                              (= (:rikki_nyt %) 0))))
+                (filter #(and (not= (:rikki-ennen %) 0)
+                              (= (:rikki-nyt %) 0))))
           (q/hae-urakan-sillat-korjatut db urakka-id))
 
     ;; DEPRECATED
@@ -73,32 +74,39 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
     (into []
           (comp (geo/muunna-pg-tulokset :alue)
                 kohteet-xf
-                (filter #(and (not= (:rikki_ennen %) 0)
-                              (= (:rikki_nyt %) 0))))
+                (filter #(and (not= (:rikki-ennen %) 0)
+                              (= (:rikki-nyt %) 0))))
           (q/hae-urakan-sillat-korjatut db urakka-id))))
 
-
-
 (defn hae-siltatarkastus [db id]
-  (first (into []
-               kohteet-xf
-               (q/hae-siltatarkastus db id))))
+  (first (konv/sarakkeet-vektoriin
+           (into []
+                 kohteet-xf
+                 (q/hae-siltatarkastus db id))
+           {:liite :liitteet})))
 
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
-  [db user silta-id]
-  ;; FIXME: tarkista oikeudet
-  (into []
-        kohteet-xf
-        (q/hae-sillan-tarkastukset db silta-id)))
-
+  [db user {:keys [urakka-id silta-id] :as tiedot}]
+  (oikeudet/lue oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+  (konv/sarakkeet-vektoriin
+    (into []
+          kohteet-xf
+          (q/hae-sillan-tarkastukset db silta-id urakka-id))
+    {:liite :liitteet}))
 
 (defn paivita-siltatarkastuksen-kohteet!
   "Päivittää siltatarkastuksen kohteet"
-  [db {:keys [id kohteet] :as siltatarkastus}]
+  [db urakka-id {:keys [id kohteet] :as siltatarkastus}]
   (doseq [[kohde [tulos lisatieto]] kohteet]
-    (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde))
+    (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde urakka-id))
   siltatarkastus)
+
+(defn paivita-siltatarkastus!
+  [db user urakka-id {:keys [id tarkastusaika tarkastaja] :as siltatarkastus}]
+  (log/debug "Päivitetään siltatarkastus.")
+  (q/paivita-siltatarkastus! db tarkastaja tarkastusaika (:id user) id urakka-id)
+  (paivita-siltatarkastuksen-kohteet! db urakka-id siltatarkastus))
 
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
   (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika)
@@ -109,22 +117,29 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
     (assoc luotu-tarkastus
       :kohteet kohteet)))
 
+(defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
+  (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str uudet-liitteet))
+  (doseq [[kohdenumero uusi-liite] uudet-liitteet]
+    (log/debug "Tallenna liite: " (pr-str (:nimi uusi-liite)))
+    (q/lisaa-liite-siltatarkastuskohteelle<! db (:id tarkastus) kohdenumero (:id uusi-liite)))
+  (log/debug "Liitteet tallennettu!"))
+
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
-  [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet] :as siltatarkastus}]
+  [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet uudet-liitteet] :as siltatarkastus}]
   (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
-  (jdbc/with-db-transaction [c db]
+  (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
+  (jdbc/with-db-transaction [db db]
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
-                      (paivita-siltatarkastuksen-kohteet! c siltatarkastus)
+                      (paivita-siltatarkastus! db user urakka-id siltatarkastus)
 
                       ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
                       ;; ja sen kohteet
-                      (luo-siltatarkastus c user siltatarkastus))]
-
-      (hae-siltatarkastus c (:id tarkastus)))))
-
-
+                      (luo-siltatarkastus db user siltatarkastus))]
+      (log/debug "Kohteet tallennettu!")
+      (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
+      (hae-siltatarkastus db (:id tarkastus)))))
 
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
@@ -132,8 +147,9 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
   (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (jdbc/with-db-transaction [c db]
     (do
-      (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id)))
-    (hae-sillan-tarkastukset c user silta-id)))
+      (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id urakka-id)))
+    (hae-sillan-tarkastukset c user {:urakka-id urakka-id
+                                     :silta-id silta-id})))
 
 (defrecord Siltatarkastukset []
   component/Lifecycle
@@ -144,8 +160,8 @@ Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
                         (fn [user {:keys [urakka-id listaus]}]
                           (hae-urakan-sillat db user urakka-id listaus)))
       (julkaise-palvelu http :hae-sillan-tarkastukset
-                        (fn [user silta-id]
-                          (hae-sillan-tarkastukset db user silta-id)))
+                        (fn [user tiedot]
+                          (hae-sillan-tarkastukset db user tiedot)))
       (julkaise-palvelu http :tallenna-siltatarkastus
                         (fn [user tiedot]
                           (tallenna-siltatarkastus! db user tiedot)))

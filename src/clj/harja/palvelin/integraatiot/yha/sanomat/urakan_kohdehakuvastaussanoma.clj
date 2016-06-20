@@ -44,7 +44,7 @@
 (defn lue-kohteet [data]
   (mapv (fn [kohde]
           (hash-map :yha-id (z/xml1-> kohde :yha-id z/text xml/parsi-kokonaisluku)
-                    :kohdetyyppi (z/xml1-> kohde :kohdetyyppi z/text keyword)
+                    :kohdetyyppi (z/xml1-> kohde :kohdetyotyyppi z/text keyword)
                     :nimi (z/xml1-> kohde :nimi z/text)
                     :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
                     :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)
