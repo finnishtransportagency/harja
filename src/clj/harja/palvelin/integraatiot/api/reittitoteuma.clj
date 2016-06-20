@@ -17,7 +17,8 @@
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.core.async :as async])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (org.postgresql.util PSQLException)
            (org.postgis Point)))
@@ -108,10 +109,12 @@
   ;; PENDING: Tämä on hidas operaatio isoille toteumille.
   (toteumat/poista-reittipiste-toteuma-idlla! db toteuma-id))
 
-(defn tallenna-yksittainen-reittitoteuma [db urakka-id kirjaaja reittitoteuma]
+(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja reittitoteuma]
   (let [reitti (:reitti reittitoteuma)
-        toteuma (:toteuma reittitoteuma)
-        toteuma (assoc toteuma :reitti (luo-reitti-geometria db reitti))]
+        toteuma (assoc (:toteuma reittitoteuma)
+                       ;; Reitti liitetään lopuksi
+                       :reitti nil)
+        toteuman-reitti (async/thread (luo-reitti-geometria db-replica reitti))]
     (jdbc/with-db-transaction [db db]
       (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
         (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
@@ -122,13 +125,18 @@
         (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
         (poista-toteuman-reitti db toteuma-id)
         (log/debug "Aloitetaan reitin tallennus")
-        (luo-reitti db reitti toteuma-id)))))
+        (luo-reitti db reitti toteuma-id)
+        (log/debug "Liitetään toteuman reitti")
+        (api-toteuma/paivita-toteuman-reitti db toteuma-id
+                                             (async/<!! toteuman-reitti))))))
 
-(defn tallenna-kaikki-pyynnon-reittitoteumat [db urakka-id kirjaaja data]
+(defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
-    (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma data)))
+    (tallenna-yksittainen-reittitoteuma db db-replica
+                                        urakka-id kirjaaja (:reittitoteuma data)))
   (doseq [pistetoteuma (:reittitoteumat data)]
-    (tallenna-yksittainen-reittitoteuma db urakka-id kirjaaja (:reittitoteuma pistetoteuma))))
+    (tallenna-yksittainen-reittitoteuma db db-replica
+                                        urakka-id kirjaaja (:reittitoteuma pistetoteuma))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
@@ -141,17 +149,21 @@
       (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
       (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat])))))
 
-(defn kirjaa-toteuma [db {id :id} data kirjaaja]
+(defn kirjaa-toteuma [db db-replica {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi reittitoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä.")
     (tarkista-pyynto db urakka-id kirjaaja data)
-    (tallenna-kaikki-pyynnon-reittitoteumat db urakka-id kirjaaja data)
+    (tallenna-kaikki-pyynnon-reittitoteumat db db-replica urakka-id kirjaaja data)
     (tee-onnistunut-vastaus)))
 
 (defrecord Reittitoteuma []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin
+           db :db
+           db-replica :db-replica
+           integraatioloki :integraatioloki
+           :as this}]
     (julkaise-reitti
       http :lisaa-reittitoteuma
       (POST "/api/urakat/:id/toteumat/reitti" request
@@ -161,7 +173,9 @@
                          request
                          json-skeemat/reittitoteuman-kirjaus
                          json-skeemat/kirjausvastaus
-                         (fn [parametit data kayttaja db] (#'kirjaa-toteuma db parametit data kayttaja)))))
+                         (fn [parametit data kayttaja db]
+                           (#'kirjaa-toteuma db db-replica
+                                             parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-reittitoteuma)

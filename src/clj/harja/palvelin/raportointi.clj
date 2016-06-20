@@ -29,6 +29,7 @@
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
             [harja.palvelin.raportointi.raportit.toimenpideajat]
+            [harja.palvelin.raportointi.raportit.toimenpidepaivat]
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
             [harja.domain.oikeudet :as oikeudet]
             [new-reliquary.core :as nr]))
@@ -49,6 +50,8 @@
 (defn SQL [& haku-ja-parametrit]
   (jdbc/query (:db *raportin-suoritus*)
               haku-ja-parametrit))
+
+(def tarvitsee-write-tietokannan #{:laskutusyhteenveto})
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id]
                                            :as parametrit} raportti]
@@ -122,8 +125,10 @@
             {}))))
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
-  (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit]
-                                                 :as suorituksen-tiedot}]
+  (suorita-raportti [{db :db
+                      db-replica :db-replica
+                      :as this} kayttaja {:keys [nimi konteksti parametrit]
+                                          :as suorituksen-tiedot}]
     (nr/with-newrelic-transaction
       "Raportin suoritus"
       (str nimi)
@@ -134,7 +139,12 @@
          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                     " parametreilla " parametrit)
          (binding [*raportin-suoritus* this]
-           ((:suorita suoritettava-raportti) db kayttaja
+           ((:suorita suoritettava-raportti)
+            (if (or (nil? db-replica)
+                    (tarvitsee-write-tietokannan nimi))
+              db
+              db-replica)
+            kayttaja
             (condp = konteksti
               "urakka" (assoc parametrit
                               :urakka-id (:urakka-id suorituksen-tiedot))
