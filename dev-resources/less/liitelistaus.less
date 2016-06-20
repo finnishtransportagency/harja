@@ -1,0 +1,21 @@
+.liitelistaus {
+  position: absolute;
+  list-style-type: none;
+  background-color: @valkoinen;
+  z-index: 100;
+  right: 0;
+  text-align: left;
+  white-space: nowrap;
+
+  > li > a {
+    display: block;
+    padding: 3px;
+  }
+
+  > li > a:hover {
+    background-color: @sininen5;
+    color: @valkoinen;
+    width: 100%;
+    text-decoration: none;
+  }
+}

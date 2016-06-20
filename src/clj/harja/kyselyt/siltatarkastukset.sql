@@ -107,14 +107,14 @@ WHERE s.id IN (SELECT silta
 SELECT
   (SELECT COUNT(k1.kohde)
    FROM siltatarkastuskohde k1
-   WHERE k1.siltatarkastus = st1.id AND (tulos = 'B' OR tulos = 'C')) AS rikki_ennen,
+   WHERE k1.siltatarkastus = st1.id AND (tulos = 'B' OR tulos = 'C')) AS "rikki-ennen",
   (SELECT array_agg(concat(k1.kohde, '=', k1.tulos, ':'))
    FROM siltatarkastuskohde k1
    WHERE k1.siltatarkastus = st1.id AND (tulos = 'B' OR tulos = 'C'))
                                                                       AS kohteet,
   (SELECT COUNT(k2.kohde)
    FROM siltatarkastuskohde k2
-   WHERE k2.siltatarkastus = st2.id AND (tulos = 'B' OR tulos = 'C')) AS rikki_nyt,
+   WHERE k2.siltatarkastus = st2.id AND (tulos = 'B' OR tulos = 'C')) AS "rikki-nyt",
   s.id,
   s.siltanimi,
   s.siltatunnus,
@@ -137,41 +137,60 @@ WHERE s.id IN (SELECT silta
 -- name: hae-sillan-tarkastukset
 -- Hakee sillan sillantarkastukset
 SELECT
-  id,
+  st.id,
   silta,
-  urakka,
+  st.urakka,
   tarkastusaika,
   tarkastaja,
-  luotu,
-  luoja,
+  st.luotu,
+  st.luoja,
   muokattu,
   muokkaaja,
   poistettu,
   (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
    FROM siltatarkastuskohde k
-   WHERE k.siltatarkastus = id) AS kohteet
-FROM siltatarkastus
-WHERE silta = :silta AND poistettu = FALSE
+   WHERE k.siltatarkastus = st.id) AS kohteet,
+  skl.kohde as liite_kohde,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
+FROM siltatarkastus st
+  LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
+  LEFT JOIN liite ON skl.liite = liite.id
+WHERE silta = :silta
+      AND poistettu = FALSE
+      AND st.urakka = :urakka
 ORDER BY tarkastusaika DESC;
 
 -- name: hae-siltatarkastus
 -- Hakee yhden siltatarkastuksen id:n mukaan
 SELECT
-  id,
+  st.id,
   silta,
-  urakka,
+  st.urakka,
   tarkastusaika,
   tarkastaja,
-  luotu,
-  luoja,
+  st.luotu,
+  st.luoja,
   muokattu,
   muokkaaja,
   poistettu,
   (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
    FROM siltatarkastuskohde k
-   WHERE k.siltatarkastus = id) AS kohteet
-FROM siltatarkastus
-WHERE id = :id AND poistettu = FALSE;
+   WHERE k.siltatarkastus = st.id) AS kohteet,
+  skl.kohde as liite_kohde,
+  liite.id   as liite_id,
+  liite.nimi as liite_nimi,
+  liite.tyyppi as liite_tyyppi,
+  liite.koko as liite_koko,
+  liite.liite_oid as liite_oid
+FROM siltatarkastus st
+  LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
+  LEFT JOIN liite ON skl.liite = liite.id
+WHERE st.id = :id
+      AND poistettu = FALSE;
 
 -- name: hae-siltatarkastus-ulkoisella-idlla-ja-luojalla
 -- Hakee yhden siltatarkastuksen ulkoisella id:llä ja luojalla
@@ -217,7 +236,7 @@ INTO siltatarkastus
 VALUES (:silta, :urakka, :tarkastusaika, :tarkastaja, current_timestamp, :luoja, FALSE,
         :ulkoinen_id, :lahde::lahde);
 
--- name: paivita-siltatarkastus<!
+-- name: paivita-siltatarkastus-ulkoisella-idlla<!
 -- Päivittää siltatarkastuksen
 UPDATE siltatarkastus
 SET silta       = :silta,
@@ -238,11 +257,24 @@ SELECT
 FROM siltatarkastuskohde
 WHERE siltatarkastus = ANY(:siltatarkastus_idt);
 
+-- name: paivita-siltatarkastus!
+-- Päivittää siltatarkastuksen tiedot
+UPDATE siltatarkastus
+  SET
+  tarkastaja = :tarkastaja,
+  tarkastusaika = :tarkastusaika,
+  muokattu = NOW(),
+  muokkaaja = :kayttaja
+  WHERE id = :id
+      AND urakka = :urakka;
+
 -- name: paivita-siltatarkastuksen-kohteet!
 -- Päivittää olemassaolevan siltatarkastuksen kohteet
 UPDATE siltatarkastuskohde
 SET tulos = :tulos, lisatieto = :lisatieto
-WHERE siltatarkastus = :siltatarkastus AND kohde = :kohde;
+WHERE siltatarkastus = :siltatarkastus
+      AND kohde = :kohde
+      AND (SELECT urakka FROM siltatarkastus WHERE id = :siltatarkastus) = :urakka;
 
 -- name: luo-siltatarkastuksen-kohde<!
 -- Luo siltatarkastukselle uuden kohteet
@@ -255,7 +287,8 @@ VALUES (:tulos, :lisatieto, :siltatarkastus, :kohde);
 -- Merkitsee annetun siltatarkastuksen poistetuksi
 UPDATE siltatarkastus
 SET poistettu = TRUE
-WHERE id = :id;
+WHERE id = :id
+      AND urakka = :urakka;
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
@@ -288,3 +321,7 @@ SELECT exists(SELECT id
               WHERE silta = :silta AND
                     ulkoinen_id != :ulkoinen_id AND
                     tarkastusaika = :tarkastusaika);
+
+-- name: lisaa-liite-siltatarkastuskohteelle<!
+INSERT INTO siltatarkastus_kohde_liite (siltatarkastus, kohde, liite)
+    VALUES (:siltatarkastus, :kohde, :liite);
