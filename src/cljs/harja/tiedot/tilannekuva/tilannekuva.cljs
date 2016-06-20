@@ -44,15 +44,18 @@ hakutiheys-historiakuva 1200000)
 (def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
 (def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 
-(def oletusalueet {"Varsinais-Suomi"             {},
-                   "Etelä-Pohjanmaa"             {},
-                   "Pohjois-Savo"                {},
-                   "Lappi"                       {},
-                   "Kaakkois-Suomi"              {},
-                   "Pirkanmaa"                   {},
-                   "Uusimaa"                     {},
-                   "Pohjois-Pohjanmaa ja Kainuu" {},
-                   "Keski-Suomi"                 {}})
+;; Alustetaan aluesuodattimet näin, jotta näkymä ei näytä tyhmältä, kun haetaan tietoja.
+;; False, koska muuten suodatinlaatikko tulee valituksi
+;; :haku-kaynnissa tarkoittaa, että vetolaatikkoon piirretään spinneri, jos se aukaistaan
+(def oletusalueet {"Varsinais-Suomi"             {:haku-kaynnissa false},
+                   "Etelä-Pohjanmaa"             {:haku-kaynnissa false},
+                   "Pohjois-Savo"                {:haku-kaynnissa false},
+                   "Lappi"                       {:haku-kaynnissa false},
+                   "Kaakkois-Suomi"              {:haku-kaynnissa false},
+                   "Pirkanmaa"                   {:haku-kaynnissa false},
+                   "Uusimaa"                     {:haku-kaynnissa false},
+                   "Pohjois-Pohjanmaa ja Kainuu" {:haku-kaynnissa false},
+                   "Keski-Suomi"                 {:haku-kaynnissa false}})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 (def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))

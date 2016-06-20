@@ -135,11 +135,15 @@
            (when (auki?)
              [:div.tk-checkbox-ryhma-sisalto
               (doall (for [elementti (seq ryhman-elementtien-avaimet)]
-                       ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
-                       [yksittainen-suodatincheckbox
-                        (:otsikko elementti)
-                        suodattimet-atom
-                        (conj ryhma-polku elementti)]))])])))))
+                       (if (= :haku-kaynnissa elementti)
+                         ^{:key (str otsikko "-spinner")}
+                         [yleiset/ajax-loader "Ladataan alueita"]
+
+                         ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
+                         [yksittainen-suodatincheckbox
+                          (:otsikko elementti)
+                          suodattimet-atom
+                          (conj ryhma-polku elementti)])))])])))))
 
 (defn aluesuodattimet []
   (let [nimet (set (keys tiedot/oletusalueet))
