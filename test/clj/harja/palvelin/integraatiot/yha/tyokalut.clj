@@ -78,7 +78,7 @@
     <kohteet>
       <kohde>
         <yha-id>3</yha-id>
-        <kohdetyyppi>paikkaus</kohdetyyppi>
+        <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <yllapitoluokka>1</yllapitoluokka>
         <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>

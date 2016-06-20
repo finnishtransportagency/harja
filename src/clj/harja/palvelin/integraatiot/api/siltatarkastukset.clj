@@ -68,7 +68,7 @@
 
 (defn paivita-siltatarkastus [ulkoinen-id urakka-id tarkastus silta kayttaja db]
   (log/debug "Päivitetään vanha siltarkastus")
-  (:id (silta-q/paivita-siltatarkastus<!
+  (:id (silta-q/paivita-siltatarkastus-ulkoisella-idlla<!
          db
          (:id silta)
          urakka-id

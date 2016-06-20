@@ -11,16 +11,17 @@
 (def kayttaja "fastroi")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-pistetoteuma (component/using
-                                                               (api-pistetoteuma/->Pistetoteuma)
-                                                               [:http-palvelin :db :integraatioloki])
-                                           :api-reittitoteuma (component/using
-                                                                (api-reittitoteuma/->Reittitoteuma)
-                                                                [:http-palvelin :db :integraatioloki])
-                                           :api-varusteoteuma (component/using
-                                                                (api-varustetoteuma/->Varustetoteuma)
-                                                                [:http-palvelin :db :integraatioloki])))
+  (laajenna-integraatiojarjestelmafixturea
+   kayttaja
+   :api-pistetoteuma (component/using
+                      (api-pistetoteuma/->Pistetoteuma)
+                      [:http-palvelin :db :integraatioloki])
+   :api-reittitoteuma (component/using
+                       (api-reittitoteuma/->Reittitoteuma)
+                       [:http-palvelin :db :db-replica :integraatioloki])
+   :api-varusteoteuma (component/using
+                       (api-varustetoteuma/->Varustetoteuma)
+                       [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 

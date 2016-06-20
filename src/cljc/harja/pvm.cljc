@@ -84,6 +84,21 @@
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
 
+#?(:clj
+   (defn joda-timeksi [dt]
+     (cond
+       (joda-time? dt)
+       dt
+
+       (instance? java.util.Date dt)
+       (tc/from-date dt)
+
+       (instance? java.sql.Date dt)
+       (tc/from-sql-date dt)
+
+       (instance? java.sql.Timestamp dt)
+       (tc/from-sql-time dt))))
+
 (defn nyt
   "Frontissa palauttaa goog.date.Datetimen
   Backendissä palauttaa java.util.Daten"
@@ -620,6 +635,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 
 (def paivan-aikavali (juxt paivan-alussa paivan-lopussa))
+
+#?(:clj
+   (defn aikavali-paivina [alku loppu]
+     (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
 (defn paivia-valissa
   "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."

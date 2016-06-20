@@ -185,7 +185,8 @@
 
       :raportointi (component/using
                      (raportointi/luo-raportointi)
-                     {:db :db-replica
+                     {:db-replica :db-replica
+                      :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
 
@@ -309,7 +310,9 @@
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
-                     [:http-palvelin :db :karttakuvat])
+                     {:db :db-replica
+                      :http-palvelin :http-palvelin
+                      :karttakuvat :karttakuvat})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
@@ -334,7 +337,7 @@
                           [:http-palvelin :db :integraatioloki])
       :api-reittitoteuma (component/using
                            (api-reittitoteuma/->Reittitoteuma)
-                           [:http-palvelin :db :integraatioloki])
+                           [:http-palvelin :db :db-replica :integraatioloki])
       :api-varustetoteuma (component/using
                             (api-varustetoteuma/->Varustetoteuma)
                             [:http-palvelin :db :tierekisteri :integraatioloki])

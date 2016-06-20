@@ -35,4 +35,5 @@ Pohjavesialue
 tuotanto/harja.jar
 tuotanto_test.sh
 .labyrintti-salasana
+.turi-salasana
 .hipchat-token

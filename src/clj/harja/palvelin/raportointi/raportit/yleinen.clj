@@ -7,6 +7,7 @@
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]))
 
+
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
 (defn raportin-otsikko
@@ -162,3 +163,21 @@
           (hae-kontekstin-hallintayksikot db))
     (into []
           (hae-kontekstin-urakat db parametrit))))
+
+(defn uniikit [avain rivit]
+  (into #{}
+        (map avain)
+        rivit))
+
+(defn laske-uniikit [avain-fn rivit]
+  (loop [lkm 0
+         nahdyt (transient {})
+         [rivi & rivit] rivit]
+    (if-not rivi
+      lkm
+      (let [avain (avain-fn rivi)]
+        (recur (if (nahdyt avain)
+                 lkm
+                 (inc lkm))
+               (assoc! nahdyt avain true)
+               rivit)))))

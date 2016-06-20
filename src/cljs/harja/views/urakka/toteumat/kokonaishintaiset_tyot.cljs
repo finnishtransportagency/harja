@@ -23,7 +23,8 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka.toteumat :as toteumat])
+            [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -105,7 +106,8 @@
    [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
                                         (tiedot/uusi-kokonaishintainen-toteuma))
     {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka)))}]
-   (tee-taulukko)])
+   (tee-taulukko)
+   [yleiset/vihje "Näet työn kartalla klikkaamalla riviä."]])
 
 (defn kokonaishintainen-toteuma-lomake []
   (let [muokattu (reaction @tiedot/valittu-kokonaishintainen-toteuma)
