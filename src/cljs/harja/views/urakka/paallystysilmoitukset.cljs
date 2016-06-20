@@ -75,8 +75,8 @@
                  (:asiatarkastus-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
                  :asiatarkastus-taloudellinen-osa
                  (:asiatarkastus-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)
-                 :asiatarkastus-kommentit
-                 (:asiatarkastus-kommentit @paallystys/paallystysilmoitus-lomakedata)}
+                 :asiatarkastus-lisatiedot
+                 (:asiatarkastus-lisatiedot @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
                          #(-> %
@@ -88,8 +88,8 @@
                                      (:asiatarkastus-tekninen-osa uusi-arvo))
                               (assoc :asiatarkastus-taloudellinen-osa
                                      (:asiatarkastus-taloudellinen-osa uusi-arvo))
-                              (assoc :asiatarkastus-kommentit
-                                     (:asiatarkastus-kommentit uusi-arvo))))))]
+                              (assoc :asiatarkastus-lisatiedot
+                                     (:asiatarkastus-lisatiedot uusi-arvo))))))]
 
     (when @valmis-asiatarkastukseen?
       [:div.pot-asiatarkastus
@@ -119,7 +119,7 @@
           :tyyppi :checkbox
           :fmt fmt/totuus}
          {:otsikko "Kommentit"
-          :nimi :asiatarkastus-kommentit
+          :nimi :asiatarkastus-lisatiedot
           :tyyppi :text
           :koko [60 3]
           :pituus-max 4096

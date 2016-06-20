@@ -100,7 +100,7 @@
            kasittelyaika-taloudellinen-osa
            asiatarkastus-tarkastusaika asiatarkastus-tarkastaja
            asiatarkastus-tekninen-osa asiatarkastus-taloudellinen-osa
-           asiatarkastus-kommentit]}]
+           asiatarkastus-lisatiedot]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and (= paatos-tekninen-osa :hyvaksytty)
@@ -130,7 +130,7 @@
        :asiatarkastus_tarkastaja asiatarkastus-tarkastaja
        :asiatarkastus_tekninen_osa asiatarkastus-tekninen-osa
        :asiatarkastus_taloudellinen_osa asiatarkastus-taloudellinen-osa
-       :asiatarkastus_kommentit asiatarkastus-kommentit
+       :asiatarkastus_lisatiedot asiatarkastus-lisatiedot
        :muokkaaja (:id user)
        :id paallystyskohde-id}))
   id)
@@ -218,7 +218,7 @@
           (let [vertailtavat
                 [:asiatarkastus-tarkastusaika :asiatarkastus-tarkastaja
                  :asiatarkastus-tekninen-osa :asiatarkastus-taloudellinen-osa
-                 :asiatarkastus-kommentit]]
+                 :asiatarkastus-lisatiedot]]
             (not= (select-keys uudet-tiedot vertailtavat)
                   (select-keys tiedot-kannassa vertailtavat))))
         kasittelytiedot-muuttuneet?

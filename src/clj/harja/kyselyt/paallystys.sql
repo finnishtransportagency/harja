@@ -52,7 +52,7 @@ SELECT
   asiatarkastus_tarkastaja        AS "asiatarkastus-tarkastaja",
   asiatarkastus_tekninen_osa      AS "asiatarkastus-tekninen-osa",
   asiatarkastus_taloudellinen_osa AS "asiatarkastus-taloudellinen-osa",
-  asiatarkastus_kommentit         AS "asiatarkastus-kommentit",
+  asiatarkastus_lisatiedot        AS "asiatarkastus-lisatiedot",
   ypko.id                         AS kohdeosa_id,
   ypko.nimi                       AS kohdeosa_nimi,
   ypko.tunnus                     AS kohdeosa_tunnus,
@@ -92,7 +92,7 @@ SET
   asiatarkastus_tarkastaja          = :asiatarkastus_tarkastaja,
   asiatarkastus_tekninen_osa        = :asiatarkastus_tekninen_osa,
   asiatarkastus_taloudellinen_osa   = :asiatarkastus_taloudellinen_osa,
-  asiatarkastus_kommentit           = :asiatarkastus_kommentit,
+  asiatarkastus_lisatiedot          = :asiatarkastus_lisatiedot,
   muokattu                          = NOW(),
   muokkaaja                         = :muokkaaja,
   poistettu                         = FALSE
