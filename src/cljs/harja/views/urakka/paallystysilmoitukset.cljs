@@ -627,7 +627,7 @@
     :tunniste hash}
    [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 30}
-    {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
+    {:otsikko "Edellinen lähetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 50
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
     {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
