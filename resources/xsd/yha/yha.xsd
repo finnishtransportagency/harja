@@ -175,7 +175,7 @@
     <xs:complexType name="kohde">
         <xs:sequence>
             <xs:element name="yha-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
+            <xs:element name="kohdetyotyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:restriction base="xs:string">
