@@ -113,13 +113,14 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
 (defn- organisaation-geometria [piirrettava]
   (let [alue (:alue piirrettava)]
     (when (map? alue)
-      (update-in piirrettava
-                 [:alue]
-                 assoc
-                 :fill false
-                 :stroke {:width 3}
-                 :type :ur
-                 :z-index 1))))
+      (assoc (update-in piirrettava
+                  [:alue]
+                  assoc
+                  :fill false
+                  :stroke {:width 1}
+                  :z-index 1)
+        :type :ur
+        :nimi nil))))
 
 (defn aseta-valitut-organisaatiot! [suodattimet]
   (reset! tilannekuvan-organisaatiot (into [] (keep organisaation-geometria) (domain/valitut-kentat suodattimet))))
