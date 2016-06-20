@@ -229,7 +229,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa ja Kainuu'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
