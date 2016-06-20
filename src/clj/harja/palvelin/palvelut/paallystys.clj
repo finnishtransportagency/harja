@@ -95,7 +95,10 @@
            valmispvm-paallystys takuupvm paallystyskohde-id
            paatos-tekninen-osa paatos-taloudellinen-osa perustelu-tekninen-osa
            perustelu-taloudellinen-osa kasittelyaika-tekninen-osa
-           kasittelyaika-taloudellinen-osa]}]
+           kasittelyaika-taloudellinen-osa
+           asiatarkastus-tarkastusaika asiatarkastus-tarkastaja
+           asiatarkastus-tekninen-osa asiatarkastus-taloudellinen-osa
+           asiatarkastus-kommentit]}]
   (log/debug "Päivitetään vanha päällystysilmoitus, jonka id: " paallystyskohde-id)
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and (= paatos-tekninen-osa :hyvaksytty)
@@ -121,6 +124,11 @@
       perustelu-taloudellinen-osa
       (konv/sql-date kasittelyaika-tekninen-osa)
       (konv/sql-date kasittelyaika-taloudellinen-osa)
+      (konv/sql-date asiatarkastus-tarkastusaika)
+      asiatarkastus-tarkastaja
+      asiatarkastus-tekninen-osa
+      asiatarkastus-taloudellinen-osa
+      asiatarkastus-kommentit
       (:id user)
       paallystyskohde-id))
   id)
@@ -201,7 +209,15 @@
 (defn- tarkista-paallystysilmoituksen-tallentamisoikeudet [user urakka-id
                                                            uusi-paallystysilmoitus
                                                            paallystysilmoitus-kannassa]
-  (let [kasittelytiedot-muuttuneet?
+  (let [asiatarkastustiedot-muuttuneet?
+        (fn [uudet-tiedot tiedot-kannassa]
+          (let [vertailtavat
+                [:asiatarkastus-tarkastusaika :asiatarkastus-tarkastaja
+                 :asiatarkastus-tekninen-osa :asiatarkastus-taloudellinen-osa
+                 :asiatarkastus-kommentit]]
+            (not= (select-keys uudet-tiedot vertailtavat)
+                  (select-keys tiedot-kannassa vertailtavat))))
+        kasittelytiedot-muuttuneet?
         (fn [uudet-tiedot tiedot-kannassa]
           (let [vertailtavat
                 [:paatos-tekninen-osa :paatos-taloudellinen-osa
@@ -213,6 +229,11 @@
     ;; Eli jos päätöstiedot ovat muuttuneet, vaadi rooli urakanvalvoja.
     (if (kasittelytiedot-muuttuneet? uusi-paallystysilmoitus paallystysilmoitus-kannassa)
       (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                             user urakka-id))
+
+    ;; Myös asiatarkastus lähetetään aina lomakkeen mukana, muokkaus vaatii erityisoikeuden.
+    (if (asiatarkastustiedot-muuttuneet? uusi-paallystysilmoitus paallystysilmoitus-kannassa)
+      (oikeudet/vaadi-oikeus "asiatarkastus" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                              user urakka-id))
 
     ;; Käyttöliittymässä on estetty lukitun päällystysilmoituksen muokkaaminen,

@@ -83,6 +83,11 @@ SET
   perustelu_taloudellinen_osa       = :perustelu_taloudellinen_osa,
   kasittelyaika_tekninen_osa        = :kasittelyaika_tekninen_osa,
   kasittelyaika_taloudellinen_osa   = :kasittelyaika_taloudellinen_osa,
+  asiatarkastus_pvm                 = :asiatarkastus_pvm,
+  asiatarkastus_tarkastaja          = :asiatarkastus_tarkastaja,
+  asiatarkastus_tekninen_osa        = :asiatarkastus_tekninen_osa,
+  asiatarkastus_taloudellinen_osa   = :asiatarkastus_taloudellinen_osa,
+  asiatarkastus_kommentit           = :asiatarkastus_kommentit,
   muokattu                          = NOW(),
   muokkaaja                         = :muokkaaja,
   poistettu                         = FALSE

@@ -56,11 +56,11 @@
      "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or @muutokset-kokonaishintaan 0))
      "Yhteensä: " (fmt/euro-opt @toteuman-kokonaishinta)]))
 
-(defn kasittely
-  "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
-  [valmis-kasiteltavaksi?]
+(defn asiaktarkastus
+  "Asiatarkastusosio konsultille, kun ilmoitus on valmis."
+  [valmis-asiatarkastukseen?]
   (let [muokattava? (and
-                      (oikeudet/on-muu-oikeus? "päätös"
+                      (oikeudet/on-muu-oikeus? "asiatarkastus"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                (:id @nav/valittu-urakka)
                                                @istunto/kayttaja)
@@ -89,7 +89,53 @@
                               (assoc :asiatarkastus-taloudellinen-osa
                                      (:asiatarkastus-taloudellinen-osa uusi-arvo))
                               (assoc :asiatarkastus-kommentit
-                                     (:asiatarkastus-kommentit uusi-arvo))))))
+                                     (:asiatarkastus-kommentit uusi-arvo))))))]
+
+    (when @valmis-asiatarkastukseen?
+      [:div.pot-asiatarkastus
+       [:h3 "Asiatarkastus"]
+
+       [lomake/lomake
+        {:otsikko ""
+         :muokkaa! (fn [uusi]
+                     (reset! asiatarkastus uusi))
+         :voi-muokata? muokattava?}
+        [{:otsikko "Tarkastettu"
+          :nimi :asiatarkastus-tarkastusaika
+          :tyyppi :pvm
+          :validoi [[:ei-tyhja "Anna tarkastuspäivämäärä"]
+                    [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata) "Tarkastus ei voi olla ennen valmistumista"]]}
+         {:otsikko "Tarkastaja"
+          :nimi :asiatarkastus-tarkastaja
+          :tyyppi :string
+          :validoi [[:ei-tyhja "Anna tarkastaja"]]
+          :pituus-max 1024}
+         {:teksti "Tekninen osa tarkastettu"
+          :nimi :asiatarkastus-tekninen-osa
+          :tyyppi :checkbox
+          :fmt fmt/totuus}
+         {:teksti "Taloudellinen osa tarkastettu"
+          :nimi :asiatarkastus-taloudellinen-osa
+          :tyyppi :checkbox
+          :fmt fmt/totuus}
+         {:otsikko "Kommentit"
+          :nimi :asiatarkastus-kommentit
+          :tyyppi :text
+          :koko [60 3]
+          :pituus-max 4096
+          :palstoja 2}]
+        @asiatarkastus]])))
+
+(defn kasittely
+  "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
+  [valmis-kasiteltavaksi?]
+  (let [muokattava? (and
+                      (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                               (:id @nav/valittu-urakka)
+                                               @istunto/kayttaja)
+                      (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
+                      (false? @paallystys/paallystysilmoituslomake-lukittu?))
         paatos-tekninen-osa
         (r/wrap {:paatos-tekninen
                  (:paatos-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)
@@ -125,38 +171,6 @@
 
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
-       [:h3 "Asiatarkastus"]
-
-       [lomake/lomake
-        {:otsikko ""
-         :muokkaa! (fn [uusi]
-                     (reset! asiatarkastus uusi))
-         :voi-muokata? muokattava?}
-        [{:otsikko "Tarkastettu"
-          :nimi :asiatarkastus-tarkastusaika
-          :tyyppi :pvm
-          :validoi [[:ei-tyhja "Anna tarkastuspäivämäärä"]
-                    [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata) "Tarkastus ei voi olla ennen valmistumista"]]}
-         {:otsikko "Tarkastaja"
-          :nimi :asiatarkastus-tarkastaja
-          :tyyppi :string
-          :validoi [[:ei-tyhja "Anna tarkastaja"]]
-          :pituus-max 1024}
-         {:teksti "Tekninen osa tarkastettu"
-          :nimi :asiatarkastus-tekninen-osa
-          :tyyppi :checkbox
-          :fmt fmt/totuus}
-         {:teksti "Taloudellinen osa tarkastettu"
-          :nimi :asiatarkastus-taloudellinen-osa
-          :tyyppi :checkbox
-          :fmt fmt/totuus}
-         {:otsikko "Kommentit"
-          :nimi :asiatarkastus-kommentit
-          :tyyppi :text
-          :koko [60 3]
-          :pituus-max 4096
-          :palstoja 2}]
-        @asiatarkastus]
 
        [:h3 "Käsittely"]
 
@@ -383,7 +397,9 @@
               @kohteen-tiedot]]
 
             [:div.col-md-6
-             (kasittely valmis-kasiteltavaksi?)]]
+             [:div
+              [asiaktarkastus valmis-kasiteltavaksi?]
+              [kasittely valmis-kasiteltavaksi?]]]]
 
            [:fieldset.lomake-osa
             [:h3 "Tekninen osa"]
