@@ -102,6 +102,12 @@
     (q/paivita-siltatarkastuksen-kohteet! db tulos lisatieto id kohde urakka-id))
   siltatarkastus)
 
+(defn paivita-siltatarkastus!
+  [db user urakka-id {:keys [id tarkastusaika tarkastaja] :as siltatarkastus}]
+  (log/debug "Päivitetään siltatarkastus.")
+  (q/paivita-siltatarkastus! db tarkastaja tarkastusaika (:id user) id urakka-id)
+  (paivita-siltatarkastuksen-kohteet! db urakka-id siltatarkastus))
+
 (defn- luo-siltatarkastus [db user {:keys [silta-id urakka-id tarkastaja tarkastusaika kohteet]}]
   (let [luotu-tarkastus (q/luo-siltatarkastus<! db silta-id urakka-id (konv/sql-date tarkastusaika)
                                                 tarkastaja (:id user) nil "harja-ui")
@@ -126,7 +132,7 @@
   (jdbc/with-db-transaction [db db]
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
-                      (paivita-siltatarkastuksen-kohteet! db urakka-id siltatarkastus)
+                      (paivita-siltatarkastus! db user urakka-id siltatarkastus)
 
                       ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
                       ;; ja sen kohteet

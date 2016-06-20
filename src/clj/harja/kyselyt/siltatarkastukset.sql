@@ -257,6 +257,17 @@ SELECT
 FROM siltatarkastuskohde
 WHERE siltatarkastus = ANY(:siltatarkastus_idt);
 
+-- name: paivita-siltatarkastus!
+-- Päivittää siltatarkastuksen tiedot
+UPDATE siltatarkastus
+  SET
+  tarkastaja = :tarkastaja,
+  tarkastusaika = :tarkastusaika,
+  muokattu = NOW(),
+  muokkaaja = :kayttaja
+  WHERE id = :id
+      AND urakka = :urakka;
+
 -- name: paivita-siltatarkastuksen-kohteet!
 -- Päivittää olemassaolevan siltatarkastuksen kohteet
 UPDATE siltatarkastuskohde
