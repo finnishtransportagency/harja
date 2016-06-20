@@ -359,7 +359,8 @@
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
                   (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
-        uudet-liitteet (atom nil)]
+        uudet-liitteet (atom nil)
+        alkuperainen-tarkastusaika (:tarkastusaika @muokattava-tarkastus)]
     (fn [muokattava-tarkastus]
       (let [tarkastus @muokattava-tarkastus
             tarkastusrivit (dissoc
@@ -389,8 +390,9 @@
            {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true
             :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
-                      #(when (@olemassa-olevat-tarkastus-pvmt %1)
-                         "Tälle päivälle on jo kirjattu tarkastus.")]
+                      #(when (and (@olemassa-olevat-tarkastus-pvmt %1)
+                                  (not= %1 alkuperainen-tarkastusaika))
+                        "Tälle päivälle on jo kirjattu tarkastus.")]
             :huomauta [[:urakan-aikana]]}
            ;; maksimipituus tarkastajalle tietokannassa varchar(128)
            {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
