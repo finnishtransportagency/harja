@@ -46,7 +46,8 @@
     :paikkauskohteet
     :tr-valitsin
     :nakyman-geometriat
-    :tilannekuva})
+    :tilannekuva
+    :tilannekuva-organisaatiot})
 
 (defn kartan-asioiden-z-indeksit [taso]
   (case taso
@@ -167,7 +168,8 @@
    :paikkauskohteet paikkaus/paikkauskohteet-kartalla
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
    :nakyman-geometriat nakyman-geometriat
-   :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla})
+   :tilannekuva tilannekuva/tilannekuvan-asiat-kartalla
+   :tilannekuva-organisaatiot tilannekuva/tilannekuvan-organisaatiot})
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
@@ -194,6 +196,7 @@
   (reaction
     (merge
      {:organisaatio (taso :organisaatio :urakka 0.7)
+      :tilannekuva-organisaatiot (taso :tilannekuva-organisaatiot :urakka)
       :pohjavesi (taso :pohjavesi :pohjavesialueet)
       :sillat (taso :sillat :sillat)
       :tarkastusreitit (taso :tarkastusreitit)
@@ -234,6 +237,7 @@
    :paikkauskohteet paikkaus/karttataso-paikkauskohteet
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
    :tilannekuva tilannekuva/karttataso-tilannekuva
+   :tilannekuva-organisaatiot tilannekuva/karttataso-tilannekuva
    :nakyman-geometriat (atom true)})
 
 (defonce nykyiset-karttatasot

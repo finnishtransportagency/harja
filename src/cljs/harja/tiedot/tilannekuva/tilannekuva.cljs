@@ -226,15 +226,16 @@ hakutiheys-historiakuva 1200000)
                   {(get-in aluekokonaisuus [:hallintayksikko :nimi])
                    (into {}
                          (map
-                           (fn [{:keys [id nimi]}]
-                             [(tk/->Suodatin id
+                           (fn [{:keys [id nimi alue]}]
+                             [(tk/->Aluesuodatin id
                                              (-> nimi
                                                  (clojure.string/replace " " "_")
                                                  (clojure.string/replace "," "_")
                                                  (clojure.string/replace "(" "_")
                                                  (clojure.string/replace ")" "_")
                                                  (keyword))
-                                             (format/lyhennetty-urakan-nimi nimi urakan-nimen-pituus))
+                                             (format/lyhennetty-urakan-nimi nimi urakan-nimen-pituus)
+                                             alue)
                               (valitse-urakka? id (:hallintayksikko aluekokonaisuus))])
                            (:urakat aluekokonaisuus)))})
                 tulos)))))
@@ -264,8 +265,10 @@ hakutiheys-historiakuva 1200000)
               (go (when nakymassa?
                     (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/valittu-urakkatyyppi))
                           yhdistetyt (yhdista-aluesuodattimet (:alueet @suodattimet) tulos)]
-                     (swap! suodattimet assoc :alueet yhdistetyt)
-                     tulos)))))
+                      (swap! suodattimet assoc :alueet yhdistetyt)
+                      tulos)))))
+
+(run! (tilannekuva-kartalla/aseta-valitut-organisaatiot! (:alueet @suodattimet)))
 
 (defonce hakuparametrit
   (reaction

@@ -2,6 +2,7 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.domain.tilannekuva :as domain]
             [harja.atom :refer-macros [reaction<!]
              :refer [paivita-periodisesti]]
             [harja.ui.kartta.esitettavat-asiat
@@ -18,6 +19,7 @@
 
 (defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
+(defonce tilannekuvan-organisaatiot (atom []))
 
 
 (def lisaa-karttatyyppi-fn
@@ -107,3 +109,16 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
 
 (add-watch haetut-asiat :paivita-tilannekuvatasot
            (fn [_ _ vanha uusi] (paivita-tilannekuvatasot vanha uusi)))
+
+(defn- organisaation-geometria [piirrettava]
+  (let [alue (:alue piirrettava)]
+    (when (map? alue)
+      (update-in piirrettava
+                 [:alue]
+                 assoc
+                 :fill false
+                 :stroke {:width 3}))))
+
+(defn aseta-valitut-organisaatiot! [suodattimet]
+  (log "Aseta valitut organisaatiot!" (pr-str (into {} (map (fn [[hy suodattimet]] [hy (into {} (map (fn [[s val?]] [(dissoc s :alue) val?]) suodattimet))]) suodattimet))))
+  (reset! tilannekuvan-organisaatiot (into [] (keep organisaation-geometria) (domain/valitut-kentat suodattimet))))
