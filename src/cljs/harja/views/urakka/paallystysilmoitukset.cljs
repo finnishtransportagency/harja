@@ -392,13 +392,12 @@
                                         :placeholder "Kirjoita kommentti..."
                                         :uusi-kommentti (r/wrap (:uusi-kommentti lomakedata-nyt)
                                                                 #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
-                   (:kommentit lomakedata-nyt)]})
-               ]
-              @kohteen-tiedot]]
+                   (:kommentit lomakedata-nyt)]})]
+              @kohteen-tiedot]
+             [asiaktarkastus valmis-kasiteltavaksi?]]
 
             [:div.col-md-6
              [:div
-              [asiaktarkastus valmis-kasiteltavaksi?]
               [kasittely valmis-kasiteltavaksi?]]]]
 
            [:fieldset.lomake-osa
