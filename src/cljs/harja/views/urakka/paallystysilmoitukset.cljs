@@ -654,11 +654,7 @@
          [:h3 "Päällystysilmoitukset"]
          (paallystysilmoitukset-taulukko paallystysilmoitukset)
          [:h3 "YHA-lähetykset"]
-         [:div {:class
-                (str "inline-block lomake-vihje")}
-          [:div.vihjeen-sisalto
-           (harja.ui.ikonit/livicon-info-sign)
-           [:span (str " Kohteen täytyy olla merkitty valmiiksi ja teknisen osan hyväksytty ennen kuin se voidaan lähettää YHA:n.")]]]
+         [yleiset/vihje "Kohteen täytyy olla merkitty valmiiksi ja teknisen osan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
          (yha-lahetykset-taulukko urakka-id sopimus-id paallystysilmoitukset)
          [yha/laheta-kohteet-yhaan
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
