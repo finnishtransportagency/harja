@@ -235,7 +235,9 @@
                            [liitteet/liitteet-ikoneina (:liitteet rivi)])}]
           (muut-tarkastukset-sarakkeet muut-tarkastukset))))
 
-(defn tallenna-siltatarkastus! [tarkastus]
+(defn tallenna-siltatarkastus!
+  "Ottaa tallennettavan tarkastuksen, jossa tarkastustietojen lisäksi mahdollinen uusi-liite ja urakka-id"
+  [tarkastus]
   (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))
             olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
             kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
@@ -445,8 +447,10 @@
            :on-click
            #(do (.preventDefault %)
                 (reset! tallennus-kaynnissa true)
-                (go (let [tarkastukset-ja-uudet-liitteet (assoc tarkastus :uudet-liitteet @uudet-liitteet)
-                          res (<! (tallenna-siltatarkastus! tarkastukset-ja-uudet-liitteet))]
+                (go (let [tallennettava-tarkastus (-> tarkastus
+                                                      (assoc :uudet-liitteet @uudet-liitteet)
+                                                      (assoc :urakka-id (:id @nav/valittu-urakka)))
+                          res (<! (tallenna-siltatarkastus! tallennettava-tarkastus))]
                       (if res
                         ;; Tallennus ok
                         (do (viesti/nayta! "Siltatarkastus tallennettu")
