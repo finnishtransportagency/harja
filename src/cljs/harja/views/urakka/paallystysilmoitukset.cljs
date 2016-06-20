@@ -674,10 +674,10 @@
      :komponentti
      :komponentti (fn [rivi]
                     (if (:tila rivi)
-                      [:button.nappi-ensisijainen.nappi-grid
+                      [:button.nappi-toissijainen.nappi-grid
                        {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                        [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                      [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
+                      [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                        [:span "Aloita päällystysilmoitus"]]))}]
    paallystysilmoitukset])
 
