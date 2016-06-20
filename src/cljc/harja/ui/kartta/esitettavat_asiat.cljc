@@ -40,7 +40,8 @@
   (case (:type (or (:sijainti asia) asia))
     :point false
     :line true
-    :multiline true))
+    :multiline true
+    false))
 
 (defn asia-on-piste? [asia]
   (not (reitillinen-asia? asia)))
