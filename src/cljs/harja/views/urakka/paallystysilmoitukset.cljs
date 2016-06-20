@@ -630,7 +630,7 @@
     {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 50
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
-    {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
+    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/laheta-kohteet-yhaan
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet
