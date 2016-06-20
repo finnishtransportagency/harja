@@ -9,7 +9,9 @@
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
             [harja.ui.openlayers :as openlayers]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.geo :as geo]
+            [harja.tiedot.navigaatio :as nav])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -122,5 +124,15 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
         :type :ur
         :nimi nil))))
 
+(defn zoomaa-urakoihin! []
+  (reset! nav/kartan-extent
+          (-> (geo/extent-monelle (map :alue @tilannekuvan-organisaatiot))
+              (geo/laajenna-extent geo/pisteen-extent-laajennus))))
+
 (defn aseta-valitut-organisaatiot! [suodattimet]
-  (reset! tilannekuvan-organisaatiot (into [] (keep organisaation-geometria) (domain/valitut-kentat suodattimet))))
+  (reset! tilannekuvan-organisaatiot (into []
+                                           (keep organisaation-geometria)
+                                           (domain/valitut-kentat suodattimet))))
+
+(run! (when-not (empty? @tilannekuvan-organisaatiot)
+        (zoomaa-urakoihin!)))
