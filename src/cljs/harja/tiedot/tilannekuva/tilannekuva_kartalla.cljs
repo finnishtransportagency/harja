@@ -117,8 +117,9 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
                  [:alue]
                  assoc
                  :fill false
-                 :stroke {:width 3}))))
+                 :stroke {:width 3}
+                 :type :ur
+                 :z-index 1))))
 
 (defn aseta-valitut-organisaatiot! [suodattimet]
-  (log "Aseta valitut organisaatiot!" (pr-str (into {} (map (fn [[hy suodattimet]] [hy (into {} (map (fn [[s val?]] [(dissoc s :alue) val?]) suodattimet))]) suodattimet))))
   (reset! tilannekuvan-organisaatiot (into [] (keep organisaation-geometria) (domain/valitut-kentat suodattimet))))
