@@ -547,6 +547,119 @@
             </div>
 
 
+            <!-- Urakan tietueiden hakeminen -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 id="_haeUrakanTietueet" class="panel-title">Urakan tietueiden haku: haeUrakanTietueet</h3>
+                </div>
+
+
+                <div class="panel-body">
+                    <div class="top-resource-description">
+                        <p>Urakan tietueiden haku. Hakee annetun urakan tietueet. Voidaan rajata tietylle palauttamaan tietyn tietolajin tietueet. Jos ei annettu, hakee kaikki varuste- ja laiteteeman mukaiset tietueet. Palauttaa pelkät otsikkotason tiedot tietueista: tunniste, tietolaji & sijainti.</p>
+                    </div>
+
+                    <div class="panel-group">
+                        <div class="panel panel-white">
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_haeUrakanTietueet_sekvenssi"><span class=
+                                                                                "badge badge_post">Sekvenssi</span></a>
+                                </h4>
+                            </div>
+
+                            <div class="panel-heading">
+                                <h4 class="panel-title"><a href="#" data-toggle="modal" data-target=
+                                        "#_haeUrakanTietueet_post"><span class=
+                                                                           "badge badge_post">Viestit</span></a></h4>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeUrakanTietueet_sekvenssi">
+                                <div class="modal-dialog" style="width: 900">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                        </div>
+                                        <object data="documentation\tietueiden-haku.svg" type="image/svg+xml">
+                                        </object>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" tabindex="0" id="_haeUrakanTietueet_post">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &#215;</button>
+                                            <h4 class="modal-title" id="myModalLabel">haeUrakanTietueet</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#_haeUrakanTietueet_post_request"
+                                                                      data-toggle="tab">Request</a>
+                                                </li>
+
+                                                <li><a href="#_haeUrakanTietueet_post_response"
+                                                       data-toggle="tab">Response</a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="_haeUrakanTietueet_post_request">
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="skeemat/haeUrakanTietueet.xsd"
+                                                                                   target="_blank">haeUrakanTietueet.xsd</a>
+                                                    </p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="esimerkit/hae-urakan-tietueet-request.xml" target="_blank">hae-urakan-tietueet-request.xml</a>
+                                                    </p>
+
+                                                </div>
+
+                                                <div class="tab-pane" id="_haeUrakanTietueet_post_response">
+                                                    <h2>Onnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="skeemat/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="esimerkit/urakan-tietuedenhaku-response.xml" target="_blank">urakan-tietuedenhaku-response.xml</a>
+                                                    </p>
+
+                                                    <h2>Epäonnistunut kutsu</h2>
+
+                                                    <p><strong>Tyyppi: application/xml</strong>
+                                                    </p>
+
+                                                    <p><strong>Skeema</strong>: <a href="skeemat/vastaus.xsd"
+                                                                                   target="_blank">vastaus.xsd</a></p>
+
+                                                    <p><strong>Esimerkki</strong>: <a
+                                                            href="esimerkit/virhe-vastaus-tietuetta-ei-loydy-response.xml"
+                                                            target="_blank">virhe-vastaus-tietuetta-ei-loydy-response.xml</a>
+                                                    </p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
             <!-- Tietueen lisaaminen-->
             <div class="panel panel-default">
                 <div class="panel-heading">

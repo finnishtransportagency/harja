@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://www.solita.fi/harja/tierekisteri/haeUrakanTietueet"
+           xmlns:ns1="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+           version="1.0">
+
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajitunniste"
+               schemaLocation="tietolajitunniste.xsd"/>
+
+    <xs:element name="haeUrakanTietueet">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element minOccurs="1" maxOccurs="1" name="urakka-id">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:maxLength value="16"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+                <xs:element minOccurs="1" maxOccurs="1" name="tilannepvm" type="xs:date"/>
+                <xs:element name="tietolajit">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="tietolaji" type="ns1:tietolajitunniste" maxOccurs="unbounded" minOccurs="0"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>
+
+
+

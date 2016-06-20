@@ -54,6 +54,6 @@
                                      :listaus :korjatut})
         kajaanintie (nimella sillat "Kajaanintien silta")]
     (is kajaanintie)
-    (is (= 24 (:rikki_ennen kajaanintie)) "Ennen oli kaikki rikki")
-    (is (= 0 (:rikki_nyt kajaanintie)) "Nyt on kaikki korjattu")))
+    (is (= 24 (:rikki-ennen kajaanintie)) "Ennen oli kaikki rikki")
+    (is (= 0 (:rikki-nyt kajaanintie)) "Nyt on kaikki korjattu")))
     

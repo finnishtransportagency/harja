@@ -10,6 +10,7 @@
             [harja.visualisointi :as vis]
             [harja.ui.grid :refer [grid]]
             [harja.ui.valinnat :as valinnat]
+            [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :refer [modal] :as modal]
             [harja.ui.dom :as dom])
@@ -29,9 +30,6 @@
         [:b (name (key elementti))]
         (str ": " (val elementti))])]))
 
-(defn leikkaa-merkkijono [merkkijono pituus]
-  (when merkkijono (subs merkkijono 0 (min (count merkkijono) pituus))))
-
 (defn nayta-sisalto-modaalissa-dialogissa [otsikko sisalto]
   (modal/nayta! {:otsikko otsikko
                  :leveys  "80%"}
@@ -41,7 +39,7 @@
   (let [sisalto (kartta-merkkijonoksi otsikko)
         max-pituus 30]
     (if (> (count sisalto) max-pituus)
-      [:div (str (leikkaa-merkkijono sisalto max-pituus) "... ")
+      [:div (str (fmt/leikkaa-merkkijono sisalto max-pituus {:pisteet? true}) " ")
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
@@ -55,7 +53,7 @@
         teksti lisatiedot]
     (if (> (count teksti) max-pituus)
       [:span
-       (str (leikkaa-merkkijono lisatiedot max-pituus) "... ")
+       (str (fmt/leikkaa-merkkijono lisatiedot max-pituus {:pisteet? true}) " ")
        [:button.nappi-toissijainen.grid-lisaa
         {:on-click
          (fn [e]
@@ -66,7 +64,7 @@
 (defn nayta-sisalto [sisalto]
   (let [max-pituus 30]
     (if (> (count sisalto) max-pituus)
-      [:div (str (leikkaa-merkkijono sisalto max-pituus) "...")
+      [:div (str (fmt/leikkaa-merkkijono sisalto max-pituus {:pisteet? true}))
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
@@ -91,7 +89,7 @@
                             [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
             {:otsikko "Osoite" :nimi :osoite :leveys "30%"}
             {:otsikko     "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
-             :komponentti #(leikkaa-merkkijono (kartta-merkkijonoksi (:parametrit %)) 50)}
+             :komponentti #(fmt/leikkaa-merkkijono (kartta-merkkijonoksi (:parametrit %)) 50)}
             {:otsikko     "Otsikko" :nimi :otsikko :leveys "30%" :tyyppi :komponentti
              :komponentti #(nayta-otsikko (:otsikko %))}
             {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys "20%"}

@@ -21,7 +21,7 @@
     (first elementti)))
 
 (defmethod muodosta-html :liitteet [[_ liitteet]]
-  (liitteet/liitelistaus liitteet))
+  (liitteet/liitteet-numeroina liitteet))
 
 (defmethod muodosta-html :arvo-ja-osuus [[_ arvo-ja-osuus]]
   [:span.arvo-ja-osuus

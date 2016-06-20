@@ -602,10 +602,10 @@
      :komponentti
      :komponentti (fn [rivi]
                     (if (:tila rivi)
-                      [:button.nappi-ensisijainen.nappi-grid
+                      [:button.nappi-toissijainen.nappi-grid
                        {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                        [:span (ikonit/eye-open) " Päällystysilmoitus"]]
-                      [:button.nappi-ensisijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
+                      [:button.nappi-toissijainen.nappi-grid {:on-click #(avaa-paallystysilmoitus (:paallystyskohde-id rivi))}
                        [:span "Aloita päällystysilmoitus"]]))}]
    paallystysilmoitukset])
 
@@ -630,7 +630,7 @@
     {:otsikko "Edellinen lahetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 50
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
-    {:otsikko "Lahetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
+    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 15 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/laheta-kohteet-yhaan
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet

@@ -11,6 +11,14 @@
     }
 }
 
+.kuva-modal .modal-body {
+    /* Kun näytetään kuva, halutaan, että modal täyttää suurin piirtein koko ruudun.
+       Tämä myös varmistaa, että kuva näyttää hyvältä vaikka sen leveys tai korkeus olisi
+       huomattavasti pidempi. */
+    height: 100%;
+    max-height: 80%;
+}
+
 .modal-dialog {
     width: 90%;
     max-width: 600px;
@@ -31,6 +39,11 @@
     width: 100%;
 }
 
-.liite-ikkuna > img {
-    width: 100%;
+img.kuva-modalissa {
+    /* Varmista, että kuva näyttää hyvältä kuvasuhteesta riippumatta. */
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
