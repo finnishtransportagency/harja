@@ -37,15 +37,16 @@
    (when voi-kommentoida?
      [:div.uusi-kommentti
       [:div.uusi-kommentti-teksti
-       [kentat/tee-kentta {:tyyppi      :text :nimi :teksti
+       [kentat/tee-kentta {:tyyppi :text :nimi :teksti
                            :placeholder (or placeholder "Kirjoita uusi kommentti...")
-                           :koko        [(or leveys-col 80) :auto]}
+                           :koko [(or leveys-col 80) :auto]}
         (r/wrap (:kommentti @uusi-kommentti) #(swap! uusi-kommentti assoc :kommentti %))]]
       (when kommentoi!
         [:button.nappi-ensisijainen.uusi-kommentti-tallenna
          {:on-click #(kommentoi! @uusi-kommentti)
           :disabled (str/blank? (:kommentti @uusi-kommentti))}
          "Tallenna kommentti"])
-      (when voi-liittaa [liitteet/liite {:urakka-id     (:id @nav/valittu-urakka)
-                                         :liite-ladattu #(swap! uusi-kommentti assoc :liite %)
-                                         :nappi-teksti  liita-nappi-teksti}])])])
+      (when voi-liittaa [liitteet/lisaa-liite
+                         (:id @nav/valittu-urakka)
+                         {:liite-ladattu #(swap! uusi-kommentti assoc :liite %)
+                          :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")}])])])

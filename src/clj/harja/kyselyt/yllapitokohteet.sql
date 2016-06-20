@@ -17,6 +17,7 @@ SELECT
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
   ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   yllapitoluokka,
+  indeksin_kuvaus                       AS "indeksin-kuvaus",
   ypk.tr_numero                         AS "tr-numero",
   ypk.tr_alkuosa                        AS "tr-alkuosa",
   ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
@@ -55,19 +56,6 @@ WHERE
   AND ypk.poistettu IS NOT TRUE
 ORDER BY tr_numero, tr_alkuosa, tr_alkuetaisyys;
 
--- name: hae-urakan-yllapitokohde
--- Hakee urakan yksittäisen ylläpitokohteen
-SELECT
-  id,
-  kohdenumero,
-  nimi,
-  sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
-  arvonvahennykset,
-  bitumi_indeksi           AS "bitumi-indeksi",
-  kaasuindeksi
-FROM yllapitokohde
-WHERE urakka = :urakka AND id = :id;
-
 -- name: hae-urakan-yllapitokohteen-yllapitokohdeosat
 -- Hakee urakan ylläpitokohdeosat ylläpitokohteen id:llä.
 SELECT
@@ -96,9 +84,8 @@ WHERE yllapitokohde = :yllapitokohde
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
-                           yllapitoluokka, nykyinen_paallyste,
-                           sopimuksen_mukaiset_tyot,
-                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, tyyppi)
+                           yllapitoluokka, nykyinen_paallyste, sopimuksen_mukaiset_tyot,
+                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, tyyppi, indeksin_kuvaus)
 VALUES (:urakka,
   :sopimus,
   :kohdenumero,
@@ -110,14 +97,15 @@ VALUES (:urakka,
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-        :keskimaarainen_vuorokausiliikenne,
-        :yllapitoluokka,
-        :nykyinen_paallyste,
-        :sopimuksen_mukaiset_tyot,
-        :arvonvahennykset,
-        :bitumi_indeksi,
-        :kaasuindeksi,
-        :tyyppi :: yllapitokohdetyyppi);
+  :keskimaarainen_vuorokausiliikenne,
+  :yllapitoluokka,
+  :nykyinen_paallyste,
+  :sopimuksen_mukaiset_tyot,
+  :arvonvahennykset,
+  :bitumi_indeksi,
+  :kaasuindeksi,
+  :tyyppi :: yllapitokohdetyyppi,
+  :indeksin_kuvaus);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -138,7 +126,8 @@ SET
   sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
   arvonvahennykset                  = :arvonvanhennykset,
   bitumi_indeksi                    = :bitumi_indeksi,
-  kaasuindeksi                      = :kaasuindeksi
+  kaasuindeksi                      = :kaasuindeksi,
+  indeksin_kuvaus                   = :indeksin_kuvaus
 WHERE id = :id
       AND urakka = :urakkaid;
 
