@@ -330,7 +330,8 @@
           :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
           :tyyppi :positiivinen-numero
           :leveys 20
-          :tasaa :oikea}
+          :tasaa :oikea
+          :fmt fmt/desimaaliluku-opt}
          {:otsikko "Suorittaja"
           :nimi :suorittajan_nimi
           :muokattava? (constantly false)
