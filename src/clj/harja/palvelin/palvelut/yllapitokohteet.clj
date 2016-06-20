@@ -97,7 +97,7 @@
     vastaus))
 
 (defn- hae-urakkatyyppi [db urakka-id]
-  (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakkaid urakka-id})))))
+  (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
@@ -127,7 +127,7 @@
       db
       {:valmis_tiemerkintaan tiemerkintapvm
        :id kohde-id
-       :urakkaid urakka-id})
+       :urakka urakka-id})
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
@@ -149,7 +149,7 @@
            :aikataulu_muokkaaja (:id user)
            :suorittava_tiemerkintaurakka (:suorittava-tiemerkintaurakka rivi)
            :id (:id rivi)
-           :urakkaid urakka-id}))
+           :urakka urakka-id}))
       :tiemerkinta
       (doseq [rivi kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
@@ -158,7 +158,7 @@
            :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu rivi)
            :aikataulu_muokkaaja (:id user)
            :id (:id rivi)
-           :urakkaid urakka-id})))
+           :urakka urakka-id})))
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
@@ -215,7 +215,7 @@
                    (nil? paikkausilmoitus))
             (do
               (log/debug "Ilmoituksia ei löytynyt, poistetaan ylläpitokohde")
-              (q/poista-yllapitokohde! db {:id id :urakkaid urakka-id}))
+              (q/poista-yllapitokohde! db {:id id :urakka urakka-id}))
             (log/debug "Ei voi poistaa, ylläpitokohteelle on kirjattu ilmoituksia!"))))
     (do (log/debug "Päivitetään ylläpitokohde")
         (q/paivita-yllapitokohde! db
@@ -237,7 +237,7 @@
                                    :kaasuindeksi kaasuindeksi
                                    :indeksin_kuvaus indeksin-kuvaus
                                    :id id
-                                   :urakkaid urakka-id}))))
+                                   :urakka urakka-id}))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
   (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
@@ -294,7 +294,7 @@
                                      :sijainti (when-not (empty? sijainti)
                                                  (geo/geometry (geo/clj->pg sijainti)))
                                      :id id
-                                     :urakka-id urakka-id})))
+                                     :urakka urakka-id})))
 
 (defn tallenna-yllapitokohdeosa
   "Tallentaa yksittäisen ylläpitokohdeosan kantaan.
@@ -336,7 +336,7 @@
           poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
       (doseq [id poistuneet-osa-idt]
-        (q/poista-yllapitokohdeosa! c {:urakkaid urakka-id
+        (q/poista-yllapitokohdeosa! c {:urakka urakka-id
                                        :id id}))
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)

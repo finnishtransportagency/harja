@@ -48,7 +48,9 @@
                                        (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
                                                                                [:paatos-tekninen-osa]
                                                                                [:tila]])))
-                                 (q/hae-urakan-paallystysilmoitus-paallystyskohteella db paallystyskohde-id))
+                                 (q/hae-urakan-paallystysilmoitus-paallystyskohteella
+                                   db
+                                   {:paallystyskohde paallystyskohde-id}))
         paallystysilmoitus (first (konv/sarakkeet-vektoriin
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
@@ -82,7 +84,7 @@
                                              liite)
                                          kommentti
                                          (dissoc kommentti :liite)))))
-                          (q/hae-paallystysilmoituksen-kommentit db (:id paallystysilmoitus)))]
+                          (q/hae-paallystysilmoituksen-kommentit db {:id (:id paallystysilmoitus)}))]
       (log/debug "Kommentit saatu: " kommentit)
       (assoc paallystysilmoitus
         :kokonaishinta kokonaishinta
@@ -111,26 +113,26 @@
     (log/debug "POT muutoshinta: " muutoshinta)
     (q/paivita-paallystysilmoitus!
       db
-      tila
-      encoodattu-ilmoitustiedot
-      (konv/sql-date aloituspvm)
-      (konv/sql-date valmispvm-kohde)
-      (konv/sql-date valmispvm-paallystys)
-      (konv/sql-date takuupvm)
-      muutoshinta
-      (if paatos-tekninen-osa (name paatos-tekninen-osa))
-      (if paatos-taloudellinen-osa (name paatos-taloudellinen-osa))
-      perustelu-tekninen-osa
-      perustelu-taloudellinen-osa
-      (konv/sql-date kasittelyaika-tekninen-osa)
-      (konv/sql-date kasittelyaika-taloudellinen-osa)
-      (konv/sql-date asiatarkastus-tarkastusaika)
-      asiatarkastus-tarkastaja
-      asiatarkastus-tekninen-osa
-      asiatarkastus-taloudellinen-osa
-      asiatarkastus-kommentit
-      (:id user)
-      paallystyskohde-id))
+      {:tila tila
+       :ilmoitustiedot encoodattu-ilmoitustiedot
+       :aloituspvm (konv/sql-date aloituspvm)
+       :valmispvm_kohde (konv/sql-date valmispvm-kohde)
+       :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
+       :takuupvm (konv/sql-date takuupvm)
+       :muutoshinta muutoshinta
+       :paatos_tekninen_osa (if paatos-tekninen-osa (name paatos-tekninen-osa))
+       :paatos_taloudellinen_osa (if paatos-taloudellinen-osa (name paatos-taloudellinen-osa))
+       :perustelu_tekninen_osa perustelu-tekninen-osa
+       :perustelu_taloudellinen_osa perustelu-taloudellinen-osa
+       :kasittelyaika_tekninen_osa (konv/sql-date kasittelyaika-tekninen-osa)
+       :kasittelyaika_taloudellinen_osa (konv/sql-date kasittelyaika-taloudellinen-osa)
+       :asiatarkastus_pvm (konv/sql-date asiatarkastus-tarkastusaika)
+       :asiatarkastus_tarkastaja asiatarkastus-tarkastaja
+       :asiatarkastus_tekninen_osa asiatarkastus-tekninen-osa
+       :asiatarkastus_taloudellinen_osa asiatarkastus-taloudellinen-osa
+       :asiatarkastus_kommentit asiatarkastus-kommentit
+       :muokkaaja (:id user)
+       :id paallystyskohde-id}))
   id)
 
 (defn- luo-paallystysilmoitus [db user
@@ -144,15 +146,15 @@
     (log/debug "POT muutoshinta: " muutoshinta)
     (:id (q/luo-paallystysilmoitus<!
            db
-           paallystyskohde-id
-           tila
-           encoodattu-ilmoitustiedot
-           (konv/sql-date aloituspvm)
-           (konv/sql-date valmispvm-kohde)
-           (konv/sql-date valmispvm-paallystys)
-           (konv/sql-date takuupvm)
-           muutoshinta
-           (:id user)))))
+           {:paallystyskohde paallystyskohde-id
+            :tila tila
+            :ilmoitustiedot encoodattu-ilmoitustiedot
+            :aloituspvm (konv/sql-date aloituspvm)
+            :valmispvm_kohde (konv/sql-date valmispvm-kohde)
+            :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
+            :takuupvm (konv/sql-date takuupvm)
+            :muutoshinta muutoshinta
+            :kayttaja (:id user)}))))
 
 (defn- kasittele-paallystysilmoituksen-tierekisterikohteet
   "Ottaa päällystysilmoituksen ilmoitustiedot.
@@ -202,7 +204,9 @@
                                                                           sopimus-id
                                                                           (:paallystyskohde-id lomakedata)
                                                                           (:ilmoitustiedot lomakedata)))]
-    (if (first (q/hae-urakan-paallystysilmoituksen-id-paallystyskohteella db paallystyskohde-id))
+    (if (first (q/hae-urakan-paallystysilmoituksen-id-paallystyskohteella
+                 db
+                 {:paallystyskohde paallystyskohde-id}))
       (paivita-paallystysilmoitus db user lomakedata)
       (luo-paallystysilmoitus db user lomakedata))))
 
@@ -283,7 +287,8 @@
                                                      nil
                                                      (:id user))]
             ;; Liitä kommentti päällystysilmoitukseen
-            (q/liita-kommentti<! c paallystysilmoitus-id (:id kommentti))))
+            (q/liita-kommentti<! c {:paallystysilmoitus paallystysilmoitus-id
+                                    :kommentti (:id kommentti)})))
         (let [uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
                                                                           :sopimus-id sopimus-id})]
           (log/debug "Tallennus tehty, palautetaan uudet päällystysilmoitukset: " (count uudet-ilmoitukset) " kpl")
