@@ -102,7 +102,7 @@
       :paallystys
       (q/hae-paallystysurakan-aikataulu db urakka-id sopimus-id)
       :tiemerkinta
-      (q/hae-tiemerkintaurakan-aikataulu db urakka-id sopimus-id))))
+      (q/hae-tiemerkintaurakan-aikataulu db urakka-id))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/lue oikeudet/urakat-aikataulu user urakka-id)
