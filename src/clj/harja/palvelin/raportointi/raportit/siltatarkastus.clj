@@ -28,7 +28,7 @@
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? laatupoikkeamarivit) "Ei raportoitavia siltatarkastuksia.")
+                 :tyhja   (if (empty? sillat) "Ei raportoitavia siltatarkastuksia.")
                  :sheet-nimi raportin-nimi}
       [{:leveys 15 :otsikko "Silta"}]
       [["1"]]]]))
