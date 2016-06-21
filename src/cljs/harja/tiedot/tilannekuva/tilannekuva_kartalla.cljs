@@ -119,7 +119,7 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
                   [:alue]
                   assoc
                   :fill false
-                  :stroke {:width 1}
+                  :stroke {:width 2}
                   :z-index 1)
         :type :ur
         :nimi nil))))
