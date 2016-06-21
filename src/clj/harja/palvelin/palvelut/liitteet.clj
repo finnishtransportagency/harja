@@ -18,7 +18,7 @@
         liite (get parametrit "liite")
         urakka (Integer/parseInt (get parametrit "urakka"))]
 
-    (oikeudet/kirjoita oikeudet/urakat-liitteet (:kayttaja req) urakka)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-liitteet (:kayttaja req) urakka)
     (if liite
       (let [{:keys [filename content-type tempfile size kuvaus]} liite
             uusi-liite (liitteet/luo-liite liitteet (:id (:kayttaja req)) urakka filename content-type size tempfile kuvaus "harja-ui")]
@@ -32,7 +32,7 @@
 (defn lataa-liite [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
         {:keys [tyyppi koko urakka data]} (liitteet/lataa-liite liitteet id)]
-    (oikeudet/lue oikeudet/urakat-liitteet (:kayttaja req) urakka)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-liitteet (:kayttaja req) urakka)
     {:status  200
      :headers {"Content-Type"   tyyppi
                "Content-Length" koko}
@@ -41,7 +41,7 @@
 (defn lataa-pikkukuva [liitteet req]
   (let [id (Integer/parseInt (get (:params req) "id"))
         {:keys [pikkukuva urakka]} (liitteet/lataa-pikkukuva liitteet id)]
-    (oikeudet/lue oikeudet/urakat-liitteet (:kayttaja req) urakka)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-liitteet (:kayttaja req) urakka)
     (log/debug "Ladataan pikkukuva " id)
     (if pikkukuva
       {:status  200

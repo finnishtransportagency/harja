@@ -299,8 +299,7 @@
               (empty? alustalle-tehdyt-toimet-virheet)
               (empty? kiviaines-virheet)
               (empty? toteutuneet-maarat-virheet)
-              (false? lomake-lukittu-muokkaukselta?)
-              lomake-kirjoitusoikeus?)))
+              (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi?
         (reaction
           (let [valmispvm-kohde (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata)

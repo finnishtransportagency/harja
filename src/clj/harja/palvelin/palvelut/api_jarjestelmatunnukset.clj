@@ -8,14 +8,14 @@
             [clojure.java.jdbc :as jdbc]))
 
 (defn hae-jarjestelmatunnukset [db user]
-  (oikeudet/lue oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(konv/array->vec % :urakat)))
         (q/hae-jarjestelmatunnukset db)))
 
 (defn tallenna-jarjestelmatunnukset [db user tunnukset]
-  (oikeudet/kirjoita oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [id kayttajanimi kuvaus organisaatio poistettu]} tunnukset]
       (if poistettu

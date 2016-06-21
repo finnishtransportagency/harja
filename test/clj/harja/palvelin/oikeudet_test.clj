@@ -109,7 +109,7 @@
 
 (deftest tilaajan-kayttajan-lukuoikeuksia
   (is (try+
-        (oikeudet/lue oikeudet/urakat tilaajan-kayttaja 1)
+        (oikeudet/vaadi-lukuoikeus oikeudet/urakat tilaajan-kayttaja 1)
         true
         (catch harja.domain.roolit.EiOikeutta e
           false)))

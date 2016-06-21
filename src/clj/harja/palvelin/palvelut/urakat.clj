@@ -146,24 +146,24 @@
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id)))))
 
 (defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
-  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/tallenna-urakan-sopimustyyppi! db (name sopimustyyppi) urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
 
 (defn tallenna-urakan-tyyppi [db user {:keys  [urakka-id urakkatyyppi]}]
-  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/tallenna-urakan-tyyppi! db urakkatyyppi urakka-id)
   (hae-urakan-tyyppi db user urakka-id))
 
 (defn hae-yksittainen-urakka [db user urakka-id]
   (log/debug "Hae yksittäinen urakka id:llä: " urakka-id)
-  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (first (into []
                 urakka-xf
                 (q/hae-yksittainen-urakka db urakka-id))))
 
 (defn aseta-takuun-loppupvm [db user {:keys [urakka-id takuu]}]
-  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/aseta-takuun-loppupvm! db {:urakka urakka-id
                                 :loppupvm (:loppupvm takuu)}))
 
