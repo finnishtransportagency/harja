@@ -57,7 +57,7 @@
      "Yhteensä: " (fmt/euro-opt @toteuman-kokonaishinta)]))
 
 (defn asiaktarkastus
-  "Asiatarkastusosio konsultille, kun ilmoitus on valmis."
+  "Asiatarkastusosio konsultille."
   [valmis-asiatarkastukseen?]
   (let [muokattava? (and
                       (oikeudet/on-muu-oikeus? "asiatarkastus"
@@ -118,7 +118,7 @@
           :nimi :asiatarkastus-taloudellinen-osa
           :tyyppi :checkbox
           :fmt fmt/totuus}
-         {:otsikko "Kommentit"
+         {:otsikko "Lisätiedot"
           :nimi :asiatarkastus-lisatiedot
           :tyyppi :text
           :koko [60 3]
