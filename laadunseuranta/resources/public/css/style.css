@@ -50,13 +50,31 @@ button {
 }
 
 .ylapalkki .hoitoluokka {
-    top: 0;
+    top: -10px;
     position: absolute;
     border-left: 1px solid rgb(40,40,40);
     left: 700px;
     padding-left: 10px;
     color: white;
-    width: 50px;
+    width: 100px;
+}
+
+.ylapalkki .hoitoluokka .soratiehoitoluokka {
+    display: block;
+    padding-top: 0;
+    width: 190px;
+    top: 0;
+    font-size: 15px;
+    height: 19px;
+}
+
+.ylapalkki .hoitoluokka .talvihoitoluokka {
+    display: block;
+    padding-top: 0;
+    width: 190px;
+    top: 0;
+    font-size: 15px;
+    height: 15px;
 }
 
 .ylapalkki-button {

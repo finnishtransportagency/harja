@@ -27,13 +27,15 @@
   [:div.ylapalkki-button.keskityspainike.livicon-crosshairs {:on-click #(do (swap! keskita-ajoneuvoon not)
                                                                             (swap! keskita-ajoneuvoon not))}])
 
-(defn ylapalkkikomponentti [tiedot-nakyvissa hoitoluokka tr-osoite kiinteistorajat tallennus-kaynnissa tallennustilaa-muutetaan keskita-ajoneuvoon disabloi-kaynnistys?]
+(defn ylapalkkikomponentti [tiedot-nakyvissa hoitoluokka soratiehoitoluokka tr-osoite kiinteistorajat tallennus-kaynnissa tallennustilaa-muutetaan keskita-ajoneuvoon disabloi-kaynnistys?]
   [:div.ylapalkki
    [logo]
    (when-not @tallennus-kaynnissa
      [keskityspainike keskita-ajoneuvoon])
    [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
-   [:div.hoitoluokka (or @hoitoluokka "-")]
+   [:div.hoitoluokka
+    [:div.soratiehoitoluokka (str "Soratiehoitoluokka: " (or @soratiehoitoluokka "-"))]
+    [:div.talvihoitoluokka (str "Talvihoitoluokka: " (or @hoitoluokka "-"))]]
    [:div.ylapalkki-button.kiinteistorajat.livicon-home {:on-click #(swap! kiinteistorajat not)}]
    [:div.ylapalkki-button.infonappi.livicon-circle-info {:on-click #(swap! tiedot-nakyvissa not)}]
    [kaynnistyspainike tallennus-kaynnissa tallennustilaa-muutetaan disabloi-kaynnistys?]])
