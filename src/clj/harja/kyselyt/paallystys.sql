@@ -1,29 +1,31 @@
 -- name: hae-urakan-paallystysilmoitukset
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
-  yllapitokohde.id AS "paallystyskohde-id",
+  yllapitokohde.id            AS "paallystyskohde-id",
   pi.tila,
   nimi,
   kohdenumero,
-  pi.paatos_tekninen_osa AS "paatos-tekninen-osa",
-  pi.paatos_taloudellinen_osa  AS "paatos-taloudellinen-osa",
-  sopimuksen_mukaiset_tyot  AS "sopimuksen-mukaiset-tyot",
+  pi.paatos_tekninen_osa      AS "paatos-tekninen-osa",
+  pi.paatos_taloudellinen_osa AS "paatos-taloudellinen-osa",
+  sopimuksen_mukaiset_tyot    AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset,
-  bitumi_indeksi AS "bitumi-indeksi",
+  bitumi_indeksi              AS "bitumi-indeksi",
   kaasuindeksi,
   lahetetty,
-  lahetys_onnistunut AS "lahetys-onnistunut",
+  lahetys_onnistunut          AS "lahetys-onnistunut",
   lahetysvirhe
 FROM yllapitokohde
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = yllapitokohde.id
-  AND pi.poistettu IS NOT TRUE
+                                     AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
-AND sopimus = :sopimus
-AND tyyppi = 'paallystys'::yllapitokohdetyyppi
-AND yllapitokohde.poistettu IS NOT TRUE;
+      AND sopimus = :sopimus
+      AND tyyppi = 'paallystys' :: yllapitokohdetyyppi
+      AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
-SELECT id FROM paallystysilmoitus WHERE paallystyskohde = :paallystyskohde;
+SELECT id
+FROM paallystysilmoitus
+WHERE paallystyskohde = :paallystyskohde;
 
 -- name: hae-urakan-paallystysilmoitus-paallystyskohteella
 -- Hakee urakan päällystysilmoituksen päällystyskohteen id:llä
@@ -71,46 +73,95 @@ FROM yllapitokohde ypk
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE;
 
--- name: paivita-paallystysilmoitus!
--- Päivittää päällystysilmoituksen
+-- name: hae-paallystysilmoitus-paallystyskohteella
+SELECT
+  id,
+  muutoshinta,
+  tila,
+  aloituspvm,
+  valmispvm_kohde                 AS "valmispvm-kohde",
+  valmispvm_paallystys            AS "valmispvm-paallystys",
+  takuupvm,
+  ilmoitustiedot,
+  paatos_tekninen_osa             AS "paatos-tekninen-osa",
+  paatos_taloudellinen_osa        AS "paatos-taloudellinen-osa",
+  perustelu_tekninen_osa          AS "perustelu-tekninen-osa",
+  perustelu_taloudellinen_osa     AS "perustelu-taloudellinen-osa",
+  kasittelyaika_tekninen_osa      AS "kasittelyaika-tekninen-osa",
+  kasittelyaika_taloudellinen_osa AS "kasittelyaika-taloudellinen-osa",
+  asiatarkastus_pvm               AS "asiatarkastus-tarkastusaika",
+  asiatarkastus_tarkastaja        AS "asiatarkastus-tarkastaja",
+  asiatarkastus_tekninen_osa      AS "asiatarkastus-tekninen-osa",
+  asiatarkastus_taloudellinen_osa AS "asiatarkastus-taloudellinen-osa",
+  asiatarkastus_lisatiedot        AS "asiatarkastus-lisatiedot"
+FROM paallystysilmoitus pi
+WHERE paallystyskohde = :paallystyskohde;
+
+-- name: paivita-paallystysilmoitus<!
+-- Päivittää päällystysilmoituksen tiedot (ei käsittelyä tai asiatarkastusta, päivitetään erikseen)
 UPDATE paallystysilmoitus
 SET
-  tila                              = :tila::paallystystila,
-  ilmoitustiedot                    = :ilmoitustiedot :: JSONB,
-  aloituspvm                        = :aloituspvm,
-  valmispvm_kohde                   = :valmispvm_kohde,
-  valmispvm_paallystys              = :valmispvm_paallystys,
-  takuupvm                          = :takuupvm,
-  muutoshinta                       = :muutoshinta,
-  paatos_tekninen_osa               = :paatos_tekninen_osa::paallystysilmoituksen_paatostyyppi,
-  paatos_taloudellinen_osa          = :paatos_taloudellinen_osa::paallystysilmoituksen_paatostyyppi,
-  perustelu_tekninen_osa            = :perustelu_tekninen_osa,
-  perustelu_taloudellinen_osa       = :perustelu_taloudellinen_osa,
-  kasittelyaika_tekninen_osa        = :kasittelyaika_tekninen_osa,
-  kasittelyaika_taloudellinen_osa   = :kasittelyaika_taloudellinen_osa,
-  asiatarkastus_pvm                 = :asiatarkastus_pvm,
-  asiatarkastus_tarkastaja          = :asiatarkastus_tarkastaja,
-  asiatarkastus_tekninen_osa        = :asiatarkastus_tekninen_osa,
-  asiatarkastus_taloudellinen_osa   = :asiatarkastus_taloudellinen_osa,
-  asiatarkastus_lisatiedot          = :asiatarkastus_lisatiedot,
-  muokattu                          = NOW(),
-  muokkaaja                         = :muokkaaja,
-  poistettu                         = FALSE
-WHERE paallystyskohde = :id;
+  tila                 = :tila :: paallystystila,
+  ilmoitustiedot       = :ilmoitustiedot :: JSONB,
+  aloituspvm           = :aloituspvm,
+  valmispvm_kohde      = :valmispvm_kohde,
+  valmispvm_paallystys = :valmispvm_paallystys,
+  takuupvm             = :takuupvm,
+  muutoshinta          = :muutoshinta,
+  muokattu             = NOW(),
+  muokkaaja            = :muokkaaja,
+  poistettu            = FALSE
+WHERE paallystyskohde = :id
+      AND paallystyskohde IN (SELECT id
+                              FROM yllapitokohde
+                              WHERE urakka = :urakka);
+
+-- name: paivita-paallystysilmoituksen-kasittelytiedot<!
+-- Päivittää päällystysilmoituksen käsittelytiedot
+UPDATE paallystysilmoitus
+SET
+  paatos_tekninen_osa             = :paatos_tekninen_osa :: paallystysilmoituksen_paatostyyppi,
+  paatos_taloudellinen_osa        = :paatos_taloudellinen_osa :: paallystysilmoituksen_paatostyyppi,
+  perustelu_tekninen_osa          = :perustelu_tekninen_osa,
+  perustelu_taloudellinen_osa     = :perustelu_taloudellinen_osa,
+  kasittelyaika_tekninen_osa      = :kasittelyaika_tekninen_osa,
+  kasittelyaika_taloudellinen_osa = :kasittelyaika_taloudellinen_osa,
+  muokattu                        = NOW(),
+  muokkaaja                       = :muokkaaja
+  WHERE paallystyskohde = :id
+        AND paallystyskohde IN (SELECT id
+                                FROM yllapitokohde
+                                WHERE urakka = :urakka);
+
+-- name: paivita-paallystysilmoituksen-asiatarkastus<!
+-- Päivittää päällystysilmoituksen asiatarkastuksen
+UPDATE paallystysilmoitus
+SET
+  asiatarkastus_pvm               = :asiatarkastus_pvm,
+  asiatarkastus_tarkastaja        = :asiatarkastus_tarkastaja,
+  asiatarkastus_tekninen_osa      = :asiatarkastus_tekninen_osa,
+  asiatarkastus_taloudellinen_osa = :asiatarkastus_taloudellinen_osa,
+  asiatarkastus_lisatiedot        = :asiatarkastus_lisatiedot,
+  muokattu                        = NOW(),
+  muokkaaja                       = :muokkaaja
+  WHERE paallystyskohde = :id
+        AND paallystyskohde IN (SELECT id
+                                FROM yllapitokohde
+                                WHERE urakka = :urakka);
 
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, aloituspvm, valmispvm_kohde, valmispvm_paallystys, takuupvm, muutoshinta, luotu, luoja, poistettu)
 VALUES (:paallystyskohde,
-        :tila::paallystystila,
-        :ilmoitustiedot::JSONB,
-        :aloituspvm,
-        :valmispvm_kohde,
-        :valmispvm_paallystys,
-        :takuupvm,
-        :muutoshinta,
-        NOW(),
-        :kayttaja, FALSE);
+  :tila :: paallystystila,
+  :ilmoitustiedot :: JSONB,
+  :aloituspvm,
+  :valmispvm_kohde,
+  :valmispvm_paallystys,
+  :takuupvm,
+  :muutoshinta,
+  NOW(),
+  :kayttaja, FALSE);
 
 -- name: hae-paallystysilmoituksen-kommentit
 -- Hakee annetun päällystysilmoituksen kaikki kommentit (joita ei ole poistettu) sekä
