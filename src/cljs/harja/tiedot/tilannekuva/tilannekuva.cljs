@@ -271,11 +271,17 @@ hakutiheys-historiakuva 1200000)
                       (swap! suodattimet assoc :alueet yhdistetyt)
                       tulos)))))
 
-(run! (tilannekuva-kartalla/aseta-valitut-organisaatiot! (:alueet @suodattimet)))
+(defn seuraa-alueita! []
+  (tilannekuva-kartalla/seuraa-alueita! suodattimet))
 
+(defn lopeta-alueiden-seuraus! []
+  (tilannekuva-kartalla/lopeta-alueen-seuraus! suodattimet))
+
+;; FIXME: Tämä lasketaan uusiksi joka kerta, kun karttaa siirretään. Isohko homma korjata?
 (defonce hakuparametrit
-  (reaction
-   (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet)))
+         (reaction
+           (when @nakymassa?
+             (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet))))
 
 (defn yhdista-tyokonedata [uusi]
   (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)

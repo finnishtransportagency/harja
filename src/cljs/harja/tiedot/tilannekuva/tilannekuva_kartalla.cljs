@@ -11,7 +11,8 @@
             [harja.ui.openlayers :as openlayers]
             [clojure.string :as str]
             [harja.geo :as geo]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.views.kartta.muuttujat :refer [+koko-suomi-extent+]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -124,15 +125,24 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
         :type :ur
         :nimi nil))))
 
-(defn zoomaa-urakoihin! []
+(defn zoomaa-urakoihin! [urakat]
   (reset! nav/kartan-extent
-          (-> (geo/extent-monelle (map :alue @tilannekuvan-organisaatiot))
-              (geo/laajenna-extent geo/pisteen-extent-laajennus))))
+          (if-not (empty? urakat)
+            (-> (geo/extent-monelle (map :alue urakat))
+                (geo/laajenna-extent geo/pisteen-extent-laajennus))
+
+            +koko-suomi-extent+)))
 
 (defn aseta-valitut-organisaatiot! [suodattimet]
   (reset! tilannekuvan-organisaatiot (into []
                                            (keep organisaation-geometria)
                                            (domain/valitut-kentat suodattimet))))
 
-(run! (when-not (empty? @tilannekuvan-organisaatiot)
-        (zoomaa-urakoihin!)))
+(defn seuraa-alueita! [suodattimet]
+  (add-watch suodattimet ::alueen-seuraus (fn [_ _ vanha-tila uusi-tila]
+                                             (when-not (= (domain/valitut-suodattimet (:alueet vanha-tila))
+                                                          (domain/valitut-suodattimet (:alueet uusi-tila)))
+                                               (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet uusi-tila)))))))
+
+(defn lopeta-alueen-seuraus! [suodattimet]
+  (remove-watch suodattimet ::alueen-seuraus))

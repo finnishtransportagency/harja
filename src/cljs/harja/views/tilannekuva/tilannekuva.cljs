@@ -224,11 +224,13 @@
                            (kartta/aseta-paivitetaan-karttaa-tila! true)
                            (swap! tiedot/suodattimet assoc :alueet tiedot/oletusalueet)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa @nav/valittu-urakka)
-                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko))
+                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa @nav/valittu-hallintayksikko)
+                           (tiedot/seuraa-alueita!))
                       #(do (reset! kartta/pida-geometriat-nakyvilla? true)
                            (kartta/aseta-paivitetaan-karttaa-tila! false)
                            (reset! tiedot/valittu-urakka-tilannekuvaan-tullessa nil)
-                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)))
+                           (reset! tiedot/valittu-hallintayksikko-tilannekuvaan-tullessa nil)
+                           (tiedot/lopeta-alueiden-seuraus!)))
     (komp/kuuntelija [:toteuma-klikattu :ilmoitus-klikattu
                       :laatupoikkeama-klikattu :tarkastus-klikattu :turvallisuuspoikkeama-klikattu
                       :paallystys-klikattu :paikkaus-klikattu :tyokone-klikattu
