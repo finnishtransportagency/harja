@@ -36,7 +36,7 @@
                                        (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset id))
                                    (= tyyppi :paallystys))
     :kohdeluettelo-paikkaus (and (or (oikeudet/urakat-kohdeluettelo-paikkauskohteet id)
-                                     (oikeudet/urakat-kohdeluettelo-paikkaussilmoitukset id))
+                                     (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset id))
                                  (= tyyppi :paikkaus))
     :laadunseuranta (oikeudet/urakat-laadunseuranta id)
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
