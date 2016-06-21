@@ -186,11 +186,14 @@
   ;; Täydennä väliaikaisesti tänne oletusarvot,
   ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
-  (->> viivat
-       (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
-                       :color (or (:color %) ulkoasu/+normaali-vari+)))
-       (sort-by :width >)
-       (mapv :color)))
+  (if (seq? viivat)
+    (->> viivat
+        (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
+                        :color (or (:color %) ulkoasu/+normaali-vari+)))
+        (sort-by :width >)
+        (mapv :color))
+
+    (:color viivat)))
 
 (defmulti
   ^{:private true}
@@ -251,15 +254,18 @@
                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
                (:tekija tarkastus))
         viiva (ulkoasu/tarkastuksen-reitti (valittu-fn? tarkastus) (:ok? tarkastus)
-                                           (:tekija tarkastus))]
+                                           (:tekija tarkastus))
+        selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
+        selite (if ikoni
+                 (assoc selite-teksti :img ikoni)
+                 (assoc selite-teksti :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)))]
     (assoc tarkastus
       :type :tarkastus
       :nimi (or (:nimi tarkastus)
                 (otsikko-tekijalla
                   (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus))
                   tarkastus))
-      :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
-               :img    ikoni}
+      :selite selite
       :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni viiva))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
