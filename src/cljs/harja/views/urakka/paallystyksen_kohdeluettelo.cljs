@@ -58,11 +58,11 @@
 
           "Päällystyskohteet"
           :paallystyskohteet
-          (when (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
+          (when (oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
             [paallystyskohteet/paallystyskohteet ur])
 
           "Päällystysilmoitukset"
           :paallystysilmoitukset
-          (when (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset id)
+          (when (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset (:id ur))
             [paallystysilmoitukset/paallystysilmoitukset])]]
         [vihje "Päällystysurakka täytyy sitoa YHA-urakkaan ennen kuin sen kohteita voi hallita."]))))
