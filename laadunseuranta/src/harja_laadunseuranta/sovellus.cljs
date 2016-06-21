@@ -31,7 +31,7 @@
    :alustettu false
    :gps-tuettu false
    :nayta-kiinteistorajat false
-   :nayta-ortokuva true
+   :nayta-ortokuva false
    :tr-tiedot-nakyvissa false
    :tr-tiedot {:tr-osoite {:tie 20
                            :aosa 1
