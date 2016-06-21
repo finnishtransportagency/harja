@@ -165,6 +165,7 @@
                                      (assoc :toimenpideinstanssi arvo)
                                      (aseta-tehtava nil)))]
           [:div.muun-tyon-tiedot
+           (log "Toteuma: " (pr-str @muokattu))
            [napit/takaisin " Takaisin muiden töiden luetteloon" #(reset! muut-tyot/valittu-toteuma nil)]
            [lomake {:otsikko (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
                                (if lomaketta-voi-muokata?
@@ -295,6 +296,12 @@
               :palstoja 1
               :validoi     [[:ei-tyhja "Valitse päivämäärä"]
                             [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
+             {:tyyppi :tierekisteriosoite
+              :nimi :tr
+              :pakollinen? false
+              :sijainti (r/wrap (:sijainti @muokattu)
+                                #(swap! muokattu assoc :sijainti %))
+              :palstoja 2}
 
              (lomake/rivi
               {:otsikko       "Hinnoittelu" :nimi :hinnoittelu
