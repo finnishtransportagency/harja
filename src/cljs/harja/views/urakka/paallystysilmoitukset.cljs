@@ -113,11 +113,11 @@
          {:teksti "Tekninen osa tarkastettu"
           :nimi :asiatarkastus-tekninen-osa
           :tyyppi :checkbox
-          :fmt fmt/totuus}
+          :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
          {:teksti "Taloudellinen osa tarkastettu"
           :nimi :asiatarkastus-taloudellinen-osa
           :tyyppi :checkbox
-          :fmt fmt/totuus}
+          :fmt #(if % "Taloudellinen osa tarkastettu" "Taloudellista osaa ei tarkastettu")}
          {:otsikko "Lisätiedot"
           :nimi :asiatarkastus-lisatiedot
           :tyyppi :text
