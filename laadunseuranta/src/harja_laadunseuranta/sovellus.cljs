@@ -31,6 +31,7 @@
    :alustettu false
    :gps-tuettu false
    :nayta-kiinteistorajat false
+   :nayta-ortokuva false
    :tr-tiedot-nakyvissa false
    :tr-tiedot {:tr-osoite {:tie 20
                            :aosa 1
@@ -110,11 +111,13 @@
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 
 (def nayta-kiinteistorajat (reagent/cursor sovellus [:nayta-kiinteistorajat]))
+(def nayta-ortokuva (reagent/cursor sovellus [:nayta-ortokuva]))
 
 (def keskita-ajoneuvoon (reagent/cursor sovellus [:keskita-ajoneuvoon]))
 
 (def karttaoptiot (reaction {:seuraa-sijaintia (or @tallennus-kaynnissa @keskita-ajoneuvoon)
-                             :nayta-kiinteistorajat @nayta-kiinteistorajat}))
+                             :nayta-kiinteistorajat @nayta-kiinteistorajat
+                             :nayta-ortokuva @nayta-ortokuva}))
 
 (def havainnot (reagent/cursor sovellus [:pikahavainnot]))
 

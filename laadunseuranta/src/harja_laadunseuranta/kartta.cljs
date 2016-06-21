@@ -26,7 +26,7 @@
                         :url          url
                         :layer        layer
                         :matrixSet    "ETRS-TM35FIN"
-                        :format       "image/png"
+                        :format       (if (= "ortokuva" layer) "image/jpeg" "image/png")
                         :projection   projektiot/projektio
                         :tileGrid     (ol.tilegrid.WMTS. (clj->js (projektiot/tilegrid 16)))
                         :style        "default"
@@ -37,6 +37,9 @@
 
 (defn- wmts-source-kiinteistojaotus [url]
   (wmts-source url "kiinteistojaotus"))
+
+(defn- wmts-source-ortokuva [url]
+  (wmts-source url "ortokuva"))
 
 (defn- tile-layer [source]
   (ol.layer.Tile.
@@ -125,9 +128,10 @@
                             :rotate      false
                             :attribution false}))
 
-(defn- luo-optiot [wmts-url wmts-url-kiinteistorajat
+(defn- luo-optiot [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva
                    sijainti kohde-elementti ajoneuvokerros reittikerros ikonikerros]
   {:layers [(tile-layer (wmts-source-taustakartta wmts-url))
+            (tile-layer (wmts-source-ortokuva wmts-url-ortokuva))
             (tile-layer (wmts-source-kiinteistojaotus wmts-url-kiinteistorajat))
             ajoneuvokerros
             reittikerros
@@ -191,13 +195,16 @@
       (.removeInteraction kartta dragpan))))
 
 (defn- kytke-kiinteistorajat [kartta enable]
+  (.setVisible (aget (.getArray (.getLayers kartta)) 2) enable))
+
+(defn- kytke-ortokuva [kartta enable]
   (.setVisible (aget (.getArray (.getLayers kartta)) 1) enable))
 
 (defn- sijainti-ok? [{:keys [lat lon]}]
   (and (not= 0 lon)
        (not= 0 lat)))
 
-(defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat keskipiste-atomi
+(defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
                         ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
         map-element (reagent/dom-node this)
@@ -210,7 +217,7 @@
         reittikerros (vector-layer (tee-vektorilahde ajettu-reitti))
         ikonikerros (vector-layer (tee-vektorilahde kirjatut-pisteet))
         
-        kartta (ol/Map. (clj->js (luo-optiot wmts-url wmts-url-kiinteistorajat @keskipiste-atomi
+        kartta (ol/Map. (clj->js (luo-optiot wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva @keskipiste-atomi
                                              map-element ajoneuvokerros reittikerros ikonikerros)))]
     
     ;; instanssi talteen DOMiin testausta varten
@@ -231,6 +238,9 @@
 
     (run!
      (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat @optiot)))
+
+    (run!
+     (kytke-ortokuva kartta (:nayta-ortokuva @optiot)))
     
     ;; reagoidaan ajoneuvon sijainnin muutokseen
     (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros @ajoneuvon-sijainti-atomi))
@@ -242,12 +252,13 @@
     (run! (paivita-kirjausikonit kartta kirjatut-pisteet ikonikerros @kirjatut-pisteet-atomi))))
 
 
-(defn karttakomponentti [wmts-url wmts-url-kiinteistorajat sijainti-atomi
+(defn karttakomponentti [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
                          ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot]
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount #(kartta-did-mount %
                                                                  wmts-url
                                                                  wmts-url-kiinteistorajat
+                                                                 wmts-url-ortokuva
                                                                  sijainti-atomi
                                                                  ajoneuvon-sijainti-atomi
                                                                  reittipisteet-atomi
@@ -278,6 +289,7 @@
                     :height "800px"}}
       [karttakomponentti (paikallinen asetukset/+wmts-url+)
                          (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
+                         (paikallinen asetukset/+wmts-url-ortokuva+)
                          sijainti sijainti test-reittipisteet test-ikonit testioptiot]]))
   test-sijainti  
   {:inspect-data true
