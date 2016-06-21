@@ -44,6 +44,7 @@ button {
     border-left: 1px solid rgb(40,40,40);
     position: absolute;
     color: white;
+    font-size: 23px;
     font-weight: normal;
     padding-left: 10px;
     left: 480px;
