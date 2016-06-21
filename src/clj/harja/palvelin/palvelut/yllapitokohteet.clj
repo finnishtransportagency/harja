@@ -75,8 +75,8 @@
       vastaus)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (or (oikeudet/lue oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
+      (oikeudet/lue oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))
   (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
   (jdbc/with-db-transaction [db db]
     (let [vastaus (q/hae-urakan-yllapitokohteet-lomakkeelle db {:urakka urakka-id
