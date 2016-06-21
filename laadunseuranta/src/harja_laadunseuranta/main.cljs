@@ -162,7 +162,7 @@
     (fn []
       [:div.toplevel
        [virhekasittely/virhekomponentti]
-       [ylapalkki/ylapalkkikomponentti s/tr-tiedot-nakyvissa s/hoitoluokka s/tr-osoite s/nayta-kiinteistorajat s/tallennus-kaynnissa s/tallennustilaa-muutetaan s/keskita-ajoneuvoon
+       [ylapalkki/ylapalkkikomponentti s/tr-tiedot-nakyvissa s/hoitoluokka s/soratiehoitoluokka s/tr-osoite s/nayta-kiinteistorajat s/tallennus-kaynnissa s/tallennustilaa-muutetaan s/keskita-ajoneuvoon
         s/palautettava-tarkastusajo]
        
        [kartta/karttakomponentti asetukset/+wmts-url+ asetukset/+wmts-url-kiinteistojaotus+
