@@ -136,7 +136,10 @@
    {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
            valmispvm-paallystys takuupvm
            paatos-tekninen-osa paatos-taloudellinen-osa] :as paallystysilmoitus}]
-  (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (if (oikeudet/voi-kirjoittaa?
+        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+        urakka-id
+        user)
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
         (let [ilmoitustiedot (kasittele-paallystysilmoituksen-tierekisterikohteet db
                                                                                   user
@@ -212,7 +215,7 @@
                                         perustelu-taloudellinen-osa kasittelyaika-tekninen-osa
                                         kasittelyaika-taloudellinen-osa] :as uusi-paallystysilmoitus}]
   (if (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                               user urakka-id)
+                               urakka-id user)
     (do
       (log/debug "Päivitetään päällystysilmoituksen käsittelytiedot")
       (q/paivita-paallystysilmoituksen-kasittelytiedot<!
@@ -234,7 +237,7 @@
                                       asiatarkastus-tekninen-osa asiatarkastus-taloudellinen-osa
                                       asiatarkastus-lisatiedot] :as uusi-paallystysilmoitus}]
   (if (oikeudet/on-muu-oikeus? "asiatarkastus" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                               user urakka-id)
+                               urakka-id user)
     (do (log/debug "Päivitetään päällystysilmoituksen asiatarkastus")
         (q/paivita-paallystysilmoituksen-asiatarkastus<!
           db
