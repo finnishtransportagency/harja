@@ -34,7 +34,7 @@
                                                        (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
                                    (= tyyppi :paallystys))
-    :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
+    :kohdeluettelo-paikkaus (and (oikeudet/urakat-kohdeluettelo-paikkauskohteet id)
                                  (= tyyppi :paikkaus))
     :laadunseuranta (oikeudet/urakat-laadunseuranta id)
     :valitavoitteet (oikeudet/urakat-valitavoitteet id)
