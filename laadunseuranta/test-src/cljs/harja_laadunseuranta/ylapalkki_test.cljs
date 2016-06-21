@@ -21,6 +21,6 @@
               hoitoluokka-div (sel1 [:div.soratiehoitoluokka])
               talvihoitoluokka-div (sel1 [:div.talvihoitoluokka])]
           (is (= "20 / 4 / 3000" (dommy/text palkki-div)))
-          (is (= "Soratiehoitoluokka: 5" (dommy/text hoitoluokka-div)))
-          (is (= "Talvihoitoluokka: Ia" (dommy/text talvihoitoluokka-div))))))))
+          (is (= "SHL: 5" (dommy/text hoitoluokka-div)))
+          (is (= "THL: Ia" (dommy/text talvihoitoluokka-div))))))))
 

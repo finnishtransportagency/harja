@@ -46,14 +46,14 @@ button {
     color: white;
     font-weight: normal;
     padding-left: 10px;
-    left: 500px;
+    left: 480px;
 }
 
 .ylapalkki .hoitoluokka {
     position: absolute;
     border-left: 1px solid rgb(40,40,40);
     top: 0;
-    left: 700px;
+    left: 680px;
     padding-left: 10px;
     color: white;
     width: 100px;
@@ -100,19 +100,19 @@ button {
 
 
 .ylapalkki .infonappi {
-    left: 450px;
+    left: 430px;
 }
 
 .ylapalkki .kiinteistorajat {
-    left: 340px;
+    left: 320px;
 }
 
 .ylapalkki .ortokuva {
-    left: 400px;
+    left: 380px;
 }
 
 .keskityspainike {
-    left: 280px;
+    left: 270px;
 }
 
 /* ---------- kartta ----------*/
