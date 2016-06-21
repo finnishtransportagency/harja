@@ -18,6 +18,7 @@
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.paallystys :as paallystys])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]

@@ -15,6 +15,7 @@
             [harja.ui.komponentti :as komp]
             [harja.views.kartta :as kartta]
             [harja.asiakas.tapahtumat :as tapahtumat]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]
