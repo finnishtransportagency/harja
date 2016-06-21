@@ -50,13 +50,15 @@ button {
 }
 
 .ylapalkki .hoitoluokka {
-    top: -10px;
     position: absolute;
     border-left: 1px solid rgb(40,40,40);
+    top: 0;
     left: 700px;
     padding-left: 10px;
     color: white;
     width: 100px;
+    height: 70px;
+    line-height: 50px;
 }
 
 .ylapalkki .hoitoluokka .soratiehoitoluokka {
@@ -98,15 +100,19 @@ button {
 
 
 .ylapalkki .infonappi {
-    left: 410px;
+    left: 450px;
 }
 
 .ylapalkki .kiinteistorajat {
-    left: 350px;
+    left: 340px;
+}
+
+.ylapalkki .ortokuva {
+    left: 400px;
 }
 
 .keskityspainike {
-    left: 290px;
+    left: 280px;
 }
 
 /* ---------- kartta ----------*/
@@ -124,7 +130,7 @@ button {
     color: white;
     margin: 0;
     padding: 0;
-    width: 50px;
+    width: 45px;
     font-size: 2em;
     height: 70px;
     outline-width: 0;
