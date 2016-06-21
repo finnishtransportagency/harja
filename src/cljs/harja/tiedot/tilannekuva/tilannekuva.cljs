@@ -168,7 +168,7 @@ hakutiheys-historiakuva 1200000)
                     (into #{}
                          (keep
                            (fn [[nimi urakat]]
-                             (when-not (empty? urakat)
+                             (when-not (or (= (contains? urakat :haku-kaynnissa)) (empty? urakat))
                                (when-not (some
                                            (fn [[suodatin valittu?]]
                                              (= valittu? boolean-arvo))
