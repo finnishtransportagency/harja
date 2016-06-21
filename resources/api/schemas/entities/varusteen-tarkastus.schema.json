@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tarkastaja": {
+      "id": "urn:harja/lisaaVaruste/lisaaja",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/suorittaja.schema.json",
+      "required": true
+    },
+    "varuste": {
+      "id": "urn:harja/tietue",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "allOf": [
+        {
+          "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json"
+        },
+        {
+          "$ref": "file:resources/api/schemas/entities/varuste.schema.json"
+        }
+      ]
+    },
+    "tarkastettu": {
+      "id": "urn:harja/poistettu",
+      "type": "string",
+      "format": "date-time",
+      "additionalProperties": false,
+      "required": true
+    }
+  }
+}

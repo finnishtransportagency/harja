@@ -3,85 +3,20 @@
   "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
-  "properties": {
-    "otsikko": {
-      "id": "urn:harja/otsikko",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
-    },
-    "lisaaja": {
-      "id": "urn:harja/lisaaVaruste/lisaaja",
-      "type": "object",
-      "$ref": "file:resources/api/schemas/entities/suorittaja.schema.json",
-      "required": true
-    },
-    "varuste": {
-      "id": "urn:harja/tietue",
-      "type": "object",
-      "additionalProperties": false,
-      "required": true,
+  "allOf": [
+    {
       "properties": {
-        "tilannepvm":{
-          "id": "urn:harja/tilannepvm",
-          "type": "date",
-          "required": true
-        },
-        "sijainti": {
-          "id": "urn:harja/havainnot/0/sijainti",
+        "otsikko": {
+          "id": "urn:harja/otsikko",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+          "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
           "required": true
-        },
-        "ajr": {
-          "id": "urn:harja/ajr",
-          "type": "number"
-        },
-        "kaista": {
-          "id": "urn:harja/kaista",
-          "type": "integer"
-        },
-        "alkupvm": {
-          "id": "urn:harja/alkupvm",
-          "type": "string",
-          "format": "date-time"
-        },
-        "loppupvm": {
-          "id": "urn:harja/loppupvm",
-          "type": "string",
-          "format": "date-time"
-        },
-        "karttapvm": {
-          "id": "urn:harja/karttapvm",
-          "type": "string",
-          "format": "date-time"
-        },
-        "kuntoluokitus": {
-          "id": "urn:harja/kuntoluokitus",
-          "type": "string"
-        },
-        "ely": {
-          "id": "urn:harja/ely",
-          "type": "integer"
-        },
-        "tietolaji": {
-          "tietolaji": {
-            "id": "urn:harja/tietolaji",
-            "type": "object",
-            "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json"
-          }
         }
       }
     },
-    "lisatty": {
-      "id": "urn:harja/lisatty",
-      "type": "string",
-      "format": "date-time",
-      "additionalProperties": false,
-      "required": true
+    {
+      "$ref": "varusteen-lisays.schema.json"
     }
-  }
+  ]
 }

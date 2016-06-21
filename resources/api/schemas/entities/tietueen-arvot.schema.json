@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "array",
+  "maxItems" : 5000,
+  "items": {
+    "id": "urn:harja/arvot/0/arvo",
+    "type": "object",
+    "properties": {
+      "avain": {
+        "id": "urn:harja/arvo/0/avain",
+        "required": true,
+        "type": "string"
+      },
+      "arvo": {
+        "id": "urn:harja/arvo/0/arvo",
+        "type": "string"
+      }
+    }
+  }
+}

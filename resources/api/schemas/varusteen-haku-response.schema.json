@@ -12,7 +12,10 @@
           "id": "urn:harja/varuste",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/varuste.schema.json"
+          "allOf":[
+            {"$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json"},
+            {"$ref": "file:resources/api/schemas/entities/varuste.schema.json"}
+          ]
         }
       }
     }

@@ -4,11 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "tunniste": {
-      "id": "urn:harja/tunniste",
-      "type": "string",
-      "required": false
-    },
     "sijainti": {
       "id": "urn:harja/havainnot/0/sijainti",
       "type": "object",
@@ -46,6 +41,39 @@
     "ely": {
       "id": "urn:harja/ely",
       "type": "integer"
+    },
+    "piiri": {
+      "id": "urn:harja/piiri",
+      "type": "integer"
+    },
+    "tierekisteriurakkakoodi": {
+      "id": "urn:harja/piiri",
+      "enum": [
+        100,
+        400,
+        2062,
+        3001,
+        3002,
+        3003,
+        3004,
+        3005,
+        3006,
+        4001,
+        4002,
+        4003,
+        4004,
+        4005,
+        4006,
+        4007,
+        4008,
+        4009,
+        5001,
+        5002,
+        5003,
+        6001,
+        6002,
+        9001
+      ]
     },
     "tietolaji": {
       "tietolaji": {
