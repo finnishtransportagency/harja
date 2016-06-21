@@ -90,34 +90,54 @@
            {:kuittaus :kuittaukset}))))))
 
 (defn- hae-paallystystyot
-  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} _]
-  (when (tk/valittu? yllapito tk/paallystys)
-    (into []
-          (comp
-            (geo/muunna-pg-tulokset :sijainti)
-            (map konv/alaviiva->rakenne)
-            (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
-          (if nykytilanne?
-            (q/hae-paallystykset-nykytilanteeseen db toleranssi)
-            (q/hae-paallystykset-historiakuvaan db
-                                                toleranssi
-                                                (konv/sql-date loppu)
-                                                (konv/sql-date alku))))))
+  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
+  ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
+  ;; käyttäjällä on oikeudet. Jos lista on tyhjä, urakoita ei ole joko valittuna,
+  ;; tai yritettiin hakea urakoilla, joihin käyttäjällä ei ole oikeuksia.
+  ;; Ylläpidon hommat halutaan hakea, vaikkei valittuna olisikaan yhtään urakkaa.
+  ;; Lista voi siis tulla tänne tyhjänä. Jos näin on, täytyy tarkastaa, onko käyttäjällä
+  ;; yleistä tilannekuvaoikeutta.
+  (when (or (not (empty? urakat)) (oikeudet/voi-lukea? (if nykytilanne?
+                                                         oikeudet/tilannekuva-nykytilanne
+                                                         oikeudet/tilannekuva-historia)
+                                                       nil user))
+    (when (tk/valittu? yllapito tk/paallystys)
+      (into []
+            (comp
+              (geo/muunna-pg-tulokset :sijainti)
+              (map konv/alaviiva->rakenne)
+              (map #(konv/string-polusta->keyword % [:paallystysilmoitus :tila])))
+            (if nykytilanne?
+              (q/hae-paallystykset-nykytilanteeseen db toleranssi)
+              (q/hae-paallystykset-historiakuvaan db
+                                                  toleranssi
+                                                  (konv/sql-date loppu)
+                                                  (konv/sql-date alku)))))))
 
 (defn- hae-paikkaustyot
-  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} _]
-  (when (tk/valittu? yllapito tk/paikkaus)
-    (into []
-          (comp
-            (geo/muunna-pg-tulokset :sijainti)
-            (map konv/alaviiva->rakenne)
-            (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
-          (if nykytilanne?
-            (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
-            (q/hae-paikkaukset-historiakuvaan db
-                                              toleranssi
-                                              (konv/sql-date loppu)
-                                              (konv/sql-date alku))))))
+  [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]
+  ;; Muut haut toimivat siten, että urakat parametrissa on vain urakoita, joihin
+  ;; käyttäjällä on oikeudet. Jos lista on tyhjä, urakoita ei ole joko valittuna,
+  ;; tai yritettiin hakea urakoilla, joihin käyttäjällä ei ole oikeuksia.
+  ;; Ylläpidon hommat halutaan hakea, vaikkei valittuna olisikaan yhtään urakkaa.
+  ;; Lista voi siis tulla tänne tyhjänä. Jos näin on, täytyy tarkastaa, onko käyttäjällä
+  ;; yleistä tilannekuvaoikeutta.
+  (when (or (not (empty? urakat)) (oikeudet/voi-lukea? (if nykytilanne?
+                                                         oikeudet/tilannekuva-nykytilanne
+                                                         oikeudet/tilannekuva-historia)
+                                                       nil user))
+    (when (tk/valittu? yllapito tk/paikkaus)
+     (into []
+           (comp
+             (geo/muunna-pg-tulokset :sijainti)
+             (map konv/alaviiva->rakenne)
+             (map #(konv/string-polusta->keyword % [:paikkausilmoitus :tila])))
+           (if nykytilanne?
+             (q/hae-paikkaukset-nykytilanteeseen db toleranssi)
+             (q/hae-paikkaukset-historiakuvaan db
+                                               toleranssi
+                                               (konv/sql-date loppu)
+                                               (konv/sql-date alku)))))))
 
 (defn- hae-laatupoikkeamat
   [db user {:keys [toleranssi alku loppu laatupoikkeamat nykytilanne?]} urakat]
