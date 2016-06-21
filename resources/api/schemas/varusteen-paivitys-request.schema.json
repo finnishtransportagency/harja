@@ -16,7 +16,7 @@
       }
     },
     {
-      "$ref": "varusteen-paivitys.schema.json"
+      "$ref": "file:resources/api/schemas/entities/varusteen-paivitys.schema.json"
     }
   ]
 }

@@ -9,20 +9,12 @@
             "aosa": 1,
             "aet": 4,
             "losa": 1,
-            "let": 1
-          },
-          "linkki": {
-            "id": 1,
-            "marvo": 10
-          },
-          "koordinaatit": {
-            "x": 61000,
-            "y": 7210000,
-            "z": 0
+            "let": 1 ,
+            "ajr": 10,
+            "puoli": 1,
+            "kaista": 2
           }
         },
-        "ajr": 10.1,
-        "kaista": 2,
         "alkupvm": "2015-01-01",
         "loppupvm": "2015-01-01",
         "karttapvm": "2016-01-30",

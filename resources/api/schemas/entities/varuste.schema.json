@@ -5,19 +5,64 @@
   "additionalProperties": false,
   "properties": {
     "sijainti": {
-      "id": "urn:harja/havainnot/0/sijainti",
+      "id": "urn:harja/sijainti",
       "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
-      "required": true
-    },
-    "ajr": {
-      "id": "urn:harja/ajr",
-      "type": "number"
-    },
-    "kaista": {
-      "id": "urn:harja/kaista",
-      "type": "integer"
+      "required": true,
+      "properties": {
+        "tie": {
+          "id": "urn:harja/sijainti/tie",
+          "type": "object",
+          "required": true,
+          "properties": {
+            "numero": {
+              "id": "urn:harja/sijainti/tie/numero",
+              "required": true,
+              "type": "integer"
+            },
+            "nimi": {
+              "id": "urn:harja/nimi",
+              "type": "string",
+              "required": false
+            },
+            "aet": {
+              "id": "urn:harja/sijainti/tie/aet",
+              "required": true,
+              "type": "integer"
+            },
+            "aosa": {
+              "id": "urn:harja/sijainti/tie/aosa",
+              "required": true,
+              "type": "integer"
+            },
+            "let": {
+              "id": "urn:harja/sijainti/tie/let",
+              "required": false,
+              "type": "integer"
+            },
+            "losa": {
+              "id": "urn:harja/sijainti/tie/losa",
+              "required": false,
+              "type": "integer"
+            },
+            "ajr": {
+              "id": "urn:harja/sijainti/tie/ajr",
+              "required": false,
+              "type": "integer"
+            },
+            "puoli": {
+              "id": "urn:harja/sijainti/tie/puoli",
+              "required": false,
+              "type": "integer"
+            },
+            "kaista": {
+              "id": "urn:harja/kaista",
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     },
     "alkupvm": {
       "id": "urn:harja/alkupvm",
@@ -76,12 +121,24 @@
       ]
     },
     "tietolaji": {
-      "tietolaji": {
-        "id": "urn:harja/tietolaji",
-        "type": "object",
-        "additionalProperties": false,
-        "$ref": "file:resources/api/schemas/entities/tietolaji.schema.json"
-      }
+      "id": "urn:harja/tietolaji",
+      "type": "object",
+      "required": true,
+      "properties": {
+        "tunniste": {
+          "id": "urn:harja/tietolaji/tietolajitunniste",
+          "type": "string",
+          "required": true
+        },
+        "arvot": {
+          "id": "urn:harja/tietolaji/arvot",
+          "type": "object",
+          "required": true,
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/tietueen-arvot.schema.json"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

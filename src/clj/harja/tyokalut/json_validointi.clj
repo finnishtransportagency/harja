@@ -65,14 +65,16 @@
 (defn lue-skeematiedosto [polku]
   (cheshire/parse-string (slurp polku)))
 
+(defn ref-resolver [polku]
+  (lue-skeematiedosto
+    (.substring polku (count "file:"))))
+
 (defmacro tee-validaattori
   [skeemaresurssin-polku]
   (let [skeema (lue-skeematiedosto (str "resources/" (eval skeemaresurssin-polku)))]
     `(let [validator#
            (make-validator ~skeema {:draft3-required true
-                                    :ref-resolver (fn [polku#]
-                                                    (lue-skeematiedosto
-                                                     (.substring polku# (count "file:"))))})]
+                                    :ref-resolver ~ref-resolver})]
        (fn [json#]
          (try
            (let [virheet# (validator# (cheshire/parse-string json#))]

@@ -64,15 +64,18 @@
 
 (deftest varusteet
 
+  (is (nil? (validoi json-skeemat/varusteen-haku-vastaus json-esimerkit/+varusteen-haku-vastaus+)))
+  ;;
   (is (nil? (validoi json-skeemat/varusteiden-haku-vastaus
                      json-esimerkit/+varusteiden-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/varusteen-lisays json-esimerkit/+varusteen-lisays+)))
   (is (nil? (validoi json-skeemat/varusteen-paivitys json-esimerkit/+varusteen-paivitys+)))
   (is (nil? (validoi json-skeemat/varusteen-poisto json-esimerkit/+varusteen-poisto+)))
   (is (nil? (validoi json-skeemat/varustetoteuman-kirjaus
-                     json-esimerkit/+varustetoteuman-kirjaus+))))
+                     json-esimerkit/+varustetoteuman-kirjaus+)))    )
 
 (deftest sadf
-  (is (nil? (validoi json-skeemat/varusteen-paivitys json-esimerkit/+varusteen-paivitys+)))
+  (is (nil? (validoi json-skeemat/varusteiden-haku-vastaus
+                     json-esimerkit/+varusteiden-haku-vastaus+)))
 
   )

@@ -20,13 +20,15 @@
           "properties": {
             "tilannepvm": {
               "id": "urn:harja/tilannepvm",
-              "type": "date",
+              "format": "date-time",
+              "required": true
+            },
+            "tunniste": {
+              "id": "urn:harja/tunniste",
+              "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json",
               "required": true
             }
           }
-        },
-        {
-          "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json"
         },
         {
           "$ref": "file:resources/api/schemas/entities/varuste.schema.json"

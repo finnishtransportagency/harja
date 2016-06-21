@@ -18,7 +18,13 @@
       "required": true,
       "allOf": [
         {
-          "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json"
+          "properties": {
+            "tunniste": {
+              "id": "urn:harja/tunniste",
+              "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json",
+              "required": true
+            }
+          }
         },
         {
           "$ref": "file:resources/api/schemas/entities/varuste.schema.json"

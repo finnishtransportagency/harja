@@ -19,7 +19,7 @@
     },
     "tietolajitunniste": {
       "id": "urn:harja/tietolajitunniste",
-      "$ref": "file:resources/api/schemas/entities/tietolajin-tunniste.schema.json"
+      "$ref": "file:resources/api/schemas/entities/tietolajin-tunniste.schema.json",
       "additionalProperties": false,
       "required": true
     },

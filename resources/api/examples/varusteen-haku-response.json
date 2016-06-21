@@ -8,22 +8,14 @@
             "numero": 1234,
             "nimi": "Kiviharjunlenkki",
             "aosa": 1,
-            "losa": 73,
             "aet": 100,
-            "let": 20
-          },
-          "linkki": {
-            "id": 1,
-            "marvo": 10
-          },
-          "koordinaatit": {
-            "x": 61000,
-            "y": 7210000,
-            "z": 0
+            "let": 20,
+            "losa": 73,
+            "ajr": 1,
+            "puoli": 2,
+            "kaista": 2
           }
         },
-        "ajr": 10.1,
-        "kaista": 2,
         "alkupvm": "2016-01-30T12:00:00Z",
         "loppupvm": "2016-01-30T12:00:00Z",
         "karttapvm": "2016-01-30T12:00:00Z",

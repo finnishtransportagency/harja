@@ -16,7 +16,7 @@
       }
     },
     {
-      "$ref": "varusteen-lisays.schema.json"
+      "$ref": "file:resources/api/schemas/entities/varusteen-lisays.schema.json"
     }
   ]
 }

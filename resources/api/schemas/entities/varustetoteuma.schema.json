@@ -7,24 +7,30 @@
     {
       "properties": {
         "lisatty": {
-          "$ref": "varusteen-lisays.schema.json" ,
+          "$ref": "file:resources/api/schemas/entities/varusteen-lisays.schema.json",
           "additionalProperties": false,
           "required": true
         },
         "paivitetty": {
-          "$ref": "varusteen-paivitys.schema.json" ,
+          "$ref": "file:resources/api/schemas/entities/varusteen-paivitys.schema.json",
           "additionalProperties": false,
           "required": true
         },
         "poistettu": {
-          "$ref": "varusteen-poisto.schema.json" ,
+          "$ref": "file:resources/api/schemas/entities/varusteen-poisto.schema.json",
           "additionalProperties": false,
           "required": true
         },
         "tarkastettu": {
           "allOf": [
             {
-              "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json"
+              "properties": {
+                "tunniste": {
+                  "id": "urn:harja/tunniste",
+                  "$ref": "file:resources/api/schemas/entities/tietueen-tunniste.schema.json",
+                  "required": true
+                }
+              }
             },
             {
               "$ref": "file:resources/api/schemas/entities/varuste.schema.json"

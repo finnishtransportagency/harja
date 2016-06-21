@@ -16,7 +16,7 @@
       }
     },
     {
-      "$ref": "varusteen-poisto.schema.json"
+      "$ref": "file:resources/api/schemas/entities/varusteen-poisto.schema.json"
     }
   ]
 }
