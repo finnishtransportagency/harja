@@ -34,8 +34,8 @@
      [keskityspainike keskita-ajoneuvoon])
    [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
    [:div.hoitoluokka
-    [:div.soratiehoitoluokka (str "Soratiehoitoluokka: " (or @soratiehoitoluokka "-"))]
-    [:div.talvihoitoluokka (str "Talvihoitoluokka: " (or @hoitoluokka "-"))]]
+    [:div.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
+    [:div.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]
    [:div.ylapalkki-button.kiinteistorajat.livicon-home {:on-click #(swap! kiinteistorajat not)}]
    [:div.ylapalkki-button.ortokuva.livicon-eye {:on-click #(swap! ortokuva not)}]
    [:div.ylapalkki-button.infonappi.livicon-circle-info {:on-click #(swap! tiedot-nakyvissa not)}]

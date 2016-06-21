@@ -135,7 +135,7 @@
         karttaoptiot (atom {})
         virheita (atom #{})
         reittipisteet (atom [])]
-    (fn [_ _ _ tallenna-fn peruuta-fn]
+    (fn [_ _ _ _ tallenna-fn peruuta-fn]
       [:div.havaintolomake
        [:div.lomake-kartta-container
         [kartta/karttakomponentti wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti sijainti reittipisteet reittipisteet karttaoptiot]]
