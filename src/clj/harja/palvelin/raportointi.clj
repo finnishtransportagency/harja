@@ -23,6 +23,7 @@
             [harja.palvelin.raportointi.raportit.kelitarkastus]
             [harja.palvelin.raportointi.raportit.laaduntarkastus]
             [harja.palvelin.raportointi.raportit.laatupoikkeama]
+            [harja.palvelin.raportointi.raportit.siltatarkastus]
             [harja.palvelin.raportointi.raportit.sanktio]
             [harja.palvelin.raportointi.raportit.soratietarkastus]
             [harja.palvelin.raportointi.raportit.ymparisto]
