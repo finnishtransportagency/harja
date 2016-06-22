@@ -87,11 +87,30 @@
     (muodosta-siltojen-datarivit db urakka-id vuosi)
     (muodosta-sillan-datarivit db urakka-id silta-id vuosi)))
 
-(defn muodosta-hallintayksikon-datarivit []
-  )
+(defn muodosta-hallintayksikon-datarivit [db hallintayksikko-id vuosi]
+  (let [urakkarivit (hae-hallintayksikon-siltatarkastukset db {:hallintayksikko hallintayksikko-id
+                                                               :vuosi vuosi})
+        taulukkorivit (mapv
+                        (fn [rivi]
+                          [(:nimi rivi)
+                           (:a rivi)
+                           (:b rivi)
+                           (:c rivi)
+                           (:d rivi)])
+                        urakkarivit)]
+    taulukkorivit))
 
-(defn muodosta-koko-maan-datarivit []
-  )
+(defn muodosta-koko-maan-datarivit [db vuosi]
+  (let [urakkarivit (hae-koko-maan-siltatarkastukset db {:vuosi vuosi})
+        taulukkorivit (mapv
+                        (fn [rivi]
+                          [(:nimi rivi)
+                           (:a rivi)
+                           (:b rivi)
+                           (:c rivi)
+                           (:d rivi)])
+                        urakkarivit)]
+    taulukkorivit))
 
 (defn muodosta-raportin-otsikkorivit [db konteksti silta]
   (case konteksti
@@ -110,14 +129,22 @@
                {:leveys 2 :otsikko "Tulos"}
                {:leveys 10 :otsikko "Lisätieto"}
                {:leveys 5 :otsikko "Liitteet" :tyyppi :liite}])
-    :hallintayksikko []
-    :koko-maa []))
+    :hallintayksikko [{:leveys 10 :otsikko "Urakka"}
+                      {:leveys 5 :otsikko "A"}
+                      {:leveys 5 :otsikko "B"}
+                      {:leveys 5 :otsikko "C"}
+                      {:leveys 5 :otsikko "D"}]
+    :koko-maa [{:leveys 10 :otsikko "Hallintayksikkö"}
+               {:leveys 5 :otsikko "A"}
+               {:leveys 5 :otsikko "B"}
+               {:leveys 5 :otsikko "C"}
+               {:leveys 5 :otsikko "D"}]))
 
-(defn muodosta-raportin-datarivit [db urakka-id konteksti silta-id vuosi]
+(defn muodosta-raportin-datarivit [db urakka-id hallintayksikko-id konteksti silta-id vuosi]
   (case konteksti
     :urakka (muodosta-urakan-datarivit db urakka-id silta-id vuosi)
-    :hallintayksikko (muodosta-hallintayksikon-datarivit)
-    :koko-maa (muodosta-koko-maan-datarivit)))
+    :hallintayksikko (muodosta-hallintayksikon-datarivit db hallintayksikko-id vuosi)
+    :koko-maa (muodosta-koko-maan-datarivit db vuosi)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id silta-id vuosi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
@@ -129,7 +156,7 @@
                                          (first (hae-sillan-tarkastus db {:urakka urakka-id
                                                                     :vuosi vuosi
                                                                     :silta silta-id})))
-        datarivit (muodosta-raportin-datarivit db urakka-id konteksti silta-id vuosi)
+        datarivit (muodosta-raportin-datarivit db urakka-id hallintayksikko-id konteksti silta-id vuosi)
         raportin-nimi "Siltatarkastusraportti"
         arvon-d-sisaltavat-rivi-indeksit (fn [datarivit]
                                            (into #{}
