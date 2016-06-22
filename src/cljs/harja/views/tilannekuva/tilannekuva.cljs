@@ -157,7 +157,8 @@
                          (fn [[_ suodattimet]]
                            (not (empty? suodattimet)))
                          (:alueet @tiedot/suodattimet)))
-        ensimmainen-haku-kaynnissa? (reaction (nil? @tiedot/uudet-aluesuodattimet))]
+        ensimmainen-haku-kaynnissa? (reaction (and (empty? (mapcat val (:alueet @tiedot/suodattimet)))
+                                                   (nil? @tiedot/uudet-aluesuodattimet)))]
     (assert (not (some nil? (map nimet [uusimaa varsinais-suomi kaakkois-suomi
                                         pirkanmaa pohjois-savo keski-suomi
                                         etela-pohjanmaa pohjois-pohjanmaa lappi])))
