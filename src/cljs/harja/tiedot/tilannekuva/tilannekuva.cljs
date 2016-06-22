@@ -190,7 +190,7 @@ hakutiheys-historiakuva 1200000)
 
       ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
       ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
-      (and (nil? urakka-id) (= valittu-hallintayksikko (:id hallintayksikko)))
+      (and (nil? valittu-urakka) (= valittu-hallintayksikko (:id hallintayksikko)))
       (do
         true)
 
@@ -222,7 +222,7 @@ hakutiheys-historiakuva 1200000)
         (into {}
               (map
                 (fn [aluekokonaisuus]
-                  {(get-in aluekokonaisuus [:hallintayksikko :nimi])
+                  {(get-in aluekokonaisuus [:hallintayksikko])
                    (into {}
                          (map
                            (fn [{:keys [id nimi alue]}]
@@ -239,6 +239,16 @@ hakutiheys-historiakuva 1200000)
                            (:urakat aluekokonaisuus)))})
                 tulos)))))
 
+(defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo urakka hallintayksikko]
+  (let [arvo (cond
+          (nil? vanha-arvo) uusi-arvo
+          (= (:id urakka) (:id @valittu-urakka-tilannekuvaan-tullessa)) uusi-arvo
+          (and (nil? @valittu-urakka-tilannekuvaan-tullessa)
+               (= (:id hallintayksikko) (:id @valittu-hallintayksikko-tilannekuvaan-tullessa))) uusi-arvo
+          :else vanha-arvo)]
+    #_(log "Urakalle " (pr-str (:nimi urakka)) " käytetään arvoa " (pr-str arvo) "(" (pr-str vanha-arvo) " => " (pr-str uusi-arvo) ")")
+    arvo))
+
 (defn yhdista-aluesuodattimet [vanhat uudet]
   ;; Yhdistetään kaksi mäppiä, joka sisältää mäppiä
   ;; Otetaan pelkästään kentät uudesta mäpistä,
@@ -246,12 +256,13 @@ hakutiheys-historiakuva 1200000)
   (into {}
         (map
           (fn [[hallintayksikko urakat]]
-            [hallintayksikko
+            [(:nimi hallintayksikko)
              (into {}
                    (map
                      (fn [[suodatin valittu?]]
-                       (let [vanha-arvo (get-in vanhat [hallintayksikko suodatin])
-                             arvo (if-not (nil? vanha-arvo) vanha-arvo valittu?)]
+                       (let [vanha-arvo (get-in vanhat [(:nimi hallintayksikko) suodatin])
+                             arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?
+                                                                   suodatin hallintayksikko)]
                          [suodatin arvo]))
                      urakat))])
           uudet)))
