@@ -8,6 +8,7 @@
 
 (def +wmts-url+ (str "/" (prefix) "wmts/maasto/wmts"))
 (def +wmts-url-kiinteistojaotus+ (str "/" (prefix) "wmts/kiinteisto/wmts"))
+(def +wmts-url-ortokuva+ (str "/" (prefix) "wmts/maasto/wmts"))
 
 ;; reitintallennus
 (def +tapahtumastore+ "tapahtumat")

@@ -265,6 +265,11 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    ikoni
    [:span (str " " teksti)]])
 
+(defn teksti-ja-ikoni [teksti ikoni]
+  [:span
+   [:span (str teksti " ")]
+   ikoni])
+
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
    [:span.alasvedon-otsikko otsikko]

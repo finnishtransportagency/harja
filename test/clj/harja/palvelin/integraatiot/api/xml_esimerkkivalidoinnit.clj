@@ -15,6 +15,7 @@
     (is (true? (validoi xsd-polku "haeTietolaji.xsd" xml-esimerkit/+hae-tietolaji-request+)))
     (is (true? (validoi xsd-polku "haeTietue.xsd" xml-esimerkit/+hae-tietue-request+)))
     (is (true? (validoi xsd-polku "haeTietueet.xsd" xml-esimerkit/+hae-tietueet-request+)))
+    (is (true? (validoi xsd-polku "haeUrakanTietueet.xsd" xml-esimerkit/+hae-urakantietueet-request+)))
     (is (true? (validoi xsd-polku "paivitaTietue.xsd" xml-esimerkit/+paivita-tietue-request+)))
     (is (true? (validoi xsd-polku "poistaTietue.xsd" xml-esimerkit/+poista-tietue-request+)))
     (is (true? (validoi xsd-polku "vastaus.xsd" xml-esimerkit/+hae-tietue-response+)))
