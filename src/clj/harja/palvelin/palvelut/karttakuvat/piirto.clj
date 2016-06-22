@@ -137,7 +137,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
 (defn piirra-karttakuvaan [extent px-scale g asiat]
   (binding [*px-scale* px-scale
             *extent* extent]
-    (let [ruudukko (ruudukko/ruudukko extent px-scale 64)]
+    (let [ruudukko (ruudukko/ruudukko extent px-scale 128)]
       (doseq [{alue :alue :as asia} asiat
               :when alue]
         (piirra g asia alue ruudukko)))))
