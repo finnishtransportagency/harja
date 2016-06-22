@@ -44,18 +44,15 @@ hakutiheys-historiakuva 1200000)
 (def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
 (def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 
-;; Alustetaan aluesuodattimet näin, jotta näkymä ei näytä tyhmältä, kun haetaan tietoja.
-;; False, koska muuten suodatinlaatikko tulee valituksi
-;; :haku-kaynnissa tarkoittaa, että vetolaatikkoon piirretään spinneri, jos se aukaistaan
-(def oletusalueet {"Varsinais-Suomi"             {:haku-kaynnissa false},
-                   "Etelä-Pohjanmaa"             {:haku-kaynnissa false},
-                   "Pohjois-Savo"                {:haku-kaynnissa false},
-                   "Lappi"                       {:haku-kaynnissa false},
-                   "Kaakkois-Suomi"              {:haku-kaynnissa false},
-                   "Pirkanmaa"                   {:haku-kaynnissa false},
-                   "Uusimaa"                     {:haku-kaynnissa false},
-                   "Pohjois-Pohjanmaa ja Kainuu" {:haku-kaynnissa false},
-                   "Keski-Suomi"                 {:haku-kaynnissa false}})
+(def oletusalueet {"Varsinais-Suomi"             {},
+                   "Etelä-Pohjanmaa"             {},
+                   "Pohjois-Savo"                {},
+                   "Lappi"                       {},
+                   "Kaakkois-Suomi"              {},
+                   "Pirkanmaa"                   {},
+                   "Uusimaa"                     {},
+                   "Pohjois-Pohjanmaa ja Kainuu" {},
+                   "Keski-Suomi"                 {}})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 (def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
@@ -168,7 +165,7 @@ hakutiheys-historiakuva 1200000)
                     (into #{}
                          (keep
                            (fn [[nimi urakat]]
-                             (when-not (or (contains? urakat :haku-kaynnissa) (empty? urakat))
+                             (when-not (empty? urakat)
                                (when-not (some
                                            (fn [[suodatin valittu?]]
                                              (= valittu? boolean-arvo))
@@ -184,6 +181,19 @@ hakutiheys-historiakuva 1200000)
         hallintayksikot-joista-ei-mitaan-valittu (get @hyt-joiden-urakoilla-ei-arvoa true)
         hallintayksikot-joista-kaikki-valittu (get @hyt-joiden-urakoilla-ei-arvoa false)]
     (cond
+
+      ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
+      ;; tarkasta, onko tämä urakka se
+      (= urakka-id valittu-urakka)
+      (do
+        true)
+
+      ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
+      ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
+      (and (nil? urakka-id) (= valittu-hallintayksikko (:id hallintayksikko)))
+      (do
+        true)
+
       ;; Valitse urakka, jos se kuuluu hallintayksikköön, joista käyttäjä on valinnut
       ;; kaikki urakat
       (hallintayksikot-joista-kaikki-valittu (:nimi hallintayksikko))
@@ -197,20 +207,6 @@ hakutiheys-historiakuva 1200000)
       (do
         #_(log (:nimi hallintayksikko) " on hy, joista ei ole mitään valittu!")
         false)
-
-      ;; Jos murupolun kautta oli valittu urakka tilannekuvaan tultaessa,
-      ;; tarkasta, onko tämä urakka se
-      valittu-urakka
-      (do
-        #_(log "Murupolun kautta on valittu urakka; onko tämä se urakka? " (= urakka-id valittu-urakka))
-        (= urakka-id valittu-urakka))
-
-      ;; Jos murupolun kautta tultaessa oli valittuna hallintayksikkö,
-      ;; tarkasta, kuuluuko tämä urakka siihen hallintayksikköön
-      valittu-hallintayksikko
-      (do
-        #_(log "Murupolun kautta on valittu hy; onko tämä se hy? " (= valittu-hallintayksikko (:id hallintayksikko)))
-        (= valittu-hallintayksikko (:id hallintayksikko)))
 
       ;; Sisään tultaessa oli valittuna "koko maa"
       :else
