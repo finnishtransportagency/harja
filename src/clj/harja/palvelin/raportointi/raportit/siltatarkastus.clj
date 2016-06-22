@@ -11,6 +11,7 @@
     [harja.domain.roolit :as roolit]
     [harja.kyselyt.konversio :as konv]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+    [harja.domain.siltatarkastus :as siltadomain]
     [harja.math :as math]
     [clj-time.coerce :as c]))
 
@@ -19,9 +20,9 @@
 (defn muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
                          (map konv/alaviiva->rakenne)
-                         (hae-sillan-tarkastus db {:urakka urakka-id
-                                                   :vuosi vuosi
-                                                   :silta silta-id}))
+                         (hae-sillan-tarkastuskohteet db {:urakka urakka-id
+                                                          :vuosi vuosi
+                                                          :silta silta-id}))
         kohderivit (sort-by :kohde (konv/sarakkeet-vektoriin
                                       kohderivit
                                       {:liite :liitteet}
@@ -29,7 +30,7 @@
         taulukkorivit (mapv
                         (fn [kohde]
                           [(:kohde kohde)
-                           "" ;; TODO Kohteen selitys
+                           (siltadomain/siltatarkastuskohteen-nimi (:kohde kohde))
                            (:tulos kohde)
                            (:lisatieto kohde)
                            [:liitteet (:liitteet kohde)]])
@@ -97,7 +98,7 @@
                {:leveys 15 :otsikko "Kohde"}
                {:leveys 2 :otsikko "Tulos"}
                {:leveys 10 :otsikko "Lisätieto"}
-               {:leveys 5 :otsikko "Liitteet"}])
+               {:leveys 5 :otsikko "Liitteet" :tyyppi :liite}])
     :hallintayksikko []
     :koko-maa []))
 
@@ -112,6 +113,11 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         otsikkorivit (muodosta-raportin-otsikkorivit db konteksti silta-id)
+        yksittaisen-sillan-perustiedot (when (and (= konteksti :urakka)
+                                                  (not= silta-id :kaikki))
+                                         (first (hae-sillan-tarkastus db {:urakka urakka-id
+                                                                    :vuosi vuosi
+                                                                    :silta silta-id})))
         datarivit (muodosta-raportin-datarivit db urakka-id konteksti silta-id vuosi)
         raportin-nimi "Siltatarkastusraportti"
         arvon-d-sisaltavat-rivi-indeksit (fn [datarivit]
@@ -137,4 +143,7 @@
                  :sheet-nimi raportin-nimi
                  :korosta-rivit (arvon-d-sisaltavat-rivi-indeksit datarivit)}
       otsikkorivit
-      datarivit]]))
+      datarivit]
+     (when yksittaisen-sillan-perustiedot
+       [:yhteenveto [["Tarkastaja" (:tarkastaja yksittaisen-sillan-perustiedot)]
+                     ["Tarkastettu" (pvm/pvm-opt (:tarkastusaika yksittaisen-sillan-perustiedot))]]])]))

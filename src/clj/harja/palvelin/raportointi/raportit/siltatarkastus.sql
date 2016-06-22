@@ -81,11 +81,41 @@ WHERE s.id IN (SELECT silta
 ORDER BY siltanro;
 
 -- name: hae-sillan-tarkastus
+SELECT
+  tarkastusaika,
+  tarkastaja
+ FROM siltatarkastus st
+ WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+       AND urakka = :urakka
+       AND silta = :silta
+       AND st.poistettu = FALSE
+ ORDER BY tarkastusaika DESC
+ LIMIT 1;
+
+-- name: hae-sillan-tarkastuskohteet
 -- Hakee valitun sillan annettuna vuonna tehdyn uusimman siltatarkastuksen
 SELECT
   kohde,
   tulos,
   lisatieto,
+  (SELECT
+     tarkastusaika
+   FROM siltatarkastus st
+   WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+         AND urakka = :urakka
+         AND silta = :silta
+         AND st.poistettu = FALSE
+   ORDER BY tarkastusaika DESC
+   LIMIT 1),
+  (SELECT
+     tarkastaja
+   FROM siltatarkastus st
+   WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+         AND urakka = :urakka
+         AND silta = :silta
+         AND st.poistettu = FALSE
+   ORDER BY tarkastusaika DESC
+   LIMIT 1),
   l.id AS liite_id,
   l.tyyppi AS liite_tyyppi,
   l.koko AS liite_koko,
