@@ -267,6 +267,26 @@
 
      [:kaikki :urakoitsija :tilaaja :konsultti]]))
 
+(def silta (atom :kaikki))
+
+(def urakan-sillat (reaction
+                     (let [urakka @nav/valittu-urakka]
+                       (log "[RAPORTTI] Urakka on nyt: " (pr-str urakka)))))
+
+(defmethod raportin-parametri "silta" [p arvo]
+  (reset! arvo {:silta @silta})
+  (fn []
+    [yleiset/pudotusvalikko
+     "Silta"
+     {:valinta    @silta
+      :valitse-fn #(do (reset! silta %)
+                       (reset! arvo {:silta %}))
+      :format-fn  #(case %
+                    :kaikki "Kaikki"
+                    (:siltanimi %))}
+
+     [:kaikki {:id 4 :siltanimi "Oulujoen silta"} {:id 1 :siltanimi "Öhömöhösilta"}]]))
+
 (def tyomaakokousraportit
   {"Erilliskustannukset" :erilliskustannukset
    "Ilmoitukset" :ilmoitusraportti
@@ -560,25 +580,14 @@
       [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
 
 (defn raporttivalinnat-ja-raportti []
-  (let [v-ur @nav/valittu-urakka
-        hae-urakan-tyot (fn [ur]
-                          (log "[RAPORTTI] Haetaan urakan yks. hint. ja kok. hint. työt")
-                          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
-                            (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
-                          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
-                            (go (reset! u/urakan-yks-hint-tyot
-                                       (s/prosessoi-tyorivit ur
-                                                             (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
+  (let [r @raportit/suoritettu-raportti]
+    [:span
+     [raporttivalinnat]
+     (cond (= :ladataan r)
+           [yleiset/ajax-loader "Raporttia suoritetaan..."]
 
-    (when v-ur (hae-urakan-tyot @nav/valittu-urakka))
-    (let [r @raportit/suoritettu-raportti]
-      [:span
-       [raporttivalinnat]
-       (cond (= :ladataan r)
-             [yleiset/ajax-loader "Raporttia suoritetaan..."]
-
-             (not (nil? r))
-             [nayta-raportti @valittu-raporttityyppi r])])))
+           (not (nil? r))
+           [nayta-raportti @valittu-raporttityyppi r])]))
 
 (defn raportit []
   (komp/luo
