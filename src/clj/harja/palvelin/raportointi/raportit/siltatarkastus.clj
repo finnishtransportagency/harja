@@ -22,11 +22,10 @@
                          (hae-sillan-tarkastus db {:urakka urakka-id
                                                    :vuosi vuosi
                                                    :silta silta-id}))
-        _ (log/debug "Raakadata:" (pr-str kohderivit))
-        kohderivit (konv/sarakkeet-vektoriin
-                     kohderivit
-                     {:liite :liitteet}
-                     :kohde)
+        kohderivit (sort-by :kohde (konv/sarakkeet-vektoriin
+                                      kohderivit
+                                      {:liite :liitteet}
+                                      :kohde))
         taulukkorivit (mapv
                         (fn [kohde]
                           [(:kohde kohde)

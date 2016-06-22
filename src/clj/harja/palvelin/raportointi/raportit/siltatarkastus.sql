@@ -111,4 +111,5 @@ WHERE siltatarkastus = (SELECT id
                               AND silta = :silta
                               AND st.poistettu = FALSE
                         ORDER BY tarkastusaika DESC
-                        LIMIT 1);
+                        LIMIT 1)
+ORDER BY kohde;
