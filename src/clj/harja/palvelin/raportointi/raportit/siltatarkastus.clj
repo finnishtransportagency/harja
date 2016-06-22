@@ -197,8 +197,8 @@
                           "Sillalle ei ole tehty tarkastusta valittuna vuonna."
                           "Ei raportoitavia siltatarkastuksia.")
                  :sheet-nimi raportin-nimi
-                 :korosta-rivit (if (or (not= konteksti :urakka)
-                                        (= silta-id :kaikki))
+                 :korosta-rivit (if (and (= konteksti :urakka)
+                                         (= silta-id :kaikki))
                                   (arvon-d-sisaltavat-rivi-indeksit datarivit)
                                   #{})}
       otsikkorivit
