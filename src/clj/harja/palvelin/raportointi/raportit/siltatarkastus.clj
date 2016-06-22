@@ -46,7 +46,6 @@
                                          (mapv datarivi (kohdenumerot-valilta 11 19))
                                          [{:otsikko "Siltapaikan rakenteet"}]
                                          (mapv datarivi (kohdenumerot-valilta 20 24)))))]
-    (log/debug "Rapsadata: " (pr-str taulukkorivit))
     taulukkorivit))
 
 (defn muodosta-siltojen-datarivit [db urakka-id vuosi]
