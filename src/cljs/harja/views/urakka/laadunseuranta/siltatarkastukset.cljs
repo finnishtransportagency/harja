@@ -302,12 +302,13 @@
                                             (filter #(not (= (:tarkastusaika %) aika)) kaikki))))
             siltatarkastussarakkeet (reaction (let [muut @muut-tarkastukset]
                                                 (siltatarkastuksen-sarakkeet muut)))
-            siltatarkastusrivit (reaction (let [tark @st/valittu-tarkastus
+            siltatarkastusrivit (reaction (let [tarkastukset @st/valitun-sillan-tarkastukset
+                                                tark @st/valittu-tarkastus
                                                 muut @muut-tarkastukset]
-                                            (if tark
-                                              (siltatarkastusten-rivit tark muut)
-                                              [])))
-            _ (tarkkaile! "[SILTA] Siltarivit: " siltatarkastusrivit)]
+                                            (when tarkastukset
+                                              (if tark
+                                               (siltatarkastusten-rivit tark muut)
+                                               []))))]
         [:div.siltatarkastukset
          [napit/takaisin "Takaisin siltaluetteloon" #(reset! st/valittu-silta nil)]
 
@@ -332,13 +333,15 @@
                                                                @st/valittu-tarkastus))]]
 
          [grid/grid
-          {:otsikko      (if @st/valittu-tarkastus
-                           (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
-                           "Sillan tarkastus")
-           :tyhja        "Sillasta ei ole tarkastuksia Harjassa"
+          {:otsikko (if @st/valittu-tarkastus
+                      (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
+                      "Sillan tarkastus")
+           :tyhja (if (nil? @siltatarkastusrivit)
+                    [ajax-loader "Ladataan..."]
+                    "Sillasta ei ole tarkastuksia Harjassa")
            :piilota-toiminnot? true
-           :tunniste     :kohdenro
-           :voi-lisata?  false
+           :tunniste :kohdenro
+           :voi-lisata? false
            :voi-poistaa? (constantly false)}
 
           ;; sarakkeet

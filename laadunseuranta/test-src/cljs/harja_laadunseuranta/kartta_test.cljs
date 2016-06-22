@@ -39,6 +39,7 @@
       
       (with-component [kartta/karttakomponentti asetukset/+wmts-url+
                                                 asetukset/+wmts-url-kiinteistojaotus+
+                                                asetukset/+wmts-url-ortokuva+
                                                 sijainti ajoneuvon-sijainti reittipisteet kirjauspisteet (atom {:seuraa-sijaintia true})]
         (let [kartta-div (sel1 [:div.map])]
           (is (not (nil? kartta-div)))
@@ -53,13 +54,13 @@
             
             (testing "Kerrokset"
               (let [kerrokset (kartan-kerrokset ol)]
-                (is (= 5 (.-length kerrokset)))
+                (is (= 6 (.-length kerrokset)))
                 
-                (let [ajoneuvokerros (aget kerrokset 2)
+                (let [ajoneuvokerros (aget kerrokset 3)
                       ajoneuvon-geometria (kerroksen-geometria ajoneuvokerros 0)]
                   (is (= [500 400] (js->clj ajoneuvon-geometria))))
                  
-                (let [reittipistekerros (aget kerrokset 3)
+                (let [reittipistekerros (aget kerrokset 4)
                       reittipistegeometriat (kerroksen-geometria reittipistekerros 0)
                       reittipistegeometriat2 (kerroksen-geometria reittipistekerros 1)]
                   (is (= [[1 1] [2 2]] (js->clj reittipistegeometriat)))
@@ -75,7 +76,7 @@
               (is (= [300 200] (js->clj (.getCenter view)))))
             
             (testing "Ajoneuvon geometrioiden muuttuminen"
-              (let [ajoneuvokerros (kartan-kerros ol 2)
+              (let [ajoneuvokerros (kartan-kerros ol 3)
                     ajoneuvon-geometria (kerroksen-geometria ajoneuvokerros 0)]
                 (is (= [1000 1000] (js->clj ajoneuvon-geometria)))))))))))
 
