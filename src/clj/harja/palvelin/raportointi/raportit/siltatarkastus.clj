@@ -92,11 +92,20 @@
                                                                :vuosi vuosi})
         taulukkorivit (mapv
                         (fn [rivi]
-                          [(:nimi rivi)
-                           (:a rivi)
-                           (:b rivi)
-                           (:c rivi)
-                           (:d rivi)])
+                          (let [arvioidut-kohteet-yhteensa (reduce + ((juxt :a :b :c :d) rivi))]
+                            [(:nimi rivi)
+                             [:arvo-ja-osuus {:arvo (:a rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:a rivi) arvioidut-kohteet-yhteensa))}]
+                             [:arvo-ja-osuus {:arvo (:b rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:b rivi) arvioidut-kohteet-yhteensa))}]
+                             [:arvo-ja-osuus {:arvo (:c rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:c rivi) arvioidut-kohteet-yhteensa))}]
+                             [:arvo-ja-osuus {:arvo (:d rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:d rivi) arvioidut-kohteet-yhteensa))}]]))
                         urakkarivit)]
     taulukkorivit))
 
@@ -104,11 +113,20 @@
   (let [urakkarivit (hae-koko-maan-siltatarkastukset db {:vuosi vuosi})
         taulukkorivit (mapv
                         (fn [rivi]
-                          [(:nimi rivi)
-                           (:a rivi)
-                           (:b rivi)
-                           (:c rivi)
-                           (:d rivi)])
+                          (let [arvioidut-kohteet-yhteensa (reduce + ((juxt :a :b :c :d) rivi))]
+                            [(:nimi rivi)
+                             [:arvo-ja-osuus {:arvo (:a rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:a rivi) arvioidut-kohteet-yhteensa))}]
+                             [:arvo-ja-osuus {:arvo (:b rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:b rivi) arvioidut-kohteet-yhteensa))}]
+                             [:arvo-ja-osuus {:arvo (:c rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:c rivi) arvioidut-kohteet-yhteensa))}]
+                             [:arvo-ja-osuus {:arvo (:d rivi)
+                                              :osuus (Math/round (math/osuus-prosentteina
+                                                                   (:d rivi) arvioidut-kohteet-yhteensa))}]]))
                         urakkarivit)]
     taulukkorivit))
 
@@ -130,15 +148,15 @@
                {:leveys 10 :otsikko "Lisätieto"}
                {:leveys 5 :otsikko "Liitteet" :tyyppi :liite}])
     :hallintayksikko [{:leveys 10 :otsikko "Urakka"}
-                      {:leveys 5 :otsikko "A"}
-                      {:leveys 5 :otsikko "B"}
-                      {:leveys 5 :otsikko "C"}
-                      {:leveys 5 :otsikko "D"}]
+                      {:leveys 5 :otsikko "A" :tyyppi :arvo-ja-osuus}
+                      {:leveys 5 :otsikko "B" :tyyppi :arvo-ja-osuus}
+                      {:leveys 5 :otsikko "C" :tyyppi :arvo-ja-osuus}
+                      {:leveys 5 :otsikko "D" :tyyppi :arvo-ja-osuus}]
     :koko-maa [{:leveys 10 :otsikko "Hallintayksikkö"}
-               {:leveys 5 :otsikko "A"}
-               {:leveys 5 :otsikko "B"}
-               {:leveys 5 :otsikko "C"}
-               {:leveys 5 :otsikko "D"}]))
+               {:leveys 5 :otsikko "A" :tyyppi :arvo-ja-osuus}
+               {:leveys 5 :otsikko "B" :tyyppi :arvo-ja-osuus}
+               {:leveys 5 :otsikko "C" :tyyppi :arvo-ja-osuus}
+               {:leveys 5 :otsikko "D" :tyyppi :arvo-ja-osuus}]))
 
 (defn muodosta-raportin-datarivit [db urakka-id hallintayksikko-id konteksti silta-id vuosi]
   (case konteksti
