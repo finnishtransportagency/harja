@@ -1,6 +1,7 @@
 -- name: hae-urakan-siltatarkastukset
 -- Hakee urakan kaikki sillat ja sekä annettuna vuonna tehdyn uusimman siltatarkastuksen
 SELECT
+  s.id,
   siltanro,
   siltanimi,
   (SELECT tarkastusaika
