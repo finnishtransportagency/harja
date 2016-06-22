@@ -149,10 +149,13 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja (if silta-id
-                           "Sillalle ei ole tehty tarkastusta valittuna vuonna."
-                           "Ei raportoitavia siltatarkastuksia.")
+                          "Sillalle ei ole tehty tarkastusta valittuna vuonna."
+                          "Ei raportoitavia siltatarkastuksia.")
                  :sheet-nimi raportin-nimi
-                 :korosta-rivit (arvon-d-sisaltavat-rivi-indeksit datarivit)}
+                 :korosta-rivit (if (or (not= konteksti :urakka)
+                                        (= silta-id :kaikki))
+                                  (arvon-d-sisaltavat-rivi-indeksit datarivit)
+                                  #{})}
       otsikkorivit
       datarivit]
      (when yksittaisen-sillan-perustiedot
