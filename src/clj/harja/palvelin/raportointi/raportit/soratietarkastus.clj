@@ -9,16 +9,8 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
-
-(defn osuus-prosentteina
-  "Ottaa luvun numerot-vectorista annetulla indeksillä ja jakaa sen vectorin kaikkien lukujen summalla."
-  [osoittaja nimittaja]
-  (if (not= nimittaja 0)
-    (* (/ osoittaja
-          nimittaja)
-       100.0)
-    0.0))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.math :as math]))
 
 (def laatupoikkeama-syyt {1 "Vähintään yksi mittaustulos arvoltaan 1"
                           2 "Vähintään yksi mittaustulos arvoltaan 2 yhtenäisellä 20m tie­osuudella hoito­luokassa II tai III."})
@@ -78,10 +70,10 @@
                   (merge yhdistettava-rivi
                          (zipmap (range 1 6)
                                  (map (juxt
-                                       ;; laatuarvon summa
-                                       #(nth laatuarvot %)
-                                       ;; laatuarvon summan osuus
-                                       #(Math/round (osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
+                                        ;; laatuarvon summa
+                                        #(nth laatuarvot %)
+                                        ;; laatuarvon summan osuus
+                                        #(Math/round (math/osuus-prosentteina (nth laatuarvot %) laatuarvot-yhteensa)))
                                       (range 5)))
                          {:laatuarvot-yhteensa laatuarvot-yhteensa
                           :laatuarvo-1+2-summa (+ (first laatuarvot) (second laatuarvot))
@@ -199,7 +191,7 @@
            (map
              (fn [numero]
                [:arvo-ja-osuus {:arvo (nth laatuarvo-summat numero)
-                                :osuus (Math/round (osuus-prosentteina
+                                :osuus (Math/round (math/osuus-prosentteina
                                                      (nth laatuarvo-summat numero) laatuarvo-summat-yhteensa))}])
              (range 5))
            [[:arvo-ja-osuus {:arvo laatuarvo-summat-yhteensa

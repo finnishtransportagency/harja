@@ -11,6 +11,7 @@
     [harja.domain.roolit :as roolit]
     [harja.kyselyt.konversio :as konv]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+    [harja.math :as math]
     [clj-time.coerce :as c]))
 
 (defqueries "harja/palvelin/raportointi/raportit/siltatarkastus.sql")
@@ -29,18 +30,27 @@
                        {:liite :liitteet})
         rivit (mapv
                 (fn [tarkastus]
-                  [(:siltanro tarkastus)
-                   (:siltanimi tarkastus)
-                   (if (:tarkastusaika tarkastus)
-                     (fmt/pvm-opt (:tarkastusaika tarkastus))
-                     "Tarkastamatta")
-                   (or (:tarkastaja tarkastus)
-                       "-")
-                   (or (:a tarkastus) "-")
-                   (or (:b tarkastus) "-")
-                   (or (:c tarkastus) "-")
-                   (or (:d tarkastus) "-")
-                   [:liitteet (:liitteet tarkastus)]])
+                  (let [arvioidut-kohteet-yhteensa (reduce + ((juxt :a :b :c :d) tarkastus))]
+                    [(:siltanro tarkastus)
+                    (:siltanimi tarkastus)
+                    (if (:tarkastusaika tarkastus)
+                      (fmt/pvm-opt (:tarkastusaika tarkastus))
+                      "Tarkastamatta")
+                    (or (:tarkastaja tarkastus)
+                        "-")
+                    [:arvo-ja-osuus {:arvo (:a tarkastus)
+                                     :osuus (Math/round (math/osuus-prosentteina
+                                                          (:a tarkastus) arvioidut-kohteet-yhteensa))}]
+                    [:arvo-ja-osuus {:arvo (:b tarkastus)
+                                     :osuus (Math/round (math/osuus-prosentteina
+                                                          (:b tarkastus) arvioidut-kohteet-yhteensa))}]
+                    [:arvo-ja-osuus {:arvo (:c tarkastus)
+                                     :osuus (Math/round (math/osuus-prosentteina
+                                                          (:c tarkastus) arvioidut-kohteet-yhteensa))}]
+                    [:arvo-ja-osuus {:arvo (:d tarkastus)
+                                     :osuus (Math/round (math/osuus-prosentteina
+                                                          (:d tarkastus) arvioidut-kohteet-yhteensa))}]
+                    [:liitteet (:liitteet tarkastus)]]))
                 tarkastukset)]
     rivit))
 
@@ -62,10 +72,10 @@
                {:leveys 10 :otsikko "Silta"}
                {:leveys 5 :otsikko "Tarkastettu"}
                {:leveys 5 :otsikko "Tarkastaja"}
-               {:leveys 5 :otsikko "A summa"}
-               {:leveys 5 :otsikko "B summa"}
-               {:leveys 5 :otsikko "C summa"}
-               {:leveys 5 :otsikko "D summa"}
+               {:leveys 5 :otsikko "A" :tyyppi :arvo-ja-osuus}
+               {:leveys 5 :otsikko "B" :tyyppi :arvo-ja-osuus}
+               {:leveys 5 :otsikko "C" :tyyppi :arvo-ja-osuus}
+               {:leveys 5 :otsikko "D" :tyyppi :arvo-ja-osuus}
                {:leveys 5 :otsikko "Liitteet" :tyyppi :liite}]
               [{:leveys 2 :otsikko "#"}
                {:leveys 15 :otsikko "Kohde"}
