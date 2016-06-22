@@ -34,7 +34,7 @@
    (fn [rivi]
      (let [tarkastus (:tarkastus rivi)
            ulkoinen-id (-> tarkastus :tunniste :id)]
-       (jdbc/with-db-transaction [transaktio db]
+       (jdbc/with-db-transaction [db db]
          (let [{tarkastus-id :id}
                (first
                 (tarkastukset/hae-tarkastus-ulkoisella-idlla-ja-tyypilla db ulkoinen-id (name tyyppi) (:id kayttaja)))

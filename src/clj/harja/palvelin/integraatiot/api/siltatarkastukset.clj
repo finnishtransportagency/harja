@@ -111,11 +111,11 @@
   (log/info "Kirjataan siltatarkastus käyttäjältä: " kayttaja)
   (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (jdbc/with-db-transaction [transaktio db]
+    (jdbc/with-db-transaction [db db]
       (let [ulkoinen-id (str (get-in data [:siltatarkastus :tunniste :id]))
             tarkastus (:siltatarkastus data)
             siltatunnus (get-in data [:siltatarkastus :siltatunnus])
-            silta (first (silta-q/hae-silta-tunnuksella transaktio siltatunnus))]
+            silta (first (silta-q/hae-silta-tunnuksella db siltatunnus))]
         (if silta
           (do
             (log/debug "Siltatunnuksella löydetty silta: " (pr-str silta))
@@ -126,9 +126,9 @@
                                       (:siltatarkastus data)
                                       silta
                                       kayttaja
-                                      transaktio)]
+                                      db)]
               (log/debug "Siltatarkastukselle saatu id kannassa: " siltatarkastus-id)
-              (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id transaktio)
+              (lisaa-siltatarkastuskohteet (get-in data [:siltatarkastus :sillantarkastuskohteet]) siltatarkastus-id db)
               (tee-kirjausvastauksen-body {:ilmoitukset "Siltatarkistus kirjattu onnistuneesti"})))
           (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                    :virheet [{:koodi virheet/+tuntematon-silta+

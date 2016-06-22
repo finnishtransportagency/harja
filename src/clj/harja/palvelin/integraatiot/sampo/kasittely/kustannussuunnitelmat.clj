@@ -151,12 +151,11 @@
         {:virhe :poikkeus}))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
-  (jdbc/with-db-transaction [transaktio db]
-    (if-let [maksuera (hae-kustannussuunnitelman-maksuera transaktio viesti-id)]
+  (jdbc/with-db-transaction [db db]
+    (if-let [maksuera (hae-kustannussuunnitelman-maksuera db viesti-id)]
       (if (contains? kuittaus :virhe)
         (do
           (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
-          (merkitse-kustannussuunnitelmalle-lahetysvirhe transaktio maksuera))
-        (merkitse-kustannussuunnitelma-lahetetyksi transaktio maksuera))
+          (merkitse-kustannussuunnitelmalle-lahetysvirhe db maksuera))
+        (merkitse-kustannussuunnitelma-lahetetyksi db maksuera))
       (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
-
