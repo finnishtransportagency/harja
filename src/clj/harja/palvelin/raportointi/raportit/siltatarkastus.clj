@@ -37,14 +37,15 @@
                     (:tulos kohde)
                     (:lisatieto kohde)
                     [:liitteet (:liitteet kohde)]])
-        taulukkorivit (into [] (concat [{:otsikko "Aluerakenne"}]
-                                       (mapv datarivi (kohdenumerot-valilta 1 3))
-                                       [{:otsikko "Päällysrakenne"}]
-                                       (mapv datarivi (kohdenumerot-valilta 4 10))
-                                       [{:otsikko "Varusteet ja laitteet"}]
-                                       (mapv datarivi (kohdenumerot-valilta 11 19))
-                                       [{:otsikko "Siltapaikan rakenteet"}]
-                                       (mapv datarivi (kohdenumerot-valilta 20 24))))]
+        taulukkorivit (when-not (empty? kohderivit)
+                        (into [] (concat [{:otsikko "Aluerakenne"}]
+                                         (mapv datarivi (kohdenumerot-valilta 1 3))
+                                         [{:otsikko "Päällysrakenne"}]
+                                         (mapv datarivi (kohdenumerot-valilta 4 10))
+                                         [{:otsikko "Varusteet ja laitteet"}]
+                                         (mapv datarivi (kohdenumerot-valilta 11 19))
+                                         [{:otsikko "Siltapaikan rakenteet"}]
+                                         (mapv datarivi (kohdenumerot-valilta 20 24)))))]
     (log/debug "Rapsadata: " (pr-str taulukkorivit))
     taulukkorivit))
 
