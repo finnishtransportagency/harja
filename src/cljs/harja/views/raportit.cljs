@@ -289,7 +289,7 @@
                     :kaikki "Kaikki"
                     (:siltanimi %))}
 
-     (conj @urakan-sillat :kaikki)]))
+     (into [] (cons :kaikki @urakan-sillat))]))
 
 (def tyomaakokousraportit
   {"Erilliskustannukset" :erilliskustannukset
