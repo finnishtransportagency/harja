@@ -98,6 +98,14 @@
         otsikkorivit (muodosta-raportin-otsikkorivit db konteksti silta)
         datarivit (muodosta-raportin-datarivit db urakka-id konteksti silta vuosi)
         raportin-nimi "Siltatarkastusraportti"
+        arvon-d-sisaltavat-rivi-indeksit (fn [datarivit]
+                                           (into #{}
+                                                 (keep-indexed
+                                                   (fn [index rivi]
+                                                     (let [d-osuus (:osuus (second (get rivi 7)))]
+                                                       (when (and d-osuus (> d-osuus 0))
+                                                         index)))
+                                                   datarivit)))
         otsikko (raportin-otsikko-vuodella
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
@@ -108,6 +116,7 @@
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? datarivit) "Ei raportoitavia siltatarkastuksia.")
-                 :sheet-nimi raportin-nimi}
+                 :sheet-nimi raportin-nimi
+                 :korosta-rivit (arvon-d-sisaltavat-rivi-indeksit datarivit)}
       otsikkorivit
       datarivit]]))
