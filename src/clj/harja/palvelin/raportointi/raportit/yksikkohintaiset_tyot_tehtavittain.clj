@@ -4,7 +4,7 @@
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
             [clojure.string :as str]))
@@ -70,7 +70,7 @@
                                                                 :urakoittain? urakoittain?
                                                                 :urakkatyyppi urakkatyyppi}))
         raportin-nimi "Yksikköhintaiset työt tehtävittäin"
-        otsikko (raportin-otsikko
+        otsikko (raportin-otsikko-aikavalilla
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

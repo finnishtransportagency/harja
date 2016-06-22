@@ -6,7 +6,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
             [jeesql.core :refer [defqueries]]
             [harja.fmt :as fmt]))
 
@@ -73,7 +73,7 @@
         suolasakot-hallintayksikoittain (sort (group-by :hallintayksikko_elynumero
                                                         raportin-data))
         raportin-nimi "Suolasakkoraportti"
-        otsikko (raportin-otsikko
+        otsikko (raportin-otsikko-aikavalilla
                   (case konteksti
                     :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

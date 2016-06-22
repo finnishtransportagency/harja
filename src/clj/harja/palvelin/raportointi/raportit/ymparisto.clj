@@ -6,7 +6,7 @@
              [konversio :as konv]
              [urakat :as urakat-q]]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen
-             :refer [raportin-otsikko]]
+             :refer [raportin-otsikko-aikavalilla]]
             [jeesql.core :refer [defqueries]]
             ))
 
@@ -74,7 +74,7 @@
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5%")
         raportin-nimi "Ympäristöraportti"
-        otsikko (raportin-otsikko
+        otsikko (raportin-otsikko-aikavalilla
                   (case konteksti
                     :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio

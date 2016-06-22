@@ -5,7 +5,7 @@
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
@@ -67,7 +67,7 @@
                             naytettavat-rivit
                             {:liite :liitteet})
         raportin-nimi "Laaduntarkastusraportti"
-        otsikko (raportin-otsikko
+        otsikko (raportin-otsikko-aikavalilla
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

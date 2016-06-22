@@ -2,7 +2,7 @@
   "Erilliskustannusten raportti"
   (:require [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
                                                                  pylvaat-kuukausittain ei-osumia-aikavalilla-teksti rivi]]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.urakat :as urakat-q]
@@ -59,7 +59,7 @@
                                                                                    toimenpide-id
                                                                                    alkupvm loppupvm)))
         raportin-nimi "Erilliskustannusten raportti"
-        otsikko (raportin-otsikko
+        otsikko (raportin-otsikko-aikavalilla
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

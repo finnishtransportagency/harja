@@ -6,7 +6,7 @@
             [jeesql.core :refer [defqueries]]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
             [taoensso.timbre :as log]
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.fmt :as fmt]))
@@ -64,7 +64,7 @@
                                                      :alku alkupvm
                                                      :loppu loppupvm})
         raportin-nimi "Toimenpidekilometrit"
-        otsikko (raportin-otsikko
+        otsikko (raportin-otsikko-aikavalilla
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

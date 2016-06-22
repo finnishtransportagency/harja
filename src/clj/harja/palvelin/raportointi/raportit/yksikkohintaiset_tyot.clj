@@ -3,7 +3,7 @@
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
