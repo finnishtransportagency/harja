@@ -155,7 +155,12 @@
         keski-suomi "Keski-Suomi"
         etela-pohjanmaa "Etelä-Pohjanmaa"
         pohjois-pohjanmaa "Pohjois-Pohjanmaa ja Kainuu"
-        lappi "Lappi"]
+        lappi "Lappi"
+        onko-alueita? (reaction
+                        (some
+                         (fn [[_ suodattimet]]
+                           (not (empty? suodattimet)))
+                         (:alueet @tiedot/suodattimet)))]
     (assert (not (some nil? (map nimet [uusimaa varsinais-suomi kaakkois-suomi
                                         pirkanmaa pohjois-savo keski-suomi
                                         etela-pohjanmaa pohjois-pohjanmaa lappi])))
@@ -163,7 +168,7 @@
     (komp/luo
       (fn []
         [:div#tk-aluevalikko
-         [:span#tk-alueotsikko "Näytä alueilta:"]
+         [:span#tk-alueotsikko (if @onko-alueita? "Näytä alueilta:" "Ei näytettäviä alueita")]
          [:div#tk-aluevaihtoehdot
           [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
           [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
