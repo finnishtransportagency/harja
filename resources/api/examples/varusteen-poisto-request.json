@@ -10,17 +10,19 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2015-01-30T12:00:00Z"
+    "lahetysaika": "2016-04-12T23:20:50.52Z"
   },
-  "poistaja": {
-    "organisaatio": "Asfaltia Oy",
-    "henkilo": {
-      "id": 85644,
-      "etunimi": "Keijo",
-      "sukunimi": "Käsittelijä"
-    }
-  },
-  "tunniste": "HARJ951547ZK",
-  "tietolajitunniste": "tl505",
-  "poistettu": "2015-05-26T12:00:00Z"
+  "varusteen-poisto": {
+    "poistaja": {
+      "organisaatio": "Asfaltia Oy",
+      "henkilo": {
+        "id": 85644,
+        "etunimi": "Keijo",
+        "sukunimi": "Käsittelijä"
+      }
+    },
+    "poistettu": "2016-04-12T23:20:50.52Z",
+    "tunniste": "HARJ951547ZK",
+    "tietolajitunniste": "tl505"
+  }
 }

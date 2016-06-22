@@ -39,8 +39,6 @@
 (def +tietolajien-haku+ "api/schemas/tietolajien-haku-response.schema.json")
 (def tietolajien-haku (tee-validaattori "api/schemas/tietolajien-haku-response.schema.json"))
 
-(def +varusteen-haku-vastaus+ "api/schemas/varusteen-haku-response.schema.json")
-(def varusteen-haku-vastaus (tee-validaattori "api/schemas/varusteen-haku-response.schema.json"))
 (def +varusteiden-haku-vastaus+ "api/schemas/varusteiden-haku-response.schema.json")
 (def varusteiden-haku-vastaus (tee-validaattori "api/schemas/varusteiden-haku-response.schema.json"))
 (def +varusteen-lisays+ "api/schemas/varusteen-lisays-request.schema.json")

@@ -10,50 +10,318 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-04-12T23:20:50.52Z"
   },
-  "varustetoteuma": {
-    "toteuma": {
-      "tunniste": {
-        "id": 3
-      },
-      "alkanut": "2016-01-30T12:00:00Z",
-      "paattynyt": "2016-01-30T12:00:00Z",
-      "toteumatyyppi": "yksikkohintainen",
-      "sopimusId": 1,
-      "suorittaja": {
-        "nimi": "Tehotekijät Oy",
-        "ytunnus": "8765432-1"
-      },
-      "tehtavat": [
-        {
-          "tehtava": {
-            "id": 1
+  "varustetoteumat": [
+    {
+      "varustetoteuma": {
+        "toteuma": {
+          "tunniste": {
+            "id": 3
+          },
+          "alkanut": "2016-01-30T12:00:00.00Z",
+          "paattynyt": "2016-04-12T23:20:50.52Z",
+          "toteumatyyppi": "yksikkohintainen",
+          "sopimusId": 1,
+          "suorittaja": {
+            "nimi": "Tehotekijät Oy",
+            "ytunnus": "8765432-1"
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1
+              }
+            }
+          ]
+        },
+        "toimenpiteet": [
+          {
+            "varusteen-lisays": {
+              "lisaaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 74846,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "lisatty": "2016-04-12T23:20:50.52Z",
+              "varuste": {
+                "tilannepvm": "2016-04-12T23:20:50.52Z",
+                "tietue": {
+                  "alkupvm": "2016-04-12T23:20:50.52Z",
+                  "sijainti": {
+                    "tie": {
+                      "numero": 89,
+                      "aet": 12,
+                      "aosa": 1,
+                      "ajr": 0,
+                      "puoli": 1
+                    }
+                  },
+                  "tietolaji": {
+                    "tunniste": "tl506",
+                    "arvot": [
+                      {
+                        "avain": "LMNUMERO",
+                        "arvo": "9987"
+                      },
+                      {
+                        "avain": "SIVUTIE",
+                        "arvo": "2"
+                      },
+                      {
+                        "avain": "LMALA",
+                        "arvo": "2"
+                      },
+                      {
+                        "avain": "LMVANHA",
+                        "arvo": "0"
+                      },
+                      {
+                        "avain": "LMTYYPPI",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMKAUSI",
+                        "arvo": "0"
+                      },
+                      {
+                        "avain": "LMKIINNIT",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMMATER",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMTEKSTI",
+                        "arvo": "Testi liikennemerkki"
+                      },
+                      {
+                        "avain": "LMOMIST",
+                        "arvo": "Omistaja"
+                      },
+                      {
+                        "avain": "OPASTETUNN",
+                        "arvo": ""
+                      },
+                      {
+                        "avain": "KUNTOLUOKK",
+                        "arvo": "4"
+                      },
+                      {
+                        "avain": "TUNNISTE",
+                        "arvo": "123456789"
+                      },
+                      {
+                        "avain": "URAKKA",
+                        "arvo": "400"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "varusteen-poisto": {
+              "poistaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 85644,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "poistettu": "2016-04-12T23:20:50.52Z",
+              "tunniste": "HARJ951547ZK",
+              "tietolajitunniste": "tl505"
+            }
+          },
+          {
+            "varusteen-paivitys": {
+              "paivittaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 74846,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "paivitetty": "2016-04-12T23:20:50.52Z",
+              "varuste": {
+                "tunniste": "HARJ951547ZK",
+                "tilannepvm": "2016-04-12T23:20:50.52Z",
+                "tietue": {
+                  "alkupvm": "2016-04-12T23:20:50.52Z",
+                  "sijainti": {
+                    "tie": {
+                      "numero": 89,
+                      "aet": 12,
+                      "aosa": 1,
+                      "ajr": 0,
+                      "puoli": 1
+                    }
+                  },
+                  "tietolaji": {
+                    "tunniste": "tl506",
+                    "arvot": [
+                      {
+                        "avain": "LMNUMERO",
+                        "arvo": "9987"
+                      },
+                      {
+                        "avain": "SIVUTIE",
+                        "arvo": "2"
+                      },
+                      {
+                        "avain": "LMALA",
+                        "arvo": "2"
+                      },
+                      {
+                        "avain": "LMVANHA",
+                        "arvo": "0"
+                      },
+                      {
+                        "avain": "LMTYYPPI",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMKAUSI",
+                        "arvo": "0"
+                      },
+                      {
+                        "avain": "LMKIINNIT",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMMATER",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMTEKSTI",
+                        "arvo": "Testi liikennemerkki"
+                      },
+                      {
+                        "avain": "LMOMIST",
+                        "arvo": "Omistaja"
+                      },
+                      {
+                        "avain": "OPASTETUNN",
+                        "arvo": ""
+                      },
+                      {
+                        "avain": "KUNTOLUOKK",
+                        "arvo": "4"
+                      },
+                      {
+                        "avain": "TUNNISTE",
+                        "arvo": "123456789"
+                      },
+                      {
+                        "avain": "URAKKA",
+                        "arvo": "400"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "varusteen-tarkastus": {
+              "tarkastaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 74846,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "tarkastettu": "2016-04-12T23:20:50.52Z",
+              "varuste": {
+                "tunniste": "HARJ951547ZK",
+                "tietue": {
+                  "alkupvm": "2016-04-12T23:20:50.52Z",
+                  "sijainti": {
+                    "tie": {
+                      "numero": 89,
+                      "aet": 12,
+                      "aosa": 1,
+                      "ajr": 0,
+                      "puoli": 1
+                    }
+                  },
+                  "tietolaji": {
+                    "tunniste": "tl506",
+                    "arvot": [
+                      {
+                        "avain": "LMNUMERO",
+                        "arvo": "9987"
+                      },
+                      {
+                        "avain": "SIVUTIE",
+                        "arvo": "2"
+                      },
+                      {
+                        "avain": "LMALA",
+                        "arvo": "2"
+                      },
+                      {
+                        "avain": "LMVANHA",
+                        "arvo": "0"
+                      },
+                      {
+                        "avain": "LMTYYPPI",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMKAUSI",
+                        "arvo": "0"
+                      },
+                      {
+                        "avain": "LMKIINNIT",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMMATER",
+                        "arvo": "1"
+                      },
+                      {
+                        "avain": "LMTEKSTI",
+                        "arvo": "Testi liikennemerkki"
+                      },
+                      {
+                        "avain": "LMOMIST",
+                        "arvo": "Omistaja"
+                      },
+                      {
+                        "avain": "OPASTETUNN",
+                        "arvo": ""
+                      },
+                      {
+                        "avain": "KUNTOLUOKK",
+                        "arvo": "4"
+                      },
+                      {
+                        "avain": "TUNNISTE",
+                        "arvo": "123456789"
+                      },
+                      {
+                        "avain": "URAKKA",
+                        "arvo": "400"
+                      }
+                    ]
+                  }
+
+                }
+              }
+            }
           }
-        }
-      ]
-    },
-    "sijainti": {
-      "koordinaatit": {
-        "x": 64912,
-        "y": 7255034
-      }
-    },
-    "varuste": {
-      "tunniste": "HARJ951547ZK",
-      "tietolaji": "tl505",
-      "toimenpide": "lisatty",
-      "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  ",
-      "tilannepvm": "2016-01-01T00:00:00Z",
-      "sijainti": {
-        "tie": {
-          "numero": 89,
-          "aet": 12,
-          "aosa": 1,
-          "ajr": 0,
-          "puoli": 1
-        }
+        ]
       }
     }
-  }
+  ]
 }

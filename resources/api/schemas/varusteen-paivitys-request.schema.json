@@ -3,20 +3,20 @@
   "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
-  "allOf": [
-    {
-      "properties": {
-        "otsikko": {
-          "id": "urn:harja/otsikko",
-          "type": "object",
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-          "required": true
-        }
-      }
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
     },
-    {
-      "$ref": "file:resources/api/schemas/entities/varusteen-paivitys.schema.json"
+    "varusteen-paivitys": {
+      "id": "urn:harja/varusteen-paivitys",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/varusteen-paivitys.schema.json",
+      "required": true
     }
-  ]
+  }
 }

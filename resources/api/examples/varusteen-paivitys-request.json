@@ -10,33 +10,94 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-04-12T23:20:50.52Z"
   },
-  "paivittaja": {
-    "organisaatio": "Asfaltia Oy",
-    "henkilo": {
-      "id": 74846,
-      "etunimi": "Keijo",
-      "sukunimi": "Käsittelijä"
-    }
-  },
-  "varuste": {
-    "tunniste": "HARJ951547ZK",
-    "alkupvm": "2016-05-22T12:00:00Z",
-    "tilannepvm": "2016-01-01T00:00:00Z",
-    "sijainti": {
-      "tie": {
-        "numero": 89,
-        "aet": 12,
-        "aosa": 1,
-        "ajr": 0,
-        "puoli": 1
+  "varusteen-paivitys": {
+    "paivittaja": {
+      "organisaatio": "Asfaltia Oy",
+      "henkilo": {
+        "id": 74846,
+        "etunimi": "Keijo",
+        "sukunimi": "Käsittelijä"
       }
     },
-    "tietolaji": {
-      "tietolajitunniste": "tl505",
-      "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  "
+    "paivitetty": "2016-04-12T23:20:50.52Z",
+    "varuste": {
+      "tunniste": "HARJ951547ZK",
+      "tilannepvm": "2016-04-12T23:20:50.52Z",
+      "tietue": {
+        "alkupvm": "2016-04-12T23:20:50.52Z",
+        "sijainti": {
+          "tie": {
+            "numero": 89,
+            "aet": 12,
+            "aosa": 1,
+            "ajr": 0,
+            "puoli": 1
+          }
+        },
+        "tietolaji": {
+          "tunniste": "tl506",
+          "arvot": [
+            {
+              "avain": "LMNUMERO",
+              "arvo": "9987"
+            },
+            {
+              "avain": "SIVUTIE",
+              "arvo": "2"
+            },
+            {
+              "avain": "LMALA",
+              "arvo": "2"
+            },
+            {
+              "avain": "LMVANHA",
+              "arvo": "0"
+            },
+            {
+              "avain": "LMTYYPPI",
+              "arvo": "1"
+            },
+            {
+              "avain": "LMKAUSI",
+              "arvo": "0"
+            },
+            {
+              "avain": "LMKIINNIT",
+              "arvo": "1"
+            },
+            {
+              "avain": "LMMATER",
+              "arvo": "1"
+            },
+            {
+              "avain": "LMTEKSTI",
+              "arvo": "Testi liikennemerkki"
+            },
+            {
+              "avain": "LMOMIST",
+              "arvo": "Omistaja"
+            },
+            {
+              "avain": "OPASTETUNN",
+              "arvo": ""
+            },
+            {
+              "avain": "KUNTOLUOKK",
+              "arvo": "4"
+            },
+            {
+              "avain": "TUNNISTE",
+              "arvo": "123456789"
+            },
+            {
+              "avain": "URAKKA",
+              "arvo": "400"
+            }
+          ]
+        }
+      }
     }
-  },
-  "paivitetty": "2015-05-26T03:00:00Z"
+  }
 }

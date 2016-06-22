@@ -74,7 +74,8 @@
   (let [skeema (lue-skeematiedosto (str "resources/" (eval skeemaresurssin-polku)))]
     `(let [validator#
            (make-validator ~skeema {:draft3-required true
-                                    :ref-resolver ~ref-resolver})]
+                                    :ref-resolver ~ref-resolver
+                                    :lax-date-time-format? true})]
        (fn [json#]
          (try
            (let [virheet# (validator# (cheshire/parse-string json#))]
