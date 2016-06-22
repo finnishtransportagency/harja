@@ -20,4 +20,5 @@ SELECT
 FROM silta s
 WHERE s.id IN (SELECT silta
                FROM sillat_alueurakoittain
-               WHERE urakka = :urakka);
+               WHERE urakka = :urakka)
+ORDER BY siltanro;

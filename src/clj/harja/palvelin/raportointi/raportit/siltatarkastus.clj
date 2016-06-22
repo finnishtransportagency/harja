@@ -25,18 +25,24 @@
                 (fn [tarkastus]
                   [(:siltanro tarkastus)
                    (:siltanimi tarkastus)
-                   (fmt/pvm-opt (:tarkastusaika tarkastus))
-                   (:tarkastaja tarkastus)
-                   (:A tarkastus)
-                   (:B tarkastus)
-                   (:C tarkastus)
-                   (:D tarkastus)
+                   (if (:tarkastusaika tarkastus)
+                     (fmt/pvm-opt (:tarkastusaika tarkastus))
+                     "Tarkastamatta")
+                   (or (:tarkastaja tarkastus)
+                       "-")
+                   (or (:A tarkastus) 0)
+                   (or (:B tarkastus) 0)
+                   (or (:C tarkastus) 0)
+                   (or (:D tarkastus) 0)
                    (:liitteet tarkastus)])
                 tarkastukset)]
+    (log/debug "Datarivit: " (pr-str tarkastukset))
     rivit))
 
-(defn muodosta-urakan-datarivit []
-  )
+(defn muodosta-urakan-datarivit [db urakka-id silta vuosi]
+  (if (= silta :kaikki)
+    (muodosta-siltojen-datarivit db urakka-id vuosi)
+    (muodosta-sillan-datarivit)))
 
 (defn muodosta-hallintayksikon-datarivit []
   )
@@ -66,9 +72,7 @@
 
 (defn muodosta-raportin-datarivit [db urakka-id konteksti silta vuosi]
   (case konteksti
-    :urakka (if (= silta :kaikki)
-              (muodosta-siltojen-datarivit db urakka-id vuosi)
-              (muodosta-sillan-datarivit))
+    :urakka (muodosta-urakan-datarivit db urakka-id silta vuosi)
     :hallintayksikko (muodosta-hallintayksikon-datarivit)
     :koko-maa (muodosta-koko-maan-datarivit)))
 

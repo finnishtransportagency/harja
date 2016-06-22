@@ -296,7 +296,7 @@
                        (if urakka
                          (mapv
                            #(t/year (first %))
-                               (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka)))
+                           (reverse (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka))))
                          (pvm/edelliset-n-vuosivalia 5)))))
 
 (def urakan-vuosi (reaction (first @urakan-vuodet)))
