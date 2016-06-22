@@ -105,13 +105,10 @@
            (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
            (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
                                  workbook)))))
-
-
     this)
 
   (stop [this]
     this)
-
 
   RaportointiMoottori
   (hae-raportit [this]

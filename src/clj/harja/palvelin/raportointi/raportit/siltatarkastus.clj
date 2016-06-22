@@ -12,18 +12,18 @@
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [clj-time.coerce :as c]))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm silta] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id  silta vuosi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         sillat nil
         raportin-nimi "Siltatarkastusraportti"
-        otsikko (raportin-otsikko
+        otsikko #_(raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)]
+                  raportin-nimi vuosi) ""] ; FIXME Ei ole alkupvm:ää ja loppupvm:ää...
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
