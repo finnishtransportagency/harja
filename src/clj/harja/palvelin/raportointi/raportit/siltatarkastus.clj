@@ -16,8 +16,7 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/siltatarkastus.sql")
 
-(defn muodosta-sillan-datarivit [db urakka-id vuosi silta-id]
-  (log/debug "Params: " (pr-str urakka-id vuosi silta-id))
+(defn muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
                          (map konv/alaviiva->rakenne)
                          (hae-sillan-tarkastus db {:urakka urakka-id
@@ -31,6 +30,7 @@
         taulukkorivit (mapv
                         (fn [kohde]
                           [(:kohde kohde)
+                           "" ;; TODO Kohteen selitys
                            (:tulos kohde)
                            (:lisatieto kohde)
                            [:liitteet (:liitteet kohde)]])
@@ -41,7 +41,7 @@
   (let [tarkastukset (into []
                            (map konv/alaviiva->rakenne)
                            (hae-urakan-siltatarkastukset db {:urakka urakka-id
-                                                       :vuosi vuosi}))
+                                                             :vuosi vuosi}))
         tarkastukset (konv/sarakkeet-vektoriin
                        tarkastukset
                        {:liite :liitteet})
