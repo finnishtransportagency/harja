@@ -135,15 +135,11 @@
            (when (auki?)
              [:div.tk-checkbox-ryhma-sisalto
               (doall (for [elementti (seq ryhman-elementtien-avaimet)]
-                       (if (= :haku-kaynnissa elementti)
-                         ^{:key (str otsikko "-spinner")}
-                         [yleiset/ajax-loader "Ladataan alueita"]
-
-                         ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
-                         [yksittainen-suodatincheckbox
-                          (:otsikko elementti)
-                          suodattimet-atom
-                          (conj ryhma-polku elementti)])))])])))))
+                       ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
+                       [yksittainen-suodatincheckbox
+                        (:otsikko elementti)
+                        suodattimet-atom
+                        (conj ryhma-polku elementti)]))])])))))
 
 (defn aluesuodattimet []
   (let [nimet (set (keys tiedot/oletusalueet))
@@ -160,7 +156,8 @@
                         (some
                          (fn [[_ suodattimet]]
                            (not (empty? suodattimet)))
-                         (:alueet @tiedot/suodattimet)))]
+                         (:alueet @tiedot/suodattimet)))
+        ensimmainen-haku-kaynnissa? (reaction (nil? @tiedot/uudet-aluesuodattimet))]
     (assert (not (some nil? (map nimet [uusimaa varsinais-suomi kaakkois-suomi
                                         pirkanmaa pohjois-savo keski-suomi
                                         etela-pohjanmaa pohjois-pohjanmaa lappi])))
@@ -168,17 +165,23 @@
     (komp/luo
       (fn []
         [:div#tk-aluevalikko
-         [:span#tk-alueotsikko (if @onko-alueita? "Näytä alueilta:" "Ei näytettäviä alueita")]
-         [:div#tk-aluevaihtoehdot
-          [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
-          [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
-          [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
-          [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
-          [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
-          [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
-          [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
-          [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
-          [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]]]))))
+         [:span#tk-alueotsikko (cond
+                                 @ensimmainen-haku-kaynnissa? "Haetaan alueita"
+                                 @onko-alueita? "Näytä alueilta:"
+                                 :else "Ei näytettäviä alueita")]
+         (if @ensimmainen-haku-kaynnissa?
+           [yleiset/ajax-loader]
+
+           [:div#tk-aluevaihtoehdot
+           [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
+           [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
+           [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
+           [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
+           [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
+           [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
+           [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
+           [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
+           [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]])]))))
 
 (defn aikasuodattimet []
   [:div#tk-paavalikko
