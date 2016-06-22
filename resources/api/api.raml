@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 0.1.6
+version: 0.1.8
 baseUri: https://harja/api/{version}
 protocols: [HTTPS]
 mediaType: application/json
@@ -152,7 +152,7 @@ documentation:
       /varuste:
         post:
           is: [secured]
-          description: Varustetoteuman kirjaaminen urakalle. Huom. varusteen tiedot lähetetään Tierekisteriin. Tätä varten varusteen tietolajin kuvaus täytyy hakea käyttäen Harja API:n varusterajapintaa.
+          description: Varustetoteuman kirjaaminen urakalle. Rajapinnan kautta voidaan kirjata työsuoritteet sekä varusteen tekniset tiedot, jotka välitetään Tierekisteriin. Varusteen teknisten tietojen kuvaus, eli yksittäisen tietolajin kuvaus, kuten esim. 506 liikennemerkit, täytyy hakea käyttäen varuste rajapinnan tietolaji rajapintaa. Varustetoteuman kautta voidaan kirjata Harjaan & Tierekisteriin varusteiden lisäykset, muutokset, poistamiset sekä tarkastukset.
           body:
             application/json:
               example: !include examples/varustetoteuman-kirjaus-request.json
@@ -456,7 +456,7 @@ documentation:
     description: Varusteiden massahaku.
     get:
       is: [secured]
-      description: Palauttaa kaikki varusteet annetulla tievälillä.
+      description: Hakee Tierekisteristä kaikki annetun tietolajin tietueet, jotka löytyvät annetulla tievälillä..
       queryParameters:
         tunniste:
           description: Haettavan tietolajin tunniste
@@ -519,7 +519,7 @@ documentation:
               example: !include examples/virhe-response.json
               schema: virhe-response
   /tietolaji:
-    description: Tietolajin haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään lisättäessä ja päivitettäessä varusteiden ja laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
+    description: Tietolajin haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään kuvaamaan yksittäisen tietueen tekniset tiedot ja sitä tarvitaan lisättäessä, päivitettäessä sekä näyttäessä varusteiden sekä laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
     get:
       queryParameters:
         tunniste:
