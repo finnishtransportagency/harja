@@ -33,6 +33,13 @@ SELECT * FROM
 SELECT *
 FROM tierekisteriosoite_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, CAST(:treshold AS INTEGER)) AS tr_osoite;
 
+-- name: hae-tr-osoite*
+-- Hakee TR osoitteen pisteelle tai nil jos ei löydy
+SELECT *
+  FROM yrita_tierekisteriosoite_pisteelle(
+             ST_MakePoint(:x, :y) :: GEOMETRY,
+             CAST(:treshold AS INTEGER)) AS tr_osoite;
+
 -- name: tuhoa-tieverkkodata!
 -- poistaa kaikki tieverkon tiedot taulusta. ajetaan transaktiossa
 DELETE FROM tieverkko;

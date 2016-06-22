@@ -10,3 +10,10 @@
   (let [rivi (first (hae-tr-osoite-valille* db x1 y1 x2 y2 threshold))]
     (and (:tie rivi)
          rivi)))
+
+(defn hae-tr-osoite-ehka
+  "Hakee TR osoitteen pisteelle, jos osoitetta ei löydy, palauttaa nil."
+  [db x y threshold]
+  (let [rivi (first (hae-tr-osoite* db x y threshold))]
+    (and (:tie rivi)
+         rivi)))
