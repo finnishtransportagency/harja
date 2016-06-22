@@ -143,3 +143,44 @@ WHERE siltatarkastus = (SELECT id
                         ORDER BY tarkastusaika DESC
                         LIMIT 1)
 ORDER BY kohde;
+
+-- name: hae-hallintayksikon-siltatarkastukset
+-- Hakee hallintayksikön siltatarkastukset. Valitsee annetun vuoden uusimman tarkastuksen
+SELECT
+  u.nimi,
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'A'
+         AND siltatarkastus IN (SELECT id
+                               FROM siltatarkastus st
+                               WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                     AND urakka = u.id
+                                     AND st.poistettu = FALSE)) AS "a",
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'B'
+         AND siltatarkastus IN (SELECT id
+                                FROM siltatarkastus st
+                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                      AND urakka = u.id
+                                      AND st.poistettu = FALSE)) AS "b",
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'C'
+         AND siltatarkastus IN (SELECT id
+                                FROM siltatarkastus st
+                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                      AND urakka = u.id
+                                      AND st.poistettu = FALSE)) AS "c",
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'D'
+         AND siltatarkastus IN (SELECT id
+                                FROM siltatarkastus st
+                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                      AND urakka = u.id
+                                      AND st.poistettu = FALSE)) AS "d"
+FROM urakka u
+  WHERE u.hallintayksikko = :hallintayksikko
+  AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR FROM loppupvm)
+ORDER BY u.nimi
