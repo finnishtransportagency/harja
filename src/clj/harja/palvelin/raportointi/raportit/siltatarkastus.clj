@@ -19,8 +19,14 @@
   )
 
 (defn muodosta-siltojen-datarivit [db urakka-id vuosi]
-  (let [tarkastukset (hae-urakan-siltatarkastukset db {:urakka urakka-id
-                                                       :vuosi vuosi})
+  (let [tarkastukset (into []
+                           (map konv/alaviiva->rakenne)
+                           (hae-urakan-siltatarkastukset db {:urakka urakka-id
+                                                       :vuosi vuosi}))
+        _ (log/debug "Datarivit kannasta: " (pr-str tarkastukset))
+        tarkastukset (konv/sarakkeet-vektoriin
+                       tarkastukset
+                       {:liite :liitteet})
         rivit (mapv
                 (fn [tarkastus]
                   [(:siltanro tarkastus)
@@ -34,9 +40,8 @@
                    (or (:b tarkastus) "-")
                    (or (:c tarkastus) "-")
                    (or (:d tarkastus) "-")
-                   (:liitteet tarkastus)])
+                   [:liitteet (:liitteet tarkastus)]])
                 tarkastukset)]
-    (log/debug "Datarivit: " (pr-str tarkastukset))
     rivit))
 
 (defn muodosta-urakan-datarivit [db urakka-id silta vuosi]
@@ -61,7 +66,7 @@
                {:leveys 5 :otsikko "B summa"}
                {:leveys 5 :otsikko "C summa"}
                {:leveys 5 :otsikko "D summa"}
-               {:leveys 5 :otsikko "Liitteet"}]
+               {:leveys 5 :otsikko "Liitteet" :tyyppi :liite}]
               [{:leveys 2 :otsikko "#"}
                {:leveys 15 :otsikko "Kohde"}
                {:leveys 2 :otsikko "Tulos"}

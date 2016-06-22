@@ -56,8 +56,13 @@ SELECT
                                      AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
                                      AND st.poistettu = FALSE
                                ORDER BY tarkastusaika DESC
-                               LIMIT 1)) AS "d"
+                               LIMIT 1)) AS "d",
+   l.id AS liite_id,
+   l.tyyppi AS liite_tyyppi,
+   l.koko AS liite_koko,
+   l.nimi AS liite_nimi
 FROM silta s
+  LEFT JOIN liite l ON l.urakka = :urakka
 WHERE s.id IN (SELECT silta
                FROM sillat_alueurakoittain
                WHERE urakka = :urakka)
