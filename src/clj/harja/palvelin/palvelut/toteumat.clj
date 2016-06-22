@@ -577,7 +577,6 @@
 
 (defn- hae-kokonaishintainen-toteuma-kartalle [db user {:keys [extent parametrit]}]
   (let [p (some-> parametrit (get "kht") transit/lue-transit-string)]
-    (println "HAE KARTALLE: " (pr-str p))
     (esitettavat-asiat/kartalla-esitettavaan-muotoon
      (map #(assoc % :tyyppi-kartalla :toteuma)
           (hae-urakan-kokonaishintaisten-toteumien-reitit db user p)))))

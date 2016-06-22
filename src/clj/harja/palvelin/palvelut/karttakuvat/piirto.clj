@@ -126,6 +126,14 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
       (piirra-viiva g  alue viiva))
     (piirra-ikonit g alue ruudukko)))
 
+(defmethod piirra :moniviiva [g toteuma {:keys [lines viivat ikonit] :as alue} ruudukko]
+  (let [viivat (reverse (sort-by :width viivat))]
+    (doseq [viiva viivat
+            line lines]
+      (piirra-viiva g line viiva)
+      (piirra-ikonit g {:points (:points line)
+                        :ikonit ikonit} ruudukko))))
+
 (defn piirra-karttakuvaan [extent px-scale g asiat]
   (binding [*px-scale* px-scale
             *extent* extent]

@@ -46,15 +46,13 @@
 (defn pisteiden-taitokset
   ([pisteet] (pisteiden-taitokset pisteet true))
   ([pisteet kiertosuunta-ylos?]
-   (reduce (fn [taitokset [p1 p2 p3]]
+   (reduce (fn [taitokset [p1 p2]]
              (conj taitokset
                    {:sijainti [p1 p2]
-                    :rotaatio (let [kulma (/ (+ (kulma p1 p2)
-                                                (kulma p2 p3))
-                                             2.0)]
+                    :rotaatio (let [kulma (kulma p1 p2)]
                                 (if kiertosuunta-ylos? kulma (- kulma)))}))
            []
-           (partition 3 1 pisteet))))
+           (partition 2 1 pisteet))))
 
 
 
