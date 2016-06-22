@@ -269,9 +269,13 @@
 
 (def silta (atom :kaikki))
 
-(def urakan-sillat (reaction
-                     (let [urakka @nav/valittu-urakka]
-                       (log "[RAPORTTI] Urakka on nyt: " (pr-str urakka)))))
+(def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
+                                urakka @nav/valittu-urakka]
+                               {:nil-kun-haku-kaynnissa? true}
+                               (when urakka nakymassa?
+                                            (k/post! :hae-urakan-sillat
+                                                     {:urakka-id (:id urakka)
+                                                      :listaus :kaikki}))))
 
 (defmethod raportin-parametri "silta" [p arvo]
   (reset! arvo {:silta @silta})
@@ -285,7 +289,7 @@
                     :kaikki "Kaikki"
                     (:siltanimi %))}
 
-     [:kaikki {:id 4 :siltanimi "Oulujoen silta"} {:id 1 :siltanimi "Öhömöhösilta"}]]))
+     (conj @urakan-sillat :kaikki)]))
 
 (def tyomaakokousraportit
   {"Erilliskustannukset" :erilliskustannukset
