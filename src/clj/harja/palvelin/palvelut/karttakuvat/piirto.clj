@@ -60,7 +60,7 @@
 (def ^{:doc "Ikonien tiheys, välimatkaksi otetaan alueen hypotenuusa jaettuna tällä.
 Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        :private true}
-  ikonien-tiheys 15)
+  ikonien-tiheys 10)
 
 (def ^{:doc "Raja, jota suuremmalla näkyvällä alueella ei enää piirretä ikoneita"
        :private true}

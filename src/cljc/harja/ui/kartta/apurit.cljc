@@ -4,6 +4,11 @@
 
 (def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
 
+(defn kulma [[x1 y1] [x2 y2]]
+  (Math/atan2
+   (- y2 y1)
+   (- x2 x1)))
+
 (defn taitokset-valimatkoin
   ([valimatka taitokset]
    (taitokset-valimatkoin valimatka taitokset
@@ -14,7 +19,6 @@
    (loop [pisteet-ja-rotaatiot []
           viimeisin-sijanti [0 0]
           [{:keys [sijainti rotaatio]} & taitokset] taitokset
-          verrokki-kulma rotaatio
           ensimmainen? true]
      (if-not sijainti
        ;; Kaikki käsitelty
@@ -24,32 +28,33 @@
              [x2 y2] (second sijainti)
              dx (- x1 x2)
              dy (- y1 y2)
-             dist (Math/sqrt (+ (* dx dx) (* dy dy)))
-             kulman-erotus (- verrokki-kulma rotaatio)]
+             dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
          (cond
            (or (> dist valimatka)
-               (> (Math/abs kulman-erotus) kulmaraja-nuolelle)
                ensimmainen?)
            (recur (conj pisteet-ja-rotaatiot
-                        [(-> sijainti second luo-piste) rotaatio])
-                  (second sijainti) taitokset rotaatio false)
+                        [(-> sijainti second luo-piste)
+                         (kulma viimeisin-sijanti (second sijainti))])
+                  (second sijainti) taitokset false)
 
            :else
            (recur pisteet-ja-rotaatiot
-                  viimeisin-sijanti taitokset verrokki-kulma false)))))))
+                  viimeisin-sijanti taitokset false)))))))
+
+
 
 (defn pisteiden-taitokset
   ([pisteet] (pisteiden-taitokset pisteet true))
   ([pisteet kiertosuunta-ylos?]
-   (reduce (fn [taitokset [[x1 y1] [x2 y2]]]
+   (reduce (fn [taitokset [p1 p2 p3]]
              (conj taitokset
-                   {:sijainti [[x1 y1] [x2 y2]]
-                    :rotaatio (let [kulma (Math/atan2
-                                            (- y2 y1)
-                                            (- x2 x1))]
+                   {:sijainti [p1 p2]
+                    :rotaatio (let [kulma (/ (+ (kulma p1 p2)
+                                                (kulma p2 p3))
+                                             2.0)]
                                 (if kiertosuunta-ylos? kulma (- kulma)))}))
            []
-           (partition 2 1 pisteet))))
+           (partition 3 1 pisteet))))
 
 
 
