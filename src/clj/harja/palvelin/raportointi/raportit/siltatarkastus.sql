@@ -145,7 +145,7 @@ WHERE siltatarkastus = (SELECT id
 ORDER BY kohde;
 
 -- name: hae-hallintayksikon-siltatarkastukset
--- Hakee hallintayksikön siltatarkastukset. Valitsee annetun vuoden uusimman tarkastuksen
+-- Hakee hallintayksikön siltatarkastukset valitulta vuodelta.
 SELECT
   u.nimi,
   (SELECT COUNT(*)
@@ -184,3 +184,63 @@ FROM urakka u
   WHERE u.hallintayksikko = :hallintayksikko
   AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR FROM loppupvm)
 ORDER BY u.nimi
+
+-- name: hae-koko-maan-siltatarkastukset
+-- Hakee koko maan siltatarkastukset ELYittäin valitulta vuodelta
+SELECT
+  h.nimi,
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'A'
+         AND siltatarkastus IN (SELECT id
+                               FROM siltatarkastus st
+                               WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                     AND urakka IN (SELECT id
+                                                    FROM urakka
+                                                    WHERE hallintayksikko = h.id
+                                                          AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
+                                                                                                                    FROM
+                                                                                                                    loppupvm))
+                                     AND st.poistettu = FALSE))     AS "a",
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'B'
+         AND siltatarkastus IN (SELECT id
+                                FROM siltatarkastus st
+                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                      AND urakka IN (SELECT id
+                                                     FROM urakka
+                                                     WHERE hallintayksikko = h.id
+                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
+                                                                                                                     FROM
+                                                                                                                     loppupvm))
+                                      AND st.poistettu = FALSE)) AS "b",
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'C'
+         AND siltatarkastus IN (SELECT id
+                                FROM siltatarkastus st
+                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                      AND urakka IN (SELECT id
+                                                     FROM urakka
+                                                     WHERE hallintayksikko = h.id
+                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
+                                                                                                                     FROM
+                                                                                                                     loppupvm))
+                                      AND st.poistettu = FALSE)) AS "c",
+  (SELECT COUNT(*)
+   FROM siltatarkastuskohde
+   WHERE tulos = 'D'
+         AND siltatarkastus IN (SELECT id
+                                FROM siltatarkastus st
+                                WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                      AND urakka IN (SELECT id
+                                                     FROM urakka
+                                                     WHERE hallintayksikko = h.id
+                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
+                                                                                                                     FROM
+                                                                                                                     loppupvm))
+                                      AND st.poistettu = FALSE)) AS "d"
+FROM organisaatio h
+  WHERE tyyppi = 'hallintayksikko'
+ORDER BY h.elynumero;
