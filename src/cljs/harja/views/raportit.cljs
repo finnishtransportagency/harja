@@ -20,12 +20,13 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.ui.raportti :as raportti]
-            [harja.transit :as t]
+            [harja.transit :as tr]
             [alandipert.storage-atom :refer [local-storage]]
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.hoitoluokat :as hoitoluokat]
-            [harja.tiedot.hallintayksikot :as hy])
+            [harja.tiedot.hallintayksikot :as hy]
+            [cljs-time.core :as t])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -268,7 +269,6 @@
      [:kaikki :urakoitsija :tilaaja :konsultti]]))
 
 (def silta (atom :kaikki))
-
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
                                 urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
@@ -290,6 +290,27 @@
                     (:siltanimi %))}
 
      (into [] (cons :kaikki @urakan-sillat))]))
+
+(def urakan-vuodet (reaction
+                     (let [urakka @nav/valittu-urakka]
+                       (if urakka
+                         (mapv
+                           #(t/year (first %))
+                               (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka)))
+                         (pvm/edelliset-n-vuosivalia 5)))))
+
+(def urakan-vuosi (reaction (first @urakan-vuodet)))
+
+(defmethod raportin-parametri "urakan-vuosi" [p arvo]
+  (reset! arvo {:vuosi @urakan-vuosi})
+  (fn []
+    [yleiset/pudotusvalikko
+     "Vuosi"
+     {:valinta    @urakan-vuosi
+      :valitse-fn #(do (reset! urakan-vuosi %)
+                       (reset! arvo {:vuosi %}))}
+
+     @urakan-vuodet]))
 
 (def tyomaakokousraportit
   {"Erilliskustannukset" :erilliskustannukset
@@ -392,7 +413,7 @@
                                                (raportit/urakkaraportin-parametrit
                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
                               (set! (.-value input)
-                                    (t/clj->transit parametrit))
+                                    (tr/clj->transit parametrit))
                               true))]
     [:span
      (for [[ikoni teksti id url] +vientimuodot+]

@@ -2,7 +2,6 @@
 (ns harja.palvelin.raportointi.raportit.siltatarkastus
   (:require [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
