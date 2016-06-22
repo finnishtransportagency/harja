@@ -102,7 +102,7 @@
            (get-in rivi [:tr :alkuosa])
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
-           (get-in rivi [:tr :loppyetaisyys])
+           (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
            (str (cond
                   (:id (:talvihoitomittaus rivi))
