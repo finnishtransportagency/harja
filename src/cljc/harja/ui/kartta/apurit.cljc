@@ -1,6 +1,7 @@
 (ns harja.ui.kartta.apurit
-  #?(:cljs
-     (:require [ol.geom.Point])))
+  (:require [harja.geo :as geo]
+            #?@(:cljs
+                [[ol.geom.Point]])))
 
 (def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
 
@@ -17,24 +18,22 @@
                                      (ol.geom.Point. (clj->js p))))))
   ([valimatka taitokset luo-piste]
    (loop [pisteet-ja-rotaatiot []
-          viimeisin-sijanti [0 0]
+          viimeisin-sijanti nil
           [{:keys [sijainti rotaatio]} & taitokset] taitokset
           ensimmainen? true]
      (if-not sijainti
        ;; Kaikki käsitelty
        pisteet-ja-rotaatiot
 
-       (let [[x1 y1] viimeisin-sijanti
-             [x2 y2] (second sijainti)
-             dx (- x1 x2)
-             dy (- y1 y2)
-             dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
+       (let [[x1 y1 :as p1] (or viimeisin-sijanti (first sijainti))
+             [x2 y2 :as p2] (second sijainti)
+             dist (geo/etaisyys p1 p2)]
          (cond
            (or (> dist valimatka)
                ensimmainen?)
            (recur (conj pisteet-ja-rotaatiot
                         [(-> sijainti second luo-piste)
-                         (kulma viimeisin-sijanti (second sijainti))])
+                         (kulma p1 p2)])
                   (second sijainti) taitokset false)
 
            :else
