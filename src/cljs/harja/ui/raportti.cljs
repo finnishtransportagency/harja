@@ -31,6 +31,7 @@
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
+                                               tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
@@ -73,7 +74,7 @@
                                                 (muodosta-html elementti)))})))
                         sarakkeet))
      (if (empty? data)
-       [(grid/otsikko "Ei tietoja")]
+       [(grid/otsikko (or tyhja "Ei tietoja"))]
        (let [viimeinen-rivi (last data)]
          (into []
                (map-indexed (fn [index rivi]

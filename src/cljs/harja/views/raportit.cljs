@@ -278,13 +278,17 @@
                                                       :listaus :kaikki}))))
 
 (defmethod raportin-parametri "silta" [p arvo]
-  (reset! arvo {:silta @silta})
+  (reset! arvo {:silta-id (if (= @silta :kaikki)
+                            :kaikki
+                            (:id @silta))})
   (fn []
     [yleiset/pudotusvalikko
      "Silta"
      {:valinta    @silta
       :valitse-fn #(do (reset! silta %)
-                       (reset! arvo {:silta %}))
+                       (reset! arvo {:silta-id (if (= :kaikki %)
+                                                 :kaikki
+                                                 (:id %))}))
       :format-fn  #(case %
                     :kaikki "Kaikki"
                     (:siltanimi %))}

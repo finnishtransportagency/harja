@@ -16,15 +16,32 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/siltatarkastus.sql")
 
-(defn muodosta-sillan-datarivit []
-  )
+(defn muodosta-sillan-datarivit [db urakka-id vuosi silta-id]
+  (log/debug "Params: " (pr-str urakka-id vuosi silta-id))
+  (let [kohderivit (into []
+                         (map konv/alaviiva->rakenne)
+                         (hae-sillan-tarkastus db {:urakka urakka-id
+                                                   :vuosi vuosi
+                                                   :silta silta-id}))
+        _ (log/debug "Raakadata:" (pr-str kohderivit))
+        kohderivit (konv/sarakkeet-vektoriin
+                     kohderivit
+                     {:liite :liitteet}
+                     :kohde)
+        taulukkorivit (mapv
+                        (fn [kohde]
+                          [(:kohde kohde)
+                           (:tulos kohde)
+                           (:lisatieto kohde)
+                           [:liitteet (:liitteet kohde)]])
+                        kohderivit)]
+    taulukkorivit))
 
 (defn muodosta-siltojen-datarivit [db urakka-id vuosi]
   (let [tarkastukset (into []
                            (map konv/alaviiva->rakenne)
                            (hae-urakan-siltatarkastukset db {:urakka urakka-id
                                                        :vuosi vuosi}))
-        _ (log/debug "Datarivit kannasta: " (pr-str tarkastukset))
         tarkastukset (konv/sarakkeet-vektoriin
                        tarkastukset
                        {:liite :liitteet})
@@ -54,10 +71,10 @@
                 tarkastukset)]
     rivit))
 
-(defn muodosta-urakan-datarivit [db urakka-id silta vuosi]
-  (if (= silta :kaikki)
+(defn muodosta-urakan-datarivit [db urakka-id silta-id vuosi]
+  (if (= silta-id :kaikki)
     (muodosta-siltojen-datarivit db urakka-id vuosi)
-    (muodosta-sillan-datarivit)))
+    (muodosta-sillan-datarivit db urakka-id silta-id vuosi)))
 
 (defn muodosta-hallintayksikon-datarivit []
   )
@@ -85,18 +102,18 @@
     :hallintayksikko []
     :koko-maa []))
 
-(defn muodosta-raportin-datarivit [db urakka-id konteksti silta vuosi]
+(defn muodosta-raportin-datarivit [db urakka-id konteksti silta-id vuosi]
   (case konteksti
-    :urakka (muodosta-urakan-datarivit db urakka-id silta vuosi)
+    :urakka (muodosta-urakan-datarivit db urakka-id silta-id vuosi)
     :hallintayksikko (muodosta-hallintayksikon-datarivit)
     :koko-maa (muodosta-koko-maan-datarivit)))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id silta vuosi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id silta-id vuosi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        otsikkorivit (muodosta-raportin-otsikkorivit db konteksti silta)
-        datarivit (muodosta-raportin-datarivit db urakka-id konteksti silta vuosi)
+        otsikkorivit (muodosta-raportin-otsikkorivit db konteksti silta-id)
+        datarivit (muodosta-raportin-datarivit db urakka-id konteksti silta-id vuosi)
         raportin-nimi "Siltatarkastusraportti"
         arvon-d-sisaltavat-rivi-indeksit (fn [datarivit]
                                            (into #{}
@@ -115,7 +132,9 @@
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja   (if (empty? datarivit) "Ei raportoitavia siltatarkastuksia.")
+                 :tyhja (if silta-id
+                           "Sillalle ei ole tehty tarkastusta valittuna vuonna."
+                           "Ei raportoitavia siltatarkastuksia.")
                  :sheet-nimi raportin-nimi
                  :korosta-rivit (arvon-d-sisaltavat-rivi-indeksit datarivit)}
       otsikkorivit

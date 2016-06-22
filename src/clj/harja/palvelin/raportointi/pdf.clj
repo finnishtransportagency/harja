@@ -95,7 +95,7 @@
            ;; Ei reunusmäärittelyä, tehdään oletus
            (merge oikea-reuna vasen-reuna))))
 
-(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
+(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? korosta-rivit tyhja
                                             oikealle-tasattavat-kentat] :as optiot}]
   (let [rivien-maara (count data)
         viimeinen-rivi (last data)
@@ -112,7 +112,7 @@
                          :font-weight "normal"
                          :number-columns-spanned (count sarakkeet)}
          [:fo:block {:space-after "0.5em"}]
-         [:fo:block "Ei tietoja"]]])
+         [:fo:block (or tyhja "Ei tietoja")]]])
      (for [i-rivi (range (count data))
            :let [rivi (or (nth data i-rivi) "")
                  [rivi optiot]
