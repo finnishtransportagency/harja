@@ -26,9 +26,9 @@
   (if shapefile
     (do
       (log/debug (str "Tuodaan talvihoitoluokkatietoja kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [transaktio db]
-        (hoitoluokat/tuhoa-hoitoluokkadata! transaktio "talvihoito")
+      (jdbc/with-db-transaction [db db]
+        (hoitoluokat/tuhoa-hoitoluokkadata! db "talvihoito")
         (doseq [soratie (shapefile/tuo shapefile)]
-          (vie-hoitoluokka-entry transaktio soratie))
+          (vie-hoitoluokka-entry db soratie))
         (log/debug "Talvihoitoluokkatietojen tuonti kantaan valmis")))
     (log/debug "Talvihoitoluokkatietojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
