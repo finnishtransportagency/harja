@@ -2245,9 +2245,12 @@
      :pituus 5,
      :ylaraja nil}]})
 
-(def testiarvomappi
-  {:avain "" :arvo ""})
+(deftest tarkista-validoinnit
+  (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Pakollinen arvo puuttuu kentästä: tunniste"
+                        (tierekisteri-tietue/muodosta-arvot testi-tietolajin-kuvaus [{:avain "" :arvo ""}]))
+      "Puuttuva pakollinen arvo huomattiin")
+  (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä: tunniste maksimipituus: 20"
+                        (tierekisteri-tietue/muodosta-arvot testi-tietolajin-kuvaus [{:avain "tunniste" :arvo "1234567890112345678901"}]))
+      "Liian pitkä arvo huomattiin")
+  )
 
-(deftest tarkista-pakollisen-arvon-puuttuminen
-  (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä. Pakollinen arvo: tunniste puuttuu."
-                        (tierekisteri-tietue/muodosta-arvot testi-tietolajin-kuvaus testiarvomappi))))

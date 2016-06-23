@@ -1,26 +1,32 @@
 (ns harja.domain.tierekisteri-tietue
-  (:require [schema.core :as s]
-            [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])))
+  (:require [clojure.string :as str]
+    #?@(:cljs [[harja.loki :refer [log]]])
+            [harja.tyokalut.merkkijono :as merkkijono]))
 
 (defn jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
   (sort-by :jarjestysnumero (filter :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))))
 
-(defn validoi-arvo [tietolaji {:keys [kenttatunniste pakollinen]} arvo]
-  (when (and pakollinen (not arvo))
-    (throw (Exception.
-             (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä. Pakollinen arvo: " kenttatunniste " puuttuu.")))))
+(defn heita-poikkeus [tietolaji virhe]
+  (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
+    (throw (Exception. viesti))))
 
-(defn muodosta-kentta [tietolaji kentan-kuvaus arvot]
+(defn validoi-arvo [tietolaji {:keys [kenttatunniste pakollinen pituus]} arvo]
+
+  (when (and pakollinen (not arvo))
+    (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
+  (when (< pituus (count arvo))
+    (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä: " kenttatunniste " maksimipituus: " pituus))))
+
+(defn muodosta-kentta [tietolaji {:keys [pituus] :as kentan-kuvaus} arvot]
   (let [kenttatunniste (:kenttatunniste kentan-kuvaus)
         arvo (:arvo (first (filter #(= kenttatunniste (:avain %)) arvot)))]
     (validoi-arvo tietolaji kentan-kuvaus arvo)
-    arvo))
+    (merkkijono/tayta-oikealle pituus arvo)))
 
 (defn muodosta-arvot [tietolajin-kuvaus arvot]
   (let [tietolaji (:tunniste tietolajin-kuvaus)
         kentat (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)]
-    (clojure.string/join (mapv #(muodosta-kentta tietolaji % arvot) kentat))))
+    (str/join (mapv #(muodosta-kentta tietolaji % arvot) kentat))))
 
 (defn pura-arvot [tietolajin-kuvaus arvot])
 
