@@ -186,7 +186,7 @@
   ;; Täydennä väliaikaisesti tänne oletusarvot,
   ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
-  (if (seq? viivat)
+  (if (coll? viivat)
     (->> viivat
         (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
                         :color (or (:color %) ulkoasu/+normaali-vari+)))
