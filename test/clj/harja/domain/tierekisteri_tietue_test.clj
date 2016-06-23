@@ -2245,6 +2245,21 @@
      :pituus 5,
      :ylaraja nil}]})
 
+(deftest tarkista-perus-arvojen-muodostaminen
+  (is (= "testi               1         "
+         (tierekisteri-tietue/muodosta-arvot
+           [{:kenttatunniste "a"
+             :jarjestysnumero 1
+             :pakollinen true
+             :tietotyyppi :merkkijono
+             :pituus 20}
+            {:kenttatunniste "b"
+             :jarjestysnumero 2
+             :tietotyyppi :merkkijono
+             :pituus 10}]
+           [{:avain "a" :arvo "testi"}
+            {:avain "b" :arvo "1"}]))))
+
 (deftest tarkista-validoinnit
   (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Pakollinen arvo puuttuu kentästä: tunniste"
                         (tierekisteri-tietue/muodosta-arvot testi-tietolajin-kuvaus [{:avain "" :arvo ""}]))
