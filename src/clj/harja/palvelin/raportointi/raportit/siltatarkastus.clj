@@ -178,15 +178,29 @@
                                                                     :silta silta-id})))
         datarivit (muodosta-raportin-datarivit db urakka-id hallintayksikko-id konteksti silta-id vuosi)
         raportin-nimi "Siltatarkastusraportti"
-        arvon-d-sisaltavat-rivi-indeksit (fn [datarivit]
-                                           (into #{}
-                                                 (keep-indexed
-                                                   (fn [index rivi]
-                                                     (let [d-osuus (:osuus (second (get rivi 7)))]
-                                                       (when (and d-osuus
-                                                                  (>= d-osuus korosta-kun-arvoa-d-vahintaan))
-                                                         index))
-                                                     datarivit))))
+        arvon-d-sisaltavat-rivi-indeksit (fn [konteksti datarivit]
+                                           (cond (= konteksti :urakka)
+                                                 (into #{}
+                                                       (keep-indexed
+                                                         (fn [index rivi]
+                                                           (let [d-osuus (:osuus (second (get rivi 7)))]
+                                                             (when (and d-osuus
+                                                                        (>= d-osuus korosta-kun-arvoa-d-vahintaan))
+                                                               index)))
+                                                           datarivit))
+
+                                                 (= konteksti :silta)
+                                                 (into #{}
+                                                       (keep-indexed
+                                                         (fn [index rivi]
+                                                           (log/debug "Rivi: " (pr-str rivi))
+                                                           (let [d-rivi? (= (get rivi 2) "D")]
+                                                             (when d-rivi?
+                                                               index)))
+                                                           datarivit))
+
+                                                 :default
+                                                 #{}))
         otsikko (raportin-otsikko-vuodella
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
@@ -200,10 +214,14 @@
                           "Sillalle ei ole tehty tarkastusta valittuna vuonna."
                           "Ei raportoitavia siltatarkastuksia.")
                  :sheet-nimi raportin-nimi
-                 :korosta-rivit (if (and (= konteksti :urakka)
-                                         (= silta-id :kaikki))
-                                  (arvon-d-sisaltavat-rivi-indeksit datarivit)
-                                  #{})}
+                 :korosta-rivit (cond (and (= konteksti :urakka) (= silta-id :kaikki))
+                                      (arvon-d-sisaltavat-rivi-indeksit :urakka datarivit)
+
+                                      (and (= konteksti :urakka) (not= silta-id :kaikki))
+                                      (arvon-d-sisaltavat-rivi-indeksit :silta datarivit)
+
+                                      :default
+                                      #{})}
       otsikkorivit
       datarivit]
      (when yksittaisen-sillan-perustiedot
