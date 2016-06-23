@@ -588,9 +588,10 @@
            karttakuvat :karttakuvat
            :as this}]
 
-    (karttakuvat/rekisteroi-karttakuvan-lahde!
-     karttakuvat :kokonaishintainen-toteuma
-     (partial #'hae-kokonaishintainen-toteuma-kartalle db))
+    (when karttakuvat
+      (karttakuvat/rekisteroi-karttakuvan-lahde!
+       karttakuvat :kokonaishintainen-toteuma
+       (partial #'hae-kokonaishintainen-toteuma-kartalle db)))
 
     (julkaise-palvelut
      http
