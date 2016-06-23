@@ -323,7 +323,7 @@
 
 (def muut-tyot-xf
   (comp
-    (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+    (harja.geo/muunna-pg-tulokset :reitti)
     muut-tyot-rahasumma-xf
     muut-tyot-maara-xf
     (map konv/alaviiva->rakenne)
@@ -332,12 +332,9 @@
 (defn hae-urakan-muut-tyot [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan muut työt: " urakka-id " ajalta " alkupvm "-" loppupvm)
   (oikeudet/lue  oikeudet/urakat-toteumat-muutos-ja-lisatyot   user urakka-id)
-  (konv/sarakkeet-vektoriin
-    (into []
-          muut-tyot-xf
-          (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
-    {:reittipiste :reittipisteet}
-    #(get-in % [:toteuma :id])))
+  (into []
+        muut-tyot-xf
+        (q/listaa-urakan-hoitokauden-toteumat-muut-tyot db urakka-id sopimus-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
 
 (defn paivita-muun-tyon-toteuma
   [c user toteuma]
@@ -348,8 +345,10 @@
       (apply q/poista-toteuman-tehtavat! params)
       (apply q/poista-toteuma! params))
     (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (name (:tyyppi toteuma)) (:id user)
-                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) nil
-                            nil nil nil nil nil
+                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:reitti toteuma)
+                            (get-in toteuma [:tr :numero]) (get-in toteuma [:tr :alkuosa])
+                            (get-in toteuma [:tr :alkuetaisyys]) (get-in toteuma [:tr :loppuosa])
+                            (get-in toteuma [:tr :loppuetaisyys])
                             (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
         (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
                                                    :tehtava-id (get-in toteuma [:tehtava :id]))))))
@@ -378,18 +377,18 @@
 (defn tallenna-muiden-toiden-toteuma
   [db user toteuma]
   (oikeudet/kirjoita  oikeudet/urakat-toteumat-muutos-ja-lisatyot   user (:urakka-id toteuma))
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (if (get-in toteuma [:tehtava :id])
-      (paivita-muun-tyon-toteuma c user toteuma)
-      (luo-muun-tyon-toteuma c user toteuma))
+      (paivita-muun-tyon-toteuma db user toteuma)
+      (luo-muun-tyon-toteuma db user toteuma))
     ;; lisätään tarvittaessa hinta muutoshintainen_tyo tauluun
     (when (:uusi-muutoshintainen-tyo toteuma)
-      (let [parametrit [c (:yksikko toteuma) (:yksikkohinta toteuma) (:id user)
+      (let [parametrit [db (:yksikko toteuma) (:yksikkohinta toteuma) (:id user)
                         (:urakka-id toteuma) (:sopimus-id toteuma) (get-in toteuma [:tehtava :toimenpidekoodi])
                         (konv/sql-date (:urakan-alkupvm toteuma))
                         (konv/sql-date (:urakan-loppupvm toteuma))]]
         (apply mht-q/lisaa-muutoshintainen-tyo<! parametrit)))
-    (hae-urakan-muut-tyot c user
+    (hae-urakan-muut-tyot db user
                           {:urakka-id  (:urakka-id toteuma)
                            :sopimus-id (:sopimus-id toteuma)
                            :alkupvm    (konv/sql-timestamp (:hoitokausi-aloituspvm toteuma))
