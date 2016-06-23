@@ -46,7 +46,8 @@
                                  :urakka-id (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :hoitoluokat #{1 2 3 4 5 6 8 7}}})]
+                                              :hoitoluokat #{1 2 3 4 5 6 8 7}
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Toimenpidekilometrit"
