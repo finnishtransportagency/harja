@@ -48,6 +48,9 @@
             (when sivukaltevuus (str "Sivukalt: "
                                      (fmt/desimaaliluku sivukaltevuus 1) "%"))])))
 
+(defn- formatoi-vakiohavainnot [vakiohavainnot]
+  (str (clojure.string/join ", " vakiohavainnot) (when-not (empty? vakiohavainnot) ", ")))
+
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
@@ -95,14 +98,14 @@
                                       (get-in rivi [:tr :numero])])
                           naytettavat-rivit))
         :urakka
-        (fn [rivi]
+        (fn [rivi] 
           [(pvm/pvm (:aika rivi))
            (pvm/aika (:aika rivi))
            (get-in rivi [:tr :numero])
            (get-in rivi [:tr :alkuosa])
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
-           (get-in rivi [:tr :loppyetaisyys])
+           (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
            (str (cond
                   (:id (:talvihoitomittaus rivi))
@@ -112,6 +115,8 @@
                   (soratiemittaus (:soratiemittaus rivi))
 
                   :default ""))
-           (:havainnot rivi)
+           (let [vakiohavainnot (:vakiohavainnot (konv/array->vec rivi :vakiohavainnot))]
+             (str (formatoi-vakiohavainnot vakiohavainnot)
+                  (:havainnot rivi)))
            (fmt/totuus (:laadunalitus rivi))
            [:liitteet (:liitteet rivi)]]))]]))
