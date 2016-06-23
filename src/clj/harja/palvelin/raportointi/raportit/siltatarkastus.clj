@@ -6,11 +6,8 @@
     [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
     [harja.fmt :as fmt]
     [harja.pvm :as pvm]
-    [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-vuodella]]
     [taoensso.timbre :as log]
-    [harja.domain.roolit :as roolit]
-    [harja.kyselyt.konversio :as konv]
-    [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+P    [harja.kyselyt.konversio :as konv]
     [harja.domain.siltatarkastus :as siltadomain]
     [harja.math :as math]
     [clj-time.coerce :as c]))
