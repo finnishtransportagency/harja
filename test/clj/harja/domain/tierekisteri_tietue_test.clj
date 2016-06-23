@@ -2245,7 +2245,7 @@
      :pituus 5,
      :ylaraja nil}]})
 
-(deftest tarkista-yksinkertaisten-arvojen-muodostaminen
+(deftest tarkista-arvojen-muodostaminen
   (is (= "testi               1         "
          (tierekisteri-tietue/muodosta-arvot
            {:tunniste "tl506",
@@ -2262,7 +2262,7 @@
            [{:avain "a" :arvo "testi"}
             {:avain "b" :arvo "1"}]))))
 
-(deftest tarkista-yksinkertaisten-arvojen-purku
+(deftest tarkista-arvojen-purku
   (is (= [{:avain "a" :arvo "testi"}
           {:avain "b" :arvo "1"}]
          (tierekisteri-tietue/pura-arvot
@@ -2308,4 +2308,11 @@
     (is (= "testi" (tierekisteri-tietue/hae-arvo testikentat 3 10 testiarvot)))
     (is (= "ti" (tierekisteri-tietue/hae-arvo testikentat 2 5 testiarvot)))
     (is (= "123" (tierekisteri-tietue/hae-arvo testikentat 4 3 testiarvot)))))
+
+(deftest tarkista-paivamaarien-kasittely
+  (let [testikentat [{:kenttatunniste "a"
+                      :jarjestysnumero 1
+                      :tietotyyppi :paivamaara
+                      :pituus 8}]]
+    "2009-03-23"))
 
