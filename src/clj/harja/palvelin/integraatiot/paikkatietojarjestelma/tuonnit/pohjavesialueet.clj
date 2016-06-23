@@ -19,12 +19,12 @@
   (if shapefile
     (do
       (log/debug (str "Tuodaan pohjavesialueet kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [transaktio db]
+      (jdbc/with-db-transaction [db db]
         (log/debug "Poistetaan nykyiset pohjavesialueet")
         (p/poista-pohjavesialueet! db)
         (log/debug "Viedään kantaan uudet alueet")
         (doseq [pohjavesialue (shapefile/tuo shapefile)]
-          (vie-pohjavesialue transaktio pohjavesialue)))
+          (vie-pohjavesialue db pohjavesialue)))
       (p/paivita-pohjavesialueet db)
       (log/debug "Pohjavesialueiden tuonti kantaan valmis."))
     (log/debug "Pohjavesialueiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
