@@ -60,7 +60,8 @@
                                  :konteksti "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm            (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))}})]
+                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
@@ -71,34 +72,10 @@
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
+                                              :loppupvm (c/to-date (t/local-date 2010 10 10))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-arvot-oikealta-aikavalilta
-  (let [vastaus (raportti/hae-kuukausittaiset-summat
-                  db
-                  {:konteksti :urakka
-                   :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                   :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                   :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
-    (is (not (empty? vastaus)))
-    (is (every? #(and (>= % 2005)
-                      (<= % 2010)) (map :vuosi vastaus)))
-    (is (every? #(and (>= % 1)
-                      (<= % 12)) (map :kuukausi vastaus)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest kuukausittaisten-summien-haku-urakalle-ei-palauta-tyhjia-toteumia
-  (let [vastaus (raportti/hae-kuukausittaiset-summat
-                  db
-                  {:konteksti :urakka
-                   :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                   :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                   :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
-    (is (not (empty? vastaus)))
-    (is (every? #(> % 0) (map :toteutunut_maara vastaus)))))
 
 (deftest kuukausittaisten-summien-yhdistaminen-toimii-urakan-yhdelle-tehtavalle
   (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1}
@@ -144,18 +121,3 @@
       (is (= (get sepon-suolaus "12 / 05") 666))
       (is (= (get paavon-auraus "12 / 05") 3))
       (is (= (get paavon-auraus "12 / 06") 123)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
-  (let [rivit (raportti/hae-kuukausittaiset-summat
-                db
-                {:konteksti :urakka
-                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                 :loppupvm  (c/to-date (t/local-date 2030 10 10))})
-        tulos (raportti/muodosta-raportin-rivit rivit false)]
-    (is (not (empty? tulos)))
-    (let [ajorat (first (filter
-                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
-                          tulos))]
-      (is (= (get ajorat "10 / 05") 30M)))))
