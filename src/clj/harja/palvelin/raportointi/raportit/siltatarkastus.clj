@@ -17,6 +17,8 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/siltatarkastus.sql")
 
+(def korosta-kun-arvoa-d-vahintaan 1)
+
 (defn muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
                          (map konv/alaviiva->rakenne)
@@ -181,9 +183,10 @@
                                                  (keep-indexed
                                                    (fn [index rivi]
                                                      (let [d-osuus (:osuus (second (get rivi 7)))]
-                                                       (when (and d-osuus (> d-osuus 0))
-                                                         index)))
-                                                   datarivit)))
+                                                       (when (and d-osuus
+                                                                  (>= d-osuus korosta-kun-arvoa-d-vahintaan))
+                                                         index))
+                                                     datarivit))))
         otsikko (raportin-otsikko-vuodella
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
