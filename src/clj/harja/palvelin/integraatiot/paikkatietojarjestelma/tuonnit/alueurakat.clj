@@ -23,10 +23,10 @@
   (if shapefile
     (do
       (log/debug (str "Tuodaan urakat kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [transaktio db]
-                                (u/tuhoa-alueurakkadata! transaktio)
-                                (doseq [urakka (shapefile/tuo shapefile)]
-                                  (vie-urakka-entry transaktio urakka)))
+      (jdbc/with-db-transaction [db db]
+        (u/tuhoa-alueurakkadata! db)
+        (doseq [urakka (shapefile/tuo shapefile)]
+          (vie-urakka-entry db urakka)))
       (u/paivita-urakka-alueiden-nakyma db)
       (log/debug "Alueurakoiden tuonti kantaan valmis."))
     (log/debug "Alueurakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

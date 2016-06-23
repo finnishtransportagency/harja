@@ -9,9 +9,9 @@
   (let [threshold 250]
     (try
       (if (and alku-x alku-y loppu-x loppu-y)
-        (first (tieverkko/hae-tr-osoite-valille db alku-x alku-y loppu-x loppu-y threshold))
+        (tieverkko/hae-tr-osoite-valille-ehka db alku-x alku-y loppu-x loppu-y threshold)
         (when (and alku-x alku-y)
-          (first (tieverkko/hae-tr-osoite db alku-x alku-y threshold))))
+          (tieverkko/hae-tr-osoite-ehka db alku-x alku-y threshold)))
       (catch PSQLException e
         (log/error e "Sijainnin hakemisessa tapahtui poikkeus.")
         nil))))
