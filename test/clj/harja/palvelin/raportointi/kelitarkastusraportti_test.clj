@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.erilliskustannusraportti-test
+(ns harja.palvelin.raportointi.kelitarkastusraportti-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
