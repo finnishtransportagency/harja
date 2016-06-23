@@ -44,11 +44,11 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :yks-hint-kuukausiraportti
+                                {:nimi :yks-hint-kuukausiraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                 :parametrit {:alkupvm   (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm  (c/to-date (t/local-date 2010 10 10))}})]
+                                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                 :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 10))
+                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 

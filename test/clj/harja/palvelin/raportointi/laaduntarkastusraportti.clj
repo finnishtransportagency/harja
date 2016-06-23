@@ -43,7 +43,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :laaduntarkastusraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))}})]
     (is (vector? vastaus))
@@ -100,7 +100,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :laaduntarkastusraportti
                                  :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-oulun-alueurakan-2005-2010-id)
+                                 :hallintayksikko-id (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
                                               :urakkatyyppi "hoito"}})]
