@@ -48,7 +48,8 @@
                                  :konteksti "urakka"
                                  :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
+                                              :loppupvm (c/to-date (t/local-date 2010 10 10))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 

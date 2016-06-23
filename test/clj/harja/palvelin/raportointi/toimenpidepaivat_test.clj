@@ -46,7 +46,8 @@
                                  :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
-                                              :hoitoluokat #{1 2 3 4 5 6 8 7}}})]
+                                              :hoitoluokat #{1 2 3 4 5 6 8 7}
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Monenako päivänä toimenpidettä on tehty aikavälillä"
@@ -74,7 +75,15 @@
                        :tasaa :oikea}
                       {:otsikko "K2"
                        :tasaa :oikea}]
-                     ()]]))))
+                     [["Uuden radan rakentaminen, päällysrakenne"
+                       0
+                       2
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0]]]]))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
