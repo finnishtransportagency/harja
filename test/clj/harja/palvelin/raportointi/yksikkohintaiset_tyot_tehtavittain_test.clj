@@ -60,7 +60,8 @@
                                  :konteksti "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm            (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))}})]
+                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
 
@@ -71,34 +72,7 @@
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
+                                              :loppupvm (c/to-date (t/local-date 2010 10 10))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= :raportti (first vastaus)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest tehtavakohtaisten-summien-haku-koko-maalle-palauttaa-testidatan-arvot-oikein
-  (let [rivit (raportti/hae-summatut-tehtavat-koko-maalle
-                db
-                {:alkupvm  (c/to-date (t/local-date 2000 10 10))
-                 :loppupvm (c/to-date (t/local-date 2030 10 10))})]
-
-    (is (> (count rivit) 5))
-    (let [ajorat (first (filter
-                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
-                          rivit))]
-      (log/debug ajorat)
-      (is (= (:toteutunut_maara ajorat) 78M)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest tehtavakohtaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
-  (let [rivit (raportti/hae-summatut-tehtavat-urakalle
-                db
-                {:konteksti :urakka
-                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                 :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
-    (is (not (empty? rivit)))
-    (let [ajorat (first (filter
-                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
-                          rivit))]
-      (is (= (:toteutunut_maara ajorat) 30M)))))

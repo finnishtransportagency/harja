@@ -120,7 +120,8 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:toimenpide-id nil
                                               :alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 10 1))}})]
+                                              :loppupvm (c/to-date (t/local-date 2015 10 1))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Erilliskustannusten raportti"}
@@ -244,7 +245,8 @@
                                  :konteksti "koko maa"
                                  :parametrit {:toimenpide-id nil
                                               :alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 10 1))}})]
+                                              :loppupvm (c/to-date (t/local-date 2015 10 1))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Erilliskustannusten raportti"}

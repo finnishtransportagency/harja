@@ -102,7 +102,8 @@
                                  :konteksti "hallintayksikko"
                                  :hallintayksikko-id (hae-oulun-alueurakan-2005-2010-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2006 10 1))}})]
+                                              :loppupvm (c/to-date (t/local-date 2006 10 1))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Laaduntarkastusraportti"
@@ -145,7 +146,8 @@
                                 {:nimi :laaduntarkastusraportti
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2006 10 1))}})]
+                                              :loppupvm (c/to-date (t/local-date 2006 10 1))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Laaduntarkastusraportti"
