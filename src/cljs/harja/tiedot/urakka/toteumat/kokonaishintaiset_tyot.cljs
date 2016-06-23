@@ -89,32 +89,7 @@
                :sopimus-id sopimus-id
                :alkupvm    alkupvm
                :loppupvm   loppupvm
-               :tehtava    (:toimenpidekoodi valittu-paivakohtainen-tehtava)})))
-    #_(go
-       (kartalla-esitettavaan-muotoon
-        (let [haun-tulos (if valittu-paivakohtainen-tehtava
-                           (<!
-                            (hae-toteumareitit
-                             urakka-id sopimus-id
-
-                             ))
-                           [])
-              ;; Esitettävillä asioilla on tietty muoto mitä se odottaa
-              ;; Muokataan valittu-toteuma tähän muotoon
-              valittu-tehtavilla (assoc valittu-toteuma
-                                        :tehtavat
-                                        [{:id (get-in valittu-toteuma [:tehtava :toimenpidekoodi :id])
-                                          :toimenpide (get-in valittu-toteuma [:tehtava :toimenpidekoodi :nimi])
-                                          :maara (get-in valittu-toteuma [:tehtava :maara])}])
-              ;; Haetuissa reiteissä on klikatun summarivin reitit. Liitetään mukaan
-              ;; Valitun toteuman reitti jos se ei jo ole tässä joukossa.
-              yhdistetyt-reitit (if-not
-                                    (some #(= (:id valittu-toteuma) (:toteumaid %)) haun-tulos)
-                                  (conj haun-tulos valittu-tehtavilla)
-                                  haun-tulos)]
-          (reset! haetut-reitit yhdistetyt-reitit))
-        valittu-toteuma [[:toteumaid] [:id]]
-        (map #(assoc % :tyyppi-kartalla :toteuma))))))
+               :tehtava    (:toimenpidekoodi valittu-paivakohtainen-tehtava)})))))
 
 ;; Piirretään kartalle reitit, jotka haetaan kun summariviä klikataan JA
 ;; valitun toteuman reitti.
