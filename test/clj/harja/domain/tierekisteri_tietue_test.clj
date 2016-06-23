@@ -2245,20 +2245,39 @@
      :pituus 5,
      :ylaraja nil}]})
 
-(deftest tarkista-perus-arvojen-muodostaminen
+(deftest tarkista-yksinkertaisten-arvojen-muodostaminen
   (is (= "testi               1         "
          (tierekisteri-tietue/muodosta-arvot
-           [{:kenttatunniste "a"
-             :jarjestysnumero 1
-             :pakollinen true
-             :tietotyyppi :merkkijono
-             :pituus 20}
-            {:kenttatunniste "b"
-             :jarjestysnumero 2
-             :tietotyyppi :merkkijono
-             :pituus 10}]
+           {:tunniste "tl506",
+            :ominaisuudet
+            [{:kenttatunniste "a"
+              :jarjestysnumero 1
+              :pakollinen true
+              :tietotyyppi :merkkijono
+              :pituus 20}
+             {:kenttatunniste "b"
+              :jarjestysnumero 2
+              :tietotyyppi :merkkijono
+              :pituus 10}]}
            [{:avain "a" :arvo "testi"}
             {:avain "b" :arvo "1"}]))))
+
+(deftest tarkista-yksinkertaisten-arvojen-purku
+  (is (= [{:avain "a" :arvo "testi"}
+          {:avain "b" :arvo "1"}]
+         (tierekisteri-tietue/pura-arvot
+           {:tunniste "tl506",
+            :ominaisuudet
+            [{:kenttatunniste "a"
+              :jarjestysnumero 1
+              :pakollinen true
+              :tietotyyppi :merkkijono
+              :pituus 20}
+             {:kenttatunniste "b"
+              :jarjestysnumero 2
+              :tietotyyppi :merkkijono
+              :pituus 10}]}
+           "testi               1         "))))
 
 (deftest tarkista-validoinnit
   (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Pakollinen arvo puuttuu kentästä: tunniste"
@@ -2266,6 +2285,27 @@
       "Puuttuva pakollinen arvo huomattiin")
   (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä: tunniste maksimipituus: 20"
                         (tierekisteri-tietue/muodosta-arvot testi-tietolajin-kuvaus [{:avain "tunniste" :arvo "1234567890112345678901"}]))
-      "Liian pitkä arvo huomattiin")
-  )
+      "Liian pitkä arvo huomattiin"))
+
+(deftest tarkista-kentan-arvon-hakeminen-merkkijonosta
+  (let [testikentat [{:kenttatunniste "a"
+                      :jarjestysnumero 1
+                      :tietotyyppi :merkkijono
+                      :pituus 5}
+                     {:kenttatunniste "b"
+                      :jarjestysnumero 2
+                      :tietotyyppi :merkkijono
+                      :pituus 5}
+                     {:kenttatunniste "c"
+                      :jarjestysnumero 3
+                      :tietotyyppi :merkkijono
+                      :pituus 10}
+                     {:kenttatunniste "d"
+                      :jarjestysnumero 4
+                      :tietotyyppi :merkkijono
+                      :pituus 3}]
+        testiarvot "tes  ti   testi     123"]
+    (is (= "testi" (tierekisteri-tietue/hae-arvo testikentat 3 10 testiarvot)))
+    (is (= "ti" (tierekisteri-tietue/hae-arvo testikentat 2 5 testiarvot)))
+    (is (= "123" (tierekisteri-tietue/hae-arvo testikentat 4 3 testiarvot)))))
 
