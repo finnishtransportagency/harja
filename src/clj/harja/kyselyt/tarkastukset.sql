@@ -518,7 +518,10 @@ SELECT
   thm.kitka as talvihoitomittaus_kitka,
   thm.ajosuunta as talvihoitomittaus_ajosuunta,
   thm.lampotila_tie as talvihoitomittaus_lampotila_tie,
-  thm.lampotila_ilma as talvihoitomittaus_lampotila_ilma
+  thm.lampotila_ilma as talvihoitomittaus_lampotila_ilma,
+  array(SELECT vh.nimi
+          FROM vakiohavainto vh,tarkastus_vakiohavainto tvh
+	 WHERE vh.id=tvh.vakiohavainto AND tvh.tarkastus=t.id) AS vakiohavainnot
 FROM tarkastus t
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
