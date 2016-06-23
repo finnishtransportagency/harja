@@ -212,6 +212,7 @@
     :icon [(:coordinates g)]
     :circle [(:coordinates g)]
     :viiva (:points g)
+    :moniviiva (mapcat :points (:lines g))
     :merkki [(:coordinates g)]))
 
 (defn laske-extent-xf
@@ -297,8 +298,11 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod extent :merkki [{c :coordinates}]
   (extent-point-circle c))
 
-(defmethod extent :viiva [{points :points}]
+(defmethod extent :moniviiva [{points :points}]
   (laske-pisteiden-extent points))
+
+(defmethod extent :viivat [viivat]
+  (laske-pisteiden-extent (pisteet viivat)))
 
 (defmethod extent :multipolygon [{polygons :polygons}]
   (laske-pisteiden-extent (mapcat :coordinates polygons)))
@@ -341,3 +345,8 @@ pisteen [px py]."
   [[x1 y1 x2 y2] [px py]]
   (and (<= x1 px x2)
        (<= y1 py y2)))
+
+(defn etaisyys [[x1 y1] [x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))

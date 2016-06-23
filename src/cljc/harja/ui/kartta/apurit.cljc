@@ -1,8 +1,14 @@
 (ns harja.ui.kartta.apurit
-  #?(:cljs
-     (:require [ol.geom.Point])))
+  (:require [harja.geo :as geo]
+            #?@(:cljs
+                [[ol.geom.Point]])))
 
 (def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
+
+(defn kulma [[x1 y1] [x2 y2]]
+  (Math/atan2
+   (- y2 y1)
+   (- x2 x1)))
 
 (defn taitokset-valimatkoin
   ([valimatka taitokset]
@@ -12,41 +18,37 @@
                                      (ol.geom.Point. (clj->js p))))))
   ([valimatka taitokset luo-piste]
    (loop [pisteet-ja-rotaatiot []
-          viimeisin-sijanti [0 0]
+          viimeisin-sijanti nil
           [{:keys [sijainti rotaatio]} & taitokset] taitokset
-          verrokki-kulma rotaatio
           ensimmainen? true]
      (if-not sijainti
        ;; Kaikki käsitelty
        pisteet-ja-rotaatiot
 
-       (let [[x1 y1] viimeisin-sijanti
-             [x2 y2] (second sijainti)
-             dx (- x1 x2)
-             dy (- y1 y2)
-             dist (Math/sqrt (+ (* dx dx) (* dy dy)))
-             kulman-erotus (- verrokki-kulma rotaatio)]
+       (let [[x1 y1 :as p1] (or viimeisin-sijanti (first sijainti))
+             [x2 y2 :as p2] (second sijainti)
+             dist (geo/etaisyys p1 p2)]
          (cond
            (or (> dist valimatka)
-               (> (Math/abs kulman-erotus) kulmaraja-nuolelle)
                ensimmainen?)
            (recur (conj pisteet-ja-rotaatiot
-                        [(-> sijainti second luo-piste) rotaatio])
-                  (second sijainti) taitokset rotaatio false)
+                        [(-> sijainti second luo-piste)
+                         (kulma p1 p2)])
+                  (second sijainti) taitokset false)
 
            :else
            (recur pisteet-ja-rotaatiot
-                  viimeisin-sijanti taitokset verrokki-kulma false)))))))
+                  viimeisin-sijanti taitokset false)))))))
+
+
 
 (defn pisteiden-taitokset
   ([pisteet] (pisteiden-taitokset pisteet true))
   ([pisteet kiertosuunta-ylos?]
-   (reduce (fn [taitokset [[x1 y1] [x2 y2]]]
+   (reduce (fn [taitokset [p1 p2]]
              (conj taitokset
-                   {:sijainti [[x1 y1] [x2 y2]]
-                    :rotaatio (let [kulma (Math/atan2
-                                            (- y2 y1)
-                                            (- x2 x1))]
+                   {:sijainti [p1 p2]
+                    :rotaatio (let [kulma (kulma p1 p2)]
                                 (if kiertosuunta-ylos? kulma (- kulma)))}))
            []
            (partition 2 1 pisteet))))
