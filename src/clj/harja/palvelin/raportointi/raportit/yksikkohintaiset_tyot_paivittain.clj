@@ -5,7 +5,7 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [clojure.string :as str]))
@@ -31,7 +31,7 @@
                                                    suunnittelutiedot)
         raportin-nimi "Yksikköhintaiset työt päivittäin"
         konteksti :urakka
-        otsikko (raportin-otsikko-aikavalilla
+        otsikko (raportin-otsikko
                   (case konteksti
                     :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id))))
                   raportin-nimi alkupvm loppupvm)]

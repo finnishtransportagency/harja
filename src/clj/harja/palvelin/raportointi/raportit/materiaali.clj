@@ -7,7 +7,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.materiaali :as materiaalidomain]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]))
 
@@ -84,7 +84,7 @@
                                                             :urakkatyyppi urakkatyyppi}))
 
         raportin-nimi "Materiaaliraportti"
-        otsikko (raportin-otsikko-aikavalilla
+        otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

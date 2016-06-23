@@ -6,7 +6,7 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [clj-time.core :as t]
@@ -144,7 +144,7 @@
                                                 (t/plus pvm (t/months 1)))
                                               (t/to-time-zone (c/from-date alkupvm) (t/time-zone-for-id "Europe/Helsinki"))))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
-        otsikko (raportin-otsikko-aikavalilla
+        otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

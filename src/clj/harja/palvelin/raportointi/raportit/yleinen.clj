@@ -10,7 +10,7 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
-(defn raportin-otsikko-aikavalilla
+(defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
   (let [kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kkna-ja-vuonna (pvm/kuukautena-ja-vuonna (l/to-local-date-time alkupvm))]
@@ -18,10 +18,6 @@
       (str konteksti ", " nimi " " kkna-ja-vuonna)
       (str konteksti ", " nimi " ajalta "
            (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))))
-
-(defn raportin-otsikko-vuodella
-  [konteksti nimi vuosi]
-  (str konteksti ", " nimi " " vuosi))
 
 (defn ryhmittele-tulokset-raportin-taulukolle
   "rivit                   ryhmiteltävät rivit

@@ -2,7 +2,7 @@
   "Ilmoitusraportti"
   (:require [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :refer
-             [raportin-otsikko-aikavalilla vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
+             [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
               pylvaat-kuukausittain ei-osumia-aikavalilla-teksti]]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
@@ -93,7 +93,7 @@
                           loppupvm)
         hoitokaudella-tahan-asti-opt (if kyseessa-kk-vali? " hoitokaudella " "")
         raportin-nimi "Ilmoitusraportti"
-        otsikko (raportin-otsikko-aikavalilla
+        otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

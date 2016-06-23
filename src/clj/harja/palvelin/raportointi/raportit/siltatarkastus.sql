@@ -82,15 +82,18 @@ ORDER BY siltanro;
 
 -- name: hae-sillan-tarkastus
 SELECT
-  tarkastusaika,
-  tarkastaja
- FROM siltatarkastus st
- WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
-       AND urakka = :urakka
-       AND silta = :silta
-       AND st.poistettu = FALSE
- ORDER BY tarkastusaika DESC
- LIMIT 1;
+ s.siltanimi,
+ s.siltatunnus,
+ tarkastusaika,
+ tarkastaja
+FROM siltatarkastus st
+ JOIN silta s ON st.silta = s.id
+WHERE EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+      AND urakka = :urakka
+      AND silta = :silta
+      AND st.poistettu = FALSE
+ORDER BY tarkastusaika DESC
+LIMIT 1;
 
 -- name: hae-sillan-tarkastuskohteet
 -- Hakee valitun sillan annettuna vuonna tehdyn uusimman siltatarkastuksen

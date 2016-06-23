@@ -248,12 +248,17 @@
 
                                                  :default
                                                  #{}))
-        otsikko (raportin-otsikko-vuodella
-                  (case konteksti
-                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                    :koko-maa "KOKO MAA")
-                  raportin-nimi vuosi)]
+        otsikko (case konteksti
+                    :urakka
+                    (if (= silta-id :kaikki)
+                      (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) " vuodelta " vuosi)
+                      (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
+                           (str (:siltanimi yksittaisen-sillan-perustiedot)
+                                " (" (:siltatunnus yksittaisen-sillan-perustiedot)) ") , " vuosi))
+                    :hallintayksikko
+                    (str raportin-nimi ", " (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))) " " vuosi)
+                    :koko-maa
+                    (str raportin-nimi ", KOKO MAA " vuosi))]
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
      [:taulukko {:otsikko otsikko

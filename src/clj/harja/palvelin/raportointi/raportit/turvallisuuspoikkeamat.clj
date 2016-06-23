@@ -3,7 +3,7 @@
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko-aikavalilla vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat-kuukausittain]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet pylvaat-kuukausittain]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -59,7 +59,7 @@
                                          (get maarat "muu")])))
                                   {} turpo-maarat-kuukausittain)
         raportin-nimi "Turvallisuusraportti"
-        otsikko (raportin-otsikko-aikavalilla
+        otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))

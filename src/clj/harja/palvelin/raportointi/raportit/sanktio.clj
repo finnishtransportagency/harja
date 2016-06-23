@@ -3,7 +3,7 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko-aikavalilla]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain]
             [harja.kyselyt.konversio :as konv]
             [harja.fmt :as fmt]
@@ -250,7 +250,7 @@
         raportin-rivit (when (> (count naytettavat-alueet) 0)
                          (raporttirivit sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?}))
         raportin-nimi "Sanktioiden yhteenveto"
-        otsikko (raportin-otsikko-aikavalilla
+        otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
