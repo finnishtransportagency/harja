@@ -303,7 +303,12 @@
                            (reverse (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka))))
                          (pvm/edelliset-n-vuosivalia 5)))))
 
-(def urakan-vuosi (reaction (first @urakan-vuodet)))
+(def urakan-vuosi (atom urakan-vuodet))
+;; urakan-vuosi ei voi olla reaktio, koska sitä lukeva komponentti
+;; ei aina ole näkyvissä, joten arvo saattaa resetoitua siirryttäessä raportille ja takaisin.
+;; Edellinen arvo halutaan kuitenkin säilyttää aina muistissa ja
+;; vaihtaa automaattisesti jos urakan-vuodet muuttuu. Siksi run!
+(run! (reset! urakan-vuosi (first @urakan-vuodet)))
 
 (defmethod raportin-parametri "urakan-vuosi" [p arvo]
   (reset! arvo {:vuosi @urakan-vuosi})
