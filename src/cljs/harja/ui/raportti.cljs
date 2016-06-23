@@ -127,6 +127,13 @@
                 }
       pylvaat]]))
 
+(defmethod muodosta-html :piirakka [[_ {:keys [otsikko]} data]]
+  [:div.pylvaat
+   [:h3 otsikko]
+   [vis/pie
+    {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+    data]])
+
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
   (apply yleiset/taulukkotietonakyma {}
          (mapcat identity otsikot-ja-arvot)))

@@ -205,7 +205,6 @@
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
-  ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
   (log/debug "muodosta pdf pylväät data" pylvaat)
   [:fo:block {:margin-top "1em"}
    [:fo:block {:font-weight "bold"} otsikko]
@@ -223,6 +222,16 @@
                :legend legend
                }
      pylvaat)]
+   [:fo:block {:space-after "1em"}]])
+
+(defmethod muodosta-pdf :piirakka [[_ {:keys [otsikko]} data]]
+  (log/debug "muodosta pdf piirakka data" data)
+  [:fo:block {:margin-top "1em"}
+   [:fo:block {:font-weight "bold"} otsikko]
+   [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
+    (vis/pie
+     {:width 230 :height 150  :radius 60 :show-text :percent :show-legend true}
+     data)]
    [:fo:block {:space-after "1em"}]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
