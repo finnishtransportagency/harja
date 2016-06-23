@@ -299,8 +299,8 @@
              {:tyyppi :tierekisteriosoite
               :nimi :tr
               :pakollinen? false
-              :sijainti (r/wrap (:sijainti @muokattu)
-                                #(swap! muokattu assoc :sijainti %))
+              :sijainti (r/wrap (:reitti @muokattu)
+                                #(swap! muokattu assoc :reitti %))
               :palstoja 2}
 
              (lomake/rivi
