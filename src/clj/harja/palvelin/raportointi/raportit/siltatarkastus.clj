@@ -7,7 +7,7 @@
     [harja.fmt :as fmt]
     [harja.pvm :as pvm]
     [taoensso.timbre :as log]
-P    [harja.kyselyt.konversio :as konv]
+    [harja.kyselyt.konversio :as konv]
     [harja.domain.siltatarkastus :as siltadomain]
     [harja.math :as math]
     [clj-time.coerce :as c]))
