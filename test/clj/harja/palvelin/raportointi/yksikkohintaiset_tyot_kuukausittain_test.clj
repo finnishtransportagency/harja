@@ -46,7 +46,7 @@
                                 +kayttaja-jvh+
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                                  :parametrit {:alkupvm   (c/to-date (t/local-date 2005 10 10))
                                               :loppupvm  (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
@@ -80,7 +80,7 @@
   (let [vastaus (raportti/hae-kuukausittaiset-summat
                   db
                   {:konteksti :urakka
-                   :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                   :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                    :alkupvm   (c/to-date (t/local-date 2000 10 10))
                    :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
     (is (not (empty? vastaus)))
@@ -94,7 +94,7 @@
   (let [vastaus (raportti/hae-kuukausittaiset-summat
                   db
                   {:konteksti :urakka
-                   :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                   :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                    :alkupvm   (c/to-date (t/local-date 2000 10 10))
                    :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
     (is (not (empty? vastaus)))
@@ -150,7 +150,7 @@
   (let [rivit (raportti/hae-kuukausittaiset-summat
                 db
                 {:konteksti :urakka
-                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
+                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
                  :alkupvm   (c/to-date (t/local-date 2000 10 10))
                  :loppupvm  (c/to-date (t/local-date 2030 10 10))})
         tulos (raportti/muodosta-raportin-rivit rivit false)]
