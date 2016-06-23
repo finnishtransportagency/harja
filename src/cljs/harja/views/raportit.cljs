@@ -284,16 +284,16 @@
   (fn []
     [yleiset/pudotusvalikko
      "Silta"
-     {:valinta    @silta
+     {:valinta @silta
       :valitse-fn #(do (reset! silta %)
                        (reset! arvo {:silta-id (if (= :kaikki %)
                                                  :kaikki
                                                  (:id %))}))
-      :format-fn  #(case %
-                    :kaikki "Kaikki"
-                    (:siltanimi %))}
+      :format-fn #(case %
+                   :kaikki "Kaikki"
+                   (str (:siltanimi %) " ("(:siltatunnus %) ")"))}
 
-     (into [] (cons :kaikki @urakan-sillat))]))
+     (into [] (cons :kaikki (sort-by :siltatunnus @urakan-sillat)))]))
 
 (def urakan-vuodet (reaction
                      (let [urakka @nav/valittu-urakka]
@@ -301,7 +301,7 @@
                          (mapv
                            #(t/year (first %))
                            (reverse (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka))))
-                         (pvm/edelliset-n-vuosivalia 5)))))
+                         (pvm/edelliset-n-vuosivalia 10)))))
 
 (def urakan-vuosi (atom urakan-vuodet))
 ;; urakan-vuosi ei voi olla reaktio, koska sitä lukeva komponentti
