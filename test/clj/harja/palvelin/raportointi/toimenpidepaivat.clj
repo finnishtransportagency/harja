@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.toimenpidekilometrit-test
+(ns harja.palvelin.raportointi.toimenpidepaivat-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
@@ -79,7 +79,7 @@
                      []]]))))
 
 
-(deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
+(deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+

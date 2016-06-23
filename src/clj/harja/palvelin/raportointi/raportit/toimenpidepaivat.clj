@@ -59,8 +59,7 @@
                     :alku alkupvm
                     :loppu loppupvm
                     :hoitoluokat hoitoluokat
-                    :urakkatyyppi (when-not urakka-id
-                                    (name urakkatyyppi))}
+                    :urakkatyyppi (name urakkatyyppi)}
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
