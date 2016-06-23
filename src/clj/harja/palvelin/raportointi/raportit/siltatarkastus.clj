@@ -254,7 +254,7 @@
                       (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) " vuodelta " vuosi)
                       (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
                            (str (:siltanimi yksittaisen-sillan-perustiedot)
-                                " (" (:siltatunnus yksittaisen-sillan-perustiedot)) ") , " vuosi))
+                                " (" (:siltatunnus yksittaisen-sillan-perustiedot)) "), " vuosi))
                     :hallintayksikko
                     (str raportin-nimi ", " (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))) " " vuosi)
                     :koko-maa
