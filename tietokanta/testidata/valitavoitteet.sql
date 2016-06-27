@@ -22,4 +22,12 @@ VALUES ((SELECT id
                    '2014-12-24',
                    NULL,
                    NULL,
+                   false),
+                   ((SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun alueurakka 2014-2019'),
+                   'Oulaisten liikenneympyrä aurattu',
+                   '2050-1-1',
+                   NULL,
+                   NULL,
                    false)
