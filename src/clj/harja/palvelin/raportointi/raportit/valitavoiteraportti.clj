@@ -14,16 +14,16 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/valitavoitteet.sql")
 
-(defn suodata-ajoissa [valitavoitteet]
-          (filter
-            (fn [valitavoite]
-              (and (:takaraja valitavoite)
-                   (:valmis-pvm valitavoite)
-                   (pvm/sama-tai-ennen? (c/from-date (:valmis-pvm valitavoite))
-                                        (c/from-date (:takaraja valitavoite)))))
-            valitavoitteet))
+(defn- suodata-ajoissa [valitavoitteet]
+  (filter
+    (fn [valitavoite]
+      (and (:takaraja valitavoite)
+           (:valmis-pvm valitavoite)
+           (pvm/sama-tai-ennen? (c/from-date (:valmis-pvm valitavoite))
+                                (c/from-date (:takaraja valitavoite)))))
+    valitavoitteet))
 
-(defn suodata-myohassa [valitavoitteet]
+(defn- suodata-myohassa [valitavoitteet]
   (filter
     (fn [valitavoite]
       (and (:takaraja valitavoite)
@@ -32,7 +32,7 @@
                          (c/from-date (:takaraja valitavoite)))))
     valitavoitteet))
 
-(defn suodata-kesken [valitavoitteet]
+(defn- suodata-kesken [valitavoitteet]
   (filter
     (fn [valitavoite]
       (and (:takaraja valitavoite)
@@ -40,7 +40,7 @@
            (not (:valmis-pvm valitavoite))))
     valitavoitteet))
 
-(defn suodata-toteumatta [valitavoitteet]
+(defn- suodata-toteumatta [valitavoitteet]
   (filter
     (fn [valitavoite]
       (and (:takaraja valitavoite)
@@ -49,7 +49,7 @@
                          (c/from-date (:takaraja valitavoite)))))
     valitavoitteet))
 
-(defn muodosta-raportin-rivit [valitavoitteet]
+(defn- muodosta-raportin-rivit [valitavoitteet]
   (let [valitavoiterivi (fn [valitavoite]
                           [(:nimi valitavoite)
                            (pvm/pvm-opt (:takaraja valitavoite))
@@ -65,7 +65,7 @@
                [{:otsikko "Toteutumatta jääneet"}]
                (mapv valitavoiterivi (suodata-toteumatta valitavoitteet))))))
 
-(defn muodosta-otsikkorivit []
+(defn- muodosta-otsikkorivit []
   [{:otsikko "Välitavoite" :leveys 10}
    {:otsikko "Takaraja" :leveys 5}
    {:otsikko "Valmistunut" :leveys 5}
