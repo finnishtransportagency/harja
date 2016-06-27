@@ -361,9 +361,6 @@
      (let [checkbox [:div.checkbox
                      [:label
                       [:input {:type      "checkbox" :checked arvo
-                               :disabled (if disabloi
-                                           (disabloi)
-                                           false)
                                :on-change #(let [valittu? (-> % .-target .-checked)]
                                              (reset! data valittu?))}
                        teksti]]]]

@@ -162,7 +162,11 @@
                 :valinta-nayta hinnoittelun-nimet
                 :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
                {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox :leveys "15%" :fmt fmt/totuus
-                :tasaa :keskita :disabloi (constantly true)}]
+                :tasaa :keskita
+                :muokattava? (fn [rivi _]
+                               (some (fn [h] (or (= h "kokonaishintainen")
+                                                 (= h "yksikkohintainen")))
+                                     (:hinnoittelu rivi)))}]
               (sort-by (juxt :hinnoittelu :nimi) tehtavat)])
            [:div {:class
                   (str "inline-block lomake-vihje")}
