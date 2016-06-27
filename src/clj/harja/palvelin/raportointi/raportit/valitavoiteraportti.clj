@@ -4,22 +4,42 @@
             [harja.fmt :as fmt]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
+            [jeesql.core :refer [defqueries]]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [clj-time.core :as t]
             [harja.pvm :as pvm]))
 
+(defqueries "harja/palvelin/raportointi/raportit/valitavoitteet.sql")
+
+(defn muodosta-raportin-rivit [valitavoitteet]
+  (log/debug "Välitavoitteet: " (pr-str valitavoitteet))
+  (mapv
+    (fn [valitavoite]
+      [(:nimi valitavoite)
+       (pvm/pvm (:takaraja valitavoite))
+       (pvm/pvm (:valmis_pvm valitavoite))
+       (:kommentti valitavoite)])
+    valitavoitteet))
+
+(defn muodosta-otsikkorivit []
+  [{:otsikko "Välitavoite"}
+   {:otsikko "Takaraja"}
+   {:otsikko "Valmistunut"}
+   {:otsikko "Kommentti"}])
+
 (defn suorita [db user {:keys [urakka-id] :as parametrit}]
   (let [konteksti :urakka
-        valitavoitteet [] ; TODO Hae
-        taulukkorivit #_(muodosta-raportin-rivit valitavoitteet) [] ; TODO Käsittele
+        valitavoitteet (hae-valitavoitteet db {:urakka urakka-id})
+        otsikkorivit (muodosta-otsikkorivit)
+        datarivit (muodosta-raportin-rivit valitavoitteet)
         raportin-nimi "Välitavoiteraportti"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                      ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
-                 :tyhja (when (empty? taulukkorivit) "Ei raportoitavia välitavoitteita.")
+                 :tyhja (when (empty? datarivit) "Ei raportoitavia välitavoitteita.")
                  :sheet-nimi raportin-nimi}
-      [["Välitavoite"]]
-      [["Sepon tien auraus"]]]]))
+      otsikkorivit
+      datarivit]]))
