@@ -100,7 +100,6 @@
     (pvm p)
     ""))
 
-
 (defn pvm-vali [[alku loppu]]
   (str (pvm/pvm alku)
        " \u2014 "
