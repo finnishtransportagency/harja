@@ -14,7 +14,8 @@
         valitavoitteet [] ; TODO Hae
         taulukkorivit #_(muodosta-raportin-rivit valitavoitteet) [] ; TODO Käsittele
         raportin-nimi "Välitavoiteraportti"
-        otsikko (str konteksti ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))]
+        otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                     ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
      [:taulukko {:otsikko otsikko
