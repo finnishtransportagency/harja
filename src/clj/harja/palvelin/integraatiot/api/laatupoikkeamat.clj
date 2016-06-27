@@ -65,12 +65,12 @@
 (defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]
   (let [tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti data) (:loppusijainti data))
         geometria (sijainnit/tee-geometria (:alkusijainti data) (:loppusijainti data))]
-    (jdbc/with-db-transaction [transaktio db]
-      (let [laatupoikkeama-id (tallenna-laatupoikkeama transaktio urakka-id kirjaaja data tr-osoite geometria)
+    (jdbc/with-db-transaction [db db]
+      (let [laatupoikkeama-id (tallenna-laatupoikkeama db urakka-id kirjaaja data tr-osoite geometria)
             kommentit (:kommentit data)
             liitteet (:liitteet data)]
-        (tallenna-kommentit transaktio laatupoikkeama-id kirjaaja kommentit)
-        (tallenna-liitteet-laatupoikkeamalle transaktio liitteiden-hallinta urakka-id laatupoikkeama-id kirjaaja liitteet)))
+        (tallenna-kommentit db laatupoikkeama-id kirjaaja kommentit)
+        (tallenna-liitteet-laatupoikkeamalle db liitteiden-hallinta urakka-id laatupoikkeama-id kirjaaja liitteet)))
     (when-not tr-osoite (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
                                 (:alkusijainti data) (:loppusijainti data)))))
 

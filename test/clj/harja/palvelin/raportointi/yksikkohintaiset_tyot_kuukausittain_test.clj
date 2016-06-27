@@ -44,13 +44,109 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :yks-hint-kuukausiraportti
+                                {:nimi :yks-hint-kuukausiraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
-                                 :parametrit {:alkupvm   (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm  (c/to-date (t/local-date 2010 10 10))}})]
+                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                                 :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
+                                              :loppupvm (c/to-date (t/local-date 2016 9 30))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= :raportti (first vastaus)))))
+    (is (= vastaus [:raportti
+                    {:nimi "Yksikköhintaiset työt kuukausittain"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{10
+                                                    11
+                                                    12
+                                                    13
+                                                    14
+                                                    15
+                                                    16
+                                                    2
+                                                    3
+                                                    4
+                                                    5
+                                                    6
+                                                    7
+                                                    8
+                                                    9}
+                      :otsikko "Oulun alueurakka 2014-2019, Yksikköhintaiset työt kuukausittain ajalta 01.10.2015 - 30.09.2016"
+                      :sheet-nimi "Yksikköhintaiset työt kuukausittain"
+                      :tyhja nil}
+                     [{:leveys 10
+                       :otsikko "Tehtävä"}
+                       {:leveys 5
+                        :otsikko "Yk­sik­kö"}
+                       {:leveys 5
+                        :otsikko "10 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "11 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "12 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "01 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "02 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "03 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "04 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "05 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "06 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "07 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "08 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "09 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 7
+                        :otsikko "Mää­rä yh­teen­sä"}]
+                     [["Pensaiden täydennysistutus"
+                        "m2"
+                        0
+                        0
+                        0
+                        "668,0"
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        "668,0"]
+                      ["Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
+                        "m2"
+                        0
+                        0
+                        0
+                        "667,0"
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        "667,0"]]]
+                    [:teksti
+                     "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -59,10 +155,105 @@
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm            (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))}})]
+                                 :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
+                                              :loppupvm (c/to-date (t/local-date 2016 9 30))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= :raportti (first vastaus)))))
+    (is (= vastaus [:raportti
+                    {:nimi "Yksikköhintaiset työt kuukausittain"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{10
+                                                    11
+                                                    12
+                                                    13
+                                                    14
+                                                    15
+                                                    16
+                                                    2
+                                                    3
+                                                    4
+                                                    5
+                                                    6
+                                                    7
+                                                    8
+                                                    9}
+                      :otsikko "Pohjois-Pohjanmaa, Yksikköhintaiset työt kuukausittain ajalta 01.10.2015 - 30.09.2016"
+                      :sheet-nimi "Yksikköhintaiset työt kuukausittain"
+                      :tyhja nil}
+                     [{:leveys 10
+                       :otsikko "Tehtävä"}
+                       {:leveys 5
+                        :otsikko "Yk­sik­kö"}
+                       {:leveys 5
+                        :otsikko "10 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "11 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "12 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "01 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "02 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "03 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "04 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "05 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "06 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "07 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "08 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "09 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 7
+                        :otsikko "Mää­rä yh­teen­sä"}]
+                     [["Pensaiden täydennysistutus"
+                        "m2"
+                        0
+                        0
+                        0
+                        "668,0"
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        "668,0"]
+                      ["Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
+                        "m2"
+                        0
+                        0
+                        0
+                        "667,0"
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        "667,0"]]]
+                    nil]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -70,35 +261,105 @@
                                 +kayttaja-jvh+
                                 {:nimi      :yks-hint-kuukausiraportti
                                  :konteksti "koko maa"
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2015 10 1))
+                                              :loppupvm (c/to-date (t/local-date 2016 9 30))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= :raportti (first vastaus)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-arvot-oikealta-aikavalilta
-  (let [vastaus (raportti/hae-kuukausittaiset-summat
-                  db
-                  {:konteksti :urakka
-                   :urakka-id (hae-oulun-alueurakan-2005-2012-id)
-                   :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                   :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
-    (is (not (empty? vastaus)))
-    (is (every? #(and (>= % 2005)
-                      (<= % 2010)) (map :vuosi vastaus)))
-    (is (every? #(and (>= % 1)
-                      (<= % 12)) (map :kuukausi vastaus)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest kuukausittaisten-summien-haku-urakalle-ei-palauta-tyhjia-toteumia
-  (let [vastaus (raportti/hae-kuukausittaiset-summat
-                  db
-                  {:konteksti :urakka
-                   :urakka-id (hae-oulun-alueurakan-2005-2012-id)
-                   :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                   :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
-    (is (not (empty? vastaus)))
-    (is (every? #(> % 0) (map :toteutunut_maara vastaus)))))
+    (is (= vastaus [:raportti
+                    {:nimi "Yksikköhintaiset työt kuukausittain"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{10
+                                                    11
+                                                    12
+                                                    13
+                                                    14
+                                                    15
+                                                    16
+                                                    2
+                                                    3
+                                                    4
+                                                    5
+                                                    6
+                                                    7
+                                                    8
+                                                    9}
+                      :otsikko "KOKO MAA, Yksikköhintaiset työt kuukausittain ajalta 01.10.2015 - 30.09.2016"
+                      :sheet-nimi "Yksikköhintaiset työt kuukausittain"
+                      :tyhja nil}
+                     [{:leveys 10
+                       :otsikko "Tehtävä"}
+                       {:leveys 5
+                        :otsikko "Yk­sik­kö"}
+                       {:leveys 5
+                        :otsikko "10 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "11 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "12 / 15"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "01 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "02 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "03 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "04 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "05 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "06 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "07 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "08 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 5
+                        :otsikko "09 / 16"
+                        :otsikkorivi-luokka "grid-kk-sarake"}
+                       {:leveys 7
+                        :otsikko "Mää­rä yh­teen­sä"}]
+                     [["Pensaiden täydennysistutus"
+                        "m2"
+                        0
+                        0
+                        0
+                        "668,0"
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        "668,0"]
+                      ["Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
+                        "m2"
+                        0
+                        0
+                        0
+                        "667,0"
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        0
+                        "667,0"]]]
+                    nil]))))
 
 (deftest kuukausittaisten-summien-yhdistaminen-toimii-urakan-yhdelle-tehtavalle
   (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1}
@@ -106,9 +367,9 @@
                {:kuukausi 12 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 3}]
         vastaus (raportti/muodosta-raportin-rivit rivit false)]
     (is (= 1 (count vastaus)))
-    (is (= (get (first vastaus) "10 / 05") 1))
-    (is (= (get (first vastaus) "11 / 05") 2))
-    (is (= (get (first vastaus) "12 / 05") 3))))
+    (is (= (get (first vastaus) "10 / 05") "1,0"))
+    (is (= (get (first vastaus) "11 / 05") "2,0"))
+    (is (= (get (first vastaus) "12 / 05") "3,0"))))
 
 (deftest kuukausittaisten-summien-yhdistaminen-toimii-urakan-usealle-tehtavalle
   (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1}
@@ -118,9 +379,9 @@
     (is (= 2 (count vastaus)))
     (let [auraus (first (filter #(= (:nimi %) "Auraus") vastaus))
           suolaus (first (filter #(= (:nimi %) "Suolaus") vastaus))]
-      (is (= (get auraus "10 / 05") 1))
-      (is (= (get auraus "11 / 05") 2))
-      (is (= (get suolaus "11 / 05") 3)))))
+      (is (= (get auraus "10 / 05") "1,0"))
+      (is (= (get auraus "11 / 05") "2,0"))
+      (is (= (get suolaus "11 / 05") "3,0")))))
 
 (deftest kuukausittaisten-summien-yhdistaminen-toimii-urakoittain-usealle-tehtavalle
   (let [rivit [{:kuukausi 10 :vuosi 2005 :nimi "Auraus" :yksikko "km" :suunniteltu_maara 1 :toteutunut_maara 1 :urakka_id 1 :urakka_nimi "Sepon urakka"}
@@ -139,23 +400,8 @@
           paavon-auraus (first (filter #(and (= (:nimi %) "Auraus")
                                              (= (:urakka_nimi %) "Paavon urakka"))
                                        vastaus))]
-      (is (= (get sepon-auraus "10 / 05") 1))
-      (is (= (get sepon-suolaus "11 / 05") 2))
-      (is (= (get sepon-suolaus "12 / 05") 666))
-      (is (= (get paavon-auraus "12 / 05") 3))
-      (is (= (get paavon-auraus "12 / 06") 123)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest kuukausittaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
-  (let [rivit (raportti/hae-kuukausittaiset-summat
-                db
-                {:konteksti :urakka
-                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
-                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                 :loppupvm  (c/to-date (t/local-date 2030 10 10))})
-        tulos (raportti/muodosta-raportin-rivit rivit false)]
-    (is (not (empty? tulos)))
-    (let [ajorat (first (filter
-                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
-                          tulos))]
-      (is (= (get ajorat "10 / 05") 30M)))))
+      (is (= (get sepon-auraus "10 / 05") "1,0"))
+      (is (= (get sepon-suolaus "11 / 05") "2,0"))
+      (is (= (get sepon-suolaus "12 / 05") "666,0"))
+      (is (= (get paavon-auraus "12 / 05") "3,0"))
+      (is (= (get paavon-auraus "12 / 06") "123,0")))))

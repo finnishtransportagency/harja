@@ -30,7 +30,7 @@
     (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)))
 
 (defn tallenna-kaikki-pyynnon-pistetoteumat [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [transaktio db]
+  (jdbc/with-db-transaction [db db]
     (when (:pistetoteuma data)
       (tallenna-yksittainen-pistetoteuma db urakka-id kirjaaja (:pistetoteuma data)))
     (doseq [pistetoteuma (:pistetoteumat data)]

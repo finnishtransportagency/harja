@@ -8,7 +8,8 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
             [harja.pvm :as pvm]
             [harja.tiedot.istunto :refer [kayttaja]]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.ui.openlayers :as openlayers])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -73,41 +74,32 @@
 
 (def karttataso-kokonaishintainen-toteuma (atom false))
 
+(defn luo-kokonaishintainen-toteuma-kuvataso
+  [urakka-id
+   sopimus-id
+   taso-paalla?
+   valittu-paivakohtainen-tehtava
+   valittu-toteuma]
+  (when (and taso-paalla? (or valittu-toteuma valittu-paivakohtainen-tehtava))
+    (openlayers/luo-kuvataso
+     :kokonaishintainen-toteuma [] ;; FIXME tee selite valinnan pohjalta
+     "kht" (k/url-parametri
+            (let [[alkupvm loppupvm] (pvm/paivan-aikavali (:pvm valittu-paivakohtainen-tehtava))]
+              {:urakka-id  urakka-id
+               :sopimus-id sopimus-id
+               :alkupvm    alkupvm
+               :loppupvm   loppupvm
+               :tehtava    (:toimenpidekoodi valittu-paivakohtainen-tehtava)})))))
+
 ;; Piirretään kartalle reitit, jotka haetaan kun summariviä klikataan JA
 ;; valitun toteuman reitti.
 (def kokonaishintainen-toteuma-kartalla
-         (reaction<!
-           [urakka-id (:id @nav/valittu-urakka)
-            sopimus-id (first @urakka/valittu-sopimusnumero)
-            taso-paalla? @karttataso-kokonaishintainen-toteuma
-            valittu-paivakohtainen-tehtava @valittu-paivakohtainen-tehtava
-            valittu-toteuma @valittu-kokonaishintainen-toteuma]
-           (when (and taso-paalla? (or valittu-toteuma valittu-paivakohtainen-tehtava))
-             (go
-               (kartalla-esitettavaan-muotoon
-                 (let [haun-tulos (if valittu-paivakohtainen-tehtava
-                                    (<!
-                                     (hae-toteumareitit
-                                       urakka-id sopimus-id
-                                       (pvm/paivan-aikavali (:pvm valittu-paivakohtainen-tehtava))
-                                       (:toimenpidekoodi valittu-paivakohtainen-tehtava)))
-                                    [])
-                       ;; Esitettävillä asioilla on tietty muoto mitä se odottaa
-                       ;; Muokataan valittu-toteuma tähän muotoon
-                       valittu-tehtavilla (assoc valittu-toteuma
-                                            :tehtavat
-                                            [{:id (get-in valittu-toteuma [:tehtava :toimenpidekoodi :id])
-                                              :toimenpide (get-in valittu-toteuma [:tehtava :toimenpidekoodi :nimi])
-                                              :maara (get-in valittu-toteuma [:tehtava :maara])}])
-                       ;; Haetuissa reiteissä on klikatun summarivin reitit. Liitetään mukaan
-                       ;; Valitun toteuman reitti jos se ei jo ole tässä joukossa.
-                       yhdistetyt-reitit (if-not
-                                           (some #(= (:id valittu-toteuma) (:toteumaid %)) haun-tulos)
-                                           (conj haun-tulos valittu-tehtavilla)
-                                           haun-tulos)]
-                   (reset! haetut-reitit yhdistetyt-reitit))
-                 valittu-toteuma [[:toteumaid] [:id]]
-                 (map #(assoc % :tyyppi-kartalla :toteuma)))))))
+  (reaction
+   (luo-kokonaishintainen-toteuma-kuvataso (:id @nav/valittu-urakka)
+                                           (first @urakka/valittu-sopimusnumero)
+                                           @karttataso-kokonaishintainen-toteuma
+                                           @valittu-paivakohtainen-tehtava
+                                           @valittu-kokonaishintainen-toteuma)))
 
 (defn hae-toteuman-reitti!
   "Hakee reitin toteumalle, jos toteumalla ei ole vielä reittiä."

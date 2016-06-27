@@ -60,21 +60,21 @@
   Jos onnistuu, palauttaa lukon tiedot
   Jos epäonnistuu, palauttaa nil"
   [db user {:keys [id]}]
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (log/debug "Yritetään lukita " id)
     (let [lukko (first (q/hae-lukko-idlla db id))]
       (log/debug "Tarkistettiin vanha lukko. Tulos: " (pr-str lukko))
       (if (nil? lukko)
         (do
           (log/debug "Ei vanhaa lukkoa. Lukitaan " id)
-          (q/luo-lukko<! c id (:id user)))
+          (q/luo-lukko<! db id (:id user)))
         (do
           (log/debug "Vanha lukko löytyi. Tarkistetaan sen ikä.")
           (if (lukko-vanhentunut? lukko)
             (do
               (log/debug "Edellinen lukko on vanhentunut. Poistetaan se ja luodaan uusi..")
               (vapauta-lukko db (:id lukko))
-              (q/luo-lukko<! c id (:id user)))
+              (q/luo-lukko<! db id (:id user)))
             (do (log/debug "Ei voida lukita " id " koska on jo lukittu!")
                 nil)))))))
 
