@@ -17,8 +17,8 @@
   (mapv
     (fn [valitavoite]
       [(:nimi valitavoite)
-       (pvm/pvm (:takaraja valitavoite))
-       (pvm/pvm (:valmis_pvm valitavoite))
+       (pvm/pvm-opt (:takaraja valitavoite))
+       (pvm/pvm-opt (:valmis_pvm valitavoite))
        (:kommentti valitavoite)])
     valitavoitteet))
 
