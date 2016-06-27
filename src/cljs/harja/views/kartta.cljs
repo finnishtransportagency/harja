@@ -613,7 +613,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
                                 ; on valittu hallintayksikkö tai urakka.
                                 (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
-                                        (and (not (:nimi geom)) (not (:siltanimi geom))))
+                                        (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
                                   nil
                                   (fn []
                                     (and geom

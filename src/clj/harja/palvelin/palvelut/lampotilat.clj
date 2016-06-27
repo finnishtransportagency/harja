@@ -43,14 +43,14 @@
   (log/debug "tallenna-teiden-hoitourakoiden-lampotilat, hoitokausi " hoitokausi ", lämpötilat: " lampotilat)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user)
   (jdbc/with-db-transaction [db db]
-                            (doseq [lt lampotilat]
-                              (let [id (:lampotilaid lt)
-                                    parametrit [(:urakka lt) (:alkupvm lt) (:loppupvm lt)
-                                                (:keskilampotila lt) (:pitkakeskilampotila lt)]]
-                                (if id
-                                    (apply q/paivita-lampotila<! db (concat parametrit [id]))
-                                    (apply q/uusi-lampotila<! db parametrit))))
-                            (hae-teiden-hoitourakoiden-lampotilat db user hoitokausi)))
+    (doseq [lt lampotilat]
+      (let [id (:lampotilaid lt)
+            parametrit [(:urakka lt) (:alkupvm lt) (:loppupvm lt)
+                        (:keskilampotila lt) (:pitkakeskilampotila lt)]]
+        (if id
+          (apply q/paivita-lampotila<! db (concat parametrit [id]))
+          (apply q/uusi-lampotila<! db parametrit))))
+    (hae-teiden-hoitourakoiden-lampotilat db user hoitokausi)))
 
 (defn hae-urakan-suolasakot-ja-lampotilat
   [db user urakka-id]
