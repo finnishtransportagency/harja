@@ -10,7 +10,7 @@ VALUES ((SELECT id
                    ((SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'),
-                   'Pelkosen tie 678 suolattu',
+                   'Pelkosentie 678 suolattu',
                    '2015-09-23',
                    '2015-09-25',
                    'Aurattu, mutta vähän tuli myöhässä',

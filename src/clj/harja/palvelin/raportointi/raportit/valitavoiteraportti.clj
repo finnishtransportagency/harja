@@ -18,9 +18,9 @@
     (fn [valitavoite]
       [(:nimi valitavoite)
        (pvm/pvm-opt (:takaraja valitavoite))
-       (pvm/pvm-opt (:valmis_pvm valitavoite))
-       (:kommentti valitavoite)])
-    valitavoitteet))
+       (pvm/pvm-opt (:valmis-pvm valitavoite))
+       (:valmis-kommentti valitavoite)])
+      valitavoitteet))
 
 (defn muodosta-otsikkorivit []
   [{:otsikko "Välitavoite"}
