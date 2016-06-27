@@ -1,6 +1,7 @@
 (ns harja-laadunseuranta.tarkastusajon-luonti
   (:require [reagent.core :as reagent :refer [atom]]
-            [harja-laadunseuranta.kuvat :as kuvat])
+            [harja-laadunseuranta.kuvat :as kuvat]
+            [harja-laadunseuranta.sovellus :as sovellus])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 
@@ -17,7 +18,9 @@
          [:p "Valitse tarkastusajon tyyppi"]
          [:div
           [:nav.pikavalintapainike {:on-click #(valittu :kelitarkastus)} "Talvitarkastus"]
-          [:nav.pikavalintapainike.disabled #_{:on-click #(valittu :soratietarkastus)}
+          [:nav.pikavalintapainike {:class (when (not (sovellus/kesatarkastus-beta?))
+                                             "disabled") :on-click #(when (sovellus/kesatarkastus-beta?)
+                                                                      (valittu :soratietarkastus))}
            "Kesätarkastus"]]
          [:nav.pikavalintapainike.peruutuspainike {:on-click #(peruutettu-fn)}
           [:span.livicon-delete] "Peruuta"]]))))

@@ -8,6 +8,7 @@
   {:tallennus-kaynnissa false
    :tallennustilaa-muutetaan false
    :kayttajanimi nil
+   :kayttajatunnus nil
    :sijainti {:nykyinen nil
               :edellinen nil}
    :palautettava-tarkastusajo nil
@@ -29,7 +30,8 @@
    :polyavyys nil
    :alustettu false
    :gps-tuettu false
-   :nayta-kiinteistorajat true
+   :nayta-kiinteistorajat false
+   :nayta-ortokuva false
    :tr-tiedot-nakyvissa false
    :tr-tiedot {:tr-osoite {:tie 20
                            :aosa 1
@@ -65,6 +67,7 @@
 (def lahettamattomia (reagent/cursor sovellus [:lahettamattomia]))
 
 (def kayttajanimi (reagent/cursor sovellus [:kayttajanimi]))
+(def kayttajatunnus (reagent/cursor sovellus [:kayttajatunnus]))
 
 (def kirjaamassa-havaintoa (reagent/cursor sovellus [:kirjaamassa-havaintoa]))
 (def kirjaamassa-yleishavaintoa (reagent/cursor sovellus [:kirjaamassa-yleishavaintoa]))
@@ -108,11 +111,13 @@
 (def ilmoitukset (reagent/cursor sovellus [:ilmoitukset]))
 
 (def nayta-kiinteistorajat (reagent/cursor sovellus [:nayta-kiinteistorajat]))
+(def nayta-ortokuva (reagent/cursor sovellus [:nayta-ortokuva]))
 
 (def keskita-ajoneuvoon (reagent/cursor sovellus [:keskita-ajoneuvoon]))
 
 (def karttaoptiot (reaction {:seuraa-sijaintia (or @tallennus-kaynnissa @keskita-ajoneuvoon)
-                             :nayta-kiinteistorajat @nayta-kiinteistorajat}))
+                             :nayta-kiinteistorajat @nayta-kiinteistorajat
+                             :nayta-ortokuva @nayta-ortokuva}))
 
 (def havainnot (reagent/cursor sovellus [:pikahavainnot]))
 
@@ -180,3 +185,7 @@
 (defn tarkastusajo-seis! []
   (swap! sovellus tarkastusajo-seis))
 
+(def beta-kayttajat #{"A018983" "K870689"})
+
+(defn kesatarkastus-beta? []
+  (beta-kayttajat @kayttajatunnus))

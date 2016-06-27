@@ -1,6 +1,8 @@
 (ns harja.palvelin.palvelut.toteumat
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [taoensso.timbre :as log]
@@ -15,7 +17,8 @@
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [harja.geo :as geo]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.transit :as transit]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -572,77 +575,93 @@
             (map konv/alaviiva->rakenne))
           (q/hae-toteuman-reitti-ja-tr-osoite db id))))
 
+(defn- hae-kokonaishintainen-toteuma-kartalle [db user {:keys [extent parametrit]}]
+  (let [p (some-> parametrit (get "kht") transit/lue-transit-string)]
+    (esitettavat-asiat/kartalla-esitettavaan-muotoon
+     (map #(assoc % :tyyppi-kartalla :toteuma)
+          (hae-urakan-kokonaishintaisten-toteumien-reitit db user p)))))
+
 (defrecord Toteumat []
   component/Lifecycle
-  (start [this]
-    (let [http (:http-palvelin this)
-          db (:db this)]
-      (julkaise-palvelu http :urakan-toteuma
-                        (fn [user tiedot]
-                          (hae-urakan-toteuma db user tiedot)))
-      (julkaise-palvelu http :urakan-toteumien-tehtavien-summat
-                        (fn [user tiedot]
-                          (hae-urakan-toteumien-tehtavien-summat db user tiedot)))
-      (julkaise-palvelu http :poista-toteuma!
-                        (fn [user toteuma]
-                          (poista-toteuma! db user toteuma)))
-      (julkaise-palvelu http :poista-tehtava!
-                        (fn [user tiedot]
-                          (poista-tehtava! db user tiedot)))
-      (julkaise-palvelu http :urakan-toteutuneet-tehtavat-toimenpidekoodilla
-                        (fn [user tiedot]
-                          (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot)))
-      (julkaise-palvelu http :hae-urakan-tehtavat
-                        (fn [user urakka-id]
-                          (hae-urakan-tehtavat db user urakka-id)))
-      (julkaise-palvelu http :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
-                        (fn [user toteuma]
-                          (tallenna-toteuma-ja-yksikkohintaiset-tehtavat db user toteuma)))
-      (julkaise-palvelu http :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
-                        (fn [user {:keys [toteuma hakuparametrit]}]
-                          (tallenna-toteuma-ja-kokonaishintaiset-tehtavat db user toteuma hakuparametrit)))
-      (julkaise-palvelu http :paivita-yk-hint-toteumien-tehtavat
-                        (fn [user tiedot]
-                          (paivita-yk-hint-toiden-tehtavat db user tiedot)))
-      (julkaise-palvelu http :urakan-erilliskustannukset
-                        (fn [user tiedot]
-                          (hae-urakan-erilliskustannukset db user tiedot)))
-      (julkaise-palvelu http :tallenna-erilliskustannus
-                        (fn [user toteuma]
-                          (tallenna-erilliskustannus db user toteuma)))
-      (julkaise-palvelu http :urakan-muut-tyot
-                        (fn [user tiedot]
-                          (hae-urakan-muut-tyot db user tiedot)))
-      (julkaise-palvelu http :tallenna-muiden-toiden-toteuma
-                        (fn [user toteuma]
-                          (tallenna-muiden-toiden-toteuma db user toteuma)))
-      (julkaise-palvelu http :tallenna-toteuma-ja-toteumamateriaalit
-                        (fn [user tiedot]
-                          (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot)
-                                                                  (:toteumamateriaalit tiedot)
-                                                                  (:hoitokausi tiedot)
-                                                                  (:sopimus tiedot))))
-      (julkaise-palvelu http :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
-                        (fn [user tiedot]
-                          (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat db user tiedot)))
-      (julkaise-palvelu http :hae-kokonaishintaisen-toteuman-tiedot
-                        (fn [user {:keys [urakka-id pvm toimenpidekoodi]}]
-                          (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi)))
-      (julkaise-palvelu http :urakan-kokonaishintaisten-toteumien-reitit
-                        (fn [user tiedot]
-                          (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot)))
-      (julkaise-palvelu http :urakan-yksikkohintaisten-toteumien-reitit
-                        (fn [user tiedot]
-                          (hae-urakan-yksikkohintaisten-toteumien-reitit db user tiedot)))
-      (julkaise-palvelu http :urakan-varustetoteumat
-                        (fn [user tiedot]
-                          (hae-urakan-varustetoteumat db user tiedot)))
-      (julkaise-palvelu http :hae-toteuman-reitti-ja-tr-osoite
-                        (fn [user tiedot]
-                          (hae-toteuman-reitti-ja-tr-osoite db user tiedot)))
-      this))
+  (start [{http :http-palvelin
+           db :db
+           karttakuvat :karttakuvat
+           :as this}]
+
+    (when karttakuvat
+      (karttakuvat/rekisteroi-karttakuvan-lahde!
+       karttakuvat :kokonaishintainen-toteuma
+       (partial #'hae-kokonaishintainen-toteuma-kartalle db)))
+
+    (julkaise-palvelut
+     http
+     :urakan-toteuma
+     (fn [user tiedot]
+       (hae-urakan-toteuma db user tiedot))
+     :urakan-toteumien-tehtavien-summat
+     (fn [user tiedot]
+       (hae-urakan-toteumien-tehtavien-summat db user tiedot))
+     :poista-toteuma!
+     (fn [user toteuma]
+       (poista-toteuma! db user toteuma))
+     :poista-tehtava!
+     (fn [user tiedot]
+       (poista-tehtava! db user tiedot))
+     :urakan-toteutuneet-tehtavat-toimenpidekoodilla
+     (fn [user tiedot]
+       (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot))
+     :hae-urakan-tehtavat
+     (fn [user urakka-id]
+       (hae-urakan-tehtavat db user urakka-id))
+     :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+     (fn [user toteuma]
+       (tallenna-toteuma-ja-yksikkohintaiset-tehtavat db user toteuma))
+     :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+     (fn [user {:keys [toteuma hakuparametrit]}]
+       (tallenna-toteuma-ja-kokonaishintaiset-tehtavat db user toteuma hakuparametrit))
+     :paivita-yk-hint-toteumien-tehtavat
+     (fn [user tiedot]
+       (paivita-yk-hint-toiden-tehtavat db user tiedot))
+     :urakan-erilliskustannukset
+     (fn [user tiedot]
+       (hae-urakan-erilliskustannukset db user tiedot))
+     :tallenna-erilliskustannus
+     (fn [user toteuma]
+       (tallenna-erilliskustannus db user toteuma))
+     :urakan-muut-tyot
+     (fn [user tiedot]
+       (hae-urakan-muut-tyot db user tiedot))
+     :tallenna-muiden-toiden-toteuma
+     (fn [user toteuma]
+       (tallenna-muiden-toiden-toteuma db user toteuma))
+     :tallenna-toteuma-ja-toteumamateriaalit
+     (fn [user tiedot]
+       (tallenna-toteuma-ja-toteumamateriaalit db user (:toteuma tiedot)
+                                               (:toteumamateriaalit tiedot)
+                                               (:hoitokausi tiedot)
+                                               (:sopimus tiedot)))
+     :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+     (fn [user tiedot]
+       (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat db user tiedot))
+     :hae-kokonaishintaisen-toteuman-tiedot
+     (fn [user {:keys [urakka-id pvm toimenpidekoodi]}]
+       (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi))
+     :urakan-kokonaishintaisten-toteumien-reitit
+     (fn [user tiedot]
+       (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot))
+     :urakan-yksikkohintaisten-toteumien-reitit
+     (fn [user tiedot]
+       (hae-urakan-yksikkohintaisten-toteumien-reitit db user tiedot))
+     :urakan-varustetoteumat
+     (fn [user tiedot]
+       (hae-urakan-varustetoteumat db user tiedot))
+     :hae-toteuman-reitti-ja-tr-osoite
+     (fn [user tiedot]
+       (hae-toteuman-reitti-ja-tr-osoite db user tiedot)))
+    this)
 
   (stop [this]
+
     (poista-palvelut
       (:http-palvelin this)
       :urakan-toteuma

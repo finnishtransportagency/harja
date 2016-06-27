@@ -262,17 +262,17 @@
 
            {:otsikko "Suorittajan Y-tunnus" :nimi :suorittajan-ytunnus :pituus-max 256 :tyyppi :string :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
 
-           (when-not jarjestelman-lisaama-toteuma?
-             {:tyyppi      :tierekisteriosoite
-             :nimi        :tr
-             :pakollinen? true
-             :sijainti    (r/wrap (:reitti @lomake-toteuma)
-                                  #(swap! lomake-toteuma assoc :reitti %))})
-
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2
             :tyyppi :komponentti
             :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
+
+           (when-not jarjestelman-lisaama-toteuma?
+             {:tyyppi :tierekisteriosoite
+              :nimi :tr
+              :pakollinen? true
+              :sijainti (r/wrap (:reitti @lomake-toteuma)
+                                #(swap! lomake-toteuma assoc :reitti %))})
 
            {:otsikko "Lisätieto" :nimi :lisatieto :pituus-max 256 :tyyppi :text
             :uusi-rivi? true
@@ -330,7 +330,8 @@
           :muokattava? (fn [rivi] (not (:jarjestelmanlisaama rivi)))
           :tyyppi :positiivinen-numero
           :leveys 20
-          :tasaa :oikea}
+          :tasaa :oikea
+          :fmt fmt/desimaaliluku-opt}
          {:otsikko "Suorittaja"
           :nimi :suorittajan_nimi
           :muokattava? (constantly false)

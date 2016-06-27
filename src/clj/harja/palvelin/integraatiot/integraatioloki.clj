@@ -159,4 +159,7 @@
 
         :rest-viesti
         (let [[tapahtuma-id suunta url sisaltotyyppi kutsudata otsikot parametrit] argumentit]
-          (kirjaa-rest-viesti integraatioloki tapahtuma-id suunta url sisaltotyyppi kutsudata otsikot parametrit))))))
+          (kirjaa-rest-viesti integraatioloki tapahtuma-id suunta url sisaltotyyppi kutsudata otsikot parametrit))
+
+        :avain
+        (str jarjestelma "-" integraation-nimi)))))

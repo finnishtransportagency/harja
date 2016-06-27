@@ -289,20 +289,33 @@
   (let [arvo (or valinta-arvo identity)
         nayta (or valinta-nayta str)
         nykyinen-arvo @data]
-    [:span.radiovalinnat
-     (doall
-       (map-indexed (fn [i valinta]
-                      (let [otsikko (nayta valinta)
-                            arvo (arvo valinta)]
-                        ^{:key otsikko}
-                        [:span.radiovalinta
-                         [:input {:type      "radio"
-                                  :value i
-                                  :checked   (= nykyinen-arvo arvo)
-                                  :on-change #(reset! data arvo)}]
-                         [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
-                          otsikko]]))
-                    valinnat))]))
+    (if-let [valinta (and (= 1 (count valinnat))
+                          (first valinnat))]
+      (let [arvo (arvo valinta)
+            valitse #(reset! data arvo)
+            label (nayta valinta)]
+        [:span {:style {:width "100%" :height "100%" :display "inline-block"}
+                :on-click valitse}
+         [:input {:type      "radio"
+                  :value 1
+                  :checked   (= nykyinen-arvo arvo)
+                  :on-change valitse}]
+         (when-not (str/blank? label)
+           [:span.radiovalinta-label.klikattava {:on-click valitse} label])])
+      [:span.radiovalinnat
+       (doall
+        (map-indexed (fn [i valinta]
+                       (let [otsikko (nayta valinta)
+                             arvo (arvo valinta)]
+                         ^{:key otsikko}
+                         [:span.radiovalinta
+                          [:input {:type      "radio"
+                                   :value i
+                                   :checked   (= nykyinen-arvo arvo)
+                                   :on-change #(reset! data arvo)}]
+                          [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
+                           otsikko]]))
+                     valinnat))])))
 
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
@@ -499,7 +512,6 @@
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (let [p @data]
-           (log "RECEIVED PROPS")
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))

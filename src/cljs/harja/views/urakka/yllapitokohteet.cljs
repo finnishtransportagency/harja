@@ -22,7 +22,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -41,11 +42,12 @@
 
 ;; Ylläpitokohteiden sarakkeiden leveydet
 (def haitari-leveys 5)
-(def id-leveys 10)
+(def id-leveys 6)
 (def kohde-leveys 15)
 (def kvl-leveys 5)
 (def yllapitoluokka-leveys 5)
 (def nykyinen-paallyste-leveys 8)
+(def indeksin-kuvaus-leveys 8)
 (def tr-leveys 8)
 (def tarjoushinta-leveys 10)
 (def muutoshinta-leveys 10)
@@ -106,7 +108,7 @@
                                                       "- Ajorata -"
                                                       "")))
             :valinnat pot/+ajoradat+
-            :leveys perusleveys}
+            :leveys (- perusleveys 2)}
            {:otsikko "Kais\u00ADta"
             :muokattava? (or (:muokattava? kaista) (constantly true))
             :nimi (:nimi kaista)
@@ -118,7 +120,7 @@
                                                       "- Kaista -"
                                                       "")))
             :valinnat pot/+kaistat+
-            :leveys perusleveys}
+            :leveys (- perusleveys 2)}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea
             :validoi (into [[:ei-tyhja "Anna alkuosa"]
@@ -194,13 +196,20 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
-(defn yllapitokohdeosat [kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
+(defn yllapitokohdeosat [urakka
+                         kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
                                     alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde}
                          kohdeosat-paivitetty-fn]
   (if @grid/gridia-muokataan?
     [:span "Kohteen tierekisterikohteet ovat muokattavissa kohteen tallennuksen jälkeen."]
 
-    (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
+    (let [kirjoitusoikeus? (case (:tyyppi urakka)
+                             :paallystys
+                             (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id urakka))
+                             :paikkaus
+                             (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
+                             false)
+          tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
           tr-virheet (atom {}) ;; virheelliset TR sijainnit
           resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))
 
@@ -250,7 +259,7 @@
                                        (str "Osan " osa " maksimietäisyys on " pit))))))]
       (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
       (komp/luo
-       (fn [kohdeosat {yllapitokohde-id :id :as kohde}]
+       (fn [urakka kohdeosat {yllapitokohde-id :id :as kohde}]
          (let [kohdeosia (count @grid-data)]
            [:div
             [grid/muokkaus-grid
@@ -270,14 +279,15 @@
                                             osat (into []
                                                        (map (fn [osa]
                                                               (assoc osa :sijainti
-                                                                     (sijainnit (tr-osoite osa)))))
+                                                                         (sijainnit (tr-osoite osa)))))
                                                        (vals @grid-data))]
                                         #(tiedot/tallenna-yllapitokohdeosat! urakka-id
                                                                              sopimus-id
                                                                              yllapitokohde-id
                                                                              osat))
                                       {:disabled (do (log "VIRHEET: " (pr-str @virheet))
-                                                     (not (empty? @virheet)))
+                                                     (or (not (empty? @virheet))
+                                                         (not kirjoitusoikeus?)))
                                        :luokka "nappi-myonteinen grid-tallenna"
                                        :virheviesti "Tallentaminen epäonnistui."
                                        :kun-onnistuu (fn [vastaus]
@@ -335,14 +345,14 @@
       (assoc-in kohteet [rivi :kohdeosat] kohdeosat)
       kohteet)))
 
-(defn yllapitokohteet [kohteet-atom optiot]
+(defn yllapitokohteet [urakka kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         tallenna (reaction (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
                              :ei-mahdollinen
                              (:tallenna optiot)))]
     (komp/luo
-      (fn [kohteet-atom optiot]
+      (fn [urakka kohteet-atom optiot]
         [:div.yllapitokohteet
          [grid/grid
           {:otsikko (:otsikko optiot)
@@ -351,6 +361,7 @@
                                (map (juxt :id
                                           (fn [rivi]
                                             [yllapitokohdeosat
+                                             urakka
                                              (into [] (:kohdeosat rivi))
                                              rivi
                                              #(swap! kohteet-atom
@@ -399,6 +410,8 @@
                     :valinta-nayta :nimi
                     :leveys nykyinen-paallyste-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+                   {:otsikko "In\u00ADdek\u00ADsin ku\u00ADvaus"
+                    :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys :pituus-max 2048}
                    (when (= (:nakyma optiot) :paallystys)
                      {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                       :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
@@ -465,6 +478,7 @@
       {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :nykyinen-paallyste :tyyppi :string :leveys nykyinen-paallyste-leveys}
+      {:otsikko "" :nimi :indeksin-kuvaus :tyyppi :string :leveys indeksin-kuvaus-leveys}
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot :fmt fmt/euro-opt :tyyppi :numero
          :leveys tarjoushinta-leveys :tasaa :oikea})

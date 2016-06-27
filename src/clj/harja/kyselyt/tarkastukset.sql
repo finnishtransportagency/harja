@@ -2,7 +2,7 @@
 -- Hakee urakan tarkastukset aikavälin perusteella
 SELECT
   t.id,
-  sopimus,
+  t.sopimus,
   t.aika,
   t.tr_numero,
   t.tr_alkuosa,
@@ -14,6 +14,13 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
+  ypk.tr_numero        AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero      AS yllapitokohde_numero,
+  ypk.nimi             AS yllapitokohde_nimi,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
@@ -25,6 +32,7 @@ SELECT
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
@@ -49,6 +57,7 @@ SELECT
   t.havainnot,
   t.laadunalitus,
   t.luoja,
+  t.yllapitokohde,
   o.nimi        AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma,
@@ -98,10 +107,10 @@ ORDER BY l.luotu ASC;
 INSERT
 INTO tarkastus
 (lahde, urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus)
+ sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde)
 VALUES (:lahde::lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
                  :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
-        :havainnot, :laadunalitus);
+        :havainnot, :laadunalitus, :yllapitokohde);
 
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot
@@ -118,7 +127,8 @@ SET aika           = :aika,
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp,
   havainnot        = :havainnot,
-  laadunalitus     = :laadunalitus
+  laadunalitus     = :laadunalitus,
+  yllapitokohde    = :yllapitokohde
 WHERE urakka = :urakka AND id = :id;
 
 -- name: luo-talvihoitomittaus<!
@@ -508,7 +518,10 @@ SELECT
   thm.kitka as talvihoitomittaus_kitka,
   thm.ajosuunta as talvihoitomittaus_ajosuunta,
   thm.lampotila_tie as talvihoitomittaus_lampotila_tie,
-  thm.lampotila_ilma as talvihoitomittaus_lampotila_ilma
+  thm.lampotila_ilma as talvihoitomittaus_lampotila_ilma,
+  array(SELECT vh.nimi
+          FROM vakiohavainto vh,tarkastus_vakiohavainto tvh
+	 WHERE vh.id=tvh.vakiohavainto AND tvh.tarkastus=t.id) AS vakiohavainnot
 FROM tarkastus t
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id

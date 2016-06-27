@@ -740,3 +740,9 @@ FROM toteuma t
    t.urakka = :urakka
    AND t.alkanut::date = :pvm::date
    AND tt.toimenpidekoodi = :toimenpidekoodi;
+
+
+-- name: paivita-toteuman-reitti!
+UPDATE toteuma
+   SET reitti = :reitti
+ WHERE id = :id

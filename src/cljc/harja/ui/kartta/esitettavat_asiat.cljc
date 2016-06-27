@@ -40,7 +40,8 @@
   (case (:type (or (:sijainti asia) asia))
     :point false
     :line true
-    :multiline true))
+    :multiline true
+    false))
 
 (defn asia-on-piste? [asia]
   (not (reitillinen-asia? asia)))
@@ -176,8 +177,8 @@
          (= :multiline tyyppi)
          (merge
            (maarittele-viiva valittu? merkit viivat)
-           {:type   :viiva
-            :points koordinaatit}))))))
+           {:type   :moniviiva
+            :lines (:lines geo)}))))))
 
 ;;;;;;
 

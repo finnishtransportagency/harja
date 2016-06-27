@@ -19,5 +19,7 @@
                          (into []
                                kohdeosa-xf
                                (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                 db urakka-id sopimus-id (:paallystyskohde-id %))))))
+                                 db {:urakka urakka-id
+                                     :sopimus sopimus-id
+                                     :yllapitokohde (:paallystyskohde-id %)})))))
         (harja.kyselyt.paallystys/hae-urakan-paallystysilmoitukset db urakka-id sopimus-id)))

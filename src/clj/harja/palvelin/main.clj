@@ -185,7 +185,8 @@
 
       :raportointi (component/using
                      (raportointi/luo-raportointi)
-                     {:db :db-replica
+                     {:db-replica :db-replica
+                      :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
 
@@ -225,7 +226,7 @@
                    [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db])
+                  [:http-palvelin :db :karttakuvat])
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
@@ -309,7 +310,9 @@
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
-                     [:http-palvelin :db :karttakuvat])
+                     {:db :db-replica
+                      :http-palvelin :http-palvelin
+                      :karttakuvat :karttakuvat})
       :karttakuvat (component/using
                      (karttakuvat/luo-karttakuvat)
                      [:http-palvelin :db])
@@ -334,7 +337,7 @@
                           [:http-palvelin :db :integraatioloki])
       :api-reittitoteuma (component/using
                            (api-reittitoteuma/->Reittitoteuma)
-                           [:http-palvelin :db :integraatioloki])
+                           [:http-palvelin :db :db-replica :integraatioloki])
       :api-varustetoteuma (component/using
                             (api-varustetoteuma/->Varustetoteuma)
                             [:http-palvelin :db :tierekisteri :integraatioloki])
@@ -436,6 +439,8 @@
 (defn explain [sql]
   (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
 
+(defn log-level-info! []
+  (log/set-config! [:appenders :standard-out :min-level] :info))
 
 (def figwheel-repl-options
   ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten

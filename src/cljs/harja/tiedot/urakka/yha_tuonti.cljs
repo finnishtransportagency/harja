@@ -15,7 +15,8 @@
             [harja.pvm :as pvm]
             [harja.ui.modal :as modal]
             [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.paallystys :as paallystys])
+            [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -263,11 +264,13 @@
                  "ei koskaan"))]))
 
 (defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id paallystysilmoitukset]
-  (let [kohde-idt (mapv :paallystyskohde-id (filter :tila paallystysilmoitukset))]
+  (let [kohde-idt (mapv :paallystyskohde-id (filter #(and (= :valmis (:tila %))
+                                                          (= :hyvaksytty (:paatos-tekninen-osa %)))
+                                                    paallystysilmoitukset))]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
-         [:span "Laheta " (ikonit/livicon-arrow-right)]
+         (yleiset/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
          "Lähetä kaikki kohteet YHA:n")
        #(do
          (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")

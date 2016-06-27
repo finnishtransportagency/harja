@@ -14,7 +14,7 @@
     kayttaja
     :api-reittitoteuma (component/using
                          (api-reittitoteuma/->Reittitoteuma)
-                         [:http-palvelin :db :integraatioloki])))
+                         [:http-palvelin :db :db-replica :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 

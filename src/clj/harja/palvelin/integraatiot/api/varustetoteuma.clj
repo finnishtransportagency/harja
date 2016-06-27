@@ -92,20 +92,20 @@
                                                    id))))
 
 (defn tallenna-toteuma [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [transaktio db]
+  (jdbc/with-db-transaction [db db]
     (let [toteuma (assoc (get-in data [:varustetoteuma :toteuma]) :reitti nil)
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma transaktio urakka-id kirjaaja toteuma)
+          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)
           varustetiedot (get-in data [:varustetoteuma :varuste])
           sijainti (get-in data [:varustetoteuma :sijainti])
           aika (aika-string->java-sql-date (get-in data [:varustetoteuma :toteuma :alkanut]))]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
       (log/debug "Aloitetaan sijainnin tallennus")
-      (api-toteuma/tallenna-sijainti transaktio sijainti aika toteuma-id)
+      (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
       (log/debug "Aloitetaan toteuman tehtävien tallennus")
-      (api-toteuma/tallenna-tehtavat transaktio kirjaaja toteuma toteuma-id)
+      (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
       (log/debug "Aloitetaan toteuman varustetietojen tallentaminen")
-      (poista-toteuman-varustetiedot transaktio toteuma-id)
-      (tallenna-varuste transaktio kirjaaja varustetiedot toteuma-id))))
+      (poista-toteuman-varustetiedot db toteuma-id)
+      (tallenna-varuste db kirjaaja varustetiedot toteuma-id))))
 
 (defn kirjaa-toteuma [tierekisteri db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

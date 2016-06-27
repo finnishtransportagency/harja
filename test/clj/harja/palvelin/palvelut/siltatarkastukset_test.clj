@@ -26,7 +26,7 @@
 
 (deftest joutsensillalle-ei-ole-tarkastuksia
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :kaikki})
         joutsensilta (nimella sillat "Joutsensilta")]
     (is joutsensilta "Joutsensilta löytyi")
@@ -34,7 +34,7 @@
 
 (deftest kempeleen-testisillan-tarkastus
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :kaikki})
         kempele (nimella sillat "Kempeleen testisilta")]
     (is kempele "Kempeleen testisilta löytyy")
@@ -42,7 +42,7 @@
 
 (deftest puutteellisia-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :puutteet})]
     (is (nimella sillat "Kempeleen testisilta"))
     (is (nimella sillat "Oulujoen silta"))
@@ -50,10 +50,10 @@
 
 (deftest korjattuja-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2010-id)
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :korjatut})
         kajaanintie (nimella sillat "Kajaanintien silta")]
     (is kajaanintie)
-    (is (= 24 (:rikki_ennen kajaanintie)) "Ennen oli kaikki rikki")
-    (is (= 0 (:rikki_nyt kajaanintie)) "Nyt on kaikki korjattu")))
+    (is (= 24 (:rikki-ennen kajaanintie)) "Ennen oli kaikki rikki")
+    (is (= 0 (:rikki-nyt kajaanintie)) "Nyt on kaikki korjattu")))
     
