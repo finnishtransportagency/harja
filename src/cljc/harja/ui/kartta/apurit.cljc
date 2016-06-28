@@ -4,6 +4,8 @@
 
 (def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
 
+(def +koko-suomi-extent+ [60000 6613000 736400 7780300])
+
 (defn taitokset-valimatkoin
   ([valimatka taitokset]
    (taitokset-valimatkoin valimatka taitokset

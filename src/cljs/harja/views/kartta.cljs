@@ -23,7 +23,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kartta.varit.alpha :as varit]
             [harja.ui.openlayers.taso :as taso]
-            [harja.views.kartta.muuttujat :refer [+koko-suomi-extent+]])
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
