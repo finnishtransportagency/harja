@@ -139,8 +139,7 @@
                                  (fmt/prosentti
                                    (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet)) 0)
                                  ")")}]
-                 (mapv valitavoiterivi toteutumatta)))
-      nil)))
+                 (mapv valitavoiterivi toteutumatta))))))
 
 (defn- muodosta-otsikkorivit []
   [{:otsikko "Välitavoite" :leveys 10}
