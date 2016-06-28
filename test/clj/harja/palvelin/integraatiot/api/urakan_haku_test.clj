@@ -31,9 +31,8 @@
 
     (let [kokonaishintaiset (get-in encoodattu-body [:urakka :tehtavat :kokonaishintaiset])
           yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
-      ;; todo: kun saadaan oikeat listat, täytyy asettaa tarkistamaan, että oikeat tehtävät palautuvat
-      (is (= 8 (count kokonaishintaiset)))
-      (is (= 0 (count yksikkohintaiset)))
+      (is (= 25 (count kokonaishintaiset)))
+      (is (= 55 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
