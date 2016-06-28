@@ -222,7 +222,7 @@
   6 kuukautta
   1 vuosi"
   [paivat]
-  (assert (>= paivat 0) "Ajan tulee olla 0 tai suurempi")
+  (assert (and (number? paivat) (>= paivat 0)) "Ajan tulee olla 0 tai suurempi")
   (let [viikko 7
         kuukausi (* viikko 4)
         vuosi (* kuukausi 12)]
