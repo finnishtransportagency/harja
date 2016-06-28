@@ -177,8 +177,8 @@
          (= :multiline tyyppi)
          (merge
            (maarittele-viiva valittu? merkit viivat)
-           {:type   :moniviiva
-            :lines (:lines geo)}))))))
+           {:type   :viiva
+            :points koordinaatit}))))))
 
 ;;;;;;
 
