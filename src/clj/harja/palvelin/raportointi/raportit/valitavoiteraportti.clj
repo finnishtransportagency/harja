@@ -104,12 +104,12 @@
                                     (str " (" kuvaus ")"))))
                            (:valmis-kommentti valitavoite)])]
     (into [] (concat
-               [{:otsikko (str "Ajoissa toteutuneet ("
+               [{:otsikko (str "Ajoissa valmistuneet ("
                                (fmt/prosentti
                                  (math/osuus-prosentteina (count ajoissa) (count valitavoitteet)) 0)
                                ")")}]
                (mapv valitavoiterivi ajoissa)
-               [{:otsikko (str "Myöhässä toteutuneet ("
+               [{:otsikko (str "Myöhässä valmistuneet ("
                                (fmt/prosentti
                                  (math/osuus-prosentteina (count myohassa) (count valitavoitteet)) 0)
                                ")")}]
@@ -119,7 +119,7 @@
                                  (math/osuus-prosentteina (count kesken) (count valitavoitteet)) 0)
                                ")")}]
                (mapv valitavoiterivi kesken)
-               [{:otsikko (str "Toteutumatta ("
+               [{:otsikko (str "Valmistumatta ("
                                (fmt/prosentti
                                  (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet)) 0)
                                ")")}]
