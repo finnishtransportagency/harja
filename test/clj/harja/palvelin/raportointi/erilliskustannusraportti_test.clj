@@ -128,7 +128,7 @@
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{5
                                                     6}
-                      :otsikko "Pohjois-Pohjanmaa, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
+                      :otsikko "Pohjois-Pohjanmaa ja Kainuu, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Erilliskustannusten raportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:leveys 10

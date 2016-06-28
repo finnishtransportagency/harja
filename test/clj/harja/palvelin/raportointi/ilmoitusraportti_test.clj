@@ -61,7 +61,7 @@
                        :otsikko "TUR (Tiedoksi)"}
                       {:leveys 23
                        :otsikko "URK (Kysely)"}]
-                     [{:otsikko "Pohjois-Pohjanmaa"}
+                     [{:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
                        ["Oulun alueurakka 2014-2019"
                         10
                         7
@@ -155,7 +155,7 @@
     (is (= vastaus [:raportti
                     {:nimi "Ilmoitusraportti"}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Ilmoitusraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:leveys 31
@@ -166,7 +166,7 @@
                        :otsikko "TUR (Tiedoksi)"}
                       {:leveys 23
                        :otsikko "URK (Kysely)"}]
-                     [{:otsikko "Pohjois-Pohjanmaa"}
+                     [{:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
                       ["Oulun alueurakka 2014-2019"
                        10
                        7
@@ -274,12 +274,12 @@
                        :otsikko "TUR (Tiedoksi)"}
                       {:leveys 23
                        :otsikko "URK (Kysely)"}]
-                     [{:otsikko "Pohjois-Pohjanmaa"}
+                     [{:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
                       ["Oulun alueurakka 2014-2019"
                        10
                        7
                        3]
-                      ["Pohjois-Pohjanmaa yhteensä"
+                      ["Pohjois-Pohjanmaa ja Kainuu yhteensä"
                         10
                         7
                         3]

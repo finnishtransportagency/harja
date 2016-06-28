@@ -22,7 +22,8 @@
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kartta.varit.alpha :as varit]
-            [harja.ui.openlayers.taso :as taso])
+            [harja.ui.openlayers.taso :as taso]
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -203,11 +204,6 @@
          [:div.pystyvali-karttanapille]]
         [kartan-paikkavaraus koko args])
       [:span.ei-karttaa])))
-
-
-
-;; Envelop [minx miny maxx maxy], jossa koko suomi näkyy
-(def +koko-suomi-extent+ [60000 6613000 736400 7780300])
 
 (reset! nav/kartan-extent +koko-suomi-extent+)
 

@@ -148,7 +148,7 @@
                                                     7
                                                     8
                                                     9}
-                      :otsikko "Pohjois-Pohjanmaa, Suolasakkoraportti ajalta 01.10.2014 - 01.10.2015"
+                      :otsikko "Pohjois-Pohjanmaa ja Kainuu, Suolasakkoraportti ajalta 01.10.2014 - 01.10.2015"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:leveys 10
                        :otsikko "Urakka"}
@@ -338,7 +338,7 @@
                         "4 398,68"
                         "96 678,68"]
                        {:lihavoi? true
-                        :rivi ["12 Pohjois-Pohjanmaa"
+                        :rivi ["12 Pohjois-Pohjanmaa ja Kainuu"
                                nil
                                nil
                                1600M

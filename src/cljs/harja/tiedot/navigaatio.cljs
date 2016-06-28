@@ -38,6 +38,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (declare kasittele-url! paivita-url valitse-urakka)
 
 (defonce murupolku-nakyvissa? (reaction (and (not @raportit/raportit-nakymassa?)
+                                             (not= @valittu-sivu :tilannekuva)
                                              (not= @valittu-sivu :about)
                                              (not= @valittu-sivu :hallinta))))
 

@@ -391,7 +391,7 @@
                                                     7
                                                     8
                                                     9}
-                      :otsikko "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+                      :otsikko "Pohjois-Pohjanmaa ja Kainuu, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
                       :sheet-nimi "Ympäristöraportti"}
                      [{:leveys "16%"
                        :otsikko "Materiaali"}
