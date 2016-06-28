@@ -167,6 +167,8 @@ hakutiheys-historiakuva 1200000)
       {true (funktio true)
        false (funktio false)})))
 
+;; Valitaanko palvelimelta palautettu suodatin vai ei.
+;; Yhdistäminen tehdään muualla
 (defn- valitse-urakka? [urakka-id hallintayksikko]
   (let [valittu-urakka (:id @valittu-urakka-tilannekuvaan-tullessa)
         valittu-hallintayksikko (:id @valittu-hallintayksikko-tilannekuvaan-tullessa)
@@ -231,6 +233,13 @@ hakutiheys-historiakuva 1200000)
                            (:urakat aluekokonaisuus)))})
                 tulos)))))
 
+;; Alkuperäinen logiikka nojasi siihen, että valitaan AINA vanhan suodattimen arvo,
+;; jos sellainen löytyy. Jos ei löydy, niin sitten käytetään uuden suodattimen arvoa, jonka
+;; valintalogiikka löytyy valitse-urakka? funktiosta.
+;; Tämä funktio piti lisätä, koska tietyissä tapauksissa halutaan ylikirjoittaa vanha
+;; suodattimen arvo uudella.
+;; Esim: Valitse Oulun urakka -> Mene tilannekuvaan -> Ota Oulu pois päältä -> Mene vaikka toteumiin ->
+;; -> Mene takaisin Tilannekuvaan -> Tässä tapauksessa Oulun pitäisi mennä takaisin päälle!
 (defn uusi-tai-vanha-suodattimen-arvo [vanha-arvo uusi-arvo urakka hallintayksikko]
   (let [arvo (cond
           (nil? vanha-arvo) uusi-arvo
