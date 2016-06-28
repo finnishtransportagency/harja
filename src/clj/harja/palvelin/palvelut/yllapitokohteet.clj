@@ -278,7 +278,6 @@
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
                                          tr-kaista toimenpide sijainti] :as kohdeosa}]
-
   (do (log/debug "Päivitetään ylläpitokohdeosa")
       (q/paivita-yllapitokohdeosa<! db
                                     {:nimi nimi
