@@ -39,24 +39,6 @@
 
 (def reunan-tyyli (str "solid 0.1mm " raportin-tehostevari))
 
-(defn taulukko-header [optiot sarakkeet]
-  [:fo:table-header
-   (when-let [rivi-ennen (:rivi-ennen optiot)]
-     [:fo:table-row
-      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
-                         :color "#ffffff"
-                         :number-columns-spanned (or sarakkeita 1)
-                         :text-align (tasaus tasaa)}
-         [:fo:block teksti]])])
-
-   [:fo:table-row
-    (for [otsikko (map :otsikko sarakkeet)]
-      [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
-                       :color "#ffffff"
-                       :font-weight "normal" :padding "1mm"}
-       [:fo:block (cdata otsikko)]])]])
-
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
@@ -165,6 +147,24 @@
                       "Tarkenna hakuehtoa. "
                       (when viimeinen-rivi-yhteenveto?
                         "Yhteenveto on laskettu kaikista riveistä"))]]]))
+
+(defn taulukko-header [optiot sarakkeet]
+  [:fo:table-header
+   (when-let [rivi-ennen (:rivi-ennen optiot)]
+     [:fo:table-row
+      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
+                         :color "#ffffff"
+                         :number-columns-spanned (or sarakkeita 1)
+                         :text-align (tasaus tasaa)}
+         [:fo:block teksti]])])
+
+   [:fo:table-row
+    (for [otsikko (map :otsikko sarakkeet)]
+      [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
+                       :color "#ffffff"
+                       :font-weight "normal" :padding "1mm"}
+       [:fo:block (cdata otsikko)]])]])
 
 (defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto?] :as optiot}]
   (let [rivien-maara (count data)
