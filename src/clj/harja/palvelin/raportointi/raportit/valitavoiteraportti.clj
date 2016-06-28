@@ -119,7 +119,7 @@
                                  (math/osuus-prosentteina (count kesken) (count valitavoitteet)) 0)
                                ")")}]
                (mapv valitavoiterivi kesken)
-               [{:otsikko (str "Toteutumatta jääneet ("
+               [{:otsikko (str "Toteutumatta ("
                                (fmt/prosentti
                                  (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet)) 0)
                                ")")}]
