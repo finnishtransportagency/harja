@@ -44,15 +44,7 @@ hakutiheys-historiakuva 1200000)
 (def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
 (def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 
-(def oletusalueet {"Varsinais-Suomi"             {},
-                   "Etelä-Pohjanmaa"             {},
-                   "Pohjois-Savo"                {},
-                   "Lappi"                       {},
-                   "Kaakkois-Suomi"              {},
-                   "Pirkanmaa"                   {},
-                   "Uusimaa"                     {},
-                   "Pohjois-Pohjanmaa ja Kainuu" {},
-                   "Keski-Suomi"                 {}})
+(def oletusalueet {})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 (def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
@@ -287,8 +279,7 @@ hakutiheys-historiakuva 1200000)
 ;; FIXME: Tämä lasketaan uusiksi joka kerta, kun karttaa siirretään. Isohko homma korjata?
 (defonce hakuparametrit
          (reaction
-           (when @nakymassa?
-             (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet))))
+           (kasaa-parametrit @valittu-tila @nav/kartalla-nakyva-alue @suodattimet)))
 
 (defn yhdista-tyokonedata [uusi]
   (let [vanhat (:tyokoneet @tilannekuva-kartalla/haetut-asiat)

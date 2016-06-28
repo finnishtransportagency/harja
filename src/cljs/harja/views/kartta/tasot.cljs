@@ -93,7 +93,7 @@
                v-ur @nav/valittu-urakka
                sivu @nav/valittu-sivu]
            (cond
-             ;; Näillä sivuilla ei ikinä näytetä organisaatiorajoja
+             ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
              (#{:tilannekuva} sivu)
              nil
              
