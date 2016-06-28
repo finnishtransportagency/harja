@@ -167,7 +167,7 @@
                      :orientaatio :landscape}
                     nil
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
+                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Laatupoikkeamaraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Laatupoikkeamaraportti"
                       :tyhja nil}
                      [{:leveys 15

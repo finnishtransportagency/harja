@@ -294,7 +294,7 @@
                      {:korosta-rivit #{1
                                        2
                                        4}
-                      :otsikko "Pohjois-Pohjanmaa, Soratietarkastusraportti ajalta 01.10.2014 - 01.10.2015"
+                      :otsikko "Pohjois-Pohjanmaa ja Kainuu, Soratietarkastusraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Soratietarkastusraportti"
                       :tyhja nil
                       :viimeinen-rivi-yhteenveto? true}
