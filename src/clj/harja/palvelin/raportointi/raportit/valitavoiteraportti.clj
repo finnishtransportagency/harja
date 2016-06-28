@@ -68,7 +68,7 @@
         (let [paivia-valissa (t/in-days (t/interval (c/from-date (:valmis-pvm valitavoite))
                                                     (c/from-date (:takaraja valitavoite))))]
           (when (pos? paivia-valissa)
-            (str (fmt/kuvaile-aikavali paivia-valissa) " etuajassa")))
+            (str (fmt/kuvaile-aikavali paivia-valissa) " ennen")))
 
         (myohassa? valitavoite)
         (let [paivia-valissa (t/in-days (t/interval
@@ -128,7 +128,7 @@
 (defn- muodosta-otsikkorivit []
   [{:otsikko "Välitavoite" :leveys 10}
    {:otsikko "Takaraja" :leveys 5}
-   {:otsikko "Valmistunut" :leveys 5}
+   {:otsikko "Valmistunut" :leveys 10}
    {:otsikko "Kommentti" :leveys 10}])
 
 (defn suorita [db user {:keys [urakka-id] :as parametrit}]
