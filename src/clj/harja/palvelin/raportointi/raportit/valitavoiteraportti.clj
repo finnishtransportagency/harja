@@ -114,31 +114,33 @@
                                  kuvaus (kuvaile-valmistunut-valitavoite valitavoite)]
                              (if valmis-pvm
                                (str (pvm/pvm-opt (:valmis-pvm valitavoite))
-                                   (if kuvaus
-                                     (str " (" kuvaus ")")))
+                                    (if kuvaus
+                                      (str " (" kuvaus ")")))
                                "-"))
                            (:valmis-kommentti valitavoite)])]
-    (into [] (concat
-               [{:otsikko (str "Ajoissa valmistuneet ("
-                               (fmt/prosentti
-                                 (math/osuus-prosentteina (count ajoissa) (count valitavoitteet)) 0)
-                               ")")}]
-               (mapv valitavoiterivi ajoissa)
-               [{:otsikko (str "Myöhässä valmistuneet ("
-                               (fmt/prosentti
-                                 (math/osuus-prosentteina (count myohassa) (count valitavoitteet)) 0)
-                               ")")}]
-               (mapv valitavoiterivi myohassa)
-               [{:otsikko (str "Kesken ("
-                               (fmt/prosentti
-                                 (math/osuus-prosentteina (count kesken) (count valitavoitteet)) 0)
-                               ")")}]
-               (mapv valitavoiterivi kesken)
-               [{:otsikko (str "Valmistumatta ("
-                               (fmt/prosentti
-                                 (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet)) 0)
-                               ")")}]
-               (mapv valitavoiterivi toteutumatta)))))
+    (when-not (empty? valitavoitteet)
+      (into [] (concat
+                 [{:otsikko (str "Ajoissa valmistuneet ("
+                                 (fmt/prosentti
+                                   (math/osuus-prosentteina (count ajoissa) (count valitavoitteet)) 0)
+                                 ")")}]
+                 (mapv valitavoiterivi ajoissa)
+                 [{:otsikko (str "Myöhässä valmistuneet ("
+                                 (fmt/prosentti
+                                   (math/osuus-prosentteina (count myohassa) (count valitavoitteet)) 0)
+                                 ")")}]
+                 (mapv valitavoiterivi myohassa)
+                 [{:otsikko (str "Kesken ("
+                                 (fmt/prosentti
+                                   (math/osuus-prosentteina (count kesken) (count valitavoitteet)) 0)
+                                 ")")}]
+                 (mapv valitavoiterivi kesken)
+                 [{:otsikko (str "Valmistumatta ("
+                                 (fmt/prosentti
+                                   (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet)) 0)
+                                 ")")}]
+                 (mapv valitavoiterivi toteutumatta)))
+      nil)))
 
 (defn- muodosta-otsikkorivit []
   [{:otsikko "Välitavoite" :leveys 10}
