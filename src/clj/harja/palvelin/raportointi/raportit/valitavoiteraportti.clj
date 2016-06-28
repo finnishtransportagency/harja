@@ -61,34 +61,43 @@
       (toteutumatta? valitavoite))
     valitavoitteet))
 
-(defn- kuvaile-valmispvm
+(defn- kuvaile-valmistunut-valitavoite
   "Palauttaa tekstimuotoisen kuvauksen välitavoitteen valmistumisesta."
   [valitavoite]
-  (cond (ajoissa? valitavoite)
-        (let [paivia-valissa (t/in-days (t/interval (c/from-date (:valmis-pvm valitavoite))
-                                                    (c/from-date (:takaraja valitavoite))))]
-          (when (pos? paivia-valissa)
-            (str (fmt/kuvaile-aikavali paivia-valissa) " ennen")))
+  (cond
+    (ajoissa? valitavoite)
+    (let [paivia-valissa (t/in-days (t/interval (c/from-date (:valmis-pvm valitavoite))
+                                                (c/from-date (:takaraja valitavoite))))]
+      (when (pos? paivia-valissa)
+        (str (fmt/kuvaile-aikavali paivia-valissa) " ennen")))
 
-        (myohassa? valitavoite)
-        (let [paivia-valissa (t/in-days (t/interval
-                                          (c/from-date (:takaraja valitavoite))
-                                          (c/from-date (:valmis-pvm valitavoite))))]
-          (when (pos? paivia-valissa)
-            (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))
+    (myohassa? valitavoite)
+    (let [paivia-valissa (t/in-days (t/interval
+                                      (c/from-date (:takaraja valitavoite))
+                                      (c/from-date (:valmis-pvm valitavoite))))]
+      (when (pos? paivia-valissa)
+        (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))
+    :default
+    nil))
 
-        (kesken? valitavoite)
-        (let [paivia-valissa (t/in-days (t/interval (t/now)
-                                                    (c/from-date (:takaraja valitavoite))))]
-          (when (pos? paivia-valissa)
-            (str (fmt/kuvaile-aikavali paivia-valissa) " jäljellä")))
+(defn- kuvaile-keskenerainen-valitavoite
+  "Palauttaa tekstimuotoisen kuvauksen välitavoitteen valmistumisesta."
+  [valitavoite]
+  (cond
+    (kesken? valitavoite)
+    (let [paivia-valissa (t/in-days (t/interval (t/now)
+                                                (c/from-date (:takaraja valitavoite))))]
+      (when (pos? paivia-valissa)
+        (str (fmt/kuvaile-aikavali paivia-valissa) " jäljellä")))
 
-        (toteutumatta? valitavoite)
-        (let [paivia-valissa (t/in-days (t/interval
-                                          (c/from-date (:takaraja valitavoite))
-                                          (t/now)))]
-          (when (pos? paivia-valissa)
-            (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))))
+    (toteutumatta? valitavoite)
+    (let [paivia-valissa (t/in-days (t/interval
+                                      (c/from-date (:takaraja valitavoite))
+                                      (t/now)))]
+      (when (pos? paivia-valissa)
+        (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))
+    :default
+    nil))
 
 (defn- muodosta-raportin-rivit [valitavoitteet]
   (let [ajoissa (suodata-ajoissa valitavoitteet)
@@ -97,11 +106,17 @@
         toteutumatta (suodata-toteumatta valitavoitteet)
         valitavoiterivi (fn [valitavoite]
                           [(:nimi valitavoite)
-                           (pvm/pvm-opt (:takaraja valitavoite))
-                           (let [kuvaus (kuvaile-valmispvm valitavoite)]
-                             (str (pvm/pvm-opt (:valmis-pvm valitavoite))
+                           (let [kuvaus (kuvaile-keskenerainen-valitavoite valitavoite)]
+                             (str (pvm/pvm-opt (:takaraja valitavoite))
                                   (when kuvaus
                                     (str " (" kuvaus ")"))))
+                           (let [valmis-pvm (:valmis-pvm valitavoite)
+                                 kuvaus (kuvaile-valmistunut-valitavoite valitavoite)]
+                             (if valmis-pvm
+                               (str (pvm/pvm-opt (:valmis-pvm valitavoite))
+                                   (if kuvaus
+                                     (str " (" kuvaus ")")))
+                               "-"))
                            (:valmis-kommentti valitavoite)])]
     (into [] (concat
                [{:otsikko (str "Ajoissa valmistuneet ("
