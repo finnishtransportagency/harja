@@ -189,7 +189,7 @@
               {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
               {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
-             (sort-by :nimi kokonaishintaiset-tehtavat)]
+             (sort-by (juxt :tasot :nimi) kokonaishintaiset-tehtavat)]
             [:br]
             [grid/grid
              {:otsikko "API:n kautta seurattavat yksikköhintaiset toteumatehtävät"
@@ -201,7 +201,7 @@
               {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
               {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
-             (sort-by :nimi yksikkohintaiset-tehtavat)]])
+             (sort-by (juxt :tasot :nimi) yksikkohintaiset-tehtavat)]])
          (let [tehtavat @tyokoneiden-reaaliaikaseuranna-tehtavat]
            [grid/grid
             {:otsikko "API:n kautta seurattavat työkoneiden reaaliaikaseurannan tehtävät"
