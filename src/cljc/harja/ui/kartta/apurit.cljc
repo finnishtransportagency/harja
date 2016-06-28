@@ -5,6 +5,8 @@
 
 (def kulmaraja-nuolelle (/ Math/PI 2)) ;; pi / 2 = 90 astetta
 
+(def +koko-suomi-extent+ [60000 6613000 736400 7780300])
+
 (defn kulma [[x1 y1] [x2 y2]]
   (Math/atan2
    (- y2 y1)
