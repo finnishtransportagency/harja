@@ -205,7 +205,7 @@
   (if (= :lukittu (:tila paallystysilmoitus-kannassa))
     (do (log/debug "POT on lukittu, ei voi päivittää!")
         (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
-    (log/debug "POT ei ole lukittu, vaan " (:tila paallystysilmoitus-kannassa))))
+    (log/debug "POT ei ole lukittu, vaan " (pr-str (:tila paallystysilmoitus-kannassa)))))
 
 (defn- paivita-kasittelytiedot [db user urakka-id
                                 {:keys [paallystyskohde-id
@@ -290,9 +290,15 @@
     (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
 
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
-          paallystysilmoitus-kannassa (first (q/hae-paallystysilmoitus-paallystyskohteella
-                                               db
-                                               {:paallystyskohde paallystyskohde-id}))]
+          paallystysilmoitus-kannassa (first (into []
+                                                   (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                                                         (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
+                                                         (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
+                                                                                                 [:paatos-tekninen-osa]
+                                                                                                 [:tila]])))
+                                                   (q/hae-paallystysilmoitus-paallystyskohteella
+                                                     db
+                                                     {:paallystyskohde paallystyskohde-id})))]
       (let [paallystysilmoitus-id
             (if paallystysilmoitus-kannassa
               (paivita-paallystysilmoitus db user urakka-id sopimus-id paallystysilmoitus paallystysilmoitus-kannassa)
