@@ -252,7 +252,8 @@
 (defn- paivita-paallystysilmoitus [db user urakka-id sopimus-id
                                    uusi-paallystysilmoitus paallystysilmoitus-kannassa]
   ;; Ilmoituksen kaikki tiedot lähetetään aina tallennettavaksi, vaikka käyttäjällä olisi oikeus
-  ;; muokata vain tiettyä osaa ilmoituksesta. Näin ollen ilmoitus päivitetään osa kerrallaan niin, että jokaista
+  ;; muokata vain tiettyä osaa ilmoituksesta. Frontissa on estettyä muokkaamasta sellaisia asioita, joita
+  ;; käyttäjä ei saa muokata. Täällä ilmoitus päivitetään osa kerrallaan niin, että jokaista
   ;; osaa vasten tarkistetaan tallennusoikeus.
   (log/debug "Päivitetään olemassa oleva päällystysilmoitus")
   (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
