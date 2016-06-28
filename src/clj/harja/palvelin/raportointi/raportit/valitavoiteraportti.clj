@@ -86,7 +86,7 @@
         (toteutumatta? valitavoite)
         (let [paivia-valissa (t/in-days (t/interval
                                           (c/from-date (:takaraja valitavoite))
-                                          (c/from-date (:valmis-pvm valitavoite))))]
+                                          (t/now)))]
           (when (pos? paivia-valissa)
             (str paivia-valissa " " (if (= 1 paivia-valissa) "päivä" "päivää") " myöhässä")))))
 
