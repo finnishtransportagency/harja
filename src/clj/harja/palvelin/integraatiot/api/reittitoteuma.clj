@@ -23,6 +23,11 @@
   (:import (org.postgresql.util PSQLException)
            (org.postgis Point)))
 
+(def ^{:const true
+       :doc "Etäisyys, jota lähempänä toisiaan olevat reittipisteet yhdistetään linnuntietä,
+jos niille ei löydy yhteistä tietä tieverkolta."}
+  maksimi-linnuntien-etaisyys 200)
+
 (defn- yhdista-viivat [viivat]
   {:type  :multiline
    :lines (mapcat
@@ -38,15 +43,19 @@
 
 (defn- valin-geometria [{:keys [alku loppu geometria]}]
   (or (and geometria (geo/pg->clj geometria))
-      (let [[x1 y1] (:coordinates (geo/pg->clj alku))
-            [x2 y2] (:coordinates (geo/pg->clj loppu))]
-        (log/warn "Reittitoteuman pisteillä"
-                  " (x1:" x1 " y1: " y1
-                  " & x2: " x2 " y2: " y2 " )"
-                  " ei ole yhteistä tietä. Tehdään linnuntie.")
-          {:type :line
-           :points [[x1 y1]
-                    [x2 y2]]})))
+      (let [[x1 y1 :as p1] (:coordinates (geo/pg->clj alku))
+            [x2 y2 :as p2] (:coordinates (geo/pg->clj loppu))
+            etaisyys (geo/etaisyys p1 p2)]
+        (if (< etaisyys maksimi-linnuntien-etaisyys)
+          (do (log/warn "Reittitoteuman pisteillä"
+                        " (x1:" x1 " y1: " y1
+                        " & x2: " x2 " y2: " y2 " )"
+                        " ei ole yhteistä tietä. Tehdään linnuntie, etäisyys: " etaisyys)
+              {:type :line
+               :points [[x1 y1]
+                        [x2 y2]]})
+          (do (log/warn "EI TEHDÄ linnuntietä, etäisyys: " etaisyys)
+              nil)))))
 
 (defn- hae-reitti [db pisteet]
   (as-> pisteet p
@@ -55,7 +64,7 @@
     (str/join "," p)
     (str "GEOMETRYCOLLECTION(" p ")")
     (tieverkko/hae-tieviivat-pisteille db p 250)
-    (map valin-geometria p)
+    (keep valin-geometria p)
     (yhdista-viivat p)))
 
 (defn luo-reitti-geometria [db reitti]
@@ -64,6 +73,17 @@
        (map piste)
        (hae-reitti db)
        geo/clj->pg geo/geometry))
+
+(defn- paivita-toteuman-reitti
+  "REPL testausta varten, laskee annetun toteuman reitin uudelleen reittipisteistä."
+  [db toteuma-id]
+  (let [reitti (->> toteuma-id
+                    (toteumat/hae-toteuman-reittipisteet db)
+                    (map (comp :coordinates geo/pg->clj :sijainti))
+                    (hae-reitti db)
+                    geo/clj->pg geo/geometry)]
+    (toteumat/paivita-toteuman-reitti! db {:reitti reitti
+                                           :id toteuma-id})))
 
 (defn tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Reittitoteuma kirjattu onnistuneesti"}))

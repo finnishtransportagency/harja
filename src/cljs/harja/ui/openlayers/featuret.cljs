@@ -118,6 +118,22 @@ pienemmällä zindexillä." :const true}
         tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
     (doto feature (.setStyle (clj->js tyylit)))))
 
+(defmethod luo-feature :moniviiva
+  [{:keys [lines viivat points ikonit]}]
+  (let [feature (ol.Feature. #js {:geometry (ol.geom.MultiLineString.
+                                             (clj->js (mapv :points lines)))})
+        kasvava-zindex (atom oletus-zindex)
+        taitokset (atom [])
+        laske-taitokset (fn []
+                          (if-not (empty? @taitokset)
+                            @taitokset
+                            (reset! taitokset
+                                    (apurit/pisteiden-taitokset points false))))
+        tee-ikoni (partial tee-ikonille-tyyli kasvava-zindex laske-taitokset)
+        tee-viiva (partial tee-viivalle-tyyli kasvava-zindex)
+        tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
+    (doto feature (.setStyle (clj->js tyylit)))))
+
 (defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor]}]
   (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
     (.setStyle (ol.style.Style.

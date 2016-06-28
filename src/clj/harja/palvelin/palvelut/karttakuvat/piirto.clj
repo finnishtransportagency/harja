@@ -6,7 +6,8 @@
            (javax.imageio ImageIO))
   (:require [harja.geo :as geo]
             [taoensso.timbre :as log]
-            [harja.ui.kartta.apurit :as apurit]))
+            [harja.ui.kartta.apurit :as apurit]
+            [harja.palvelin.palvelut.karttakuvat.ruudukko :as ruudukko]))
 
 (def ^:dynamic *px-scale* 1)
 (def ^:dynamic *extent* nil)
@@ -14,7 +15,7 @@
 (defn px [pikselit]
   (* *px-scale* pikselit))
 
-(defmulti piirra (fn [_ toteuma alue] (:type alue)))
+(defmulti piirra (fn [_ toteuma alue ruudukko] (:type alue)))
 
 (defn- aseta-viiva-tyyli [g {:keys [color width dash cap join miter]}]
   ;;(println "COL: " color "; STROKE:  " width " => " (px width))
@@ -59,7 +60,7 @@
 (def ^{:doc "Ikonien tiheys, välimatkaksi otetaan alueen hypotenuusa jaettuna tällä.
 Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        :private true}
-  ikonien-tiheys 15)
+  ikonien-tiheys 10)
 
 (def ^{:doc "Raja, jota suuremmalla näkyvällä alueella ei enää piirretä ikoneita"
        :private true}
@@ -94,7 +95,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
                  (.scale (px skaala) (px skaala)))
                nil-image-observer)))
 
-(defn- piirra-ikonit [g {points :points ikonit :ikonit}]
+(defn- piirra-ikonit [g {points :points ikonit :ikonit} ruudukko]
   (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
         valimatka (/ hypotenuusa ikonien-tiheys)
         taitokset (apurit/pisteiden-taitokset points)
@@ -107,25 +108,36 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
                     skaala (ikonin-skaala scale)]]
         (when kuva
           (doseq [[[x y] rotaatio] paikat]
-            (with-rotation g x y rotaatio
-              (piirra-kuva g kuva skaala x y))))))))
+            (when (not (ruudukko/kohta-asetettu? ruudukko x y))
+              (ruudukko/aseta-kohta! ruudukko x y)
+              (with-rotation g x y rotaatio
+                (piirra-kuva g kuva skaala x y)))))))))
 
 ;;{:scale 1, :img public/images/tuplarajat/pinnit/pinni-punainen.png, :type :merkki, :coordinates (429739.8163550331 7206534.971915511)}
-(defmethod piirra :merkki [g toteuma {:keys [scale img coordinates]}]
+(defmethod piirra :merkki [g toteuma {:keys [scale img coordinates]} ruudukko]
   (when-let [kuva (hae-kuva img)]
     (let [[x y] coordinates]
       (with-rotation g x y Math/PI
         (piirra-kuva g kuva scale x y 0.5 1)))))
 
-(defmethod piirra :viiva [g toteuma {:keys [viivat points ikonit] :as alue}]
+(defmethod piirra :viiva [g toteuma {:keys [viivat points ikonit] :as alue} ruudukko]
   (let [viivat (reverse (sort-by :width viivat))]
     (doseq [viiva viivat]
       (piirra-viiva g  alue viiva))
-    (piirra-ikonit g alue)))
+    (piirra-ikonit g alue ruudukko)))
+
+(defmethod piirra :moniviiva [g toteuma {:keys [lines viivat ikonit] :as alue} ruudukko]
+  (let [viivat (reverse (sort-by :width viivat))]
+    (doseq [viiva viivat
+            line lines]
+      (piirra-viiva g line viiva)
+      (piirra-ikonit g {:points (:points line)
+                        :ikonit ikonit} ruudukko))))
 
 (defn piirra-karttakuvaan [extent px-scale g asiat]
   (binding [*px-scale* px-scale
             *extent* extent]
-    (doseq [{alue :alue :as asia} asiat
-            :when alue]
-      (piirra g asia alue))))
+    (let [ruudukko (ruudukko/ruudukko extent px-scale 128)]
+      (doseq [{alue :alue :as asia} asiat
+              :when alue]
+        (piirra g asia alue ruudukko)))))
