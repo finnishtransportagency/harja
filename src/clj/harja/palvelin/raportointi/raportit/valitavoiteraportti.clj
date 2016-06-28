@@ -68,27 +68,27 @@
         (let [paivia-valissa (t/in-days (t/interval (c/from-date (:valmis-pvm valitavoite))
                                                     (c/from-date (:takaraja valitavoite))))]
           (when (pos? paivia-valissa)
-            (str paivia-valissa " " (if (= 1 paivia-valissa) "päivä" "päivää") " etuajassa")))
+            (str (fmt/kuvaile-aikavali paivia-valissa) " etuajassa")))
 
         (myohassa? valitavoite)
         (let [paivia-valissa (t/in-days (t/interval
                                           (c/from-date (:takaraja valitavoite))
                                           (c/from-date (:valmis-pvm valitavoite))))]
           (when (pos? paivia-valissa)
-            (str paivia-valissa " " (if (= 1 paivia-valissa) "päivä" "päivää") " myöhässä")))
+            (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))
 
         (kesken? valitavoite)
         (let [paivia-valissa (t/in-days (t/interval (t/now)
                                                     (c/from-date (:takaraja valitavoite))))]
           (when (pos? paivia-valissa)
-            (str paivia-valissa " " (if (= 1 paivia-valissa) "päivä" "päivää") " jäljellä")))
+            (str (fmt/kuvaile-aikavali paivia-valissa) " jäljellä")))
 
         (toteutumatta? valitavoite)
         (let [paivia-valissa (t/in-days (t/interval
                                           (c/from-date (:takaraja valitavoite))
                                           (t/now)))]
           (when (pos? paivia-valissa)
-            (str paivia-valissa " " (if (= 1 paivia-valissa) "päivä" "päivää") " myöhässä")))))
+            (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))))
 
 (defn- muodosta-raportin-rivit [valitavoitteet]
   (let [ajoissa (suodata-ajoissa valitavoitteet)

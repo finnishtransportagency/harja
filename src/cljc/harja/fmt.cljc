@@ -1,10 +1,10 @@
 (ns harja.fmt
   "Yleisiä apureita erityyppisen datan formatointiin."
   (:require [harja.pvm :as pvm]
-            #?(:cljs [goog.i18n.currencyCodeMap])
-            #?(:cljs [goog.i18n.NumberFormatSymbols])
-            #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
-            #?(:cljs [goog.i18n.NumberFormat])
+    #?(:cljs [goog.i18n.currencyCodeMap])
+    #?(:cljs [goog.i18n.NumberFormatSymbols])
+    #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
+    #?(:cljs [goog.i18n.NumberFormat])
             [clojure.string :as str])
   #?(:clj
      (:import (java.text NumberFormat)
@@ -26,19 +26,19 @@
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
   ([eur] (euro true eur))
   ([nayta-euromerkki eur]
-  #?(:cljs
-     ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
-     ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
-     ;; vasta IE11 versiosta lähtien.
-     (str (.format euro-number-format eur) " \u20AC")
+    #?(:cljs
+       ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
+       ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
+       ;; vasta IE11 versiosta lähtien.
+       (str (.format euro-number-format eur) " \u20AC")
 
-     :clj
-     (.format (doto
-                (if nayta-euromerkki
-                  (NumberFormat/getCurrencyInstance)
-                  (NumberFormat/getNumberInstance))
-                (.setMaximumFractionDigits 2)
-                (.setMinimumFractionDigits 2)) eur))))
+       :clj
+       (.format (doto
+                  (if nayta-euromerkki
+                    (NumberFormat/getCurrencyInstance)
+                    (NumberFormat/getNumberInstance))
+                  (.setMaximumFractionDigits 2)
+                  (.setMinimumFractionDigits 2)) eur))))
 
 
 
@@ -115,10 +115,10 @@
      (into {}
            (zipmap (range 1 4)
                    (map #(doto (goog.i18n.NumberFormat.
-                                (.-DECIMAL goog.i18n.NumberFormat/Format))
-                           (.setShowTrailingZeros false)
-                           (.setMinimumFractionDigits %)
-                           (.setMaximumFractionDigits %))
+                                 (.-DECIMAL goog.i18n.NumberFormat/Format))
+                          (.setShowTrailingZeros false)
+                          (.setMinimumFractionDigits %)
+                          (.setMaximumFractionDigits %))
                         (range 1 4))))))
 
 #?(:clj (def desimaali-symbolit
@@ -129,22 +129,22 @@
   ([luku] (desimaaliluku luku 2 false))
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
-   #?(:cljs
-      ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-      (if (= tarkkuus 0)
-        (.toFixed luku 0)
-        (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
-         (if-not ryhmitelty?
-           (str/replace formatoitu #" " "")
-           formatoitu)))
-      :clj
-      (.format (doto (java.text.DecimalFormat.)
-                 (.setDecimalFormatSymbols desimaali-symbolit)
-                 (.setMinimumFractionDigits tarkkuus)
-                 (.setMaximumFractionDigits tarkkuus)
-                 (.setGroupingSize (if ryhmitelty? 3 0)))
+    #?(:cljs
+       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
+       (if (= tarkkuus 0)
+         (.toFixed luku 0)
+         (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+           (if-not ryhmitelty?
+             (str/replace formatoitu #" " "")
+             formatoitu)))
+       :clj
+       (.format (doto (java.text.DecimalFormat.)
+                  (.setDecimalFormatSymbols desimaali-symbolit)
+                  (.setMinimumFractionDigits tarkkuus)
+                  (.setMaximumFractionDigits tarkkuus)
+                  (.setGroupingSize (if ryhmitelty? 3 0)))
 
-               (double luku)))))
+                (double luku)))))
 
 (defn desimaaliluku-opt
   ([luku] (desimaaliluku-opt luku 2 false))
@@ -209,8 +209,37 @@
   pisteet?      Näyttää kolme pistettä tekstin lopussa jos teksti katkeaa. Oletus false."
   ([merkkijono pituus] (leikkaa-merkkijono merkkijono pituus {}))
   ([merkkijono pituus {:keys [pisteet?] :as optiot}]
-  (when merkkijono
-    (let [tulos (subs merkkijono 0 (min (count merkkijono) pituus))]
-      (if (and pisteet? (> (count merkkijono) pituus))
-        (str tulos "...")
-        tulos)))))
+   (when merkkijono
+     (let [tulos (subs merkkijono 0 (min (count merkkijono) pituus))]
+       (if (and pisteet? (> (count merkkijono) pituus))
+         (str tulos "...")
+         tulos)))))
+
+(defn kuvaile-aikavali
+  "Ottaa numeron päiviä, ja kuvailee sen tekstinä. Esim.
+  3 päivää
+  2 viikkoa
+  6 kuukautta
+  1 vuosi"
+  [paivat]
+  (assert (>= paivat 0) "Ajan tulee olla 0 tai suurempi")
+  (let [viikko 7
+        kuukausi (* viikko 4)
+        vuosi (* kuukausi 12)]
+    (cond (= paivat 0)
+          ""
+
+          (< paivat viikko)
+          (str paivat " " (if (= paivat 1) "päivä" "päivää"))
+
+          (< paivat kuukausi)
+          (let [viikot (int (/ paivat viikko))]
+            (str viikot " " (if (= viikot 1) "viikko" "viikkoa")))
+
+          (< paivat vuosi)
+          (let [kuukaudet (int (/ paivat kuukausi))]
+            (str kuukaudet " " (if (= kuukaudet 1) "kuukausi" "kuukautta")))
+
+          (>= paivat vuosi)
+          (let [vuodet (int (/ paivat vuosi))]
+            (str vuodet " " (if (= vuodet 1) "vuosi" "vuotta"))))))
