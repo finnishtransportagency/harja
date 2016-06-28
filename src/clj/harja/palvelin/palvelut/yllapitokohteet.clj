@@ -294,7 +294,7 @@
                                      :sijainti (when-not (empty? sijainti)
                                                  (geo/geometry (geo/clj->pg sijainti)))
                                      :id id
-                                     :urakka-id urakka-id})))
+                                     :urakkaid urakka-id})))
 
 (defn tallenna-yllapitokohdeosa
   "Tallentaa yksittäisen ylläpitokohdeosan kantaan.
