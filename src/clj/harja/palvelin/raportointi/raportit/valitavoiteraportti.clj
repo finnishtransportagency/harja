@@ -50,20 +50,32 @@
     valitavoitteet))
 
 (defn- muodosta-raportin-rivit [valitavoitteet]
-  (let [valitavoiterivi (fn [valitavoite]
+  (let [ajoissa (suodata-ajoissa valitavoitteet)
+        myohassa (suodata-myohassa valitavoitteet)
+        kesken (suodata-kesken valitavoitteet)
+        toteutumatta (suodata-toteumatta valitavoitteet)
+        valitavoiterivi (fn [valitavoite]
                           [(:nimi valitavoite)
                            (pvm/pvm-opt (:takaraja valitavoite))
                            (pvm/pvm-opt (:valmis-pvm valitavoite))
                            (:valmis-kommentti valitavoite)])]
     (into [] (concat
-               [{:otsikko "Ajoissa toteutuneet"}]
-               (mapv valitavoiterivi (suodata-ajoissa valitavoitteet))
-               [{:otsikko "Myöhässä toteutuneet"}]
-               (mapv valitavoiterivi (suodata-myohassa valitavoitteet))
-               [{:otsikko "Kesken"}]
-               (mapv valitavoiterivi (suodata-kesken valitavoitteet))
-               [{:otsikko "Toteutumatta jääneet"}]
-               (mapv valitavoiterivi (suodata-toteumatta valitavoitteet))))))
+               [{:otsikko (str "Ajoissa toteutuneet ("
+                               (math/osuus-prosentteina (count ajoissa) (count valitavoitteet))
+                               "%)")}]
+               (mapv valitavoiterivi ajoissa)
+               [{:otsikko (str "Myöhässä toteutuneet ("
+                               (math/osuus-prosentteina (count myohassa) (count valitavoitteet))
+                               "%)")}]
+               (mapv valitavoiterivi myohassa)
+               [{:otsikko (str "Kesken ("
+                               (math/osuus-prosentteina (count kesken) (count valitavoitteet))
+                               "%)")}]
+               (mapv valitavoiterivi kesken)
+               [{:otsikko (str "Toteutumatta jääneet ("
+                               (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet))
+                               "%)")}]
+               (mapv valitavoiterivi toteutumatta)))))
 
 (defn- muodosta-otsikkorivit []
   [{:otsikko "Välitavoite" :leveys 10}
@@ -85,15 +97,4 @@
                  :tyhja (when (empty? datarivit) "Ei raportoitavia välitavoitteita.")
                  :sheet-nimi raportin-nimi}
       otsikkorivit
-      datarivit]
-     ;; Yhteenveto
-     [:taulukko {:otsikko "Osuudet"
-                 :tyhja (when (empty? datarivit) "Ei raportoitavia välitavoitteita.")
-                 :sheet-nimi raportin-nimi}
-      [{:otsikko "Ryhmä" :leveys 50}
-       {:otsikko "Osuus" :leveys 50}]
-      [["Ajoissa toteutuneet" (math/osuus-prosentteina (suodata-ajoissa valitavoitteet) valitavoitteet)]
-       ["Myöhässä toteutuneet" (math/osuus-prosentteina (suodata-myohassa valitavoitteet) valitavoitteet)]
-       ["Kesken" (math/osuus-prosentteina (suodata-kesken valitavoitteet) valitavoitteet)]
-       ["Toteutumatta jääneet" (math/osuus-prosentteina (suodata-toteumatta valitavoitteet) valitavoitteet)]]
       datarivit]]))
