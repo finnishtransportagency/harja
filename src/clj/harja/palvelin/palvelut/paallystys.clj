@@ -200,9 +200,7 @@
             :muutoshinta muutoshinta
             :kayttaja (:id user)}))))
 
-(defn- tarkista-paallystysilmoituksen-lukinta [user urakka-id
-                                               uusi-paallystysilmoitus
-                                               paallystysilmoitus-kannassa]
+(defn- tarkista-paallystysilmoituksen-lukinta [paallystysilmoitus-kannassa]
   (log/debug "Tarkistetaan onko POT lukittu...")
   (if (= :lukittu (:tila paallystysilmoitus-kannassa))
     (do (log/debug "POT on lukittu, ei voi päivittää!")
@@ -257,9 +255,7 @@
   ;; muokata vain tiettyä osaa ilmoituksesta. Näin ollen ilmoitus päivitetään osa kerrallaan niin, että jokaista
   ;; osaa vasten tarkistetaan tallennusoikeus.
   (log/debug "Päivitetään olemassa oleva päällystysilmoitus")
-  (tarkista-paallystysilmoituksen-lukinta user urakka-id
-                                          uusi-paallystysilmoitus
-                                          paallystysilmoitus-kannassa)
+  (tarkista-paallystysilmoituksen-lukinta paallystysilmoitus-kannassa)
   (paivita-kasittelytiedot db user urakka-id uusi-paallystysilmoitus)
   (paivita-asiatarkastus db user urakka-id uusi-paallystysilmoitus)
   (paivita-paallystysilmoituksen-perustiedot db user urakka-id sopimus-id uusi-paallystysilmoitus)
