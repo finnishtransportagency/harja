@@ -278,7 +278,7 @@
                     {:nimi "Kelitarkastusraportti"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
+                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Kelitarkastusraportti"
                       :tyhja nil}
                      [{:leveys 10

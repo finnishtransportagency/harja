@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clj-time.core :as t]
             [harja.pvm :as pvm]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.domain.oikeudet :as oikeudet])
 (:import (java.util Date)))
 
 (defn hakuehto-annettu? [p]
@@ -89,9 +90,11 @@
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
                          (konv/sql-date (second aikavali)))
-        urakat (urakat/kayttajan-urakat-aikavalilta db user
-                                                    urakka urakoitsija urakkatyyppi hallintayksikko
-                                                    (first aikavali) (second aikavali))
+        urakat (map :id
+                    (mapcat :urakat
+                            (urakat/kayttajan-urakat-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset
+                                                                 urakka urakoitsija urakkatyyppi hallintayksikko
+                                                                 (first aikavali) (second aikavali))))
         tyypit (mapv name tyypit)
         selite-annettu? (boolean (and selite (first selite)))
         selite (if selite-annettu? (name (first selite)) "")
@@ -203,7 +206,9 @@
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
   (log/debug "Haetaan päivitetyt tiedot ilmoituksille " (pr-str id))
   (let [id-vektori (if (vector? id) id [id])
-        kayttajan-urakat (set (urakat/kayttajan-urakat-aikavalilta db user))
+        kayttajan-urakat (set (map :id
+                                   (mapcat :urakat
+                                           (urakat/kayttajan-urakat-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset))))
         tiedot (q/hae-ilmoitukset-idlla db id-vektori)
         tulos (konv/sarakkeet-vektoriin
                 (into []

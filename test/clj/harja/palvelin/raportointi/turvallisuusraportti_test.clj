@@ -151,7 +151,7 @@
     (is (= vastaus [:raportti
                     {:nimi "Turvallisuusraportti"}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
+                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Turvallisuusraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Tyyppi"}
