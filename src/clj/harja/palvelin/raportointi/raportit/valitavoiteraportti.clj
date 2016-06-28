@@ -61,20 +61,24 @@
                            (:valmis-kommentti valitavoite)])]
     (into [] (concat
                [{:otsikko (str "Ajoissa toteutuneet ("
-                               (math/osuus-prosentteina (count ajoissa) (count valitavoitteet))
-                               "%)")}]
+                               (fmt/prosentti
+                                 (math/osuus-prosentteina (count ajoissa) (count valitavoitteet)) 0)
+                               ")")}]
                (mapv valitavoiterivi ajoissa)
                [{:otsikko (str "Myöhässä toteutuneet ("
-                               (math/osuus-prosentteina (count myohassa) (count valitavoitteet))
-                               "%)")}]
+                               (fmt/prosentti
+                                 (math/osuus-prosentteina (count myohassa) (count valitavoitteet)) 0)
+                               ")")}]
                (mapv valitavoiterivi myohassa)
                [{:otsikko (str "Kesken ("
-                               (math/osuus-prosentteina (count kesken) (count valitavoitteet))
-                               "%)")}]
+                               (fmt/prosentti
+                                 (math/osuus-prosentteina (count kesken) (count valitavoitteet)) 0)
+                               ")")}]
                (mapv valitavoiterivi kesken)
                [{:otsikko (str "Toteutumatta jääneet ("
-                               (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet))
-                               "%)")}]
+                               (fmt/prosentti
+                                 (math/osuus-prosentteina (count toteutumatta) (count valitavoitteet)) 0)
+                               ")")}]
                (mapv valitavoiterivi toteutumatta)))))
 
 (defn- muodosta-otsikkorivit []
