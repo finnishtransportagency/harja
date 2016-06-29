@@ -8,12 +8,18 @@
             [clojure.java.jdbc :as jdbc]
             [harja.domain.oikeudet :as oikeudet]))
 
-(defn hae-valitavoitteet [db user urakka-id]
+(defn hae-urakan-valitavoitteet [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
 
   (into []
         (map konv/alaviiva->rakenne)
         (q/hae-urakan-valitavoitteet db urakka-id)))
+
+(defn hae-valtakunnalliset-valitavoitteet [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
+
+  (into []
+        (q/hae-valtakunnalliset-valitavoitteet db)))
 
 (defn merkitse-valmiiksi! [db user {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
   (log/info "merkitse valmiiksi: " tiedot)
@@ -21,7 +27,7 @@
   (jdbc/with-db-transaction [c db]
     (and (= 1 (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
                                      (:id user) urakka-id valitavoite-id))
-         (hae-valitavoitteet db user urakka-id))))
+         (hae-urakan-valitavoitteet db user urakka-id))))
 
 (defn tallenna! [db user {:keys [urakka-id valitavoitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
@@ -46,14 +52,17 @@
       (q/paivita-valitavoite! c nimi (konv/sql-date takaraja) (:id user) urakka-id id))
 
     ;; Lopuksi haetaan uudet tavoitteet
-    (hae-valitavoitteet c user urakka-id)))
+    (hae-urakan-valitavoitteet c user urakka-id)))
 
 (defrecord Valitavoitteet []
   component/Lifecycle
   (start [this]
     (julkaise-palvelu (:http-palvelin this) :hae-urakan-valitavoitteet
                       (fn [user urakka-id]
-                        (hae-valitavoitteet (:db this) user urakka-id)))
+                        (hae-urakan-valitavoitteet (:db this) user urakka-id)))
+    (julkaise-palvelu (:http-palvelin this) :hae-valtakunnalliset-valitavoitteet
+                      (fn [user _]
+                        (hae-valtakunnalliset-valitavoitteet (:db this) user)))
     (julkaise-palvelu (:http-palvelin this) :merkitse-valitavoite-valmiiksi
                       (fn [user tiedot]
                         (merkitse-valmiiksi! (:db this) user tiedot)))
@@ -64,6 +73,8 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
-                     :hae-urakan-valitavoitteet :merkitse-valitavoite-valmiiksi
+                     :hae-valtakunnalliset-valitavoitteet
+                     :hae-urakan-valitavoitteet
+                     :merkitse-valitavoite-valmiiksi
                      :tallenna-valitavoitteet)
     this))

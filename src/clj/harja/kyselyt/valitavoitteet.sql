@@ -7,14 +7,20 @@ SELECT v.id, nimi, takaraja, viikkosakko, sakko,
   FROM valitavoite v
        LEFT JOIN kayttaja k ON valmis_merkitsija=k.id
  WHERE v.poistettu = false AND urakka = :urakka
-ORDER BY takaraja ASC
+ORDER BY takaraja ASC;
+
+-- name: hae-valtakunnalliset-valitavoitteet
+-- Hakee kaikki valtakunnalliset välitavoitteet
+SELECT v.id, nimi, takaraja
+FROM valitavoite v
+WHERE v.poistettu = false AND urakka IS NULL
+ORDER BY takaraja ASC;
 
 -- name: merkitse-valmiiksi!
 -- Merkitsee välitavoitteen valmiiksi
 UPDATE valitavoite
    SET valmis_pvm=:valmis, valmis_kommentti=:kommentti, valmis_merkitsija=:user, valmis_merkitty=NOW()
  WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false
-
 
 -- name: poista-valitavoite!
 -- Merkitsee välitavoitteen poistetuksi

@@ -29,4 +29,4 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      [valitavoitteet-grid @tiedot/tavoitteet])))
+      [valitavoitteet-grid @tiedot/valitavoitteet])))

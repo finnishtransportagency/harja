@@ -8,6 +8,7 @@
             [cljs-time.core :as time]
             [harja.atom :refer [paivita!]]
             [cljs-time.core :as t]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
@@ -15,4 +16,10 @@
 
 (def nakymassa? (atom false))
 
-(def tavoitteet (atom nil))
+(defn hae-valitavoitteet []
+  (k/post! :hae-valtakunnalliset-valitavoitteet {}))
+
+(def valitavoitteet
+  (reaction<! [nakymassa? @nakymassa?]
+              (when nakymassa?
+                (hae-valitavoitteet))))
