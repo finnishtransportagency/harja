@@ -84,11 +84,12 @@ VALUES (:takaraja,
         :luoja,
         NOW());
 
--- name: hae-urakat<!
+-- name: hae-kaynnissa-olevat-urakat
 -- Hakee kaikki urakat
 SELECT
   id,
   nimi,
   alkupvm,
   loppupvm
-FROM urakka;
+FROM urakka
+WHERE loppupvm >= NOW();

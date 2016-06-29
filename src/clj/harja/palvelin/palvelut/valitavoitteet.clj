@@ -63,7 +63,8 @@
   #_(doseq [poistettava (filter :poistettu valitavoitteet)]
       (q/poista-valtakunnallinen-valitavoite! db (:id user) urakka-id (:id poistettava))))
 
-(defn- kopioi-valtakunnallinen-valitavoite-urakoihin [db user valitavoite valitavoite-kannassa-id urakat]
+(defn- kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin
+  [db user valitavoite valitavoite-kannassa-id urakat]
   (doseq [urakka urakat]
     (luo-uudet-urakan-valitavoitteet db user
                                      (merge valitavoite
@@ -71,34 +72,47 @@
                                      (:id urakka))))
 
 (defn- luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet [db user valitavoitteet]
-  (let [urakat (hae-kertaluontoisten-valitavoitteiden-kohdeurakat)]
+  (let [urakat (hae-kaynnissa-olevat-urakat db)]
     (doseq [{:keys [takaraja nimi urakkatyyppi] :as valitavoite} valitavoitteet]
-     (let [id (:id (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
+      (let [id (:id (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
                      db
                      {:takaraja (konv/sql-date takaraja)
                       :nimi nimi
                       :urakkatyyppi (name urakkatyyppi)
                       :tyyppi "kertaluontoinen"
                       :luoja (:id user)}))
+            ; FIXME Käsittele tilanne jossa takarajaa ei ole annettu
            kohdeurakat (filter
                          (fn [urakka]
                            (pvm/valissa? takaraja
                                          (c/from-date (:alkupvm urakka))
                                          (c/from-date (:loppupvm urakka))))
                          urakat)]
-       (kopioi-valtakunnallinen-valitavoite-urakoihin db user valitavoite id kohdeurakat)))))
+        (kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin db user valitavoite id kohdeurakat)))))
 
 (defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet [db user valitavoitteet]
-  (doseq [{:keys [takaraja nimi urakkatyyppi takaraja-toistopaiva takaraja-toistokuukausi]} valitavoitteet]
-    (q/lisaa-valtakunnallinen-toistuva-valitavoite<! db {:takaraja (konv/sql-date takaraja)
-                                                         :nimi nimi
-                                                         :urakkatyyppi (name urakkatyyppi)
-                                                         :takaraja_toistopaiva takaraja-toistopaiva
-                                                         :takaraja_toistokuukausi takaraja-toistokuukausi
-                                                         :tyyppi "toistuva"
-                                                         :luoja (:id user)})))
+  (let [urakat (hae-kaynnissa-olevat-urakat db)]
+    (doseq [{:keys [takaraja nimi urakkatyyppi
+                    takaraja-toistopaiva takaraja-toistokuukausi] :as valitavoite} valitavoitteet]
+      (let [kohdeurakat (filter
+                          (fn [urakka]
+                            (pvm/valissa? takaraja
+                                          (c/from-date (:alkupvm urakka))
+                                          (c/from-date (:loppupvm urakka))))
+                          urakat)
+            id (q/lisaa-valtakunnallinen-toistuva-valitavoite<!
+                 db
+                 {:takaraja (konv/sql-date takaraja)
+                  :nimi nimi
+                  :urakkatyyppi (name urakkatyyppi)
+                  :takaraja_toistopaiva takaraja-toistopaiva
+                  :takaraja_toistokuukausi takaraja-toistokuukausi
+                  :tyyppi "toistuva"
+                  :luoja (:id user)})]
+        ;; TODO Kopioi kertaalleen per jäljellä oleva vuosi
+        (kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin db user valitavoite id kohdeurakat))))
 
-(defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet]
+  (defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet]
   (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db
                                                              user
                                                              (filter #(and (= (:tyyppi %) :kertaluontoinen)
