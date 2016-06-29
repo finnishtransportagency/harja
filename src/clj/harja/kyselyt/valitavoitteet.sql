@@ -39,8 +39,18 @@ UPDATE valitavoite
 -- Lisää uuden välitavoitteen urakalle
 INSERT
   INTO valitavoite
-       (urakka,takaraja,nimi,luoja,luotu)
-VALUES (:urakka, :takaraja, :nimi, :luoja, NOW());
+       (urakka,
+        takaraja,
+        valtakunnallinen_valitavoite,
+        nimi,
+        luoja,
+        luotu)
+VALUES (:urakka,
+        :takaraja,
+        :valtakunnallinen_valitavoite,
+        :nimi,
+        :luoja,
+        NOW());
 
 -- name: paivita-urakan-valitavoite!
 -- Päivittää välitavoitteen tiedot
@@ -73,3 +83,12 @@ VALUES (:takaraja,
         :takaraja_toistokuukausi,
         :luoja,
         NOW());
+
+-- name: hae-urakat<!
+-- Hakee kaikki urakat
+SELECT
+  id,
+  nimi,
+  alkupvm,
+  loppupvm
+FROM urakka;
