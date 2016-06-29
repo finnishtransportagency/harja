@@ -88,6 +88,6 @@
     (komp/lippu tiedot/nakymassa?)
     (fn []
       [valitavoitteet-grid
-       valitavoitteet-atom
+       tiedot/valitavoitteet
        tiedot/kertaluontoiset-valitavoitteet
        tiedot/toistuvat-valitavoitteet])))
