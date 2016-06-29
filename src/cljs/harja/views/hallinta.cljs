@@ -45,7 +45,7 @@
 
    "Integraatioloki"
    :integraatioloki
-   (when (oikeudet/hallinta-lampotilat)
+   (when (oikeudet/hallinta-integraatioloki)
      ^{:key "integraatioloki"}
      [integraatioloki/integraatioloki])
 
