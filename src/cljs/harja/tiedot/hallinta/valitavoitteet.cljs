@@ -14,3 +14,5 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def nakymassa? (atom false))
+
+(def tavoitteet (atom nil))
