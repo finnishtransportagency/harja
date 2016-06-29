@@ -10,9 +10,11 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
+            [clojure.core.match :refer [match]]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [clojure.string :as str]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -47,38 +49,40 @@
                                  :konteksti "urakka"
                                  :urakka-id (hae-oulun-alueurakan-2014-2019-id)})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Välitavoiteraportti"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:otsikko "Oulun alueurakka 2014-2019, Välitavoiteraportti, suoritettu 28.06.2016"
-                      :sheet-nimi "Välitavoiteraportti"
-                      :tyhja nil}
-                     [{:leveys 10
-                       :otsikko "Välitavoite"}
-                      {:leveys 5
-                       :otsikko "Takaraja"}
-                      {:leveys 10
-                       :otsikko "Valmistunut"}
-                      {:leveys 10
-                       :otsikko "Kommentti"}]
-                     [{:otsikko "Ajoissa valmistuneet (25%)"}
-                      ["Koko Suomi aurattu"
-                       "29.05.2014"
-                       "01.05.2014 (1 kuukausi ennen)"
-                       "Homma hoidettu hyvästi ennen tavoitepäivää!"]
-                      {:otsikko "Myöhässä valmistuneet (25%)"}
-                      ["Pelkosentie 678 suolattu"
-                       "23.09.2015"
-                       "25.09.2015 (2 päivää myöhässä)"
-                       "Aurattu, mutta vähän tuli myöhässä"]
-                      {:otsikko "Kesken (25%)"}
-                      ["Oulaisten liikenneympyrä aurattu"
-                       "01.01.2050 (36 vuotta jäljellä)"
-                       "-"
-                       nil]
-                      {:otsikko "Valmistumatta (25%)"}
-                      ["Sepon mökkitie suolattu"
-                       "24.12.2014 (1 vuosi myöhässä)"
-                       "-"
-                       nil]]]]))))
+    (is (match [vastaus]
+               [[:raportti
+                 {:nimi "Välitavoiteraportti"
+                  :orientaatio :landscape}
+                 [:taulukko
+                  {:otsikko (_ :guard #(str/starts-with? % "Oulun alueurakka 2014-2019, Välitavoiteraportti"))
+                   :sheet-nimi "Välitavoiteraportti"
+                   :tyhja nil}
+                  [{:leveys 10
+                    :otsikko "Välitavoite"}
+                   {:leveys 5
+                    :otsikko "Takaraja"}
+                   {:leveys 10
+                    :otsikko "Valmistunut"}
+                   {:leveys 10
+                    :otsikko "Kommentti"}]
+                  [{:otsikko "Ajoissa valmistuneet (25%)"}
+                   ["Koko Suomi aurattu"
+                    "29.05.2014"
+                    (_ :guard #(str/starts-with? % "01.05.2014"))
+                    "Homma hoidettu hyvästi ennen tavoitepäivää!"]
+                   {:otsikko "Myöhässä valmistuneet (25%)"}
+                   ["Pelkosentie 678 suolattu"
+                    "23.09.2015"
+                    (_ :guard #(str/starts-with? % "25.09.2015"))
+                    "Aurattu, mutta vähän tuli myöhässä"]
+                   {:otsikko "Kesken (25%)"}
+                   ["Oulaisten liikenneympyrä aurattu"
+                    (_ :guard #(str/starts-with? % "01.01.2050"))
+                    "-"
+                    nil]
+                   {:otsikko "Valmistumatta (25%)"}
+                   ["Sepon mökkitie suolattu"
+                    (_ :guard #(str/starts-with? % "24.12.2014"))
+                    "-"
+                    nil]]]]]
+               true))))
