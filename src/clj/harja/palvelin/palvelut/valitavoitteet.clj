@@ -29,7 +29,7 @@
                                      (:id user) urakka-id valitavoite-id))
          (hae-urakan-valitavoitteet db user urakka-id))))
 
-(defn tallenna! [db user {:keys [urakka-id valitavoitteet]}]
+(defn tallennaurakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (log/debug "Tallenna välitavoitteet " (pr-str valitavoitteet))
   (jdbc/with-db-transaction [c db]
@@ -66,9 +66,9 @@
     (julkaise-palvelu (:http-palvelin this) :merkitse-valitavoite-valmiiksi
                       (fn [user tiedot]
                         (merkitse-valmiiksi! (:db this) user tiedot)))
-    (julkaise-palvelu (:http-palvelin this) :tallenna-valitavoitteet
+    (julkaise-palvelu (:http-palvelin this) :tallenna-urakan-valitavoitteet
                       (fn [user tiedot]
-                        (tallenna! (:db this) user tiedot)))
+                        (tallennaurakan-valitavoitteet! (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -76,5 +76,5 @@
                      :hae-valtakunnalliset-valitavoitteet
                      :hae-urakan-valitavoitteet
                      :merkitse-valitavoite-valmiiksi
-                     :tallenna-valitavoitteet)
+                     :tallenna-urakan-valitavoitteet)
     this))

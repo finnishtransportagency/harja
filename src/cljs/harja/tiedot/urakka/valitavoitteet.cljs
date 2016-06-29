@@ -36,7 +36,7 @@
 
 (defn tallenna! [urakka-id valitavoitteet]
   (let [ch (chan)]
-    (go (let [res (<! (k/post! :tallenna-valitavoitteet
+    (go (let [res (<! (k/post! :tallenna-urakan-valitavoitteet
                                {:urakka-id urakka-id
                                 :valitavoitteet valitavoitteet}))]
           (>! ch res)))
