@@ -117,6 +117,7 @@ SELECT
   WHERE tarkastus = t.id) as vakiohavainnot,
   t.tarkastaja,
   t.havainnot,
+  t.laadunalitus,
   t.tyyppi
 FROM tarkastus t
 WHERE sijainti IS NOT NULL

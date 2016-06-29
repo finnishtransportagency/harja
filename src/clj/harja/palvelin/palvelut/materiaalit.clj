@@ -16,7 +16,7 @@
         (q/hae-materiaalikoodit-ilman-talvisuolaa db)))
 
 (defn hae-urakan-materiaalit [db user urakka-id]
-  (oikeudet/lue oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (double (:maara %))))
@@ -27,7 +27,7 @@
 
 (defn hae-urakassa-kaytetyt-materiaalit
   [db user urakka-id hk-alkanut hk-paattynyt sopimus]
-  (oikeudet/lue oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))
@@ -36,7 +36,7 @@
 
 (defn hae-urakan-toteumat-materiaalille
   [db user urakka-id materiaali-id hoitokausi sopimus]
-  (oikeudet/lue oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
               (map #(assoc-in % [:toteuma :maara] (when (:maara (:toteuma %)) (double (:maara (:toteuma %)))))))
@@ -50,7 +50,7 @@
 
 (defn hae-toteuman-materiaalitiedot
   [db user urakka-id toteuma-id]
-  (oikeudet/lue oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (let [mankeloitava (into []
                            (comp (map konv/alaviiva->rakenne)
                                  (map #(assoc-in % [:toteumamateriaali :maara] (double (:maara (:toteumamateriaali %))))))
@@ -88,7 +88,7 @@
     (q/poista-materiaalinkaytto-id! c (:id user) id)))
 
 (defn tallenna-urakan-materiaalit [db user {:keys [urakka-id sopimus-id hoitokausi hoitokaudet tulevat-hoitokaudet-mukana?  materiaalit] :as tiedot}]
-  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "MATERIAALIT PÄIVITETTÄVÄKSI: " tiedot)
   (jdbc/with-db-transaction [c db]
     (let [ryhmittele #(group-by (juxt :alkupvm :loppupvm) %)
@@ -149,7 +149,7 @@
   toteumat/tallenna-toteuma-ja-toteumamateriaalit funktioon (todnäk)"
   [db user urakka-id toteumamateriaalit hoitokausi sopimus]
 
-  (oikeudet/kirjoita oikeudet/urakat-toteumat-materiaalit user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user urakka-id)
   (jdbc/with-db-transaction [c db]
     (doseq [tm toteumamateriaalit]
       ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
@@ -183,7 +183,7 @@
 
   Palauttaa urakassa käytetyt materiaalit, koska kyselyä käytetään toteumat/materiaalit näkymässä."
   [db user tiedot]
-  (oikeudet/kirjoita oikeudet/urakat-toteumat-materiaalit user (:urakka tiedot))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user (:urakka tiedot))
   (jdbc/with-db-transaction
     [db db]
     (when (:tmid tiedot)
@@ -195,7 +195,7 @@
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
 (defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (oikeudet/lue oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
         (q/hae-suolatoteumat db urakka-id alkupvm loppupvm)))
@@ -218,7 +218,7 @@
      (:maara toteuma) (:id user))))
 
 (defn tallenna-suolatoteumat [db user {:keys [urakka-id sopimus-id toteumat]}]
-  (oikeudet/kirjoita oikeudet/urakat-toteumat-suola user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [toteuma toteumat]
       (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)

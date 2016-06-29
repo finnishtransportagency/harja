@@ -2,13 +2,17 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.domain.tilannekuva :as domain]
             [harja.atom :refer-macros [reaction<!]
              :refer [paivita-periodisesti]]
             [harja.ui.kartta.esitettavat-asiat
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
             [harja.ui.openlayers :as openlayers]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.geo :as geo]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -18,6 +22,7 @@
 
 (defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
+(defonce tilannekuvan-organisaatiot (atom []))
 
 
 (def lisaa-karttatyyppi-fn
@@ -107,3 +112,37 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
 
 (add-watch haetut-asiat :paivita-tilannekuvatasot
            (fn [_ _ vanha uusi] (paivita-tilannekuvatasot vanha uusi)))
+
+(defn- organisaation-geometria [piirrettava]
+  (let [alue (:alue piirrettava)]
+    (when (map? alue)
+      (assoc (update-in piirrettava
+                  [:alue]
+                  assoc
+                  :fill false
+                  :stroke {:width 2}
+                  :z-index 1)
+        :type :ur
+        :nimi nil))))
+
+(defn zoomaa-urakoihin! [urakat]
+  (reset! nav/kartan-extent
+          (if-not (empty? urakat)
+            (-> (geo/extent-monelle (map :alue urakat))
+                (geo/laajenna-extent geo/pisteen-extent-laajennus))
+
+            +koko-suomi-extent+)))
+
+(defn aseta-valitut-organisaatiot! [suodattimet]
+  (reset! tilannekuvan-organisaatiot (into []
+                                           (keep organisaation-geometria)
+                                           (domain/valitut-kentat suodattimet))))
+
+(defn seuraa-alueita! [suodattimet]
+  (add-watch suodattimet ::alueen-seuraus (fn [_ _ vanha-tila uusi-tila]
+                                             (when-not (= (domain/valitut-suodattimet (:alueet vanha-tila))
+                                                          (domain/valitut-suodattimet (:alueet uusi-tila)))
+                                               (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet uusi-tila)))))))
+
+(defn lopeta-alueen-seuraus! [suodattimet]
+  (remove-watch suodattimet ::alueen-seuraus))

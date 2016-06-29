@@ -40,7 +40,7 @@
   (= 1 (q/muokkaa-toimenpidekoodi! db (:id user) nimi yksikko (konv/seq->array hinnoittelu) id)))
 
 (defn tallenna-tehtavat [db user {:keys [lisattavat muokattavat poistettavat]}]
-  (oikeudet/kirjoita oikeudet/hallinta-tehtavat user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-tehtavat user)
   (jdbc/with-db-transaction [c db]
     (doseq [rivi lisattavat]
       (lisaa-toimenpidekoodi c user rivi))

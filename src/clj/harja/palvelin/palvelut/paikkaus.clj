@@ -18,7 +18,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
 (defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id]}]
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
                         (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
@@ -36,7 +36,7 @@
 
 (defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [;; FIXME Voisi joinata suoraan kun ilmoitus haetaan. Pitää refactoroida kun palataan paikkausjuttuihin
         kohdetiedot (first (q/hae-urakan-yllapitokohde db urakka-id paikkauskohde-id))
         _ (log/debug (pr-str kohdetiedot))
@@ -151,7 +151,7 @@
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
              ", paikkauskohde-id:" (:paikkauskohde-id paikkausilmoitus))
-  (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (skeema/validoi paikkausilmoitus-domain/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]

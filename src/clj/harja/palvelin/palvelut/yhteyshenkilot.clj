@@ -62,7 +62,7 @@
     this))
 
 (defn hae-urakan-kayttajat [db fim user urakka-id]
-  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (->> urakka-id
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
@@ -75,7 +75,7 @@
 
 (defn hae-urakan-yhteyshenkilot [db user urakka-id]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
-  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (let [tulokset (q/hae-urakan-yhteyshenkilot db urakka-id)
         yhteyshenkilot
         (into []
@@ -97,7 +97,7 @@
 (defn tallenna-urakan-yhteyshenkilot [db user {:keys [urakka-id yhteyshenkilot poistettu]}]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
   (assert (vector? yhteyshenkilot) "Yhteyshenkilöiden tulee olla vektori")
-  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
     ;; käyttäjän oikeudet urakkaan
 
@@ -143,7 +143,7 @@
 
 (defn hae-urakan-paivystajat [db user urakka-id]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
-  (oikeudet/lue oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (into []
         ;; munklaukset tässä
         (map #(if-let [org-id (:organisaatio %)]
@@ -155,7 +155,7 @@
 
 
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]
-  (oikeudet/kirjoita oikeudet/urakat-yleiset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
 
     (log/debug "SAATIIN päivystäjät: " paivystajat)

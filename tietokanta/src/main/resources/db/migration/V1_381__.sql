@@ -1,8 +1,6 @@
--- Välitavoiteraportti
-INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) VALUES (
- 'valitavoiteraportti', 'Välitavoiteraportti',
- ARRAY['urakka'::raporttikonteksti],
- ARRAY[]::raporttiparametri[],
- '#''harja.palvelin.raportointi.raportit.valitavoiteraportti/suorita',
- 'hoito'::urakkatyyppi
-);
+-- Lisää asiatarkastuksen tiedot POT-lomakkeelle
+ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_pvm DATE;
+ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_tarkastaja VARCHAR(1024);
+ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_tekninen_osa BOOLEAN;
+ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_taloudellinen_osa BOOLEAN;
+ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_lisatiedot VARCHAR(4096);

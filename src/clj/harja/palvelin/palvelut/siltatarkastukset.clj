@@ -33,7 +33,7 @@
   :korjatut  hakee sillat, joilla on ollut puutteita ja jotka on korjattu"
 
   [db user urakka-id listaus]
-  (oikeudet/lue oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (case listaus
     :kaikki
     (into []
@@ -88,7 +88,7 @@
 (defn hae-sillan-tarkastukset
   "Hakee annetun sillan siltatarkastukset"
   [db user {:keys [urakka-id silta-id] :as tiedot}]
-  (oikeudet/lue oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
           kohteet-xf
@@ -127,7 +127,7 @@
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet uudet-liitteet] :as siltatarkastus}]
-  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
     (let [tarkastus (if id
@@ -144,7 +144,7 @@
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
   [db user {:keys [urakka-id silta-id siltatarkastus-id]}]
-  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (jdbc/with-db-transaction [c db]
     (do
       (log/info "  päivittyi: " (q/poista-siltatarkastus! c siltatarkastus-id urakka-id)))

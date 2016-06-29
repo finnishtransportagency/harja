@@ -96,7 +96,7 @@
                     {:nimi "Toimenpidekilometrit"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015"
+                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015"
                       :rivi-ennen [{:sarakkeita 1
                                     :teksti "Alue"}
                                     {:sarakkeita 8
@@ -173,7 +173,7 @@
                                     {:sarakkeita 8
                                      :teksti "Etelä-Pohjanmaa"}
                                     {:sarakkeita 8
-                                     :teksti "Pohjois-Pohjanmaa"}
+                                     :teksti "Pohjois-Pohjanmaa ja Kainuu"}
                                     {:sarakkeita 8
                                      :teksti "Lappi"}]
                       :sheet-nimi "Toimenpidekilometrit"
