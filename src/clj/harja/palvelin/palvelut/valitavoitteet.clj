@@ -69,12 +69,12 @@
                                                                 :luoja (:id user)})))
 
 (defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet [db user valitavoitteet]
-  (doseq [{:keys [takaraja nimi urakkatyyppi takaraja-paiva takaraja-kuukausi]} valitavoitteet]
+  (doseq [{:keys [takaraja nimi urakkatyyppi takaraja-toistopaiva takaraja-toistokuukausi]} valitavoitteet]
     (q/lisaa-valtakunnallinen-toistuva-valitavoite<! db {:takaraja (konv/sql-date takaraja)
                                                          :nimi nimi
                                                          :urakkatyyppi (name urakkatyyppi)
-                                                         :toistopaiva takaraja-paiva
-                                                         :toistokuukausi takaraja-kuukausi
+                                                         :takaraja_toistopaiva takaraja-toistopaiva
+                                                         :takaraja_toistokuukausi takaraja-toistokuukausi
                                                          :tyyppi "toistuva"
                                                          :luoja (:id user)})))
 

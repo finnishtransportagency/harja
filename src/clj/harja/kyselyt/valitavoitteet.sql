@@ -17,8 +17,8 @@ SELECT
   takaraja,
   tyyppi,
   urakkatyyppi,
-  toistopaiva,
-  toistokuukausi
+  takaraja_toistopaiva AS "takaraja-toistopaiva",
+  takaraja_toistokuukausi AS "takaraja-toistokuukausi"
 FROM valitavoite v
 WHERE v.poistettu = false AND urakka IS NULL
 ORDER BY takaraja ASC;
@@ -64,12 +64,12 @@ VALUES (:takaraja,
 -- Lisää uuden valtakunnallisen välitavoitteen
 INSERT
 INTO valitavoite
-(takaraja, urakkatyyppi, nimi, tyyppi, toistopaiva, toistokuukausi, luoja, luotu)
+(takaraja, urakkatyyppi, nimi, tyyppi, takaraja_toistopaiva, takaraja_toistokuukausi, luoja, luotu)
 VALUES (:takaraja,
         :urakkatyyppi::urakkatyyppi,
         :nimi,
         :tyyppi::valitavoite_tyyppi,
-        :toistopaiva,
-        :toistokuukausi,
+        :takaraja_toistopaiva,
+        :takaraja_toistokuukausi,
         :luoja,
         NOW());

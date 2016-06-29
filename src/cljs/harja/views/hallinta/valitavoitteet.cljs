@@ -77,9 +77,9 @@
                            (fn [tyyppi] (= (:arvo tyyppi) %))
                            nav/+urakkatyypit+)))
       :valinnat (mapv :arvo nav/+urakkatyypit+)}
-     {:otsikko "Takaraja-päivä" :leveys 10 :nimi :takaraja-paiva
+     {:otsikko "Takarajan toistopäivä" :leveys 10 :nimi :takaraja-toistopaiva
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
-     {:otsikko "Takaraja-kuukausi" :leveys 10 :nimi :takaraja-kuukausi
+     {:otsikko "Takarajan toistokuukausi" :leveys 10 :nimi :takaraja-toistokuukausi
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
     @toistuvat-valitavoitteet-atom]])
 
