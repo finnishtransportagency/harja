@@ -19,6 +19,11 @@
 (defn hae-valitavoitteet []
   (k/post! :hae-valtakunnalliset-valitavoitteet {}))
 
+(defn tallenna-valitavoitteet [valitavoitteet]
+  (log "[VALVÄLI] Tallennetaan valtakunnalliset välitavoitteet: " (pr-str valitavoitteet))
+  (k/post! :tallenna-valtakunnalliset-valitavoitteet {:valitavoitteet valitavoitteet}))
+
+
 (def valitavoitteet
   (reaction<! [nakymassa? @nakymassa?]
               (when nakymassa?

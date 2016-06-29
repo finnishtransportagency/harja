@@ -9,24 +9,30 @@
             [harja.ui.grid :refer [grid]]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as y]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn valitavoitteet-grid [tavoitteet]
+(defn valitavoitteet-grid [tavoitteet-atom]
   [grid/grid
    {:otsikko "Valtakunnalliset välitavoitteet"
-    :tyhja (if (nil? tavoitteet)
+    :tyhja (if (nil? @tavoitteet-atom)
              [y/ajax-loader "Välitavoitteita haetaan..."]
              "Ei valtakunnallisia välitavoitteita")
     :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-valitavoitteet)
-                #(go (log "[VALTVÄL] TODO Tallenna")))}
+                #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet %))]
+                       (if (k/virhe? vastaus)
+                         (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
+                                        :warning viesti/viestin-nayttoaika-keskipitka)
+                         (reset! tavoitteet-atom vastaus)))))}
    [{:otsikko "Nimi" :leveys 70 :nimi :nimi :tyyppi :string :pituus-max 128}
     {:otsikko "Takaraja" :leveys 30 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
-   tavoitteet])
+   @tavoitteet-atom])
 
 (defn valitavoitteet []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      [valitavoitteet-grid @tiedot/valitavoitteet])))
+      [valitavoitteet-grid tiedot/valitavoitteet])))

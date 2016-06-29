@@ -97,7 +97,7 @@
                         (merkitse-valmiiksi! (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this) :tallenna-urakan-valitavoitteet
                       (fn [user tiedot]
-                        (tallenna-valtakunnalliset-valitavoitteet! (:db this) user tiedot)))
+                        (tallenna-urakan-valitavoitteet! (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this) :tallenna-valtakunnalliset-valitavoitteet
                       (fn [user tiedot]
                         (tallenna-valtakunnalliset-valitavoitteet! (:db this) user tiedot)))
