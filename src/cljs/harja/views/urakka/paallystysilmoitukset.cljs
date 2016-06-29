@@ -276,7 +276,7 @@
 
 (defn paallystysilmoituslomake []
   (let [lomake-kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                                   (:id @nav/valittu-urakka))
+                                                          (:id @nav/valittu-urakka))
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
         kiviaines-virheet (atom {})
@@ -456,10 +456,10 @@
                                     "")))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
-              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :tasaa :oikea}
+              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0 :leveys "10%" :tasaa :oikea}
               {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
-              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :tasaa :oikea :pituus-max 100
+              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0 :tasaa :oikea :pituus-max 100
                :validoi [[:rajattu-numero nil 100 0]]}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
                :nimi :tyomenetelma
@@ -636,20 +636,20 @@
 (defn jarjesta-paallystysilmoitukset [paallystysilmoitukset]
   (when paallystysilmoitukset
     (sort-by
-     (juxt (fn [toteuma] (case (:tila toteuma)
-                           :lukittu 0
-                           :valmis 1
-                           :aloitettu 3
-                           4))
-           (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                           :hyvaksytty 0
-                           :hylatty 1
-                           3))
-           (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
-                           :hyvaksytty 0
-                           :hylatty 1
-                           3)))
-     paallystysilmoitukset)))
+      (juxt (fn [toteuma] (case (:tila toteuma)
+                            :lukittu 0
+                            :valmis 1
+                            :aloitettu 3
+                            4))
+            (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                            :hyvaksytty 0
+                            :hylatty 1
+                            3))
+            (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
+                            :hyvaksytty 0
+                            :hylatty 1
+                            3)))
+      paallystysilmoitukset)))
 
 (defn paallystysilmoitukset-taulukko [paallystysilmoitukset]
   [grid/grid
