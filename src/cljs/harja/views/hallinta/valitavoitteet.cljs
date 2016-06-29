@@ -16,7 +16,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn valitavoitteet-grid [kertaluontoiset-valitavoitteet-atom
+(defn valitavoitteet-grid [valitavoitteet-atom
+                           kertaluontoiset-valitavoitteet-atom
                            toistuvat-valitavoitteet-atom]
   [:div
    [grid/grid
@@ -32,7 +33,7 @@
                         (if (k/virhe? vastaus)
                           (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                          :warning viesti/viestin-nayttoaika-keskipitka)
-                          (reset! kertaluontoiset-valitavoitteet-atom vastaus)))))}
+                          (reset! valitavoitteet-atom vastaus)))))}
    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128}
     {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
      :tyyppi :valinta
@@ -63,7 +64,7 @@
                         (if (k/virhe? vastaus)
                           (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                          :warning viesti/viestin-nayttoaika-keskipitka)
-                          (reset! toistuvat-valitavoitteet-atom vastaus)))))}
+                          (reset! valitavoitteet-atom vastaus)))))}
     [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128}
      {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
       :tyyppi :valinta
@@ -86,4 +87,7 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      [valitavoitteet-grid tiedot/kertaluontoiset-valitavoitteet tiedot/toistuvat-valitavoitteet])))
+      [valitavoitteet-grid
+       valitavoitteet-atom
+       tiedot/kertaluontoiset-valitavoitteet
+       tiedot/toistuvat-valitavoitteet])))
