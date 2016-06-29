@@ -113,18 +113,18 @@
         (kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin db user valitavoite id kohdeurakat))))
 
   (defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db
-                                                             user
-                                                             (filter #(and (= (:tyyppi %) :kertaluontoinen)
-                                                                           (< (:id %) 0)
-                                                                           (not (:poistettu %)))
-                                                                     valitavoitteet))
-  (luo-uudet-valtakunnalliset-toistuvat-valitavoitteet db
-                                                       user
-                                                       (filter #(and (= (:tyyppi %) :toistuva)
-                                                                     (< (:id %) 0)
-                                                                     (not (:poistettu %)))
-                                                               valitavoitteet)))
+    (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db
+                                                               user
+                                                               (filter #(and (= (:tyyppi %) :kertaluontoinen)
+                                                                             (< (:id %) 0)
+                                                                             (not (:poistettu %)))
+                                                                       valitavoitteet))
+    (luo-uudet-valtakunnalliset-toistuvat-valitavoitteet db
+                                                         user
+                                                         (filter #(and (= (:tyyppi %) :toistuva)
+                                                                       (< (:id %) 0)
+                                                                       (not (:poistettu %)))
+                                                                 valitavoitteet)))
 
 (defn- paivita-valtakunnalliset-valitavoitteet [db user valitavoitteet]
   ;; TODO Mahdollisesti halutaan, että tämän päivittäminen vaikuttaa vain uusiin urakoihin?
