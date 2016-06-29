@@ -20,23 +20,31 @@ ORDER BY takaraja ASC;
 -- Merkitsee välitavoitteen valmiiksi
 UPDATE valitavoite
    SET valmis_pvm=:valmis, valmis_kommentti=:kommentti, valmis_merkitsija=:user, valmis_merkitty=NOW()
- WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false
+ WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false;
 
--- name: poista-valitavoite!
+-- name: poista-urakan-valitavoite!
 -- Merkitsee välitavoitteen poistetuksi
 UPDATE valitavoite
    SET poistettu = true, muokattu = NOW(), muokkaaja = :user
- WHERE urakka = :urakka AND id = :valitavoite
+ WHERE urakka = :urakka AND id = :valitavoite;
 
--- name: lisaa-valitavoite<!
+-- name: lisaa-urakan-valitavoite<!
 -- Lisää uuden välitavoitteen urakalle
 INSERT
   INTO valitavoite
        (urakka,takaraja,nimi,luoja,luotu)
-VALUES (:urakka, :takaraja, :nimi, :luoja, NOW())
+VALUES (:urakka, :takaraja, :nimi, :luoja, NOW());
 
--- name: paivita-valitavoite!
+-- name: paivita-urakan-valitavoite!
 -- Päivittää välitavoitteen tiedot
 UPDATE valitavoite
    SET nimi = :nimi, takaraja = :takaraja, muokattu = NOW(), muokkaaja = :user
- WHERE urakka = :urakka AND id = :id
+ WHERE urakka = :urakka AND id = :id;
+
+
+-- name: lisaa-valtakunnallinen-valitavoite<!
+-- Lisää uuden valtakunnallisen välitavoitteen
+INSERT
+INTO valitavoite
+(takaraja, nimi, luoja, luotu)
+VALUES (:takaraja, :nimi, :luoja, NOW());
