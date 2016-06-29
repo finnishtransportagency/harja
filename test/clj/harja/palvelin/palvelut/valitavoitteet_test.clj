@@ -24,10 +24,9 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-; FIXME Testi kommentoitu, koska testidataa ei ole toistaiseksi saatavilla (ja ilmeisesti välitavoitteet on ominaisuutena kesken sillä näkymä ei ainakaan toimi kovin hyvin?)
-#_(deftest urakan-valitavoitteiden-haku-toimii
+(deftest urakan-valitavoitteiden-haku-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-valitavoitteet +kayttaja-jvh+ 1)]
+                                :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-oulun-alueurakan-2014-2019-id))]
 
     (log/debug "Vastaus: " vastaus)
-    (is (not (nil? vastaus)))))
+    (is (>= (count vastaus) 4))))
