@@ -11,7 +11,14 @@ ORDER BY takaraja ASC;
 
 -- name: hae-valtakunnalliset-valitavoitteet
 -- Hakee kaikki valtakunnalliset välitavoitteet
-SELECT v.id, nimi, takaraja
+SELECT
+  id,
+  nimi,
+  takaraja,
+  tyyppi,
+  urakkatyyppi,
+  toistopaiva,
+  toistokuukausi
 FROM valitavoite v
 WHERE v.poistettu = false AND urakka IS NULL
 ORDER BY takaraja ASC;
@@ -41,10 +48,28 @@ UPDATE valitavoite
    SET nimi = :nimi, takaraja = :takaraja, muokattu = NOW(), muokkaaja = :user
  WHERE urakka = :urakka AND id = :id;
 
-
--- name: lisaa-valtakunnallinen-valitavoite<!
+-- name: lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
 -- Lisää uuden valtakunnallisen välitavoitteen
 INSERT
 INTO valitavoite
-(takaraja, nimi, luoja, luotu)
-VALUES (:takaraja, :nimi, :luoja, NOW());
+(takaraja, urakkatyyppi, tyyppi, nimi, luoja, luotu)
+VALUES (:takaraja,
+        :urakkatyyppi::urakkatyyppi,
+        :tyyppi::valitavoite_tyyppi,
+        :nimi,
+        :luoja,
+        NOW());
+
+-- name: lisaa-valtakunnallinen-toistuva-valitavoite<!
+-- Lisää uuden valtakunnallisen välitavoitteen
+INSERT
+INTO valitavoite
+(takaraja, urakkatyyppi, nimi, tyyppi, toistopaiva, toistokuukausi, luoja, luotu)
+VALUES (:takaraja,
+        :urakkatyyppi::urakkatyyppi,
+        :nimi,
+        :tyyppi::valitavoite_tyyppi,
+        :toistopaiva,
+        :toistokuukausi,
+        :luoja,
+        NOW());

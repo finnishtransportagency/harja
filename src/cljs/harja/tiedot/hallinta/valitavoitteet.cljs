@@ -23,8 +23,17 @@
   (log "[VALVÄLI] Tallennetaan valtakunnalliset välitavoitteet: " (pr-str valitavoitteet))
   (k/post! :tallenna-valtakunnalliset-valitavoitteet {:valitavoitteet valitavoitteet}))
 
-
 (def valitavoitteet
   (reaction<! [nakymassa? @nakymassa?]
               (when nakymassa?
                 (hae-valitavoitteet))))
+
+(tarkkaile! "[VALVÄLI] Välitavoitteet: " valitavoitteet)
+
+(def kertaluontoiset-valitavoitteet
+  (reaction (when @valitavoitteet
+              (filterv #(= (:tyyppi %) :kertaluontoinen) @valitavoitteet))))
+
+(def toistuvat-valitavoitteet
+  (reaction (when @valitavoitteet
+              (filterv #(= (:tyyppi %) :toistuva) @valitavoitteet))))

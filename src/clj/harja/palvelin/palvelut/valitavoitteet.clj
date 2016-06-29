@@ -17,6 +17,7 @@
 (defn hae-valtakunnalliset-valitavoitteet [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-valitavoitteet user)
   (into []
+        (map #(konv/string->keyword % :urakkatyyppi :tyyppi))
         (q/hae-valtakunnalliset-valitavoitteet db)))
 
 (defn merkitse-valmiiksi! [db user {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
@@ -37,9 +38,9 @@
                                           (not (:poistettu %)))
                                     valitavoitteet)]
     (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
-                               :takaraja (konv/sql-date takaraja)
-                               :nimi nimi
-                               :luoja (:id user)})))
+                                      :takaraja (konv/sql-date takaraja)
+                                      :nimi nimi
+                                      :luoja (:id user)})))
 
 (defn- paivita-urakan-valitavoitteet [db user valitavoitteet urakka-id]
   (doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
@@ -57,21 +58,44 @@
 (defn- poista-poistetut-valtakunnalliset-valitavoitteet [db user valitavoitteet]
   ;; TODO Pitää selventää mitä tämän poistamisesta seuraa
   #_(doseq [poistettava (filter :poistettu valitavoitteet)]
-    (q/poista-valtakunnallinen-valitavoite! db (:id user) urakka-id (:id poistettava))))
+      (q/poista-valtakunnallinen-valitavoite! db (:id user) urakka-id (:id poistettava))))
+
+(defn- luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet [db user valitavoitteet]
+  (doseq [{:keys [takaraja nimi urakkatyyppi]} valitavoitteet]
+    (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<! db {:takaraja (konv/sql-date takaraja)
+                                                                :nimi nimi
+                                                                :urakkatyyppi (name urakkatyyppi)
+                                                                :tyyppi "kertaluontoinen"
+                                                                :luoja (:id user)})))
+
+(defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet [db user valitavoitteet]
+  (doseq [{:keys [takaraja nimi urakkatyyppi takaraja-paiva takaraja-kuukausi]} valitavoitteet]
+    (q/lisaa-valtakunnallinen-toistuva-valitavoite<! db {:takaraja (konv/sql-date takaraja)
+                                                         :nimi nimi
+                                                         :urakkatyyppi (name urakkatyyppi)
+                                                         :toistopaiva takaraja-paiva
+                                                         :toistokuukausi takaraja-kuukausi
+                                                         :tyyppi "toistuva"
+                                                         :luoja (:id user)})))
 
 (defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  (doseq [{:keys [takaraja nimi urakkatyyppi]} (filter
-                                    #(and (< (:id %) 0)
-                                          (not (:poistettu %)))
-                                    valitavoitteet)]
-    (q/lisaa-valtakunnallinen-valitavoite<! db {:takaraja (konv/sql-date takaraja)
-                                                :nimi nimi
-                                                :luoja (:id user)})))
+  (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db
+                                                             user
+                                                             (filter #(and (= (:tyyppi %) :kertaluontoinen)
+                                                                           (< (:id %) 0)
+                                                                           (not (:poistettu %)))
+                                                                     valitavoitteet))
+  (luo-uudet-valtakunnalliset-toistuvat-valitavoitteet db
+                                                       user
+                                                       (filter #(and (= (:tyyppi %) :toistuva)
+                                                                     (< (:id %) 0)
+                                                                     (not (:poistettu %)))
+                                                               valitavoitteet)))
 
 (defn- paivita-valtakunnalliset-valitavoitteet [db user valitavoitteet]
   ;; TODO Mahdollisesti halutaan, että tämän päivittäminen vaikuttaa vain uusiin urakoihin?
   #_(doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
-    (q/paivita-valtakunnallinen-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)))
+      (q/paivita-valtakunnallinen-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)))
 
 
 (defn tallenna-valtakunnalliset-valitavoitteet! [db user {:keys [valitavoitteet]}]
