@@ -60,7 +60,7 @@
     (q/poista-valtakunnallinen-valitavoite! db (:id user) urakka-id (:id poistettava))))
 
 (defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  (doseq [{:keys [takaraja nimi]} (filter
+  (doseq [{:keys [takaraja nimi urakkatyyppi]} (filter
                                     #(and (< (:id %) 0)
                                           (not (:poistettu %)))
                                     valitavoitteet)]

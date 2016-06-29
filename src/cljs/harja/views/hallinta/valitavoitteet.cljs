@@ -11,6 +11,7 @@
             [harja.ui.yleiset :as y]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.viesti :as viesti]
+            [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -27,8 +28,14 @@
                          (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                         :warning viesti/viestin-nayttoaika-keskipitka)
                          (reset! tavoitteet-atom vastaus)))))}
-   [{:otsikko "Nimi" :leveys 70 :nimi :nimi :tyyppi :string :pituus-max 128}
-    {:otsikko "Takaraja" :leveys 30 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
+   [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128}
+    {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
+     :tyyppi :valinta
+     :validoi [[:ei-tyhja "Valitse materiaali"]]
+     :valinta-arvo :arvo
+     :valinta-nayta #(or (:nimi %) "- valitse -")
+     :valinnat nav/+urakkatyypit+}
+    {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
    @tavoitteet-atom])
 
 (defn valitavoitteet []
