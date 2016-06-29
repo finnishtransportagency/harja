@@ -63,10 +63,6 @@
   #_(doseq [poistettava (filter :poistettu valitavoitteet)]
       (q/poista-valtakunnallinen-valitavoite! db (:id user) urakka-id (:id poistettava))))
 
-(defn- hae-kertaluontoisten-valitavoitteiden-kohdeurakat []
-
-  )
-
 (defn- kopioi-valtakunnallinen-valitavoite-urakoihin [db user valitavoite valitavoite-kannassa-id urakat]
   (doseq [urakka urakat]
     (luo-uudet-urakan-valitavoitteet db user
