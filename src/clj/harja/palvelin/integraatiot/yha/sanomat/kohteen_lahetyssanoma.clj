@@ -76,7 +76,7 @@
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
-   (when [:yha-id yhaid])
+   (when yhaid [:yha-id yhaid])
    [:harja-id id]
    [:kohdetyotyyppi tyyppi]
    (when yhatunnus [:nimi yhatunnus])
