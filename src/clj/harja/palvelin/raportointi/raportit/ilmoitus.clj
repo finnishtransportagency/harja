@@ -9,7 +9,8 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
             [harja.pvm :as pvm]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset]))
+            [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [clojure.string :as str]))
 
 (defn hae-ilmoitukset-raportille
   [db user hallintayksikko-id urakka-id urakoitsija urakkatyyppi
@@ -27,8 +28,30 @@
                                     :hakuehto hakuehto
                                     :selite selite}))
 
+(def asiakaspalauteluokkien-jarjestys
+  {"auraus ja sohjonpoisto" 100
+   "liukkaudentorjunta" 200
+   "polanteen tasaus" 300
+   "muu talvihoito" 400
+   "liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito" 500
+   "puhtaanapito ja kalusteiden hoito" 600
+   "viheralueiden hoito" 700
+   "kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito" 800
+   "rumpujen kunnossapito" 900
+   "kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito" 1000
+   "päällysteiden paikkaus" 1100
+   "päällystettyjen teiden sorapientareen kunnossapito" 1200
+   "siltojen ja laitureiden hoito" 1300
+   "sorateiden hoito" 1400
+   "äkillinen hoitotyö" 1500
+   "lupa-asiat" 1600
+   "tiemerkinnät" 1700
+   "korjaus ja investointihankkeet (tietyöt)" 1800
+   "valaistus" 1900
+   "muu" 2000})
+
 (defn kasittele-summat [summat]
-  (let [nolla-jos-nil (fn [numero] (if (nil? numero) 0 numero))]
+  (let [nolla-jos-nil #(or % 0)]
     [(nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "toimenpidepyynto") summat))))
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "tiedoitus") summat))))
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "kysely") summat))))
@@ -37,7 +60,8 @@
 (defn ilmoitukset-asiakaspalauteluokittain [db urakka-id hallintayksikko-id alkupvm loppupvm]
   (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
         ilman-kokonaismaaria (filter #(not-empty (:nimi %)) data)
-        rivit (mapv (fn [[nimi summat]] (into [nimi] (kasittele-summat summat)))
+        rivit (mapv (fn [[nimi summat]]
+                      (into [nimi] (kasittele-summat summat)))
                     (group-by :nimi ilman-kokonaismaaria))]
     [:taulukko {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
      [{:leveys 6 :otsikko "Asiakaspalauteluokka"}
@@ -45,7 +69,9 @@
       {:leveys 2 :otsikko "TUR (Tiedoksi)"}
       {:leveys 2 :otsikko "URK (Kysely)"}
       {:leveys 2 :otsikko "Yhteensä"}]
-     rivit]))
+     (sort-by
+       #(asiakaspalauteluokkien-jarjestys (str/lower-case (first %)))
+       rivit)]))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
