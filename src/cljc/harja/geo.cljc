@@ -313,6 +313,9 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 (defmethod extent :default [geo]
   (laske-pisteiden-extent (pisteet geo)))
 
+(defn extent-monelle [geometriat]
+  (laske-pisteiden-extent (mapcat pisteet geometriat)))
+
 (defn extent-hypotenuusa
   "Laskee extent hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
   [[x1 y1 x2 y2]]

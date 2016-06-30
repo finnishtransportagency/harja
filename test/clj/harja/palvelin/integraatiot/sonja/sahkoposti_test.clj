@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.testi :refer :all]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.integraatiot :as integraatiot]
             [clojure.test :as t :refer :all]))
