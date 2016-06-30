@@ -165,7 +165,6 @@
                                      (assoc :toimenpideinstanssi arvo)
                                      (aseta-tehtava nil)))]
           [:div.muun-tyon-tiedot
-           (log "Toteuma: " (pr-str @muokattu))
            [napit/takaisin " Takaisin muiden töiden luetteloon" #(reset! muut-tyot/valittu-toteuma nil)]
            [lomake {:otsikko (if (get-in @muut-tyot/valittu-toteuma [:tehtava :id])
                                (if lomaketta-voi-muokata?
