@@ -59,16 +59,16 @@
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
 (defn kohteen-alun-tunnus [kohde]
-  (str "kohde-" (:tunnus kohde) "-alku"))
+  (str "kohde-" (:yha-id kohde) "-alku"))
 
 (defn kohteen-lopun-tunnus [kohde]
-  (str "kohde-" (:tunnus kohde) "-loppu"))
+  (str "kohde-" (:yha-id kohde) "-loppu"))
 
 (defn alikohteen-alun-tunnus [kohde alikohde]
-  (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-alku"))
+  (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) "-alku"))
 
 (defn alikohteen-lopun-tunnus [kohde alikohde]
-  (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-loppu"))
+  (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) "-loppu"))
 
 (defn rakenna-tieosoitteet [kohteet]
   {:tieosoitteet
@@ -170,7 +170,7 @@
                 (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
                       epaonnistuneet-kohteet (vec (filter :virhe kohteet))
-                      _ (log "[YHA] Tallennetaan uudet kohteet")
+                      _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str kohteet))
                       yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
