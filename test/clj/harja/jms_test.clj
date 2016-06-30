@@ -1,4 +1,4 @@
-(ns harja.jms
+(ns harja.jms-test
   "JMS testit: hornetq"
   (:require [harja.palvelin.komponentit.sonja :as sonja]
             [clojure.core.async :refer [<! go] :as async]
