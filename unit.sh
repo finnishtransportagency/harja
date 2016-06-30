@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 function fail {
     if [ -z "$1" ];
     then
@@ -28,6 +27,13 @@ fi
 echo " ---- "
 echo "Aloitetaan ajo.."
 tulos="$(lein test2junit 2> /dev/null)"
+status=$?
+
+if [ $status -ne 0 ];
+then
+    echo "Ei saatu ajettua testejä. Ympäristössä on jotain häikkää. Kokeile ajaa lein test."
+    exit 1
+fi
 
 echo "Testit ajettu. Analysoidaan tulokset."
 echo "Step: 1/2.."

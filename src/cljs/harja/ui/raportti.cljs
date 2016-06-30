@@ -31,6 +31,7 @@
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
+                                               tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
@@ -73,7 +74,7 @@
                                                 (muodosta-html elementti)))})))
                         sarakkeet))
      (if (empty? data)
-       [(grid/otsikko "Ei tietoja")]
+       [(grid/otsikko (or tyhja "Ei tietoja"))]
        (let [viimeinen-rivi (last data)]
          (into []
                (map-indexed (fn [index rivi]
@@ -125,6 +126,13 @@
                 :legend legend
                 }
       pylvaat]]))
+
+(defmethod muodosta-html :piirakka [[_ {:keys [otsikko]} data]]
+  [:div.pylvaat
+   [:h3 otsikko]
+   [vis/pie
+    {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+    data]])
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
   (apply yleiset/taulukkotietonakyma {}

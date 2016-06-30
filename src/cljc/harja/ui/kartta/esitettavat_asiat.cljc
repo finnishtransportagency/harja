@@ -177,8 +177,8 @@
          (= :multiline tyyppi)
          (merge
            (maarittele-viiva valittu? merkit viivat)
-           {:type   :viiva
-            :points koordinaatit}))))))
+           {:type   :moniviiva
+            :lines (:lines geo)}))))))
 
 ;;;;;;
 
@@ -186,7 +186,7 @@
   ;; Täydennä väliaikaisesti tänne oletusarvot,
   ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
-  (if (coll? viivat)
+  (if (sequential? viivat)
     (->> viivat
         (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
                         :color (or (:color %) ulkoasu/+normaali-vari+)))
@@ -424,6 +424,9 @@
   ;; (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
     (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
+          toimenpiteet (if-not (empty? toimenpiteet)
+                         toimenpiteet
+                         [(get-in toteuma [:tehtava :nimi])])
           _ (when (empty? toimenpiteet)
               (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or

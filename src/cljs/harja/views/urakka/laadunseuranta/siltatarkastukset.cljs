@@ -24,6 +24,7 @@
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.siltatarkastus :as siltadomain]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.liitteet :as liitteet])
@@ -110,7 +111,7 @@
    (for [[kohde [tulos _]] (seq kohteet)]
      ^{:key kohde}
      [:li.puutekohde {:style {:list-style-type "circle"}}
-      (str (st/siltatarkastuskohteen-nimi kohde)
+      (str (siltadomain/siltatarkastuskohteen-nimi kohde)
         ": "
         tulos (when vika-korjattu " \u2192 A"))])])
 
@@ -253,7 +254,7 @@
             (merge
               ;; Valittu tarkastus
               {:kohdenro kohdenro
-               :kohde (st/siltatarkastuskohteen-nimi kohdenro)
+               :kohde (siltadomain/siltatarkastuskohteen-nimi kohdenro)
                :tulos (first (get (:kohteet valittu-tarkastus) kohdenro))
                :lisatieto (second (get (:kohteet valittu-tarkastus) kohdenro))
                :liitteet (filterv #(= (:kohde %) kohdenro)
