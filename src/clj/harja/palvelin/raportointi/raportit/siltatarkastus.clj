@@ -81,7 +81,7 @@
                        {:liite :liitteet})
         rivit (mapv
                 (fn [tarkastus]
-                  (let [arvioidut-kohteet-yhteensa (reduce + ((juxt :a :b :c :d) tarkastus))]
+                  (let [arvioidut-kohteet-yhteensa (reduce + 0 ((juxt :a :b :c :d) tarkastus))]
                     [(:siltanro tarkastus)
                      (:siltanimi tarkastus)
                      (if (:tarkastusaika tarkastus)
@@ -136,7 +136,7 @@
                                                                :vuosi vuosi})
         taulukkorivit (mapv
                         (fn [rivi]
-                          (let [arvioidut-kohteet-yhteensa (reduce + ((juxt :a :b :c :d) rivi))]
+                          (let [arvioidut-kohteet-yhteensa (reduce + 0 ((juxt :a :b :c :d) rivi))]
                             [(:nimi rivi)
                              [:arvo-ja-osuus {:arvo (:a rivi)
                                               :osuus (Math/round (math/osuus-prosentteina
