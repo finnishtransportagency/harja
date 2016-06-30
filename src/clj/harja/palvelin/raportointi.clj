@@ -23,6 +23,7 @@
             [harja.palvelin.raportointi.raportit.kelitarkastus]
             [harja.palvelin.raportointi.raportit.laaduntarkastus]
             [harja.palvelin.raportointi.raportit.laatupoikkeama]
+            [harja.palvelin.raportointi.raportit.siltatarkastus]
             [harja.palvelin.raportointi.raportit.sanktio]
             [harja.palvelin.raportointi.raportit.soratietarkastus]
             [harja.palvelin.raportointi.raportit.valitavoiteraportti]
@@ -105,13 +106,10 @@
            (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
            (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
                                  workbook)))))
-
-
     this)
 
   (stop [this]
     this)
-
 
   RaportointiMoottori
   (hae-raportit [this]
