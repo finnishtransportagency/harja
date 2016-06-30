@@ -424,6 +424,9 @@
   ;; (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
     (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
+          toimenpiteet (if-not (empty? toimenpiteet)
+                         toimenpiteet
+                         [(get-in toteuma [:tehtava :nimi])])
           _ (when (empty? toimenpiteet)
               (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
