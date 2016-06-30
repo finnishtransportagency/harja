@@ -300,7 +300,7 @@
               :pakollinen? false
               :sijainti (r/wrap (:reitti @muokattu)
                                 #(swap! muokattu assoc :reitti %))
-              :palstoja 2}
+              :palstoja 1}
 
              (lomake/rivi
               {:otsikko       "Hinnoittelu" :nimi :hinnoittelu
