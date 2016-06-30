@@ -4,7 +4,7 @@
             [clojure.data.zip.xml :as z]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
