@@ -205,7 +205,6 @@
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
-  (log/debug "muodosta pdf pylväät data" pylvaat)
   [:fo:block {:margin-top "1em"}
    [:fo:block {:font-weight "bold"} otsikko]
    [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
@@ -225,7 +224,6 @@
    [:fo:block {:space-after "1em"}]])
 
 (defmethod muodosta-pdf :piirakka [[_ {:keys [otsikko]} data]]
-  (log/debug "muodosta pdf piirakka data" data)
   [:fo:block {:margin-top "1em"}
    [:fo:block {:font-weight "bold"} otsikko]
    [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
