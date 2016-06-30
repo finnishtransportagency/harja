@@ -595,7 +595,7 @@
                        [:arvo-ja-osuus
                         {:arvo 0
                          :osuus 0}]]
-                      ["Pohjois-Pohjanmaa"
+                      ["Pohjois-Pohjanmaa ja Kainuu"
                        [:arvo-ja-osuus
                         {:arvo 40
                          :osuus 83}]
