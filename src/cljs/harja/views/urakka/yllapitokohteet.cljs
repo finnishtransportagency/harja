@@ -22,7 +22,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet])
+            [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -195,13 +196,20 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
-(defn yllapitokohdeosat [kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
+(defn yllapitokohdeosat [urakka
+                         kohdeosat {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
                                     alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde}
                          kohdeosat-paivitetty-fn]
   (if @grid/gridia-muokataan?
     [:span "Kohteen tierekisterikohteet ovat muokattavissa kohteen tallennuksen jälkeen."]
 
-    (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
+    (let [kirjoitusoikeus? (case (:tyyppi urakka)
+                             :paallystys
+                             (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id urakka))
+                             :paikkaus
+                             (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
+                             false)
+          tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
           tr-virheet (atom {}) ;; virheelliset TR sijainnit
           resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))
 
@@ -251,7 +259,7 @@
                                        (str "Osan " osa " maksimietäisyys on " pit))))))]
       (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
       (komp/luo
-       (fn [kohdeosat {yllapitokohde-id :id :as kohde}]
+       (fn [urakka kohdeosat {yllapitokohde-id :id :as kohde}]
          (let [kohdeosia (count @grid-data)]
            [:div
             [grid/muokkaus-grid
@@ -271,14 +279,15 @@
                                             osat (into []
                                                        (map (fn [osa]
                                                               (assoc osa :sijainti
-                                                                     (sijainnit (tr-osoite osa)))))
+                                                                         (sijainnit (tr-osoite osa)))))
                                                        (vals @grid-data))]
                                         #(tiedot/tallenna-yllapitokohdeosat! urakka-id
                                                                              sopimus-id
                                                                              yllapitokohde-id
                                                                              osat))
                                       {:disabled (do (log "VIRHEET: " (pr-str @virheet))
-                                                     (not (empty? @virheet)))
+                                                     (or (not (empty? @virheet))
+                                                         (not kirjoitusoikeus?)))
                                        :luokka "nappi-myonteinen grid-tallenna"
                                        :virheviesti "Tallentaminen epäonnistui."
                                        :kun-onnistuu (fn [vastaus]
@@ -336,14 +345,14 @@
       (assoc-in kohteet [rivi :kohdeosat] kohdeosat)
       kohteet)))
 
-(defn yllapitokohteet [kohteet-atom optiot]
+(defn yllapitokohteet [urakka kohteet-atom optiot]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         tallenna (reaction (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
                              :ei-mahdollinen
                              (:tallenna optiot)))]
     (komp/luo
-      (fn [kohteet-atom optiot]
+      (fn [urakka kohteet-atom optiot]
         [:div.yllapitokohteet
          [grid/grid
           {:otsikko (:otsikko optiot)
@@ -352,6 +361,7 @@
                                (map (juxt :id
                                           (fn [rivi]
                                             [yllapitokohdeosat
+                                             urakka
                                              (into [] (:kohdeosat rivi))
                                              rivi
                                              #(swap! kohteet-atom

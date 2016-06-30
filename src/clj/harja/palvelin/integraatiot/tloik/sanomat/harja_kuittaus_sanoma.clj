@@ -21,11 +21,11 @@
      [:nimi (:urakoitsija_nimi urakka)]
      [:ytunnus (:urakoitsija_ytunnus urakka)]]))
 
-(defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin sahkoposti]}]
+(defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin tyopuhelin sahkoposti]}]
   [:paivystaja
    [:etunimi etunimi]
    [:sukunimi sukunimi]
-   [:matkapuhelin matkapuhelin]
+   [:matkapuhelin (or matkapuhelin tyopuhelin)]
    [:sahkoposti sahkoposti]])
 
 (defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]

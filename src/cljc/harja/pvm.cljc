@@ -195,7 +195,6 @@
   #?(:cljs (df/parse-local format teksti)
      :clj (.parse format teksti)))
 
-
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"
   (luo-format "dd.MM.yyyy"))

@@ -55,7 +55,7 @@
                                                           (fn [map tehtava]
                                                             (assoc map
                                                               (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
-                                                              (or (:toteutunut_maara tehtava) 0)))
+                                                              (or (fmt/desimaaliluku-opt (:toteutunut_maara tehtava) 1) 0)))
                                                           {}
                                                           tehtavat)]
                              (-> kuukausittaiset-summat

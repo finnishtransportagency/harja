@@ -58,22 +58,24 @@
 
 (def yhan-paallystyskohteet
   (reaction
-    (let [yha-kohteet (filter
-                        yllapitokohteet/yha-kohde?
-                        @yllapitokohteet)]
+    (let [kohteet @yllapitokohteet
+          yha-kohteet (when kohteet
+                        (filter
+                         yllapitokohteet/yha-kohde?
+                         kohteet))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yha-kohteet))))
 
 (def harjan-paikkauskohteet
   (reaction
-    (let [ei-yha-kohteet (filter
-                           (comp not yllapitokohteet/yha-kohde?)
-                           @yllapitokohteet)]
+    (let [kohteet @yllapitokohteet
+          ei-yha-kohteet (when kohteet
+                           (filter
+                            (comp not yllapitokohteet/yha-kohde?)
+                            kohteet))]
       (tr-domain/jarjesta-kohteiden-kohdeosat ei-yha-kohteet))))
 
 (def kohteet-yhteensa
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
-
-(tarkkaile! "[YHA] Päällystyskohteet: " yhan-paallystyskohteet)
 
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet

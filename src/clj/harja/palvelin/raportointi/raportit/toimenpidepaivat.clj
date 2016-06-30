@@ -54,12 +54,12 @@
                         ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
                         (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
         talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)
-        parametrit {:urakka          urakka-id
+        parametrit {:urakka urakka-id
                     :hallintayksikko hallintayksikko-id
-                    :alku         alkupvm
-                    :loppu        loppupvm
-                    :hoitoluokat     hoitoluokat
-                    :urakkatyyppi    (name urakkatyyppi)}
+                    :alku alkupvm
+                    :loppu loppupvm
+                    :hoitoluokat hoitoluokat
+                    :urakkatyyppi (name urakkatyyppi)}
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)

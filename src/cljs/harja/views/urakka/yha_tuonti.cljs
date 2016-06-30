@@ -29,7 +29,7 @@
                             :kun-onnistuu (fn [vastaus]
                                             (log "[YHA] YHA-urakat haettu onnistuneesti: " (pr-str vastaus))
                                             (reset! yha/hakutulokset-data vastaus))}]}
-   [{:otsikko "YHA-tunniste"
+   [{:otsikko "YHA-nimi"
      :nimi :yhatunniste
      :pituus-max 512
      :tyyppi :string}
@@ -48,7 +48,7 @@
    {:otsikko "Löytyneet urakat"
     :tyhja (if (nil? @yha/hakutulokset-data) [ajax-loader "Haetaan urakoita..."] "Urakoita ei löytynyt")
     :tunniste :yhatunnus}
-   [{:otsikko "YHA-tunnus"
+   [{:otsikko "YHA-nimi"
      :nimi :yhatunnus
      :tyyppi :string
      :muokattava? (constantly false)}

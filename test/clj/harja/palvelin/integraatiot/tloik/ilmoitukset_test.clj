@@ -9,7 +9,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]

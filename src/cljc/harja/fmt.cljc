@@ -1,10 +1,10 @@
 (ns harja.fmt
   "Yleisiä apureita erityyppisen datan formatointiin."
   (:require [harja.pvm :as pvm]
-            #?(:cljs [goog.i18n.currencyCodeMap])
-            #?(:cljs [goog.i18n.NumberFormatSymbols])
-            #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
-            #?(:cljs [goog.i18n.NumberFormat])
+    #?(:cljs [goog.i18n.currencyCodeMap])
+    #?(:cljs [goog.i18n.NumberFormatSymbols])
+    #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
+    #?(:cljs [goog.i18n.NumberFormat])
             [clojure.string :as str])
   #?(:clj
      (:import (java.text NumberFormat)
@@ -26,19 +26,19 @@
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
   ([eur] (euro true eur))
   ([nayta-euromerkki eur]
-  #?(:cljs
-     ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
-     ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
-     ;; vasta IE11 versiosta lähtien.
-     (str (.format euro-number-format eur) " \u20AC")
+    #?(:cljs
+       ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
+       ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
+       ;; vasta IE11 versiosta lähtien.
+       (str (.format euro-number-format eur) " \u20AC")
 
-     :clj
-     (.format (doto
-                (if nayta-euromerkki
-                  (NumberFormat/getCurrencyInstance)
-                  (NumberFormat/getNumberInstance))
-                (.setMaximumFractionDigits 2)
-                (.setMinimumFractionDigits 2)) eur))))
+       :clj
+       (.format (doto
+                  (if nayta-euromerkki
+                    (NumberFormat/getCurrencyInstance)
+                    (NumberFormat/getNumberInstance))
+                  (.setMaximumFractionDigits 2)
+                  (.setMinimumFractionDigits 2)) eur))))
 
 
 
@@ -49,6 +49,103 @@
    (if summa
      (euro nayta-euromerkki summa)
      "")))
+
+(defn lyhenna-keskelta
+  "Lyhentää tekstijonon haluttuun pituuteen siten, että
+  pituutta otetaan pois keskeltä, ja korvataan kahdella pisteellä .."
+  [haluttu-pituus teksti]
+  (if (>= haluttu-pituus (count teksti))
+    teksti
+
+    (let [patkat (split-at (/ (count teksti) 2) teksti)
+          eka (apply str (first patkat))
+          ;; Ekan pituus pyöristetään ylöspäin, tokan alaspäin
+          eka-haluttu-pituus (int (Math/ceil (/ haluttu-pituus 2)))
+          toka (apply str (second patkat))
+          toka-haluttu-pituus (int (Math/floor (/ haluttu-pituus 2)))]
+      (str
+        ;; Otetaan haluttu pituus -1, jotta pisteet mahtuu mukaan
+        (apply str (take (dec eka-haluttu-pituus) eka))
+        ".."
+        (apply str (take-last (dec toka-haluttu-pituus) toka))))))
+
+(def urakan-nimen-oletuspituus 30)
+
+(defn lyhennetty-urakan-nimi
+  "Lyhentää urakan nimen haluttuun pituuteen, lyhentämällä
+  aluksi tiettyjä sanoja (esim urakka -> ur.), ja jos nämä eivät
+  auta, leikkaamalla keskeltä kirjaimia pois ja korvaamalla leikatut
+  kirjaimet kahdella pisteellä .."
+  ([nimi] (lyhennetty-urakan-nimi nimi urakan-nimen-oletuspituus))
+  ([nimi pituus]
+    (loop [nimi nimi]
+      (if (>= pituus (count nimi))
+        nimi
+
+        ;; Tänne voi lisätä lisää korvattavia asioita
+        ;; Päällimmäiseksi yleisemmät korjaukset,
+        ;; viimeiseksi "last resort" tyyppiset ratkaisut
+        (recur
+          (cond
+            ;; Ylimääräiset välilyönnit pois
+            (re-find #"\s\s+" nimi)
+            (str/replace nimi #"\s\s+" " ")
+
+            ;; "  - " -> "-"
+            ;; Täytyy etsiä nämä kaksi erikseen, koska
+            ;; \s*-\s* osuisi myös korjattuun "-" merkkijonoon,
+            ;; ja "\s+-\s+" osuisi vain jos molemmilla puolilla on välilyönti.
+            (or (re-find #"\s+-" nimi) (re-find #"-\s+" nimi))
+            (str/replace nimi #"\s*-\s*" "-")
+
+            ;; (?i) case insensitive ei toimi str/replacessa
+            ;; cljs puolella. Olisi mahdollista käyttää vain
+            ;; clj puolella käyttäen reader conditionaleja, mutta
+            ;; samapa se on toistaa kaikki näin.
+            (re-find #"alueurakka" nimi)
+            (str/replace nimi #"alueurakka" "ur.")
+
+            (re-find #"Alueurakka" nimi)
+            (str/replace nimi #"Alueurakka" "ur.")
+
+            (re-find #"ALUEURAKKA" nimi)
+            (str/replace nimi #"ALUEURAKKA" "ur.")
+
+            (re-find #"urakka" nimi)
+            (str/replace nimi #"urakka" "ur.")
+
+            (re-find #"Urakka" nimi)
+            (str/replace nimi #"Urakka" "ur.")
+
+            (re-find #"URAKKA" nimi)
+            (str/replace nimi #"URAKKA" "ur.")
+
+            (re-find #"kunnossapidon" nimi)
+            (str/replace nimi #"kunnossapidon" "kun.pid.")
+
+            (re-find #"Kunnossapidon" nimi)
+            (str/replace nimi #"Kunnossapidon" "kun.pid.")
+
+            (re-find #"KUNNOSSAPIDON" nimi)
+            (str/replace nimi #"KUNNOSSAPIDON" "kun.pid.")
+
+            ;; ", " -> " "
+            (re-find #"\s*,\s*" nimi)
+            (str/replace nimi #"\s*,\s*" " ")
+
+            ;; Jos vieläkin liian pitkä, niin lyhennetään kun.pid. entisestään
+            (re-find #"kun.pid." nimi)
+            (str/replace nimi #"kun.pid." "kp.")
+
+            (re-find #"POP" nimi)
+            (str/replace nimi #"POP" "")
+
+            :else (lyhenna-keskelta pituus nimi)))))))
+
+(defn lyhennetty-urakan-nimi-opt
+  ([nimi] (lyhennetty-urakan-nimi-opt nimi urakan-nimen-oletuspituus))
+  ([nimi pituus]
+    (when nimi (lyhennetty-urakan-nimi nimi pituus))))
 
 (def roomalaisena-numerona {1 "I"
                             2 "II"
@@ -100,7 +197,6 @@
     (pvm p)
     ""))
 
-
 (defn pvm-vali [[alku loppu]]
   (str (pvm/pvm alku)
        " \u2014 "
@@ -116,10 +212,10 @@
      (into {}
            (zipmap (range 1 4)
                    (map #(doto (goog.i18n.NumberFormat.
-                                (.-DECIMAL goog.i18n.NumberFormat/Format))
-                           (.setShowTrailingZeros false)
-                           (.setMinimumFractionDigits %)
-                           (.setMaximumFractionDigits %))
+                                 (.-DECIMAL goog.i18n.NumberFormat/Format))
+                          (.setShowTrailingZeros false)
+                          (.setMinimumFractionDigits %)
+                          (.setMaximumFractionDigits %))
                         (range 1 4))))))
 
 #?(:clj (def desimaali-symbolit
@@ -130,22 +226,22 @@
   ([luku] (desimaaliluku luku 2 false))
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
-   #?(:cljs
-      ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-      (if (= tarkkuus 0)
-        (.toFixed luku 0)
-        (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
-         (if-not ryhmitelty?
-           (str/replace formatoitu #" " "")
-           formatoitu)))
-      :clj
-      (.format (doto (java.text.DecimalFormat.)
-                 (.setDecimalFormatSymbols desimaali-symbolit)
-                 (.setMinimumFractionDigits tarkkuus)
-                 (.setMaximumFractionDigits tarkkuus)
-                 (.setGroupingSize (if ryhmitelty? 3 0)))
+    #?(:cljs
+       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
+       (if (= tarkkuus 0)
+         (.toFixed luku 0)
+         (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+           (if-not ryhmitelty?
+             (str/replace formatoitu #" " "")
+             formatoitu)))
+       :clj
+       (.format (doto (java.text.DecimalFormat.)
+                  (.setDecimalFormatSymbols desimaali-symbolit)
+                  (.setMinimumFractionDigits tarkkuus)
+                  (.setMaximumFractionDigits tarkkuus)
+                  (.setGroupingSize (if ryhmitelty? 3 0)))
 
-               (double luku)))))
+                (double luku)))))
 
 (defn desimaaliluku-opt
   ([luku] (desimaaliluku-opt luku 2 false))
@@ -210,8 +306,37 @@
   pisteet?      Näyttää kolme pistettä tekstin lopussa jos teksti katkeaa. Oletus false."
   ([merkkijono pituus] (leikkaa-merkkijono merkkijono pituus {}))
   ([merkkijono pituus {:keys [pisteet?] :as optiot}]
-  (when merkkijono
-    (let [tulos (subs merkkijono 0 (min (count merkkijono) pituus))]
-      (if (and pisteet? (> (count merkkijono) pituus))
-        (str tulos "...")
-        tulos)))))
+   (when merkkijono
+     (let [tulos (subs merkkijono 0 (min (count merkkijono) pituus))]
+       (if (and pisteet? (> (count merkkijono) pituus))
+         (str tulos "...")
+         tulos)))))
+
+(defn kuvaile-paivien-maara
+  "Ottaa päivien määrää kuvaavan numeron, ja kuvailee sen tekstinä.
+  - Jos päiviä on alle 7, näytetään päivien määrä
+  - Jos päiviä on alle kuukausi, näytetään määrä viikkoina (pyöristettynä alimpaan)
+  - Jos päiviä on alle vuosi, näytetään määrä kuukausina (pyöristettynä alimpaan)
+  - Muussa tapauksessa näytetään päivien määrä vuosina (pyöristettynä alimpaan)"
+  [paivat]
+  (assert (and (number? paivat) (>= paivat 0)) "Ajan tulee olla 0 tai suurempi")
+  (let [viikko 7
+        kuukausi (* viikko 4)
+        vuosi (* kuukausi 12)]
+    (cond (= paivat 0)
+          ""
+
+          (< paivat viikko)
+          (str paivat " " (if (= paivat 1) "päivä" "päivää"))
+
+          (< paivat kuukausi)
+          (let [viikot (int (/ paivat viikko))]
+            (str viikot " " (if (= viikot 1) "viikko" "viikkoa")))
+
+          (< paivat vuosi)
+          (let [kuukaudet (int (/ paivat kuukausi))]
+            (str kuukaudet " " (if (= kuukaudet 1) "kuukausi" "kuukautta")))
+
+          (>= paivat vuosi)
+          (let [vuodet (int (/ paivat vuosi))]
+            (str vuodet " " (if (= vuodet 1) "vuosi" "vuotta"))))))

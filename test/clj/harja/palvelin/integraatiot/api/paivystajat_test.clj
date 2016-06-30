@@ -25,8 +25,8 @@
     (if (empty? vastaus) id (recur))))
 
 (deftest tallenna-paivystajatiedot
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
-        urakoitsija-id (hae-oulun-alueurakan-2005-2010-urakoitsija)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+        urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
         ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti
                                                 (-> "test/resurssit/api/kirjaa_paivystajatiedot.json"

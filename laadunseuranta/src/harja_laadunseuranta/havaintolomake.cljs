@@ -107,7 +107,7 @@
               :defaultValue ""
               :style {:resize "none"}}])
 
-(defn havaintolomake [wmts-url wmts-url-kiinteistorajat model tallenna-fn peruuta-fn]
+(defn havaintolomake [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva model tallenna-fn peruuta-fn]
   (let [model (atom model)
         sijainti (reagent/cursor model [:sijainti])
         tarkastustyyppi (reagent/cursor model [:tarkastustyyppi])
@@ -135,10 +135,10 @@
         karttaoptiot (atom {})
         virheita (atom #{})
         reittipisteet (atom [])]
-    (fn [_ _ _ tallenna-fn peruuta-fn]
+    (fn [_ _ _ _ tallenna-fn peruuta-fn]
       [:div.havaintolomake
        [:div.lomake-kartta-container
-        [kartta/karttakomponentti wmts-url wmts-url-kiinteistorajat sijainti sijainti reittipisteet reittipisteet karttaoptiot]]
+        [kartta/karttakomponentti wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti sijainti reittipisteet reittipisteet karttaoptiot]]
        
        [:div.lomake-container
         [:div.lomake-title "Uuden havainnon perustiedot"]
@@ -202,7 +202,8 @@
 (defcard havaintolomake-card
   (fn [_ _]
     (reagent/as-element [havaintolomake (str "http://localhost:8000" asetukset/+wmts-url+)
-                                        (str "http://localhost:8000" asetukset/+wmts-url-kiinteistojaotus+) test-model #() #()]))
+                         (str "http://localhost:8000" asetukset/+wmts-url-kiinteistojaotus+)
+                         (str "http://localhost:8000" asetukset/+wmts-url-ortokuva+) test-model #() #()]))
   test-model
   {:watch-atom true
    :inspect-data true})
