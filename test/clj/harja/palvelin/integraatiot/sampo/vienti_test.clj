@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.tyokalut.xml :as xml]))
 

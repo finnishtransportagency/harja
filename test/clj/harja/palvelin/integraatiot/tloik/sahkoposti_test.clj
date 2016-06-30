@@ -3,7 +3,7 @@
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.sms :refer [feikki-labyrintti]]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer [luo-tloik-komponentti tuo-ilmoitus] :as tloik-apurit]
