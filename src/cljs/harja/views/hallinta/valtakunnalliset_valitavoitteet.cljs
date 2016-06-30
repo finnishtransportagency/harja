@@ -1,9 +1,9 @@
-(ns harja.views.hallinta.valitavoitteet
+(ns harja.views.hallinta.valtakunnalliset-valitavoitteet
   "Valtakunnallisten välitavoitteiden näkymä"
   (:require [reagent.core :refer [atom] :as r]
             [cljs.core.async :refer [<! >! timeout chan]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.hallinta.valitavoitteet :as tiedot]
+            [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as tiedot]
             [harja.pvm :as pvm]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.grid :refer [grid]]

@@ -11,7 +11,7 @@
             [harja.views.indeksit :as i]
             [harja.views.hallinta.lampotilat :as lampotilat]
             [harja.views.hallinta.integraatioloki :as integraatioloki]
-            [harja.views.hallinta.valitavoitteet :as valitavoitteet]
+            [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.ui.grid :as g]))
 
@@ -32,9 +32,9 @@
      [tp/toimenpidekoodit])
 
    "Välitavoitteet"
-   :valitavoitteet
+   :valtakunnalliset-valitavoitteet
    (when (oikeudet/hallinta-valitavoitteet)
-     ^{:key "valitavoitteet"}
+     ^{:key "valtakunnalliset-valitavoitteet"}
      [valitavoitteet/valitavoitteet])
 
    "Lämpötilat"

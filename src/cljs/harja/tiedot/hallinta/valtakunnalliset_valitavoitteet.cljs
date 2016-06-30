@@ -1,4 +1,4 @@
-(ns harja.tiedot.hallinta.valitavoitteet
+(ns harja.tiedot.hallinta.valtakunnalliset-valitavoitteet
   "Hallinnoi valtakunnallisten välitavoitteiden tietoja"
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
