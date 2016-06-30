@@ -26,8 +26,9 @@
    [:ajorata (:tr_ajorata osoite)]
    [:kaista (:tr_kaista osoite)]])
 
-(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala
-                            esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus lisaaineet] :as alikohde}]
+(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko kohteen-kokonaismassa massamaara rc% kuulamylly
+                            tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
+                            lisaaineet] :as alikohde}]
   [:alikohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
@@ -38,7 +39,8 @@
      [:paallystystoimenpide
       (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
       (when raekoko [:raekoko raekoko])
-      (when massa [:kokonaismassamaara massa])
+      (when massamaara [:massamaara massamaara])
+      (when kohteen-kokonaismassa [:kokonaismassamaara kohteen-kokonaismassa])
       (when rc% [:rc-prosentti rc%])
       (when kuulamylly [:kuulamylly kuulamylly])
       (when tyomenetelma [:paallystetyomenetelma tyomenetelma])

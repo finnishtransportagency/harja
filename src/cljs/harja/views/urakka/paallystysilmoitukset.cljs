@@ -302,7 +302,8 @@
               (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi?
         (reaction
-          (let [valmispvm-kohde (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata)
+          (let [_ (log "--->" (pr-str @paallystys/paallystysilmoitus-lomakedata))
+                valmispvm-kohde (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata)
                 tila (:tila @paallystys/paallystysilmoitus-lomakedata)]
             (log "[PÄÄLLYSTYS] valmis käsiteltäväksi " (pr-str valmispvm-kohde) (pr-str tila))
             (and tila
@@ -458,7 +459,7 @@
                :leveys "30%"}
               {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0 :leveys "10%" :tasaa :oikea
                :validoi [[:rajattu-numero nil 99 0]]}
-              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
+              {:otsikko "Massamaara (kg/m2)" :nimi :massamaara :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
               {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0 :tasaa :oikea :pituus-max 100
                :validoi [[:rajattu-numero nil 100 0]]}
@@ -476,8 +477,8 @@
                :leveys "30%"}
               {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
                :tasaa :oikea}
-              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero
-               :tasaa :oikea}
+              {:otsikko "Kohteen kokonaismassa (t)" :nimi :kohteen-kokonaismassa :leveys "15%" :tyyppi :positiivinen-numero
+               :tasaa :oikea :desimaalien-maara 0}
               {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
                :tasaa :oikea}
               {:otsikko "Edellinen päällyste"

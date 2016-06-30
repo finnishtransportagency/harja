@@ -282,6 +282,13 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
+            <xs:element name="massamaara" minOccurs="0" maxOccurs="1" type="xs:decimal">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: kg/m2
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="kokonaismassamaara" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:annotation>
