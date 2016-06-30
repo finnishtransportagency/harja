@@ -45,7 +45,6 @@
 
 (def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
 
-
 (tarkkaile! "Rapsat" raporttityypit)
 
 (defn- raportin-sort-avain
@@ -468,7 +467,7 @@
           [:div.row (seq cols)])
         (loop [rows []
                row nil
-               [p & parametrit] parametrit]
+               [p & parametrit] (filter :tyyppi parametrit)] ;; Kaikilla rapsoilla ei parametreja, älä näytä tyhjiä
 
           (let [arvo (r/wrap (get @parametri-arvot (:nimi p))
                              #(swap! parametri-arvot assoc (:nimi p) %))]

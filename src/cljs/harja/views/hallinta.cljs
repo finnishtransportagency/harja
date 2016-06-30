@@ -12,10 +12,7 @@
             [harja.views.hallinta.lampotilat :as lampotilat]
             [harja.views.hallinta.integraatioloki :as integraatioloki]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
-            [harja.ui.grid :as g]
-            ))
-
-(def +vain-jvhn-kaytossa+ "Tämä osio on vain järjestelmän vastuuhenkilön käytössä.")
+            [harja.ui.grid :as g]))
 
 (defn hallinta []
   [bs/tabs {:style :tabs :classes "tabs-taso1"
@@ -41,7 +38,7 @@
 
    "Integraatioloki"
    :integraatioloki
-   (when (oikeudet/hallinta-lampotilat)
+   (when (oikeudet/hallinta-integraatioloki)
      ^{:key "integraatioloki"}
      [integraatioloki/integraatioloki])
 

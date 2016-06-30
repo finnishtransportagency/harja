@@ -129,14 +129,14 @@ SET
   kaasuindeksi                      = :kaasuindeksi,
   indeksin_kuvaus                   = :indeksin_kuvaus
 WHERE id = :id
-      AND urakka = :urakkaid;
+      AND urakka = :urakka;
 
 -- name: poista-yllapitokohde!
 -- Poistaa ylläpitokohteen
 UPDATE yllapitokohde
 SET poistettu = TRUE
 WHERE id = :id
-      AND urakka = :urakkaid;
+      AND urakka = :urakka;
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
@@ -172,7 +172,7 @@ SET
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde
-                            WHERE urakka = :urakkaid);
+                            WHERE urakka = :urakka);
 
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan
@@ -181,7 +181,7 @@ SET poistettu = TRUE
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde
-                            WHERE urakka = :urakkaid);
+                            WHERE urakka = :urakka);
 
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
@@ -246,10 +246,9 @@ WHERE
 -- name: hae-urakan-tyyppi
 SELECT tyyppi
 FROM urakka
-WHERE id = :urakkaid;
+WHERE id = :urakka;
 
 -- name: hae-tiemerkinnan-suorittavat-urakat
--- FIXME Käytä urakka-id:tä sorttaamaan lähimpänä olevat ylimmäs
 SELECT
   id,
   nimi,
@@ -269,14 +268,14 @@ SET
   aikataulu_muokkaaja          = :aikataulu_muokkaaja,
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
 WHERE id = :id
-      AND urakka = :urakkaid;
+      AND urakka = :urakka;
 
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohde
 SET
   valmis_tiemerkintaan = :valmis_tiemerkintaan
 WHERE id = :id
-      AND urakka = :urakkaid;
+      AND urakka = :urakka;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
@@ -287,7 +286,7 @@ SET
   aikataulu_muokattu          = NOW(),
   aikataulu_muokkaaja         = :aikataulu_muokkaaja
 WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :urakkaid;
+      AND suorittava_tiemerkintaurakka = :urakka;
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id

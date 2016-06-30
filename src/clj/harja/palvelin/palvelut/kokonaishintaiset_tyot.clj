@@ -33,7 +33,7 @@
 (defn hae-urakan-kokonaishintaiset-tyot
   "Palvelu, joka palauttaa urakan kokonaishintaiset työt."
   [db user urakka-id]
-  (oikeudet/lue oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (into []
         (map #(assoc %
                :summa (if (:summa %) (double (:summa %)))))
@@ -42,7 +42,7 @@
 (defn tallenna-kokonaishintaiset-tyot
   "Palvelu joka tallentaa urakan kokonaishintaiset tyot."
   [db user {:keys [urakka-id sopimusnumero tyot]}]
-  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
     (let [nykyiset-arvot (hae-urakan-kokonaishintaiset-tyot c user urakka-id)

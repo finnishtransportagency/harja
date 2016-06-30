@@ -4,12 +4,11 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.geo :as geo]))
 
-(defqueries "harja/kyselyt/paallystys.sql"
-  {:positional? true})
+(defqueries "harja/kyselyt/paallystys.sql")
 
 (def kohdeosa-xf (geo/muunna-pg-tulokset :sijainti))
 
-(defn hae-urakan-paallystysilmoitukset-kohteineen[db urakka-id sopimus-id]
+(defn hae-urakan-paallystysilmoitukset-kohteineen [db urakka-id sopimus-id]
   (into []
         (comp
           (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
@@ -22,4 +21,5 @@
                                  db {:urakka urakka-id
                                      :sopimus sopimus-id
                                      :yllapitokohde (:paallystyskohde-id %)})))))
-        (harja.kyselyt.paallystys/hae-urakan-paallystysilmoitukset db urakka-id sopimus-id)))
+        (harja.kyselyt.paallystys/hae-urakan-paallystysilmoitukset db {:urakka urakka-id
+                                                                       :sopimus sopimus-id})))

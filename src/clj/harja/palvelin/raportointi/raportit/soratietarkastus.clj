@@ -58,11 +58,11 @@
                                                ;; Laskee annetun kuntoarvon summan annettujen
                                                ;; rivien kaikista mittausluokista
                                                (reduce
-                                                (fn [nykysumma seuraava-rivi]
-                                                  (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
-                                                    (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
-                                                0
-                                                rivit))
+                                                 (fn [nykysumma seuraava-rivi]
+                                                   (let [kuntoarvot ((juxt :polyavyys :tasaisuus :kiinteys) seuraava-rivi)]
+                                                     (+ nykysumma (count (filter #(= % arvo) kuntoarvot)))))
+                                                 0
+                                                 rivit))
                       laatuarvot (mapv (fn [arvo]
                                          (laske-kuntoarvon-summa tarkastukset arvo))
                                        (range 1 6))
@@ -153,27 +153,27 @@
 
 (defn raportti-rivi [rivi]
   (vec (concat
-        ;; päivämäärä
-        [(pvm/pvm (:aika rivi))]
+         ;; päivämäärä
+         [(pvm/pvm (:aika rivi))]
 
-        ;; tie,aosa,aet,losa,let
-        (map #(get-in rivi %) tr-kentat)
+         ;; tie,aosa,aet,losa,let
+         (map #(get-in rivi %) tr-kentat)
 
-        ;; hoitoluokka
-        [(fmt/roomalaisena-numerona (:hoitoluokka rivi))]
+         ;; hoitoluokka
+         [(fmt/roomalaisena-numerona (:hoitoluokka rivi))]
 
-        ;; arvot ja prosentit 1-5
-        (map (fn [numero]
-               [:arvo-ja-osuus {:arvo (get-in rivi [numero 0]) :osuus (get-in rivi [numero 1])}])
-             (range 1 6))
+         ;; arvot ja prosentit 1-5
+         (map (fn [numero]
+                [:arvo-ja-osuus {:arvo (get-in rivi [numero 0]) :osuus (get-in rivi [numero 1])}])
+              (range 1 6))
 
-        ;; yhteensä, 1+2 yhteensä
-        [[:arvo-ja-osuus {:arvo (:laatuarvot-yhteensa rivi) :osuus 100}]
-         [:arvo-ja-osuus {:arvo (:laatuarvo-1+2-summa rivi) :osuus (+ (get-in rivi [1 1])
-                                                                      (get-in rivi [2 1]))}]
-         ;; laatupoikkeamat
-         (when-not (empty? (:laatupoikkeamat rivi))
-           (str "Kyllä" " (" (clojure.string/join ", " (:laatupoikkeamat rivi)) ")"))])))
+         ;; yhteensä, 1+2 yhteensä
+         [[:arvo-ja-osuus {:arvo (:laatuarvot-yhteensa rivi) :osuus 100}]
+          [:arvo-ja-osuus {:arvo (:laatuarvo-1+2-summa rivi) :osuus (+ (get-in rivi [1 1])
+                                                                       (get-in rivi [2 1]))}]
+          ;; laatupoikkeamat
+          (when-not (empty? (:laatupoikkeamat rivi))
+            (str "Kyllä" " (" (clojure.string/join ", " (:laatupoikkeamat rivi)) ")"))])))
 
 (defn yhteensa-rivi [naytettavat-rivit]
   (let [laatuarvo-summat (map (fn [arvo]
@@ -214,8 +214,8 @@
                                                 :urakkatyyppi urakkatyyppi}))
         naytettavat-rivit (muodosta-raportin-rivit tarkastukset)
         ainakin-yksi-poikkeama? (true? (some
-                                        #(not (empty? (:laatupoikkeamat %)))
-                                            naytettavat-rivit))
+                                         #(not (empty? (:laatupoikkeamat %)))
+                                         naytettavat-rivit))
         raportin-nimi "Soratietarkastusraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -248,11 +248,11 @@
       taulukon-otsikot
       (remove nil?
               (conj
-              ;; Raportin varsinainen data
-              ryhmittellyt-rivit
-              ;; Yhteensä-rivi, jos tarvitaan
-              (when (not (empty? naytettavat-rivit))
-                (yhteensa-rivi naytettavat-rivit))))]
+                ;; Raportin varsinainen data
+                ryhmittellyt-rivit
+                ;; Yhteensä-rivi, jos tarvitaan
+                (when (not (empty? naytettavat-rivit))
+                  (yhteensa-rivi naytettavat-rivit))))]
      ;; Poikkeamien selitykset
      (when ainakin-yksi-poikkeama?
        [:yhteenveto

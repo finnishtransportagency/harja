@@ -84,12 +84,16 @@
     (openlayers/luo-kuvataso
      :kokonaishintainen-toteuma [] ;; FIXME tee selite valinnan pohjalta
      "kht" (k/url-parametri
-            (let [[alkupvm loppupvm] (pvm/paivan-aikavali (:pvm valittu-paivakohtainen-tehtava))]
-              {:urakka-id  urakka-id
+            (let [[alkupvm loppupvm] (if valittu-paivakohtainen-tehtava
+                                       (pvm/paivan-aikavali (:pvm valittu-paivakohtainen-tehtava))
+                                       [(:alkanut valittu-toteuma) (:paattynyt valittu-toteuma)])]
+              {:urakka-id urakka-id
                :sopimus-id sopimus-id
-               :alkupvm    alkupvm
-               :loppupvm   loppupvm
-               :tehtava    (:toimenpidekoodi valittu-paivakohtainen-tehtava)})))))
+               :alkupvm alkupvm
+               :loppupvm loppupvm
+               :tehtava (if valittu-paivakohtainen-tehtava
+                          (:toimenpidekoodi valittu-paivakohtainen-tehtava)
+                          (get-in valittu-toteuma [:tehtava :toimenpidekoodi :id]))})))))
 
 ;; Piirretään kartalle reitit, jotka haetaan kun summariviä klikataan JA
 ;; valitun toteuman reitti.

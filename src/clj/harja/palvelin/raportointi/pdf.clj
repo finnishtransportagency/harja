@@ -14,15 +14,15 @@
 (def raportin-tehostevari "#0066cc")
 
 (defmulti muodosta-pdf
-  "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
-  Dispatch tyypin mukaan (vektorin 1. elementti)."
-  (fn [elementti]
-    (assert (and (vector? elementti)
-                 (> (count elementti) 1)
-                 (keyword? (first elementti)))
-            (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
-                 (pr-str elementti)))
-    (first elementti)))
+          "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
+          Dispatch tyypin mukaan (vektorin 1. elementti)."
+          (fn [elementti]
+            (assert (and (vector? elementti)
+                         (> (count elementti) 1)
+                         (keyword? (first elementti)))
+                    (str "Raporttielementin on oltava vektori, jonka 1. elementti on tyyppi ja muut sen sisältöä, sain: "
+                         (pr-str elementti)))
+            (first elementti)))
 
 (def ^:const +max-rivimaara+ 1000)
 
@@ -38,24 +38,6 @@
     "left"))
 
 (def reunan-tyyli (str "solid 0.1mm " raportin-tehostevari))
-
-(defn taulukko-header [optiot sarakkeet]
-  [:fo:table-header
-   (when-let [rivi-ennen (:rivi-ennen optiot)]
-     [:fo:table-row
-      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
-                         :color "#ffffff"
-                         :number-columns-spanned (or sarakkeita 1)
-                         :text-align (tasaus tasaa)}
-         [:fo:block teksti]])])
-
-   [:fo:table-row
-    (for [otsikko (map :otsikko sarakkeet)]
-      [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
-                       :color "#ffffff"
-                       :font-weight "normal" :padding "1mm"}
-       [:fo:block (cdata otsikko)]])]])
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
@@ -95,62 +77,51 @@
            ;; Ei reunusmäärittelyä, tehdään oletus
            (merge oikea-reuna vasen-reuna))))
 
-(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? korosta-rivit tyhja
-                                            oikealle-tasattavat-kentat] :as optiot}]
-  (let [rivien-maara (count data)
-        viimeinen-rivi (last data)
-        data (if (> (count data) +max-rivimaara+)
-               (vec (concat (take +max-rivimaara+ data)
-                            (when viimeinen-rivi-yhteenveto?
-                              [viimeinen-rivi])))
-               data)
-        oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
-    [:fo:table-body
-     (when (empty? data)
-       [:fo:table-row
-        [:fo:table-cell {:padding                "1mm"
-                         :font-weight "normal"
-                         :number-columns-spanned (count sarakkeet)}
-         [:fo:block {:space-after "0.5em"}]
-         [:fo:block (or tyhja "Ei tietoja")]]])
-     (for [i-rivi (range (count data))
-           :let [rivi (or (nth data i-rivi) "")
-                 [rivi optiot]
-                 (if (map? rivi)
-                   [(:rivi rivi) rivi]
-                   [rivi {}])
-                 lihavoi-rivi? (:lihavoi? optiot)]]
-       (if-let [otsikko (:otsikko optiot)]
-         [:fo:table-row
-          [:fo:table-cell {:padding                "1mm"
-                           :font-weight            "normal"
-                           :background-color       "#e1e1e1"
-                           :number-columns-spanned (count sarakkeet)}
-           [:fo:block {:space-after "0.5em"}]
-           [:fo:block (cdata otsikko)]]]
-         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
-                                      (= viimeinen-rivi rivi))
-                             {:background-color "#fafafa"
-                              :border           (str "solid 0.3mm " raportin-tehostevari)
-                              :font-weight      "bold"})
-               korosta? (when (some #(= i-rivi %) korosta-rivit)
-                          {:background-color       "#ff9900"
-                           :color "black"})
-               lihavoi? (when lihavoi-rivi?
-                          {:font-weight "bold"})]
-           [:fo:table-row
-            (for [i (range (count sarakkeet))
-                  :let [arvo-datassa (nth rivi i)
-                        sarake (nth sarakkeet i)
-                        fmt (case (:fmt sarake)
-                              :numero #(fmt/desimaaliluku-opt % 1 true)
-                              :prosentti #(fmt/prosentti-opt %)
-                              str)
-                        naytettava-arvo (or (if (vector? arvo-datassa)
-                                              (muodosta-pdf arvo-datassa)
-                                              (fmt arvo-datassa))
-                                            "")]]
-              [:fo:table-cell (merge
+(defn- taulukko-valiotsikko [otsikko sarakkeet]
+  [:fo:table-row
+   [:fo:table-cell {:padding "1mm"
+                    :font-weight "normal"
+                    :background-color "#e1e1e1"
+                    :number-columns-spanned (count sarakkeet)}
+    [:fo:block {:space-after "0.5em"}]
+    [:fo:block (cdata otsikko)]]])
+
+(defn- taulukko-rivit [sarakkeet data viimeinen-rivi
+                       {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
+                               oikealle-tasattavat-kentat] :as optiot}]
+  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+    (for [i-rivi (range (count data))
+          :let [rivi (or (nth data i-rivi) "")
+                [rivi optiot]
+                (if (map? rivi)
+                  [(:rivi rivi) rivi]
+                  [rivi {}])
+                lihavoi-rivi? (:lihavoi? optiot)]]
+      (if-let [otsikko (:otsikko optiot)]
+        (taulukko-valiotsikko otsikko sarakkeet)
+        (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
+                                     (= viimeinen-rivi rivi))
+                            {:background-color "#fafafa"
+                             :border (str "solid 0.3mm " raportin-tehostevari)
+                             :font-weight "bold"})
+              korosta? (when (some #(= i-rivi %) korosta-rivit)
+                         {:background-color "#ff9900"
+                          :color "black"})
+              lihavoi? (when lihavoi-rivi?
+                         {:font-weight "bold"})]
+          [:fo:table-row
+           (for [i (range (count sarakkeet))
+                 :let [arvo-datassa (nth rivi i)
+                       sarake (nth sarakkeet i)
+                       fmt (case (:fmt sarake)
+                             :numero #(fmt/desimaaliluku-opt % 1 true)
+                             :prosentti #(fmt/prosentti-opt %)
+                             str)
+                       naytettava-arvo (or (if (vector? arvo-datassa)
+                                             (muodosta-pdf arvo-datassa)
+                                             (fmt arvo-datassa))
+                                           "")]]
+             [:fo:table-cell (merge
                                (border-tyyli sarake)
                                {:padding "1mm"
                                 :font-weight "normal"
@@ -160,20 +131,59 @@
                                yhteenveto?
                                korosta?
                                lihavoi?)
-               (when korosta?
-                 [:fo:block {:space-after "0.2em"}])
-               [:fo:block (if (string? naytettava-arvo)
-                            (cdata (str naytettava-arvo))
-                            naytettava-arvo)]])])))
-     (when (> rivien-maara +max-rivimaara+)
+              (when korosta?
+                [:fo:block {:space-after "0.2em"}])
+              [:fo:block (if (string? naytettava-arvo)
+                           (cdata (str naytettava-arvo))
+                           naytettava-arvo)]])])))))
+
+(defn- taulukko-alaosa [rivien-maara sarakkeet viimeinen-rivi-yhteenveto?]
+  (when (> rivien-maara +max-rivimaara+)
+    [:fo:table-row
+     [:fo:table-cell {:padding "1mm"
+                      :number-columns-spanned (count sarakkeet)}
+      [:fo:block {:space-after "0.5em"}]
+      [:fo:block (str "Taulukossa näytetään vain ensimmäiset " +max-rivimaara+ " rivia. "
+                      "Tarkenna hakuehtoa. "
+                      (when viimeinen-rivi-yhteenveto?
+                        "Yhteenveto on laskettu kaikista riveistä"))]]]))
+
+(defn taulukko-header [optiot sarakkeet]
+  [:fo:table-header
+   (when-let [rivi-ennen (:rivi-ennen optiot)]
+     [:fo:table-row
+      (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
+        [:fo:table-cell {:border reunan-tyyli :background-color raportin-tehostevari
+                         :color "#ffffff"
+                         :number-columns-spanned (or sarakkeita 1)
+                         :text-align (tasaus tasaa)}
+         [:fo:block teksti]])])
+
+   [:fo:table-row
+    (for [otsikko (map :otsikko sarakkeet)]
+      [:fo:table-cell {:border "solid 0.1mm black" :background-color raportin-tehostevari
+                       :color "#ffffff"
+                       :font-weight "normal" :padding "1mm"}
+       [:fo:block (cdata otsikko)]])]])
+
+(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto?] :as optiot}]
+  (let [rivien-maara (count data)
+        viimeinen-rivi (last data)
+        data (if (> (count data) +max-rivimaara+)
+               (vec (concat (take +max-rivimaara+ data)
+                            (when viimeinen-rivi-yhteenveto?
+                              [viimeinen-rivi])))
+               data)]
+    [:fo:table-body
+     (when (empty? data)
        [:fo:table-row
         [:fo:table-cell {:padding "1mm"
+                         :font-weight "normal"
                          :number-columns-spanned (count sarakkeet)}
          [:fo:block {:space-after "0.5em"}]
-         [:fo:block (str "Taulukossa näytetään vain ensimmäiset " +max-rivimaara+ " rivia. "
-                         "Tarkenna hakuehtoa. "
-                         (when viimeinen-rivi-yhteenveto?
-                           "Yhteenveto on laskettu kaikista riveistä"))]]])]))
+         [:fo:block "Ei tietoja"]]])
+     (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
+     (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
@@ -205,14 +215,16 @@
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
+  ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
+  (log/debug "muodosta pdf pylväät data" pylvaat)
   [:fo:block {:margin-top "1em"}
    [:fo:block {:font-weight "bold"} otsikko]
    [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
-    (vis/bars {:width         180
-               :height        80
+    (vis/bars {:width 180
+               :height 80
                ;; tarvitaanko erityyppisille rapsoille eri formatteri?
                :format-amount (or fmt str)
-               :hide-value?   piilota-arvo?
+               :hide-value? piilota-arvo?
                :margin-x 20
                :margin-y 20
                :value-font-size "4pt"
@@ -220,16 +232,7 @@
                :y-axis-font-size "4pt"
                :legend legend
                }
-     pylvaat)]
-   [:fo:block {:space-after "1em"}]])
-
-(defmethod muodosta-pdf :piirakka [[_ {:keys [otsikko]} data]]
-  [:fo:block {:margin-top "1em"}
-   [:fo:block {:font-weight "bold"} otsikko]
-   [:fo:instream-foreign-object {:content-width "17cm" :content-height "10cm"}
-    (vis/pie
-     {:width 230 :height 150  :radius 60 :show-text :percent :show-legend true}
-     data)]
+              pylvaat)]
    [:fo:block {:space-after "1em"}]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]

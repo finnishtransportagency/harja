@@ -119,7 +119,7 @@ pienemmällä zindexillä." :const true}
     (doto feature (.setStyle (clj->js tyylit)))))
 
 (defmethod luo-feature :moniviiva
-  [{:keys [lines viivat points ikonit]}]
+  [{:keys [lines viivat ikonit]}]
   (let [feature (ol.Feature. #js {:geometry (ol.geom.MultiLineString.
                                              (clj->js (mapv :points lines)))})
         kasvava-zindex (atom oletus-zindex)
@@ -128,7 +128,7 @@ pienemmällä zindexillä." :const true}
                           (if-not (empty? @taitokset)
                             @taitokset
                             (reset! taitokset
-                                    (apurit/pisteiden-taitokset points false))))
+                                    (apurit/pisteiden-taitokset (mapcat :points lines) false))))
         tee-ikoni (partial tee-ikonille-tyyli kasvava-zindex laske-taitokset)
         tee-viiva (partial tee-viivalle-tyyli kasvava-zindex)
         tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]

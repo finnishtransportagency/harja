@@ -26,6 +26,7 @@
             [harja.palvelin.raportointi.raportit.siltatarkastus]
             [harja.palvelin.raportointi.raportit.sanktio]
             [harja.palvelin.raportointi.raportit.soratietarkastus]
+            [harja.palvelin.raportointi.raportit.valitavoiteraportti]
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
@@ -131,8 +132,8 @@
       "Raportin suoritus"
       (str nimi)
       #(when-let [suoritettava-raportti (hae-raportti this nimi)]
-         (oikeudet/lue (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
-                       kayttaja (when (= "urakka" konteksti)
+         (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
+                                    kayttaja (when (= "urakka" konteksti)
                                   (:urakka-id suorituksen-tiedot)))
          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                     " parametreilla " parametrit)

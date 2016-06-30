@@ -28,7 +28,7 @@
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
 
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
-  (oikeudet/lue oikeudet/urakat-turvallisuus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
           turvallisuuspoikkeama-xf
@@ -36,7 +36,7 @@
     {:korjaavatoimenpide :korjaavattoimenpiteet}))
 
 (defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
-  (oikeudet/lue oikeudet/urakat-turvallisuus user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
   (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
                                                          turvallisuuspoikkeama-xf
@@ -149,7 +149,7 @@
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
-  (oikeudet/kirjoita oikeudet/urakat-turvallisuus user (:urakka tp))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka tp))
   (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi)]
     (when turi
       (turi/laheta-turvallisuuspoikkeama turi id)))

@@ -1,4 +1,4 @@
-(ns harja.sms
+(ns harja.sms-test
   (:require [harja.palvelin.integraatiot.labyrintti.sms :as sms]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]))

@@ -22,7 +22,7 @@
 (defn hae-urakan-muutoshintaiset-tyot
   "Palvelu, joka palauttaa urakan muutoshintaiset työt."
   [db user urakka-id]
-  (oikeudet/lue oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka-id)
   (into []
     muutoshintaiset-xf
     (q/listaa-urakan-muutoshintaiset-tyot db urakka-id)))
@@ -30,7 +30,7 @@
 (defn tallenna-muutoshintaiset-tyot
   "Palvelu joka tallentaa muutoshintaiset tyot."
   [db user {:keys [urakka-id tyot]}]
-  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-muutos-ja-lisatyot user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
 
   (jdbc/with-db-transaction
