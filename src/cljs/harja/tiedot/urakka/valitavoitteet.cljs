@@ -36,8 +36,11 @@
 
 (def urakan-valitavoitteet
   (reaction (when @valitavoitteet
-              (filterv :urakka @valitavoitteet))))
+              (filterv #(and
+                         (:urakka-id %)
+                         (nil? (:valtakunnallinen-valitavoite-id %)))
+                       @valitavoitteet))))
 
 (def valtakunnalliset-valitavoitteet
   (reaction (when @valitavoitteet
-              (filterv (comp not :urakka) @valitavoitteet))))
+              (filterv :valtakunnallinen-valitavoite-id @valitavoitteet))))
