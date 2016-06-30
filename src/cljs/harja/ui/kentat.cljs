@@ -353,7 +353,7 @@
                         checkboxit)]]
          checkboxit))]))
 
-(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? disabloi]} data]
+(defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
   (let [arvo (if (nil? @data)
                false
                @data)]

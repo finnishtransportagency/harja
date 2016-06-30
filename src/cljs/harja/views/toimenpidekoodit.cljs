@@ -114,7 +114,9 @@
             taso2 @valittu-taso2
             taso3 @valittu-taso3
             valinnan-koodi #(get kaikki-koodit (-> % .-target .-value js/parseInt))]
+
         [:div.container-fluid.toimenpidekoodit
+         [:h2 "Tehtävien hallinta"]
          [:div.input-group
           [:select#taso1 {:on-change #(do (reset! valittu-taso1 (valinnan-koodi %))
                                           (reset! valittu-taso2 nil)
@@ -163,18 +165,16 @@
                 :fmt #(if % (hinnoittelun-nimet %) "Ei hinnoittelua")}
                {:otsikko "Seurataan API:n kautta" :nimi :api-seuranta :tyyppi :checkbox :leveys "15%" :fmt fmt/totuus
                 :tasaa :keskita
+                ;; todo: jos muutetaan arvo esim. muutoshintaiseksi, pitää arvo asettaa nilliksi
                 :muokattava? (fn [rivi _]
                                (some (fn [h] (or (= h "kokonaishintainen")
                                                  (= h "yksikkohintainen")))
                                      (:hinnoittelu rivi)))}]
               (sort-by (juxt :hinnoittelu :nimi) tehtavat)])
-           [:div {:class
-                  (str "inline-block lomake-vihje")}
-            [:div.vihjeen-sisalto
-             (harja.ui.ikonit/livicon-info-sign)
-             [:span (str " Valitse taso nähdäksesi tehtävät")]]])
 
-         [:br]
+           [:div [yleiset/vihje "Valitse taso nähdäksesi tehtävät"]])
+
+         [:h2 "API-seuranta"]
          (let [tehtavat (rakenna-tasot kaikki-koodit (filter #(true? (:api-seuranta %)) (get koodit-tasoittain 4)))
                kokonaishintaiset-tehtavat (filter #(some (fn [h] (= h "kokonaishintainen")) (:hinnoittelu %)) tehtavat)
                yksikkohintaiset-tehtavat (filter #(some (fn [h] (= h "yksikkohintainen")) (:hinnoittelu %)) tehtavat)]
@@ -190,7 +190,6 @@
               {:otsikko "Tasot" :nimi :tasot :tyyppi :string :leveys "20%"}
               {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :leveys "10%"}]
              (sort-by (juxt :tasot :nimi) kokonaishintaiset-tehtavat)]
-            [:br]
             [grid/grid
              {:otsikko "API:n kautta seurattavat yksikköhintaiset toteumatehtävät"
               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")

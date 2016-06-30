@@ -5,7 +5,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
             [cheshire.core :as cheshire]
             [clojure.java.io :as io]))
 
@@ -50,7 +49,7 @@
       (poista-toimenpidekoodi c user id))
     (hae-toimenpidekoodit c user)))
 
-(defn hae-reaaliaikaseurannan-tehtavat [kayttaja]
+(defn hae-reaaliaikaseurannan-tehtavat []
   (let [json (clojure.walk/keywordize-keys
                (cheshire/decode
                  (slurp (io/resource "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json"))))
@@ -74,8 +73,8 @@
           (tallenna-tehtavat (:db this) user tiedot)))
       (julkaise-palvelu
         :hae-reaaliaikaseurannan-tehtavat
-        (fn [kayttaja]
-          (hae-reaaliaikaseurannan-tehtavat kayttaja))))
+        (fn [_]
+          (hae-reaaliaikaseurannan-tehtavat))))
     this)
 
   (stop [this]
