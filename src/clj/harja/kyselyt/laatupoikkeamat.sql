@@ -18,14 +18,6 @@ SELECT
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
   lp.sijainti,
-  (SELECT k.kommentti
-   FROM kommentti k
-   WHERE k.id IN (SELECT hk.kommentti
-                  FROM laatupoikkeama_kommentti hk
-                  WHERE hk.laatupoikkeama = lp.id)
-   ORDER BY luotu ASC
-   OFFSET 0
-   LIMIT 1)                          AS kommentti,
   ypk.tr_numero        AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
@@ -62,14 +54,6 @@ SELECT
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
   lp.sijainti,
-  (SELECT k.kommentti
-   FROM kommentti k
-   WHERE k.id IN (SELECT hk.kommentti
-                  FROM laatupoikkeama_kommentti hk
-                  WHERE hk.laatupoikkeama = lp.id)
-   ORDER BY luotu ASC
-   OFFSET 0
-   LIMIT 1)                          AS kommentti,
   ypk.tr_numero        AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
@@ -105,14 +89,6 @@ SELECT
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
   lp.sijainti,
-  (SELECT k.kommentti
-   FROM kommentti k
-   WHERE k.id IN (SELECT hk.kommentti
-                  FROM laatupoikkeama_kommentti hk
-                  WHERE hk.laatupoikkeama = lp.id)
-   ORDER BY luotu ASC
-   OFFSET 0
-   LIMIT 1)                          AS kommentti,
   ypk.tr_numero        AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
@@ -150,14 +126,6 @@ SELECT
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
   lp.sijainti,
-  (SELECT k.kommentti
-   FROM kommentti k
-   WHERE k.id IN (SELECT hk.kommentti
-                  FROM laatupoikkeama_kommentti hk
-                  WHERE hk.laatupoikkeama = lp.id)
-   ORDER BY luotu ASC
-   OFFSET 0
-   LIMIT 1)                          AS kommentti,
   ypk.tr_numero        AS yllapitokohde_tr_numero,
   ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
   ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
