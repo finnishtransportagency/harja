@@ -54,7 +54,7 @@
                (yha-q/hae-urakan-yhatiedot db {:urakka urakka-id}))))
 
 (defn- sido-yha-urakka-harja-urakkaan [db user {:keys [harja-urakka-id yha-tiedot]}]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user harja-urakka-id)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
   (if (:sidonta-lukittu? (hae-urakan-yha-tiedot db harja-urakka-id))
     (throw (RuntimeException. "Sidonta lukittu!"))
@@ -68,7 +68,7 @@
 
 
 (defn- hae-urakat-yhasta [db yha user {:keys [yhatunniste sampotunniste vuosi harja-urakka-id]}]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet harja-urakka-id user)
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user harja-urakka-id)
   (let [urakat (yha/hae-urakat yha yhatunniste sampotunniste vuosi)
         yhaidt (mapv :yhaid urakat)
         sidontatiedot (when (not-empty yhaidt) (yha-q/hae-urakoiden-sidontatiedot db {:yhaidt yhaidt}))
@@ -85,7 +85,7 @@
 (defn- hae-yha-kohteet
   "Hakee kohteet YHA:sta ja palauttaa vain uudet, Harjasta puuttuvat kohteet."
   [db yha user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Haetaan kohteet yhasta")
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
         _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
@@ -130,7 +130,7 @@
   "Tallentaa YHA:sta tulleet ylläpitokohteet. Olettaa, että ollaan tallentamassa vain
   uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
   [db user {:keys [urakka-id kohteet] :as tiedot}]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [tierekisteriosoitevali
@@ -182,8 +182,7 @@
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHA:n."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt]}]
-  ;; todo: onko tämä oikeus ok?
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id user)
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
   (yha/laheta-kohteet yha urakka-id kohde-idt)
   (let [paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id)]

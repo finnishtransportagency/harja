@@ -19,7 +19,7 @@
                             :sopimus-id sopimus-id}))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
-  (k/post! :hae-tiemerkinnan-suorittavat-urakat {urakka-id urakka-id}))
+  (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan [kohde-id tiemerkintapvm urakka-id sopimus-id]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
