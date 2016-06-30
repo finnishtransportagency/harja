@@ -99,7 +99,7 @@
     :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
                 #(go (reset! tallennus-kaynnissa? true)
                      (go
-                       (let [vastaus (<! (vt/tallenna! (:id urakka) %))]
+                       (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
                          (if (k/virhe? vastaus)
                            (viesti/nayta! "Tallentaminen epäonnistui"
                                           :warning viesti/viestin-nayttoaika-lyhyt)
@@ -111,7 +111,7 @@
                           (juxt :id
                                 (partial valitavoite-lomake
                                          {:aseta-tavoitteet
-                                          #(reset! urakan-valitavoitteet-atom %)} urakka)))
+                                          #(reset! kaikki-valitavoitteet-atom %)} urakka)))
                         @urakan-valitavoitteet-atom)}
 
    [{:tyyppi :vetolaatikon-tila :leveys 5}
@@ -132,7 +132,7 @@
     :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
                 #(go (reset! tallennus-kaynnissa? true)
                      (go
-                       (let [vastaus (<! (vt/tallenna! (:id urakka) %))]
+                       (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
                          (if (k/virhe? vastaus)
                            (viesti/nayta! "Tallentaminen epäonnistui"
                                           :warning viesti/viestin-nayttoaika-lyhyt)
@@ -143,8 +143,10 @@
                           (juxt :id
                                 (partial valitavoite-lomake
                                          {:aseta-tavoitteet
-                                          #(reset! valtakunnalliset-valitavoitteet-atom %)} urakka)))
-                        @valtakunnalliset-valitavoitteet-atom)}
+                                          #(reset! kaikki-valitavoitteet-atom %)} urakka)))
+                        @valtakunnalliset-valitavoitteet-atom)
+    :voi-lisata? false
+    :voi-poistaa? (constantly false)}
 
    [{:tyyppi :vetolaatikon-tila :leveys 5}
     {:otsikko "Valtakunnallinen välitavoite" :leveys 55

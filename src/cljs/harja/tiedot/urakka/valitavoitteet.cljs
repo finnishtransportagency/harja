@@ -23,7 +23,7 @@
             :valmis-pvm valmis-pvm
             :kommentti kommentti}))
 
-(defn tallenna! [urakka-id valitavoitteet]
+(defn tallenna-valitavoitteet! [urakka-id valitavoitteet]
   (k/post! :tallenna-urakan-valitavoitteet
            {:urakka-id urakka-id
             :valitavoitteet valitavoitteet}))
@@ -43,4 +43,7 @@
 
 (def valtakunnalliset-valitavoitteet
   (reaction (when @valitavoitteet
-              (filterv :valtakunnallinen-valitavoite-id @valitavoitteet))))
+              (filterv #(and
+                         (:urakka-id %)
+                         (some? (:valtakunnallinen-valitavoite-id %)))
+                       @valitavoitteet))))
