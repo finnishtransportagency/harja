@@ -272,11 +272,11 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmulti extent (fn [geometry] (:type geometry)))
 
-(defmethod extent :line [{points :points}]
-  (laske-pisteiden-extent points))
+(defmethod extent :line [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defmethod extent :multiline [{lines :lines}]
-  (laske-pisteiden-extent (mapcat :points lines)))
+(defmethod extent :multiline [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
 ;; Kuinka paljon yksittäisen pisteen extentiä laajennetaan joka suuntaan
 (def pisteen-extent-laajennus 2000)
@@ -286,32 +286,32 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
         [x y] c]
     [(- x d) (- y d) (+ x d) (+ y d)]))
 
-(defmethod extent :point [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :point [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :circle [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :circle [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :icon [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :icon [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :merkki [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :merkki [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :moniviiva [{points :points}]
-  (laske-pisteiden-extent points))
+(defmethod extent :viiva [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defmethod extent :viivat [viivat]
-  (laske-pisteiden-extent (pisteet viivat)))
+(defmethod extent :moniviiva [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defmethod extent :multipolygon [{polygons :polygons}]
-  (laske-pisteiden-extent (mapcat :coordinates polygons)))
+(defmethod extent :multipolygon [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defmethod extent :polygon [{coordinates :coordinates}]
-  (laske-pisteiden-extent coordinates))
+(defmethod extent :polygon [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defn extent-monelle [geometriat]
-  (laske-pisteiden-extent (mapcat pisteet geometriat)))
+(defmethod extent :default [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
 (defn extent-hypotenuusa
   "Laskee extent hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."

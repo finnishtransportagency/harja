@@ -15,7 +15,7 @@
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [db user url vuosi]
   (log/debug "hae-lampotilat-ilmatieteenlaitokselta, url " url " vuosi " vuosi)
-  (oikeudet/kirjoita oikeudet/hallinta-lampotilat user) ;; vaatii KIRJOITUS oikeuden
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user) ;; vaatii KIRJOITUS oikeuden
   (assert (and url vuosi) "Annettava url ja vuosi kun haetaan ilmatieteenlaitokselta lämpötiloja.")
   ;; Ilmatieteenlaitos käyttää :urakka-id -kentässään Harjan :alueurakkanro -kenttää, siksi muunnoksia alla
   (let [hoidon-urakoiden-lampotilat (into {}
@@ -32,7 +32,7 @@
 
 (defn hae-teiden-hoitourakoiden-lampotilat [db user hoitokausi]
   (log/debug "hae-teiden-hoitourakoiden-lampotilat hoitokaudella: " hoitokausi)
-  (oikeudet/kirjoita oikeudet/hallinta-lampotilat user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user)
   (let [alkupvm (first hoitokausi)
         loppupvm (second hoitokausi)]
     (into {}
@@ -41,7 +41,7 @@
 
 (defn tallenna-teiden-hoitourakoiden-lampotilat [db user {:keys [hoitokausi lampotilat]}]
   (log/debug "tallenna-teiden-hoitourakoiden-lampotilat, hoitokausi " hoitokausi ", lämpötilat: " lampotilat)
-  (oikeudet/kirjoita oikeudet/hallinta-lampotilat user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user)
   (jdbc/with-db-transaction [db db]
     (doseq [lt lampotilat]
       (let [id (:lampotilaid lt)
@@ -55,7 +55,7 @@
 (defn hae-urakan-suolasakot-ja-lampotilat
   [db user urakka-id]
   (log/debug "hae-urakan-suolasakot-ja-lampotilat")
-  (oikeudet/lue oikeudet/urakat-toteumat-suola user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   {:suolasakot (into []
                       (map #(konv/decimal->double % :maara))
                      (q/hae-urakan-suolasakot db urakka-id))
@@ -114,7 +114,7 @@
 (defn tallenna-suolasakko-ja-pohjavesialueet
   [db user {:keys [hoitokaudet urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]
   (log/debug"tallenna-suolasakko-ja-pohjavesialueet tiedot: " (pr-str tiedot))
-  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-suola user urakka)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka)
   (jdbc/with-db-transaction
     [db db]
     (doseq [hk hoitokaudet]
@@ -130,7 +130,7 @@
 
 (defn aseta-suolasakon-kaytto [db user {:keys [urakka-id kaytossa?]}]
   (log/debug "Käytössä? " kaytossa?)
-  (oikeudet/kirjoita oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (jdbc/with-db-transaction
     [db db]
     (q/aseta-suolasakon-kaytto! db kaytossa? (:id user) urakka-id)

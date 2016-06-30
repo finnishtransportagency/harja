@@ -9,7 +9,7 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-valitavoitteet [db user urakka-id]
-  (oikeudet/lue oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
 
   (into []
         (map konv/alaviiva->rakenne)
@@ -17,14 +17,14 @@
 
 (defn merkitse-valmiiksi! [db user {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
   (log/info "merkitse valmiiksi: " tiedot)
-  (oikeudet/kirjoita oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (jdbc/with-db-transaction [c db]
     (and (= 1 (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
                                      (:id user) urakka-id valitavoite-id))
          (hae-valitavoitteet db user urakka-id))))
 
 (defn tallenna! [db user {:keys [urakka-id valitavoitteet]}]
-  (oikeudet/kirjoita oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (log/debug "Tallenna välitavoitteet " (pr-str valitavoitteet))
   (jdbc/with-db-transaction [c db]
     ;; Poistetaan tietokannasta :poistettu merkityt
