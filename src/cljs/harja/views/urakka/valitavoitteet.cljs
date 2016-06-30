@@ -125,22 +125,23 @@
             :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
           @vt/valitavoitteet]
 
-         (when (and (= (:sopimustyyppi @nav/valittu-urakka) :kokonaisurakka)
+         ;; PENDING Kommentoidaan toistaiseksi tämä demo pois hämmentämästä
+         #_(when (and (= (:sopimustyyppi @nav/valittu-urakka) :kokonaisurakka)
                     (or (= (:tyyppi @nav/valittu-urakka) :paallystys)
                         (= (:tyyppi @nav/valittu-urakka) :paikkaus)))
            [grid/grid
             {:otsikko "Kohteiden välitavoitteet"
              :tunniste :yha-id
-             :tallenna nil ;; TODO Kohteiden välitavoitteet toistaiseksi puhdas demo, tallennusta ei implementoitu
-            ; :vetolaatikot (into {}
-            ;                     (map
-            ;                       (juxt :id
-            ;                             (partial valitavoite-lomake
-            ;                                      {:aseta-tavoitteet #(reset! vt/valitavoitteet %)} ur)))
-            ;                     @vt/valitavoitteet)
+             :tallenna nil
+             :vetolaatikot (into {}
+                                 (map
+                                   (juxt :id
+                                         (partial valitavoite-lomake
+                                                  {:aseta-tavoitteet #(reset! vt/valitavoitteet %)} ur)))
+                                 @vt/valitavoitteet)
             }
 
-            [#_{:tyyppi :vetolaatikon-tila :leveys "5%"}
+            [{:tyyppi :vetolaatikon-tila :leveys "5%"}
              {:otsikko "YHA-ID" :leveys "15%" :nimi :yha-id :tyyppi :string :pituus-max 128 :muokattava? (constantly false)}
              {:otsikko "Kohde" :leveys "60%" :nimi :kohde :tyyppi :string :muokattava? (constantly false)}
              {:otsikko "Tila" :leveys "20%" :tyyppi :string :muokattava? (constantly false)
