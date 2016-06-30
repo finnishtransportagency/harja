@@ -14,6 +14,14 @@ function fail {
     exit 1
 }
 
+function eiajoa {
+    echo "Koodissa taitaa olla jotain häikkää! test2junit/xml/ kansio on tyhjä, eli testejä ei saatu ajettua ollenkaan."
+    echo "Kokeile ajaa lein test nähdäksesi tarkemmat tulokset?"
+    exit 1
+}
+
+rm -r test2junit/xml/ 2>/dev/null
+
 AVAARAPORTTI=$1
 
 if [ -z "$AVAARAPORTTI" ];
@@ -29,12 +37,6 @@ echo "Aloitetaan ajo.."
 tulos="$(lein test2junit 2> /dev/null)"
 status=$?
 
-if [ $status -ne 0 ];
-then
-    echo "Ei saatu ajettua testejä. Ympäristössä on jotain häikkää. Kokeile ajaa lein test."
-    exit 1
-fi
-
 echo "Testit ajettu. Analysoidaan tulokset."
 echo "Step: 1/2.."
 
@@ -48,6 +50,9 @@ notificationoutput=`find test2junit -name "*.xml" | xargs xmllint --xpath "strin
 
 echo "Done!"
 echo " ---- "
+
+# Jos testien output kansio on tyhjä, testien ajossa oli jotain häikkää.
+test "$(ls -A "test2junit/xml/" 2>/dev/null)" || eiajoa
 
 NOTIFIER="$(which terminal-notifier)"
 
@@ -72,4 +77,13 @@ else
   echo " ---- "
   echo "$tulos" | tail -16 | head -n 2 # Montako testiä / Montako virhettä
   fail $AVAARAPORTTI
+fi
+
+
+# Fallback, jos testit exittas virheviestillä, niin ei me voida sitä hyväksyä mitenkään.
+if [ $status -ne 0 ];
+then
+    echo "Kaikki muut tarkastukset menivät muka läpi, mutta lein test2junit valmistui muulla koodilla kuin 0."
+    echo "Joku ongelma siellä siis pitäisi olla. Aja lein test?"
+    exit 1
 fi
