@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- 1. Lisää puuttuvat tehtävät
 
 -- Talvihoito
@@ -955,11 +954,3 @@ WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)';
 UPDATE toimenpidekoodi
 SET api_seuranta = TRUE
 WHERE nimi = 'Päällysteiden paikkaus - massasaumaus';
-=======
--- Lisää asiatarkastuksen tiedot POT-lomakkeelle
-ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_pvm DATE;
-ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_tarkastaja VARCHAR(1024);
-ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_tekninen_osa BOOLEAN;
-ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_taloudellinen_osa BOOLEAN;
-ALTER TABLE paallystysilmoitus ADD COLUMN asiatarkastus_lisatiedot VARCHAR(4096);
->>>>>>> develop
