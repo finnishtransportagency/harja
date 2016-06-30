@@ -456,7 +456,8 @@
                                     "")))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
-              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0 :leveys "10%" :tasaa :oikea}
+              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0 :leveys "10%" :tasaa :oikea
+               :validoi [[:rajattu-numero nil 99 0]]}
               {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
               {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0 :tasaa :oikea :pituus-max 100
