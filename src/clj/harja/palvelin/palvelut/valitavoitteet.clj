@@ -42,6 +42,7 @@
     (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
                                       :takaraja (konv/sql-date takaraja)
                                       :nimi nimi
+                                      :valtakunnallinen_valitavoite nil
                                       :luoja (:id user)})))
 
 (defn- paivita-urakan-valitavoitteet [db user valitavoitteet urakka-id]
