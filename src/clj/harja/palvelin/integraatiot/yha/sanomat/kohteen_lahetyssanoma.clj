@@ -35,7 +35,7 @@
    (tee-tierekisteriosoitevali alikohde)
    [:tunnus tunnus]
    (when
-     (or paallystetyyppi raekoko massa rc% kuulamylly tyomenetelma leveys pinta-ala)
+     (or paallystetyyppi raekoko massamaara kohteen-kokonaismassa rc% kuulamylly tyomenetelma leveys pinta-ala)
      [:paallystystoimenpide
       (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
       (when raekoko [:raekoko raekoko])

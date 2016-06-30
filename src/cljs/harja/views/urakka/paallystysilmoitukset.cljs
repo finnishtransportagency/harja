@@ -302,8 +302,7 @@
               (false? lomake-lukittu-muokkaukselta?))))
         valmis-kasiteltavaksi?
         (reaction
-          (let [_ (log "--->" (pr-str @paallystys/paallystysilmoitus-lomakedata))
-                valmispvm-kohde (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata)
+          (let [valmispvm-kohde (:valmispvm-kohde @paallystys/paallystysilmoitus-lomakedata)
                 tila (:tila @paallystys/paallystysilmoitus-lomakedata)]
             (log "[PÄÄLLYSTYS] valmis käsiteltäväksi " (pr-str valmispvm-kohde) (pr-str tila))
             (and tila
