@@ -69,33 +69,34 @@
     (let [paivia-valissa (t/in-days (t/interval (c/from-date (:valmis-pvm valitavoite))
                                                 (c/from-date (:takaraja valitavoite))))]
       (when (pos? paivia-valissa)
-        (str (fmt/kuvaile-aikavali paivia-valissa) " ennen")))
+        (str (fmt/kuvaile-paivien-maara paivia-valissa) " ennen")))
 
     (myohassa? valitavoite)
     (let [paivia-valissa (t/in-days (t/interval
                                       (c/from-date (:takaraja valitavoite))
                                       (c/from-date (:valmis-pvm valitavoite))))]
       (when (pos? paivia-valissa)
-        (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))
+        (str (fmt/kuvaile-paivien-maara paivia-valissa) " myöhässä")))
     :default
     nil))
 
 (defn- kuvaile-keskenerainen-valitavoite
-  "Palauttaa tekstimuotoisen kuvauksen välitavoitteen valmistumisesta."
+  "Palauttaa tekstimuotoisen kuvauksen siitä kuinka kauan välitavoitteen
+   takarajaan on aikaa jäljellä tai kauanko tavoitteesta ollaan myöhässä."
   [valitavoite]
   (cond
     (kesken? valitavoite)
     (let [paivia-valissa (t/in-days (t/interval (t/now)
                                                 (c/from-date (:takaraja valitavoite))))]
       (when (pos? paivia-valissa)
-        (str (fmt/kuvaile-aikavali paivia-valissa) " jäljellä")))
+        (str (fmt/kuvaile-paivien-maara paivia-valissa) " jäljellä")))
 
     (toteutumatta? valitavoite)
     (let [paivia-valissa (t/in-days (t/interval
                                       (c/from-date (:takaraja valitavoite))
                                       (t/now)))]
       (when (pos? paivia-valissa)
-        (str (fmt/kuvaile-aikavali paivia-valissa) " myöhässä")))
+        (str (fmt/kuvaile-paivien-maara paivia-valissa) " myöhässä")))
     :default
     nil))
 

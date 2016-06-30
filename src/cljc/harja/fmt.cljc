@@ -312,12 +312,12 @@
          (str tulos "...")
          tulos)))))
 
-(defn kuvaile-aikavali
-  "Ottaa numeron päiviä, ja kuvailee sen tekstinä. Esim.
-  3 päivää
-  2 viikkoa
-  6 kuukautta
-  1 vuosi"
+(defn kuvaile-paivien-maara
+  "Ottaa päivien määrää kuvaavan numeron, ja kuvailee sen tekstinä.
+  - Jos päiviä on alle 7, näytetään päivien määrä
+  - Jos päiviä on alle kuukausi, näytetään määrä viikkoina (pyöristettynä alimpaan)
+  - Jos päiviä on alle vuosi, näytetään määrä kuukausina (pyöristettynä alimpaan)
+  - Muussa tapauksessa näytetään päivien määrä vuosina (pyöristettynä alimpaan)"
   [paivat]
   (assert (and (number? paivat) (>= paivat 0)) "Ajan tulee olla 0 tai suurempi")
   (let [viikko 7
