@@ -226,7 +226,7 @@
                    [:http-palvelin :db])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db])
+                  [:http-palvelin :db :karttakuvat])
       :paallystys (component/using
                     (paallystys/->Paallystys)
                     [:http-palvelin :db])
@@ -439,6 +439,8 @@
 (defn explain [sql]
   (q "EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS, FORMAT JSON) " sql))
 
+(defn log-level-info! []
+  (log/set-config! [:appenders :standard-out :min-level] :info))
 
 (def figwheel-repl-options
   ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten

@@ -35,11 +35,12 @@
 (deftest tarkista-yllapitokohteen-lahetys
   (let [kohde-id 1
         urakka-id (hae-urakka-id 1)
-        url (tee-url)]
+        url (tee-url)
+        onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.liikennevirasto.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
     (with-fake-http [{:url url :method :post}
                      (fn [_ opts _]
                        (is (= url (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
-                       200)]
+                       onnistunut-kirjaus-vastaus)]
       (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
       (let [lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
         (is (not (nil? (:lahetetty lahetystiedot))) "Lähetysaika on merkitty")

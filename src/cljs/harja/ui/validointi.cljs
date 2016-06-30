@@ -136,7 +136,7 @@
   (when-not (<= -55 data 55)
     (or viesti "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")))
 
-(defmethod validoi-saanto :rajattu-numero [_ _ data rivi _ _ & [max-arvo min-arvo viesti]]
+(defmethod validoi-saanto :rajattu-numero [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
   (when-not (<= min-arvo data max-arvo)
     (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo ""))))
 

@@ -200,12 +200,12 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
 
-(defn hae-oulun-alueurakan-2005-2010-id []
+(defn hae-oulun-alueurakan-2005-2012-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
 
-(defn hae-oulun-alueurakan-2005-2010-urakoitsija []
+(defn hae-oulun-alueurakan-2005-2012-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
@@ -229,7 +229,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa ja Kainuu'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -281,7 +281,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (pudota-ja-luo-testitietokanta-templatesta)
   (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
-  (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2010-id))
+  (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))

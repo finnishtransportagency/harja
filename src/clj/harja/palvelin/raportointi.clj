@@ -133,8 +133,8 @@
       "Raportin suoritus"
       (str nimi)
       #(when-let [suoritettava-raportti (hae-raportti this nimi)]
-         (oikeudet/lue (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
-                       kayttaja (when (= "urakka" konteksti)
+         (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
+                                    kayttaja (when (= "urakka" konteksti)
                                   (:urakka-id suorituksen-tiedot)))
          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
                     " parametreilla " parametrit)

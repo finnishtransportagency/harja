@@ -20,7 +20,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteelle(
+CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteelle(
   piste geometry, treshold INTEGER)
   RETURNS tr_osoite
 AS $$
@@ -37,12 +37,28 @@ BEGIN
   INTO alkuosa;
 
   IF alkuosa IS NULL THEN
-    RAISE EXCEPTION 'pisteelle ei löydy tietä';
+    RETURN NULL;
   END IF;
 
   SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_LineLocatePoint(alkuosa.geom, piste))) INTO alkuet;
 
   RETURN ROW(alkuosa.tie, alkuosa.osa, alkuet::INTEGER, 0, 0, ST_ClosestPoint(piste, alkuosa.geom)::geometry);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION tierekisteriosoite_pisteelle(
+  piste geometry, treshold INTEGER)
+  RETURNS tr_osoite
+AS $$
+DECLARE
+  osoite tr_osoite;
+BEGIN
+  osoite := yrita_tierekisteriosoite_pisteelle(piste, treshold);
+  IF osoite IS NULL THEN
+    RAISE EXCEPTION 'pisteelle ei löydy tietä';
+  ELSE
+    RETURN osoite;
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 

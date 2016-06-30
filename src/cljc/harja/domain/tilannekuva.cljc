@@ -9,7 +9,9 @@
 
 
 (defrecord Suodatin [id nimi otsikko])
-(def suodatin? (partial instance? Suodatin))
+(defrecord Aluesuodatin [id nimi otsikko alue])
+(defn suodatin? [s] (or (instance? Suodatin s)
+                        (instance? Aluesuodatin s)))
 
 (maarittele-suodattimet
  [laatupoikkeamat :laatupoikkeamat "Laatupoikkeamat"]
@@ -129,3 +131,10 @@ suodattimien id numeroilla."
 (defn valittu? [valitut-set suodatin]
   (and valitut-set
        (valitut-set (:id suodatin))))
+
+(defn valitut-kentat [valinnat]
+  "Valitsee joukosta suodattimia valitut, ja palauttaa itse suodattimet listassa."
+  (let [valitut-suodattimet (apply clojure.set/union (map val (valitut-suodattimet valinnat)))
+        kentat (filter #(valitut-suodattimet (:id %))
+                             (mapcat (fn [[_ suodatin-map]] (map key suodatin-map)) valinnat))]
+    kentat))
