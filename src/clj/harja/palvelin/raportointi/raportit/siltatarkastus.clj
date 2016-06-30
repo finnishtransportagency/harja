@@ -237,7 +237,6 @@
                                                  (into #{}
                                                        (keep-indexed
                                                          (fn [index rivi]
-                                                           (log/debug "Rivi: " (pr-str rivi))
                                                            (let [d-rivi? (= (get rivi 2) "D")]
                                                              (when d-rivi?
                                                                index)))
