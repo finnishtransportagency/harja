@@ -1,12 +1,26 @@
 -- name: hae-urakan-valitavoitteet
 -- Hakee urakan kaikki välitavoitteet
-SELECT v.id, nimi, takaraja, viikkosakko, sakko,
-       valmis_pvm, valmis_kommentti, valmis_merkitsija as valmis_merkitsija_id, valmis_merkitty,
-       k.etunimi as valmis_merkitsija_etunimi, k.sukunimi as valmis_merkitsija_sukunimi,
-       v.luotu, v.muokattu, v.luoja, v.muokkaaja
-  FROM valitavoite v
-       LEFT JOIN kayttaja k ON valmis_merkitsija=k.id
- WHERE v.poistettu = false AND urakka = :urakka
+SELECT
+  v.id,
+  nimi,
+  takaraja,
+  viikkosakko,
+  sakko,
+  urakka,
+  valmis_pvm,
+  valmis_kommentti,
+  valmis_merkitsija AS valmis_merkitsija_id,
+  valmis_merkitty,
+  k.etunimi         AS valmis_merkitsija_etunimi,
+  k.sukunimi        AS valmis_merkitsija_sukunimi,
+  v.luotu,
+  v.muokattu,
+  v.luoja,
+  v.muokkaaja
+FROM valitavoite v
+  LEFT JOIN kayttaja k ON valmis_merkitsija = k.id
+WHERE v.poistettu = FALSE
+      AND (urakka = :urakka OR urakka IS NULL)
 ORDER BY takaraja ASC;
 
 -- name: hae-valtakunnalliset-valitavoitteet

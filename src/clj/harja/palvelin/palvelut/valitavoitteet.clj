@@ -10,7 +10,9 @@
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
 
-(defn hae-urakan-valitavoitteet [db user urakka-id]
+(defn hae-urakan-valitavoitteet
+  "Hakee urakan välitavoitteet sekä valtakunnalliset välitavoitteet"
+  [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-valitavoitteet user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)

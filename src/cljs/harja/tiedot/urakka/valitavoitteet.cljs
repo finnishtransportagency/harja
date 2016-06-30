@@ -29,6 +29,15 @@
             :valitavoitteet valitavoitteet}))
 
 (def valitavoitteet
+  "Urakan omat ja valtakunnalliset välitavoitteet"
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                nakymassa? @nakymassa?]
               (hae-urakan-valitavoitteet urakka-id)))
+
+(def urakan-valitavoitteet
+  (reaction (when @valitavoitteet
+              (filterv :urakka @valitavoitteet))))
+
+(def valtakunnalliset-valitavoitteet
+  (reaction (when @valitavoitteet
+              (filterv (comp not :urakka) @valitavoitteet))))
