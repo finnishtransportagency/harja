@@ -152,11 +152,11 @@
     {:otsikko "Valtakunnallinen välitavoite" :leveys 55
      :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
      :muokattava? (constantly false)}
-    {:otsikko "Urakan välitavoite" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+    {:otsikko "Välitavoite urakassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
     {:otsikko "Valtakunnallinen takaraja" :leveys 20
      :nimi :valtakunnallinen-takaraja :fmt pvm/pvm-opt :tyyppi :pvm
      :muokattava? (constantly false)}
-    {:otsikko "Urakan takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
+    {:otsikko "Takaraja urakassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
     {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
      :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
    @valtakunnalliset-valitavoitteet-atom])
