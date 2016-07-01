@@ -129,7 +129,7 @@
                                          (pvm/valissa? (c/from-date takaraja)
                                                        (c/from-date (:alkupvm urakka))
                                                        (c/from-date (:loppupvm urakka)))
-                                         (pvm/ennen? (t/now) (:loppupvm urakka))))
+                                         (pvm/ennen? (t/now) (c/from-date (:loppupvm urakka)))))
                                      urakat)
                                    (filter
                                      #(= (:urakkatyyppi valitavoite) (:tyyppi %))

@@ -158,8 +158,18 @@
      :muokattava? (constantly false)}
     {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
     {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
-     :nimi :valtakunnallinen-takaraja :fmt #(if %
-                                             (pvm/pvm-opt %)
+     :nimi :valtakunnallinen-takaraja :hae #(cond
+                                             (:valtakunnallinen-takaraja %)
+                                             (pvm/pvm-opt (:valtakunnallinen-takaraja %))
+
+                                             (and (:valtakunnallinen-takarajan-toistopaiva %)
+                                                  (:valtakunnallinen-takarajan-toistokuukausi %))
+                                             (str "Vuosittain "
+                                                  (:valtakunnallinen-takarajan-toistopaiva %)
+                                                  "."
+                                                  (:valtakunnallinen-takarajan-toistokuukausi %))
+
+                                             :default
                                              "Ei takarajaa")
      :tyyppi :pvm
      :muokattava? (constantly false)}
