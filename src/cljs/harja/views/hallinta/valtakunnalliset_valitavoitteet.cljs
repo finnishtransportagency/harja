@@ -50,7 +50,10 @@
       :valinnat (mapv :arvo nav/+urakkatyypit+)
       :muokattava? #(neg? (:id %))}
 
-     {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
+     {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt #(if %
+                                                            (pvm/pvm-opt %)
+                                                            "Ei takarajaa")
+      :tyyppi :pvm}]
     (sort-by :takaraja @kertaluontoiset-valitavoitteet-atom)]
    [yleiset/vihje
     "Kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin heti kun ne luodaan.
