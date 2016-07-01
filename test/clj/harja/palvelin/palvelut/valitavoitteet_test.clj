@@ -36,7 +36,13 @@
 
 
 (deftest urakan-valitavoitteiden-haku-toimii
-  (let [vastaus (kutsu-palvelua
+  (let [oulun-urakan-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                    (hae-oulun-alueurakan-2014-2019-id))
+        muhoksen-urakan-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                    (hae-muhoksen-paallystysurakan-id))
+        lisatyt-valtakunnalliset (kutsu-palvelua
                   (:http-palvelin jarjestelma)
                   :tallenna-valtakunnalliset-valitavoitteet
                   +kayttaja-jvh+
@@ -47,11 +53,23 @@
                                     {:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
                                      :takaraja nil, :tyyppi :toistuva,
                                      :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
-                                     :takaraja-toistokuukausi 7}]})]
+                                     :takaraja-toistokuukausi 7}]})
+        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                    (hae-oulun-alueurakan-2014-2019-id))
+        muhoksen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                       :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                       (hae-muhoksen-paallystysurakan-id))]
 
-    (log/debug "Vastaus: " vastaus)
-    (is (= (count vastaus) 2))
-    (is (= (count (filter #(= (:tyyppi %) :kertaluontoinen) vastaus)) 1))
-    (is (= (count (filter #(= (:tyyppi %) :toistuva) vastaus)) 1))
+    ;; Uudet valtakunnalliset lisätty ok
+    (is (= (count lisatyt-valtakunnalliset) 2))
+    (is (= (count (filter #(= (:tyyppi %) :kertaluontoinen) lisatyt-valtakunnalliset)) 1))
+    (is (= (count (filter #(= (:tyyppi %) :toistuva) lisatyt-valtakunnalliset)) 1))
+
+    ;; Oulun hoidon urakalle tuli lisää välitavoitteita
+    (is (> (count oulun-urakan-paivitetyt-valitavoitteet) (count oulun-urakan-valitavoitteet)))
+    ;; Muhokselle ei tullut, koska oli eri urakkatyyppi
+    (is (= (count muhoksen-urakan-paivitetyt-valitavoitteet) (count muhoksen-urakan-valitavoitteet)))
+
     (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
     (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
