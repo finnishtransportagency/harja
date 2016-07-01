@@ -10,6 +10,8 @@ SELECT
   v.valtakunnallinen_valitavoite as "valtakunnallinen-id",
   vv.nimi as "valtakunnallinen-nimi",
   vv.takaraja as "valtakunnallinen-takaraja",
+  vv.takaraja_toistopaiva as "valtakunnallinen-takarajan-toistopaiva",
+  vv.takaraja_toistokuukausi as "valtakunnallinen-takarajan-toistokuukausi",
   v.valmis_pvm,
   v.valmis_kommentti,
   v.valmis_merkitsija AS valmis_merkitsija_id,
