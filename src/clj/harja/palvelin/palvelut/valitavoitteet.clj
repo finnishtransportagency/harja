@@ -138,40 +138,44 @@
 
 (defn- kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
   [db user valitavoite valitavoite-kannassa-id urakat]
-  #_(doseq [urakka urakat]
-      ;; TODO Kopioi per jäljellä oleva vuosi
-      (luo-uudet-urakan-valitavoitteet db user
-                                       (merge valitavoite
-                                              {:valtakunnallinen-valitavoite-id valitavoite-kannassa-id})
-                                       (:id urakka))))
+  (doseq [urakka urakat]
+    (let [urakan-jaljella-olevat-vuodet (range (max (t/year (t/now))
+                                                    (t/year (c/from-date (:alkupvm urakka))))
+                                               (inc (t/year (c/from-date (:loppupvm urakka)))))]
+      (doseq [vuosi urakan-jaljella-olevat-vuodet]
+        (log/debug "Lisätään välitavoite urakkaan " (:nimi urakka) " takarajalla "
+                   vuosi "-" (:takaraja-toistokuukausi valitavoite) "-" (:takaraja-toistopaiva valitavoite))
+        (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
+                                          :takaraja (konv/sql-date (c/to-date (t/local-date
+                                                                                vuosi
+                                                                                (:takaraja-toistokuukausi valitavoite)
+                                                                                (:takaraja-toistopaiva valitavoite))))
+                                          :nimi (:nimi valitavoite)
+                                          :valtakunnallinen_valitavoite valitavoite-kannassa-id
+                                          :luoja (:id user)})))))
 
 (defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet
   "Luo uudet valtakunnalliset toistuvat välitavoitteet.
    Kopioi välitavoitteen käynnissä oleviin ja tuleviin urakoihin kertaalleen per urakkavuosi"
   [db user valitavoitteet]
-  ; FIXME Rajaa urakat urakkatyypillä
-  #_(let [urakat (into []
+  (let [urakat (into []
                        (map #(konv/string->keyword % :tyyppi))
                        (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))]
     (doseq [{:keys [takaraja nimi urakkatyyppi
                     takaraja-toistopaiva takaraja-toistokuukausi] :as valitavoite} valitavoitteet]
-      (let [kohdeurakat (filter
-                          (fn [urakka]
-                            (pvm/valissa? (c/from-date takaraja)
-                                          (c/from-date (:alkupvm urakka))
-                                          (c/from-date (:loppupvm urakka))))
-                          urakat)
-            id (q/lisaa-valtakunnallinen-toistuva-valitavoite<!
-                 db
-                 {:takaraja (konv/sql-date takaraja)
-                  :nimi nimi
-                  :urakkatyyppi (name urakkatyyppi)
-                  :takaraja_toistopaiva takaraja-toistopaiva
-                  :takaraja_toistokuukausi takaraja-toistokuukausi
-                  :tyyppi "toistuva"
-                  :luoja (:id user)})]
-        ;; TODO Kopioi kertaalleen per jäljellä oleva vuosi
-        (kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin db user valitavoite id kohdeurakat)))))
+      (let [linkitettavat-urakat (filter
+                                   #(= (:urakkatyyppi valitavoite) (:tyyppi %))
+                                   urakat)
+            id (:id (q/lisaa-valtakunnallinen-toistuva-valitavoite<!
+                  db
+                  {:takaraja (konv/sql-date takaraja)
+                   :nimi nimi
+                   :urakkatyyppi (name urakkatyyppi)
+                   :takaraja_toistopaiva takaraja-toistopaiva
+                   :takaraja_toistokuukausi takaraja-toistokuukausi
+                   :tyyppi "toistuva"
+                   :luoja (:id user)}))]
+        (kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin db user valitavoite id linkitettavat-urakat)))))
 
 (defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet]
   (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db

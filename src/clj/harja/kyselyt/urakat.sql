@@ -25,7 +25,9 @@ WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
 SELECT
   u.id,
   u.nimi,
-  u.tyyppi
+  u.tyyppi,
+  u.alkupvm,
+  u.loppupvm
 FROM urakka u
 WHERE u.alkupvm >= current_date
       OR
