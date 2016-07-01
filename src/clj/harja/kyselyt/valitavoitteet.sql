@@ -153,10 +153,15 @@ WHERE v.poistettu = FALSE
       AND v.valtakunnallinen_valitavoite = :id
 ORDER BY v.takaraja ASC;
 
--- name: paivita-valitavoitteeseen-linkitetty-muokkaamaton-kertaluontoinen-valitavoite!
+-- name: paivita-kertaluontoiseen-valitavoitteeseen-linkitetty-muokkaamaton-valitavoite!
 UPDATE valitavoite
 SET nimi = :nimi,
   takaraja = :takaraja
   -- Ei päivitetä muokkaustietoja, koska niitä käytetään tutkimaan onko käyttäjä muokannut tätä urakassa
+WHERE valtakunnallinen_valitavoite = :id
+AND muokattu IS NULL;
+
+-- name: poista-toistuvaan-valitavoitteeseen-linkitetty-muokkaamaton-valitavoite!
+DELETE FROM valitavoite
 WHERE valtakunnallinen_valitavoite = :id
 AND muokattu IS NULL;
