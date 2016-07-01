@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.valitavoitteet :as q]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
@@ -108,7 +109,7 @@
   takaraja osuu urakan voimassaoloajalle eikä urakka ole päättynyt.
   Jos takarajaa ei ole annettu, kopioidaan välitavoite kaikkiin käynnissä oleviin ja tuleviin urakoihin."
   [db user valitavoitteet]
-  (let [urakat (q/hae-kaynnissa-olevat-ja-tulevat-urakat db)]
+  (let [urakat (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db)]
     (doseq [{:keys [takaraja nimi urakkatyyppi] :as valitavoite} valitavoitteet]
       (let [id (:id (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
                       db
