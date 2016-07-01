@@ -265,6 +265,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    ikoni
    [:span (str " " teksti)]])
 
+(defn ikoni-ja-elementti [ikoni elementti]
+  [:span
+   ikoni
+   [:span " "]
+   elementti])
+
 (defn teksti-ja-ikoni [teksti ikoni]
   [:span
    [:span (str teksti " ")]
@@ -480,6 +486,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
           (str "lomake-vihje " (or luokka ""))}
     [:div.vihjeen-sisalto
      (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
+
+(defn vihje-elementti
+  ([elementti] (vihje-elementti elementti nil))
+  ([elementti luokka]
+   [:div {:class
+          (str "lomake-vihje " (or luokka ""))}
+    [:div.vihjeen-sisalto
+     (ikoni-ja-elementti (harja.ui.ikonit/livicon-info-sign) elementti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

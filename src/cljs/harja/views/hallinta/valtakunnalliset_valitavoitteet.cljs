@@ -35,24 +35,26 @@
                           (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                          :warning viesti/viestin-nayttoaika-keskipitka)
                           (reset! valitavoitteet-atom vastaus)))))}
-   [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128}
-    {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
-     :tyyppi :valinta
-     :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
-     :valinta-nayta #(or (:nimi (first (filter
-                                         (fn [tyyppi] (= (:arvo tyyppi) %))
-                                         nav/+urakkatyypit+)))
-                         "- valitse -")
-     :fmt #(:nimi (first (filter
-                               (fn [tyyppi] (= (:arvo tyyppi) %))
-                               nav/+urakkatyypit+)))
-     :valinnat (mapv :arvo nav/+urakkatyypit+)
-     :muokattava? #(neg? (:id %))}
+    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128}
+     {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
+      :tyyppi :valinta
+      :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
+      :valinta-nayta #(or (:nimi (first (filter
+                                          (fn [tyyppi] (= (:arvo tyyppi) %))
+                                          nav/+urakkatyypit+)))
+                          "- valitse -")
+      :fmt #(:nimi (first (filter
+                            (fn [tyyppi] (= (:arvo tyyppi) %))
+                            nav/+urakkatyypit+)))
+      :valinnat (mapv :arvo nav/+urakkatyypit+)
+      :muokattava? #(neg? (:id %))}
 
-    {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
+     {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
     (sort-by :takaraja @kertaluontoiset-valitavoitteet-atom)]
-   [yleiset/vihje "Kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin heti kun ne luodaan.
-   Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]
+   [yleiset/vihje-elementti
+    [:span
+     [:span "Kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin heti kun ne luodaan."]
+     [:br] [:span "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]
 
    [:br]
    [grid/grid
@@ -79,8 +81,8 @@
                                           nav/+urakkatyypit+)))
                           "- valitse -")
       :fmt #(:nimi (first (filter
-                           (fn [tyyppi] (= (:arvo tyyppi) %))
-                           nav/+urakkatyypit+)))
+                            (fn [tyyppi] (= (:arvo tyyppi) %))
+                            nav/+urakkatyypit+)))
       :valinnat (mapv :arvo nav/+urakkatyypit+)
       :muokattava? #(neg? (:id %))}
      {:otsikko "Takarajan toistopäivä" :leveys 10 :nimi :takaraja-toistopaiva
@@ -88,9 +90,10 @@
      {:otsikko "Takarajan toistokuukausi" :leveys 10 :nimi :takaraja-toistokuukausi
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
     (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
-   [yleiset/vihje "Toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen
-   per jäljellä oleva urakkavuosi. Poistettu välitavoite jää näkyviin päättyneisiin urakoihin
-   tai jos se on ehditty tehdä valmiiksi."]])
+   [yleiset/vihje-elementti
+    [:span
+     [:span "Toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."]
+     [:br] [:span "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]])
 
 (defn valitavoitteet []
   (komp/luo
