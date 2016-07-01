@@ -140,9 +140,11 @@
                                                                valitavoitteet)))
 
 (defn- paivita-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  ;; TODO Mahdollisesti halutaan, että tämän päivittäminen vaikuttaa vain uusiin urakoihin?
-  #_(doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
-      (q/paivita-valtakunnallinen-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)))
+  (doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
+    (q/paivita-valtakunnallinen-valitavoite! db nimi
+                                             (konv/sql-date takaraja)
+                                             (:id user)
+                                             id)))
 
 
 (defn tallenna-valtakunnalliset-valitavoitteet! [db user {:keys [valitavoitteet]}]

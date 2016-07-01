@@ -71,7 +71,7 @@ VALUES (:urakka,
         NOW());
 
 -- name: paivita-urakan-valitavoite!
--- Päivittää välitavoitteen tiedot
+-- Päivittää urakan välitavoitteen tiedot
 UPDATE valitavoite
    SET nimi = :nimi, takaraja = :takaraja, muokattu = NOW(), muokkaaja = :user
  WHERE urakka = :urakka AND id = :id;
@@ -111,3 +111,12 @@ SELECT
   loppupvm
 FROM urakka
 WHERE loppupvm >= NOW();
+
+-- name: paivita-valtakunnallinen-valitavoite!
+-- Päivittää valtakunnallisen välitavoitteen tiedot
+UPDATE valitavoite
+SET nimi = :nimi,
+  takaraja = :takaraja,
+  muokattu = NOW(),
+  muokkaaja = :user
+WHERE id = :id;
