@@ -37,7 +37,7 @@
                           (reset! valitavoitteet-atom vastaus)))))}
     [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
       :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
-     {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
+     {:otsikko "Urakka\u00ADtyyppi" :leveys 20 :nimi :urakkatyyppi
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
       :valinta-nayta #(or (:nimi (first (filter
@@ -50,7 +50,7 @@
       :valinnat (mapv :arvo nav/+urakkatyypit+)
       :muokattava? #(neg? (:id %))}
 
-     {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt #(if %
+     {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                             (pvm/pvm-opt %)
                                                             "Ei takarajaa")
       :tyyppi :pvm}]
@@ -77,7 +77,7 @@
                           (reset! valitavoitteet-atom vastaus)))))}
     [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
       :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
-     {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
+     {:otsikko "Urakka\u00ADtyyppi" :leveys 20 :nimi :urakkatyyppi
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
       :valinta-nayta #(or (:nimi (first (filter
@@ -89,9 +89,9 @@
                             nav/+urakkatyypit+)))
       :valinnat (mapv :arvo nav/+urakkatyypit+)
       :muokattava? #(neg? (:id %))}
-     {:otsikko "Takarajan toistopäivä" :leveys 10 :nimi :takaraja-toistopaiva
+     {:otsikko "Taka\u00ADrajan toisto\u00ADpäi\u00ADvä" :leveys 10 :nimi :takaraja-toistopaiva
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
-     {:otsikko "Takarajan toistokuukausi" :leveys 10 :nimi :takaraja-toistokuukausi
+     {:otsikko "Taka\u00ADrajan toisto\u00ADkuu\u00ADkausi" :leveys 10 :nimi :takaraja-toistokuukausi
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
     (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
    [yleiset/vihje

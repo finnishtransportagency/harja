@@ -117,7 +117,7 @@
    [{:tyyppi :vetolaatikon-tila :leveys 5}
     {:otsikko "Nimi" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128
      :validoi [:ei-tyhja "Anna välitavoitteen nimi"]}
-    {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt #(if %
+    {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                            (pvm/pvm-opt %)
                                                            "Ei takarajaa")
      :tyyppi :pvm}
@@ -153,17 +153,17 @@
     :voi-poistaa? (constantly false)}
 
    [{:tyyppi :vetolaatikon-tila :leveys 5}
-    {:otsikko "Valtakunnallinen välitavoite" :leveys 55
+    {:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 55
      :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
      :muokattava? (constantly false)}
-    {:otsikko "Välitavoite urakassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
-    {:otsikko "Valtakunnallinen takaraja" :leveys 20
+    {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+    {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
      :nimi :valtakunnallinen-takaraja :fmt #(if %
                                              (pvm/pvm-opt %)
                                              "Ei takarajaa")
      :tyyppi :pvm
      :muokattava? (constantly false)}
-    {:otsikko "Takaraja urakassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
+    {:otsikko "Taka\u00ADraja ura\u00ADkassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
     {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
      :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
    @valtakunnalliset-valitavoitteet-atom])
