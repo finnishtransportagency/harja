@@ -282,6 +282,13 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
+            <xs:element name="massamaara" minOccurs="0" maxOccurs="1" type="xs:decimal">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: kg/m2
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:element name="kokonaismassamaara" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:annotation>
@@ -312,14 +319,14 @@
         <xs:complexContent>
             <xs:extension base="paallystystoimenpide">
                 <xs:sequence>
-                    <xs:element name="leveys" type="xs:integer" minOccurs="0" maxOccurs="1">
+                    <xs:element name="leveys" type="xs:decimal" minOccurs="0" maxOccurs="1">
                         <xs:annotation>
                             <xs:documentation>
                                 Yksikkö: metri
                             </xs:documentation>
                         </xs:annotation>
                     </xs:element>
-                    <xs:element name="pinta-ala" type="xs:integer" minOccurs="0" maxOccurs="1">
+                    <xs:element name="pinta-ala" type="xs:decimal" minOccurs="0" maxOccurs="1">
                         <xs:annotation>
                             <xs:documentation>
                                 Yksikkö: neliömetri
@@ -346,7 +353,7 @@
         <xs:sequence>
             <xs:element name="tierekisteriosoitevali" type="tierekisteriosoitevali" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="kasittelymenetelma" type="alustamenetelma" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="kasittelypaksuus" type="xs:integer" nillable="false" minOccurs="1" maxOccurs="1">
+            <xs:element name="kasittelypaksuus" type="xs:decimal" nillable="false" minOccurs="1" maxOccurs="1">
                 <xs:annotation>
                     <xs:documentation>
                         Yksikkö: senttimetri

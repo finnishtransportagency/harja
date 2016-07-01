@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.1.6</b>
-<b>Julkaistu: 20.5.2016</b>
+<b>Nykyinen versio: 0.1.8</b>
+<b>Julkaistu: 1.7.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.1.8. Julkaistu 1.7.2016:
+    - Urakkahaku palauttaa kokonaishintaiset ja yksikköhintaiset tehtävät omassa elementissään. Tehtävät ovat jatkossa vakiojoukko, jonka Harjan pääkäyttäjä määrittää ja näin ollen eivät enää ole riippuvaisia urakkakohtaisista suunnitelmatiedoista. Samalla päivitetty lista työkoneiden reaaliaikaseurannan tehtävistä.
 - Versionumero: 0.1.7. Julkaistu 16.5.2016:
     - Siltatarkastuksen kirjaamisessa mahdollisuus antaa tarkastuskohteelle arvo "eiPade", joka tarkoittaa, ettei kyseistä ominaisuutta voida arvioida tässä sillassa. Arvo voi olla myös tyhjä string, joka tulkitaan arvoksi eiPade.
 - Versionumero: 0.1.6. Julkaistu 20.5.2016:

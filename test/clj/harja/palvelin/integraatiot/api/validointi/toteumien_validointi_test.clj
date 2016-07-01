@@ -31,6 +31,6 @@
 
 (deftest tarkiasta-toteuman-tehtavien-tarkistus
   (let [db (tietokanta/luo-tietokanta testitietokanta)]
-    (validointi/tarkista-tehtavat db 1 [{:tehtava {:id 1370}}])
-    (is (thrown? Exception (validointi/tarkista-tehtavat db 1 [{:tehtava {:id 608}} {:tehtava {:id 1}}]))
+    (validointi/tarkista-tehtavat db [{:tehtava {:id 1370}}])
+    (is (thrown? Exception (validointi/tarkista-tehtavat db [{:tehtava {:id 7777666}} {:tehtava {:id 1}}]))
         "Poikkeusta ei heitetty, kun yksi toteuman tehtävistä ei ole urakalla")))

@@ -4,7 +4,7 @@
         <!--Zero or more repetitions:-->
         <kohde>
             <yha-id>3</yha-id>
-            <kohdetyyppi>paikkaus</kohdetyyppi>
+            <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
             <nimi>string</nimi>
             <!--Optional:-->
             <yllapitoluokka>1</yllapitoluokka>
