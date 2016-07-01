@@ -45,7 +45,8 @@
      :fmt #(:nimi (first (filter
                                (fn [tyyppi] (= (:arvo tyyppi) %))
                                nav/+urakkatyypit+)))
-     :valinnat (mapv :arvo nav/+urakkatyypit+)}
+     :valinnat (mapv :arvo nav/+urakkatyypit+)
+     :muokattava? #(neg? (:id %))}
 
     {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
     @kertaluontoiset-valitavoitteet-atom]
@@ -76,7 +77,8 @@
       :fmt #(:nimi (first (filter
                            (fn [tyyppi] (= (:arvo tyyppi) %))
                            nav/+urakkatyypit+)))
-      :valinnat (mapv :arvo nav/+urakkatyypit+)}
+      :valinnat (mapv :arvo nav/+urakkatyypit+)
+      :muokattava? #(neg? (:id %))}
      {:otsikko "Takarajan toistopäivä" :leveys 10 :nimi :takaraja-toistopaiva
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
      {:otsikko "Takarajan toistokuukausi" :leveys 10 :nimi :takaraja-toistokuukausi
