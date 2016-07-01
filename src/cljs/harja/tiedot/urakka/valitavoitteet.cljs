@@ -32,6 +32,7 @@
   "Urakan omat ja valtakunnalliset välitavoitteet"
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                nakymassa? @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
               (hae-urakan-valitavoitteet urakka-id)))
 
 (def urakan-valitavoitteet

@@ -25,6 +25,7 @@
 
 (def valitavoitteet
   (reaction<! [nakymassa? @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
               (when nakymassa?
                 (hae-valitavoitteet))))
 
