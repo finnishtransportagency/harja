@@ -47,7 +47,11 @@ ORDER BY takaraja ASC;
 -- name: merkitse-valmiiksi!
 -- Merkitsee välitavoitteen valmiiksi
 UPDATE valitavoite
-   SET valmis_pvm=:valmis, valmis_kommentti=:kommentti, valmis_merkitsija=:user, valmis_merkitty=NOW()
+   SET valmis_pvm=:valmis,
+     valmis_kommentti=:kommentti,
+     valmis_merkitsija=:user,
+     valmis_merkitty=NOW(),
+     muokattu = NOW()
  WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false;
 
 -- name: poista-urakan-valitavoite!
@@ -164,4 +168,5 @@ AND muokattu IS NULL;
 -- name: poista-toistuvaan-valitavoitteeseen-linkitetty-muokkaamaton-valitavoite!
 DELETE FROM valitavoite
 WHERE valtakunnallinen_valitavoite = :id
-AND muokattu IS NULL;
+      AND valmis_pvm IS NULL
+      AND muokattu IS NULL;
