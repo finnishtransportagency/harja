@@ -192,10 +192,11 @@
                                                                valitavoitteet)))
 
 (defn- paivita-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  ; FIXME Päivitä myös toistuva oikein
-  (doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
+  (doseq [{:keys [id takaraja takaraja-toistopaiva takaraja-toistokuukausi nimi]} (filter #(> (:id %) 0) valitavoitteet)]
     (q/paivita-valtakunnallinen-valitavoite! db nimi
                                              (konv/sql-date takaraja)
+                                             takaraja-toistopaiva
+                                             takaraja-toistokuukausi
                                              (:id user)
                                              id)))
 

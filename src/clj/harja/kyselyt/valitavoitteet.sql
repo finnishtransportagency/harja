@@ -121,6 +121,8 @@ WHERE loppupvm >= NOW();
 UPDATE valitavoite
 SET nimi = :nimi,
   takaraja = :takaraja,
+  takaraja_toistopaiva = :takaraja_toistopaiva,
+  takaraja_toistokuukausi = :takaraja_toistokuukausi,
   muokattu = NOW(),
   muokkaaja = :user
 WHERE id = :id
