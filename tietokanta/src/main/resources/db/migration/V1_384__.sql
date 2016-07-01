@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- 1. Lisää puuttuvat tehtävät
 
 -- Talvihoito
@@ -955,18 +954,3 @@ WHERE nimi = 'Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)';
 UPDATE toimenpidekoodi
 SET api_seuranta = TRUE
 WHERE nimi = 'Päällysteiden paikkaus - massasaumaus';
-=======
--- SiltatarkastusraporTTI
-
-INSERT INTO raportti (nimi, kuvaus, konteksti, parametrit, koodi, urakkatyyppi) VALUES (
- 'siltatarkastus', 'Siltatarkastusraportti',
- ARRAY['urakka'::raporttikonteksti,
-       'hallintayksikko'::raporttikonteksti,
-       'hankinta-alue'::raporttikonteksti,
-       'koko maa'::raporttikonteksti],
- ARRAY[('Vuosi', 'urakan-vuosi', true, NULL)::raporttiparametri,
-       ('Silta', 'silta', true, 'urakka'::raporttikonteksti)::raporttiparametri],
- '#''harja.palvelin.raportointi.raportit.siltatarkastus/suorita',
-  'hoito'::urakkatyyppi
-);
->>>>>>> develop
