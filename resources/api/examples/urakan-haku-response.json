@@ -19,32 +19,7 @@
           "id": 456789132,
           "nimi": "Kiviharjunlenkin asfaltointi",
           "alkupvm": "2015-01-30T12:00:00Z",
-          "loppupvm": "2016-01-30T12:00:00Z",
-          "toteumakirjauskohteet": {
-            "kokonaishintaiset": [
-              {
-                "tehtava": {
-                  "id": 1399,
-                  "selite": "Auraus ja sohjonpoisto",
-                  "yksikko": "km"
-                },
-                "tehtava": {
-                  "id": 1400,
-                  "selite": "Suolaus",
-                  "yksikko": "km"
-                }
-              }
-            ],
-            "yksikkohintaiset": [
-              {
-                "tehtava": {
-                  "id": 1371,
-                  "selite": "Vesakonraivaus",
-                  "yksikko": "m2"
-                }
-              }
-            ]
-          }
+          "loppupvm": "2016-01-30T12:00:00Z"
         }
       }
     ],
@@ -55,6 +30,31 @@
           "yksikko": "t"
         }
       }
-    ]
+    ],
+    "tehtavat": {
+      "kokonaishintaiset": [
+        {
+          "tehtava": {
+            "id": 1399,
+            "selite": "Auraus ja sohjonpoisto",
+            "yksikko": "km"
+          },
+          "tehtava": {
+            "id": 1400,
+            "selite": "Suolaus",
+            "yksikko": "km"
+          }
+        }
+      ],
+      "yksikkohintaiset": [
+        {
+          "tehtava": {
+            "id": 1371,
+            "selite": "Vesakonraivaus",
+            "yksikko": "m2"
+          }
+        }
+      ]
+    }
   }
 }

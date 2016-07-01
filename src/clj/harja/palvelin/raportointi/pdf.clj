@@ -166,7 +166,7 @@
                        :font-weight "normal" :padding "1mm"}
        [:fo:block (cdata otsikko)]])]])
 
-(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto?] :as optiot}]
+(defn taulukko-body [sarakkeet data {:keys [viimeinen-rivi-yhteenveto? tyhja] :as optiot}]
   (let [rivien-maara (count data)
         viimeinen-rivi (last data)
         data (if (> (count data) +max-rivimaara+)
@@ -181,7 +181,7 @@
                          :font-weight "normal"
                          :number-columns-spanned (count sarakkeet)}
          [:fo:block {:space-after "0.5em"}]
-         [:fo:block "Ei tietoja"]]])
+         [:fo:block (or tyhja "Ei tietoja")]]])
      (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
      (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
 

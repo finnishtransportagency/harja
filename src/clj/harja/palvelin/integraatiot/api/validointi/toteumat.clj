@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.api.validointi.toteumat
   (:require [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.kyselyt.urakat :as urakat]))
+            [harja.kyselyt.urakat :as q-urakat]
+            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodi]))
 
 (defn tarkasta-pvmvalin-validiteetti [alku loppu]
   (when (.after (aika-string->java-sql-date alku) (aika-string->java-sql-date loppu))
@@ -21,10 +22,10 @@
                              toteuman-alku
                              toteuman-loppu)}))))))
 
-(defn tarkista-tehtavat [db urakka-id tehtavat]
+(defn tarkista-tehtavat [db tehtavat]
   (doseq [tehtava tehtavat]
     (let [tehtava-id (get-in tehtava [:tehtava :id])]
-      (when (not (urakat/onko-urakalla-tehtavaa? db urakka-id tehtava-id))
+      (when (not (q-toimenpidekoodi/onko-olemassa-idlla? db tehtava-id))
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi  :virheellinen-tehtava
-           :viesti (format "Urakalla id %s ei ole tehtävää %s." urakka-id tehtava-id)})))))
+           :viesti (format "Tuntematon tehtävä (id: %s)." tehtava-id)})))))

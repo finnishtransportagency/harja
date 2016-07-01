@@ -164,10 +164,10 @@ jos niille ei löydy yhteistä tietä tieverkolta."}
       (validointi/tarkista-urakka-sopimus-ja-kayttaja db urakka-id sopimus-id kirjaaja)))
   (when (:reittitoteuma data)
     (toteuman-validointi/tarkista-reittipisteet data)
-    (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in data [:reittitoteuma :toteuma :tehtavat]))
+    (toteuman-validointi/tarkista-tehtavat db (get-in data [:reittitoteuma :toteuma :tehtavat]))
     (doseq [reittitoteuma (:reittitoteumat data)]
       (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
-      (toteuman-validointi/tarkista-tehtavat db urakka-id (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat])))))
+      (toteuman-validointi/tarkista-tehtavat db (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat])))))
 
 (defn kirjaa-toteuma [db db-replica {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]

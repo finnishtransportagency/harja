@@ -276,7 +276,7 @@
 
 (defn paallystysilmoituslomake []
   (let [lomake-kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                                   (:id @nav/valittu-urakka))
+                                                          (:id @nav/valittu-urakka))
         alikohteet-virheet (atom {})
         paallystystoimenpide-virheet (atom {})
         kiviaines-virheet (atom {})
@@ -456,10 +456,11 @@
                                     "")))
                :valinnat paallystys-ja-paikkaus/+paallystetyypit+
                :leveys "30%"}
-              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :leveys "10%" :tasaa :oikea}
-              {:otsikko "Massa (kg/m2)" :nimi :massa :tyyppi :positiivinen-numero :tasaa :oikea
+              {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0 :leveys "10%" :tasaa :oikea
+               :validoi [[:rajattu-numero nil 0 99]]}
+              {:otsikko "Massamaara (kg/m2)" :nimi :massamaara :tyyppi :positiivinen-numero :tasaa :oikea
                :leveys "10%"}
-              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :tasaa :oikea :pituus-max 100
+              {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0 :tasaa :oikea :pituus-max 100
                :validoi [[:rajattu-numero nil 0 100]]}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
                :nimi :tyomenetelma
@@ -475,8 +476,8 @@
                :leveys "30%"}
               {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
                :tasaa :oikea}
-              {:otsikko "Massamäärä (kg/m2)" :nimi :massamaara :leveys "15%" :tyyppi :positiivinen-numero
-               :tasaa :oikea}
+              {:otsikko "Kohteen kokonaismassa (t)" :nimi :kohteen-kokonaismassa :leveys "15%" :tyyppi :positiivinen-numero
+               :tasaa :oikea :desimaalien-maara 0}
               {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
                :tasaa :oikea}
               {:otsikko "Edellinen päällyste"
@@ -636,20 +637,20 @@
 (defn jarjesta-paallystysilmoitukset [paallystysilmoitukset]
   (when paallystysilmoitukset
     (sort-by
-     (juxt (fn [toteuma] (case (:tila toteuma)
-                           :lukittu 0
-                           :valmis 1
-                           :aloitettu 3
-                           4))
-           (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                           :hyvaksytty 0
-                           :hylatty 1
-                           3))
-           (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
-                           :hyvaksytty 0
-                           :hylatty 1
-                           3)))
-     paallystysilmoitukset)))
+      (juxt (fn [toteuma] (case (:tila toteuma)
+                            :lukittu 0
+                            :valmis 1
+                            :aloitettu 3
+                            4))
+            (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                            :hyvaksytty 0
+                            :hylatty 1
+                            3))
+            (fn [toteuma] (case (:paatos-taloudellinen-osa toteuma)
+                            :hyvaksytty 0
+                            :hylatty 1
+                            3)))
+      paallystysilmoitukset)))
 
 (defn paallystysilmoitukset-taulukko [paallystysilmoitukset]
   [grid/grid

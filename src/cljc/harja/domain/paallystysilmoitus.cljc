@@ -201,11 +201,11 @@
      ; Osoitteelle tehdyt toimenpiteet
      (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
      (s/optional-key :raekoko) (s/maybe s/Int)
-     (s/optional-key :massa) (s/maybe s/Num)                ;; kg/m2
+     (s/optional-key :massamaara) (s/maybe s/Num)                ;; kg/m2
      (s/optional-key :rc%) (s/maybe s/Int)
      (s/optional-key :tyomenetelma) (s/maybe +tyomenetelma+) ;; koodisto "työmenetelmä"
      (s/optional-key :leveys) (s/maybe s/Num)               ;; metriä, esim. 4,2
-     (s/optional-key :massamaara) (s/maybe s/Num)           ;; tonnia
+     (s/optional-key :kohteen-kokonaismassa) (s/maybe s/Int)           ;; tonnia
      (s/optional-key :pinta-ala) (s/maybe s/Num)            ;; m2
      (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
      (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)

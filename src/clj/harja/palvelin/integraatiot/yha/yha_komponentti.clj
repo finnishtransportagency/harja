@@ -13,7 +13,8 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [clojure.string :as string])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -51,24 +52,37 @@
            :virheet {:virhe virhe}}))
       kohteet)))
 
+(defn muodosta-kohteiden-lahetysvirheet [virheet]
+  (let [virhe-viestit (string/join ", " (mapv (fn [{:keys [kohde-yha-id selite]}]
+                                           (str (when kohde-yha-id (str "Kohde id: " kohde-yha-id ", ")) "Virhe: " selite))
+                                         virheet))]
+    (str "YHA palautti seuraavat virheet: " virhe-viestit)))
+
 (defn kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet]
   (log/debug format "YHA palautti urakokan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
-  (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)]
+  (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
+        virheet (:virheet vastaus)
+        onnistunut? (empty? virheet)
+        virhe-viesti (muodosta-kohteiden-lahetysvirheet virheet)]
+    (if onnistunut?
+      (log/info "Kohteiden lähetys YHA:n onnistui")
+      (log/error (str "Kohteiden lähetys YHA:n epäonnistui: " virhe-viesti)))
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
             virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) (:virheet vastaus)))
-            onnistunut? (nil? virhe)
             virhe-viesti (:selite virhe)]
-        (if onnistunut?
-          (log/info (format "Kohteen (id: %s) lähetys onnistui." kohde-id))
+        (when (not onnistunut?)
           (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti)))
         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
           {:lahetetty (pvm/nyt)
            :onnistunut onnistunut?
            :lahetysvirhe virhe-viesti
-           :kohdeid kohde-id})))))
+           :kohdeid kohde-id})))
+    (when (not onnistunut?)
+      (throw+ {:type +virhe-kohteen-lahetyksessa+
+               :virheet {:virhe virhe-viesti}}))))
 
 (defn lisaa-http-parametri [parametrit avain arvo]
   (if arvo
@@ -122,7 +136,7 @@
 (defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id kayttajatunnus]
   (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "haeUrakanKohteet" yha-id))
-          vuosi 2015 #_(pvm/vuosi (pvm/nyt))]
+          vuosi (pvm/vuosi (pvm/nyt))]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "yha" "kohteiden-haku"
