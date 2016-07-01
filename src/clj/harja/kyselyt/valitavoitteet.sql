@@ -48,9 +48,11 @@ UPDATE valitavoite
  WHERE urakka = :urakka AND id = :valitavoite AND poistettu = false;
 
 -- name: poista-urakan-valitavoite!
--- Merkitsee välitavoitteen poistetuksi
+-- Merkitsee urakan välitavoitteen poistetuksi
 UPDATE valitavoite
-   SET poistettu = true, muokattu = NOW(), muokkaaja = :user
+   SET poistettu = true,
+     muokattu = NOW(),
+     muokkaaja = :user
  WHERE urakka = :urakka AND id = :valitavoite;
 
 -- name: lisaa-urakan-valitavoite<!
@@ -119,4 +121,30 @@ SET nimi = :nimi,
   takaraja = :takaraja,
   muokattu = NOW(),
   muokkaaja = :user
-WHERE id = :id;
+WHERE id = :id
+      AND urakka IS NULL;
+
+-- name: poista-valtakunnallinen-valitavoite!
+-- Merkitsee valtakunnallisen välitavoitteen poistetuksi
+UPDATE valitavoite
+SET poistettu = true,
+  muokattu = NOW(),
+  muokkaaja = :user
+WHERE id = :id
+      AND urakka IS NULL;
+
+-- name: hae-valitavoitteeseen-linkitetyt-valitavoitteet
+-- Merkitsee valtakunnallisen välitavoitteen poistetuksi
+SELECT
+  v.id,
+  v.nimi,
+  v.valmis_pvm as "valmispvm",
+  u.id as urakka_id,
+  u.nimi as urakka_nimi,
+  u.alkupvm as urakka_alkupvm,
+  u.loppupvm as urakka_loppupvm
+FROM valitavoite v
+  JOIN urakka u ON v.urakka = u.id
+WHERE v.poistettu = FALSE
+      AND v.valtakunnallinen_valitavoite = :id
+ORDER BY v.takaraja ASC;

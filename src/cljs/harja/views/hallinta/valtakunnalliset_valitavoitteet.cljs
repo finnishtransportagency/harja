@@ -49,7 +49,7 @@
      :muokattava? #(neg? (:id %))}
 
     {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
-    @kertaluontoiset-valitavoitteet-atom]
+    (sort-by :takaraja @kertaluontoiset-valitavoitteet-atom)]
 
    [grid/grid
     {:otsikko "Valtakunnalliset vuosittain toistuvat välitavoitteet"
@@ -83,7 +83,7 @@
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
      {:otsikko "Takarajan toistokuukausi" :leveys 10 :nimi :takaraja-toistokuukausi
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
-    @toistuvat-valitavoitteet-atom]])
+    (sort-by :takaraja @toistuvat-valitavoitteet-atom)]])
 
 (defn valitavoitteet []
   (komp/luo

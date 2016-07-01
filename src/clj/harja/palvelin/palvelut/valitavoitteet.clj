@@ -8,7 +8,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [clj-time.core :as t]))
 
 (defn hae-urakan-valitavoitteet
   "Hakee urakan välitavoitteet sekä valtakunnalliset välitavoitteet"
@@ -60,10 +61,37 @@
     (paivita-urakan-valitavoitteet db user valitavoitteet urakka-id)
     (hae-urakan-valitavoitteet db user urakka-id)))
 
-(defn- poista-poistetut-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  ;; TODO Pitää selventää mitä tämän poistamisesta seuraa
-  #_(doseq [poistettava (filter :poistettu valitavoitteet)]
-      (q/poista-valtakunnallinen-valitavoite! db (:id user) urakka-id (:id poistettava))))
+(defn- poista-poistetut-valtakunnalliset-valitavoitteet
+  "Poistaa valtakunnallisen välitavoitteen.
+
+  Välitavoitteeseen linkitetyt urakkakohtaiset välitavoitteet poistetaan vain käynnissä olevista
+  ja tulevista urakoista ja vain silloin jos välitavoite ei ole valmistunut.
+  Toisin sanoen välitavoite jää näkyviin vanhoihin urakoihin tai jos se on ehditty tehdä valmiiksi."
+  [db user valitavoitteet]
+  ; FIXME Käsittele toistuvien poisto
+  (doseq [poistettava (filter :poistettu valitavoitteet)]
+    (let [linkitetyt (into []
+                           (map konv/alaviiva->rakenne)
+                           (q/hae-valitavoitteeseen-linkitetyt-valitavoitteet db (:id poistettava)))
+          urakka-kaynnissa-tai-tulossa? (fn [urakka]
+                                          (or (pvm/valissa?
+                                                (t/now)
+                                                (c/from-date (:alkupvm urakka))
+                                                (c/from-date (:loppupvm urakka)))
+                                              (pvm/jalkeen? (:alkupvm urakka) (t/now))))
+          poistettavat-linkitetyt (filter
+                                    (fn [valitavoite]
+                                      (and (urakka-kaynnissa-tai-tulossa? (:urakka valitavoite))
+                                           (nil? (:valmispvm valitavoite))))
+                                    linkitetyt)]
+      (q/poista-valtakunnallinen-valitavoite! db
+                                              (:id user)
+                                              (:id poistettava))
+      (doseq [poistettava poistettavat-linkitetyt]
+        (q/poista-urakan-valitavoite! db
+                                      (:id user)
+                                      (get-in poistettava [:urakka :id])
+                                      (:id poistettava))))))
 
 (defn- kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin
   [db user valitavoite valtakunnallinen-valitavoite-id urakat]
@@ -140,6 +168,7 @@
                                                                valitavoitteet)))
 
 (defn- paivita-valtakunnalliset-valitavoitteet [db user valitavoitteet]
+  ; FIXME Päivitä myös toistuva oikein
   (doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
     (q/paivita-valtakunnallinen-valitavoite! db nimi
                                              (konv/sql-date takaraja)
