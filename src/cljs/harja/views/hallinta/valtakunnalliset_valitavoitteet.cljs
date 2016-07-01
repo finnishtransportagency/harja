@@ -35,7 +35,8 @@
                           (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                          :warning viesti/viestin-nayttoaika-keskipitka)
                           (reset! valitavoitteet-atom vastaus)))))}
-    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128}
+    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
+      :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
      {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
@@ -71,7 +72,8 @@
                           (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                          :warning viesti/viestin-nayttoaika-keskipitka)
                           (reset! valitavoitteet-atom vastaus)))))}
-    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128}
+    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
+      :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
      {:otsikko "Urakkatyyppi" :leveys 20 :nimi :urakkatyyppi
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
