@@ -73,6 +73,7 @@
     ;; Muhokselle ei tullut, koska oli eri urakkatyyppi
     (is (= (count muhoksen-urakan-paivitetyt-valitavoitteet) (count muhoksen-urakan-valitavoitteet)))
 
+    ;; Valtakunnallisten päivittäminen päivittää tiedot myös urakkaan
     (let [uudelleenpaivitetyt (kutsu-palvelua
                                 (:http-palvelin jarjestelma)
                                 :tallenna-valtakunnalliset-valitavoitteet
@@ -83,7 +84,10 @@
           oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                                  (hae-oulun-alueurakan-2014-2019-id))]
-      (is (every? #(= (:nimi %) "PÄIVITÄ") (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
+      (is (every? #(= (:nimi %) "PÄIVITÄ")
+                  (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
+      (is (every? #(= (:valtakunnallinen-nimi %) "PÄIVITÄ")
+                  (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
 
       (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
       (u (str "DELETE FROM valitavoite WHERE urakka IS NULL")))))
