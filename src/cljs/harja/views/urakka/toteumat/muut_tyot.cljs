@@ -295,6 +295,12 @@
               :palstoja 1
               :validoi     [[:ei-tyhja "Valitse päivämäärä"]
                             [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]}
+             {:tyyppi :tierekisteriosoite
+              :nimi :tr
+              :pakollinen? false
+              :sijainti (r/wrap (:reitti @muokattu)
+                                #(swap! muokattu assoc :reitti %))
+              :palstoja 1}
 
              (lomake/rivi
               {:otsikko       "Hinnoittelu" :nimi :hinnoittelu

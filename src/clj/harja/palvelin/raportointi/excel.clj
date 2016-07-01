@@ -51,6 +51,15 @@
 (defmethod erikoiskentta :liitteet [liitteet]
   (count (second liitteet)))
 
+(defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
+  (dorun
+    (map-indexed
+      (fn [sarake-nro {:keys [otsikko] :as sarake}]
+        (let [cell (.createCell otsikko-rivi sarake-nro)]
+          (excel/set-cell! cell (ilman-soft-hyphenia otsikko))
+          (excel/set-cell-style! cell sarake-tyyli)))
+      sarakkeet)))
+
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
     (let [nimi (:otsikko optiot)
@@ -88,13 +97,7 @@
                 0 rivi-ennen))
 
       ;; Luodaan otsikot saraketyylillä
-      (dorun
-       (map-indexed
-        (fn [sarake-nro {:keys [otsikko] :as sarake}]
-          (let [cell (.createCell otsikko-rivi sarake-nro)]
-            (excel/set-cell! cell (ilman-soft-hyphenia otsikko))
-            (excel/set-cell-style! cell sarake-tyyli)))
-        sarakkeet))
+      (taulukko-otsikkorivi otsikko-rivi sarakkeet sarake-tyyli)
 
       (dorun
        (map-indexed
