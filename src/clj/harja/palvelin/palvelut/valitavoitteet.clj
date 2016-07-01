@@ -69,7 +69,6 @@
   ja tulevista urakoista ja vain silloin jos välitavoite ei ole valmistunut.
   Toisin sanoen välitavoite jää näkyviin vanhoihin urakoihin tai jos se on ehditty tehdä valmiiksi."
   [db user valitavoitteet]
-  ; FIXME Käsittele toistuvien poisto
   (doseq [poistettava (filter :poistettu valitavoitteet)]
     (let [linkitetyt (into []
                            (map konv/alaviiva->rakenne)
