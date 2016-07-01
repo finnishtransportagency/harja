@@ -15,10 +15,10 @@
   (if shapefile
     (do
       (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [transaktio db]
-        (k/tuhoa-tieverkkodata! transaktio)
+      (jdbc/with-db-transaction [db db]
+        (k/tuhoa-tieverkkodata! db)
         (doseq [tv (shapefile/tuo shapefile)]
-          (vie-tieverkko-entry transaktio tv)))
+          (vie-tieverkko-entry db tv)))
       (k/paivita-paloiteltu-tieverkko db)
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

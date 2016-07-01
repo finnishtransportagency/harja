@@ -10,7 +10,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]))
 
 (def +xsd-polku+ "xsd/sampo/inbound/")

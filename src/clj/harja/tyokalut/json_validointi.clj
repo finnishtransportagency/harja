@@ -67,7 +67,7 @@
 
 (defn ref-resolver [polku]
   (lue-skeematiedosto
-    (.substring polku (count "file:"))))
+   (.substring polku (count "file:"))))
 
 (defmacro tee-validaattori
   [skeemaresurssin-polku]

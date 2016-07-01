@@ -26,8 +26,8 @@
   (if shapefile
     (do
       (log/debug (str "Tuodaan ELYt kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [transaktio db]
-                                (doseq [ely (shapefile/tuo shapefile)]
-                                  (vie-ely-entry transaktio (-> ely (assoc :numero (Integer. (:numero ely))))))
-                                (log/debug "ELYjen tuonti kantaan valmis")))
+      (jdbc/with-db-transaction [db db]
+        (doseq [ely (shapefile/tuo shapefile)]
+          (vie-ely-entry db (-> ely (assoc :numero (Integer. (:numero ely))))))
+        (log/debug "ELYjen tuonti kantaan valmis")))
     (log/debug "ELYjen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

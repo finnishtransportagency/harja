@@ -26,7 +26,7 @@
     lisatietoja))
 
 (defn tuo-data [db viestin-sisalto]
-  (jdbc/with-db-transaction [transaktio db]
+  (jdbc/with-db-transaction [db db]
     (let [data (sampo-sanoma/lue-viesti viestin-sisalto)
           hankkeet (:hankkeet data)
           urakat (:urakat data)
@@ -36,12 +36,12 @@
           yhteyshenkilot (:yhteyshenkilot data)
           kuittaukset (doall
                         (concat
-                          (hankkeet/kasittele-hankkeet transaktio hankkeet)
-                          (urakat/kasittele-urakat transaktio urakat)
-                          (sopimukset/kasittele-sopimukset transaktio sopimukset)
-                          (toimenpiteet/kasittele-toimenpiteet transaktio toimenpiteet)
-                          (organisaatiot/kasittele-organisaatiot transaktio organisaatiot)
-                          (yhteyshenkilot/kasittele-yhteyshenkilot transaktio yhteyshenkilot)))]
+                          (hankkeet/kasittele-hankkeet db hankkeet)
+                          (urakat/kasittele-urakat db urakat)
+                          (sopimukset/kasittele-sopimukset db sopimukset)
+                          (toimenpiteet/kasittele-toimenpiteet db toimenpiteet)
+                          (organisaatiot/kasittele-organisaatiot db organisaatiot)
+                          (yhteyshenkilot/kasittele-yhteyshenkilot db yhteyshenkilot)))]
       kuittaukset)))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]

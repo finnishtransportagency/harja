@@ -143,7 +143,9 @@
                        (reset! paikkaus/paikkausilmoitus-lomakedata nil))}]]))
 
 (defn paikkausilmoituslomake []
-  (let [kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat])))]
+  (let [lomake-kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkausilmoitukset
+                                                          (:id @nav/valittu-urakka))
+        kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat])))]
 
     (komp/luo
       (komp/ulos #(kartta/poista-popup!))
@@ -186,7 +188,11 @@
                                          (and tila
                                               valmispvm-kohde
                                               (not (= tila :aloitettu))
-                                              (not (nil? valmispvm-kohde)))))]
+                                              (not (nil? valmispvm-kohde)))))
+              grid-kirjoitusoikeus? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
+                                         (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
+                                         (false? @paikkaus/paikkausilmoituslomake-lukittu?)
+                                         lomake-kirjoitusoikeus?)]
           [:div.paikkausilmoituslomake
            [napit/takaisin "Takaisin ilmoitusluetteloon" #(reset! paikkaus/paikkausilmoitus-lomakedata nil)]
 
@@ -200,7 +206,8 @@
              [:h3 "Perustiedot"]
              [lomake/lomake {:luokka :horizontal
                              :voi-muokata? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                                (false? @paikkaus/paikkausilmoituslomake-lukittu?))
+                                                (false? @paikkaus/paikkausilmoituslomake-lukittu?)
+                                                lomake-kirjoitusoikeus?)
                              :muokkaa! (fn [uusi]
                                          (log "PAI Muokataan kohteen tietoja: " (pr-str uusi))
                                          (reset! kohteen-tiedot uusi))}
@@ -238,11 +245,7 @@
             [grid/muokkaus-grid
              {:otsikko "Paikatut tierekisteriosoitteet"
               :tunniste :tie
-              :voi-muokata? (do
-                              (log "PAI tila " (pr-str (:tila @paikkaus/paikkausilmoitus-lomakedata)) " Päätös: " (pr-str (:paatos @paikkaus/paikkausilmoitus-lomakedata)))
-                              (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                   (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
-                                   (false? @paikkaus/paikkausilmoituslomake-lukittu?)))
+              :voi-muokata? grid-kirjoitusoikeus?
               :virheet toteutuneet-osoitteet-virheet
               :uusi-id (inc (count @toteutuneet-osoitteet))}
              [{:otsikko "Tie#" :nimi :tie :tyyppi :positiivinen-numero :leveys "10%"
@@ -273,9 +276,7 @@
 
             [grid/muokkaus-grid
              {:otsikko "Toteutuneet suoritemäärät"
-              :voi-muokata? (and (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                 (not= :hyvaksytty (:paatos @paikkaus/paikkausilmoitus-lomakedata))
-                                 (false? @paikkaus/paikkausilmoituslomake-lukittu?))
+              :voi-muokata? grid-kirjoitusoikeus?
               :voi-lisata? false
               :voi-kumota? false
               :voi-poistaa? (constantly false)

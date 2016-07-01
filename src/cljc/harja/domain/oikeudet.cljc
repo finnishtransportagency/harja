@@ -146,9 +146,9 @@
        (on-oikeus? :kirjoitus oikeus urakka-id kayttaja))))
 
 #?(:clj
-   (defn lue
+   (defn vaadi-lukuoikeus
      ([oikeus kayttaja]
-      (lue oikeus kayttaja nil))
+      (vaadi-lukuoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
       (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
@@ -158,9 +158,9 @@
                         (str " urakassa " urakka-id)))))))))
 
 #?(:clj
-   (defn kirjoita
+   (defn vaadi-kirjoitusoikeus
      ([oikeus kayttaja]
-      (kirjoita oikeus kayttaja nil))
+      (vaadi-kirjoitusoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
       (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta

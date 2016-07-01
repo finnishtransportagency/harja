@@ -114,8 +114,8 @@
 
 (defn tallenna-paivystajatiedot [db urakka-id kirjaaja data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
-  (jdbc/with-db-transaction [transaktio db]
-    (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija transaktio urakka-id)))]
+  (jdbc/with-db-transaction [db db]
+    (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija db urakka-id)))]
       (doseq [paivystys (:paivystykset data)]
         (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]) urakoitsija)]
           (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id kirjaaja))))))

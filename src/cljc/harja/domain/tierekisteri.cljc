@@ -148,7 +148,8 @@
 (defn jarjesta-kohteiden-kohdeosat
   "Palauttaa kohteet tieosoitteen mukaisessa järjestyksessä"
   [kohteet]
-  (mapv
-    (fn [kohde]
-      (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
-    kohteet))
+  (when kohteet
+    (mapv
+     (fn [kohde]
+       (assoc kohde :kohdeosat (sort-by tiekohteiden-jarjestys (:kohdeosat kohde))))
+     kohteet)))
