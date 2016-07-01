@@ -95,7 +95,7 @@
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
     (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
    [yleiset/vihje
-    "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi.
+    "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi.
      Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]])
 
 (defn valitavoitteet []
