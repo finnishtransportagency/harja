@@ -97,9 +97,8 @@ VALUES (:takaraja,
 -- Lisää uuden valtakunnallisen välitavoitteen
 INSERT
 INTO valitavoite
-(takaraja, urakkatyyppi, nimi, tyyppi, takaraja_toistopaiva, takaraja_toistokuukausi, luoja, luotu)
-VALUES (:takaraja,
-        :urakkatyyppi::urakkatyyppi,
+(urakkatyyppi, nimi, tyyppi, takaraja_toistopaiva, takaraja_toistokuukausi, luoja, luotu)
+VALUES (:urakkatyyppi::urakkatyyppi,
         :nimi,
         :tyyppi::valitavoite_tyyppi,
         :takaraja_toistopaiva,
@@ -153,3 +152,11 @@ FROM valitavoite v
 WHERE v.poistettu = FALSE
       AND v.valtakunnallinen_valitavoite = :id
 ORDER BY v.takaraja ASC;
+
+-- name: paivita-valitavoitteeseen-linkitetty-muokkaamaton-kertaluontoinen-valitavoite!
+UPDATE valitavoite
+SET nimi = :nimi,
+  takaraja = :takaraja
+  -- Ei päivitetä muokkaustietoja, koska niitä käytetään tutkimaan onko käyttäjä muokannut tätä urakassa
+WHERE valtakunnallinen_valitavoite = :id
+AND muokattu IS NULL;

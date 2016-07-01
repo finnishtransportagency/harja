@@ -167,8 +167,7 @@
                                    urakat)
             id (:id (q/lisaa-valtakunnallinen-toistuva-valitavoite<!
                   db
-                  {:takaraja (konv/sql-date takaraja)
-                   :nimi nimi
+                  {:nimi nimi
                    :urakkatyyppi (name urakkatyyppi)
                    :takaraja_toistopaiva takaraja-toistopaiva
                    :takaraja_toistokuukausi takaraja-toistokuukausi
@@ -190,14 +189,33 @@
                                                                      (not (:poistettu %)))
                                                                valitavoitteet)))
 
+(defn- paivita-valtakunnalliseen-valitavoitteeseen-linkitetty-valitavoite
+  "Päivittää valtakunnalliseen välitavoitteeseen linkitetyt urakkakohtaiset välitavoitteet
+   mikäli niitä ei ole muokattu urakassa."
+  [db {:keys [id nimi takaraja] :as valitavoite}]
+  (cond (= (:tyyppi valitavoite) :kertaluontoinen)
+        (q/paivita-valitavoitteeseen-linkitetty-muokkaamaton-kertaluontoinen-valitavoite!
+          db
+          {:nimi nimi
+           :takaraja (konv/sql-date takaraja)
+           :id id})
+
+        (= (:tyyppi valitavoite) :kertaluontoinen)
+        nil ; TODO
+
+        :default
+        nil))
+
 (defn- paivita-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  (doseq [{:keys [id takaraja takaraja-toistopaiva takaraja-toistokuukausi nimi]} (filter #(> (:id %) 0) valitavoitteet)]
+  (doseq [{:keys [id takaraja takaraja-toistopaiva takaraja-toistokuukausi nimi] :as valitavoite}
+          (filter #(> (:id %) 0) valitavoitteet)]
     (q/paivita-valtakunnallinen-valitavoite! db nimi
                                              (konv/sql-date takaraja)
                                              takaraja-toistopaiva
                                              takaraja-toistokuukausi
                                              (:id user)
-                                             id)))
+                                             id)
+    (paivita-valtakunnalliseen-valitavoitteeseen-linkitetty-valitavoite db valitavoite)))
 
 
 (defn tallenna-valtakunnalliset-valitavoitteet! [db user {:keys [valitavoitteet]}]
