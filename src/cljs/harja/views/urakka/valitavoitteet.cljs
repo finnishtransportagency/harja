@@ -155,7 +155,9 @@
    [{:tyyppi :vetolaatikon-tila :leveys 5}
     {:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 55
      :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
-     :muokattava? (constantly false)}
+     :muokattava? (constantly false) :hae #(if (:valtakunnallinen-poistettu %)
+                                            (str (:valtakunnallinen-nimi %) " (poistettu)")
+                                            (str (:valtakunnallinen-nimi %)))}
     {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
     {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
      :nimi :valtakunnallinen-takaraja :hae #(cond
