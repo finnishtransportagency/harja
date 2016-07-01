@@ -51,10 +51,9 @@
 
      {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
     (sort-by :takaraja @kertaluontoiset-valitavoitteet-atom)]
-   [yleiset/vihje-elementti
-    [:span
-     [:span "Kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin heti kun ne luodaan."]
-     [:br] [:span "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]
+   [yleiset/vihje
+    "Kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin heti kun ne luodaan.
+     Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]
 
    [:br]
    [grid/grid
@@ -90,10 +89,9 @@
      {:otsikko "Takarajan toistokuukausi" :leveys 10 :nimi :takaraja-toistokuukausi
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
     (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
-   [yleiset/vihje-elementti
-    [:span
-     [:span "Toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."]
-     [:br] [:span "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]])
+   [yleiset/vihje
+    "Toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi.
+     Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]])
 
 (defn valitavoitteet []
   (komp/luo
