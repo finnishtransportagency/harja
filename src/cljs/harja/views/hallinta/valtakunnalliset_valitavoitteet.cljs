@@ -56,7 +56,7 @@
       :tyyppi :pvm}]
     (sort-by :takaraja @kertaluontoiset-valitavoitteet-atom)]
    [yleiset/vihje
-    "Kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin heti kun ne luodaan.
+    "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin jos välitavoitteen takaraja on urakan voimassaoloaikana eikä urakka ole päättynyt.
      Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]
 
    [:br]
@@ -95,7 +95,7 @@
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
     (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
    [yleiset/vihje
-    "Toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi.
+    "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi.
      Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]])
 
 (defn valitavoitteet []
