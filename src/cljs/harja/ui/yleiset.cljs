@@ -483,7 +483,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([teksti] (vihje teksti nil))
   ([teksti luokka]
    [:div {:class
-          (str "lomake-vihje " (or luokka ""))}
+          (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
      (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
 
@@ -491,7 +491,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([elementti] (vihje-elementti elementti nil))
   ([elementti luokka]
    [:div {:class
-          (str "lomake-vihje " (or luokka ""))}
+          (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
      (ikoni-ja-elementti (harja.ui.ikonit/livicon-info-sign) elementti)]]))
 
