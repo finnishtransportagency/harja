@@ -12,7 +12,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -50,7 +51,10 @@
 
     {:otsikko "Takaraja" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}]
     (sort-by :takaraja @kertaluontoiset-valitavoitteet-atom)]
+   [yleiset/vihje "Kertaluontoiset välitavoitteet liitetään valituntyyppisiin urakoihin heti kun ne luodaan.
+   Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]
 
+   [:br]
    [grid/grid
     {:otsikko "Valtakunnalliset vuosittain toistuvat välitavoitteet"
      :tyhja (if (nil? @toistuvat-valitavoitteet-atom)
@@ -83,7 +87,10 @@
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
      {:otsikko "Takarajan toistokuukausi" :leveys 10 :nimi :takaraja-toistokuukausi
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
-    (sort-by :takaraja @toistuvat-valitavoitteet-atom)]])
+    (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
+   [yleiset/vihje "Toistuvat välitavoitteet liitetään valituntyyppisiin urakoihin kertaalleen
+   per jäljellä oleva urakkavuosi. Poistettu välitavoite jää näkyviin päättyneisiin urakoihin
+   tai jos se on ehditty tehdä valmiiksi."]])
 
 (defn valitavoitteet []
   (komp/luo
