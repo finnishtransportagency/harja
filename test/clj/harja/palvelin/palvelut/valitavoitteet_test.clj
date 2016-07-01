@@ -40,26 +40,27 @@
                                                     :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                     (hae-oulun-alueurakan-2014-2019-id))
         muhoksen-urakan-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                    (hae-muhoksen-paallystysurakan-id))
-        lisatyt-valtakunnalliset (kutsu-palvelua
-                  (:http-palvelin jarjestelma)
-                  :tallenna-valtakunnalliset-valitavoitteet
-                  +kayttaja-jvh+
-                  {:valitavoitteet [{:id -2, :nimi "Kertaluontoinen",
-                                     :takaraja (c/to-date (t/plus (t/now) (t/years 5))),
-                                     :tyyppi :kertaluontoinen, :urakkatyyppi :hoito,
-                                     :takaraja-toistopaiva nil, :takaraja-toistokuukausi nil}
-                                    {:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
-                                     :takaraja nil, :tyyppi :toistuva,
-                                     :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
-                                     :takaraja-toistokuukausi 7}]})
-        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                    (hae-oulun-alueurakan-2014-2019-id))
-        muhoksen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                        :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                       (hae-muhoksen-paallystysurakan-id))]
+                                                       (hae-muhoksen-paallystysurakan-id))
+        lisatyt-valtakunnalliset
+        (kutsu-palvelua
+          (:http-palvelin jarjestelma)
+          :tallenna-valtakunnalliset-valitavoitteet
+          +kayttaja-jvh+
+          {:valitavoitteet [{:id -2, :nimi "Kertaluontoinen",
+                             :takaraja (c/to-date (t/plus (t/now) (t/years 5))),
+                             :tyyppi :kertaluontoinen, :urakkatyyppi :hoito,
+                             :takaraja-toistopaiva nil, :takaraja-toistokuukausi nil}
+                            {:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
+                             :takaraja nil, :tyyppi :toistuva,
+                             :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
+                             :takaraja-toistokuukausi 7}]})
+        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                               :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                               (hae-oulun-alueurakan-2014-2019-id))
+        muhoksen-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                                  (hae-muhoksen-paallystysurakan-id))]
 
     ;; Uudet valtakunnalliset lisätty ok
     (is (= (count lisatyt-valtakunnalliset) 2))
@@ -68,8 +69,21 @@
 
     ;; Oulun hoidon urakalle tuli lisää välitavoitteita
     (is (> (count oulun-urakan-paivitetyt-valitavoitteet) (count oulun-urakan-valitavoitteet)))
+    (is (some :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet))
     ;; Muhokselle ei tullut, koska oli eri urakkatyyppi
     (is (= (count muhoksen-urakan-paivitetyt-valitavoitteet) (count muhoksen-urakan-valitavoitteet)))
 
-    (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
-    (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
+    (let [uudelleenpaivitetyt (kutsu-palvelua
+                                (:http-palvelin jarjestelma)
+                                :tallenna-valtakunnalliset-valitavoitteet
+                                +kayttaja-jvh+
+                                {:valitavoitteet (mapv
+                                                   #(assoc % :nimi "PÄIVITÄ")
+                                                   lisatyt-valtakunnalliset)})
+          oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                 :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                                 (hae-oulun-alueurakan-2014-2019-id))]
+      (is (every? #(= (:nimi %) "PÄIVITÄ") (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
+
+      (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
+      (u (str "DELETE FROM valitavoite WHERE urakka IS NULL")))))
