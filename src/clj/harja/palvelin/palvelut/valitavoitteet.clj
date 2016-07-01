@@ -102,17 +102,13 @@
                                       :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
                                       :luoja (:id user)})))
 
-(defn- kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
-  [db user valitavoite valitavoite-kannassa-id urakat]
-  #_(doseq [urakka urakat]
-    ;; TODO Kopioi per jäljellä oleva vuosi
-    (luo-uudet-urakan-valitavoitteet db user
-                                     (merge valitavoite
-                                            {:valtakunnallinen-valitavoite-id valitavoite-kannassa-id})
-                                     (:id urakka))))
-
-(defn- luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet [db user valitavoitteet]
-  (let [urakat (q/hae-kaynnissa-olevat-urakat db)]
+(defn- luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet
+  "Luo uudet valtakunnalliset kertaluontoisten välitavoitteet
+  Jos takaraja on annettu, kopioidaan välitavoite urakkaan vain jos
+  takaraja osuu urakan voimassaoloajalle eikä urakka ole päättynyt.
+  Jos takarajaa ei ole annettu, kopioidaan välitavoite kaikkiin käynnissä oleviin ja tuleviin urakoihin."
+  [db user valitavoitteet]
+  (let [urakat (q/hae-kaynnissa-olevat-ja-tulevat-urakat db)]
     (doseq [{:keys [takaraja nimi urakkatyyppi] :as valitavoite} valitavoitteet]
       (let [id (:id (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
                       db
@@ -121,14 +117,26 @@
                        :urakkatyyppi (name urakkatyyppi)
                        :tyyppi "kertaluontoinen"
                        :luoja (:id user)}))
-            ; FIXME Mahdollista myös tyhjän takarajan antaminen & käsittely
-            kohdeurakat (filter
-                          (fn [urakka]
-                            (pvm/valissa? (c/from-date takaraja)
-                                          (c/from-date (:alkupvm urakka))
-                                          (c/from-date (:loppupvm urakka))))
+            kohdeurakat (if (:takaraja valitavoite)
+                          (filter
+                            (fn [urakka]
+                              (and
+                                (pvm/valissa? (c/from-date takaraja)
+                                              (c/from-date (:alkupvm urakka))
+                                              (c/from-date (:loppupvm urakka)))
+                                (pvm/ennen? (t/now) (:loppupvm urakka))))
+                            urakat)
                           urakat)]
         (kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin db user valitavoite id kohdeurakat)))))
+
+(defn- kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
+  [db user valitavoite valitavoite-kannassa-id urakat]
+  #_(doseq [urakka urakat]
+      ;; TODO Kopioi per jäljellä oleva vuosi
+      (luo-uudet-urakan-valitavoitteet db user
+                                       (merge valitavoite
+                                              {:valtakunnallinen-valitavoite-id valitavoite-kannassa-id})
+                                       (:id urakka))))
 
 (defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet [db user valitavoitteet]
   ;; FIXME Ei vielä mietitty loppuun asti

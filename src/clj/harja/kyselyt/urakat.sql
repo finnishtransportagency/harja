@@ -21,6 +21,17 @@ FROM urakka u
 WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
       (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
+-- name: hae-kaynnissa-olevat-ja-tulevat-urakat
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi
+FROM urakka u
+WHERE u.alkupvm >= current_date
+      OR
+      (u.alkupvm <= current_date AND
+       u.loppupvm >= current_date);
+
 -- name: hae-hallintayksikon-urakat
 SELECT
   u.id,
