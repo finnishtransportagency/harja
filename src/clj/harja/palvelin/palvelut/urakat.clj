@@ -36,32 +36,41 @@
               (not (nil? urakka-id))
               (q/hae-urakoiden-organisaatiotiedot db urakka-id)
 
-              (roolit/lukuoikeus-kaikkiin-urakoihin? user)
+              #_(roolit/lukuoikeus-kaikkiin-urakoihin? user)
+              ;; Haetaan vaan kaikki urakat, näistä filtteröidään joka tapauksessa
+              ;; pois sellaiset, johon käyttäjällä ei ole oikeutta
+              :else
               (q/hae-kaikki-urakat-aikavalilla
                 db (konv/sql-date alku) (konv/sql-date loppu)
                 (when urakoitsija urakoitsija)
                 (when urakkatyyppi (name urakkatyyppi)) hallintayksikot)
 
-              :else
-              (kayttajat-q/hae-kayttajan-urakat-aikavalilta
-                db (:id user)
-                (konv/sql-date alku) (konv/sql-date loppu)
-                (when urakoitsija urakoitsija)
-                (when urakkatyyppi (name urakkatyyppi))
-                hallintayksikot))))
+              ;:else
+              #_(do
+                (log/debug "Hae käyttäjän urakat aikaväliltä")
+                (log/debug (:id user))
+                (log/debug (konv/sql-date alku) (konv/sql-date loppu))
+                (log/debug urakoitsija urakkatyyppi hallintayksikot)
+                (kayttajat-q/hae-kayttajan-urakat-aikavalilta
+                 db (:id user)
+                 (konv/sql-date alku) (konv/sql-date loppu)
+                 (when urakoitsija urakoitsija)
+                 (when urakkatyyppi (name urakkatyyppi))
+                 hallintayksikot)))))
      {:urakka :urakat}
      (comp :id :hallintayksikko))))
 
 (defn urakoiden-alueet
   [db user oikeus urakka-idt toleranssi]
-  (into []
-        (comp
-          (filter (fn [{:keys [urakka_id]}]
-                    (oikeudet/voi-lukea? oikeus urakka_id user)))
-          (harja.geo/muunna-pg-tulokset :urakka_alue)
-          (harja.geo/muunna-pg-tulokset :alueurakka_alue)
-          (map konv/alaviiva->rakenne))
-        (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt)))
+  (when-not (empty? urakka-idt)
+    (into []
+         (comp
+           (filter (fn [{:keys [urakka_id]}]
+                     (oikeudet/voi-lukea? oikeus urakka_id user)))
+           (harja.geo/muunna-pg-tulokset :urakka_alue)
+           (harja.geo/muunna-pg-tulokset :alueurakka_alue)
+           (map konv/alaviiva->rakenne))
+         (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt))))
 
 (defn kayttajan-urakat-aikavalilta-alueineen
   "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan vielä niiden geometriat."
