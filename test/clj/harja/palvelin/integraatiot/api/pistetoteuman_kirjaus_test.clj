@@ -6,7 +6,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]))
 
-(def kayttaja "fastroi")
+(def kayttaja "destia")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea

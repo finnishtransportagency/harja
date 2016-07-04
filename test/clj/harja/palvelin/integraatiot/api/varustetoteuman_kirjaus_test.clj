@@ -6,7 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]))
 
-(def kayttaja "fastroi")
+(def kayttaja "destia")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
