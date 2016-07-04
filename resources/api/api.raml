@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 0.1.8
+version: 0.2.0
 baseUri: https://harja/api/{version}
 protocols: [HTTPS]
 mediaType: application/json
@@ -34,6 +34,7 @@ schemas:
  - tielupien-haku-request: !include schemas/tielupien-haku-request.schema.json
  - tielupien-haku-response: !include schemas/tielupien-haku-response.schema.json
  - tietyoilmoituksen-kirjaus-request: !include schemas/tietyoilmoituksen-kirjaus-request.schema.json
+ - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
 
 securitySchemes:
  - basic:
@@ -451,6 +452,28 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
+    /yllapitokohteet:
+        description: Ylläpitourakoiden kohteiden hallinta.
+        get:
+          is: [secured]
+          description: Palauttaa listan urakan ylläpitokohteista. Tiedot tarvitaan, jotta voidana kirjata esim. päällystysilmoitus päällystyskohteelle
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/urakan-yllapitokohteiden-haku-response.json
+                  schema: yllapitokohteiden-haku-response
+            400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+            500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+
 /varusteet:
   is: [secured]
   /haku:
