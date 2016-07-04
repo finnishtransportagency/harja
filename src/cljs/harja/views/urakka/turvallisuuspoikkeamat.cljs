@@ -108,13 +108,34 @@
                                  #(swap! turvallisuuspoikkeama assoc :sijainti %))}
 
               {:uusi-rivi? true
-               :otsikko "Kuvaus"
+               :otsikko "Tila"
+               :nimi :tila
+               :tyyppi :valinta
+               :valinta-nayta #(or ({:avoin "Avoin"
+                                     :kasitelty "Käsitelty"
+                                     :taydennetty "Täydennetty"
+                                     :suljettu "Suljettu"} %)
+                                   "- valitse -")
+               :valinnat #{:avoin :kasitelty :taydennetty :suljettu}
+               :validoi [[:ei-tyhja "Valitse tila"]]
+               :palstoja 1}
+              {:otsikko "Tapahtuman otsikko"
+               :nimi :otsikko
+               :tyyppi :string
+               :pituus-max 1024
+               :palstoja 1}
+              {:otsikko "Tapahtuman kuvaus"
                :nimi :kuvaus
                :tyyppi :text
                :koko [80 :auto]
                :palstoja 1
                :pakollinen? true
                :validoi [[:ei-tyhja "Anna kuvaus"]]}
+              {:otsikko "Paikan kuvaus"
+               :nimi :paikan-kuvaus
+               :tyyppi :string
+               :pituus-max 2048
+               :palstoja 1}
               {:otsikko "Aiheutuneet seuraukset"
                :nimi :seuraukset
                :tyyppi :text
