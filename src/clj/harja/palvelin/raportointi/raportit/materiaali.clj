@@ -24,7 +24,7 @@
         suunnitellut-materiaalit-ilman-toteumia (filter
                                                   (fn [materiaali]
                                                     (not-any?
-                                                      (fn [toteuma] (= (:materiaali_nimi toteuma) (:materiaali_nimi materiaali)))
+                                                      (fn [toteuma] (= (:materiaali-nimi toteuma) (:materiaalinimi materiaali)))
                                                       toteutuneet-materiaalit))
                                                   suunnitellut-materiaalit)
         lopullinen-tulos (mapv
@@ -55,7 +55,7 @@
     toteutuneet-materiaalit))
 
 (defn- materiaalin-otsikko [t]
-  (str (:materiaali_nimi t) " (" (:materiaali_yksikko t) ")"))
+  (str (:materiaali-nimi t) " (" (:materiaali-yksikko t) ")"))
 
 
 (defn suorita [db user {:keys [urakka-id
@@ -93,16 +93,16 @@
         ;; Aluksi pitää laittaa materiaalit järjestykseen nimen (string) perusteella, sitten liittää
         ;; jokaiseen mukaan yksikkö, pitäen yllä alkuperäinen järjestys.
         materiaaliotsikot (mapv
-                            (fn [materiaalin_nimi]
+                            (fn [materiaalin-nimi]
                               (some (fn [t]
-                                      (when (= (:materiaali_nimi t) materiaalin_nimi)
+                                      (when (= (:materiaali-nimi t) materiaalin-nimi)
                                         (materiaalin-otsikko t)))
                                     toteumat))
                             (sort-by materiaalidomain/materiaalien-jarjestys (distinct
                                                                                (map
-                                                                                 #(str (:materiaali_nimi %))
+                                                                                 #(str (:materiaali-nimi %))
                                                                                  toteumat))))
-        toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
+        toteumat-urakan-mukaan (group-by :urakka-nimi toteumat)]
 
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
