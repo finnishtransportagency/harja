@@ -63,24 +63,26 @@
                        (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))
                        (rivi (:nimi urakka) "Muu" (or (turpo-maarat-per-tyyppi "muu") 0))]))]
     (concat (if (= konteksti :koko-maa)
-              (let [hallintayksikon-turpot (fn [turpot] (filter
-                                                          #(= (get-in % [:hallintayksikko :id]))
-                                                          turpot))]
+              (let [alueen-turpot (fn [turpot alue]
+                                             (filter
+                                               #(= (get-in % [:hallintayksikko :id])
+                                                   (:hallintayksikko-id alue))
+                                               turpot))]
                 (mapcat
-                 (fn [alue]
-                   (concat [{:otsikko (:nimi alue)}]
-                           (mapcat turporivi
-                                   (if urakoittain?
-                                     (group-by :urakka (hallintayksikon-turpot turpot))
-                                     [[nil (hallintayksikon-turpot turpot)]]))))
-                 naytettavat-alueet))
-             (mapcat turporivi
-                     (if urakoittain?
-                       (group-by :urakka turpot)
-                       [[nil turpot]])))
+                  (fn [alue]
+                    (concat [{:otsikko (:nimi alue)}]
+                            (mapcat turporivi
+                                    (if urakoittain?
+                                      (group-by :urakka (alueen-turpot turpot alue))
+                                      [[nil (alueen-turpot turpot alue)]]))))
+                  naytettavat-alueet))
+              (mapcat turporivi
+                      (if urakoittain?
+                        (group-by :urakka turpot)
+                        [[nil turpot]])))
             (if urakoittain?
-               [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
-               [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))))
+              [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
+              [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))))
 
 (defn- turvallisuuspoikkeamat-sarakkeet [urakoittain?]
   (into []
