@@ -324,7 +324,7 @@
                        ["Vaaratilanne"
                         1]
                        ["Turvallisuushavainto"
-                        2]
+                        3]
                        ["Muu"
                         1]
                        {:otsikko "Lappi"}
@@ -337,7 +337,7 @@
                        ["Muu"
                         0]
                        ["Yksittäisiä ilmoituksia yhteensä"
-                        4]]]
+                        5]]]
                     [:taulukko
                      {:otsikko "Turvallisuuspoikkeamat vakavuusasteittain"}
                      [{:otsikko "Tyyppi"}
@@ -381,7 +381,7 @@
                        ["Lievä"
                         1]
                        ["Vakava"
-                        3]
+                        4]
                        {:otsikko "Lappi"}
                        ["Lievä"
                         0]
@@ -444,7 +444,7 @@
                       ["2015/11"
                        [nil
                         nil
-                        1
+                        2
                         nil]]
                       ["2015/12"
                        []]]]
