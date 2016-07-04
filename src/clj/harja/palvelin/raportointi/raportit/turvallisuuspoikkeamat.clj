@@ -70,11 +70,15 @@
                                                turpot))]
                 (mapcat
                   (fn [alue]
-                    (concat [{:otsikko (:nimi alue)}]
-                            (mapcat turporivi
-                                    (if urakoittain?
-                                      (group-by :urakka (alueen-turpot turpot alue))
-                                      [[nil (alueen-turpot turpot alue)]]))))
+                    (let [turpot (alueen-turpot turpot alue)
+                          rivit (mapcat turporivi
+                                        (if urakoittain?
+                                          (group-by :urakka turpot)
+                                          [[nil turpot]]))]
+                      (concat [{:otsikko (:nimi alue)}]
+                              (if (empty? rivit)
+                                [["Ei tietoja"]]
+                                rivit))))
                   naytettavat-alueet))
               (mapcat turporivi
                       (if urakoittain?
