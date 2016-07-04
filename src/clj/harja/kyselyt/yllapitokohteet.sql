@@ -1,6 +1,34 @@
 -- name: hae-urakan-yllapitokohteet
 -- Hakee urakan kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
+  id,
+  sopimus,
+  kohdenumero,
+  nimi,
+  tyyppi,
+  sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  arvonvahennykset,
+  bitumi_indeksi                    AS "bitumi-indeksi",
+  kaasuindeksi,
+  nykyinen_paallyste                AS "nykyinen-paallyste",
+  keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
+  yllapitoluokka,
+  tr_numero                         AS "tr-numero",
+  tr_alkuosa                        AS "tr-alkuosa",
+  tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  tr_loppuosa                       AS "tr-loppuosa",
+  tr_loppuetaisyys                  AS "tr-loppuetaisyys",
+  tr_ajorata                        AS "tr-ajorata",
+  tr_kaista                         AS "tr-kaista",
+  yhaid
+FROM yllapitokohde
+WHERE
+  urakka = :urakka
+  AND poistettu IS NOT TRUE;
+
+-- name: hae-urakan-sopimuksen-yllapitokohteet
+-- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
+SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
@@ -97,15 +125,15 @@ VALUES (:urakka,
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-  :keskimaarainen_vuorokausiliikenne,
-  :yllapitoluokka,
-  :nykyinen_paallyste,
-  :sopimuksen_mukaiset_tyot,
-  :arvonvahennykset,
-  :bitumi_indeksi,
-  :kaasuindeksi,
-  :tyyppi :: yllapitokohdetyyppi,
-  :indeksin_kuvaus);
+        :keskimaarainen_vuorokausiliikenne,
+        :yllapitoluokka,
+        :nykyinen_paallyste,
+        :sopimuksen_mukaiset_tyot,
+        :arvonvahennykset,
+        :bitumi_indeksi,
+        :kaasuindeksi,
+        :tyyppi :: yllapitokohdetyyppi,
+        :indeksin_kuvaus);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -298,14 +326,14 @@ SELECT EXISTS(SELECT id
               WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;
 
 -- name: hae-yllapitokohteen-urakka-id
-SELECT
-  urakka AS id
-FROM yllapitokohde WHERE id = :id;
+SELECT urakka AS id
+FROM yllapitokohde
+WHERE id = :id;
 
 -- name: hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
-SELECT
-  suorittava_tiemerkintaurakka AS id
-FROM yllapitokohde WHERE id = :id;
+SELECT suorittava_tiemerkintaurakka AS id
+FROM yllapitokohde
+WHERE id = :id;
 
 -- name: hae-yllapitokohde
 SELECT

@@ -48,7 +48,7 @@
                                                      db {:urakka urakka-id
                                                          :sopimus sopimus-id
                                                          :yllapitokohde (:id %)})))))
-                        (q/hae-urakan-yllapitokohteet db {:urakka urakka-id
+                        (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                           :sopimus sopimus-id}))
           osien-pituudet-tielle
           (fmap
