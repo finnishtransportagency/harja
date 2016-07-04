@@ -102,7 +102,7 @@ SELECT
   materiaalikoodi.yksikko AS "materiaali-yksikko"
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  LEFT JOIN urakka ON urakka.id = (SELECT urakka
+  JOIN urakka ON urakka.id = (SELECT urakka
                                    FROM toteuma
                                    WHERE id = toteuma_materiaali.toteuma)
   JOIN toteuma ON toteuma.id = toteuma
@@ -128,7 +128,7 @@ FROM toteuma_materiaali
                         AND alkanut :: DATE <= :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
-  LEFT JOIN urakka ON urakka.id = toteuma.urakka
+  JOIN urakka ON urakka.id = toteuma.urakka
 WHERE urakka.hallintayksikko = :hallintayksikko AND (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
 GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_materiaali.id;
 
@@ -138,6 +138,7 @@ GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_mate
 SELECT
   SUM(maara)              AS kokonaismaara,
   urakka.nimi             AS "urakka-nimi",
+  o.nimi                  AS "hallintayksikko-nimi",
   materiaalikoodi.nimi    AS "materiaali-nimi",
   materiaalikoodi.yksikko AS "materiaali-yksikko"
 FROM toteuma_materiaali
@@ -147,9 +148,10 @@ FROM toteuma_materiaali
                         AND alkanut :: DATE <= :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
-  LEFT JOIN urakka ON urakka.id = toteuma.urakka
+  JOIN urakka ON urakka.id = toteuma.urakka
+  JOIN organisaatio o ON urakka.hallintayksikko = o.id
   WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
-GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko;
+GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, materiaalikoodi.yksikko;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali

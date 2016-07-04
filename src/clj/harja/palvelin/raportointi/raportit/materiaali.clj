@@ -102,7 +102,10 @@
                                                                                (map
                                                                                  #(str (:materiaali-nimi %))
                                                                                  toteumat))))
-        toteumat-urakan-mukaan (group-by :urakka-nimi toteumat)]
+        toteumat-urakan-mukaan (when (not= konteksti :koko-maa)
+                                 (group-by :urakka-nimi toteumat))
+        toteumat-elyn-mukaan (when (= konteksti :koko-maa)
+                               (group-by :hallintayksikko-nimi toteumat))]
 
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
@@ -118,10 +121,10 @@
             (into
               []
               (concat
-                ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut toteumat
-                (for [[urakka toteumat] toteumat-urakan-mukaan]
+                ;; Tehdään rivi jokaiselle alueelle, jossa sen yhteenlasketut toteumat
+                (for [[alue toteumat] (or toteumat-urakan-mukaan toteumat-elyn-mukaan)]
                   (into []
-                        (concat [urakka]
+                        (concat [alue]
                                 (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                                   (for [m materiaaliotsikot]
                                     (fmt/desimaaliluku-opt
