@@ -98,16 +98,12 @@
                              :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                              :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
                              :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)})
-              (lomake/ryhma {:rivi? true
-                             :otsikko "Tapahtuma-aika"}
-                            {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-                             :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
-                             :huomauta [[:urakan-aikana-ja-hoitokaudella]]})
-              {:rivi? true
-               :otsikko "Tierekisteriosoite"
+              {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+               :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
+               :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+              {:otsikko "Tierekisteriosoite"
                :nimi :tr
                :tyyppi :tierekisteriosoite
-               :uusi-rivi? true
                :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
                                  #(swap! turvallisuuspoikkeama assoc :sijainti %))}
 
