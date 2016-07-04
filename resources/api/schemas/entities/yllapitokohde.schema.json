@@ -57,8 +57,7 @@
       "type": "object",
       "id": "urn:harja/yllapitokohde/nykyinen-paallyste",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/paallyste2.schema.json",
-      "required": true
+      "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
     },
     "alikohteet": {
       "id": "urn:harja/yllapitokohde/alikohteet",

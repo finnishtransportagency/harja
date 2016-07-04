@@ -1,28 +1,22 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "id": {
-      "id": "urn:harja/paallyste",
-      "enum": [
-        "Betoni",
-        "Kivi",
-        "Avoin asfaltti",
-        "Asfalttibetoni",
-        "Epäjatkuva asfaltti",
-        "Kivimastiksiasfaltti",
-        "Kantavan kerroksen AB",
-        "Bit.sidottu kantava ker.",
-        "Valuasfaltti",
-        "Pehmeä asfalttibetoni",
-        "Pehmeä asfalttibetoni",
-        "Pehmeä asfalttibetoni",
-        "Sirotepintaus",
-        "Soratien pintaus",
-        "Sora"
-      ]
-    }
-  }
+  "enum": [
+    "betoni",
+    "kivi",
+    "avoin asfaltti",
+    "asfalttibetoni",
+    "epäjatkuva asfaltti",
+    "kivimastiksiasfaltti",
+    "kantavan kerroksen AB",
+    "bit.sidottu kantava ker.",
+    "valuasfaltti",
+    "pehmeä asfalttibetoni (b)",
+    "pehmeä asfalttibetoni (v)",
+    "pehmeä asfalttibetoni (o)",
+    "sirotepintaus",
+    "soratien pintaus",
+    "sora"
+  ]
 }
+
