@@ -100,12 +100,9 @@
                              :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)})
               (lomake/ryhma {:rivi? true
                              :otsikko "Tapahtuma-aika"}
-                            {:otsikko "Alkanut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+                            {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
-                             :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
-                            {:otsikko "Päättynyt" :pakollinen? true :nimi :paattynyt :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-                             :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
-                                       [:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]})
+                             :huomauta [[:urakan-aikana-ja-hoitokaudella]]})
               {:rivi? true
                :otsikko "Tierekisteriosoite"
                :nimi :tr
@@ -165,7 +162,6 @@
                    :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
                    :valinta-nayta #(or (turpodomain/turpo-tyontekijan-ammatit %) "- valitse -")
                    :uusi-rivi? true}
-                  {:otsikko "Työtehtävä" :nimi :tyotehtava :tyyppi :string :palstoja 1}
                   (when (= :muu_tyontekija (:tyontekijanammatti @turvallisuuspoikkeama))
                     {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
                   (lomake/ryhma {:rivi? true}
@@ -213,7 +209,7 @@
                             {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                             {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-                             :validoi [[:pvm-kentan-jalkeen :paattynyt "Ei voida käsitellä ennen päättymisaikaa"]]})]
+                             :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voida käsitellä ennen tapahtumaikaa"]]})]
              @turvallisuuspoikkeama]]))))
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
@@ -236,7 +232,6 @@
       [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
        {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys "15%"
         :hae turpodomain/kuvaile-tyontekijan-ammatti}
-       {:otsikko "Ty\u00ADöteh\u00ADtä\u00ADvä" :nimi :tyotehtava :tyyppi :string :leveys "15%"}
        {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
        {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys "5%"
         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}

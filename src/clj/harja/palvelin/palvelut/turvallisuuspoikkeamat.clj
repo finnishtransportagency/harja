@@ -80,8 +80,8 @@
                        :lahde "harja-ui"})
 
 (defn luo-tai-paivita-turvallisuuspoikkeama
-  [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu
-                   tyotehtava kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
+  [db user {:keys [id urakka tapahtunut kasitelty tyontekijanammatti tyontekijanammattimuu
+                   kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
                    laatijaetunimi laatijasukunimi
@@ -93,11 +93,9 @@
                tr
                {:urakka urakka
                 :tapahtunut (konv/sql-timestamp tapahtunut)
-                :paattynyt (konv/sql-timestamp paattynyt)
                 :kasitelty (konv/sql-timestamp kasitelty)
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
-                :tehtava tyotehtava
                 :kuvaus kuvaus
                 :vammat (konv/seq->array vammat)
                 :poissa sairauspoissaolopaivat
