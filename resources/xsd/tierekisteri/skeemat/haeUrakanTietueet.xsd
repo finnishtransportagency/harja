@@ -18,13 +18,7 @@
                     </xs:simpleType>
                 </xs:element>
                 <xs:element minOccurs="1" maxOccurs="1" name="tilannepvm" type="xs:date"/>
-                <xs:element name="tietolajit">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element name="tietolaji" type="ns1:tietolajitunniste" maxOccurs="unbounded" minOccurs="0"/>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
+                <xs:element minOccurs="0" maxOccurs="1" name="tietolaji" type="ns1:tietolajitunniste"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
