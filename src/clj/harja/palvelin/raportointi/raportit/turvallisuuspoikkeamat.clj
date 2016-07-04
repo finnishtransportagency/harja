@@ -45,15 +45,13 @@
                                          (get maarat "turvallisuushavainto")
                                          (get maarat "muu")])))
                                   {} turpo-maarat-kuukausittain)]
-    (if (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
+    (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
              (> (count turpot) 0))
       (pylvaat-kuukausittain {:otsikko "Turvallisuuspoikkeamat kuukausittain"
                               :alkupvm alkupvm :loppupvm loppupvm
                               :kuukausittainen-data turpomaarat-tyypeittain
                               :piilota-arvo? #{0}
-                              :legend ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot" "Muut"]})
-      ;; estää nillin pääsyn PDF:ään
-      [:teksti ""])))
+                              :legend ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot" "Muut"]}))))
 
 (defn- turvallisuuspoikkeamat-rivit [turpot urakoittain? konteksti naytettavat-alueet]
   (let [turporivi (fn [[urakka turpot]]
@@ -89,6 +87,42 @@
               [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))))
 
 (defn- turvallisuuspoikkeamat-sarakkeet [urakoittain?]
+  (into []
+        (concat (when urakoittain?
+                  [{:otsikko "Urakka"}])
+                [{:otsikko "Tyyppi"}
+                 {:otsikko "Määrä"}])))
+
+(defn- turvallisuuspoikkeamat-vakavuusasteittain-rivit [turpot urakoittain? konteksti naytettavat-alueet]
+  (let [turporivi (fn [[urakka turpot]]
+                    (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
+                                                          (count (filter #(= (:vakavuusaste %) vakavuusaste) turpot)))]
+                      [(rivi (:nimi urakka) "Lievä" (or (turpo-maarat-per-vakavuusaste turpot :lieva) 0))
+                       (rivi (:nimi urakka) "Vakava" (or (turpo-maarat-per-vakavuusaste turpot :vakava) 0))]))]
+    (concat (if (= konteksti :koko-maa)
+              (let [alueen-turpot (fn [turpot alue]
+                                    (filter
+                                      #(= (get-in % [:hallintayksikko :id])
+                                          (:hallintayksikko-id alue))
+                                      turpot))]
+                (mapcat
+                  (fn [alue]
+                    (let [turpot (alueen-turpot turpot alue)
+                          rivit (mapcat turporivi
+                                        (if urakoittain?
+                                          (group-by :urakka turpot)
+                                          [[nil turpot]]))]
+                      (concat [{:otsikko (:nimi alue)}]
+                              (if (empty? rivit)
+                                [["Ei tietoja"]]
+                                rivit))))
+                  naytettavat-alueet))
+              (mapcat turporivi
+                      (if urakoittain?
+                        (group-by :urakka turpot)
+                        [[nil turpot]]))))))
+
+(defn- turvallisuuspoikkeamat-vakavuusasteittain-sarakkeet [urakoittain?]
   (into []
         (concat (when urakoittain?
                   [{:otsikko "Urakka"}])
@@ -169,9 +203,15 @@
       (turvallisuuspoikkeamat-sarakkeet urakoittain?)
       (turvallisuuspoikkeamat-rivit turpot urakoittain? konteksti naytettavat-alueet)]
 
+     (when (= konteksti :koko-maa)
+       [:taulukko {:otsikko (str "Turvallisuuspoikkeamat vakavuusasteittain")}
+        (turvallisuuspoikkeamat-vakavuusasteittain-sarakkeet urakoittain?)
+        (turvallisuuspoikkeamat-vakavuusasteittain-rivit turpot urakoittain? konteksti naytettavat-alueet)])
+
      (turvallisuuspoikkeamat-pylvaat turpot alkupvm loppupvm)
 
-     [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
-                 :viimeinen-rivi-yhteenveto? true}
-      (turvallisuuspoikkeamat-listana-sarakkeet urakoittain?)
-      (turvallisuuspoikkeamat-listana-rivit turpot urakoittain?)]]))
+     (when (not= konteksti :koko-maa)
+       [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
+                  :viimeinen-rivi-yhteenveto? true}
+       (turvallisuuspoikkeamat-listana-sarakkeet urakoittain?)
+       (turvallisuuspoikkeamat-listana-rivit turpot urakoittain?)])]))
