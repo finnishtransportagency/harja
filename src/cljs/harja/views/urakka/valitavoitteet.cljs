@@ -92,6 +92,7 @@
 (defn- urakan-valitavoitteet [urakka
                               kaikki-valitavoitteet-atom
                               urakan-valitavoitteet-atom]
+  (log "[BUG] " (pr-str @urakan-valitavoitteet-atom))
   [grid/grid
    {:otsikko "Urakan välitavoitteet"
     :tyhja (if (nil? @urakan-valitavoitteet-atom)
@@ -116,8 +117,7 @@
                         @urakan-valitavoitteet-atom)}
 
    [{:tyyppi :vetolaatikon-tila :leveys 5}
-    {:otsikko "Nimi" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128
-     :validoi [:ei-tyhja "Anna välitavoitteen nimi"]}
+    {:otsikko "Nimi" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
     {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                            (pvm/pvm-opt %)
                                                            "Ei takarajaa")
