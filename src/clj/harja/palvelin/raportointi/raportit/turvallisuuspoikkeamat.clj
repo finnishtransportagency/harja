@@ -46,42 +46,24 @@
                                          (get maarat "muu")])))
                                   {} turpo-maarat-kuukausittain)]
     (when (and (not= (vuosi-ja-kk alkupvm) (vuosi-ja-kk loppupvm))
-             (> (count turpot) 0))
+               (> (count turpot) 0))
       (pylvaat-kuukausittain {:otsikko "Turvallisuuspoikkeamat kuukausittain"
                               :alkupvm alkupvm :loppupvm loppupvm
                               :kuukausittainen-data turpomaarat-tyypeittain
                               :piilota-arvo? #{0}
                               :legend ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot" "Muut"]}))))
 
-(defn- turvallisuuspoikkeamat-tyypeittain-rivit [turpot urakoittain? konteksti naytettavat-alueet]
+(defn- turvallisuuspoikkeamat-tyypeittain-rivit [turpot urakoittain?]
   (let [turporivi (fn [[urakka turpot]]
                     (let [turpo-maarat-per-tyyppi (frequencies (mapcat :tyyppi turpot))]
                       [(rivi (:nimi urakka) "Työtapaturma" (or (turpo-maarat-per-tyyppi "tyotapaturma") 0))
                        (rivi (:nimi urakka) "Vaaratilanne" (or (turpo-maarat-per-tyyppi "vaaratilanne") 0))
                        (rivi (:nimi urakka) "Turvallisuushavainto" (or (turpo-maarat-per-tyyppi "turvallisuushavainto") 0))
                        (rivi (:nimi urakka) "Muu" (or (turpo-maarat-per-tyyppi "muu") 0))]))]
-    (concat (if (= konteksti :koko-maa)
-              (let [alueen-turpot (fn [turpot alue]
-                                             (filter
-                                               #(= (get-in % [:hallintayksikko :id])
-                                                   (:hallintayksikko-id alue))
-                                               turpot))]
-                (mapcat
-                  (fn [alue]
-                    (let [turpot (alueen-turpot turpot alue)
-                          rivit (mapcat turporivi
-                                        (if urakoittain?
-                                          (group-by :urakka turpot)
-                                          [[nil turpot]]))]
-                      (concat [{:otsikko (:nimi alue)}]
-                              (if (empty? rivit)
-                                [["Ei tietoja"]]
-                                rivit))))
-                  naytettavat-alueet))
-              (mapcat turporivi
-                      (if urakoittain?
-                        (group-by :urakka turpot)
-                        [[nil turpot]])))
+    (concat (mapcat turporivi
+                    (if urakoittain?
+                      (group-by :urakka turpot)
+                      [[nil turpot]]))
             (if urakoittain?
               [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
               [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))))
@@ -93,35 +75,76 @@
                 [{:otsikko "Tyyppi"}
                  {:otsikko "Määrä"}])))
 
-(defn- turvallisuuspoikkeamat-vakavuusasteittain-rivit [turpot urakoittain? naytettavat-alueet]
-  (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
-          (count (filter #(= (:vakavuusaste %) vakavuusaste) turpot)))
+(defn- turvallisuuspoikkeamat-tyypeittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
+  (let [turpo-maarat-per-tyyppi (fn [turpot tyyppi]
+                                  (count (filter
+                                           (fn [turpo]
+                                             (some #(= % tyyppi) (:tyyppi turpo)))
+                                           turpot)))
         hallintayksikon-turpot (fn [turpot alue]
                                  (filter
                                    #(= (get-in % [:hallintayksikko :id])
                                        (:hallintayksikko-id alue))
-                                   turpot))]
-
+                                   turpot))
+        turporivi (fn [turpot alue]
+                    [(:nimi alue)
+                     (or (turpo-maarat-per-tyyppi turpot "tyotapaturma") 0)
+                     (or (turpo-maarat-per-tyyppi turpot "vaaratilanne") 0)
+                     (or (turpo-maarat-per-tyyppi turpot "turvallisuushavainto") 0)
+                     (or (turpo-maarat-per-tyyppi turpot "muu") 0)])]
     (concat (if urakoittain?
-             (mapv
-                 (fn [alue]
-                   (let [alueen-turpot (filter
-                                         #(= (get-in % [:urakka :id])
-                                             (:id alue))
-                                         turpot)]
-                     [(:nimi alue)
-                     (or (turpo-maarat-per-vakavuusaste alueen-turpot :lieva) 0)
-                     (or (turpo-maarat-per-vakavuusaste alueen-turpot :vakava) 0)]))
-                 (distinct (mapv :urakka turpot)))
-               (mapv
-                 (fn [alue]
-                   (let [alueen-turpot (hallintayksikon-turpot turpot alue)]
-                     [(:nimi alue)
-                      (or (turpo-maarat-per-vakavuusaste alueen-turpot :lieva) 0)
-                      (or (turpo-maarat-per-vakavuusaste alueen-turpot :vakava) 0)]))
-                 naytettavat-alueet)))))
+              (mapv
+                (fn [alue]
+                  (let [alueen-turpot (filter
+                                        #(= (get-in % [:urakka :id])
+                                            (:id alue))
+                                        turpot)]
+                    (turporivi alueen-turpot alue)))
+                (distinct (mapv :urakka turpot)))
+              (mapv
+                (fn [alue]
+                  (let [alueen-turpot (hallintayksikon-turpot turpot alue)]
+                    (turporivi alueen-turpot alue)))
+                naytettavat-alueet)))))
 
-(defn- turvallisuuspoikkeamat-vakavuusasteittain-sarakkeet [urakoittain?]
+(defn- turvallisuuspoikkeamat-tyypeittain-koko-maan-sarakkeet [urakoittain?]
+  (into []
+        (concat (if urakoittain?
+                  [{:otsikko "Urakka"}]
+                  [{:otsikko "Hallintayksikkö"}])
+                [{:otsikko "Työtapaturmat"}
+                 {:otsikko "Vaaratilanteet"}
+                 {:otsikko "Turvallisuushavainnot"}
+                 {:otsikko "Muut"}])))
+
+(defn- turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
+  (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
+                                        (count (filter #(= (:vakavuusaste %) vakavuusaste) turpot)))
+        hallintayksikon-turpot (fn [turpot alue]
+                                 (filter
+                                   #(= (get-in % [:hallintayksikko :id])
+                                       (:hallintayksikko-id alue))
+                                   turpot))
+        turporivi (fn [turpot alue]
+                    [(:nimi alue)
+                     (or (turpo-maarat-per-vakavuusaste turpot :lieva) 0)
+                     (or (turpo-maarat-per-vakavuusaste turpot :vakava) 0)])]
+    (concat (if urakoittain?
+              (mapv
+                (fn [alue]
+                  (let [alueen-turpot (filter
+                                        #(= (get-in % [:urakka :id])
+                                            (:id alue))
+                                        turpot)]
+                    (turporivi alueen-turpot alue)))
+                (distinct (mapv :urakka turpot)))
+              (mapv
+                (fn [alue]
+                  (let [alueen-turpot (hallintayksikon-turpot turpot alue)]
+                    (turporivi alueen-turpot alue)))
+                naytettavat-alueet)))))
+
+(defn- turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-sarakkeet [urakoittain?]
   (into []
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
@@ -171,6 +194,7 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
+        ;; Näytettävät alueet (hallintayksiköt) koko maan raporttia varten
         naytettavat-alueet (naytettavat-alueet
                              db
                              konteksti
@@ -198,20 +222,24 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true
+     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? (not= konteksti :koko-maa)
                  :sheet-nimi raportin-nimi}
-      (turvallisuuspoikkeamat-tyypeittain-sarakkeet urakoittain?)
-      (turvallisuuspoikkeamat-tyypeittain-rivit turpot urakoittain? konteksti naytettavat-alueet)]
+      (if (= konteksti :koko-maa)
+        (turvallisuuspoikkeamat-tyypeittain-koko-maan-sarakkeet urakoittain?)
+        (turvallisuuspoikkeamat-tyypeittain-sarakkeet urakoittain?))
+      (if (= konteksti :koko-maa)
+        (turvallisuuspoikkeamat-tyypeittain-koko-maan-rivit turpot urakoittain? naytettavat-alueet)
+        (turvallisuuspoikkeamat-tyypeittain-rivit turpot urakoittain?))]
 
      (when (= konteksti :koko-maa)
        [:taulukko {:otsikko (str "Turvallisuuspoikkeamat vakavuusasteittain")}
-        (turvallisuuspoikkeamat-vakavuusasteittain-sarakkeet urakoittain?)
-        (turvallisuuspoikkeamat-vakavuusasteittain-rivit turpot urakoittain? naytettavat-alueet)])
+        (turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-sarakkeet urakoittain?)
+        (turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-rivit turpot urakoittain? naytettavat-alueet)])
 
      (turvallisuuspoikkeamat-pylvaat turpot alkupvm loppupvm)
 
      (when (not= konteksti :koko-maa)
        [:taulukko {:otsikko (str "Turvallisuuspoikkeamat listana: " (count turpot) " kpl")
-                  :viimeinen-rivi-yhteenveto? true}
-       (turvallisuuspoikkeamat-listana-sarakkeet urakoittain?)
-       (turvallisuuspoikkeamat-listana-rivit turpot urakoittain?)])]))
+                   :viimeinen-rivi-yhteenveto? true}
+        (turvallisuuspoikkeamat-listana-sarakkeet urakoittain?)
+        (turvallisuuspoikkeamat-listana-rivit turpot urakoittain?)])]))
