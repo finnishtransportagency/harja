@@ -14,7 +14,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -128,7 +129,8 @@
 (defn- valtakunnalliset-valitavoitteet [urakka
                                         kaikki-valitavoitteet-atom
                                         valtakunnalliset-valitavoitteet-atom]
-  [grid/grid
+  [:div
+   [grid/grid
    {:otsikko "Valtakunnalliset välitavoitteet"
     :tyhja (if (nil? @valtakunnalliset-valitavoitteet-atom)
              [y/ajax-loader "Välitavoitteita haetaan..."]
@@ -176,7 +178,9 @@
     {:otsikko "Taka\u00ADraja ura\u00ADkassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
     {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
      :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
-   @valtakunnalliset-valitavoitteet-atom])
+   @valtakunnalliset-valitavoitteet-atom]
+   [yleiset/vihje "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. Järjestelmävastaavalla on mahdollisuus
+   muokata olemassa olevia välitavoitteita mikäli niitä ei ole muokattu urakassa."]])
 
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
