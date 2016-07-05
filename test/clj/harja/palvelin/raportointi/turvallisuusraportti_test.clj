@@ -252,140 +252,88 @@
                     [:taulukko
                      {:otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
                       :sheet-nimi "Turvallisuusraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:otsikko "Tyyppi"}
-                      {:otsikko "Määrä"}]
-                     [{:otsikko "Uusimaa"}
-                       ["Työtapaturma"
+                      :viimeinen-rivi-yhteenveto? false}
+                     [{:otsikko "Hallintayksikkö"}
+                      {:otsikko "Työtapaturmat"}
+                      {:otsikko "Vaaratilanteet"}
+                      {:otsikko "Turvallisuushavainnot"}
+                      {:otsikko "Muut"}]
+                     [["Uusimaa"
+                       0
+                       0
+                       0
+                       0]
+                       ["Varsinais-Suomi"
+                        0
+                        0
+                        0
                         0]
-                       ["Vaaratilanne"
+                       ["Kaakkois-Suomi"
+                        0
+                        0
+                        0
                         0]
-                       ["Turvallisuushavainto"
+                       ["Pirkanmaa"
+                        0
+                        0
+                        0
                         0]
-                       ["Muu"
+                       ["Pohjois-Savo"
+                        0
+                        0
+                        0
                         0]
-                       {:otsikko "Varsinais-Suomi"}
-                       ["Työtapaturma"
+                       ["Keski-Suomi"
+                        0
+                        0
+                        0
                         0]
-                       ["Vaaratilanne"
+                       ["Etelä-Pohjanmaa"
+                        0
+                        0
+                        0
                         0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       {:otsikko "Kaakkois-Suomi"}
-                       ["Työtapaturma"
-                        0]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       {:otsikko "Pirkanmaa"}
-                       ["Työtapaturma"
-                        0]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       {:otsikko "Pohjois-Savo"}
-                       ["Työtapaturma"
-                        0]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       {:otsikko "Keski-Suomi"}
-                       ["Työtapaturma"
-                        0]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       {:otsikko "Etelä-Pohjanmaa"}
-                       ["Työtapaturma"
-                        0]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       {:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
-                       ["Työtapaturma"
-                        2]
-                       ["Vaaratilanne"
+                       ["Pohjois-Pohjanmaa ja Kainuu"
+                        2
+                        1
+                        3
                         1]
-                       ["Turvallisuushavainto"
-                        3]
-                       ["Muu"
-                        1]
-                       {:otsikko "Lappi"}
-                       ["Työtapaturma"
-                        0]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       ["Yksittäisiä ilmoituksia yhteensä"
-                        5]]]
+                       ["Lappi"
+                        0
+                        0
+                        0
+                        0]]]
                     [:taulukko
                      {:otsikko "Turvallisuuspoikkeamat vakavuusasteittain"}
-                     [{:otsikko "Tyyppi"}
-                      {:otsikko "Määrä"}]
-                     [{:otsikko "Uusimaa"}
-                       ["Lievä"
+                     [{:otsikko "Hallintayksikkö"}
+                      {:otsikko "Lievät"}
+                      {:otsikko "Vakavat"}]
+                     [["Uusimaa"
+                       0
+                       0]
+                       ["Varsinais-Suomi"
+                        0
                         0]
-                       ["Vakava"
+                       ["Kaakkois-Suomi"
+                        0
                         0]
-                       {:otsikko "Varsinais-Suomi"}
-                       ["Lievä"
+                       ["Pirkanmaa"
+                        0
                         0]
-                       ["Vakava"
+                       ["Pohjois-Savo"
+                        0
                         0]
-                       {:otsikko "Kaakkois-Suomi"}
-                       ["Lievä"
+                       ["Keski-Suomi"
+                        0
                         0]
-                       ["Vakava"
+                       ["Etelä-Pohjanmaa"
+                        0
                         0]
-                       {:otsikko "Pirkanmaa"}
-                       ["Lievä"
-                        0]
-                       ["Vakava"
-                        0]
-                       {:otsikko "Pohjois-Savo"}
-                       ["Lievä"
-                        0]
-                       ["Vakava"
-                        0]
-                       {:otsikko "Keski-Suomi"}
-                       ["Lievä"
-                        0]
-                       ["Vakava"
-                        0]
-                       {:otsikko "Etelä-Pohjanmaa"}
-                       ["Lievä"
-                        0]
-                       ["Vakava"
-                        0]
-                       {:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
-                       ["Lievä"
-                        1]
-                       ["Vakava"
+                       ["Pohjois-Pohjanmaa ja Kainuu"
+                        1
                         4]
-                       {:otsikko "Lappi"}
-                       ["Lievä"
-                        0]
-                       ["Vakava"
+                       ["Lappi"
+                        0
                         0]]]
                     [:pylvaat
                      {:legend ["Työtapaturmat"
