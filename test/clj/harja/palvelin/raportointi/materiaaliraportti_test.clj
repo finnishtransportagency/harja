@@ -104,13 +104,9 @@
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Urakka"}
                       {:otsikko "Talvisuolaliuos NaCl (t)"}]
-                     [["Vantaan alueurakka 2014-2019"
-                       "1000,00"]
-                       ["Kajaanin alueurakka 2014-2019"
-                        "1000,00"]
-                       ["Oulun alueurakka 2014-2019"
-                        "1000,00"]
-                       ["Espoon alueurakka 2014-2019"
-                        "1000,00"]
+                     [["Uusimaa"
+                       "2000,00"]
+                       ["Pohjois-Pohjanmaa ja Kainuu"
+                        "2000,00"]
                        ["Yhteensä"
                          "4000,00"]]]]))))
