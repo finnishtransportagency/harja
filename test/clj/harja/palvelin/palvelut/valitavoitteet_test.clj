@@ -73,19 +73,38 @@
     ;; Muhokselle ei tullut, koska oli eri urakkatyyppi
     (is (= (count muhoksen-urakan-paivitetyt-valitavoitteet) (count muhoksen-urakan-valitavoitteet)))
 
-    ;; Valtakunnallisten päivittäminen päivittää tiedot myös urakkaan
-    (let [uudelleenpaivitetyt (kutsu-palvelua
-                                (:http-palvelin jarjestelma)
-                                :tallenna-valtakunnalliset-valitavoitteet
-                                +kayttaja-jvh+
-                                {:valitavoitteet (mapv
-                                                   #(assoc % :nimi "PÄIVITÄ")
-                                                   lisatyt-valtakunnalliset)})
+    ;; Päivitä urakkakohtaista tavoitetta ja sen jälkeen valtakunnallista
+    (let [random-tavoite-id-urakassa (first (first (q (str
+                                                        "SELECT id FROM valitavoite
+                                                         WHERE urakka = 4
+                                                         AND valtakunnallinen_valitavoite IS NOT NULL
+                                                         AND poistettu IS NOT TRUE
+                                                         LIMIT 1;"))))
+          _ (is (integer? random-tavoite-id-urakassa))
+          _ (u (str "UPDATE valitavoite set muokattu = NOW() WHERE id = " random-tavoite-id-urakassa))
+          _ (kutsu-palvelua
+              (:http-palvelin jarjestelma)
+              :tallenna-valtakunnalliset-valitavoitteet
+              +kayttaja-jvh+
+              {:valitavoitteet (mapv
+                                 #(assoc % :nimi "PÄIVITÄ")
+                                 lisatyt-valtakunnalliset)})
           oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                                  (hae-oulun-alueurakan-2014-2019-id))]
+      ;; Ei muokatut välitavoitteet päivittyivät myös urakkaan
       (is (every? #(= (:nimi %) "PÄIVITÄ")
-                  (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
+                  (filter #(and (:valtakunnallinen-id %)
+                                (nil? (:muokattu %)))
+                          oulun-urakan-paivitetyt-valitavoitteet)))
+
+      ;; Muokatut välitavoitteet eivät päivittyneet
+      (is (every? #(not= (:nimi %) "PÄIVITÄ")
+                  (filter #(and (:valtakunnallinen-id %)
+                                (some? (:muokattu %)))
+                          oulun-urakan-paivitetyt-valitavoitteet)))
+
+      ;; Kaikkien linkitettyjen välitavoitteiden "emo" näkyy kuitenkin päivitettynä
       (is (every? #(= (:valtakunnallinen-nimi %) "PÄIVITÄ")
                   (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
 
