@@ -82,7 +82,15 @@
                                         (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                         (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                         :disabled (not (voi-tallentaa? @turvallisuuspoikkeama))}]}
-             [(lomake/ryhma {:rivi? true}
+             [{:otsikko "Tapahtuman otsikko"
+               :nimi :otsikko
+               :tyyppi :string
+               :pituus-max 1024
+               :palstoja 1}
+              {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+               :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
+               :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+              (lomake/ryhma {:rivi? true}
                             {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
                              :pakollinen? true
                              :vaihtoehto-nayta turpodomain/turpo-tyypit
@@ -98,15 +106,16 @@
                              :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                              :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
                              :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)})
-              {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-               :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
-               :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
               {:otsikko "Tierekisteriosoite"
                :nimi :tr
                :tyyppi :tierekisteriosoite
                :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
                                  #(swap! turvallisuuspoikkeama assoc :sijainti %))}
-
+              {:otsikko "Paikan kuvaus"
+               :nimi :paikan-kuvaus
+               :tyyppi :string
+               :pituus-max 2048
+               :palstoja 1}
               {:uusi-rivi? true
                :otsikko "Tila"
                :nimi :tila
@@ -119,11 +128,6 @@
                :valinnat #{:avoin :kasitelty :taydennetty :suljettu}
                :validoi [[:ei-tyhja "Valitse tila"]]
                :palstoja 1}
-              {:otsikko "Tapahtuman otsikko"
-               :nimi :otsikko
-               :tyyppi :string
-               :pituus-max 1024
-               :palstoja 1}
               {:otsikko "Tapahtuman kuvaus"
                :nimi :kuvaus
                :tyyppi :text
@@ -131,11 +135,6 @@
                :palstoja 1
                :pakollinen? true
                :validoi [[:ei-tyhja "Anna kuvaus"]]}
-              {:otsikko "Paikan kuvaus"
-               :nimi :paikan-kuvaus
-               :tyyppi :string
-               :pituus-max 2048
-               :palstoja 1}
               {:otsikko "Aiheutuneet seuraukset"
                :nimi :seuraukset
                :tyyppi :text
