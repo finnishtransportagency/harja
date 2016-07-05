@@ -112,9 +112,9 @@
   Jos takarajaa ei ole annettu, kopioidaan välitavoite kaikkiin
   oikeantyyppisiin käynnissä oleviin ja tuleviin urakoihin."
   [db user valitavoitteet]
-  (let [urakat (into []
-                     (map #(konv/string->keyword % :tyyppi))
-                     (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))]
+  (let [urakat-kaynissa-tulossa (into []
+                                      (map #(konv/string->keyword % :tyyppi))
+                                      (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))]
     (doseq [{:keys [takaraja nimi urakkatyyppi] :as valitavoite} valitavoitteet]
       (let [id (:id (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
                       db
@@ -130,22 +130,21 @@
                                          (= (:urakkatyyppi valitavoite) (:tyyppi urakka))
                                          (pvm/valissa? (c/from-date takaraja)
                                                        (c/from-date (:alkupvm urakka))
-                                                       (c/from-date (:loppupvm urakka)))
-                                         (pvm/ennen? (t/now) (c/from-date (:loppupvm urakka)))))
-                                     urakat)
+                                                       (c/from-date (:loppupvm urakka)))))
+                                     urakat-kaynissa-tulossa)
                                    (filter
                                      #(= (:urakkatyyppi valitavoite) (:tyyppi %))
-                                     urakat))]
+                                     urakat-kaynissa-tulossa))]
         (kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin db user valitavoite id linkitettavat-urakat)))))
 
 (defn- kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
   [db user valitavoite valitavoite-kannassa-id]
-  (let [urakat (into []
+  (let [urakat-kaynnissa-tulossa (into []
                      (map #(konv/string->keyword % :tyyppi))
                      (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))
         linkitettavat-urakat (filter
                                #(= (:urakkatyyppi valitavoite) (:tyyppi %))
-                               urakat)]
+                               urakat-kaynnissa-tulossa)]
     (doseq [urakka linkitettavat-urakat]
      (let [urakan-jaljella-olevat-vuodet (range (max (t/year (t/now))
                                                      (t/year (c/from-date (:alkupvm urakka))))
