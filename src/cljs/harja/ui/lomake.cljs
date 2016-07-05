@@ -164,7 +164,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   (when vihje
     (let [vihjeet (if (vector? vihje) vihje [vihje])]
       [:div {:class
-            (str "inline-block lomake-vihje")}
+            (str "inline-block yleinen-pikkuvihje")}
       [:div.vihjeen-sisalto
        (harja.ui.ikonit/livicon-info-sign)
        [:span (str " " (first vihjeet))]

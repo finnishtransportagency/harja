@@ -84,11 +84,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
 
 (def +urakkatyypit+
-  [{:nimi "Hoito" :arvo :hoito }
-   {:nimi "Tiemerkintä" :arvo :tiemerkinta }
-   {:nimi "Päällystys" :arvo :paallystys }
-   {:nimi "Paikkaus" :arvo :paikkaus }
-   {:nimi "Valaistus" :arvo :valaistus }])
+  [{:nimi "Hoito" :arvo :hoito}
+   {:nimi "Tiemerkintä" :arvo :tiemerkinta}
+   {:nimi "Päällystys" :arvo :paallystys}
+   {:nimi "Paikkaus" :arvo :paikkaus}
+   {:nimi "Valaistus" :arvo :valaistus}])
 
 (defn urakkatyyppi [tyyppi]
   (first (filter #(= tyyppi (:arvo %))

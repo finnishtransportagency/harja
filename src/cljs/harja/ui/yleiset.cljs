@@ -265,6 +265,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
    ikoni
    [:span (str " " teksti)]])
 
+(defn ikoni-ja-elementti [ikoni elementti]
+  [:span
+   ikoni
+   [:span " "]
+   elementti])
+
 (defn teksti-ja-ikoni [teksti ikoni]
   [:span
    [:span (str teksti " ")]
@@ -363,6 +369,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    komp])
 
 ;; Lasipaneelin tyyli, huom: parentin on oltava position: relative
+;; FIXME CSS Expression on deprecated: https://robertnyman.com/2007/11/13/stop-using-poor-performance-css-expressions-use-javascript-instead/
+;; Muutenkin pitäisi miettiä tarvitaanko tätä, sillä on epäyhteneväinen muun Harjan kanssa.
 (def lasipaneeli-tyyli {:display          "block"
                         :position         "absolute"
                         :top              0
@@ -475,9 +483,17 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([teksti] (vihje teksti nil))
   ([teksti luokka]
    [:div {:class
-          (str "lomake-vihje " (or luokka ""))}
+          (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
      (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
+
+(defn vihje-elementti
+  ([elementti] (vihje-elementti elementti nil))
+  ([elementti luokka]
+   [:div {:class
+          (str "yleinen-pikkuvihje " (or luokka ""))}
+    [:div.vihjeen-sisalto
+     (ikoni-ja-elementti (harja.ui.ikonit/livicon-info-sign) elementti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
