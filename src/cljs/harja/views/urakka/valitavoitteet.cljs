@@ -179,7 +179,7 @@
     {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
      :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
    @valtakunnalliset-valitavoitteet-atom]
-   [yleiset/vihje "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia."]])
+   [yleiset/vihje "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."]])
 
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
