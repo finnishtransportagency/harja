@@ -92,7 +92,7 @@
     (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
    [yleiset/vihje-elementti
     [:span
-     "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin jos välitavoitteen takaraja on urakan voimassaoloaikana."
+     "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
      [:br]"Uudet Toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
      [:br]"Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
      [:br]"Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]])
