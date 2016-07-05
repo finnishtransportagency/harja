@@ -92,7 +92,6 @@
 (defn- urakan-valitavoitteet [urakka
                               kaikki-valitavoitteet-atom
                               urakan-valitavoitteet-atom]
-  (log "[BUG] " (pr-str @urakan-valitavoitteet-atom))
   [grid/grid
    {:otsikko "Urakan välitavoitteet"
     :tyhja (if (nil? @urakan-valitavoitteet-atom)
