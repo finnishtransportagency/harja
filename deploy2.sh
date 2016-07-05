@@ -40,7 +40,7 @@ if [ -z "$UNIT" ] || [ "$UNIT" = true ]; then
   # echo ""
   sh unit.sh
 else
-  msg "Huom. yksikkötestejä ei ajettu!"
+  msg "Yksikkötestejä ei ajettu!"
   sh unit.sh
 fi
 
