@@ -48,7 +48,7 @@
                                                      db {:urakka urakka-id
                                                          :sopimus sopimus-id
                                                          :yllapitokohde (:id %)})))))
-                        (q/hae-urakan-yllapitokohteet db {:urakka urakka-id
+                        (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                           :sopimus sopimus-id}))
           osien-pituudet-tielle
           (fmap
@@ -256,13 +256,14 @@
       paallystyskohteet)))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
-                                  {:keys [nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
+                                  {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu sijainti]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
                               {:yllapitokohde yllapitokohde-id
                                :nimi nimi
+                               :tunnus tunnus
                                :tr_numero tr-numero
                                :tr_alkuosa tr-alkuosa
                                :tr_alkuetaisyys tr-alkuetaisyys

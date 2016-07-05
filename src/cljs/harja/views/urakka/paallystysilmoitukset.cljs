@@ -458,8 +458,8 @@
                :leveys "30%"}
               {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0 :leveys "10%" :tasaa :oikea
                :validoi [[:rajattu-numero nil 0 99]]}
-              {:otsikko "Massamaara (kg/m2)" :nimi :massamaara :tyyppi :positiivinen-numero :tasaa :oikea
-               :leveys "10%"}
+              {:otsikko "Massamenekki (kg/m2)" :nimi :massamenekki :tyyppi :positiivinen-numero :desimaalien-maara 0
+               :tasaa :oikea :leveys "10%"}
               {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0 :tasaa :oikea :pituus-max 100
                :validoi [[:rajattu-numero nil 0 100]]}
               {:otsikko "Pääll. työ\u00ADmenetelmä"
@@ -476,8 +476,8 @@
                :leveys "30%"}
               {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
                :tasaa :oikea}
-              {:otsikko "Kohteen kokonaismassa (t)" :nimi :kohteen-kokonaismassa :leveys "15%" :tyyppi :positiivinen-numero
-               :tasaa :oikea :desimaalien-maara 0}
+              {:otsikko "Kohteen kokonaismassamäärä (t)" :nimi :kokonaismassamaara :leveys "15%" :tyyppi :positiivinen-numero
+               :tasaa :oikea}
               {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
                :tasaa :oikea}
               {:otsikko "Edellinen päällyste"

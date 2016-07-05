@@ -59,4 +59,7 @@
                      json-esimerkit/+tyokoneenseuranta-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/paivystyksen-poisto
-                     json-esimerkit/+paivystyksen-poisto-kirjaus+))))
+                     json-esimerkit/+paivystyksen-poisto-kirjaus+)))
+
+  (is (nil? (validoi json-skeemat/urakan-yllapitokohteiden-haku-vastaus
+                     json-esimerkit/+urakan-yllapitokohteiden-haku+))))

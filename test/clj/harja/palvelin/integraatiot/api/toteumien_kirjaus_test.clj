@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
             [taoensso.timbre :as log]))
 
-(def kayttaja "fastroi")
+(def kayttaja "destia")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea

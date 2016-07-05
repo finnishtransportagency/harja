@@ -67,6 +67,7 @@
                         0]
                        ["Yksittäisiä ilmoituksia yhteensä"
                         1]]]
+                    nil
                     [:pylvaat
                      {:legend ["Työtapaturmat"
                                "Vaaratilanteet"
@@ -166,6 +167,7 @@
                         0]
                        ["Yksittäisiä ilmoituksia yhteensä"
                         1]]]
+                    nil
                     [:pylvaat
                      {:legend ["Työtapaturmat"
                                "Vaaratilanteet"
@@ -250,19 +252,89 @@
                     [:taulukko
                      {:otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
                       :sheet-nimi "Turvallisuusraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:otsikko "Tyyppi"}
-                      {:otsikko "Määrä"}]
-                     [["Työtapaturma"
-                       2]
-                       ["Vaaratilanne"
+                      :viimeinen-rivi-yhteenveto? false}
+                     [{:otsikko "Hallintayksikkö"}
+                      {:otsikko "Työtapaturmat"}
+                      {:otsikko "Vaaratilanteet"}
+                      {:otsikko "Turvallisuushavainnot"}
+                      {:otsikko "Muut"}]
+                     [["Uusimaa"
+                       0
+                       0
+                       0
+                       0]
+                       ["Varsinais-Suomi"
+                        0
+                        0
+                        0
+                        0]
+                       ["Kaakkois-Suomi"
+                        0
+                        0
+                        0
+                        0]
+                       ["Pirkanmaa"
+                        0
+                        0
+                        0
+                        0]
+                       ["Pohjois-Savo"
+                        0
+                        0
+                        0
+                        0]
+                       ["Keski-Suomi"
+                        0
+                        0
+                        0
+                        0]
+                       ["Etelä-Pohjanmaa"
+                        0
+                        0
+                        0
+                        0]
+                       ["Pohjois-Pohjanmaa ja Kainuu"
+                        2
+                        1
+                        3
                         1]
-                       ["Turvallisuushavainto"
-                        2]
-                       ["Muu"
-                        1]
-                       ["Yksittäisiä ilmoituksia yhteensä"
-                        4]]]
+                       ["Lappi"
+                        0
+                        0
+                        0
+                        0]]]
+                    [:taulukko
+                     {:otsikko "Turvallisuuspoikkeamat vakavuusasteittain"}
+                     [{:otsikko "Hallintayksikkö"}
+                      {:otsikko "Lievät"}
+                      {:otsikko "Vakavat"}]
+                     [["Uusimaa"
+                       0
+                       0]
+                       ["Varsinais-Suomi"
+                        0
+                        0]
+                       ["Kaakkois-Suomi"
+                        0
+                        0]
+                       ["Pirkanmaa"
+                        0
+                        0]
+                       ["Pohjois-Savo"
+                        0
+                        0]
+                       ["Keski-Suomi"
+                        0
+                        0]
+                       ["Etelä-Pohjanmaa"
+                        0
+                        0]
+                       ["Pohjois-Pohjanmaa ja Kainuu"
+                        1
+                        4]
+                       ["Lappi"
+                        0
+                        0]]]
                     [:pylvaat
                      {:legend ["Työtapaturmat"
                                "Vaaratilanteet"
@@ -320,59 +392,8 @@
                       ["2015/11"
                        [nil
                         nil
-                        1
+                        2
                         nil]]
                       ["2015/12"
                        []]]]
-                    [:taulukko
-                     {:otsikko "Turvallisuuspoikkeamat listana: 4 kpl"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 14
-                       :otsikko "Pvm"}
-                      {:leveys 24
-                       :otsikko "Tyyppi"}
-                      {:leveys 15
-                       :otsikko "Vakavuusaste"}
-                      {:leveys 14
-                       :otsikko "Ammatti"}
-                      {:leveys 14
-                       :otsikko "Työ­tehtävä"}
-                      {:leveys 9
-                       :otsikko "Sairaala­vuoro­kaudet"}
-                      {:leveys 9
-                       :otsikko "Sairaus­poissa­olo­päivät"}]
-                     [["1.11.2015 0:20"
-                       "Tur­val­li­suus­ha­vain­to"
-                       "Vakava"
-                       "Porari"
-                       "Lastaaminen"
-                       3
-                       4]
-                       ["5.10.2015 0:10"
-                        "Vaa­ra­ti­lan­ne, Ty­ö­ta­pa­tur­ma, Tur­val­li­suus­ha­vain­to"
-                        "Lievä"
-                        "Porari"
-                        "Lastailu"
-                        ""
-                        ""]
-                       ["3.10.2015 0:10"
-                        "Muu"
-                        "Vakava"
-                        "Porari"
-                        "Lastauksen tekeminen"
-                        2
-                        1]
-                       ["1.10.2015 0:20"
-                        "Ty­ö­ta­pa­tur­ma"
-                        "Vakava"
-                        "Porari"
-                        "Lastaus"
-                        1
-                        7]
-                       ["Yhteensä"
-                        ""
-                        ""
-                        ""
-                        ""
-                        6
-                        12]]]]))))
+                    nil]))))

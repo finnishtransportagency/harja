@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [clojure.test :refer :all]))
 
-(def kayttaja "fastroi")
+(def kayttaja "destia")
 
 (def jarjestelma-fixture (laajenna-integraatiojarjestelmafixturea kayttaja
                           :api-tyokoneenseuranta (component/using

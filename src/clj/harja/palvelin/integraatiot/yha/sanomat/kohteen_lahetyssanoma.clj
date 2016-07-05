@@ -18,15 +18,15 @@
 (defn tee-tierekisteriosoitevali [osoite]
   [:tierekisteriosoitevali
    [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapvm osoite) (:karttapvm osoite) (pvm/nyt)))]
-   [:tienumero (:tr_numero osoite)]
-   [:aosa (:tr_alkuosa osoite)]
-   [:aet (:tr_alkuetaisyys osoite)]
-   [:losa (:tr_loppuosa osoite)]
-   [:let (:tr_loppuetaisyys osoite)]
-   [:ajorata (:tr_ajorata osoite)]
-   [:kaista (:tr_kaista osoite)]])
+   [:tienumero (:tr-numero osoite)]
+   [:aosa (:tr-alkuosa osoite)]
+   [:aet (:tr-alkuetaisyys osoite)]
+   [:losa (:tr-loppuosa osoite)]
+   [:let (:tr-loppuetaisyys osoite)]
+   [:ajorata (:tr-ajorata osoite)]
+   [:kaista (:tr-kaista osoite)]])
 
-(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko kohteen-kokonaismassa massamaara rc% kuulamylly
+(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
                             lisaaineet] :as alikohde}]
   [:alikohde
@@ -35,12 +35,12 @@
    (tee-tierekisteriosoitevali alikohde)
    [:tunnus tunnus]
    (when
-     (or paallystetyyppi raekoko massamaara kohteen-kokonaismassa rc% kuulamylly tyomenetelma leveys pinta-ala)
+     (or paallystetyyppi raekoko massamenekki kokonaismassamaara rc% kuulamylly tyomenetelma leveys pinta-ala)
      [:paallystystoimenpide
       (when paallystetyyppi [:uusi-paallyste paallystetyyppi])
       (when raekoko [:raekoko raekoko])
-      (when massamaara [:massamaara massamaara])
-      (when kohteen-kokonaismassa [:kokonaismassamaara kohteen-kokonaismassa])
+      (when massamenekki [:massamenekki massamenekki])
+      (when kokonaismassamaara [:kokonaismassamaara kokonaismassamaara])
       (when rc% [:rc-prosentti rc%])
       (when kuulamylly [:kuulamylly kuulamylly])
       (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
@@ -74,7 +74,7 @@
    [:verkon-sijainti verkon-sijainti]
    [:tekninen-toimenpide tekninen-toimenpide]])
 
-(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus tr_numero karttapvm] :as kohde}
+(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus tr-numero karttapvm] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
@@ -90,7 +90,7 @@
    (tee-tierekisteriosoitevali kohde)
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
-             (mapv #(tee-alustalle-tehty-toimenpide % tr_numero karttapvm)
+             (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapvm)
                    (:alustatoimet ilmoitustiedot))))
    (when alikohteet
      (reduce conj [:alikohteet]
