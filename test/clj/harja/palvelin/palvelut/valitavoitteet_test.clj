@@ -35,11 +35,11 @@
     (is (>= (count vastaus) 4))))
 
 
-(deftest urakan-valitavoitteiden-haku-toimii
-  (let [oulun-urakan-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+(deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
+  (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                     :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                     (hae-oulun-alueurakan-2014-2019-id))
-        muhoksen-urakan-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+        muhoksen-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                        :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                        (hae-muhoksen-paallystysurakan-id))
         lisatyt-valtakunnalliset
@@ -68,10 +68,10 @@
     (is (= (count (filter #(= (:tyyppi %) :toistuva) lisatyt-valtakunnalliset)) 1))
 
     ;; Oulun hoidon urakalle tuli lisää välitavoitteita
-    (is (> (count oulun-urakan-paivitetyt-valitavoitteet) (count oulun-urakan-valitavoitteet)))
+    (is (> (count oulun-urakan-paivitetyt-valitavoitteet) (count oulun-urakan-vanhat-valitavoitteet)))
     (is (some :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet))
     ;; Muhokselle ei tullut, koska oli eri urakkatyyppi
-    (is (= (count muhoksen-urakan-paivitetyt-valitavoitteet) (count muhoksen-urakan-valitavoitteet)))
+    (is (= (count muhoksen-urakan-paivitetyt-valitavoitteet) (count muhoksen-urakan-vanhat-valitavoitteet)))
 
     ;; Päivitä urakkakohtaista tavoitetta ja sen jälkeen valtakunnallista
     (let [random-tavoite-id-urakassa (first (first (q (str
@@ -133,8 +133,36 @@
                                                                      (hae-muhoksen-paallystysurakan-id))]
         ;; R.I.P valtakunnalliset välitavoitteet
         (is (empty? poistetut-valtakunnalliset))
+        ;; Muokattu välitavoite säilyi Oulun urakassa
         (is (= (count (filter :valtakunnallinen-id oulun-urakan-poistetut-valitavoitteet)) 1))
+        ;; Muhoksen urakassa ei valtakunnallisia tavoitteita koskaan ollutkaan, eikä ole vieläkään
         (is (empty? (filter :valtakunnallinen-id muhoksen-urakan-poistetut-valitavoitteet)))
 
-      (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
-      (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))
+        (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
+        (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))
+
+(deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
+  (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                    (hae-oulun-alueurakan-2014-2019-id))
+        lisatyt-valtakunnalliset
+        (kutsu-palvelua
+          (:http-palvelin jarjestelma)
+          :tallenna-valtakunnalliset-valitavoitteet
+          +kayttaja-jvh+
+          {:valitavoitteet [{:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
+                             :takaraja nil, :tyyppi :toistuva,
+                             :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
+                             :takaraja-toistokuukausi 7}]})
+        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                               :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                               (hae-oulun-alueurakan-2014-2019-id))
+        odotetut-toistovuodet (range (t/year (t/now)) (inc 2019))]
+
+    ;; Oulun urakan käynnissäolovuosille luotiin uusi välitavoite
+    (is (= (count oulun-urakan-paivitetyt-valitavoitteet)
+           (+ (count oulun-urakan-vanhat-valitavoitteet)
+              (count odotetut-toistovuodet))))
+
+    (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
+    (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
