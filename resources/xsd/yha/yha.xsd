@@ -282,18 +282,11 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
-            <xs:element name="massamaara" minOccurs="0" maxOccurs="1" type="xs:decimal">
-                <xs:annotation>
-                    <xs:documentation>
-                        Yksikkö: kg/m2
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="kokonaismassamaara" minOccurs="0" maxOccurs="1">
+            <xs:element name="massamenekki" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:annotation>
                         <xs:documentation>
-                            Yksikkö: tonni
+                            Yksikkö: kg/m2
                         </xs:documentation>
                     </xs:annotation>
                     <xs:restriction base="xs:int">
@@ -301,6 +294,13 @@
                         <xs:maxInclusive value="999"/>
                     </xs:restriction>
                 </xs:simpleType>
+            </xs:element>
+            <xs:element name="kokonaismassamaara" minOccurs="0" maxOccurs="1" type="xs:decimal">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: tonni
+                    </xs:documentation>
+                </xs:annotation>
             </xs:element>
             <xs:element name="rc-prosentti" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
