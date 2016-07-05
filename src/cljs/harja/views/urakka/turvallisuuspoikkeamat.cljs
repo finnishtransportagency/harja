@@ -63,12 +63,17 @@
     (fnc []
          (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                             ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
+               vaaralliset-aineet-disablointi-fn (fn [valitut vaihtoehto]
+                                                   (and
+                                                     (= vaihtoehto :vaarallisten-aineiden-vuoto)
+                                                     (not (valitut :vaarallisten-aineiden-kuljetus))))
                henkilovahinkojen-disablointi-fn (fn [valitut vaihtoehto]
-                                                  (or (and (valitut :ei_tietoa)
-                                                           (not= vaihtoehto :ei_tietoa))
-                                                      (and (not (empty? valitut))
-                                                           (not (valitut :ei_tietoa))
-                                                           (= vaihtoehto :ei_tietoa))))]
+                                                  (or (and
+                                                        (not= vaihtoehto :ei_tietoa)
+                                                        (valitut :ei_tietoa))
+                                                      (and (= vaihtoehto :ei_tietoa)
+                                                           (not (empty? valitut))
+                                                           (not (valitut :ei_tietoa)))))]
            [:div
             [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
             (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
@@ -158,6 +163,7 @@
                :palstoja 1}
               {:otsikko "Vaaralliset aineet" :nimi :vaaralliset-aineet :tyyppi :checkbox-group
                :vaihtoehto-nayta turpodomain/turpo-vaaralliset-aineet
+               :disabloi vaaralliset-aineet-disablointi-fn
                :vaihtoehdot #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}}
               (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
                              :uusi-rivi? true}
