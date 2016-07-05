@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
-            [harja.kyselyt.yllapitokohteet :as q])
+            [harja.kyselyt.yllapitokohteet :as q]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
@@ -20,9 +21,13 @@
                        (:kayttajanimi kayttaja)
                        (:id kayttaja)))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [yllapitokohteet (mapv #(assoc %
-                                  :alikohteet (into [] (q/hae-yllapitokohteen-kohdeosat db {:yllapitokohde (:id %)})))
-                                (q/hae-urakan-yllapitokohteet db {:urakka urakka-id}))]
+    (let [yllapitokohteet (into []
+                                (map konv/alaviiva->rakenne)
+                                (q/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id}))
+          yllapitokohteet (konv/sarakkeet-vektoriin
+                            yllapitokohteet
+                            {:kohdeosa :alikohteet}
+                            :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (defrecord Yllapitokohteet []
@@ -33,7 +38,7 @@
       (GET "/api/urakat/:id/yllapitokohteet" request
         (kasittele-kutsu-async db
                                integraatioloki
-                               :lisaa-varustetoteuma
+                               :hae-yllapitokohteet
                                request
                                nil
                                json-skeemat/urakan-yllapitokohteiden-haku-vastaus

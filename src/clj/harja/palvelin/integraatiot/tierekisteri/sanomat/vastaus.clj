@@ -53,20 +53,20 @@
   (let [koordinaatit (z/xml1-> data :koordinaatit)
         linkki (z/xml1-> data :linkki)
         tie (z/xml1-> data :tie)]
-    {:koordinaatit {:x (xml/parsi-reaaliluku (z/xml1-> koordinaatit :x z/text))
-                    :y (xml/parsi-reaaliluku (z/xml1-> koordinaatit :y z/text))
-                    :z (xml/parsi-reaaliluku (z/xml1-> koordinaatit :z z/text))}
-     :linkki       {:id    (xml/parsi-kokonaisluku (z/xml1-> linkki :id z/text))
-                    :marvo (xml/parsi-kokonaisluku (z/xml1-> linkki :marvo z/text))}
-     :tie          {:numero  (xml/parsi-kokonaisluku (z/xml1-> tie :numero z/text))
-                    :aet     (xml/parsi-kokonaisluku (z/xml1-> tie :aet z/text))
-                    :aosa    (xml/parsi-kokonaisluku (z/xml1-> tie :aosa z/text))
-                    :let     (xml/parsi-kokonaisluku (z/xml1-> tie :let z/text))
-                    :losa    (xml/parsi-kokonaisluku (z/xml1-> tie :losa z/text))
-                    :ajr     (xml/parsi-kokonaisluku (z/xml1-> tie :ajr z/text))
-                    :puoli   (xml/parsi-kokonaisluku (z/xml1-> tie :puoli z/text))
-                    :alkupvm (xml/parsi-paivamaara (z/xml1-> tie :alkupvm z/text))
-                    }}))
+    {:koordinaatit {:x (xml/parsi-desimaaliluku (z/xml1-> koordinaatit :x z/text))
+                    :y (xml/parsi-desimaaliluku (z/xml1-> koordinaatit :y z/text))
+                    :z (xml/parsi-desimaaliluku (z/xml1-> koordinaatit :z z/text))}
+     :linkki {:id (xml/parsi-kokonaisluku (z/xml1-> linkki :id z/text))
+              :marvo (xml/parsi-kokonaisluku (z/xml1-> linkki :marvo z/text))}
+     :tie {:numero (xml/parsi-kokonaisluku (z/xml1-> tie :numero z/text))
+           :aet (xml/parsi-kokonaisluku (z/xml1-> tie :aet z/text))
+           :aosa (xml/parsi-kokonaisluku (z/xml1-> tie :aosa z/text))
+           :let (xml/parsi-kokonaisluku (z/xml1-> tie :let z/text))
+           :losa (xml/parsi-kokonaisluku (z/xml1-> tie :losa z/text))
+           :ajr (xml/parsi-kokonaisluku (z/xml1-> tie :ajr z/text))
+           :puoli (xml/parsi-kokonaisluku (z/xml1-> tie :puoli z/text))
+           :alkupvm (xml/parsi-paivamaara (z/xml1-> tie :alkupvm z/text))
+           }}))
 
 (defn parsi-tietueen-tietolaji [data]
   {:tietolajitunniste (z/xml1-> data :tietolajitunniste z/text)

@@ -18,13 +18,13 @@
 (defn tee-tierekisteriosoitevali [osoite]
   [:tierekisteriosoitevali
    [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapvm osoite) (:karttapvm osoite) (pvm/nyt)))]
-   [:tienumero (:tr_numero osoite)]
-   [:aosa (:tr_alkuosa osoite)]
-   [:aet (:tr_alkuetaisyys osoite)]
-   [:losa (:tr_loppuosa osoite)]
-   [:let (:tr_loppuetaisyys osoite)]
-   [:ajorata (:tr_ajorata osoite)]
-   [:kaista (:tr_kaista osoite)]])
+   [:tienumero (:tr-numero osoite)]
+   [:aosa (:tr-alkuosa osoite)]
+   [:aet (:tr-alkuetaisyys osoite)]
+   [:losa (:tr-loppuosa osoite)]
+   [:let (:tr-loppuetaisyys osoite)]
+   [:ajorata (:tr-ajorata osoite)]
+   [:kaista (:tr-kaista osoite)]])
 
 (defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus

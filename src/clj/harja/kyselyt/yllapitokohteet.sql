@@ -1,30 +1,46 @@
--- name: hae-urakan-yllapitokohteet
--- Hakee urakan kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
+-- name: hae-urakan-yllapitokohteet-alikohteineen
+-- Hakee urakan kaikki yllapitokohteet sekä niiden alikohteet
 SELECT
-  id,
-  sopimus,
-  kohdenumero,
-  nimi,
-  tyyppi,
-  sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  arvonvahennykset,
-  bitumi_indeksi                    AS "bitumi-indeksi",
-  kaasuindeksi,
-  nykyinen_paallyste                AS "nykyinen-paallyste",
-  keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
-  yllapitoluokka,
-  tr_numero                         AS "tr-numero",
-  tr_alkuosa                        AS "tr-alkuosa",
-  tr_alkuetaisyys                   AS "tr-alkuetaisyys",
-  tr_loppuosa                       AS "tr-loppuosa",
-  tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  tr_ajorata                        AS "tr-ajorata",
-  tr_kaista                         AS "tr-kaista",
-  yhaid
-FROM yllapitokohde
+  ypk.id,
+  ypk.sopimus,
+  ypk.kohdenumero,
+  ypk.nimi,
+  ypk.tyyppi,
+  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset,
+  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypk.kaasuindeksi,
+  ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
+  ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
+  ypk.yllapitoluokka,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
+  ypk.tr_ajorata                        AS "tr-ajorata",
+  ypk.tr_kaista                         AS "tr-kaista",
+  ypk.yhaid,
+  ypko.id                               AS "kohdeosa_id",
+  ypko.yllapitokohde                    AS "kohdeosa_yllapitokohde",
+  ypko.nimi                             AS "kohdeosa_nimi",
+  ypko.tunnus                           AS "kohdeosa_tunnus",
+  ypko.tr_numero                        AS "kohdeosa_tr-numero",
+  ypko.tr_alkuosa                       AS "kohdeosa_tr-alkuosa",
+  ypko.tr_alkuetaisyys                  AS "kohdeosa_tr-alkuetaisyys",
+  ypko.tr_loppuosa                      AS "kohdeosa_tr-loppuosa",
+  ypko.tr_loppuetaisyys                 AS "kohdeosa_tr-loppuetaisyys",
+  ypko.tr_ajorata                       AS "kohdeosa_tr-ajorata",
+  ypko.tr_kaista                        AS "kohdeosa_tr-kaista",
+  ypko.poistettu                        AS "kohdeosa_poistettu",
+  ypko.sijainti                         AS "kohdeosa_sijainti",
+  ypko.yhaid                            AS "kohdeosa_yhaid",
+  ypko.toimenpide                       AS "kohdeosa_toimenpide"
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
 WHERE
-  urakka = :urakka
-  AND poistettu IS NOT TRUE;
+  ypk.urakka = :urakka
+  AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
@@ -354,11 +370,13 @@ SELECT
   aikataulu_muokattu,
   aikataulu_muokkaaja,
   valmis_tiemerkintaan,
-  tr_numero,
-  tr_alkuosa,
-  tr_alkuetaisyys,
-  tr_loppuosa,
-  tr_loppuetaisyys,
+  tr_numero                  AS "tr-numero",
+  tr_alkuosa                 AS "tr-alkuosa",
+  tr_alkuetaisyys            AS "tr-alkuetaisyys",
+  tr_loppuosa                AS "tr-loppuosa",
+  tr_loppuetaisyys           AS "tr-loppuetaisyys",
+  tr_ajorata                 AS "tr-ajorata",
+  tr_kaista                  AS "tr-kaista",
   tyyppi,
   yhatunnus,
   yhaid,
@@ -366,8 +384,6 @@ SELECT
   lahetysaika,
   keskimaarainen_vuorokausiliikenne,
   nykyinen_paallyste,
-  tr_ajorata,
-  tr_kaista,
   suorittava_tiemerkintaurakka,
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
@@ -381,16 +397,16 @@ SELECT
   yllapitokohde,
   nimi,
   tunnus,
-  tr_numero,
-  tr_alkuosa,
-  tr_alkuetaisyys,
-  tr_loppuosa,
-  tr_loppuetaisyys,
+  tr_numero                  AS "tr-numero",
+  tr_alkuosa                 AS "tr-alkuosa",
+  tr_alkuetaisyys            AS "tr-alkuetaisyys",
+  tr_loppuosa                AS "tr-loppuosa",
+  tr_loppuetaisyys           AS "tr-loppuetaisyys",
+  tr_ajorata                 AS "tr-ajorata",
+  tr_kaista                  AS "tr-kaista",
   poistettu,
   sijainti,
   yhaid,
-  tr_ajorata,
-  tr_kaista,
   toimenpide,
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
