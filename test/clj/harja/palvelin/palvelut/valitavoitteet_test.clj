@@ -34,6 +34,33 @@
     (log/debug "Vastaus: " vastaus)
     (is (>= (count vastaus) 4))))
 
+(deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
+  (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                           :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                           (hae-oulun-alueurakan-2014-2019-id))
+        lisatyt-valtakunnalliset
+        (kutsu-palvelua
+          (:http-palvelin jarjestelma)
+          :tallenna-valtakunnalliset-valitavoitteet
+          +kayttaja-jvh+
+          {:valitavoitteet [{:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
+                             :takaraja nil, :tyyppi :toistuva,
+                             :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
+                             :takaraja-toistokuukausi 7}]})
+        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                               :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                               (hae-oulun-alueurakan-2014-2019-id))
+        odotetut-toistovuodet (range (t/year (t/now)) (inc 2019))]
+
+    ;; Oulun urakan jäljellä oleville vuosille luotiin uusi välitavoite
+    (is (= (count oulun-urakan-paivitetyt-valitavoitteet)
+           (+ (count oulun-urakan-vanhat-valitavoitteet)
+              (count odotetut-toistovuodet))))
+    (is (not (empty? odotetut-toistovuodet))) ;; Urakka päättynyt, päivitä testi
+
+    (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
+    (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
+
 
 (deftest valtakunnallisten-valitavoitteiden-kasittely-toimii
   (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -140,29 +167,3 @@
 
         (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
         (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))
-
-(deftest toistuvan-valtakunnallisen-valitavoitteen-lisaaminen-toimii
-  (let [oulun-urakan-vanhat-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                    :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                    (hae-oulun-alueurakan-2014-2019-id))
-        lisatyt-valtakunnalliset
-        (kutsu-palvelua
-          (:http-palvelin jarjestelma)
-          :tallenna-valtakunnalliset-valitavoitteet
-          +kayttaja-jvh+
-          {:valitavoitteet [{:id -5, :nimi "Sepon mökkitien vuosittainen auraus",
-                             :takaraja nil, :tyyppi :toistuva,
-                             :urakkatyyppi :hoito, :takaraja-toistopaiva 1,
-                             :takaraja-toistokuukausi 7}]})
-        oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                               :hae-urakan-valitavoitteet +kayttaja-jvh+
-                                                               (hae-oulun-alueurakan-2014-2019-id))
-        odotetut-toistovuodet (range (t/year (t/now)) (inc 2019))]
-
-    ;; Oulun urakan käynnissäolovuosille luotiin uusi välitavoite
-    (is (= (count oulun-urakan-paivitetyt-valitavoitteet)
-           (+ (count oulun-urakan-vanhat-valitavoitteet)
-              (count odotetut-toistovuodet))))
-
-    (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
-    (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))
