@@ -1,55 +1,33 @@
 (ns harja.palvelin.integraatiot.api.urakan-yllapitokohdehaku-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.api.urakat :as api-urakat]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]))
 
 (def kayttaja "skanska")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-urakat (component/using
-                                                         (api-urakat/->Urakat)
-                                                         [:http-palvelin :db :integraatioloki])))
+  (laajenna-integraatiojarjestelmafixturea
+    kayttaja
+    :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet) [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
-(deftest urakan-haku-idlla-toimii
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] kayttaja portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)
-        materiaalien-lkm (ffirst (q
-                                   (str "SELECT count(*) FROM materiaalikoodi")))]
-    (log/debug "Urakan haku id:llä: " encoodattu-body)
+(deftest tarkista-yllapitokohteiden-haku
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet"] kayttaja portti)
+        data (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
-    (is (not (nil? (:urakka encoodattu-body))))
-    (is (= (get-in encoodattu-body [:urakka :tiedot :id]) urakka))
-    (is (>= (count (get-in encoodattu-body [:urakka :sopimukset])) 1))
-    (is (not-empty (get-in encoodattu-body [:urakka :tiedot :alueurakkanumero])))
+    (is (= 5 (count (:yllapitokohteet data))))))
 
-    (let [kokonaishintaiset (get-in encoodattu-body [:urakka :tehtavat :kokonaishintaiset])
-          yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
-      (is (= 25 (count kokonaishintaiset)))
-      (is (= 55 (count yksikkohintaiset)))
-      (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
-
-(deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
+(deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet" urakka] "Erkki Esimerkki" portti)]
     (is (= 403 (:status vastaus)))
-    (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki" ))))
+    (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
 
-(deftest urakan-haku-ytunnuksella-toimii
-  (let [ytunnus "1565583-5"
-        vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" ytunnus] kayttaja portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
-    (log/debug "Urakan haku ytunnuksella löytyi " (count (:urakat encoodattu-body)) " urakkaa: " (:body vastaus))
-    (is (= 200 (:status vastaus)))
-    (is (>= (count (:urakat encoodattu-body)) 2))
-    (log/debug "Urakka: " (first (:urakat encoodattu-body)))
-    (is (= (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :urakoitsija :ytunnus]) ytunnus))))
+(deftest yllapitokohteiden-haku-ei-toimi-tuntemattomalle-urakalle
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja portti)]
+    (is (= 400 (:status vastaus)))
+    (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
-(deftest urakan-haku-ytunnuksella-ei-toimi-ilman-oikeuksia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" "1565583-5"] "Erkki Esimerkki" portti)]
-    (is (not (= 200 (:status vastaus))))))
