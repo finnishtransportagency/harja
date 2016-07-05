@@ -74,7 +74,7 @@
    [:verkon-sijainti verkon-sijainti]
    [:tekninen-toimenpide tekninen-toimenpide]])
 
-(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus tr_numero karttapvm] :as kohde}
+(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus tr-numero karttapvm] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
@@ -90,7 +90,7 @@
    (tee-tierekisteriosoitevali kohde)
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
-             (mapv #(tee-alustalle-tehty-toimenpide % tr_numero karttapvm)
+             (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapvm)
                    (:alustatoimet ilmoitustiedot))))
    (when alikohteet
      (reduce conj [:alikohteet]
