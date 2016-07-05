@@ -82,13 +82,14 @@
                                                          LIMIT 1;"))))
           _ (is (integer? random-tavoite-id-urakassa))
           _ (u (str "UPDATE valitavoite set muokattu = NOW() WHERE id = " random-tavoite-id-urakassa))
-          _ (kutsu-palvelua
-              (:http-palvelin jarjestelma)
-              :tallenna-valtakunnalliset-valitavoitteet
-              +kayttaja-jvh+
-              {:valitavoitteet (mapv
-                                 #(assoc % :nimi "PÄIVITÄ")
-                                 lisatyt-valtakunnalliset)})
+          paivitetyt-valtakunnalliset
+          (kutsu-palvelua
+            (:http-palvelin jarjestelma)
+            :tallenna-valtakunnalliset-valitavoitteet
+            +kayttaja-jvh+
+            {:valitavoitteet (mapv
+                               #(assoc % :nimi "PÄIVITÄ")
+                               lisatyt-valtakunnalliset)})
           oulun-urakan-paivitetyt-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
                                                                  (hae-oulun-alueurakan-2014-2019-id))]
@@ -108,5 +109,24 @@
       (is (every? #(= (:valtakunnallinen-nimi %) "PÄIVITÄ")
                   (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
 
+      ;; Poistetaan valtakunnalliset välitavoitteet
+      (let [poistetut-valtakunnalliset (kutsu-palvelua
+                                         (:http-palvelin jarjestelma)
+                                         :tallenna-valtakunnalliset-valitavoitteet
+                                         +kayttaja-jvh+
+                                         {:valitavoitteet (mapv
+                                                            #(assoc % :poistettu true)
+                                                            paivitetyt-valtakunnalliset)})
+            oulun-urakan-poistetut-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                  :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                                  (hae-oulun-alueurakan-2014-2019-id))
+            muhoksen-urakan-poistetut-valitavoitteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                     :hae-urakan-valitavoitteet +kayttaja-jvh+
+                                                                     (hae-muhoksen-paallystysurakan-id))]
+        ;; R.I.P valtakunnalliset välitavoitteet
+        (is (empty? poistetut-valtakunnalliset))
+        (is (empty? (filter :valtakunnallinen-id oulun-urakan-poistetut-valitavoitteet)))
+        (is (empty? (filter :valtakunnallinen-id muhoksen-urakan-poistetut-valitavoitteet)))
+
       (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
-      (u (str "DELETE FROM valitavoite WHERE urakka IS NULL")))))
+      (u (str "DELETE FROM valitavoite WHERE urakka IS NULL"))))))
