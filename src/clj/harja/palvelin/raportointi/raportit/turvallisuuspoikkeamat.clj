@@ -53,7 +53,7 @@
                               :piilota-arvo? #{0}
                               :legend ["Työtapaturmat" "Vaaratilanteet" "Turvallisuushavainnot" "Muut"]}))))
 
-(defn- turvallisuuspoikkeamat-rivit [turpot urakoittain? konteksti naytettavat-alueet]
+(defn- turvallisuuspoikkeamat-tyypeittain-rivit [turpot urakoittain? konteksti naytettavat-alueet]
   (let [turporivi (fn [[urakka turpot]]
                     (let [turpo-maarat-per-tyyppi (frequencies (mapcat :tyyppi turpot))]
                       [(rivi (:nimi urakka) "Työtapaturma" (or (turpo-maarat-per-tyyppi "tyotapaturma") 0))
@@ -86,7 +86,7 @@
               [(rivi "Yksittäisiä ilmoituksia yhteensä" "" (count turpot))]
               [(rivi "Yksittäisiä ilmoituksia yhteensä" (count turpot))]))))
 
-(defn- turvallisuuspoikkeamat-sarakkeet [urakoittain?]
+(defn- turvallisuuspoikkeamat-tyypeittain-sarakkeet [urakoittain?]
   (into []
         (concat (when urakoittain?
                   [{:otsikko "Urakka"}])
@@ -200,8 +200,8 @@
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true
                  :sheet-nimi raportin-nimi}
-      (turvallisuuspoikkeamat-sarakkeet urakoittain?)
-      (turvallisuuspoikkeamat-rivit turpot urakoittain? konteksti naytettavat-alueet)]
+      (turvallisuuspoikkeamat-tyypeittain-sarakkeet urakoittain?)
+      (turvallisuuspoikkeamat-tyypeittain-rivit turpot urakoittain? konteksti naytettavat-alueet)]
 
      (when (= konteksti :koko-maa)
        [:taulukko {:otsikko (str "Turvallisuuspoikkeamat vakavuusasteittain")}
