@@ -12,7 +12,6 @@ SELECT
   vv.takaraja as "valtakunnallinen-takaraja",
   vv.takaraja_toistopaiva as "valtakunnallinen-takarajan-toistopaiva",
   vv.takaraja_toistokuukausi as "valtakunnallinen-takarajan-toistokuukausi",
-  vv.poistettu as "valtakunnallinen-poistettu",
   v.valmis_pvm,
   v.valmis_kommentti,
   v.valmis_merkitsija AS valmis_merkitsija_id,

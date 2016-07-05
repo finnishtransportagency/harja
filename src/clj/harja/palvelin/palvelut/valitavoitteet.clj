@@ -39,10 +39,10 @@
     (q/poista-urakan-valitavoite! db (:id user) urakka-id (:id poistettava))))
 
 (defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [takaraja nimi valtakunnallinen-valitavoite-id]} (filter
-                                                                    #(and (< (:id %) 0)
-                                                                          (not (:poistettu %)))
-                                                                    valitavoitteet)]
+  (doseq [{:keys [takaraja nimi]} (filter
+                                    #(and (< (:id %) 0)
+                                          (not (:poistettu %)))
+                                    valitavoitteet)]
     (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
                                       :takaraja (konv/sql-date takaraja)
                                       :nimi nimi
@@ -50,7 +50,8 @@
                                       :luoja (:id user)})))
 
 (defn- paivita-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [id takaraja nimi]} (filter #(> (:id %) 0) valitavoitteet)]
+  (doseq [{:keys [id takaraja nimi]} (filter #(and (> (:id %) 0)
+                                                   (not (:poistettu %))) valitavoitteet)]
     (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)))
 
 (defn tallenna-urakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
@@ -84,9 +85,11 @@
                                       (and (urakka-kaynnissa-tai-tulossa? (:urakka valitavoite))
                                            (nil? (:valmispvm valitavoite))))
                                     linkitetyt)]
+      (log/debug "Poistetaan valtakunnallinen valitavoite " (:id poistettava))
       (q/poista-valtakunnallinen-valitavoite! db
                                               (:id user)
                                               (:id poistettava))
+      (log/debug "Poistetaan tavoitteeseen kopioidut urakkakohtaiset tavoitteet")
       (doseq [poistettava poistettavat-linkitetyt]
         (q/poista-urakan-valitavoite! db
                                       (:id user)
@@ -189,7 +192,7 @@
                                                                      (not (:poistettu %)))
                                                                valitavoitteet)))
 
-(defn- paivita-valtakunnalliseen-valitavoitteeseen-linkitetty-valitavoite
+(defn- paivita-valtakunnalliseen-valitavoitteeseen-linkitetyt-valitavoitteet
   "Päivittää valtakunnalliseen välitavoitteeseen linkitetyt urakkakohtaiset välitavoitteet
    mikäli niitä ei ole muokattu urakassa."
   [db user {:keys [id nimi takaraja] :as valitavoite}]
@@ -202,6 +205,8 @@
 
         (= (:tyyppi valitavoite) :toistuva)
         (do
+          (log/debug "Päivitetään valtakunnallisen toistuvan välitavoitteen " (:id valitavoite) "urakkakohtaiset
+          linkitetyt välitavoitteet poistamalla vanhat ja lisäämällä uudet tilalle")
           (q/poista-toistuvaan-valitavoitteeseen-linkitetty-muokkaamaton-valitavoite! db {:id id})
           (kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin db user valitavoite id))
         :default
@@ -209,14 +214,15 @@
 
 (defn- paivita-valtakunnalliset-valitavoitteet [db user valitavoitteet]
   (doseq [{:keys [id takaraja takaraja-toistopaiva takaraja-toistokuukausi nimi] :as valitavoite}
-          (filter #(> (:id %) 0) valitavoitteet)]
+          (filter #(and (> (:id %) 0)
+                        (not (:poistettu %))) valitavoitteet)]
     (q/paivita-valtakunnallinen-valitavoite! db nimi
                                              (konv/sql-date takaraja)
                                              takaraja-toistopaiva
                                              takaraja-toistokuukausi
                                              (:id user)
                                              id)
-    (paivita-valtakunnalliseen-valitavoitteeseen-linkitetty-valitavoite db user valitavoite)))
+    (paivita-valtakunnalliseen-valitavoitteeseen-linkitetyt-valitavoitteet db user valitavoite)))
 
 
 (defn tallenna-valtakunnalliset-valitavoitteet! [db user {:keys [valitavoitteet]}]
