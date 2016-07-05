@@ -101,5 +101,5 @@
    :koko_keho           "Koko keho (useat kehon alueet)"
    :ei_tietoa           "Ei tietoa"})
 
-(def vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
+(def vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
   (henkilovahingon-checkboksien-avaimet-jarjestyksessa vahingoittunut-ruumiinosa))

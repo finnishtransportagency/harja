@@ -21,6 +21,11 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def +uusi-turvallisuuspoikkeama+ {:tila :avoin
+                                   :vakavuusaste :lieva
+                                   :vaylamuoto :tie
+                                   :tyontekijanammatti :muu_tyontekija})
+
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
   (r/wrap
     (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama-atom)))
@@ -86,6 +91,8 @@
                :nimi :otsikko
                :tyyppi :string
                :pituus-max 1024
+               :pakollinen? true
+               :validoi [[:ei-tyhja "Valitse tila"]]
                :palstoja 1}
               {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
@@ -119,6 +126,8 @@
               {:uusi-rivi? true
                :otsikko "Tila"
                :nimi :tila
+               :pakollinen? true
+               :validoi [[:ei-tyhja "Valitse tila"]]
                :tyyppi :valinta
                :valinta-nayta #(or ({:avoin "Avoin"
                                      :kasitelty "Käsitelty"
@@ -126,7 +135,6 @@
                                      :suljettu "Suljettu"} %)
                                    "- valitse -")
                :valinnat #{:avoin :kasitelty :taydennetty :suljettu}
-               :validoi [[:ei-tyhja "Valitse tila"]]
                :palstoja 1}
               {:otsikko "Tapahtuman kuvaus"
                :nimi :kuvaus
@@ -205,7 +213,7 @@
                    :palstoja 1
                    :tyyppi :checkbox-group
                    :disabloi henkilovahinkojen-disablointi-fn
-                   :vaihtoehdot turpodomain/vahingoizttunut-ruumiinosa-avaimet-jarjestyksessa
+                   :vaihtoehdot turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
                    :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}))
               {:otsikko "Kommentit" :nimi :kommentit
                :tyyppi :komponentti
@@ -241,7 +249,7 @@
   (let [urakka @nav/valittu-urakka]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi urakka]
-     [napit/uusi "Lisää turvallisuuspoikkeama" #(reset! tiedot/valittu-turvallisuuspoikkeama tiedot/+uusi-turvallisuuspoikkeama+)
+     [napit/uusi "Lisää turvallisuuspoikkeama" #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
       {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka)))}]
 
      [grid/grid
