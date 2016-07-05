@@ -483,7 +483,7 @@
             <xs:enumeration value="22">
                 <xs:annotation>
                     <xs:documentation>
-                        pehmeär ab / pehmeä bitumi
+                        pehmeät ab / pehmeä bitumi
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
