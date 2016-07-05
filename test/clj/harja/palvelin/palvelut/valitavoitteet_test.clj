@@ -109,8 +109,16 @@
       (is (every? #(= (:valtakunnallinen-nimi %) "PÄIVITÄ")
                   (filter :valtakunnallinen-id oulun-urakan-paivitetyt-valitavoitteet)))
 
-      ;; Poistetaan valtakunnalliset välitavoitteet
-      (let [poistetut-valtakunnalliset (kutsu-palvelua
+      ;; Poistetaan valtakunnalliset välitavoitteet (mutta ei valmiita)
+      (let [random-tavoite-id-urakassa (first (first (q (str
+                                                          "SELECT id FROM valitavoite
+                                                           WHERE urakka = 4
+                                                           AND valtakunnallinen_valitavoite IS NOT NULL
+                                                           AND poistettu IS NOT TRUE
+                                                           LIMIT 1;"))))
+            _ (is (integer? random-tavoite-id-urakassa))
+            _ (u (str "UPDATE valitavoite set valmis_pvm = NOW() WHERE id = " random-tavoite-id-urakassa))
+            poistetut-valtakunnalliset (kutsu-palvelua
                                          (:http-palvelin jarjestelma)
                                          :tallenna-valtakunnalliset-valitavoitteet
                                          +kayttaja-jvh+
@@ -125,7 +133,7 @@
                                                                      (hae-muhoksen-paallystysurakan-id))]
         ;; R.I.P valtakunnalliset välitavoitteet
         (is (empty? poistetut-valtakunnalliset))
-        (is (empty? (filter :valtakunnallinen-id oulun-urakan-poistetut-valitavoitteet)))
+        (is (= (count (filter :valtakunnallinen-id oulun-urakan-poistetut-valitavoitteet)) 1))
         (is (empty? (filter :valtakunnallinen-id muhoksen-urakan-poistetut-valitavoitteet)))
 
       (u (str "DELETE FROM valitavoite WHERE valtakunnallinen_valitavoite IS NOT NULL"))
