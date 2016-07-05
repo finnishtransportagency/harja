@@ -197,7 +197,7 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
-  :sijainti);
+        :sijainti);
 
 -- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan
@@ -413,7 +413,8 @@ SELECT
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohdeosa
-WHERE yllapitokohde = :yllapitokohde;
+WHERE yllapitokohde = :yllapitokohde AND
+      poistettu IS NOT TRUE;
 
 -- name: merkitse-kohteen-lahetystiedot!
 UPDATE yllapitokohde
