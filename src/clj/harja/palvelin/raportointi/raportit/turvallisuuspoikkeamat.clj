@@ -93,41 +93,41 @@
                 [{:otsikko "Tyyppi"}
                  {:otsikko "Määrä"}])))
 
-(defn- turvallisuuspoikkeamat-vakavuusasteittain-rivit [turpot urakoittain? konteksti naytettavat-alueet]
-  (let [turporivi (fn [[urakka turpot]]
-                    (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
-                                                          (count (filter #(= (:vakavuusaste %) vakavuusaste) turpot)))]
-                      [(rivi (:nimi urakka) "Lievä" (or (turpo-maarat-per-vakavuusaste turpot :lieva) 0))
-                       (rivi (:nimi urakka) "Vakava" (or (turpo-maarat-per-vakavuusaste turpot :vakava) 0))]))]
-    (concat (if (= konteksti :koko-maa)
-              (let [alueen-turpot (fn [turpot alue]
-                                    (filter
-                                      #(= (get-in % [:hallintayksikko :id])
-                                          (:hallintayksikko-id alue))
-                                      turpot))]
-                (mapcat
-                  (fn [alue]
-                    (let [turpot (alueen-turpot turpot alue)
-                          rivit (mapcat turporivi
-                                        (if urakoittain?
-                                          (group-by :urakka turpot)
-                                          [[nil turpot]]))]
-                      (concat [{:otsikko (:nimi alue)}]
-                              (if (empty? rivit)
-                                [["Ei tietoja"]]
-                                rivit))))
-                  naytettavat-alueet))
-              (mapcat turporivi
-                      (if urakoittain?
-                        (group-by :urakka turpot)
-                        [[nil turpot]]))))))
+(defn- turvallisuuspoikkeamat-vakavuusasteittain-rivit [turpot urakoittain? naytettavat-alueet]
+  (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
+          (count (filter #(= (:vakavuusaste %) vakavuusaste) turpot)))
+        hallintayksikon-turpot (fn [turpot alue]
+                                 (filter
+                                   #(= (get-in % [:hallintayksikko :id])
+                                       (:hallintayksikko-id alue))
+                                   turpot))]
+
+    (concat (if urakoittain?
+             (mapv
+                 (fn [alue]
+                   (let [alueen-turpot (filter
+                                         #(= (get-in % [:urakka :id])
+                                             (:id alue))
+                                         turpot)]
+                     [(:nimi alue)
+                     (or (turpo-maarat-per-vakavuusaste alueen-turpot :lieva) 0)
+                     (or (turpo-maarat-per-vakavuusaste alueen-turpot :vakava) 0)]))
+                 (distinct (mapv :urakka turpot)))
+               (mapv
+                 (fn [alue]
+                   (let [alueen-turpot (hallintayksikon-turpot turpot alue)]
+                     [(:nimi alue)
+                      (or (turpo-maarat-per-vakavuusaste alueen-turpot :lieva) 0)
+                      (or (turpo-maarat-per-vakavuusaste alueen-turpot :vakava) 0)]))
+                 naytettavat-alueet)))))
 
 (defn- turvallisuuspoikkeamat-vakavuusasteittain-sarakkeet [urakoittain?]
   (into []
-        (concat (when urakoittain?
-                  [{:otsikko "Urakka"}])
-                [{:otsikko "Tyyppi"}
-                 {:otsikko "Määrä"}])))
+        (concat (if urakoittain?
+                  [{:otsikko "Urakka"}]
+                  [{:otsikko "Hallintayksikkö"}])
+                [{:otsikko "Lievät"}
+                 {:otsikko "Vakavat"}])))
 
 (defn- turvallisuuspoikkeamat-listana-rivit [turpot urakoittain?]
   (keep identity
@@ -206,7 +206,7 @@
      (when (= konteksti :koko-maa)
        [:taulukko {:otsikko (str "Turvallisuuspoikkeamat vakavuusasteittain")}
         (turvallisuuspoikkeamat-vakavuusasteittain-sarakkeet urakoittain?)
-        (turvallisuuspoikkeamat-vakavuusasteittain-rivit turpot urakoittain? konteksti naytettavat-alueet)])
+        (turvallisuuspoikkeamat-vakavuusasteittain-rivit turpot urakoittain? naytettavat-alueet)])
 
      (turvallisuuspoikkeamat-pylvaat turpot alkupvm loppupvm)
 
