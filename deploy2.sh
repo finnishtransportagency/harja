@@ -40,7 +40,7 @@ if [ -z "$UNIT" ] || [ "$UNIT" = true ]; then
   # echo ""
   sh unit.sh
 else
-  msg "Who said you're not responsible? It doesn't matter that you were tricked, you know now that your actions inflicted grievous damage. Do you take responsibility for them or not? Well, what are you going to do?"
+  msg "Huom. yksikkötestejä ei ajettu!"
   sh unit.sh
 fi
 
