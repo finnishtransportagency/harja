@@ -27,7 +27,7 @@
 (defn lue-paallystystoimenpide [paallystystoimenpide]
   (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)
             :raekoko (z/xml1-> paallystystoimenpide :raekoko z/text xml/parsi-kokonaisluku)
-            :kokonaismassamaara (z/xml1-> paallystystoimenpide :kokonaismassamaara z/text xml/parsi-kokonaisluku)
+            :kokonaismassamaara (z/xml1-> paallystystoimenpide :kokonaismassamaara z/text xml/parsi-desimaaliluku)
             :rc-prosentti (z/xml1-> paallystystoimenpide :rc-prosentti z/text xml/parsi-kokonaisluku)
             :kuulamylly (z/xml1-> paallystystoimenpide :kuulamylly z/text xml/parsi-kokonaisluku)
             :paallystetyomenetelma (z/xml1-> paallystystoimenpide :paallystetyomenetelma z/text xml/parsi-kokonaisluku)))

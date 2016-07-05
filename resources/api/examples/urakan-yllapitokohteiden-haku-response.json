@@ -1,0 +1,69 @@
+{
+  "yllapitokohteet": [
+    {
+      "yllapitokohde": {
+        "tunniste": {
+          "id": 1234
+        },
+        "sopimus": {
+          "id": 456789132
+        },
+        "kohdenumero": "123",
+        "nimi": "Testipäällystyskohde",
+        "tyyppi": "paallystys",
+        "sijainti": {
+          "numero": 1,
+          "aosa": 1,
+          "aet": 4,
+          "losa": 1,
+          "let": 1,
+          "ajr": 1,
+          "kaista": 1
+        },
+        "yllapitoluokka": 1,
+        "keskimaarainen-vuorokausiliikenne": 1,
+        "nykyinen-paallyste": "betoni",
+        "alikohteet": [
+          {
+            "alikohde": {
+              "tunniste": {
+                "id": 1235
+              },
+              "tunnus": "A",
+              "nimi": "1. Testialikohde",
+              "sijainti": {
+                "numero": 1,
+                "aosa": 1,
+                "aet": 4,
+                "losa": 1,
+                "let": 1,
+                "ajr": 1,
+                "kaista": 1
+              },
+              "toimenpide": "testitoimenpide"
+            }
+          },
+          {
+            "alikohde": {
+              "tunniste": {
+                "id": 1235
+              },
+              "tunnus": "B",
+              "nimi": "2. Testialikohde",
+              "sijainti": {
+                "numero": 1,
+                "aosa": 1,
+                "aet": 4,
+                "losa": 1,
+                "let": 1,
+                "ajr": 1,
+                "kaista": 1
+              },
+              "toimenpide": "testitoimenpide"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.1.8</b>
-<b>Julkaistu: 1.7.2016</b>
+<b>Nykyinen versio: 0.2.0</b>
+<b>Julkaistu: 4.7.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.0. Julkaistu 4.7.2016:
+    - Teiden ylläpidon rajapintojen työstäminen aloitettu. Ensimmäinen toteutettava on rajapinta ylläpitourakan kohteiden haku.
 - Versionumero: 0.1.8. Julkaistu 1.7.2016:
     - Urakkahaku palauttaa kokonaishintaiset ja yksikköhintaiset tehtävät omassa elementissään. Tehtävät ovat jatkossa vakiojoukko, jonka Harjan pääkäyttäjä määrittää ja näin ollen eivät enää ole riippuvaisia urakkakohtaisista suunnitelmatiedoista. Samalla päivitetty lista työkoneiden reaaliaikaseurannan tehtävistä.
 - Versionumero: 0.1.7. Julkaistu 16.5.2016:

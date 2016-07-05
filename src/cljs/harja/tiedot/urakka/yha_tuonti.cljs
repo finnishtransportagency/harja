@@ -196,7 +196,7 @@
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
-  (when (= (:id @nav/valittu-urakka) harja-urakka-id)
+  (when (and (:yhatiedot vastaus) (= (:id @nav/valittu-urakka) harja-urakka-id))
     (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
 
   ;; Näytä ilmoitus tarvittaessa

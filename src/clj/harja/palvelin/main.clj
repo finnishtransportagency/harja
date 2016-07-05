@@ -83,6 +83,7 @@
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
     [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
+    [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
@@ -366,7 +367,10 @@
       :api-ilmoitukset (component/using
                          (api-ilmoitukset/->Ilmoitukset)
                          [:http-palvelin :db :integraatioloki :klusterin-tapahtumat
-                          :tloik]))))
+                          :tloik])
+      :api-yllapitokohteet (component/using
+                             (api-yllapitokohteet/->Yllapitokohteet)
+                             [:http-palvelin :db :integraatioloki]))))
 
 (defonce harja-jarjestelma nil)
 
