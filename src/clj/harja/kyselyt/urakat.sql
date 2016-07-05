@@ -21,6 +21,19 @@ FROM urakka u
 WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
       (u.loppupvm IS NULL OR u.loppupvm >= current_date);
 
+-- name: hae-kaynnissa-olevat-ja-tulevat-urakat
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi,
+  u.alkupvm,
+  u.loppupvm
+FROM urakka u
+WHERE u.alkupvm >= current_date
+      OR
+      (u.alkupvm <= current_date AND
+       u.loppupvm >= current_date);
+
 -- name: hae-hallintayksikon-urakat
 SELECT
   u.id,
@@ -198,8 +211,7 @@ SELECT
   urk.ytunnus     AS urakoitsija_ytunnus
 FROM urakka u
   LEFT JOIN hanke h ON h.id = u.hanke
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
-  JOIN organisaatio hy ON u.hallintayksikko = hy.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE u.id = :id;
 
 -- name: hae-urakoiden-organisaatiotiedot

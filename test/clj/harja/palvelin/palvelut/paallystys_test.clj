@@ -50,11 +50,11 @@
                                  :kaista 1
                                  :paallystetyyppi 1
                                  :raekoko 1
-                                 :kohteen-kokonaismassa 2
+                                 :kokonaismassamaara 2
                                  :rc% 3
                                  :tyomenetelma 12
                                  :leveys 5
-                                 :massamaara 7
+                                 :massamenekki 7
                                  :pinta-ala 8
                                  :edellinen-paallystetyyppi 1
                                  :esiintyma "asd"
@@ -73,11 +73,11 @@
                                  :kaista 1
                                  :paallystetyyppi 1
                                  :raekoko 1
-                                 :kohteen-kokonaismassa 2
+                                 :kokonaismassamaara 2
                                  :rc% 3
                                  :tyomenetelma 12
                                  :leveys 5
-                                 :massamaara 7
+                                 :massamenekki 7
                                  :pinta-ala 8
                                  :edellinen-paallystetyyppi 1
                                  :esiintyma "asd"
@@ -171,8 +171,8 @@
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= (:muutoshinta paallystysilmoitus-kannassa) muutoshinta))
         ;; Toimenpiteen tiedot on tallennettu oikein
-        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kohteen-kokonaismassa :rc% :tyomenetelma
-                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]]
+        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kokonaismassamaara :rc% :tyomenetelma
+                                  :leveys :massamenekki :pinta-ala :edellinen-paallystetyyppi]]
           ;; Toimenpiteen tiedot on tallennettu oikein
           (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
                  (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
@@ -216,8 +216,8 @@
                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
         (is (not (some #(= (:nimi %) "Tie 555")
                    (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
-        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kohteen-kokonaismassa :rc% :tyomenetelma
-                                  :leveys :massamaara :pinta-ala :edellinen-paallystetyyppi]]
+        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kokonaismassamaara :rc% :tyomenetelma
+                                  :leveys :massamenekki :pinta-ala :edellinen-paallystetyyppi]]
           ;; Lisättiin yksi alikohde uutena. Toista ei lisätty, koska se oli merkitty poistetuksi
           (is (= alikohteet-maara-ennen-tallennusta (- alikohteet-maara-tallennuksen-jalkeen 1)))
           ;; Toimenpiteen tiedot on tallennettu oikein

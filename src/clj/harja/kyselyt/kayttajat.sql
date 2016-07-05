@@ -185,8 +185,7 @@ FROM kayttaja_urakka_rooli
   JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE kayttaja = :kayttaja AND
       poistettu IS NOT TRUE AND
-      (u.loppupvm > :alku AND u.alkupvm < :loppu) OR
-      (u.loppupvm IS NULL AND u.alkupvm < :loppu) AND
+      ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu)) AND
       (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
       (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
       (:hallintayksikko :: INTEGER IS NULL OR u.hallintayksikko IN (:hallintayksikko));
