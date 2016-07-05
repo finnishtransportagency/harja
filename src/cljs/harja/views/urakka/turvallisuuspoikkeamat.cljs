@@ -149,6 +149,9 @@
                :nimi :tilaaja
                :tyyppi :string
                :palstoja 1}
+              {:otsikko "Vaaralliset aineet" :nimi :vaaralliset-aineet :tyyppi :checkbox-group
+               :vaihtoehto-nayta turpodomain/turpo-vaaralliset-aineet
+               :vaihtoehdot #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}}
               (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
                              :uusi-rivi? true}
                             {:otsikko "Etunimi"

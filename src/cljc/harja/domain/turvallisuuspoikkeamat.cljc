@@ -18,7 +18,7 @@
 
 (def turpo-vaaralliset-aineet
   {:vaarallisten-aineiden-kuljetus  "Mukana vaarallisten aineiden kuljetus"
-   :vaarallisten-aineuden-vuoto "Vuoto tapahtunut"})
+   :vaarallisten-aineiden-vuoto "Vuoto tapahtunut"})
 
 (def turpo-tyontekijan-ammatit
   {:aluksen_paallikko                        "Aluksen päällikkö"
