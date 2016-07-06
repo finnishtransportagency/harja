@@ -24,90 +24,12 @@
 (defn hae-yha-id [urakka-id]
   (first (first (q (format "SELECT yhaid\nFROM yhatiedot\nWHERE urakka = %s;" urakka-id)))))
 
-(defn tee-url [yha-id]
-  (str +yha-url+ (format "urakat/%s/kohteet" yha-id)))
+(defn tee-url []
+  (str +yha-url+ "haeUrakanKohteet"))
 
-#_(deftest tarkista-urakan-kohteiden-haku
+(deftest tarkista-urakan-kohteiden-haku
   (let [urakka-id (hae-urakka-id)
-        yha-id (hae-yha-id urakka-id)
-        odotettu-vastaus[{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 2
-                                                               :kuulamylly 3
-                                                               :paallystetyomenetelma 31
-                                                               :raekoko 12
-                                                               :rc-prosentti 80
-                                                               :uusi-paallyste 21}
-                                        :tierekisteriosoitevali {:aet 0
-                                                                 :ajorata 0
-                                                                 :aosa 36
-                                                                 :kaista 1
-                                                                 :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                                 :let 0
-                                                                 :losa 41
-                                                                 :tienumero 66}
-                                        :tunnus nil
-                                        :yha-id 254915666}
-                                       {:paallystystoimenpide {:kokonaismassamaara 1
-                                                               :kuulamylly 1
-                                                               :paallystetyomenetelma 21
-                                                               :raekoko 10
-                                                               :rc-prosentti 1
-                                                               :uusi-paallyste 21}
-                                        :tierekisteriosoitevali {:aet 0
-                                                                 :ajorata 0
-                                                                 :aosa 41
-                                                                 :kaista 1
-                                                                 :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                                 :let 2321
-                                                                 :losa 41
-                                                                 :tienumero 66}
-                                        :tunnus nil
-                                        :yha-id 254915667}]
-                          :keskimaarainen-vuorokausiliikenne 2509
-                          :kohdetyyppi :paallystys
-                          :nykyinen-paallyste 1
-                          :tierekisteriosoitevali {:aet 0
-                                                   :ajorata 0
-                                                   :aosa 36
-                                                   :kaista 1
-                                                   :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                   :let 2321
-                                                   :losa 41
-                                                   :tienumero 66}
-                          :tunnus "kauhajoen suora"
-                          :yha-id 251041528
-                          :yllapitoluokka 3}
-                         {:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 1
-                                                               :kuulamylly 1
-                                                               :paallystetyomenetelma 21
-                                                               :raekoko 10
-                                                               :rc-prosentti 1
-                                                               :uusi-paallyste 21}
-                                        :tierekisteriosoitevali {:aet 450
-                                                                 :ajorata 0
-                                                                 :aosa 230
-                                                                 :kaista 1
-                                                                 :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                                 :let 460
-                                                                 :losa 230
-                                                                 :tienumero 3}
-                                        :tunnus nil
-                                        :yha-id 254915669}]
-                          :keskimaarainen-vuorokausiliikenne 3107
-                          :kohdetyyppi :paallystys
-                          :nykyinen-paallyste 1
-                          :tierekisteriosoitevali {:aet 450
-                                                   :ajorata 0
-                                                   :aosa 230
-                                                   :kaista 1
-                                                   :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-                                                   :let 460
-                                                   :losa 230
-                                                   :tienumero 3}
-                          :tunnus "asdf"
-                          :yha-id 251603670
-                          :yllapitoluokka 1}]
-        ;; todo: palauta tämä vastaus, kun YHA-yhteys saadaan toimimaan
-        #_[{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124
+        odotettu-vastaus [{:alikohteet [{:paallystystoimenpide {:kokonaismassamaara 124.0
                                                                 :kuulamylly 4
                                                                 :paallystetyomenetelma 22
                                                                 :raekoko 12
@@ -122,9 +44,27 @@
                                                                   :losa 3
                                                                   :tienumero 3}
                                          :tunnus "A"
-                                         :yha-id 3}]
+                                         :yha-id 3}
+                                        {:paallystystoimenpide {:kokonaismassamaara 124.0
+                                                                :kuulamylly 4
+                                                                :paallystetyomenetelma 22
+                                                                :raekoko 12
+                                                                :rc-prosentti 14
+                                                                :uusi-paallyste 11}
+                                         :tierekisteriosoitevali {:aet 3
+                                                                  :ajorata 0
+                                                                  :aosa 3
+                                                                  :kaista 11
+                                                                  :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+                                                                  :let 3
+                                                                  :losa 3
+                                                                  :tienumero 3}
+                                         :tunnus "B"
+                                         :yha-id 4}]
                            :keskimaarainen-vuorokausiliikenne 1000
-                           :kohdetyyppi :paikkaus
+                           :kohdetyotyyppi :paikkaus
+                           :kohdetyyppi "paallyste"
+                           :nimi "string"
                            :nykyinen-paallyste 1
                            :tierekisteriosoitevali {:aet 3
                                                     :ajorata 0
@@ -134,29 +74,26 @@
                                                     :let 3
                                                     :losa 3
                                                     :tienumero 3}
-                           :tunnus "string"
-                           :yha-id 5
+                           :yha-id 3
                            :yllapitoluokka 1}]
-
-        url (tee-url yha-id)]
+        url (tee-url)]
     (with-fake-http [url +onnistunut-urakan-kohdehakuvastaus+]
-      (let [vastaus (yha/hae-kohteet (:yha jarjestelma) urakka-id)]
+      (let [vastaus (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")]
         (is (= odotettu-vastaus vastaus))))))
 
 (deftest tarkista-epaonnistunut-kutsu
   (let [urakka-id (hae-urakka-id)
         yha-id (hae-yha-id urakka-id)]
-    (with-fake-http [{:url (tee-url yha-id) :method :get} 500]
+    (with-fake-http [{:url (tee-url) :method :get} 500]
       (is (thrown? Exception (yha/hae-kohteet (:yha jarjestelma) yha-id ""))
           "Poikkeusta ei heitetty epäonnistuneesta kutsusta."))))
 
-;; todo: palauta, kun oikea YHA-yhteys on saatu
-#_(deftest tarkista-virhevastaus
-    (let [urakka-id (hae-urakka-id)
-          yha-id (hae-yha-id urakka-id)]
-      (with-fake-http [(tee-url yha-id) +virhevastaus+]
-        (try+
-          (yha/hae-kohteet (:yha jarjestelma) urakka-id)
-          (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
-          (catch [:type yha/+virhe-urakan-kohdehaussa+] {:keys [virheet]}
-            (is true "Poikkeus heitettiin epäonnistuneesta kutsusta."))))))
+(deftest tarkista-virhevastaus
+  (let [urakka-id (hae-urakka-id)
+        yha-id (hae-yha-id urakka-id)]
+    (with-fake-http [(tee-url) +virhevastaus+]
+      (try+
+        (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")
+        (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
+        (catch [:type yha/+virhe-urakan-kohdehaussa+] {:keys [virheet]}
+          (is true "Poikkeus heitettiin epäonnistuneesta kutsusta."))))))
