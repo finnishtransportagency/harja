@@ -63,7 +63,7 @@ VALUES
    ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'lieva'::turvallisuuspoikkeama_vakavuusaste);
 
 INSERT INTO korjaavatoimenpide
-(turvallisuuspoikkeama, kuvaus, vastaavahenkilo)
+(turvallisuuspoikkeama, kuvaus, vastuuhenkilo)
 VALUES
   ((SELECT id FROM turvallisuuspoikkeama WHERE tyontekijanammatti='tyonjohtaja' AND tapahtunut = '2005-10-01 10:00.00'), 'Pidetään huoli että ei kenenkään tarvi liikaa kiirehtiä',
    'Tomi Työnjohtaja');
