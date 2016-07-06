@@ -62,8 +62,6 @@
                                          :tunnus "B"
                                          :yha-id 4}]
                            :keskimaarainen-vuorokausiliikenne 1000
-                           :kohdetyotyyppi :paikkaus
-                           :kohdetyyppi "paallyste"
                            :nimi "string"
                            :nykyinen-paallyste 1
                            :tierekisteriosoitevali {:aet 3
@@ -75,6 +73,8 @@
                                                     :losa 3
                                                     :tienumero 3}
                            :yha-id 3
+                           :yllapitokohdetyotyyppi :paikkaus
+                           :yllapitokohdetyyppi "paallyste"
                            :yllapitoluokka 1}]
         url (tee-url)]
     (with-fake-http [url +onnistunut-urakan-kohdehakuvastaus+]
@@ -89,8 +89,7 @@
           "Poikkeusta ei heitetty epäonnistuneesta kutsusta."))))
 
 (deftest tarkista-virhevastaus
-  (let [urakka-id (hae-urakka-id)
-        yha-id (hae-yha-id urakka-id)]
+  (let [urakka-id (hae-urakka-id)]
     (with-fake-http [(tee-url) +virhevastaus+]
       (try+
         (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")
