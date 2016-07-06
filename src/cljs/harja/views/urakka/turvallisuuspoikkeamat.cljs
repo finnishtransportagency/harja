@@ -91,6 +91,7 @@
                         :kun-onnistuu #(do
                                         (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                         (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                        :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
                         :disabled (not (voi-tallentaa? @turvallisuuspoikkeama))}]}
              [{:otsikko "Tapahtuman otsikko"
                :nimi :otsikko
