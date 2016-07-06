@@ -68,6 +68,12 @@
 
     (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
 
+(defn luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id]
+  (when-not (empty? korjaavattoimenpiteet)
+    (doseq [korjaavatoimenpide korjaavattoimenpiteet]
+      (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
+      (luo-tai-paivita-korjaavatoimenpide db user tp-id korjaavatoimenpide))))
+
 (def oletusparametrit {:ulkoinen_id nil
                        :ilmoittaja_etunimi nil
                        :ilmoittaja_sukunimi nil
@@ -121,29 +127,28 @@
           id)
       (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
 
-(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi]
-  (jdbc/with-db-transaction [c db]
-    (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
-      (when uusi-kommentti
-        (log/debug "Turvallisuuspoikkeamalle lisätään uusi kommentti.")
-        (let [liite (some->> uusi-kommentti
-                             :liite
-                             :id
-                             (liitteet/hae-urakan-liite-id c (:urakka tp))
-                             first
-                             :id)
-              kommentti (kommentit/luo-kommentti<! c
-                                                   nil
-                                                   (:kommentti uusi-kommentti)
-                                                   liite
-                                                   (:id user))]
-          (q/liita-kommentti<! c id (:id kommentti))))
+(defn- tallenna-turvallisuuspoikkeaman-kommentti [db user uusi-kommentti urakka tp-id]
+  (when uusi-kommentti
+    (log/debug "Turvallisuuspoikkeamalle lisätään uusi kommentti.")
+    (let [liite (some->> uusi-kommentti
+                         :liite
+                         :id
+                         (liitteet/hae-urakan-liite-id db (:urakka tp))
+                         first
+                         :id)
+          kommentti (kommentit/luo-kommentti<! db
+                                               nil
+                                               (:kommentti uusi-kommentti)
+                                               liite
+                                               (:id user))]
+      (q/liita-kommentti<! db id (:id kommentti)))))
 
-      (when-not (empty? korjaavattoimenpiteet)
-        (doseq [korjaavatoimenpide korjaavattoimenpiteet]
-          (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
-          (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
-      id)))
+(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi]
+  (jdbc/with-db-transaction [db db]
+    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
+      (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
+      (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id)
+      tp-id)))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
@@ -157,7 +162,6 @@
   component/Lifecycle
   (start [this]
     (julkaise-palvelut (:http-palvelin this)
-
                        :hae-turvallisuuspoikkeamat
                        (fn [user tiedot]
                          (hae-turvallisuuspoikkeamat (:db this) user tiedot))
