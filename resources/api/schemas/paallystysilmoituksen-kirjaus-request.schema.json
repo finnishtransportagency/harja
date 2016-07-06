@@ -15,7 +15,7 @@
       "id": "urn:harja/paallystysilmoitus",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/paivystys.schema.json",
+      "$ref": "file:resources/api/schemas/entities/paallystysilmoitus.schema.json",
       "required": true
     }
   }
