@@ -12,6 +12,7 @@
                 <yha-id>3</yha-id>
                 <harja-id>3</harja-id>
                 <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
+                <kohdetyyppi>1</kohdetyyppi>
                 <nimi>string</nimi>
                 <!--Optional:-->
                 <toiden-aloituspaivamaara>2007-10-26</toiden-aloituspaivamaara>

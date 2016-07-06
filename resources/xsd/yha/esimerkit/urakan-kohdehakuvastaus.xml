@@ -5,6 +5,7 @@
         <kohde>
             <yha-id>3</yha-id>
             <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
+            <kohdetyyppi>1</kohdetyyppi>
             <nimi>string</nimi>
             <!--Optional:-->
             <yllapitoluokka>1</yllapitoluokka>

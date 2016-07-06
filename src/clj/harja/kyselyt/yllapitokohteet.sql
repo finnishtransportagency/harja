@@ -148,7 +148,7 @@ VALUES (:urakka,
         :arvonvahennykset,
         :bitumi_indeksi,
         :kaasuindeksi,
-        :tyyppi :: yllapitokohdetyyppi,
+        :tyyppi :: yllapitokohdetyotyyppi,
         :indeksin_kuvaus);
 
 -- name: paivita-yllapitokohde!

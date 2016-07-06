@@ -80,7 +80,7 @@ VALUES (
   :tr_kaista,
   :yhatunnus,
   :yhaid,
-  :tyyppi :: yllapitokohdetyyppi,
+  :tyyppi :: yllapitokohdetyotyyppi,
   :yllapitoluokka,
   :keskimaarainen_vuorokausiliikenne,
   :nykyinen_paallyste,
