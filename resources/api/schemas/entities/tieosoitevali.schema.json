@@ -3,14 +3,14 @@
   "id": "urn:harja",
   "type": "object",
   "properties": {
-    "aet": {
-      "id": "urn:harja/tieosoitevali/aet",
+    "aosa": {
+      "id": "urn:harja/tieosoitevali/aosa",
       "type": "integer",
       "minimum": 0,
       "required": true
     },
-    "aosa": {
-      "id": "urn:harja/tieosoitevali/aosa",
+    "aet": {
+      "id": "urn:harja/tieosoitevali/aet",
       "type": "integer",
       "minimum": 0,
       "required": true
@@ -18,12 +18,14 @@
     "let": {
       "id": "urn:harja/tieosoitevali/let",
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "required": true
     },
     "losa": {
       "id": "urn:harja/tieosoitevali/losa",
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "required": true
     }
   }
 }
