@@ -10,7 +10,8 @@
         },
         "kohdenumero": "123",
         "nimi": "Testipäällystyskohde",
-        "tyyppi": "paallystys",
+        "tyyppi": "paallyste",
+        "tyotyyppi": "paallystys",
         "sijainti": {
           "numero": 1,
           "aosa": 1,

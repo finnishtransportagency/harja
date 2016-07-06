@@ -5,7 +5,8 @@ SELECT
   ypk.sopimus,
   ypk.kohdenumero,
   ypk.nimi,
-  ypk.tyyppi,
+  ypk.yllapitokohdetyyppi,
+  ypk.yllapitokohdetyotyyppi,
   ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi                    AS "bitumi-indeksi",
@@ -69,7 +70,8 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
-  ypk.yhaid
+  ypk.yhaid,
+  ypk.yllapitokohdetyyppi
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
@@ -129,7 +131,8 @@ INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, nykyinen_paallyste, sopimuksen_mukaiset_tyot,
-                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, tyyppi, indeksin_kuvaus)
+                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi,
+                           yllapitokohdetyotyyppi, indeksin_kuvaus)
 VALUES (:urakka,
   :sopimus,
   :kohdenumero,
@@ -141,15 +144,16 @@ VALUES (:urakka,
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-        :keskimaarainen_vuorokausiliikenne,
-        :yllapitoluokka,
-        :nykyinen_paallyste,
-        :sopimuksen_mukaiset_tyot,
-        :arvonvahennykset,
-        :bitumi_indeksi,
-        :kaasuindeksi,
-        :tyyppi :: yllapitokohdetyyppi,
-        :indeksin_kuvaus);
+  :keskimaarainen_vuorokausiliikenne,
+  :yllapitoluokka,
+  :nykyinen_paallyste,
+  :sopimuksen_mukaiset_tyot,
+  :arvonvahennykset,
+  :bitumi_indeksi,
+  :kaasuindeksi,
+  :yllapitokohdetyyppi :: yllapitokohdetyyppi,
+  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
+  :indeksin_kuvaus);
 
 -- name: paivita-yllapitokohde!
 -- Päivittää ylläpitokohteen
@@ -378,7 +382,8 @@ SELECT
   tr_loppuetaisyys           AS "tr-loppuetaisyys",
   tr_ajorata                 AS "tr-ajorata",
   tr_kaista                  AS "tr-kaista",
-  tyyppi,
+  yllapitokohdetyotyyppi,
+  yllapitokohdetyyppi,
   yhatunnus,
   yhaid,
   yllapitoluokka,

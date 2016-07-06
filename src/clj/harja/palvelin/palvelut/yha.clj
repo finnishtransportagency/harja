@@ -104,7 +104,7 @@
   (log/debug "Tallennetaan " (count kohteet) " yha-kohdetta")
   (jdbc/with-db-transaction [c db]
     (doseq [{:keys [tierekisteriosoitevali
-                    tunnus yha-id alikohteet kohdetyyppi
+                    tunnus yha-id alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                     yllapitoluokka
                     keskimaarainen_vuorokausiliikenne
                     nykyinen-paallyste
@@ -121,7 +121,8 @@
                                               :tr_kaista (:kaista tierekisteriosoitevali)
                                               :yhatunnus tunnus
                                               :yhaid yha-id
-                                              :tyyppi (name kohdetyyppi)
+                                              :yllapitokohdetyyppi (name yllapitokohdetyyppi)
+                                              :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
                                               :yllapitoluokka yllapitoluokka
                                               :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
                                               :nykyinen_paallyste nykyinen-paallyste

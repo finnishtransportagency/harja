@@ -33,6 +33,15 @@
       "id": "urn:harja/yllapitokohde/tyyppi",
       "required": true,
       "enum": [
+        "paallyste",
+        "sora",
+        "kevytliikenne"
+      ]
+    },
+    "tyotyyppi": {
+      "id": "urn:harja/yllapitokohde/tyotyyppi",
+      "required": true,
+      "enum": [
         "paikkaus",
         "paallystys"
       ]
