@@ -18,6 +18,7 @@
 (def +paivystajia-ei-loydy+ "paivystajia-ei-loydy")
 (def +tuntematon-kayttaja-koodi+ "tuntematon-kayttaja")
 (def +tuntematon-yllapitokohde+ "tuntematon-yllapitokohde")
+(def +viallinen-yllapitokohteen-tai-alikohteen-sijainti+ "viallinen-yllapitokohteen-tai-alikohteen-sijainti")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

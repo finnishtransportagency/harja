@@ -15,7 +15,7 @@
     (do
       (let [viesti (format "Urakkaa id:llä %s ei löydy." urakka-id)]
         (log/warn viesti)
-        (throw+ {:type    virheet/+viallinen-kutsu+
+        (throw+ {:type virheet/+viallinen-kutsu+
                  :virheet [{:koodi virheet/+tuntematon-urakka-koodi+ :viesti viesti}]})))))
 
 (defn tarkista-sopimus [db urakka-id sopimus-id]
@@ -24,7 +24,7 @@
                (do
                  (let [viesti (format "Urakalle id: %s ei löydy sopimusta id: %s." urakka-id sopimus-id)]
                    (log/warn viesti)
-                   (throw+ {:type    virheet/+viallinen-kutsu+
+                   (throw+ {:type virheet/+viallinen-kutsu+
                             :virheet [{:koodi virheet/+tuntematon-sopimus-koodi+ :viesti viesti}]}))))))
 
 (defn tarkista-koordinaattien-jarjestys [{:keys [x y]}]
@@ -34,22 +34,22 @@
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
   (when-not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja))
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia urakkaan: "
                                      urakka-id)}]})))
 
 (defn tarkista-onko-kayttaja-organisaatiossa [db ytunnus kayttaja]
   (when-not (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja))
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia organisaatioon: " ytunnus)}]})))
 
 (defn tarkista-onko-kayttaja-organisaation-jarjestelma [db ytunnus kayttaja]
   (tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (when (not (:jarjestelma kayttaja))
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                         :viesti (str "Käyttäjä " (:kayttajanimi kayttaja) " ei ole järjestelmä")}]})))
 
 (defn tarkista-urakka-ja-kayttaja [db urakka-id kayttaja]
@@ -58,8 +58,8 @@
 
 (defn tarkista-rooli [kayttaja rooli]
   (when-not (roolit/roolissa? kayttaja rooli)
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi  virheet/+tuntematon-kayttaja-koodi+
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                         :viesti (str "Käyttäjällä ei oikeutta resurssiin.")}]})))
 
 (defn tarkista-urakka-sopimus-ja-kayttaja [db urakka-id sopimus-id kayttaja]
@@ -70,17 +70,30 @@
 (defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
   (when-not (or (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
                 (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
-    (throw+ {:type    virheet/+viallinen-kutsu+
-             :virheet [{:koodi  virheet/+kayttajalla-puutteelliset-oikeudet+
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (format "Käyttäjällä: %s ei ole oikeuksia urakan: %s päivystäjätietoihin."
                                         (:kayttajanimi kayttaja)
                                         urakka-id)}]})))
 
 (defn tarkista-urakan-kohde [db urakka-id kohde-id]
   (log/debug (format "Validoidaan urakan (id: %s) kohdetta (id: %s)" urakka-id kohde-id))
-  (when (not (yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id} ))
+  (when (not (yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id}))
     (do
       (let [viesti (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
         (log/warn viesti)
-        (throw+ {:type    virheet/+viallinen-kutsu+
+        (throw+ {:type virheet/+viallinen-kutsu+
                  :virheet [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}]})))))
+
+(defn tarkista-kohteen-ja-alikohteiden-sijannit [kohde-id kohteen-sijainti alikohteet]
+  (let [alikohteet (sort-by (juxt #(get-in % [:sijainti :aosa]) #(get-in % [:sijainti :aet])) alikohteet)
+        virheet (as-> [] virheet
+                      (when (> (:aosa kohteen-sijainti) (:losa kohteen-sijainti))
+                        (conj virheet "Kohteen alkuosa on loppuosaa isompi"))
+                      )]
+    (when (not (empty virheet))
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+viallinen-yllapitokohteen-tai-alikohteen-sijainti+
+                          :viesti (format "Kohteen (id: %s) tai sen alikohteen sijainnit ovat virheelliset. Virheet: %s"
+                                          kohde-id
+                                          (join "," str virheet))}]}))))

@@ -7,11 +7,46 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut])
   (:use [slingshot.slingshot :only [throw+]]))
+
+(def testi-paallystysilmoitus
+  {:otsikko
+   {:lahettaja
+    {:jarjestelma "Urakoitsijan järjestelmä",
+     :organisaatio {:nimi "Urakoitsija", :ytunnus "1234567-8"}},
+    :viestintunniste {:id 123},
+    :lahetysaika "2016-01-30T12:00:00Z"},
+   :paallystysilmoitus
+   {:yllapitokohde
+    {:sijainti {:aosa 810, :aet 137, :losa 814, :let 1912},
+     :alikohteet
+     [{:alikohde
+       {:leveys 1.2,
+        :kokonaismassamaara 12.3,
+        :sijainti {:aosa 810, :aet 137, :losa 812, :let 1},
+        :kivi-ja-sideaineet
+        [{:kivi-ja-sideaine
+          {:esiintyma "testi",
+           :km-arvo "testi",
+           :muotoarvo "testi",
+           :sideainetyyppi "1",
+           :pitoisuus 1.2,
+           :lisa-aineet "lisäaineet"}}],
+        :tunnus "A",
+        :pinta-ala 2.2,
+        :massamenekki 22,
+        :kuulamylly "N14",
+        :nimi "1. testialikohde",
+        :raekoko 12,
+        :tyomenetelma "Uraremix",
+        :rc-prosentti 54,
+        :paallystetyyppi "avoin asfaltti"}}]}}}
+  )
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
   (let [urakka-id (Integer/parseInt (:id parametit))]
@@ -32,12 +67,21 @@
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)]
-    (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus") urakka-id kohde-id)
+    (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-    ;; todo: validoi kohde & alikohde
-    ;; todo: tallenna data
-    ))
+    (clojure.pprint/pprint data)
+    (let [kohteen-sijainti (get-in testi-paallystysilmoitus [:paallystysilmoitus :yllapitokohde :sijainti])
+          alikohteet (mapv :alikohde (get-in testi-paallystysilmoitus [:paallystysilmoitus :yllapitokohde :alikohteet]))]
+      (validointi/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
+      ;; tuhoa kohteen-alikohteet
+      ;; tallenna uudet alikohteet
+      ;; tallenna päällystysilmoituksen tiedot
+      )
+
+    (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+                                 ;; todo: palauta uusi id
+                                 :id nil})))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
