@@ -41,6 +41,7 @@
     (let [vastaus (into []
                         (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                               (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                              (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
                               (map #(assoc % :kohdeosat
                                              (into []
                                                    paallystys-q/kohdeosa-xf
