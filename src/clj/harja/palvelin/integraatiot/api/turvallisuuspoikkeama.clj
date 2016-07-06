@@ -77,10 +77,10 @@
                         :toteuttaja toteuttaja
                         :tilaaja tilaaja
                         :numero (:numero tie)
-                        :alkuetaisyys (:aet tie)
-                        :loppuetaisyys (:let tie)
                         :alkuosa (:aos tie)
+                        :alkuetaisyys (:aet tie)
                         :loppuosa (:los tie)
+                        :loppuetaisyys (:let tie)
                         :tila "avoin" ;; API:n kautta kirjattu ilmoitus on aina avoin
                         :tapahtuman_otsikko otsikko
                         :vaarallisten_aineiden_kuljetus vaarallisten_aineiden_kuljetus
@@ -140,10 +140,10 @@
        :x_koordinaatti (:x koordinaatit)
        :y_koordinaatti (:y koordinaatit)
        :numero (:numero tie)
-       :aet (:aet tie)
-       :let (:let tie)
        :aos (:aos tie)
+       :aet (:aet tie)
        :los (:los tie)
+       :let (:let tie)
        :vahingoittuneet_ruumiinosat
        (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
        :sairauspoissaolo_jatkuu (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
