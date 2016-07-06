@@ -4,6 +4,13 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "otsikko": {
+      "id": "urn:harja/tiestotarkastuskirjaus",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
     "tunniste": {
       "id": "urn:harja/tunniste",
       "type": "object",
