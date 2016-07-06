@@ -254,17 +254,19 @@ VALUES (:turvallisuuspoikkeama, :liite);
 --name: paivita-korjaava-toimenpide<!
 UPDATE korjaavatoimenpide
 SET
-  otsikko         = :otsikko,
-  tila            = :tila :: korjaavatoimenpide_tila,
-  vastuuhenkilo   = :vastuuhenkilo,
-  toteuttaja      = :toteuttaja,
-  kuvaus          = :kuvaus,
-  suoritettu      = :suoritettu,
-  laatija         = :laatija,
-  poistettu       = :poistettu
+  otsikko       = :otsikko,
+  tila          = :tila :: korjaavatoimenpide_tila,
+  vastuuhenkilo = :vastuuhenkilo,
+  toteuttaja    = :toteuttaja,
+  kuvaus        = :kuvaus,
+  suoritettu    = :suoritettu,
+  laatija       = :laatija,
+  poistettu     = :poistettu
 WHERE id = :id
       AND turvallisuuspoikkeama = :tp
-      AND (SELECT urakka FROM turvallisuuspoikkeama WHERE id = :tp) = :urakka;
+      AND (SELECT urakka
+           FROM turvallisuuspoikkeama
+           WHERE id = :tp) = :urakka;
 
 --name: luo-korjaava-toimenpide<!
 INSERT INTO korjaavatoimenpide
@@ -348,7 +350,7 @@ SET urakka                            = :urakka,
   vahinkoluokittelu                   = :vahinkoluokittelu :: turvallisuuspoikkeama_vahinkoluokittelu [],
   vakavuusaste                        = :vakavuusaste :: turvallisuuspoikkeama_vakavuusaste,
   tapahtuman_otsikko                  = :tapahtuman_otsikko,
-  tila                                = :tila::turvallisuuspoikkeama_tila,
+  tila                                = :tila :: turvallisuuspoikkeama_tila,
   vaarallisten_aineiden_kuljetus      = :vaarallisten_aineiden_kuljetus,
   vaarallisten_aineiden_vuoto         = :vaarallisten_aineiden_vuoto,
   toteuttaja                          = :toteuttaja,
@@ -510,7 +512,9 @@ SELECT
   etunimi,
   sukunimi
 FROM kayttaja
-WHERE id = :id;
+WHERE id = :id
+      AND poistettu IS FALSE
+      AND jarjestelma IS FALSE;
 
 --name: hae-kayttajat-parametreilla
 SELECT
@@ -521,4 +525,6 @@ SELECT
 FROM kayttaja
 WHERE (:kayttajanimi IS NULL OR lower(kayttajanimi) LIKE (CONCAT(lower(:kayttajanimi), '%')))
       AND (:etunimi IS NULL OR lower(etunimi) LIKE (CONCAT(lower(:etunimi), '%')))
-      AND (:sukunimi IS NULL OR lower(sukunimi) LIKE (CONCAT(lower(:sukunimi), '%')));
+      AND (:sukunimi IS NULL OR lower(sukunimi) LIKE (CONCAT(lower(:sukunimi), '%')))
+      AND poistettu IS FALSE
+      AND jarjestelma IS FALSE;
