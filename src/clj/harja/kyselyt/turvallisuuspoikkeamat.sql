@@ -264,7 +264,7 @@ SET
   poistettu       = :poistettu
 WHERE id = :id
       AND turvallisuuspoikkeama = :tp
-      AND (SELECT urakka FROM turvallisuuspoikkeama WHERE id = 1) = :urakka;
+      AND (SELECT urakka FROM turvallisuuspoikkeama WHERE id = :tp) = :urakka;
 
 --name: luo-korjaava-toimenpide<!
 INSERT INTO korjaavatoimenpide
