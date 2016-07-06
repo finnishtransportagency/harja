@@ -505,6 +505,7 @@ WHERE lahetys_onnistunut IS NOT TRUE;
 
 --name: hae-vastuuhenkilon-tiedot
 SELECT
+  id,
   kayttajanimi,
   etunimi,
   sukunimi
@@ -513,6 +514,7 @@ WHERE id = :id;
 
 --name: hae-kayttajat-parametreilla
 SELECT
+  id,
   kayttajanimi,
   etunimi,
   sukunimi
