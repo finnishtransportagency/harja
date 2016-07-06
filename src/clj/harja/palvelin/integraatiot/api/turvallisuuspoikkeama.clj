@@ -140,9 +140,9 @@
        :x_koordinaatti (:x koordinaatit)
        :y_koordinaatti (:y koordinaatit)
        :numero (:numero tie)
-       :aos (:aos tie)
+       :aos (:aosa tie)
        :aet (:aet tie)
-       :los (:los tie)
+       :los (:losa tie)
        :let (:let tie)
        :vahingoittuneet_ruumiinosat
        (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
