@@ -83,11 +83,6 @@
             "format": "date-time",
             "required": true
           },
-          "paattynyt": {
-            "id": "urn:harja/turvallisuuspoikkeamat/0/paattynyt",
-            "type": "string",
-            "format": "date-time"
-          },
           "kasitelty": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/kasitelty",
             "type": "string",
@@ -156,6 +151,14 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
+                "otsikko": {
+                  "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/otsikko",
+                  "type": "string"
+                },
+                "toteuttaja": {
+                  "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/toteuttaja",
+                  "type": "string"
+                },
                 "kuvaus": {
                   "id": "urn:harja/turvallisuuspoikkeamat/0/korjaavatToimenpiteet/0/kuvaus",
                   "type": "string"

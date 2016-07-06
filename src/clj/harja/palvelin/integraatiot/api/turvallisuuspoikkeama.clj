@@ -49,9 +49,10 @@
 
 (defn luo-turvallisuuspoikkeama [db urakka-id kirjaaja data]
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset
-                tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste henkilovahinko
-                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
-        {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
+                tapahtumapaivamaara otsikko kasitelty vahinkoluokittelu vakavuusaste henkilovahinko
+                toteuttaja tilaaja turvallisuuskoordinaattori laatija paikan_kuvaus
+                vaarallisten_aineiden_kuljetus vaarallisten_aineiden_vuoto]} data
+        {:keys [tyontekijanammatti ammatinselite vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
         koordinaatit (:koordinaatit sijainti)]
@@ -61,13 +62,11 @@
                        {:urakka urakka-id
                         :tyyppi (konv/seq->array luokittelu)
                         :tapahtunut (aika-string->java-sql-date tapahtumapaivamaara)
-                        :paattynyt (aika-string->java-sql-date paattynyt)
                         :kasitelty (aika-string->java-sql-date kasitelty)
                         :ammatti (when (tallenna-henkilovahinko? data) tyontekijanammatti)
                         :ammatti_muu (when (and (tallenna-henkilovahinko? data)
                                                 (tallenna-ammatinselite? data))
                                        ammatinselite)
-                        :tehtava (when (tallenna-henkilovahinko? data) tyotehtava)
                         :kuvaus kuvaus
                         :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array aiheutuneetVammat))
                         :poissa (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
@@ -82,6 +81,11 @@
                         :loppuetaisyys (:let tie)
                         :alkuosa (:aos tie)
                         :loppuosa (:los tie)
+                        :tila "avoin" ;; API:n kautta kirjattu ilmoitus on aina avoin
+                        :tapahtuman_otsikko otsikko
+                        :vaarallisten_aineiden_kuljetus vaarallisten_aineiden_kuljetus
+                        :vaarallisten_aineiden_vuoto vaarallisten_aineiden_vuoto
+                        :paikan_kuvaus paikan_kuvaus
                         :sijainti (geo/geometry
                                     (geo/clj->pg {:type :point
                                                   :coordinates ((juxt :x :y) koordinaatit)}))
@@ -174,7 +178,7 @@
 (defn tallenna-korjaavat-toimenpiteet
   "Luo tarkoituksella aina uudet korjaavat toimenpiteet. Halutaan, ettei tuleva uusi päivitys turvallisuuspoikkeamaan
   ylikirjoita mahdollisesti UI:n kautta kirjattuja juttuja."
-  [db tp-id _ korjaavat]
+  [db tp-id kirjaaja korjaavat]
   (log/debug "Tallennetaan turvallisuuspoikkeamalle " tp-id " " (count korjaavat) " korjaavaa toimenpidettä.")
   (doseq [korjaava korjaavat]
     (log/info "luodaana korjaava, args: " tp-id (:kuvaus korjaava)
@@ -183,14 +187,17 @@
                 (get-in korjaava [:vastaavahenkilo :etunimi])
                 " "
                 (get-in korjaava [:vastaavahenkilo :sukunimi])))
-    (try (turvallisuuspoikkeamat/luo-korjaava-toimenpide<! db tp-id (:kuvaus korjaava)
+    (try (turvallisuuspoikkeamat/luo-korjaava-toimenpide<! db
+                                                           tp-id
+                                                           (:otsikko korjaava)
+                                                           "avoin" ;; API:n kautta aina avoin
+                                                           (:vastuuhenkilo korjaava)
+                                                           (:toteuttaja korjaava)
+                                                           (:kuvaus korjaava)
                                                            (aika-string->java-sql-date (:suoritettu korjaava))
-                                                           (str
-                                                             (get-in korjaava [:vastaavahenkilo :etunimi])
-                                                             " "
-                                                             (get-in korjaava [:vastaavahenkilo :sukunimi])))
+                                                           (:id kirjaaja))
          (catch Throwable t
-           (log/info t " ONGELMa KORJAAVA TP")))))
+           (log/info "Ongelma kirjattaessak orjaava toimenpide: " t)))))
 
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")

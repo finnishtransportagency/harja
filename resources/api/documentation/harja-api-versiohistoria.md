@@ -9,7 +9,7 @@
     - Uusi pakollinen kenttä: otsikko (string, max. 1024 merkkiä)
     - Uusi vapaaehtoinen kenttä: paikan_kuvaus (string, max. 2048 merkkiä)
     - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_kuljetus (boolean)
-    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_vuoto (boolean)
+    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_vuoto (boolean, true vain jos sisälsi kuljetuksen)
     - Myös korjaaviin toimenpiteisiin on tehty muutoksia:
     - Uusi vapaaehtoinen kenttä: otsikko (string, max 2048 merkkiä)
     - Uusi vapaaehtoinen kenttä: toteuttaja (string, max 1024 merkkiä)
