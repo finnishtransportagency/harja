@@ -44,22 +44,30 @@
           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
     {:korjaavatoimenpide :korjaavattoimenpiteet}))
 
+(defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
+  (when kayttaja-id
+    (first (q/hae-vastuuhenkilon-tiedot db kayttaja-id))))
+
 (defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
-  (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
-                                                         turvallisuuspoikkeama-xf
-                                                         (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
-                                                   {:kommentti :kommentit
-                                                    :korjaavatoimenpide :korjaavattoimenpiteet
-                                                    :liite :liitteet}))
-
-                  (update-in [:kommentit]
-                             (fn [kommentit]
-                               (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                                     (dissoc % :liite)
-                                                     %)
-                                                   kommentit)))))]
+  (let [tulos (as-> (first (konv/sarakkeet-vektoriin (into []
+                                                           turvallisuuspoikkeama-xf
+                                                           (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                                     {:kommentti :kommentit
+                                                      :korjaavatoimenpide :korjaavattoimenpiteet
+                                                      :liite :liitteet}))
+                    turpo
+                    (assoc turpo :korjaavattoimenpiteet
+                                 (mapv #(assoc % :vastuuhenkilo
+                                                 (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
+                                       (:korjaavattoimenpiteet turpo)))
+                    (update-in turpo [:kommentit]
+                               (fn [kommentit]
+                                 (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                                       (dissoc % :liite)
+                                                       %)
+                                                     kommentit)))))]
     (log/debug "Tulos: " (pr-str tulos))
     tulos))
 

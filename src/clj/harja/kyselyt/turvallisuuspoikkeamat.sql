@@ -502,3 +502,11 @@ WHERE tpl.turvallisuuspoikkeama = :id;
 SELECT id
 FROM turvallisuuspoikkeama
 WHERE lahetys_onnistunut IS NOT TRUE;
+
+--name: hae-vastuuhenkilon-tiedot
+SELECT
+  kayttajanimi,
+  etunimi,
+  sukunimi
+FROM kayttaja
+WHERE id = :id;
