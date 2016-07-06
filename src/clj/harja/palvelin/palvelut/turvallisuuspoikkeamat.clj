@@ -76,12 +76,13 @@
     "Korjaavan toimenpiteen 'turvallisuuspoikkeama' pitäisi olla joko tyhjä (uusi korjaava), tai sama kuin parametrina
     annettu turvallisuuspoikkeaman id.")
 
+  (log/debug "Tallenna orjaava toimenpide " (pr-str korjaavatoimenpide))
   (if-not (or (nil? id) (neg? id))
     (q/paivita-korjaava-toimenpide<!
       db
       {:otsikko  otsikko
        :tila (name tila)
-       :vastuuhenkilo vastuuhenkilo ;; TODO Tee tälle frontti ennen tallennusta
+       :vastuuhenkilo (:id vastuuhenkilo)
        :toteuttaja toteuttaja
        :kuvaus kuvaus
        :suoritettu (konv/sql-timestamp suoritettu)
@@ -93,7 +94,7 @@
     (q/luo-korjaava-toimenpide<! db {:tp tp-id
                                      :otsikko  otsikko
                                      :tila (name tila)
-                                     :vastuuhenkilo vastuuhenkilo ;; TODO Tee tälle frontti ennen tallennusta
+                                     :vastuuhenkilo (:id vastuuhenkilo)
                                      :toteuttaja toteuttaja
                                      :kuvaus kuvaus
                                      :suoritettu (konv/sql-timestamp suoritettu)
@@ -201,8 +202,8 @@
 (defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))
   ;; TODO Suorita kantahaku
-  [{:etunimi "Seppo" :sukunimi "Harja" :kayttajatunnus "LX123123"}
-   {:etunimi "Pertti" :sukunimi "Harja" :kayttajatunnus "LX666"}])
+  [{:id 4 :etunimi "Seppo" :sukunimi "Harja" :kayttajatunnus "ulle"}
+   {:id 5 :etunimi "Pertti" :sukunimi "Harja" :kayttajatunnus "yit_pk"}])
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle

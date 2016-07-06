@@ -74,13 +74,12 @@
      :tyyppi :string}]
    @tiedot/kayttajahakulomake-data])
 
-(defn- hakutulokset []
+(defn- hakutulokset [korjaava-toimenpide toimenpiteet-atom]
   [grid/grid
    {:otsikko "Löytyneet käyttäjät"
     :tyhja (if (nil? @tiedot/kayttajahakutulokset-data)
              [ajax-loader "Haetaan käyttäjiä..."]
-             "Käyttäjiä ei löytynyt")
-    :tunniste :yhatunnus}
+             "Käyttäjiä ei löytynyt")}
    [{:otsikko "Käyttäjätunnus"
      :nimi :kayttajatunnus
      :tyyppi :string
@@ -98,18 +97,24 @@
      :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [:button.nappi-ensisijainen {:on-click (fn [e]
-                                                             (.preventDefault e)
-                                                             ;; TODO Reset korjaavan toimeenpiteen käyttäjä?
+                                                             (let [korjaava-toimenpide-id (.preventDefault e)]
+                                                               (log "[TURPO] Korjaava toimenpide: " (pr-str korjaava-toimenpide))
+                                                               (log "[TURPO] Atom: " (pr-str toimenpiteet-atom))
+                                                               (swap! toimenpiteet-atom
+                                                                      assoc
+                                                                      korjaava-toimenpide-id
+                                                                      (assoc korjaava-toimenpide :vastuuhenkilo rivi)))
                                                              (modal/piilota!))}
                      "Valitse"])}]
    @tiedot/kayttajahakutulokset-data])
 
-(defn kayttajahaku-modal-sisalto [urakka]
+(defn kayttajahaku-modal-sisalto [ korjaava-toimenpide toimenpiteet-atom urakka]
   [:div
    [hakulomake urakka]
-   [hakutulokset]])
+   [hakutulokset korjaava-toimenpide toimenpiteet-atom]])
 
-(defn avaa-kayttajahaku-modal [urakka]
+(defn avaa-kayttajahaku-modal [korjaava-toimenpide toimenpiteet-atom urakka]
+  (reset! tiedot/kayttajahakutulokset-data [])
   (modal/nayta!
     {:otsikko "Käyttäjähaku"
      :luokka "turvallisuuspoikkeama-kayttajahaku"
@@ -117,10 +122,11 @@
                                                       (.preventDefault e)
                                                       (modal/piilota!))}
               "Sulje"]}
-    [kayttajahaku-modal-sisalto urakka]))
+    [kayttajahaku-modal-sisalto korjaava-toimenpide toimenpiteet-atom  urakka]))
 
 (defn korjaavattoimenpiteet
   [toimenpiteet]
+  (log "[TURPO] Render toimenpiteet: " (pr-str toimenpiteet))
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
    [{:otsikko "Otsikko"
@@ -139,7 +145,7 @@
                            %)
                          "- valitse -")
      :valinnat #{:avoin :siirretty :toteutettu}
-     :leveys 20}
+     :leveys 15}
     {:otsikko "Laatija"
      :nimi :laatija
      :leveys 20
@@ -152,9 +158,15 @@
      :leveys 20
      :fmt #(str (:etunimi %) " " (:sukunimi %))
      :tyyppi :komponentti
-     :komponentti (fn [_] [:button.nappi-ensisijainen.nappi-grid
-                           {:on-click #(avaa-kayttajahaku-modal @nav/valittu-urakka)}
-                           "Hae käyttäjä"])}
+     :komponentti (fn [rivi] [:button.nappi-ensisijainen.nappi-grid
+                           {:on-click #(avaa-kayttajahaku-modal
+                                        rivi
+                                        toimenpiteet
+                                        @nav/valittu-urakka)}
+                              (if (:vastuuhenkilo rivi)
+                                (str "Vaihda " (get-in rivi [:vastuuhenkilo :etunimi])
+                                     " " (get-in rivi [:vastuuhenkilo :sukunimi]))
+                                "Hae käyttäjä")])}
     {:otsikko "Toteuttaja"
      :nimi :toteuttaja
      :leveys 20
