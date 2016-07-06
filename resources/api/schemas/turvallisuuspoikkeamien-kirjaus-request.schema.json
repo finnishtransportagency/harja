@@ -71,7 +71,7 @@
             "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
           },
           "otsikko": {
-            "id": "urn:harja/otsikko",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/otsikko",
             "type": "string",
             "required": true
           },
@@ -87,7 +87,7 @@
             "format": "date-time"
           },
           "toteuttaja": {
-            "id": "urn:harja/toteuttaja",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/toteuttaja",
             "type": "string"
           },
           "tilaaja": {
@@ -111,15 +111,15 @@
             "type": "string"
           },
           "paikan_kuvaus": {
-            "id": "urn:harja/paikan_kuvaus",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/paikan_kuvaus",
             "type": "string"
           },
           "vaarallisten_aineiden_kuljetus": {
-            "id": "urn:harja/vaarallisten_aineiden_kuljetus",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/vaarallisten_aineiden_kuljetus",
             "type": "boolean"
           },
           "vaarallisten_aineiden_vuoto": {
-            "id": "urn:harja/vaarallisten_aineiden_vuoto",
+            "id": "urn:harja/turvallisuuspoikkeamat/0/vuoto",
             "type": "boolean"
           },
           "henkilovahinko": {
