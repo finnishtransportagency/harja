@@ -31,39 +31,39 @@
                 "additionalProperties": false,
                 "properties": {
                   "nimi": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/nimi",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/nimi",
                     "type": "string"
                   },
                   "tunnus": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/tunnus",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/tunnus",
                     "type": "string"
                   },
                   "sijainti": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/sijainti",
                     "type": "object",
                     "additionalProperties": false,
                     "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
                   },
                   "paallystetyyppi": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/paallystetyyppi",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/paallystetyyppi",
                     "type": "object",
                     "additionalProperties": false,
                     "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
                   },
                   "raekoko": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/raekoko",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/raekoko",
                     "type": "integer"
                   },
                   "massamenekki": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/massamenekki",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/massamenekki",
                     "type": "integer"
                   },
                   "rc-prosentti": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/rc-prosentti",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/rc-prosentti",
                     "type": "integer"
                   },
                   "tyomenetelma": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/tyomenetelma",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/tyomenetelma",
                     "enum": [
                       "Paksuudeltaan vakio laatta",
                       "Massapintaus",
@@ -82,19 +82,19 @@
                     ]
                   },
                   "leveys": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/leveys",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/leveys",
                     "type": "number"
                   },
                   "kokonaismassamaara": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kokonaismassamaara",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kokonaismassamaara",
                     "type": "number"
                   },
                   "pinta-ala": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/pinta-ala",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/pinta-ala",
                     "type": "number"
                   },
                   "kuulamylly": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kuulamylly",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kuulamylly",
                     "enum": [
                       "AN5",
                       "AN7",
@@ -106,33 +106,33 @@
                     ]
                   },
                   "kivi-ja-sideaineet": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/0/kivi-ja-sideaineet",
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/0/kivi-ja-sideaineet",
                     "type": "array",
                     "maxItems": 100,
                     "items": {
-                      "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/0/kivi-ja-sideaineet/0",
+                      "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/0/kivi-ja-sideaineet/0",
                       "type": "object",
                       "additionalProperties": false,
                       "properties": {
                         "kivi-ja-sideaine": {
-                          "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/0/kivi-ja-sideaineet/0",
+                          "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/0/kivi-ja-sideaineet/0",
                           "type": "object",
                           "additionalProperties": false,
                           "properties": {
                             "esiintyma": {
-                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/esiintyma",
+                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kivi-ja-sideaineet/esiintyma",
                               "type": "string"
                             },
                             "km-arvo": {
-                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/km-arvo",
+                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kivi-ja-sideaineet/km-arvo",
                               "type": "string"
                             },
                             "muotoarvo": {
-                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/muotoarvo",
+                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kivi-ja-sideaineet/muotoarvo",
                               "type": "string"
                             },
                             "sideainetyyppi": {
-                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/sideainetyyppi",
+                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kivi-ja-sideaineet/sideainetyyppi",
                               "enum": [
                                 "1",
                                 "2",
@@ -159,11 +159,11 @@
                               ]
                             },
                             "pitoisuus": {
-                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/pitoisuus",
+                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kivi-ja-sideaineet/pitoisuus",
                               "type": "number"
                             },
                             "lisa-aineet": {
-                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/lisa-aineet",
+                              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/kivi-ja-sideaineet/lisa-aineet",
                               "type": "string"
                             }
                           }
