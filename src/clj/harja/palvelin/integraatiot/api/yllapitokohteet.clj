@@ -29,8 +29,15 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
-(defn kirjaa-paallystysilmoitus [db kayttaja {} data]
-  )
+(defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus") urakka-id kohde-id)
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+    ;; todo: validoi kohde & alikohde
+    ;; todo: tallenna data
+    ))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
@@ -39,7 +46,7 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db] (hae-yllapitokohteet db parametit kayttaja))}
    {:palvelu :kirjaa-paallystysilmoitus
-    :polku "/api/urakat/:id/yllapitokohteet/:kohde-id/paallystysilmoitus"
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus

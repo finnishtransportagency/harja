@@ -3,6 +3,7 @@
   (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.sopimukset :as sopimukset]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet]
             [taoensso.timbre :as log]
             [harja.kyselyt.kayttajat :as kayttajat]
             [harja.domain.roolit :as roolit])
@@ -74,3 +75,12 @@
                         :viesti (format "Käyttäjällä: %s ei ole oikeuksia urakan: %s päivystäjätietoihin."
                                         (:kayttajanimi kayttaja)
                                         urakka-id)}]})))
+
+(defn tarkista-urakan-kohde [db urakka-id kohde-id]
+  (log/debug (format "Validoidaan urakan (id: %s) kohdetta (id: %s)" urakka-id kohde-id))
+  (when (not (yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id} ))
+    (do
+      (let [viesti (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
+        (log/warn viesti)
+        (throw+ {:type    virheet/+viallinen-kutsu+
+                 :virheet [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}]})))))

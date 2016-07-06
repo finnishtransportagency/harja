@@ -425,3 +425,9 @@ WHERE yllapitokohde = :yllapitokohde AND
 UPDATE yllapitokohde
 SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
 WHERE id = :kohdeid;
+
+-- name: onko-olemassa-urakalla?
+-- single?: true
+SELECT exists(SELECT id
+              FROM yllapitokohde
+              WHERE urakka = :urakka AND id = :kohde);
