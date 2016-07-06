@@ -1,4 +1,5 @@
-(ns harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat)
+(ns harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat
+  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
 
 (defn rakenna-sijainti [kohde]
   {:numero (:tr-numero kohde)
@@ -26,7 +27,7 @@
    :sijainti (rakenna-sijainti kohde)
    :yllapitoluokka (:yllapitoluokka kohde)
    :keskimaarainen-vuorokausiliikenne (:keskimaarainen-vuorokausiliikenne kohde)
-   :nykyinen-paallyste (:nykyinen-paallyste kohde)
+   :nykyinen-paallyste (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:nykyinen-paallyste kohde))
    :alikohteet (mapv (fn [alikohde] (rakenna-alikohde alikohde)) (:alikohteet kohde))})
 
 (defn rakenna-kohteet [yllapitokohteet]

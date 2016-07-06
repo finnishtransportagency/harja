@@ -20,6 +20,25 @@
    {:nimi "Soratien pintaus" :lyhenne "SOP" :koodi 31}
    {:nimi "Sora" :lyhenne "SORA" :koodi 41}])
 
+(defn hae-apin-paallyste-koodilla [paallystekoodi]
+  (get
+    {1 "betoni",
+     2 "kivi",
+     11 "avoin asfaltti",
+     12 "asfalttibetoni",
+     13 "epäjatkuva asfaltti",
+     14 "kivimastiksiasfaltti",
+     15 "kantavan kerroksen AB",
+     16 "bit.sidottu kantava ker.",
+     17 "valuasfaltti",
+     21 "pehmeä asfalttibetoni (b)",
+     22 "pehmeä asfalttibetoni (v)",
+     23 "pehmeä asfalttibetoni (o)",
+     24 "sirotepintaus",
+     31 "soratien pintaus",
+     41 "sora"}
+    paallystekoodi))
+
 (defn hae-paallyste-koodilla
   "Hakee päällysteen nimen koodilla"
   [koodi]
