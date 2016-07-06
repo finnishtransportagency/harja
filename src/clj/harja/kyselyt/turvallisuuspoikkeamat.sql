@@ -30,41 +30,6 @@ WHERE t.urakka = :urakka
       AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
 ORDER BY t.tapahtunut DESC;
 
--- name: hae-hallintayksikon-turvallisuuspoikkeamat
--- Hakee turvallisuuspoikkeamat, jotka ovat annetun hallintayksikön urakoissa raportoituja
-SELECT
-  t.id,
-  t.urakka,
-  t.tapahtunut,
-  t.kasitelty,
-  t.tyontekijanammatti,
-  t.tyontekijanammatti_muu AS tyontekijanammattimuu,
-  t.kuvaus,
-  t.vammat,
-  t.sairauspoissaolopaivat,
-  t.sairaalavuorokaudet,
-  t.sijainti,
-  t.tr_numero,
-  t.tr_alkuetaisyys,
-  t.tr_loppuetaisyys,
-  t.tr_alkuosa,
-  t.tr_loppuosa,
-  t.tyyppi,
-  t.luotu,
-  t.lahetetty,
-  t.lahetys_onnistunut     AS lahetysonnistunut,
-  t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
-  k.id                     AS korjaavatoimenpide_id,
-  k.kuvaus                 AS korjaavatoimenpide_kuvaus,
-  k.suoritettu             AS korjaavatoimenpide_suoritettu
-FROM turvallisuuspoikkeama t
-  LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
-WHERE t.urakka IN (SELECT id
-                   FROM urakka
-                   WHERE hallintayksikko = :hallintayksikko)
-      AND t.tapahtunut :: DATE BETWEEN :alku AND :loppu
-ORDER BY t.tapahtunut DESC;
-
 -- name: hae-turvallisuuspoikkeamat
 -- Hakee kaikki turvallisuuspoikkeamat aikavälillä ilman aluerajausta
 SELECT
