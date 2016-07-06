@@ -11,6 +11,7 @@
             <kohde>
                 <yha-id>3</yha-id>
                 <harja-id>3</harja-id>
+                <kohdetyyppi>1</kohdetyyppi>
                 <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
                 <nimi>string</nimi>
                 <!--Optional:-->
