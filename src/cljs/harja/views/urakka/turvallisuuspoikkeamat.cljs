@@ -47,9 +47,43 @@
   [toimenpiteet]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
-   [{:otsikko "Vastaava henkilö" :nimi :vastaavahenkilo :leveys "20%" :tyyppi :string}
-    {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys "15%" :tyyppi :pvm}
-    {:otsikko "Kuvaus" :nimi :kuvaus :leveys "65%" :tyyppi :text :koko [80 :auto]}]
+   [{:otsikko "Otsikko"
+     :nimi :otsikko
+     :leveys 20
+     :tyyppi :string
+     :pituus-max 2048}
+    {:otsikko "Tila"
+     :nimi :tila
+     :pakollinen? true
+     :validoi [[:ei-tyhja "Valitse tila"]]
+     :tyyppi :valinta
+     :valinta-nayta #(or ({:avoin "Avoin"
+                           :siirretty "Siirretty"
+                           :toteutettu "Toteutettu"}
+                           %)
+                         "- valitse -")
+     :valinnat #{:avoin :siirretty :toteutettu}
+     :leveys 20}
+    {:otsikko "Laatija"
+     :nimi :laatija
+     :leveys 20
+     :tyyppi :string
+     :muokattava? (constantly false)
+     :fmt (fn [_] "TODO NÄYTÄ NIMI")} ;; TODO NÄYTÄ NIMI
+    {:otsikko "Vastuuhenkilö"
+     :nimi :vastuuhenkilo
+     :leveys 20
+     :muokattava? (constantly false)
+     :fmt (fn [_] "TODO NÄYTÄ NIMI")
+     :tyyppi :komponentti
+     :komponentti (fn [_] [:span "TODO Nappi -> hakudialogi"])}
+    {:otsikko "Toteuttaja"
+     :nimi :toteuttaja
+     :leveys 20
+     :tyyppi :string
+     :pituus-max 1024}
+    {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys 15 :tyyppi :pvm}
+    {:otsikko "Kuvaus" :nimi :kuvaus :leveys 40 :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
 (defn- voi-tallentaa? [tp]
