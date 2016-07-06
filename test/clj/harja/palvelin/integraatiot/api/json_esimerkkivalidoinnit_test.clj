@@ -64,5 +64,5 @@
   (is (nil? (validoi json-skeemat/urakan-yllapitokohteiden-haku-vastaus
                      json-esimerkit/+urakan-yllapitokohteiden-haku+)))
 
-  (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus-validaattori
+  (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus
                      json-esimerkit/+paallystysilmoituksen-kirjaus+))))

@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
@@ -30,20 +31,27 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
+(defn kirjaa-paallystysilmoitus [db kayttaja {} data]
+  )
+
+(def palvelut
+  [{:palvelu :hae-yllapitokohteet
+    :polku "/api/urakat/:id/yllapitokohteet"
+    :tyyppi :GET
+    :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
+    :kasittely-fn (fn [parametit _ kayttaja db] (hae-yllapitokohteet db parametit kayttaja))}
+   {:palvelu :kirjaa-paallystysilmoitus
+    :polku "/api/urakat/:id/yllapitokohteet/:kohde-id/paallystysilmoitus"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}])
+
 (defrecord Yllapitokohteet []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (julkaise-reitti
-      http :hae-yllapitokohteet
-      (GET "/api/urakat/:id/yllapitokohteet" request
-        (kasittele-kutsu-async db
-                               integraatioloki
-                               :hae-yllapitokohteet
-                               request
-                               nil
-                               json-skeemat/urakan-yllapitokohteiden-haku-vastaus
-                               (fn [parametit _ kayttaja db] (hae-yllapitokohteet db parametit kayttaja)))))
+    (palvelut/julkaise http db integraatioloki palvelut)
     this)
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-yllapitokohteet)
+    (palvelut/poista http palvelut)
     this))
