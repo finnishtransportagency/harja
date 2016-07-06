@@ -209,9 +209,11 @@
 
 (defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))
-  ;; TODO Suorita kantahaku
-  [{:id 4 :etunimi "Seppo" :sukunimi "Harja" :kayttajatunnus "ulle"}
-   {:id 5 :etunimi "Pertti" :sukunimi "Harja" :kayttajatunnus "yit_pk"}])
+  (log/debug "Haetaan käyttäjät hakuehdoilla: " (pr-str hakuehdot))
+  (jdbc/with-db-transaction [db db]
+    (into [] (q/hae-kayttajat-parametreilla db {:kayttajanimi (or (:kayttajanimi hakuehdot) "")
+                                                :etunimi (or (:etunimi hakuehdot) "")
+                                                :sukunimi (or (:sukunimi hakuehdot) "")}))))
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle

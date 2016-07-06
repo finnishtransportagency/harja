@@ -510,3 +510,13 @@ SELECT
   sukunimi
 FROM kayttaja
 WHERE id = :id;
+
+--name: hae-kayttajat-parametreilla
+SELECT
+  kayttajanimi,
+  etunimi,
+  sukunimi
+FROM kayttaja
+WHERE (:kayttajanimi IS NULL OR lower(kayttajanimi) LIKE (CONCAT(lower(:kayttajanimi), '%')))
+      AND (:etunimi IS NULL OR lower(etunimi) LIKE (CONCAT(lower(:etunimi), '%')))
+      AND (:sukunimi IS NULL OR lower(sukunimi) LIKE (CONCAT(lower(:sukunimi), '%')));
