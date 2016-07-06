@@ -74,7 +74,7 @@
      :nimi :vastuuhenkilo
      :leveys 20
      :muokattava? (constantly false)
-     :fmt (fn [_] "TODO NÄYTÄ NIMI")
+     :fmt (fn [_] "TODO Nappi -> hakudialogi")
      :tyyppi :komponentti
      :komponentti (fn [_] [:span "TODO Nappi -> hakudialogi"])}
     {:otsikko "Toteuttaja"

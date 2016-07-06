@@ -12,7 +12,8 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 (def turvallisuuspoikkeama-xf
-  (comp (map konv/alaviiva->rakenne)
+  (comp (map #(konv/string->keyword % :korjaavatoimenpide_tila))
+        (map konv/alaviiva->rakenne)
         (geo/muunna-pg-tulokset :sijainti)
         (map #(konv/array->set % :tyyppi))
         (map #(assoc % :vaaralliset-aineet (into #{} (remove nil?
@@ -59,12 +60,15 @@
                                                      (dissoc % :liite)
                                                      %)
                                                    kommentit)))))]
+    (log/debug "Tulos: " (pr-str tulos))
     tulos))
 
 (defn- luo-tai-paivita-korjaavatoimenpide
-  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu]}]
+  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu
+                         otsikko tila vastuuhenkilo toteuttaja] :as korjaavatoimenpide}]
 
   (log/debug "Tallennetaan korjaavatoimenpide (" id ") turvallisuuspoikkeamalle " tp-id ".")
+  (log/debug "TP:" (pr-str korjaavatoimenpide))
   ;; Jos tämä assertti failaa, joku on hassusti
   (assert
     (or (nil? turvallisuuspoikkeama) (= turvallisuuspoikkeama tp-id))
@@ -72,8 +76,24 @@
     annettu turvallisuuspoikkeaman id.")
 
   (if-not (or (nil? id) (neg? id))
-    (q/paivita-korjaava-toimenpide<! db kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo (or poistettu false) id tp-id)
-    (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
+    (q/paivita-korjaava-toimenpide<!
+      db
+      {:otsikko  otsikko
+       :tila (name tila)
+       :vastuuhenkilo vastuuhenkilo ;; TODO Tee tälle frontti ennen tallennusta
+       :toteuttaja toteuttaja
+       :kuvaus kuvaus
+       :suoritettu (konv/sql-timestamp suoritettu)
+       :poistettu (or poistettu false)
+       :id id
+       :tp tp-id})
+    (q/luo-korjaava-toimenpide<! db {:tp tp-id
+                                     :otsikko  otsikko
+                                     :tila (name tila)
+                                     :vastuuhenkilo vastuuhenkilo ;; TODO Tee tälle frontti ennen tallennusta
+                                     :toteuttaja toteuttaja
+                                     :kuvaus kuvaus
+                                     :suoritettu (konv/sql-timestamp suoritettu)})))
 
 (defn- luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id]
   (when-not (empty? korjaavattoimenpiteet)

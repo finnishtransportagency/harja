@@ -23,8 +23,7 @@ SELECT
   t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
-  k.suoritettu             AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo        AS korjaavatoimenpide_vastaavahenkilo
+  k.suoritettu             AS korjaavatoimenpide_suoritettu
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
 WHERE t.urakka = :urakka
@@ -57,8 +56,7 @@ SELECT
   t.ilmoitukset_lahetetty  AS ilmoituksetlahetetty,
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
-  k.suoritettu             AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo        AS korjaavatoimenpide_vastaavahenkilo
+  k.suoritettu             AS korjaavatoimenpide_suoritettu
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
 WHERE t.urakka IN (SELECT id
@@ -94,7 +92,6 @@ SELECT
   k.id                     AS korjaavatoimenpide_id,
   k.kuvaus                 AS korjaavatoimenpide_kuvaus,
   k.suoritettu             AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo        AS korjaavatoimenpide_vastaavahenkilo
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama AND k.poistettu IS NOT TRUE
 WHERE t.tapahtunut :: DATE BETWEEN :alku AND :loppu
@@ -137,16 +134,19 @@ SELECT
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
 
-  t.tapahtuman_otsikko AS otsikko,
-  t.paikan_kuvaus AS "paikan-kuvaus",
-  t.vaarallisten_aineiden_kuljetus AS "vaarallisten-aineiden-kuljetus",
-  t.vaarallisten_aineiden_vuoto AS "vaarallisten-aineiden-vuoto",
+  t.tapahtuman_otsikko                  AS otsikko,
+  t.paikan_kuvaus                       AS "paikan-kuvaus",
+  t.vaarallisten_aineiden_kuljetus      AS "vaarallisten-aineiden-kuljetus",
+  t.vaarallisten_aineiden_vuoto         AS "vaarallisten-aineiden-vuoto",
   t.tila,
 
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo                     AS korjaavatoimenpide_vastaavahenkilo,
+  k.tila                                AS korjaavatoimenpide_tila,
+  k.otsikko                             AS korjaavatoimenpide_otsikko,
+  k.vastuuhenkilo                       AS korjaavatoimenpide_vastuuhenkilo,
+  k.toteuttaja                          AS korjaavatoimenpide_toteuttaja,
 
   kom.id                                AS kommentti_id,
   kom.tekija                            AS kommentti_tekija,
@@ -229,7 +229,6 @@ SELECT
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo                     AS korjaavatoimenpide_vastaavahenkilo,
 
   kom.id                                AS kommentti_id,
   kom.tekija                            AS kommentti_tekija,
@@ -290,17 +289,35 @@ VALUES (:turvallisuuspoikkeama, :liite);
 --name: paivita-korjaava-toimenpide<!
 UPDATE korjaavatoimenpide
 SET
+  otsikko         = :otsikko,
+  tila            = :tila,
+  vastuuhenkilo   = :vastuuhenkilo,
+  toteuttaja      = :toteuttaja,
   kuvaus          = :kuvaus,
   suoritettu      = :suoritettu,
-  vastaavahenkilo = :vastaava,
   poistettu       = :poistettu
-WHERE id = :id AND turvallisuuspoikkeama = :tp;
+WHERE id = :id
+      AND turvallisuuspoikkeama = :tp;
 
 --name: luo-korjaava-toimenpide<!
 INSERT INTO korjaavatoimenpide
-(turvallisuuspoikkeama, kuvaus, suoritettu, vastaavahenkilo, poistettu)
+(turvallisuuspoikkeama,
+ otsikko,
+ tila,
+ vastuuhenkilo,
+ toteuttaja,
+ kuvaus,
+ suoritettu,
+ poistettu)
 VALUES
-  (:tp, :kuvaus, :suoritettu, :vastaava, FALSE);
+  (:tp,
+   :otsikko,
+   :tila :: korjaavatoimenpide_tila,
+   :vastuuhenkilo,
+   :toteuttaja,
+   :kuvaus,
+   :suoritettu,
+   FALSE);
 
 --name: paivita-turvallisuuspoikkeama!
 UPDATE turvallisuuspoikkeama
@@ -480,8 +497,7 @@ WHERE id = :id;
 SELECT
   id,
   kuvaus,
-  suoritettu,
-  vastaavahenkilo
+  suoritettu
 FROM korjaavatoimenpide
 WHERE turvallisuuspoikkeama = :id AND poistettu IS NOT TRUE;
 
