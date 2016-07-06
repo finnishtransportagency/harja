@@ -528,3 +528,6 @@ WHERE (:kayttajanimi IS NULL OR lower(kayttajanimi) LIKE (CONCAT(lower(:kayttaja
       AND (:sukunimi IS NULL OR lower(sukunimi) LIKE (CONCAT(lower(:sukunimi), '%')))
       AND poistettu IS FALSE
       AND jarjestelma IS FALSE;
+
+-- name: hae-turvallisuuspoikkeaman-urakka
+SELECT urakka FROM turvallisuuspoikkeama WHERE id = :id;

@@ -199,13 +199,27 @@
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
       tp-id)))
 
+(defn- vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan [db urakka-id turvallisuuspoikkeama-id]
+  (let [turpon-todellinen-urakka-id (:urakka (first
+                                               (q/hae-turvallisuuspoikkeaman-urakka db turvallisuuspoikkeama-id)))]
+    (log/debug "Tarkistetaan, että väitetty urakka-id " urakka-id " = " turpon-todellinen-urakka-id)
+    (when (not= turpon-todellinen-urakka-id urakka-id)
+      (throw (RuntimeException. "Annettu turvallisuuspoikkeama ei kuulu väitettyyn urakkaan.")))))
+
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka tp))
+  ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
+  (vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan db (:urakka tp) (:id tp))
   (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti (:urakka tp))]
     (when turi
+      ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
       (turi/laheta-turvallisuuspoikkeama turi id)))
-  (hae-turvallisuuspoikkeamat db user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))
+  (hae-turvallisuuspoikkeamat db
+                              user
+                              {:urakka-id (:urakka tp)
+                               :alku (first hoitokausi)
+                               :loppu (second hoitokausi)}))
 
 (defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))
