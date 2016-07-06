@@ -137,6 +137,12 @@ SELECT
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
 
+  t.tapahtuman_otsikko AS otsikko,
+  t.paikan_kuvaus AS "paikan-kuvaus",
+  t.vaarallisten_aineiden_kuljetus AS "vaarallisten-aineiden-kuljetus",
+  t.vaarallisten_aineiden_vuoto AS "vaarallisten-aineiden-vuoto",
+  t.tila,
+
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
@@ -417,6 +423,11 @@ INSERT INTO turvallisuuspoikkeama
  ilmoittaja_sukunimi,
  ulkoinen_id,
  ilmoitukset_lahetetty,
+ tapahtuman_otsikko,
+ paikan_kuvaus,
+ vaarallisten_aineiden_kuljetus,
+ vaarallisten_aineiden_vuoto,
+ tila,
  lahde)
 VALUES
   (:urakka,
@@ -453,6 +464,11 @@ VALUES
    :ilmoittaja_sukunimi,
    :ulkoinen_id,
    :ilmoitukset_lahetetty,
+   :tapahtuman_otsikko,
+   :paikan_kuvaus,
+   :vaarallisten_aineiden_kuljetus,
+   :vaarallisten_aineiden_vuoto,
+   :tila :: turvallisuuspoikkeama_tila,
    :lahde :: lahde);
 
 --name: lokita-lahetys<!

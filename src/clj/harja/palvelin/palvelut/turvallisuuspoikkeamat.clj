@@ -15,6 +15,13 @@
   (comp (map konv/alaviiva->rakenne)
         (geo/muunna-pg-tulokset :sijainti)
         (map #(konv/array->set % :tyyppi))
+        (map #(assoc % :vaaralliset-aineet (into #{} (remove nil?
+                                                             [(when (:vaarallisten-aineiden-kuljetus %)
+                                                                :vaarallisten-aineiden-kuljetus)
+                                                              (when (:vaarallisten-aineiden-vuoto %)
+                                                                :vaarallisten-aineiden-kuljetus)]))))
+        (map #(dissoc % :vaarallisten-aineiden-kuljetus))
+        (map #(dissoc % :vaarallisten-aineiden-vuoto))
         (map #(konv/string-set->keyword-set % :tyyppi))
         (map #(konv/array->set % :vahinkoluokittelu))
         (map #(konv/string-set->keyword-set % :vahinkoluokittelu))
@@ -23,6 +30,7 @@
         (map #(konv/array->set % :vammat))
         (map #(konv/string-set->keyword-set % :vammat))
         (map #(konv/string->keyword % :vakavuusaste))
+        (map #(konv/string->keyword % :tila))
         (map #(konv/string->keyword % :vaylamuoto))
         (map #(konv/string->keyword % :tyontekijanammatti))
         (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
@@ -89,9 +97,9 @@
                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
-                   laatijaetunimi laatijasukunimi
+                   laatijaetunimi laatijasukunimi otsikko paikan-kuvaus vaaralliset-aineet
                    turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
-                   ilmoituksetlahetetty]}]
+                   ilmoituksetlahetetty tila]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
         parametrit
         (merge oletusparametrit
@@ -120,6 +128,15 @@
                 :laatija_sukunimi laatijasukunimi
                 :turvallisuuskoordinaattori_etunimi turvallisuuskoordinaattorietunimi
                 :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi
+                :tapahtuman_otsikko otsikko
+                :paikan_kuvaus paikan-kuvaus
+                :vaarallisten_aineiden_kuljetus
+                (boolean (some #{:vaarallisten-aineiden-kuljetus}
+                               vaaralliset-aineet))
+                :vaarallisten_aineiden_vuoto
+                (boolean (some #{:vaarallisten-aineiden-vuoto}
+                               vaaralliset-aineet))
+                :tila (name tila)
                 :ilmoitukset_lahetetty (konv/sql-timestamp ilmoituksetlahetetty)})]
     (if id
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
@@ -132,7 +149,7 @@
     (let [liite (some->> uusi-kommentti
                          :liite
                          :id
-                         (liitteet/hae-urakan-liite-id db (:urakka tp))
+                         (liitteet/hae-urakan-liite-id db urakka)
                          first
                          :id)
           kommentti (kommentit/luo-kommentti<! db
@@ -140,9 +157,9 @@
                                                (:kommentti uusi-kommentti)
                                                liite
                                                (:id user))]
-      (q/liita-kommentti<! db id (:id kommentti)))))
+      (q/liita-kommentti<! db tp-id (:id kommentti)))))
 
-(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi]
+(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti]
   (jdbc/with-db-transaction [db db]
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
@@ -152,7 +169,7 @@
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka tp))
-  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi)]
+  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti)]
     (when turi
       (turi/laheta-turvallisuuspoikkeama turi id)))
   (hae-turvallisuuspoikkeamat db user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))
