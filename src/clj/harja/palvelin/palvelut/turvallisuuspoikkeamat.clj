@@ -87,7 +87,8 @@
        :laatija (:id user)
        :poistettu (or poistettu false)
        :id id
-       :tp tp-id})
+       :tp tp-id
+       :urakka urakka})
     (q/luo-korjaava-toimenpide<! db {:tp tp-id
                                      :otsikko  otsikko
                                      :tila (name tila)

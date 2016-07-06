@@ -263,7 +263,8 @@ SET
   laatija         = :laatija,
   poistettu       = :poistettu
 WHERE id = :id
-      AND turvallisuuspoikkeama = :tp;
+      AND turvallisuuspoikkeama = :tp
+      AND (SELECT urakka FROM turvallisuuspoikkeama WHERE id = 1) = :urakka;
 
 --name: luo-korjaava-toimenpide<!
 INSERT INTO korjaavatoimenpide
@@ -321,14 +322,15 @@ SET
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
   ilmoitukset_lahetetty               = :ilmoitukset_lahetetty
-WHERE id = :id;
+WHERE id = :id
+      AND urakka = :urakka;
 
 -- name: hae-turvallisuuspoikkeaman-id-ulkoisella-idlla
 -- single?: true
 SELECT id
 FROM turvallisuuspoikkeama
 WHERE ulkoinen_id = :ulkoinen_id AND
-      luoja = :luoja
+      luoja = :luoja;
 
 --name: paivita-turvallisuuspoikkeama-ulkoisella-idlla!
 UPDATE turvallisuuspoikkeama
