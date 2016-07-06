@@ -20,78 +20,41 @@
         "losa": 814,
         "let": 1912
       },
-      "yllapitokohdeosat": {
-        "nimi": "1. testialikohdt",
-        "tunnus": "A",
-        "sijainti": {
-          "aosa": 810,
-          "aet": 137,
-          "losa": 812,
-          "let": 1
-        },
-        "paallystetyyppi": "avoin asfaltti",
-        "raekoko": 12,
-        "massamenekki": 22,
-        "rc-prosentti": 54,
-        "tyomenetelma": "Uraremix",
-        "leveys": 1.2,
-        "kokonaismassamaara": 12.3,
-        "pinta-ala": 2.2,
-        "kuulamylly": "N14",
-        "kivi-ja-sideaineet": [
-          "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet",
-          "maxItems": 100,
-          "type": "array",
-          "items": {
-            "esiintyma": {
-              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/esiintyma",
-              "type": "string"
+      "alikohteet": [
+        {
+          "alikohde": {
+            "nimi": "1. testialikohde",
+            "tunnus": "A",
+            "sijainti": {
+              "aosa": 810,
+              "aet": 137,
+              "losa": 812,
+              "let": 1
             },
-            "km-arvo": {
-              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/km-arvo",
-              "type": "string"
-            },
-            "muotoarvo": {
-              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/muotoarvo",
-              "type": "string"
-            },
-            "sideainetyyppi": {
-              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/sideainetyyppi",
-              "enum": [
-                "1",
-                "2",
-                "3",
-                "4",
-                "5",
-                "6",
-                "7",
-                "8",
-                "9",
-                "10",
-                "11",
-                "12",
-                "13",
-                "14",
-                "15",
-                "16",
-                "17",
-                "18",
-                "19",
-                "20",
-                "21",
-                "22"
-              ]
-            },
-            "pitoisuus": {
-              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/pitoisuus",
-              "type": "number"
-            },
-            "lisa-aineet": {
-              "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/kivi-ja-sideaineet/lisa-aineet",
-              "type": "string"
-            }
+            "paallystetyyppi": "avoin asfaltti",
+            "raekoko": 12,
+            "massamenekki": 22,
+            "rc-prosentti": 54,
+            "tyomenetelma": "Uraremix",
+            "leveys": 1.2,
+            "kokonaismassamaara": 12.3,
+            "pinta-ala": 2.2,
+            "kuulamylly": "N14",
+            "kivi-ja-sideaineet": [
+              {
+                "kivi-ja-sideaine": {
+                  "esiintyma": "testi",
+                  "km-arvo": "testi",
+                  "muotoarvo": "testi",
+                  "sideainetyyppi": "1",
+                  "pitoisuus": 1.2,
+                  "lisa-aineet": "lisäaineet"
+                }
+              }
+            ]
           }
-         ]
-      }
+        }
+      ]
     }
   }
+}
