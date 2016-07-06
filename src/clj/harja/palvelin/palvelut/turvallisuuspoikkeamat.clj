@@ -64,8 +64,9 @@
     tulos))
 
 (defn- luo-tai-paivita-korjaavatoimenpide
-  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu
-                         otsikko tila vastuuhenkilo toteuttaja] :as korjaavatoimenpide}]
+  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu poistettu
+                         otsikko tila vastuuhenkilo toteuttaja] :as korjaavatoimenpide}
+   urakka]
 
   (log/debug "Tallennetaan korjaavatoimenpide (" id ") turvallisuuspoikkeamalle " tp-id ".")
   (log/debug "TP:" (pr-str korjaavatoimenpide))
@@ -98,11 +99,11 @@
                                      :suoritettu (konv/sql-timestamp suoritettu)
                                      :laatija (:id user)})))
 
-(defn- luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id]
+(defn- luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id urakka]
   (when-not (empty? korjaavattoimenpiteet)
     (doseq [korjaavatoimenpide korjaavattoimenpiteet]
       (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
-      (luo-tai-paivita-korjaavatoimenpide db user tp-id korjaavatoimenpide))))
+      (luo-tai-paivita-korjaavatoimenpide db user tp-id korjaavatoimenpide urakka))))
 
 (def oletusparametrit {:ulkoinen_id nil
                        :ilmoittaja_etunimi nil
@@ -182,17 +183,17 @@
                                                (:id user))]
       (q/liita-kommentti<! db tp-id (:id kommentti)))))
 
-(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti]
+(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
   (jdbc/with-db-transaction [db db]
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
-      (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id)
+      (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
       tp-id)))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka tp))
-  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti)]
+  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti (:urakka tp))]
     (when turi
       (turi/laheta-turvallisuuspoikkeama turi id)))
   (hae-turvallisuuspoikkeamat db user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))
