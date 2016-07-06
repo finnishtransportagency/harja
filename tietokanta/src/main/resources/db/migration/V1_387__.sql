@@ -1,4 +1,7 @@
 -- Yhtenäistä Harjan turvallisuuspoikkeama TURI:n kanssa
+
+-- Turvallisuuspoikkeaman päivitys
+
 ALTER TABLE turvallisuuspoikkeama DROP COLUMN paattynyt;
 ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyotehtava;
 
@@ -12,6 +15,10 @@ ALTER TABLE turvallisuuspoikkeama ADD COLUMN tila turvallisuuspoikkeama_tila;
 
 ALTER TABLE turvallisuuspoikkeama ALTER COLUMN kuvaus TYPE VARCHAR(4000);
 ALTER TABLE turvallisuuspoikkeama ALTER COLUMN aiheutuneet_seuraukset TYPE VARCHAR(4000);
+
+-- Korjaavan toimenpiteen päivitys
+
+ALTER TABLE korjaavatoimenpide DROP COLUMN vastaavahenkilo;
 
 CREATE TYPE korjaavatoimenpide_tila AS ENUM ('avoin','siirretty','toteutettu');
 
