@@ -15,6 +15,13 @@
            arvonvahennykset
            kaasuindeksi]))
 
+(defn kasittele-kohteen-tyyppi [tyyppi]
+  (case tyyppi
+    "paallyste" 1
+    "sora" 2
+    "kevytliikenne" 3
+    1))
+
 (defn tee-tierekisteriosoitevali [osoite]
   [:tierekisteriosoitevali
    [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapvm osoite) (:karttapvm osoite) (pvm/nyt)))]
@@ -80,7 +87,7 @@
   [:kohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
-   [:kohdetyyppi yllapitokohdetyyppi]
+   [:kohdetyyppi (kasittele-kohteen-tyyppi yllapitokohdetyyppi)]
    [:kohdetyotyyppi yllapitokohdetyotyyppi]
    (when yhatunnus [:nimi yhatunnus])
    (when aloituspvm [:toiden-aloituspaivamaara (xml/formatoi-paivamaara aloituspvm)])

@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <urakan-kohdehakuvastaus xmlns="http://www.liikennevirasto.fi/xsd/yha">
     <kohteet>
-        <!--Zero or more repetitions:-->
         <kohde>
             <yha-id>3</yha-id>
-            <kohdetyyppi>1</kohdetyyppi>
+            <kohdetyyppi>paallyste</kohdetyyppi>
             <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
             <nimi>string</nimi>
-            <!--Optional:-->
             <yllapitoluokka>1</yllapitoluokka>
-            <!--Optional:-->
             <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
-            <!--Optional:-->
             <nykyinen-paallyste>1</nykyinen-paallyste>
             <tierekisteriosoitevali>
                 <karttapaivamaara>2016-01-01</karttapaivamaara>
@@ -24,7 +20,6 @@
                 <kaista>11</kaista>
             </tierekisteriosoitevali>
             <alikohteet>
-                <!--Zero or more repetitions:-->
                 <alikohde>
                     <yha-id>3</yha-id>
                     <tierekisteriosoitevali>
@@ -38,13 +33,33 @@
                         <kaista>11</kaista>
                     </tierekisteriosoitevali>
                     <tunnus>A</tunnus>
-                    <!--Optional:-->
                     <paallystystoimenpide>
                         <uusi-paallyste>11</uusi-paallyste>
                         <raekoko>12</raekoko>
                         <kokonaismassamaara>124</kokonaismassamaara>
                         <rc-prosentti>14</rc-prosentti>
-                        <!--Optional:-->
+                        <kuulamylly>4</kuulamylly>
+                        <paallystetyomenetelma>22</paallystetyomenetelma>
+                    </paallystystoimenpide>
+                </alikohde>
+                <alikohde>
+                    <yha-id>4</yha-id>
+                    <tierekisteriosoitevali>
+                        <karttapaivamaara>2016-01-01</karttapaivamaara>
+                        <tienumero>3</tienumero>
+                        <aosa>3</aosa>
+                        <aet>3</aet>
+                        <losa>3</losa>
+                        <let>3</let>
+                        <ajorata>0</ajorata>
+                        <kaista>11</kaista>
+                    </tierekisteriosoitevali>
+                    <tunnus>B</tunnus>
+                    <paallystystoimenpide>
+                        <uusi-paallyste>11</uusi-paallyste>
+                        <raekoko>12</raekoko>
+                        <kokonaismassamaara>124</kokonaismassamaara>
+                        <rc-prosentti>14</rc-prosentti>
                         <kuulamylly>4</kuulamylly>
                         <paallystetyomenetelma>22</paallystetyomenetelma>
                     </paallystystoimenpide>
@@ -52,5 +67,4 @@
             </alikohteet>
         </kohde>
     </kohteet>
-    <virhe></virhe>
 </urakan-kohdehakuvastaus>

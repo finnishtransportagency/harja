@@ -21,7 +21,8 @@
    :sopimus {:id (:sopimus kohde)}
    :kohdenumero (:kohdenumero kohde)
    :nimi (:nimi kohde)
-   :tyyppi (:tyyppi kohde)
+   :tyyppi (:yllapitokohdetyyppi kohde)
+   :tyotyyppi (:yllapitokohdetyotyyppi kohde)
    :sijainti (rakenna-sijainti kohde)
    :yllapitoluokka (:yllapitoluokka kohde)
    :keskimaarainen-vuorokausiliikenne (:keskimaarainen-vuorokausiliikenne kohde)
