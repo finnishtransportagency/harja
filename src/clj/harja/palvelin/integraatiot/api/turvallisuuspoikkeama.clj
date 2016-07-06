@@ -77,9 +77,9 @@
                         :toteuttaja toteuttaja
                         :tilaaja tilaaja
                         :numero (:numero tie)
-                        :alkuosa (:aos tie)
+                        :alkuosa (:aosa tie)
                         :alkuetaisyys (:aet tie)
-                        :loppuosa (:los tie)
+                        :loppuosa (:losa tie)
                         :loppuetaisyys (:let tie)
                         :tila "avoin" ;; API:n kautta kirjattu ilmoitus on aina avoin
                         :tapahtuman_otsikko otsikko
