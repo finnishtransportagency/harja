@@ -74,13 +74,14 @@
    [:verkon-sijainti verkon-sijainti]
    [:tekninen-toimenpide tekninen-toimenpide]])
 
-(defn tee-kohde [{:keys [yhaid id tyyppi yhatunnus tr-numero karttapvm] :as kohde}
+(defn tee-kohde [{:keys [yhaid id yllapitokohdetyyppi yllapitokohdetyotyyppi yhatunnus tr-numero karttapvm] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystys-ilmoitus}]
   [:kohde
    (when yhaid [:yha-id yhaid])
    [:harja-id id]
-   [:kohdetyotyyppi tyyppi]
+   [:kohdetyyppi yllapitokohdetyyppi]
+   [:kohdetyotyyppi yllapitokohdetyotyyppi]
    (when yhatunnus [:nimi yhatunnus])
    (when aloituspvm [:toiden-aloituspaivamaara (xml/formatoi-paivamaara aloituspvm)])
    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])

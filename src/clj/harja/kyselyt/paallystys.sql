@@ -19,7 +19,7 @@ FROM yllapitokohde
                                      AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
-      AND tyyppi = 'paallystys' :: yllapitokohdetyotyyppi
+      AND yllapitokohdetyotyyppi = 'paallystys' :: yllapitokohdetyotyyppi
       AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
