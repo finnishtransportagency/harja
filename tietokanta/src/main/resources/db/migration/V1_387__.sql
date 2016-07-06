@@ -15,7 +15,7 @@ ALTER TABLE turvallisuuspoikkeama ALTER COLUMN aiheutuneet_seuraukset TYPE VARCH
 
 CREATE TYPE korjaavatoimenpide_tila AS ENUM ('avoin','siirretty','toteutettu');
 
-ALTER TABLE korjaavatoimenpide ADD COLUMN vapaateksti VARCHAR(2048);
+ALTER TABLE korjaavatoimenpide ADD COLUMN otsikko VARCHAR(2048);
 ALTER TABLE korjaavatoimenpide ADD COLUMN laatija integer REFERENCES kayttaja (id);
 ALTER TABLE korjaavatoimenpide ADD COLUMN vastuuhenkilo integer REFERENCES kayttaja (id);
 ALTER TABLE korjaavatoimenpide ADD COLUMN toteuttaja VARCHAR(1024);
