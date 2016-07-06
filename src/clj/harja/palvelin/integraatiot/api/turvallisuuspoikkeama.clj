@@ -80,8 +80,8 @@
                         :numero (:numero tie)
                         :alkuetaisyys (:aet tie)
                         :loppuetaisyys (:let tie)
-                        :alkuosa (:aos tie)
-                        :loppuosa (:los tie)
+                        :alkuosa (:aosa tie)
+                        :loppuosa (:losa tie)
                         :sijainti (geo/geometry
                                     (geo/clj->pg {:type :point
                                                   :coordinates ((juxt :x :y) koordinaatit)}))
@@ -138,8 +138,8 @@
        :numero (:numero tie)
        :aet (:aet tie)
        :let (:let tie)
-       :aos (:aos tie)
-       :los (:los tie)
+       :aos (:aosa tie)
+       :los (:losa tie)
        :vahingoittuneet_ruumiinosat
        (when (tallenna-henkilovahinko? data) (konv/seq->array vahingoittuneetRuumiinosat))
        :sairauspoissaolo_jatkuu (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
