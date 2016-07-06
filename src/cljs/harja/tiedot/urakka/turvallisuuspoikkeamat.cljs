@@ -31,7 +31,7 @@
   (k/post! :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat {:urakka-id (:urakka-id hakuparametrit)
                                                                 :etunimi (:etunimi hakuparametrit)
                                                                 :sukunimi (:sukunimi hakuparametrit)
-                                                                :kayttajatunnus (:kayttajatunnus hakuparametrit)}))
+                                                                :kayttajanimi (:kayttajanimi hakuparametrit)}))
 
 (defonce haetut-turvallisuuspoikkeamat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

@@ -68,8 +68,8 @@
      :nimi :sukunimi
      :pituus-max 512
      :tyyppi :string}
-    {:otsikko "Käyttäjätunnus"
-     :nimi :kayttajatunnus
+    {:otsikko "Käyttäjänimi"
+     :nimi :kayttajanimi
      :pituus-max 512
      :tyyppi :string}]
    @tiedot/kayttajahakulomake-data])
@@ -81,20 +81,24 @@
              [ajax-loader "Haetaan käyttäjiä..."]
              "Käyttäjiä ei löytynyt")}
    [{:otsikko "Käyttäjätunnus"
-     :nimi :kayttajatunnus
+     :nimi :kayttajanimi
      :tyyppi :string
-     :muokattava? (constantly false)}
+     :muokattava? (constantly false)
+     :leveys 10}
     {:otsikko "Etunimi"
      :nimi :etunimi
      :tyyppi :string
-     :muokattava? (constantly false)}
+     :muokattava? (constantly false)
+     :leveys 10}
     {:otsikko "Sukunimi"
      :nimi :sukunimi
      :tyyppi :string
-     :muokattava? (constantly false)}
+     :muokattava? (constantly false)
+     :leveys 10}
     {:otsikko "Valinta"
      :nimi :valitse
      :tyyppi :komponentti
+     :leveys 5
      :komponentti (fn [rivi]
                     [:button.nappi-ensisijainen {:on-click (fn [e]
                                                              (let [korjaava-toimenpide-id (.preventDefault e)]
