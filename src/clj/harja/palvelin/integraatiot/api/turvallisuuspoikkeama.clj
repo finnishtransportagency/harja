@@ -207,7 +207,7 @@
                                                            (aika-string->java-sql-date (:suoritettu korjaava))
                                                            (:id kirjaaja))
          (catch Throwable t
-           (log/info "Ongelma kirjattaessak orjaava toimenpide: " t)))))
+           (log/info "Ongelma kirjattaessa korjaava toimenpide: " t)))))
 
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
