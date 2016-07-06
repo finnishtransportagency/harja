@@ -210,8 +210,8 @@
                              :paikkaus
                              (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
                              false)
-          tr-sijainnit (atom {})                            ;; onnistuneesti haetut TR-sijainnit
-          tr-virheet (atom {})                              ;; virheelliset TR sijainnit
+          tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
+          tr-virheet (atom {}) ;; virheelliset TR sijainnit
           resetoi-tr-tiedot (fn [] (reset! tr-sijainnit {}) (reset! tr-virheet {}))
 
           [sopimus-id _] @u/valittu-sopimusnumero
