@@ -53,7 +53,7 @@
                                                    kommentit)))))]
     tulos))
 
-(defn luo-tai-paivita-korjaavatoimenpide
+(defn- luo-tai-paivita-korjaavatoimenpide
   [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu]}]
 
   (log/debug "Tallennetaan korjaavatoimenpide (" id ") turvallisuuspoikkeamalle " tp-id ".")
@@ -65,10 +65,9 @@
 
   (if-not (or (nil? id) (neg? id))
     (q/paivita-korjaava-toimenpide<! db kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo (or poistettu false) id tp-id)
-
     (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
 
-(defn luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id]
+(defn- luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id]
   (when-not (empty? korjaavattoimenpiteet)
     (doseq [korjaavatoimenpide korjaavattoimenpiteet]
       (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
@@ -85,7 +84,7 @@
                        :ilmoitukset_lahetetty nil
                        :lahde "harja-ui"})
 
-(defn luo-tai-paivita-turvallisuuspoikkeama
+(defn- luo-tai-paivita-turvallisuuspoikkeama
   [db user {:keys [id urakka tapahtunut kasitelty tyontekijanammatti tyontekijanammattimuu
                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
