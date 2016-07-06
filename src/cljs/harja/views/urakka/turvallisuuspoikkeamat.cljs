@@ -44,6 +44,9 @@
                   (:poistettu (val kartta)))))
             uusi))))))
 
+(defn avaa-kayttajahaku-modal []
+  (log "TODO"))
+
 (defn korjaavattoimenpiteet
   [toimenpiteet]
   [grid/muokkaus-grid
@@ -75,10 +78,11 @@
     {:otsikko "Vastuuhenkilö"
      :nimi :vastuuhenkilo
      :leveys 20
-     :muokattava? (constantly false)
-     :fmt (fn [_] "TODO Nappi -> hakudialogi")
+     :fmt #(str (:etunimi %) " " (:sukunimi %))
      :tyyppi :komponentti
-     :komponentti (fn [_] [:span "TODO Nappi -> hakudialogi"])}
+     :komponentti (fn [_] [:button.nappi-ensisijainen.nappi-grid
+                           {:on-click avaa-kayttajahaku-modal}
+                           "Hae käyttäjä"])}
     {:otsikko "Toteuttaja"
      :nimi :toteuttaja
      :leveys 20
