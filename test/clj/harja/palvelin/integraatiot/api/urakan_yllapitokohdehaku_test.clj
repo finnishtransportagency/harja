@@ -25,7 +25,7 @@
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet" urakka] "Erkki Esimerkki" portti)]
     (is (= 403 (:status vastaus)))
     (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
-                                                                   <
+
 (deftest yllapitokohteiden-haku-ei-toimi-tuntemattomalle-urakalle
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja portti)]
     (is (= 400 (:status vastaus)))
