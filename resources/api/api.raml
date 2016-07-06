@@ -480,7 +480,7 @@ documentation:
           /paallystysilmoitus:
             post:
               is: [secured]
-              description: Päällystysilmoituksen kirjaus
+              description: Päällystysilmoituksen kirjaus. Päällystysilmoituksen kautta on mahdollista päivittää varsinaisen kohteen sijaintia sekä alikohteita. Alikohteet päivitetään aina vanhojen päälle. Alustalle tehdyt toimepiteet sekä alikohteet täytyvät aina osua pääkohteen sisään. Sen lisäksi alikohteiden osoitteisiin ei saa jäädä välejä eivätkä ne saa mennä päällekkäin.
               body:
                 application/json:
                   example: !include examples/ilmoitustoimenpiteen-kirjaaminen-request.json
