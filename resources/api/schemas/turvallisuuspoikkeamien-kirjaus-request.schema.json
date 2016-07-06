@@ -4,13 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "otsikko": {
-      "id": "urn:harja/tiestotarkastuskirjaus",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
-      "required": true
-    },
     "tunniste": {
       "id": "urn:harja/tunniste",
       "type": "object",
@@ -93,17 +86,9 @@
             "type": "string",
             "format": "date-time"
           },
-          "paikan_kuvaus": {
-            "id": "urn:harja/paikan_kuvaus",
+          "toteuttaja": {
+            "id": "urn:harja/toteuttaja",
             "type": "string"
-          },
-          "vaarallisten_aineiden_kuljetus": {
-            "id": "urn:harja/vaarallisten_aineiden_kuljetus",
-            "type": "boolean"
-          },
-          "vaarallisten_aineiden_vuoto": {
-            "id": "urn:harja/vaarallisten_aineiden_vuoto",
-            "type": "boolean"
           },
           "tilaaja": {
             "id": "urn:harja/tilaaja",
@@ -124,6 +109,18 @@
           "kuvaus": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/kuvaus",
             "type": "string"
+          },
+          "paikan_kuvaus": {
+            "id": "urn:harja/paikan_kuvaus",
+            "type": "string"
+          },
+          "vaarallisten_aineiden_kuljetus": {
+            "id": "urn:harja/vaarallisten_aineiden_kuljetus",
+            "type": "boolean"
+          },
+          "vaarallisten_aineiden_vuoto": {
+            "id": "urn:harja/vaarallisten_aineiden_vuoto",
+            "type": "boolean"
           },
           "henkilovahinko": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/henkilovahinko",

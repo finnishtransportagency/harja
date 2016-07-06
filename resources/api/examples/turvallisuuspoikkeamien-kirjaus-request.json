@@ -58,10 +58,10 @@
         "etunimi": "Urho",
         "sukunimi": "Urakoitisja"
       },
+      "otsikko": "Aura-auto suistui tieltä",
       "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
       "kasitelty": "2016-01-30T12:00:00Z",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
-      "otsikko": "Aura-auto suistui tieltä",
       "paikan_kuvaus": "Liukas tie keskellä metsää.",
       "vaarallisten_aineiden_kuljetus": true,
       "vaarallisten_aineiden_vuoto": false,
