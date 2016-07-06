@@ -12,6 +12,9 @@
 
 (def nakymassa? (atom false))
 
+(def kayttajahakulomake-data (atom nil))
+(def kayttajahakutulokset-data (atom []))
+
 (defonce valittu-turvallisuuspoikkeama (atom nil))
 
 (defn hae-urakan-turvallisuuspoikkeamat
@@ -23,6 +26,12 @@
 (defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (k/post! :hae-turvallisuuspoikkeama {:urakka-id                urakka-id
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
+
+(defn hae-kayttajat [hakuparametrit]
+  (k/post! :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat {:urakka-id (:urakka-id hakuparametrit)
+                                                                :etunimi (:etunimi hakuparametrit)
+                                                                :sukunimi (:sukunimi hakuparametrit)
+                                                                :kayttajatunnus (:kayttajatunnus hakuparametrit)}))
 
 (defonce haetut-turvallisuuspoikkeamat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

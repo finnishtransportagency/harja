@@ -16,7 +16,8 @@
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.modal :as modal])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -44,8 +45,79 @@
                   (:poistettu (val kartta)))))
             uusi))))))
 
-(defn avaa-kayttajahaku-modal []
-  (log "TODO"))
+(defn- hakulomake [urakka]
+  [lomake/lomake {:otsikko "Käyttäjän tiedot"
+                  :muokkaa! (fn [uusi-data]
+                              (reset! tiedot/kayttajahakulomake-data uusi-data))
+                  :footer [napit/palvelinkutsu-nappi
+                           "Hae"
+                           #(tiedot/hae-kayttajat (merge {:urakka-id (:id urakka)}
+                                                         @tiedot/kayttajahakulomake-data))
+                           {:luokka "nappi-ensisijainen"
+                            :virheviesti "Käyttäjien haku epäonnistui."
+                            :kun-virhe (fn [_]
+                                         (reset! tiedot/kayttajahakutulokset-data []))
+                            :kun-onnistuu (fn [vastaus]
+                                            (log "[TURPO] Käyttäjät haettu onnistuneesti: " (pr-str vastaus))
+                                            (reset! tiedot/kayttajahakutulokset-data vastaus))}]}
+   [{:otsikko "Etunimi"
+     :nimi :etunimi
+     :pituus-max 512
+     :tyyppi :string}
+    {:otsikko "Sukunimi"
+     :nimi :sukunimi
+     :pituus-max 512
+     :tyyppi :string}
+    {:otsikko "Käyttäjätunnus"
+     :nimi :kayttajatunnus
+     :pituus-max 512
+     :tyyppi :string}]
+   @tiedot/kayttajahakulomake-data])
+
+(defn- hakutulokset []
+  [grid/grid
+   {:otsikko "Löytyneet käyttäjät"
+    :tyhja (if (nil? @tiedot/kayttajahakutulokset-data)
+             [ajax-loader "Haetaan käyttäjiä..."]
+             "Käyttäjiä ei löytynyt")
+    :tunniste :yhatunnus}
+   [{:otsikko "Käyttäjätunnus"
+     :nimi :kayttajatunnus
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "Etunimi"
+     :nimi :etunimi
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "Sukunimi"
+     :nimi :sukunimi
+     :tyyppi :string
+     :muokattava? (constantly false)}
+    {:otsikko "Valinta"
+     :nimi :valitse
+     :tyyppi :komponentti
+     :komponentti (fn [rivi]
+                    [:button.nappi-ensisijainen {:on-click (fn [e]
+                                                             (.preventDefault e)
+                                                             ;; TODO Reset korjaavan toimeenpiteen käyttäjä?
+                                                             (modal/piilota!))}
+                     "Valitse"])}]
+   @tiedot/kayttajahakutulokset-data])
+
+(defn kayttajahaku-modal-sisalto [urakka]
+  [:div
+   [hakulomake urakka]
+   [hakutulokset]])
+
+(defn avaa-kayttajahaku-modal [urakka]
+  (modal/nayta!
+    {:otsikko "Käyttäjähaku"
+     :luokka "turvallisuuspoikkeama-kayttajahaku"
+     :footer [:button.nappi-toissijainen {:on-click (fn [e]
+                                                      (.preventDefault e)
+                                                      (modal/piilota!))}
+              "Sulje"]}
+    [kayttajahaku-modal-sisalto urakka]))
 
 (defn korjaavattoimenpiteet
   [toimenpiteet]
@@ -81,7 +153,7 @@
      :fmt #(str (:etunimi %) " " (:sukunimi %))
      :tyyppi :komponentti
      :komponentti (fn [_] [:button.nappi-ensisijainen.nappi-grid
-                           {:on-click avaa-kayttajahaku-modal}
+                           {:on-click #(avaa-kayttajahaku-modal @nav/valittu-urakka)}
                            "Hae käyttäjä"])}
     {:otsikko "Toteuttaja"
      :nimi :toteuttaja

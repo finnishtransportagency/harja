@@ -198,6 +198,12 @@
       (turi/laheta-turvallisuuspoikkeama turi id)))
   (hae-turvallisuuspoikkeamat db user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))
 
+(defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))
+  ;; TODO Suorita kantahaku
+  [{:etunimi "Seppo" :sukunimi "Harja" :kayttajatunnus "LX123123"}
+   {:etunimi "Pertti" :sukunimi "Harja" :kayttajatunnus "LX666"}])
+
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle
   (start [this]
@@ -205,6 +211,10 @@
                        :hae-turvallisuuspoikkeamat
                        (fn [user tiedot]
                          (hae-turvallisuuspoikkeamat (:db this) user tiedot))
+
+                       :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat
+                       (fn [user hakuehdot]
+                         (hae-hakulomakkeen-kayttajat (:db this) user hakuehdot))
 
                        :hae-turvallisuuspoikkeama
                        (fn [user tiedot]
