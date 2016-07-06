@@ -84,7 +84,7 @@
                         :tila "avoin" ;; API:n kautta kirjattu ilmoitus on aina avoin
                         :tapahtuman_otsikko otsikko
                         :vaarallisten_aineiden_kuljetus vaarallisten_aineiden_kuljetus
-                        :vaarallisten_aineiden_vuoto vaarallisten_aineiden_vuoto
+                        :vaarallisten_aineiden_vuoto vaarallisten_aineiden_vuoto ;; TODO Ei saa olla true jos edellinen false
                         :paikan_kuvaus paikan_kuvaus
                         :sijainti (geo/geometry
                                     (geo/clj->pg {:type :point

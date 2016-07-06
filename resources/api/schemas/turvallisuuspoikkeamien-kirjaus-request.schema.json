@@ -77,6 +77,11 @@
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
           },
+          "otsikko": {
+            "id": "urn:harja/otsikko",
+            "type": "string",
+            "required": true
+          },
           "tapahtumapaivamaara": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/tapahtumapaivamaara",
             "type": "string",
@@ -88,9 +93,17 @@
             "type": "string",
             "format": "date-time"
           },
-          "toteuttaja": {
-            "id": "urn:harja/toteuttaja",
+          "paikan_kuvaus": {
+            "id": "urn:harja/paikan_kuvaus",
             "type": "string"
+          },
+          "vaarallisten_aineiden_kuljetus": {
+            "id": "urn:harja/vaarallisten_aineiden_kuljetus",
+            "type": "boolean"
+          },
+          "vaarallisten_aineiden_vuoto": {
+            "id": "urn:harja/vaarallisten_aineiden_vuoto",
+            "type": "boolean"
           },
           "tilaaja": {
             "id": "urn:harja/tilaaja",
