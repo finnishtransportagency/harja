@@ -15,7 +15,8 @@
             [harja.ui.kommentit :as kommentit]
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -69,7 +70,8 @@
      :leveys 20
      :tyyppi :string
      :muokattava? (constantly false)
-     :fmt (fn [_] "TODO NÄYTÄ NIMI")} ;; TODO NÄYTÄ NIMI
+     :fmt (fn [_] (str (:etunimi @istunto/kayttaja)
+                       " " (:sukunimi @istunto/kayttaja)))}
     {:otsikko "Vastuuhenkilö"
      :nimi :vastuuhenkilo
      :leveys 20

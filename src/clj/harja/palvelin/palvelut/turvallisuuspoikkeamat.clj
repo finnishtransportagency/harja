@@ -84,6 +84,7 @@
        :toteuttaja toteuttaja
        :kuvaus kuvaus
        :suoritettu (konv/sql-timestamp suoritettu)
+       :laatija (:id user)
        :poistettu (or poistettu false)
        :id id
        :tp tp-id})
@@ -93,7 +94,8 @@
                                      :vastuuhenkilo vastuuhenkilo ;; TODO Tee tälle frontti ennen tallennusta
                                      :toteuttaja toteuttaja
                                      :kuvaus kuvaus
-                                     :suoritettu (konv/sql-timestamp suoritettu)})))
+                                     :suoritettu (konv/sql-timestamp suoritettu)
+                                     :laatija (:id user)})))
 
 (defn- luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id]
   (when-not (empty? korjaavattoimenpiteet)

@@ -255,11 +255,12 @@ VALUES (:turvallisuuspoikkeama, :liite);
 UPDATE korjaavatoimenpide
 SET
   otsikko         = :otsikko,
-  tila            = :tila,
+  tila            = :tila :: korjaavatoimenpide_tila,
   vastuuhenkilo   = :vastuuhenkilo,
   toteuttaja      = :toteuttaja,
   kuvaus          = :kuvaus,
   suoritettu      = :suoritettu,
+  laatija         = :laatija,
   poistettu       = :poistettu
 WHERE id = :id
       AND turvallisuuspoikkeama = :tp;
@@ -273,6 +274,7 @@ INSERT INTO korjaavatoimenpide
  toteuttaja,
  kuvaus,
  suoritettu,
+ laatija,
  poistettu)
 VALUES
   (:tp,
@@ -282,6 +284,7 @@ VALUES
    :toteuttaja,
    :kuvaus,
    :suoritettu,
+   :laatija,
    FALSE);
 
 --name: paivita-turvallisuuspoikkeama!
