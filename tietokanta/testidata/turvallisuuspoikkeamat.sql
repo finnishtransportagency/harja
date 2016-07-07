@@ -40,8 +40,7 @@ INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, tila, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,
  sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
-  ('harja-ui'::lahde, 'tie'::vaylamuoto, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-11-01 20:00.00',
-                      ''avoin''::turvallisuuspoikkeama_tila,
+  ('harja-ui'::lahde, 'tie'::vaylamuoto, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-11-01 20:00.00', 'avoin'::turvallisuuspoikkeama_tila,
                                                                     'porari'::tyontekijanammatti, 'Jormalla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
                                                                     4, 3, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435887, 7216237)::GEOMETRY, 6, 6, 6, 6, 6,
    ARRAY['turvallisuushavainto']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'vakava'::turvallisuuspoikkeama_vakavuusaste);
