@@ -30,7 +30,7 @@
 (deftest tallenna-turvallisuuspoikkeama
   (let [urakka (hae-oulun-alueurakan-2005-2012-id)
         tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
-        vastaus (api-tyokalut/post-kutsu ["/api/urakat/"urakka"/turvallisuuspoikkeama"]
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                                          kayttaja portti
                                          (-> "test/resurssit/api/turvallisuuspoikkeama.json" slurp))]
     (cheshire/decode (:body vastaus) true)
@@ -49,6 +49,7 @@
 
     ;; Tiukka tarkastus, datan pitää olla kirjattu täysin oikein
     (let [uusin-tp (as-> (first (q (str "SELECT
+                                  id,
                                   urakka,
                                   tapahtunut,
                                   kasitelty,
@@ -85,21 +86,22 @@
                                   vaarallisten_aineiden_vuoto
                                   FROM turvallisuuspoikkeama
                                   ORDER BY luotu DESC
-                                  LIMIT 1")))
+                                  LIMIT 1;")))
                          turpo
-                         (assoc turpo 1 (c/from-sql-date (get turpo 1)))
+                         ;; Tapahtumapvm ja käsittely -> clj-time
                          (assoc turpo 2 (c/from-sql-date (get turpo 2)))
+                         (assoc turpo 3 (c/from-sql-date (get turpo 3)))
                          ;; Vahinkoluokittelu -> set
-                         (assoc turpo 12 (into #{} (.getArray (get turpo 12))))
+                         (assoc turpo 13 (into #{} (.getArray (get turpo 13))))
                          ;; Tyyppi -> set
-                         (assoc turpo 14 (into #{} (.getArray (get turpo 14))))
+                         (assoc turpo 15 (into #{} (.getArray (get turpo 15))))
                          ;; Vammat -> set
-                         (assoc turpo 18 (into #{} (.getArray (get turpo 18))))
+                         (assoc turpo 19 (into #{} (.getArray (get turpo 19))))
                          ;; Vahingoittuneet ruumiinosat -> set
-                         (assoc turpo 19 (into #{} (.getArray (get turpo 19)))))]
-
+                         (assoc turpo 20 (into #{} (.getArray (get turpo 20)))))]
       (is (vector uusin-tp))
-      (is (match uusin-tp [urakka
+      (is (match uusin-tp [_
+                           urakka
                            (_ :guard #(and (= (t/year %) 2016)
                                            (= (t/month %) 1)
                                            (= (t/day %) 30)))
@@ -137,4 +139,31 @@
                            "Liukas tie keskellä metsää."
                            true
                            false]
-                 true)))))
+                 true))
+
+      ;; Myös korjaava toimenpide kirjattu täysin oikein
+      (let [turpo-id (first uusin-tp)
+            korjaava-toimenpide (as-> (first (q (str "SELECT
+                                                      kuvaus,
+                                                      suoritettu,
+                                                      otsikko,
+                                                      vastuuhenkilo,
+                                                      toteuttaja,
+                                                      tila
+                                                      FROM korjaavatoimenpide
+                                                      WHERE turvallisuuspoikkeama = " turpo-id ";")))
+                                      toimenpide
+                                      (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1))))]
+
+        (is (number? turpo-id))
+        (is (vector korjaava-toimenpide))
+        (is (match korjaava-toimenpide
+                   ["Kaadetaan risteystä pimentävä pensaikko"
+                    (_ :guard #(and (= (t/year %) 2016)
+                                    (= (t/month %) 1)
+                                    (= (t/day %) 30)))
+                    "Kaadetaan pensaikko"
+                    nil
+                    "Erkki Esimerkki"
+                    "avoin"]
+                   true))))))
