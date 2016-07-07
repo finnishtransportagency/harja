@@ -135,7 +135,6 @@
 
 (defn korjaavattoimenpiteet
   [toimenpiteet]
-  (log "[TURPO] Render toimenpiteet: " (pr-str toimenpiteet))
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
    [{:otsikko "Otsikko"
@@ -267,7 +266,9 @@
                :otsikko "Tila"
                :nimi :tila
                :pakollinen? true
-               :validoi [[:ei-tyhja "Valitse tila"]]
+               :validoi [[:ei-tyhja "Valitse tila"]
+                         [:ei-avoimia-korjaavia-toimenpiteitä
+                          "Voidaan sulkea vasta kun kaikki korjaavat toimenpiteet on suljettu"]]
                :tyyppi :valinta
                :valinta-nayta #(or (turpon-tilakuvaukset %)
                                    "- valitse -")
@@ -402,7 +403,8 @@
        {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
         :hae turpodomain/kuvaile-tyontekijan-ammatti}
        {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys 45}
-       {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpon-tilakuvaukset}
+       {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpon-tilakuvaukset
+        :validoi [[:ei-tyhja "Valitse tila"]]}
        {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys 5
         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
        {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys 5

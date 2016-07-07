@@ -97,6 +97,11 @@
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
+  (when (some #(or (= (:tila %) :avoin)
+                   (nil? (:tila %))) (:korjaavattoimenpiteet lomake))
+    viesti))
+
 (defmethod validoi-saanto :joku-naista [_ _ data rivi _ & avaimet-ja-viesti]
   (let [avaimet (if (string? (last avaimet-ja-viesti)) (butlast avaimet-ja-viesti) avaimet-ja-viesti)
         viesti (if (string? (last avaimet-ja-viesti))
