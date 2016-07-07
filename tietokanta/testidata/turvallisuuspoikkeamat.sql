@@ -1,18 +1,20 @@
 INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, kasitelty, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,
-sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
+sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste,
+vaarallisten_aineiden_kuljetus, vaarallisten_aineiden_vuoto)
 VALUES
 ('harja-ui'::lahde, 'tie'::vaylamuoto, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), '2005-10-01 10:00.00', '2005-10-06 09:00.00',
 'porari'::tyontekijanammatti, 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6,
-ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'lieva'::turvallisuuspoikkeama_vakavuusaste);
+ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'lieva'::turvallisuuspoikkeama_vakavuusaste,
+true, true);
 
 INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, kasitelty, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,
  sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
   ('harja-ui'::lahde, 'tie'::vaylamuoto, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), '2015-10-01 20:00.00', '2015-10-06 23:00.00',
-                                                                    'porari'::tyontekijanammatti, 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
+                                                                    'porari'::tyontekijanammatti, 'Ernolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
                                                                     7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6,
    ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'vakava'::turvallisuuspoikkeama_vakavuusaste);
 
@@ -58,7 +60,7 @@ INSERT INTO turvallisuuspoikkeama
  sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste)
 VALUES
   ('harja-ui'::lahde, 'tie'::vaylamuoto, (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2012-10-01 10:00.00', '2012-10-06 09:00.00',
-                                                                          'porari'::tyontekijanammatti, 'Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
+                                                                          'porari'::tyontekijanammatti, 'Kalevilla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt.',
                                                                     7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(227110, 6820660) :: GEOMETRY, 6, 6, 6, 6, 6,
    ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'lieva'::turvallisuuspoikkeama_vakavuusaste);
 

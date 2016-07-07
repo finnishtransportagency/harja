@@ -20,7 +20,7 @@
                                                              [(when (:vaarallisten-aineiden-kuljetus %)
                                                                 :vaarallisten-aineiden-kuljetus)
                                                               (when (:vaarallisten-aineiden-vuoto %)
-                                                                :vaarallisten-aineiden-kuljetus)]))))
+                                                                :vaarallisten-aineiden-vuoto)]))))
         (map #(dissoc % :vaarallisten-aineiden-kuljetus))
         (map #(dissoc % :vaarallisten-aineiden-vuoto))
         (map #(konv/string-set->keyword-set % :tyyppi))
