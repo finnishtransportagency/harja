@@ -84,19 +84,6 @@
         (assoc turpo 20 (into #{} (when-let [arvo (get turpo 20)]
                                     (.getArray arvo))))))
 
-(defn hae-korjaava-toimenpide [turpo-id]
-  (as-> (first (q (str "SELECT
-                        kuvaus,
-                        suoritettu,
-                        otsikko,
-                        vastuuhenkilo,
-                        toteuttaja,
-                        tila
-                        FROM korjaavatoimenpide
-                        WHERE turvallisuuspoikkeama = " turpo-id ";")))
-        toimenpide
-        (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1)))))
-
 (defn hae-korjaavat-toimenpiteet [turpo-id]
   (as-> (q (str "SELECT
                         kuvaus,
@@ -136,7 +123,7 @@
     ;; Tiukka tarkastus, datan pitää olla kirjattu täysin oikein
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
-          korjaava-toimenpide (hae-korjaava-toimenpide turpo-id)]
+          korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
       (is (match uusin-tp [_
                            urakka
                            (_ :guard #(and (= (t/year %) 2016)
@@ -177,7 +164,8 @@
                            true
                            false]
                  true))
-      (is (match korjaava-toimenpide
+      (is (= (count korjaavat-toimenpiteet) 1))
+      (is (match (first korjaavat-toimenpiteet)
                  ["Kaadetaan risteystä pimentävä pensaikko"
                   (_ :guard #(and (= (t/year %) 2016)
                                   (= (t/month %) 1)
