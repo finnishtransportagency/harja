@@ -141,7 +141,7 @@
                {:urakka urakka
                 :tapahtunut (konv/sql-timestamp tapahtunut)
                 :kasitelty (when (= tila :suljettu)
-                             (konv/sql-timestamp (t/now)))
+                             (konv/sql-timestamp (c/to-date (t/now))))
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
                 :kuvaus kuvaus
