@@ -86,28 +86,30 @@
     "Korjaavan toimenpiteen 'turvallisuuspoikkeama' pitäisi olla joko tyhjä (uusi korjaava), tai sama kuin parametrina
     annettu turvallisuuspoikkeaman id.")
 
-  (log/debug "Tallenna orjaava toimenpide " (pr-str korjaavatoimenpide))
+  (log/debug "Tallenna korjaava toimenpide " (pr-str korjaavatoimenpide))
   (if-not (or (nil? id) (neg? id))
     (q/paivita-korjaava-toimenpide<!
       db
-      {:otsikko  otsikko
+      {:otsikko otsikko
        :tila (name tila)
        :vastuuhenkilo (:id vastuuhenkilo)
        :toteuttaja toteuttaja
        :kuvaus kuvaus
-       :suoritettu (konv/sql-timestamp suoritettu)
+       :suoritettu (when suoritettu
+                     (konv/sql-timestamp suoritettu))
        :laatija (:id user)
        :poistettu (or poistettu false)
        :id id
        :tp tp-id
        :urakka urakka})
     (q/luo-korjaava-toimenpide<! db {:tp tp-id
-                                     :otsikko  otsikko
+                                     :otsikko otsikko
                                      :tila (name tila)
                                      :vastuuhenkilo (:id vastuuhenkilo)
                                      :toteuttaja toteuttaja
                                      :kuvaus kuvaus
-                                     :suoritettu (konv/sql-timestamp suoritettu)
+                                     :suoritettu (when suoritettu
+                                                   (konv/sql-timestamp suoritettu))
                                      :laatija (:id user)})))
 
 (defn- luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id urakka]
@@ -173,7 +175,8 @@
                 (boolean (some #{:vaarallisten-aineiden-vuoto}
                                vaaralliset-aineet))
                 :tila (name tila)
-                :ilmoitukset_lahetetty (konv/sql-timestamp ilmoituksetlahetetty)})]
+                :ilmoitukset_lahetetty (when ilmoituksetlahetetty
+                                         (konv/sql-timestamp ilmoituksetlahetetty))})]
     (if id
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
