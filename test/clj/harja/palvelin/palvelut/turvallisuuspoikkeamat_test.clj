@@ -306,7 +306,7 @@
                                                       WHERE turvallisuuspoikkeama = " turpo-id ";")))
                                     toimenpide
                                     (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1))))]
-      #_(is (match uusin-tp [_
+      (is (match uusin-tp [_
                              1
                              (_ :guard #(and (= (t/year %) 2005)
                                              (= (t/month %) 9)
@@ -346,7 +346,7 @@
                              false
                              false]
                    true))
-      #_(is (match korjaava-toimenpide
+      (is (match korjaava-toimenpide
                    ["Ei ressata liikaa"
                     nil
                     "Ressi pois!"
