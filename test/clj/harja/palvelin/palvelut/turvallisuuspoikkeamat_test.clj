@@ -250,8 +250,27 @@
     (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-turvallisuuspoikkeama
                             +kayttaja-jvh+
-                            {:tp (assoc tp :paikan-kuvaus "Luminen metsätie")
-                             :korjaavattoimenpiteet korjaavattoimenpiteet
+                            {:tp (assoc tp :paikan-kuvaus "Luminen metsätie"
+                                           :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
+                                           :kasitelty (pvm/luo-pvm (+ 1900 105) 9 1)
+                                           :tyontekijanammatti :porari
+                                           :kuvaus "e2e taas punaisena"
+                                           :vammat #{:sokki}
+                                           :sairauspoissaolopaivat 0
+                                           :sairaalavuorokaudet 0
+                                           :vakavuusaste :vakava
+                                           :vaylamuoto :tie
+                                           :tyyppi #{:tyotapaturma}
+                                           :otsikko "Kävi tosi möhösti"
+                                           :tila :avoin
+                                           :vahinkoluokittelu #{:ymparistovahinko}
+                                           :sijainti {:type :point :coordinates [0 0]}
+                                           :tr {:numero 1 :alkuetaisyys 2 :loppuetaisyys 3 :alkuosa 4 :loppuosa 5})
+                             :korjaavattoimenpiteet [{:kuvaus "Ei ressata yhtään"
+                                                      :otsikko "Ressi pois vaan!"
+                                                      :tila :avoin
+                                                      :suoritettu nil
+                                                      :vastaavahenkilo "Kaikki yhdessä"}]
                              :uusi-kommentti uusi-kommentti
                              :hoitokausi hoitokausi})
           uusin-tp (hae-uusin-turvallisuuspoikkeama)
@@ -275,12 +294,12 @@
                              5
                              3
                              #{"ymparistovahinko"}
-                             "lieva"
+                             "vakava"
                              #{"tyotapaturma"}
-                             "kuorma-autonkuljettaja"
+                             "porari"
                              nil
                              nil
-                             #{"luunmurtumat"}
+                             #{"sokki"}
                              #{}
                              nil
                              nil
@@ -292,15 +311,15 @@
                              nil
                              nil
                              nil
-                             "Kävi möhösti"
+                             "Kävi tosi möhösti"
                              "Luminen metsätie"
                              false
                              false]
                    true))
       (is (match korjaava-toimenpide
-                   ["Ei ressata liikaa"
+                   ["Ei ressata yhtään"
                     nil
-                    "Ressi pois!"
+                    "Ressi pois vaan!"
                     nil
                     nil
                     "avoin"]
