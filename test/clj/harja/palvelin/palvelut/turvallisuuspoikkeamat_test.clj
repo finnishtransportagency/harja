@@ -37,6 +37,7 @@
                                 {:urakka-id urakka-id
                                  :alku (pvm/luo-pvm (+ 1900 105) 9 1)
                                  :loppu (pvm/luo-pvm (+ 1900 106) 8 30)})]
+    (is (= (count vastaus) 1))
     (is (match vastaus [{:id _
                          :ilmoituksetlahetetty nil
                          :kasitelty (_ :guard #(and (= (t/year (c/from-sql-date %)) 2005)
