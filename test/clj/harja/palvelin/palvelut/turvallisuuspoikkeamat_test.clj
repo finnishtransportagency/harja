@@ -81,6 +81,76 @@
     (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE turvallisuuspoikkeama=" id))
     (u (str "DELETE FROM turvallisuuspoikkeama WHERE id=" id))))
 
+(defn hae-uusin-turvallisuuspoikkeama []
+  (as-> (first (q (str "SELECT
+                        id,
+                        urakka,
+                        tapahtunut,
+                        kasitelty,
+                        sijainti,
+                        kuvaus,
+                        sairauspoissaolopaivat,
+                        sairaalavuorokaudet,
+                        tr_numero,
+                        tr_alkuosa,
+                        tr_alkuetaisyys,
+                        tr_loppuosa,
+                        tr_loppuetaisyys,
+                        vahinkoluokittelu,
+                        vakavuusaste,
+                        tyyppi,
+                        tyontekijanammatti,
+                        tyontekijanammatti_muu,
+                        aiheutuneet_seuraukset,
+                        vammat,
+                        vahingoittuneet_ruumiinosat,
+                        sairauspoissaolo_jatkuu,
+                        ilmoittaja_etunimi,
+                        ilmoittaja_sukunimi,
+                        vaylamuoto,
+                        toteuttaja,
+                        tilaaja,
+                        turvallisuuskoordinaattori_etunimi,
+                        turvallisuuskoordinaattori_sukunimi,
+                        laatija_etunimi,
+                        laatija_sukunimi,
+                        tapahtuman_otsikko,
+                        paikan_kuvaus,
+                        vaarallisten_aineiden_kuljetus,
+                        vaarallisten_aineiden_vuoto
+                        FROM turvallisuuspoikkeama
+                        ORDER BY luotu DESC
+                        LIMIT 1;")))
+        turpo
+        ;; Tapahtumapvm ja käsittely -> clj-time
+        (assoc turpo 2 (c/from-sql-date (get turpo 2)))
+        (assoc turpo 3 (c/from-sql-date (get turpo 3)))
+        ;; Vahinkoluokittelu -> set
+        (assoc turpo 13 (into #{} (when-let [arvo (get turpo 13)]
+                                    (.getArray arvo))))
+        ;; Tyyppi -> set
+        (assoc turpo 15 (into #{} (when-let [arvo (get turpo 15)]
+                                    (.getArray arvo))))
+        ;; Vammat -> set
+        (assoc turpo 19 (into #{} (when-let [arvo (get turpo 19)]
+                                    (.getArray arvo))))
+        ;; Vahingoittuneet ruumiinosat -> set
+        (assoc turpo 20 (into #{} (when-let [arvo (get turpo 20)]
+                                    (.getArray arvo))))))
+
+(defn hae-korjaava-toimenpide [turpo-id]
+  (as-> (first (q (str "SELECT
+                        kuvaus,
+                        suoritettu,
+                        otsikko,
+                        vastuuhenkilo,
+                        toteuttaja,
+                        tila
+                        FROM korjaavatoimenpide
+                        WHERE turvallisuuspoikkeama = " turpo-id ";")))
+        toimenpide
+        (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1)))))
+
 (deftest tallenna-turvallisuuspoikkeama-test
   (let [urakka-id @oulun-alueurakan-2005-2010-id
         tp {:urakka urakka-id
@@ -124,69 +194,9 @@
     (is (= (hae-tp-maara) (+ 1 vanha-maara)))
 
     ;; Tiukka testi, datan pitää olla tallentunut oikein
-    (let [uusin-tp (as-> (first (q (str "SELECT
-                                  id,
-                                  urakka,
-                                  tapahtunut,
-                                  kasitelty,
-                                  sijainti,
-                                  kuvaus,
-                                  sairauspoissaolopaivat,
-                                  sairaalavuorokaudet,
-                                  tr_numero,
-                                  tr_alkuosa,
-                                  tr_alkuetaisyys,
-                                  tr_loppuosa,
-                                  tr_loppuetaisyys,
-                                  vahinkoluokittelu,
-                                  vakavuusaste,
-                                  tyyppi,
-                                  tyontekijanammatti,
-                                  tyontekijanammatti_muu,
-                                  aiheutuneet_seuraukset,
-                                  vammat,
-                                  vahingoittuneet_ruumiinosat,
-                                  sairauspoissaolo_jatkuu,
-                                  ilmoittaja_etunimi,
-                                  ilmoittaja_sukunimi,
-                                  vaylamuoto,
-                                  toteuttaja,
-                                  tilaaja,
-                                  turvallisuuskoordinaattori_etunimi,
-                                  turvallisuuskoordinaattori_sukunimi,
-                                  laatija_etunimi,
-                                  laatija_sukunimi,
-                                  tapahtuman_otsikko,
-                                  paikan_kuvaus,
-                                  vaarallisten_aineiden_kuljetus,
-                                  vaarallisten_aineiden_vuoto
-                                  FROM turvallisuuspoikkeama
-                                  ORDER BY luotu DESC
-                                  LIMIT 1;")))
-                         turpo
-                         ;; Tapahtumapvm ja käsittely -> clj-time
-                         (assoc turpo 2 (c/from-sql-date (get turpo 2)))
-                         (assoc turpo 3 (c/from-sql-date (get turpo 3)))
-                         ;; Vahinkoluokittelu -> set
-                         (assoc turpo 13 (into #{} (.getArray (get turpo 13))))
-                         ;; Tyyppi -> set
-                         (assoc turpo 15 (into #{} (.getArray (get turpo 15))))
-                         ;; Vammat -> set
-                         (assoc turpo 19 (into #{} (.getArray (get turpo 19))))
-                         ;; Vahingoittuneet ruumiinosat -> set
-                         (assoc turpo 20 (into #{} (.getArray (get turpo 20)))))
+    (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
-          korjaava-toimenpide (as-> (first (q (str "SELECT
-                                                      kuvaus,
-                                                      suoritettu,
-                                                      otsikko,
-                                                      vastuuhenkilo,
-                                                      toteuttaja,
-                                                      tila
-                                                      FROM korjaavatoimenpide
-                                                      WHERE turvallisuuspoikkeama = " turpo-id ";")))
-                                    toimenpide
-                                    (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1))))]
+          korjaava-toimenpide (hae-korjaava-toimenpide turpo-id)]
       (is (match uusin-tp [_
                            1
                            (_ :guard #(and (= (t/year %) 2005)
@@ -244,69 +254,9 @@
                              :korjaavattoimenpiteet korjaavattoimenpiteet
                              :uusi-kommentti uusi-kommentti
                              :hoitokausi hoitokausi})
-          uusin-tp (as-> (first (q (str "SELECT
-                                  id,
-                                  urakka,
-                                  tapahtunut,
-                                  kasitelty,
-                                  sijainti,
-                                  kuvaus,
-                                  sairauspoissaolopaivat,
-                                  sairaalavuorokaudet,
-                                  tr_numero,
-                                  tr_alkuosa,
-                                  tr_alkuetaisyys,
-                                  tr_loppuosa,
-                                  tr_loppuetaisyys,
-                                  vahinkoluokittelu,
-                                  vakavuusaste,
-                                  tyyppi,
-                                  tyontekijanammatti,
-                                  tyontekijanammatti_muu,
-                                  aiheutuneet_seuraukset,
-                                  vammat,
-                                  vahingoittuneet_ruumiinosat,
-                                  sairauspoissaolo_jatkuu,
-                                  ilmoittaja_etunimi,
-                                  ilmoittaja_sukunimi,
-                                  vaylamuoto,
-                                  toteuttaja,
-                                  tilaaja,
-                                  turvallisuuskoordinaattori_etunimi,
-                                  turvallisuuskoordinaattori_sukunimi,
-                                  laatija_etunimi,
-                                  laatija_sukunimi,
-                                  tapahtuman_otsikko,
-                                  paikan_kuvaus,
-                                  vaarallisten_aineiden_kuljetus,
-                                  vaarallisten_aineiden_vuoto
-                                  FROM turvallisuuspoikkeama
-                                  ORDER BY luotu DESC
-                                  LIMIT 1;")))
-                         turpo
-                         ;; Tapahtumapvm ja käsittely -> clj-time
-                         (assoc turpo 2 (c/from-sql-date (get turpo 2)))
-                         (assoc turpo 3 (c/from-sql-date (get turpo 3)))
-                         ;; Vahinkoluokittelu -> set
-                         (assoc turpo 13 (into #{} (.getArray (get turpo 13))))
-                         ;; Tyyppi -> set
-                         (assoc turpo 15 (into #{} (.getArray (get turpo 15))))
-                         ;; Vammat -> set
-                         (assoc turpo 19 (into #{} (.getArray (get turpo 19))))
-                         ;; Vahingoittuneet ruumiinosat -> set
-                         (assoc turpo 20 (into #{} (.getArray (get turpo 20)))))
+          uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
-          korjaava-toimenpide (as-> (first (q (str "SELECT
-                                                      kuvaus,
-                                                      suoritettu,
-                                                      otsikko,
-                                                      vastuuhenkilo,
-                                                      toteuttaja,
-                                                      tila
-                                                      FROM korjaavatoimenpide
-                                                      WHERE turvallisuuspoikkeama = " turpo-id ";")))
-                                    toimenpide
-                                    (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1))))]
+          korjaava-toimenpide (hae-korjaava-toimenpide turpo-id)]
       (is (match uusin-tp [_
                              1
                              (_ :guard #(and (= (t/year %) 2005)
