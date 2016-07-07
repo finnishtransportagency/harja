@@ -63,7 +63,7 @@
     (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
     (let [kohteen-sijainti (get-in data [:paallystysilmoitus :yllapitokohde :sijainti])
           alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet]))
-          kohde (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+          kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           kohteen-tienumero (:tr-numero kohde)]
       (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
 

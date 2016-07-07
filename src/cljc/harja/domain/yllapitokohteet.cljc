@@ -10,7 +10,7 @@
   {:koodi koodi :viesti viesti})
 
 (defn validoi-kohteen-osoite [kohde-id kohteen-sijainti]
-  (when (>= (:aosa kohteen-sijainti) (:losa kohteen-sijainti))
+  (when (> (:aosa kohteen-sijainti) (:losa kohteen-sijainti))
     [(tee-virhe +viallinen-yllapitokohteen-sijainti+ (format "Kohteen (id: %s) alkuosa on loppuosaa isompi" kohde-id))]))
 
 (defn alikohde-kohteen-sisalla? [kohteen-sijainti alikohteen-sijainti]
