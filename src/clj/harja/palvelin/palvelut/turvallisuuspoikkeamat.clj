@@ -204,7 +204,7 @@
                                                (q/hae-turvallisuuspoikkeaman-urakka db turvallisuuspoikkeama-id)))]
     (log/debug "Tarkistetaan, että väitetty urakka-id " urakka-id " = " turpon-todellinen-urakka-id)
     (when (not= turpon-todellinen-urakka-id urakka-id)
-      (throw (RuntimeException. "Annettu turvallisuuspoikkeama ei kuulu väitettyyn urakkaan.")))))
+      (throw (SecurityException. "Annettu turvallisuuspoikkeama ei kuulu väitettyyn urakkaan.")))))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))

@@ -56,7 +56,7 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user harja-urakka-id)
   (log/debug "Käsitellään pyyntö lisätä Harja-urakalle " harja-urakka-id " yha-tiedot: " yha-tiedot)
   (if (:sidonta-lukittu? (hae-urakan-yha-tiedot db harja-urakka-id))
-    (throw (RuntimeException. "Sidonta lukittu!"))
+    (throw (SecurityException. "Sidonta lukittu!"))
     (jdbc/with-db-transaction [db db]
       (poista-urakan-yha-tiedot db harja-urakka-id)
       (poista-urakan-yllapito-ilmoitukset db harja-urakka-id)
