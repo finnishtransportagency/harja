@@ -16,6 +16,11 @@ ALTER TABLE turvallisuuspoikkeama ADD COLUMN tila turvallisuuspoikkeama_tila;
 ALTER TABLE turvallisuuspoikkeama ALTER COLUMN kuvaus TYPE VARCHAR(4000);
 ALTER TABLE turvallisuuspoikkeama ALTER COLUMN aiheutuneet_seuraukset TYPE VARCHAR(4000);
 
+-- Migratoi wanha data
+ALTER TABLE turvallisuuspoikkeama SET tila = 'avoin'::turvallisuuspoikkeama_tila;
+ALTER TABLE turvallisuuspoikkeama SET vaarallisten_aineiden_kuljetus = FALSE;
+ALTER TABLE turvallisuuspoikkeama SET vaarallisten_aineiden_vuoto = FALSE;
+
 -- Korjaavan toimenpiteen päivitys
 
 ALTER TABLE korjaavatoimenpide DROP COLUMN vastaavahenkilo;
@@ -27,3 +32,5 @@ ALTER TABLE korjaavatoimenpide ADD COLUMN laatija integer REFERENCES kayttaja (i
 ALTER TABLE korjaavatoimenpide ADD COLUMN vastuuhenkilo integer REFERENCES kayttaja (id);
 ALTER TABLE korjaavatoimenpide ADD COLUMN toteuttaja VARCHAR(1024);
 ALTER TABLE korjaavatoimenpide ADD COLUMN tila korjaavatoimenpide_tila;
+
+ALTER TABLE korjaavatoimenpide SET tila = 'avoin'::korjaavatoimenpide_tila;
