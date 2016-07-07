@@ -9,7 +9,8 @@
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clj-time.core :as t]))
 
 (def turvallisuuspoikkeama-xf
   (comp (map #(konv/string->keyword % :korjaavatoimenpide_tila))
@@ -126,7 +127,7 @@
                        :lahde "harja-ui"})
 
 (defn- luo-tai-paivita-turvallisuuspoikkeama
-  [db user {:keys [id urakka tapahtunut kasitelty tyontekijanammatti tyontekijanammattimuu
+  [db user {:keys [id urakka tapahtunut tyontekijanammatti tyontekijanammattimuu
                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
@@ -139,7 +140,8 @@
                tr
                {:urakka urakka
                 :tapahtunut (konv/sql-timestamp tapahtunut)
-                :kasitelty (konv/sql-timestamp kasitelty)
+                :kasitelty (when (= tila :suljettu)
+                             (konv/sql-timestamp (t/now)))
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
                 :kuvaus kuvaus

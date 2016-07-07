@@ -375,7 +375,7 @@
                             {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                             {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-                             :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voida käsitellä ennen tapahtumaikaa"]]})]
+                             :muokattava? (constantly false)})]
              @turvallisuuspoikkeama]]))))
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
