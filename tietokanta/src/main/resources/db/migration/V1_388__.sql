@@ -28,10 +28,3 @@ ALTER TABLE korjaavatoimenpide ADD COLUMN laatija integer REFERENCES kayttaja (i
 ALTER TABLE korjaavatoimenpide ADD COLUMN vastuuhenkilo integer REFERENCES kayttaja (id);
 ALTER TABLE korjaavatoimenpide ADD COLUMN toteuttaja VARCHAR(1024);
 ALTER TABLE korjaavatoimenpide ADD COLUMN tila korjaavatoimenpide_tila;
-=======
-ALTER TYPE yllapitokohdetyyppi RENAME TO yllapitokohdetyotyyppi;
-ALTER TABLE yllapitokohde RENAME COLUMN tyyppi TO yllapitokohdetyotyyppi;
-
-CREATE TYPE yllapitokohdetyyppi AS ENUM ('paallyste', 'sora', 'kevytliikenne');
-ALTER TABLE yllapitokohde ADD COLUMN yllapitokohdetyyppi yllapitokohdetyyppi;
->>>>>>> develop
