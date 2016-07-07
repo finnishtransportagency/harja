@@ -56,7 +56,7 @@
       "laatija": {
         "id" : 654486,
         "etunimi": "Urho",
-        "sukunimi": "Urakoitisja"
+        "sukunimi": "Urakoitsija"
       },
       "otsikko": "Aura-auto suistui tieltä",
       "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
@@ -76,6 +76,7 @@
       },
       "vahinkoluokittelu": ["henkilovahinko"],
       "vakavuusaste": "vakava",
+      "seuraukset": "Sairaalareissu",
       "korjaavatToimenpiteet": [
         {
           "otsikko": "Kaadetaan pensaikko",

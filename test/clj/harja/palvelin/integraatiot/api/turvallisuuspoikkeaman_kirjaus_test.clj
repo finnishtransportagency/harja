@@ -61,15 +61,42 @@
                                   tr_alkuetaisyys,
                                   tr_loppuosa,
                                   tr_loppuetaisyys,
-                                  vahinkoluokittelu
+                                  vahinkoluokittelu,
+                                  vakavuusaste,
+                                  tyyppi,
+                                  tyontekijanammatti,
+                                  tyontekijanammatti_muu,
+                                  aiheutuneet_seuraukset,
+                                  vammat,
+                                  vahingoittuneet_ruumiinosat,
+                                  sairauspoissaolo_jatkuu,
+                                  ilmoittaja_etunimi,
+                                  ilmoittaja_sukunimi,
+                                  vaylamuoto,
+                                  toteuttaja,
+                                  tilaaja,
+                                  turvallisuuskoordinaattori_etunimi,
+                                  turvallisuuskoordinaattori_sukunimi,
+                                  laatija_etunimi,
+                                  laatija_sukunimi,
+                                  tapahtuman_otsikko,
+                                  paikan_kuvaus,
+                                  vaarallisten_aineiden_kuljetus,
+                                  vaarallisten_aineiden_vuoto
                                   FROM turvallisuuspoikkeama
                                   ORDER BY luotu DESC
                                   LIMIT 1")))
                          turpo
                          (assoc turpo 1 (c/from-sql-date (get turpo 1)))
                          (assoc turpo 2 (c/from-sql-date (get turpo 2)))
+                         ;; Vahinkoluokittelu -> set
                          (assoc turpo 12 (into #{} (.getArray (get turpo 12))))
-                         (assoc turpo 12 (into #{} (map keyword (get turpo 12)))))]
+                         ;; Tyyppi -> set
+                         (assoc turpo 14 (into #{} (.getArray (get turpo 14))))
+                         ;; Vammat -> set
+                         (assoc turpo 18 (into #{} (.getArray (get turpo 18))))
+                         ;; Vahingoittuneet ruumiinosat -> set
+                         (assoc turpo 19 (into #{} (.getArray (get turpo 19)))))]
 
       (is (vector uusin-tp))
       (is (match uusin-tp [urakka
@@ -88,5 +115,26 @@
                            100
                            73
                            20
-                           #{:henkilovahinko}]
+                           #{"henkilovahinko"}
+                           "vakava"
+                           #{"tyotapaturma", "vaaratilanne"}
+                           "muu_tyontekija"
+                           "Auraaja"
+                           "Sairaalareissu"
+                           #{"luunmurtumat"}
+                           #{"selka", "vartalo"}
+                           true
+                           "Veera"
+                           "Veistelijä"
+                           "tie"
+                           "Yritys Oy"
+                           "Paula Projektipäällikkö"
+                           "Mikko"
+                           "Meikäläinen"
+                           "Urho"
+                           "Urakoitsija"
+                           "Aura-auto suistui tieltä"
+                           "Liukas tie keskellä metsää."
+                           true
+                           false]
                  true)))))
