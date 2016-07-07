@@ -137,24 +137,23 @@
         (assoc turpo 20 (into #{} (when-let [arvo (get turpo 20)]
                                     (.getArray arvo))))))
 
-(defn hae-korjaava-toimenpide [turpo-id]
-  (as-> (first (q (str "SELECT
-                        kuvaus,
-                        suoritettu,
-                        otsikko,
-                        vastuuhenkilo,
-                        toteuttaja,
-                        tila
-                        FROM korjaavatoimenpide
-                        WHERE turvallisuuspoikkeama = " turpo-id ";")))
+(defn hae-korjaavat-toimenpiteet [turpo-id]
+  (as-> (q (str "SELECT
+                 kuvaus,
+                 suoritettu,
+                 otsikko,
+                 vastuuhenkilo,
+                 toteuttaja,
+                 tila
+                 FROM korjaavatoimenpide
+                 WHERE turvallisuuspoikkeama = " turpo-id ";"))
         toimenpide
-        (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1)))))
+        (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
 
 (deftest tallenna-turvallisuuspoikkeama-test
   (let [urakka-id @oulun-alueurakan-2005-2010-id
         tp {:urakka urakka-id
             :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
-            :kasitelty (pvm/luo-pvm (+ 1900 105) 9 1)
             :tyontekijanammatti :kuorma-autonkuljettaja
             :kuvaus "e2e taas punaisena"
             :vammat #{:luunmurtumat}
@@ -165,12 +164,12 @@
             :vaylamuoto :tie
             :tyyppi #{:tyotapaturma}
             :otsikko "Kävi möhösti"
-            :tila :avoin
+            :tila :suljettu
             :vahinkoluokittelu #{:ymparistovahinko}
             :vaaralliset-aineet #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}
             :sijainti {:type :point :coordinates [0 0]}
             :tr {:numero 1 :alkuetaisyys 2 :loppuetaisyys 3 :alkuosa 4 :loppuosa 5}}
-        korjaavattoimenpiteet [{:kuvaus "Ei ressata liikaa"
+        korjaavat-toimenpiteet [{:kuvaus "Ei ressata liikaa"
                                 :otsikko "Ressi pois!"
                                 :tila :avoin
                                 :suoritettu nil
@@ -187,7 +186,7 @@
 
           :tallenna-turvallisuuspoikkeama
           {:tp tp
-           :korjaavattoimenpiteet korjaavattoimenpiteet
+           :korjaavattoimenpiteet korjaavat-toimenpiteet
            :uusi-kommentti uusi-kommentti
            :hoitokausi hoitokausi}))
 
@@ -196,15 +195,13 @@
     ;; Tiukka testi, datan pitää olla tallentunut oikein
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
-          korjaava-toimenpide (hae-korjaava-toimenpide turpo-id)]
+          turpon-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
       (is (match uusin-tp [_
                            1
                            (_ :guard #(and (= (t/year %) 2005)
                                            (= (t/month %) 9)
                                            (= (t/day %) 30)))
-                           (_ :guard #(and (= (t/year %) 2005)
-                                           (= (t/month %) 9)
-                                           (= (t/day %) 30)))
+                           (_ :guard #(some? %))
                            (_ :guard #(some? %))
                            "e2e taas punaisena"
                            0
@@ -237,7 +234,8 @@
                            true
                            true]
                  true))
-      (is (match korjaava-toimenpide
+      (is (= (count turpon-korjaavat-toimenpiteet) 1))
+      (is (match (first turpon-korjaavat-toimenpiteet)
                  ["Ei ressata liikaa"
                   nil
                   "Ressi pois!"
@@ -252,7 +250,6 @@
                             +kayttaja-jvh+
                             {:tp (assoc tp :paikan-kuvaus "Luminen metsätie"
                                            :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
-                                           :kasitelty (pvm/luo-pvm (+ 1900 105) 9 1)
                                            :tyontekijanammatti :porari
                                            :kuvaus "e2e taas punaisena"
                                            :vammat #{:sokki}
@@ -262,7 +259,7 @@
                                            :vaylamuoto :tie
                                            :tyyppi #{:tyotapaturma}
                                            :otsikko "Kävi tosi möhösti"
-                                           :tila :avoin
+                                           :tila :suljettu
                                            :vahinkoluokittelu #{:ymparistovahinko}
                                            :sijainti {:type :point :coordinates [0 0]}
                                            :vaaralliset-aineet #{}
@@ -276,54 +273,54 @@
                              :hoitokausi hoitokausi})
           uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
-          korjaava-toimenpide (hae-korjaava-toimenpide turpo-id)]
+          turpon-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
+
       (is (match uusin-tp [_
-                             1
-                             (_ :guard #(and (= (t/year %) 2005)
-                                             (= (t/month %) 9)
-                                             (= (t/day %) 30)))
-                             (_ :guard #(and (= (t/year %) 2005)
-                                             (= (t/month %) 9)
-                                             (= (t/day %) 30)))
-                             (_ :guard #(some? %))
-                             "e2e taas punaisena"
-                             0
-                             0
-                             1
-                             4
-                             2
-                             5
-                             3
-                             #{"ymparistovahinko"}
-                             "vakava"
-                             #{"tyotapaturma"}
-                             "porari"
-                             nil
-                             nil
-                             #{"sokki"}
-                             #{}
-                             nil
-                             nil
-                             nil
-                             "tie"
-                             nil
-                             nil
-                             nil
-                             nil
-                             nil
-                             nil
-                             "Kävi tosi möhösti"
-                             "Luminen metsätie"
-                             false
-                             false]
-                   true))
-      (is (match korjaava-toimenpide
-                   ["Ei ressata yhtään"
-                    nil
-                    "Ressi pois vaan!"
-                    nil
-                    nil
-                    "avoin"]
-                   true)))
+                           1
+                           (_ :guard #(and (= (t/year %) 2005)
+                                           (= (t/month %) 9)
+                                           (= (t/day %) 30)))
+                           (_ :guard #(some? %))
+                           (_ :guard #(some? %))
+                           "e2e taas punaisena"
+                           0
+                           0
+                           1
+                           4
+                           2
+                           5
+                           3
+                           #{"ymparistovahinko"}
+                           "vakava"
+                           #{"tyotapaturma"}
+                           "porari"
+                           nil
+                           nil
+                           #{"sokki"}
+                           #{}
+                           nil
+                           nil
+                           nil
+                           "tie"
+                           nil
+                           nil
+                           nil
+                           nil
+                           nil
+                           nil
+                           "Kävi tosi möhösti"
+                           "Luminen metsätie"
+                           false
+                           false]
+                 true))
+      (is (= (count turpon-korjaavat-toimenpiteet) 1))
+      (is (match (first turpon-korjaavat-toimenpiteet)
+                 ["Ei ressata yhtään"
+                  nil
+                  "Ressi pois vaan!"
+                  nil
+                  nil
+                  "avoin"]
+                 true)))
 
     (poista-tp-taulusta "e2e taas punaisena")))
