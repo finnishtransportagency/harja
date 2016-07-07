@@ -6,7 +6,11 @@
             [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
-            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
+            [taoensso.timbre :as log]
+            [clojure.core.match :refer [match]]
+            [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
+            [clj-time.coerce :as c]
+            [clj-time.core :as t]))
 
 (def kayttaja "yit-rakennus")
 
@@ -23,14 +27,15 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tallenna-turvallisuuspoikkeama
-  (let [tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
+  (let [urakka (hae-oulun-alueurakan-2005-2012-id)
+        tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/"urakka"/turvallisuuspoikkeama"]
                                          kayttaja portti
                                          (-> "test/resurssit/api/turvallisuuspoikkeama.json" slurp))]
     (cheshire/decode (:body vastaus) true)
-
     (is (= 200 (:status vastaus)))
 
+    ;; Tarkista ensin perustasolla, että turpon kirjaus onnistui ja tiedot löytyvät
     (let [tp-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
           liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testitp36934853.jpg';")))
           tp-id (ffirst (q (str "SELECT id FROM turvallisuuspoikkeama WHERE kuvaus ='Aura-auto suistui tieltä väistäessä jalankulkijaa.'")))
@@ -39,4 +44,42 @@
       (is (= (+ tp-kannassa-ennen-pyyntoa 1) tp-kannassa-pyynnon-jalkeen))
       (is (number? liite-id))
       (is (number? tp-id))
-      (is (number? kommentti-id)))))
+      (is (number? kommentti-id)))
+
+    ;; Tiukka tarkastus, datan pitää olla kirjattu täysin oikein
+    (let [uusin-tp (as-> (first (q (str "SELECT
+                                  urakka,
+                                  tapahtunut,
+                                  kasitelty,
+                                  kuvaus,
+                                  sairauspoissaolopaivat,
+                                  sairaalavuorokaudet,
+                                  tr_numero,
+                                  tr_alkuosa,
+                                  tr_alkuetaisyys,
+                                  tr_loppuosa,
+                                  tr_loppuetaisyys
+                                  FROM turvallisuuspoikkeama
+                                  ORDER BY luotu DESC
+                                  LIMIT 1")))
+                         turpo
+                         (assoc turpo 1 (c/from-sql-date (get turpo 1)))
+                         (assoc turpo 2 (c/from-sql-date (get turpo 2))))]
+
+      (is (vector uusin-tp))
+      (is (match uusin-tp [urakka
+                           (_ :guard #(and (= (t/year %) 2016)
+                                           (= (t/month %) 1)
+                                           (= (t/day %) 30)))
+                           (_ :guard #(and (= (t/year %) 2016)
+                                           (= (t/month %) 2)
+                                           (= (t/day %) 1)))
+                           "Aura-auto suistui tieltä väistäessä jalankulkijaa."
+                           2
+                           0
+                           1234
+                           1
+                           100
+                           73
+                           20]
+                 true)))))

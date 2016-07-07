@@ -30,8 +30,8 @@
           "numero": 1234,
           "nimi": "Kiviharjunlenkki",
           "aosa": 1,
-          "losa": 73,
           "aet": 100,
+          "losa": 73,
           "let": 20
         },
         "koordinaatit": {
@@ -58,14 +58,16 @@
         "etunimi": "Urho",
         "sukunimi": "Urakoitisja"
       },
+      "otsikko": "Aura-auto suistui tieltä",
       "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
-      "paattynyt": "2016-01-30T12:00:00Z",
-      "kasitelty": "2016-01-30T12:00:00Z",
+      "kasitelty": "2016-02-1T12:00:00Z",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
+      "paikan_kuvaus": "Liukas tie keskellä metsää.",
+      "vaarallisten_aineiden_kuljetus": true,
+      "vaarallisten_aineiden_vuoto": false,
       "henkilovahinko": {
         "tyontekijanammatti": "muu_tyontekija",
         "ammatinselite": "Auraaja",
-        "tyotehtava": "Auraus",
         "aiheutuneetVammat": ["luunmurtumat"],
         "vahingoittuneetRuumiinosat": ["selka", "vartalo"],
         "sairauspoissaoloJatkuu": true,
@@ -76,6 +78,8 @@
       "vakavuusaste": "vakava",
       "korjaavatToimenpiteet": [
         {
+          "otsikko": "Kaadetaan pensaikko",
+          "toteuttaja": "Erkki Esimerkki",
           "kuvaus": "Kaadetaan risteystä pimentävä pensaikko",
           "suoritettu": "2016-01-30T12:00:00Z",
           "vastaavahenkilo": {
