@@ -84,16 +84,3 @@
         (log/warn viesti)
         (throw+ {:type virheet/+viallinen-kutsu+
                  :virheet [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}]})))))
-
-(defn tarkista-kohteen-ja-alikohteiden-sijannit [kohde-id kohteen-sijainti alikohteet]
-  (let [alikohteet (sort-by (juxt #(get-in % [:sijainti :aosa]) #(get-in % [:sijainti :aet])) alikohteet)
-        virheet (as-> [] virheet
-                      (when (> (:aosa kohteen-sijainti) (:losa kohteen-sijainti))
-                        (conj virheet "Kohteen alkuosa on loppuosaa isompi"))
-                      )]
-    (when (not (empty virheet))
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet [{:koodi virheet/+viallinen-yllapitokohteen-tai-alikohteen-sijainti+
-                          :viesti (format "Kohteen (id: %s) tai sen alikohteen sijainnit ovat virheelliset. Virheet: %s"
-                                          kohde-id
-                                          (join "," str virheet))}]}))))

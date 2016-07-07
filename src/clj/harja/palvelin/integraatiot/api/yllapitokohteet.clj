@@ -9,6 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
+            [harja.domain.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.yllapitokohteet :as q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut])
@@ -73,7 +74,8 @@
     (clojure.pprint/pprint data)
     (let [kohteen-sijainti (get-in testi-paallystysilmoitus [:paallystysilmoitus :yllapitokohde :sijainti])
           alikohteet (mapv :alikohde (get-in testi-paallystysilmoitus [:paallystysilmoitus :yllapitokohde :alikohteet]))]
-      (validointi/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
+      (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
+      ;; hae kohteen tiedot ja tarkista sijainnit vielä kantaa vasten
       ;; tuhoa kohteen-alikohteet
       ;; tallenna uudet alikohteet
       ;; tallenna päällystysilmoituksen tiedot
