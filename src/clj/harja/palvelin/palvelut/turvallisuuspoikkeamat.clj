@@ -10,7 +10,8 @@
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [harja.domain.oikeudet :as oikeudet]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (def turvallisuuspoikkeama-xf
   (comp (map #(konv/string->keyword % :korjaavatoimenpide_tila))
