@@ -152,7 +152,7 @@
                            :toteutettu "Toteutettu"}
                            %)
                          "- valitse -")
-     :valinnat #{:avoin :siirretty :toteutettu}
+     :valinnat [:avoin :siirretty :toteutettu]
      :leveys 15}
     {:otsikko "Laatija"
      :nimi :laatija
@@ -267,11 +267,11 @@
                :pakollinen? true
                :validoi [[:ei-tyhja "Valitse tila"]
                          [:ei-avoimia-korjaavia-toimenpiteitä
-                          "Voidaan sulkea vasta kun kaikki korjaavat toimenpiteet on suljettu"]]
+                          "Voidaan sulkea vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
                :tyyppi :valinta
                :valinta-nayta #(or (turpon-tilakuvaukset %)
                                    "- valitse -")
-               :valinnat #{:avoin :kasitelty :taydennetty :suljettu}
+               :valinnat [:avoin :kasitelty :taydennetty :suljettu]
                :palstoja 1}
               {:otsikko "Tapahtuman kuvaus"
                :nimi :kuvaus
