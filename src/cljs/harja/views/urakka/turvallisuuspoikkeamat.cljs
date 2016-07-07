@@ -28,6 +28,11 @@
                                    :vaylamuoto :tie
                                    :tyontekijanammatti :muu_tyontekija})
 
+(def turpon-tilakuvaukset {:avoin "Avoin"
+                           :kasitelty "Käsitelty"
+                           :taydennetty "Täydennetty"
+                           :suljettu "Suljettu"})
+
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
   (r/wrap
     (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama-atom)))
@@ -177,6 +182,7 @@
      :tyyppi :string
      :pituus-max 1024}
     {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys 15 :tyyppi :pvm}
+    {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys 15 :tyyppi :pvm}
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys 40 :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
@@ -263,10 +269,7 @@
                :pakollinen? true
                :validoi [[:ei-tyhja "Valitse tila"]]
                :tyyppi :valinta
-               :valinta-nayta #(or ({:avoin "Avoin"
-                                     :kasitelty "Käsitelty"
-                                     :taydennetty "Täydennetty"
-                                     :suljettu "Suljettu"} %)
+               :valinta-nayta #(or (turpon-tilakuvaukset %)
                                    "- valitse -")
                :valinnat #{:avoin :kasitelty :taydennetty :suljettu}
                :palstoja 1}
@@ -392,13 +395,14 @@
       {:otsikko "Turvallisuuspoikkeamat"
        :tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan turvallisuuspoikkeamia"])
        :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
-      [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys "15%" :tyyppi :pvm}
-       {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys "15%"
+      [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 15 :tyyppi :pvm}
+       {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
         :hae turpodomain/kuvaile-tyontekijan-ammatti}
-       {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys "45%"}
-       {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys "5%"
+       {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys 45}
+       {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpon-tilakuvaukset}
+       {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys 5
         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}
-       {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys "5%"
+       {:otsikko "Korj." :nimi :korjaukset :tyyppi :string :leveys 5
         :hae (fn [rivi] (str (count (keep :suoritettu (:korjaavattoimenpiteet rivi))) "/" (count (:korjaavattoimenpiteet rivi))))}]
       (sort-by :tapahtunut pvm/jalkeen? @tiedot/haetut-turvallisuuspoikkeamat)]]))
 

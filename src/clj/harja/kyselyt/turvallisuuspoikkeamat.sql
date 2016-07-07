@@ -8,6 +8,7 @@ SELECT
   t.tyontekijanammatti_muu AS tyontekijanammattimuu,
   t.kuvaus,
   t.vammat,
+  t.tila,
   t.sairauspoissaolopaivat,
   t.sairaalavuorokaudet,
   t.sijainti,
