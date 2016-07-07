@@ -107,8 +107,6 @@
      :komponentti (fn [rivi]
                     [:button.nappi-ensisijainen {:on-click (fn [e]
                                                              (let [korjaava-toimenpide-id (.preventDefault e)]
-                                                               (log "[TURPO] Korjaava toimenpide: " (pr-str korjaava-toimenpide))
-                                                               (log "[TURPO] Atom: " (pr-str toimenpiteet-atom))
                                                                (swap! toimenpiteet-atom
                                                                       assoc
                                                                       korjaava-toimenpide-id
