@@ -81,10 +81,8 @@
 (deftest tallenna-turvallisuuspoikkeama-test
   (let [tp {:urakka @oulun-alueurakan-2005-2010-id
             :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
-            :paattynyt (pvm/luo-pvm (+ 1900 105) 9 1)
             :kasitelty (pvm/luo-pvm (+ 1900 105) 9 1)
             :tyontekijanammatti :kuorma-autonkuljettaja
-            :tyotehtava "Testaus"
             :kuvaus "e2e taas punaisena"
             :vammat #{:luunmurtumat}
             :sairauspoissaolopaivat 0
@@ -92,10 +90,16 @@
             :vakavuusaste :lieva
             :vaylamuoto :tie
             :tyyppi #{:tyotapaturma}
+            :otsikko "Kävi möhösti"
+            :tila :avoin
             :vahinkoluokittelu #{:ymparistovahinko}
             :sijainti {:type :point :coordinates [0 0]}
-            :tr {:numero 6 :alkuetaisyys 6 :loppuetaisyys 6 :alkuosa 6 :loppuosa 6}}
-        korjaavattoimenpiteet [{:kuvaus "Ei ressata liikaa" :suoritettu nil :vastaavahenkilo "Kaikki yhdessä"}]
+            :tr {:numero 1 :alkuetaisyys 2 :loppuetaisyys 3 :alkuosa 4 :loppuosa 5}}
+        korjaavattoimenpiteet [{:kuvaus "Ei ressata liikaa"
+                                :otsikko "Ressi pois!"
+                                :tila :avoin
+                                :suoritettu nil
+                                :vastaavahenkilo "Kaikki yhdessä"}]
         uusi-kommentti {:tekija "Teemu" :kommentti "Näin on!" :liite nil}
         hoitokausi [(pvm/luo-pvm (+ 1900 105) 9 1) (pvm/luo-pvm (+ 1900 106) 8 30)]
         hae-tp-maara (fn [] (ffirst (q "SELECT count(*) FROM turvallisuuspoikkeama;")))
