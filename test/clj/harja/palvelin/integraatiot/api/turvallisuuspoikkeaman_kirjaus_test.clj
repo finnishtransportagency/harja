@@ -97,6 +97,19 @@
         toimenpide
         (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1)))))
 
+(defn hae-korjaavat-toimenpiteet [turpo-id]
+  (as-> (q (str "SELECT
+                        kuvaus,
+                        suoritettu,
+                        otsikko,
+                        vastuuhenkilo,
+                        toteuttaja,
+                        tila
+                        FROM korjaavatoimenpide
+                        WHERE turvallisuuspoikkeama = " turpo-id ";"))
+        toimenpide
+        (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
+
 (deftest tallenna-turvallisuuspoikkeama
   (let [urakka (hae-oulun-alueurakan-2005-2012-id)
         tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
@@ -173,66 +186,59 @@
                   nil
                   "Erkki Esimerkki"
                   "avoin"]
-                 true)))
+                 true))
 
-    ;; Myös päivitys toimii
+      ;; Myös päivitys toimii
 
-    (let [_ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
-                                                   kayttaja portti
-                                                   (-> "test/resurssit/api/turvallisuuspoikkeama.json"
-                                                       slurp
-                                                       (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")))
-          uusin-tp (hae-uusin-turvallisuuspoikkeama)
-          turpo-id (first uusin-tp)
-          korjaava-toimenpide (hae-korjaava-toimenpide turpo-id)]
+      (let [vanhat-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
+            _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+                                       kayttaja portti
+                                       (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                                           slurp
+                                           (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")))
+            uusin-tp (hae-uusin-turvallisuuspoikkeama)
+            turpo-id (first uusin-tp)
+            korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
 
-    (is (match uusin-tp [_
-                         urakka
-                         (_ :guard #(and (= (t/year %) 2016)
-                                         (= (t/month %) 1)
-                                         (= (t/day %) 30)))
-                         (_ :guard #(and (= (t/year %) 2016)
-                                         (= (t/month %) 2)
-                                         (= (t/day %) 1)))
-                         (_ :guard #(some? %))
-                         "Aura-auto suistui tieltä väistäessä jalankulkijaa."
-                         2
-                         0
-                         1234
-                         1
-                         100
-                         73
-                         20
-                         #{"henkilovahinko"}
-                         "vakava"
-                         #{"tyotapaturma", "vaaratilanne"}
-                         "muu_tyontekija"
-                         "Auraaja"
-                         "Sairaalareissu"
-                         #{"luunmurtumat"}
-                         #{"selka", "vartalo"}
-                         true
-                         "Veera"
-                         "Veistelijä"
-                         "tie"
-                         "Yritys Oy"
-                         "Paula Projektipäällikkö"
-                         "Mikko"
-                         "Meikäläinen"
-                         "Urho"
-                         "Urakoitsija"
-                         "Aura-auto suistui tieltä"
-                         "Liukas tie metsän reunalla."
-                         true
-                         false]
-               true))
-    (is (match korjaava-toimenpide
-               ["Kaadetaan risteystä pimentävä pensaikko"
-                (_ :guard #(and (= (t/year %) 2016)
-                                (= (t/month %) 1)
-                                (= (t/day %) 30)))
-                "Kaadetaan pensaikko"
-                nil
-                "Erkki Esimerkki"
-                "avoin"]
-               true)))))
+        (is (match uusin-tp [_
+                             urakka
+                             (_ :guard #(and (= (t/year %) 2016)
+                                             (= (t/month %) 1)
+                                             (= (t/day %) 30)))
+                             (_ :guard #(and (= (t/year %) 2016)
+                                             (= (t/month %) 2)
+                                             (= (t/day %) 1)))
+                             (_ :guard #(some? %))
+                             "Aura-auto suistui tieltä väistäessä jalankulkijaa."
+                             2
+                             0
+                             1234
+                             1
+                             100
+                             73
+                             20
+                             #{"henkilovahinko"}
+                             "vakava"
+                             #{"tyotapaturma", "vaaratilanne"}
+                             "muu_tyontekija"
+                             "Auraaja"
+                             "Sairaalareissu"
+                             #{"luunmurtumat"}
+                             #{"selka", "vartalo"}
+                             true
+                             "Veera"
+                             "Veistelijä"
+                             "tie"
+                             "Yritys Oy"
+                             "Paula Projektipäällikkö"
+                             "Mikko"
+                             "Meikäläinen"
+                             "Urho"
+                             "Urakoitsija"
+                             "Aura-auto suistui tieltä"
+                             "Liukas tie metsän reunalla."
+                             true
+                             false]
+                   true))
+        ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
+        (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))))
