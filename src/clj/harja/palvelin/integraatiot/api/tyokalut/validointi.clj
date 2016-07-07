@@ -1,17 +1,20 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.validointi
   "Yleisiä API-kutsuihin liittyviä apufunktioita"
-  (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.kyselyt.urakat :as urakat]
-            [harja.kyselyt.sopimukset :as sopimukset]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet]
-            [taoensso.timbre :as log]
-            [harja.kyselyt.kayttajat :as kayttajat]
-            [harja.domain.roolit :as roolit])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:require
+    [taoensso.timbre :as log]
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+    [harja.kyselyt.urakat :as q-urakat]
+    [harja.kyselyt.sopimukset :as q-sopimukset]
+    [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+    [harja.kyselyt.tieverkko :as q-tieverkko]
+    [harja.kyselyt.kayttajat :as kayttajat]
+    [harja.domain.roolit :as roolit]
+    [harja.domain.yllapitokohteet :as kohteet])
+  (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-urakka [db urakka-id]
   (log/debug "Validoidaan urakkaa id:llä" urakka-id)
-  (when (not (urakat/onko-olemassa? db urakka-id))
+  (when (not (q-urakat/onko-olemassa? db urakka-id))
     (do
       (let [viesti (format "Urakkaa id:llä %s ei löydy." urakka-id)]
         (log/warn viesti)
@@ -20,7 +23,7 @@
 
 (defn tarkista-sopimus [db urakka-id sopimus-id]
   (log/debug (format "Validoidaan urakan id: %s sopimusta id: %s" urakka-id sopimus-id)
-             (when (not (sopimukset/onko-olemassa? db urakka-id sopimus-id))
+             (when (not (q-sopimukset/onko-olemassa? db urakka-id sopimus-id))
                (do
                  (let [viesti (format "Urakalle id: %s ei löydy sopimusta id: %s." urakka-id sopimus-id)]
                    (log/warn viesti)
@@ -78,9 +81,33 @@
 
 (defn tarkista-urakan-kohde [db urakka-id kohde-id]
   (log/debug (format "Validoidaan urakan (id: %s) kohdetta (id: %s)" urakka-id kohde-id))
-  (when (not (yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id}))
+  (when (not (q-yllapitokohteet/onko-olemassa-urakalla? db {:urakka urakka-id :kohde kohde-id}))
     (do
       (let [viesti (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
         (log/warn viesti)
         (throw+ {:type virheet/+viallinen-kutsu+
                  :virheet [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}]})))))
+
+
+(defn validoi-kohteiden-sijainnit-tieverkolla [db tienumero kohteen-sijainti alikohteet]
+  (let [sijainnit (conj (mapv :sijainti alikohteet) kohteen-sijainti)]
+    (when
+      (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
+                    db
+                    tienumero
+                    (:aosa %)
+                    (:aet %)
+                    (:losa %)
+                    (:let %))
+                  sijainnit)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi :viallisia-tieosia
+                          :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]}))))
+
+(defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
+  (try+
+    (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
+    (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet virheet})))
+  (validoi-kohteiden-sijainnit-tieverkolla db kohteen-tienumero kohteen-sijainti alikohteet))

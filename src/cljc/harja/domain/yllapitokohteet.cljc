@@ -72,9 +72,9 @@
   [kohde-id kohteen-sijainti alikohteet]
 
   (let [alikohteet (when alikohteet (sort-by (juxt #(get-in % [:sijainti :aosa]) #(get-in % [:sijainti :aet])) alikohteet))
-        virheet (concat
-                  (validoi-kohteen-osoite kohde-id kohteen-sijainti)
-                  (validoi-alikohteet kohde-id kohteen-sijainti alikohteet))]
+        virheet (remove nil? (concat
+                               (validoi-kohteen-osoite kohde-id kohteen-sijainti)
+                               (validoi-alikohteet kohde-id kohteen-sijainti alikohteet)))]
 
     (when (not (empty? virheet))
       (throw+ {:type +kohteissa-viallisia-sijainteja+

@@ -71,3 +71,21 @@
             "Alikohteet eivät täytä kohdetta (id: 1)")
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
         "Alikohteet jotka eivät täytä kohdetta otettiin kiinni")))
+
+(deftest tarkista-validi-kohde
+  (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
+        yksi-alikohde [{:tunnus "A"
+                        :sijainti {:aosa 1, :aet 1, :losa 4, :let 4}}]
+        kaksi-alikohdetta [{:tunnus "A"
+                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
+                           {:tunnus "B"
+                            :sijainti {:aosa 2, :aet 2, :losa 4, :let 4}}]
+        monta-alikohdetta [{:tunnus "A"
+                            :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
+                           {:tunnus "B"
+                            :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
+                           {:tunnus "C"
+                            :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]]
+    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde yksi-alikohde)
+    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde kaksi-alikohdetta)
+    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde monta-alikohdetta)))

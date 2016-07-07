@@ -10,10 +10,13 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.domain.yllapitokohteet :as yllapitokohteet]
-            [harja.kyselyt.yllapitokohteet :as q]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut])
-  (:use [slingshot.slingshot :only [throw+]]))
+
+            [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def testi-paallystysilmoitus
   {:otsikko
@@ -49,32 +52,22 @@
         :paallystetyyppi "avoin asfaltti"}}]}}}
   )
 
-(defn hae-yllapitokohteet [db parametit kayttaja]
-  (let [urakka-id (Integer/parseInt (:id parametit))]
-    (log/debug (format "Haetaan urakan (id: %s) ylläpitokohteet käyttäjälle: %s (id: %s)."
-                       urakka-id
-                       (:kayttajanimi kayttaja)
-                       (:id kayttaja)))
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [yllapitokohteet (into []
-                                (map konv/alaviiva->rakenne)
-                                (q/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id}))
-          yllapitokohteet (konv/sarakkeet-vektoriin
-                            yllapitokohteet
-                            {:kohdeosa :alikohteet}
-                            :id)]
-      (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)]
     (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
+    (clojure.pprint/pprint data)
+
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-    (clojure.pprint/pprint data)
-    (let [kohteen-sijainti (get-in testi-paallystysilmoitus [:paallystysilmoitus :yllapitokohde :sijainti])
-          alikohteet (mapv :alikohde (get-in testi-paallystysilmoitus [:paallystysilmoitus :yllapitokohde :alikohteet]))]
-      (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
+    (let [kohteen-sijainti (get-in data [:paallystysilmoitus :yllapitokohde :sijainti])
+          alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet]))
+          kohde (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+          kohteen-tienumero (:tr-numero kohde)]
+      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+
+
       ;; hae kohteen tiedot ja tarkista sijainnit vielä kantaa vasten
       ;; tuhoa kohteen-alikohteet
       ;; tallenna uudet alikohteet
@@ -84,6 +77,22 @@
     (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
                                  ;; todo: palauta uusi id
                                  :id nil})))
+
+(defn hae-yllapitokohteet [db parametit kayttaja]
+  (let [urakka-id (Integer/parseInt (:id parametit))]
+    (log/debug (format "Haetaan urakan (id: %s) ylläpitokohteet käyttäjälle: %s (id: %s)."
+                       urakka-id
+                       (:kayttajanimi kayttaja)
+                       (:id kayttaja)))
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [yllapitokohteet (into []
+                                (map konv/alaviiva->rakenne)
+                                (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id}))
+          yllapitokohteet (konv/sarakkeet-vektoriin
+                            yllapitokohteet
+                            {:kohdeosa :alikohteet}
+                            :id)]
+      (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
