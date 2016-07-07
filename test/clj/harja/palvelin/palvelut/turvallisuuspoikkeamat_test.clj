@@ -168,6 +168,7 @@
             :otsikko "Kävi möhösti"
             :tila :avoin
             :vahinkoluokittelu #{:ymparistovahinko}
+            :vaaralliset-aineet #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}
             :sijainti {:type :point :coordinates [0 0]}
             :tr {:numero 1 :alkuetaisyys 2 :loppuetaisyys 3 :alkuosa 4 :loppuosa 5}}
         korjaavattoimenpiteet [{:kuvaus "Ei ressata liikaa"
@@ -234,8 +235,8 @@
                            nil
                            "Kävi möhösti"
                            "Metsätie"
-                           false
-                           false]
+                           true
+                           true]
                  true))
       (is (match korjaava-toimenpide
                  ["Ei ressata liikaa"
@@ -265,6 +266,7 @@
                                            :tila :avoin
                                            :vahinkoluokittelu #{:ymparistovahinko}
                                            :sijainti {:type :point :coordinates [0 0]}
+                                           :vaaralliset-aineet #{}
                                            :tr {:numero 1 :alkuetaisyys 2 :loppuetaisyys 3 :alkuosa 4 :loppuosa 5})
                              :korjaavattoimenpiteet [{:kuvaus "Ei ressata yhtään"
                                                       :otsikko "Ressi pois vaan!"
