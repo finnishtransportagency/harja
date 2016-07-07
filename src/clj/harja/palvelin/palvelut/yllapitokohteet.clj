@@ -41,6 +41,7 @@
     (let [vastaus (into []
                         (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                               (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                              (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
                               (map #(assoc % :kohdeosat
                                              (into []
                                                    paallystys-q/kohdeosa-xf
@@ -166,12 +167,12 @@
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                       yllapitoluokka tyyppi
+                                       yllapitoluokka yllapitokohdetyyppi yllapitokohdetyotyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
                                        kaasuindeksi poistettu nykyinen-paallyste
                                        keskimaarainen-vuorokausiliikenne
                                        indeksin-kuvaus]}]
-  (log/debug "Luodaan uusi ylläpitokohde tyyppiä " tyyppi)
+  (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
     (q/luo-yllapitokohde<! db
                            {:urakka urakka-id
@@ -192,8 +193,8 @@
                             :arvonvahennykset arvonvahennykset
                             :bitumi_indeksi bitumi-indeksi
                             :kaasuindeksi kaasuindeksi
-                            :tyyppi (when tyyppi
-                                      (name tyyppi))
+                            :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
+                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
                             :indeksin_kuvaus indeksin-kuvaus})))
 
 (defn- paivita-yllapitokohde [db user urakka-id
