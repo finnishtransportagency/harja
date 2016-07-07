@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Yhtenäistä Harjan turvallisuuspoikkeama TURI:n kanssa
 
 -- Turvallisuuspoikkeaman päivitys
