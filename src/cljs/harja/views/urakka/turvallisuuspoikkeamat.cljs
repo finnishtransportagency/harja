@@ -374,7 +374,10 @@
                              :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)]}
                             {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                              :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
-                            {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+                            {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
+                                                                                 (pvm/pvm-aika-opt %)
+                                                                                 "Ei")
+                             :tyyppi :pvm-aika
                              :muokattava? (constantly false)})]
              @turvallisuuspoikkeama]]))))
 
