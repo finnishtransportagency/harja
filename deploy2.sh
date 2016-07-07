@@ -35,14 +35,7 @@ pushd vagrant
 sh migrate_test.sh > /dev/null
 popd
 
-if [ -z "$UNIT" ] || [ "$UNIT" = true ]; then
-  # msg "Voit estää unit testien ajamisen antamalla toiseksi parametriksi jotain muuta kuin true"
-  # echo ""
-  sh unit.sh
-else
-  msg "Yksikkötestejä ei ajettu!"
-  sh unit.sh
-fi
+sh unit.sh
 
 echo ""
 echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"
