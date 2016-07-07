@@ -181,7 +181,6 @@
      :tyyppi :string
      :pituus-max 1024}
     {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys 15 :tyyppi :pvm}
-    {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys 15 :tyyppi :pvm}
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys 40 :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
