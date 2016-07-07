@@ -98,8 +98,19 @@
                          ;; Vammat -> set
                          (assoc turpo 19 (into #{} (.getArray (get turpo 19))))
                          ;; Vahingoittuneet ruumiinosat -> set
-                         (assoc turpo 20 (into #{} (.getArray (get turpo 20)))))]
-      (is (vector uusin-tp))
+                         (assoc turpo 20 (into #{} (.getArray (get turpo 20)))))
+          turpo-id (first uusin-tp)
+          korjaava-toimenpide (as-> (first (q (str "SELECT
+                                                      kuvaus,
+                                                      suoritettu,
+                                                      otsikko,
+                                                      vastuuhenkilo,
+                                                      toteuttaja,
+                                                      tila
+                                                      FROM korjaavatoimenpide
+                                                      WHERE turvallisuuspoikkeama = " turpo-id ";")))
+                                    toimenpide
+                                    (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1))))]
       (is (match uusin-tp [_
                            urakka
                            (_ :guard #(and (= (t/year %) 2016)
@@ -140,30 +151,13 @@
                            true
                            false]
                  true))
-
-      ;; Myös korjaava toimenpide kirjattu täysin oikein
-      (let [turpo-id (first uusin-tp)
-            korjaava-toimenpide (as-> (first (q (str "SELECT
-                                                      kuvaus,
-                                                      suoritettu,
-                                                      otsikko,
-                                                      vastuuhenkilo,
-                                                      toteuttaja,
-                                                      tila
-                                                      FROM korjaavatoimenpide
-                                                      WHERE turvallisuuspoikkeama = " turpo-id ";")))
-                                      toimenpide
-                                      (assoc toimenpide 1 (c/from-sql-date (get toimenpide 1))))]
-
-        (is (number? turpo-id))
-        (is (vector korjaava-toimenpide))
-        (is (match korjaava-toimenpide
-                   ["Kaadetaan risteystä pimentävä pensaikko"
-                    (_ :guard #(and (= (t/year %) 2016)
-                                    (= (t/month %) 1)
-                                    (= (t/day %) 30)))
-                    "Kaadetaan pensaikko"
-                    nil
-                    "Erkki Esimerkki"
-                    "avoin"]
-                   true))))))
+      (is (match korjaava-toimenpide
+                 ["Kaadetaan risteystä pimentävä pensaikko"
+                  (_ :guard #(and (= (t/year %) 2016)
+                                  (= (t/month %) 1)
+                                  (= (t/day %) 30)))
+                  "Kaadetaan pensaikko"
+                  nil
+                  "Erkki Esimerkki"
+                  "avoin"]
+                 true)))))
