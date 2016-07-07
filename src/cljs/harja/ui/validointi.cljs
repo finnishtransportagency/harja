@@ -98,7 +98,9 @@
     viesti))
 
 (defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
-  (when-not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet lomake))
+  (log "[TURPO] Validoi korjaavat toimenpiteet. Data: " (pr-str data) " ja lomake: " (pr-str lomake))
+  (when (and (= data :suljettu)
+             (not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet lomake))))
     viesti))
 
 (defmethod validoi-saanto :joku-naista [_ _ data rivi _ & avaimet-ja-viesti]
