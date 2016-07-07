@@ -87,6 +87,7 @@
             :vammat #{:luunmurtumat}
             :sairauspoissaolopaivat 0
             :sairaalavuorokaudet 0
+            :paikan-kuvaus "Metsätie"
             :vakavuusaste :lieva
             :vaylamuoto :tie
             :tyyppi #{:tyotapaturma}
@@ -207,7 +208,7 @@
                            nil
                            nil
                            "Kävi möhösti"
-                           nil
+                           "Metsätie"
                            false
                            false]
                  true))
