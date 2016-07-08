@@ -108,7 +108,14 @@
 
 (defn rakenna-tapahtumapaikka [data]
   [:tapahtumapaikka
-   [:paikka (:paikan-kuvaus data)]])
+   [:paikka (:paikan-kuvaus data)]
+   [:eureffinn 1.0] ; TODO Hae
+   [:eureffine 1.0] ; TODO Hae
+   [:tienumero (get-in data [:tr :numero])]
+   [:tieaosa (get-in data [:tr :alkuosa])]
+   [:tielosa (get-in data [:tr :loppuosa])]
+   [:tieaet (get-in data [:tr :alkuetaisyys])]
+   [:tielet (get-in data [:tr :loppuetaisyys])]])
 
 (defn rakenna-syyt-ja-seuraukset [data]
   (into [:syytjaseuraukset]
