@@ -16,6 +16,5 @@
                 {:korjaavatoimenpide :korjaavattoimenpiteet
                  :kommentti :kommentit
                  :liite :liitteet}))
-        _ (log/debug "Data on: " (pr-str data))
         xml (sanoma/muodosta data)]
     (is (xml/validoi "xsd/turi/" "poikkeama-rest.xsd" xml)) "Tehty sanoma on XSD-skeeman mukainen"))
