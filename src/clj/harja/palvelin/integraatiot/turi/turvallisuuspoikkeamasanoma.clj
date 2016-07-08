@@ -146,55 +146,33 @@
 
 (defn rakenna-tapahtumapaikka [data]
   [:tapahtumapaikka
-   [:tapahtumapaikkaradalla "2"]
-   [:ratapaikka "Rsn"]
-   [:paikantarkenne "128"]
-   [:kmsijainti "3"]
-   [:paikka "string"]
-   [:tapahtumaalue "8"]])
+   [:paikka (:paikan-kuvaus data)]])
 
 (defn rakenna-syyt-ja-seuraukset [data]
   [:syytjaseuraukset
-   [:arviosyista "string"]
-   [:tapahtumaanliittyy "1"]
    [:seuraukset "string"]
-   [:liikennekatkonkesto "3"]
-   [:tehtava "string"]
    [:ammatti "28"]
    [:ammattimuutarkenne "anyType"]
    [:vammanlaatu "11"]
    [:vahingoittunutruumiinosa "10"]
    [:sairauspoissaolot "3"]
    [:sairauspoissaolojatkuu "true"]
-   [:sairaalahoitovuorokaudet "3"]
-   [:toimenpiteet "string"]
-   [:eho "string"]])
+   [:sairaalahoitovuorokaudet "3"]])
 
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
-   [:tuttiid "string"]
    [:otsikko "string"]
    [:luontipvm "2017-08-18"]
    [:ilmoittaja "string"]
    [:ilmoittajaorganisaatio "string"]
-   [:vuorossaolija "string"]
-   [:ilmoitettupoliisille "true"]
-   [:tila "Käsitelty"]
-   [:lisatiedot "string"]
-   [:palautepyydetty "true"]
-   [:palautepyydettyosoite "string"]
-   [:palauteannettu "false"]
-   [:palautekanava "string"]])
+   [:tila "Käsitelty"]])
 
 (defn rakenna-poikkeamatoimenpide [data]
   [:poikkeamatoimenpide
    [:otsikko "string"]
    [:kuvaus "string"]
    [:toteuttaja "string"]
-   [:toteutus "string"]
-   [:tila "1"]
-   [:pakollinen "false"]
-   [:maarapvm "2004-01-03"]])
+   [:tila "1"]])
 
 (defn rakenna-poikkeamaliite [data]
   [:poikkeamaliite
