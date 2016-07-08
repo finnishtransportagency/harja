@@ -223,7 +223,8 @@ SELECT
   l.koko                                AS liite_koko,
   l.nimi                                AS liite_nimi,
   l.liite_oid                           AS liite_oid,
-  l.pikkukuva                           AS liite_pikkukuva
+  l.pikkukuva                           AS liite_pikkukuva,
+  l.kuvaus                              AS liite_kuvaus
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
@@ -483,20 +484,6 @@ VALUES
 UPDATE turvallisuuspoikkeama
 SET lahetetty = now(), lahetys_onnistunut = :onnistunut
 WHERE id = :id;
-
---name: hae-turvallisuuspoikkeaman-liitteet
-SELECT
-  l.id,
-  l.tyyppi,
-  l.koko,
-  l.nimi,
-  l.liite_oid,
-  l.pikkukuva,
-  l.kuvaus
-FROM liite l
-  INNER JOIN turvallisuuspoikkeama_liite tpl
-    ON l.id = tpl.liite
-WHERE tpl.turvallisuuspoikkeama = :id;
 
 --name: hae-lahettamattomat-turvallisuuspoikkeamat
 SELECT id

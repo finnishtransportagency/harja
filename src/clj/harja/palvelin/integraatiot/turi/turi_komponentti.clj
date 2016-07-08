@@ -18,14 +18,17 @@
 (defn kasittele-turin-vastaus [db id _]
   (q/lokita-lahetys<! db true id))
 
-(defn hae-liitteet [liitteiden-hallinta db id]
-  (let [liitteet (q/hae-turvallisuuspoikkeaman-liitteet db id)]
-    (mapv (fn [liite] (assoc liite :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite)))) liitteet)))
+(defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
+  (let [liitteet (:liitteet turvallisuuspoikkeama)]
+    (mapv
+      (fn [liite]
+        (assoc liite :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite))))
+      liitteet)))
 
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
   (let [turvallisuuspoikkeama (first (q/hae-turvallisuuspoikkeama db id))]
     (if turvallisuuspoikkeama
-      (let [liitteet (hae-liitteet liitteiden-hallinta db id)]
+      (let [liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
         (assoc turvallisuuspoikkeama
           :liitteet liitteet))
       (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]
