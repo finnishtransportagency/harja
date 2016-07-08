@@ -112,9 +112,9 @@
            [:ammattimuutarkenne (:tyontekijanammattimuu data)]]
           (vammat->numerot (:vammat data))
           (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
-          [[:sairauspoissaolot (:sairauspoissaolopaivat data)]
+          [[:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
            [:sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))]
-           [:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]])))
+           [:sairaalahoitovuorokaudet (or (:sairaalavuorokaudet data) 0)]])))
 
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
@@ -130,6 +130,7 @@
    [:tila "1"]])
 
 (defn rakenna-poikkeamaliite [data]
+  ;; TODO Rakenna
   [[:poikkeamaliite
    [:tiedostonimi "string"]
    [:tiedosto "ZGVkaXQ="]]
