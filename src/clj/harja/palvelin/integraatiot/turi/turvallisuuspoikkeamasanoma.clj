@@ -164,6 +164,22 @@
    :muu_tyontekija 29
    :tyomaan_ulkopuolinen 30})
 
+(def vamma->numero
+  {:haavat_ja_pinnalliset_vammat 1
+   :luunmurtumat 2
+   :sijoiltaan_menot_nyrjahdykset_ja_venahdykset 3
+   :amputoitumiset_ja_irti_repeamiset 4
+   :tarahdykset_ja_sisaiset_vammat_ruhjevammat 5
+   :palovammat_syopymat_ja_paleltumat 6
+   :myrkytykset_ja_tulehdukset 7
+   :hukkuminen_ja_tukehtuminen 8
+   :aanen_ja_varahtelyn_vaikutukset 9
+   :aarilampotilojen_valon_ja_sateilyn_vaikutukset 10
+   :sokki 11
+   :useita_samantasoisia_vammoja 12
+   :muut 13
+   :ei_tietoa 14})
+
 (defn poikkeamatyypit->numerot [tyypit]
   (mapv
     (fn [tyyppi] [:tyyppi (poikkeamatyyppi->numero tyyppi)])
@@ -185,7 +201,7 @@
   [:syytjaseuraukset
    [:seuraukset (:seuraukset data)]
    [:ammatti (ammatti->numero (:tyontekijanammatti data))]
-   [:ammattimuutarkenne "anyType"]
+   [:ammattimuutarkenne (:tyontekijanammattimuu data)]
    [:vammanlaatu "11"]
    [:vahingoittunutruumiinosa "10"]
    [:sairauspoissaolot "3"]
