@@ -26,7 +26,9 @@
       liitteet)))
 
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
-  (let [turvallisuuspoikkeama (first (q/hae-turvallisuuspoikkeama db id))]
+  (let [turvallisuuspoikkeama (first (into []
+                                           q/turvallisuuspoikkeama-xf
+                                           (q/hae-turvallisuuspoikkeama db id)))]
     (if turvallisuuspoikkeama
       (let [liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
         (assoc turvallisuuspoikkeama
