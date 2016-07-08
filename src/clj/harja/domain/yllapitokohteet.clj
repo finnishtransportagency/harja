@@ -1,5 +1,5 @@
 (ns harja.domain.yllapitokohteet
-  "Ylläapitokohteiden yhteisiä apureita"
+  "Ylläpitokohteiden yhteisiä apureita"
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +kohteissa-viallisia-sijainteja+ "viallisia-sijainteja")
@@ -58,8 +58,6 @@
              :virheet (lisaa-virhe edellinen seuraava)}))
         {:virheet [] :edellinen (first alikohteet)}
         (rest alikohteet)))))
-
-
 
 (defn validoi-alikohteet [kohde-id kohteen-sijainti alikohteet]
   (concat

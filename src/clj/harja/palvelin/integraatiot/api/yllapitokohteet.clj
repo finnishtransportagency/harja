@@ -10,13 +10,14 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
-(def testi-paallystysilmoitus
+(def testidata
   {:otsikko
    {:lahettaja
     {:jarjestelma "Urakoitsijan järjestelmä",
@@ -25,12 +26,12 @@
     :lahetysaika "2016-01-30T12:00:00Z"},
    :paallystysilmoitus
    {:yllapitokohde
-    {:sijainti {:aosa 810, :aet 137, :losa 814, :let 1912},
+    {:sijainti {:aosa 1, :aet 1, :losa 5, :let 16},
      :alikohteet
      [{:alikohde
        {:leveys 1.2,
         :kokonaismassamaara 12.3,
-        :sijainti {:aosa 810, :aet 137, :losa 812, :let 1},
+        :sijainti {:aosa 1, :aet 1, :losa 5, :let 16},
         :kivi-ja-sideaineet
         [{:kivi-ja-sideaine
           {:esiintyma "testi",
@@ -47,33 +48,42 @@
         :raekoko 12,
         :tyomenetelma "Uraremix",
         :rc-prosentti 54,
-        :paallystetyyppi "avoin asfaltti"}}]}}}
-  )
-
+        :paallystetyyppi "avoin asfaltti"}}]},
+    :alustatoimenpiteet
+    [{:alustatoimenpide
+      {:sijainti {:aosa 1, :aet 1, :losa 5, :let 15},
+       :kasittelymenetelma "Massanvaihto",
+       :paksuus 1.2,
+       :verkkotyyppi "Teräsverkko",
+       :verkon-tarkoitus "Tasaukset",
+       :verkon-sijainti "Päällysteessä",
+       :tekninen-toimenpide "Rakentaminen"}}]}})
 
 (defn paivita-alikohteet [db kohde alikohteet]
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
-  (doseq [alikohde alikohteet]
-    (let [sijainti (:sijainti alikohde)
-          osoite {:tie (:tr-numero kohde)
-                  :aosa (:aosa sijainti)
-                  :aet (:aet sijainti)
-                  :losa (:losa sijainti)
-                  :loppuet (:let sijainti)}
-          sijainti-geometria (:tierekisteriosoitteelle_viiva (first (q-tieverkko/tierekisteriosoite-viivaksi db osoite)))
-          parametrit {:yllapitokohde (:id kohde)
-                      :nimi (:nimi alikohde)
-                      :tunnus (:tunnus alikohde)
-                      :tr_numero (:tr-numero kohde)
-                      :tr_alkuosa (:aosa sijainti)
-                      :tr_alkuetaisyys (:aet sijainti)
-                      :tr_loppuosa (:losa sijainti)
-                      :tr_loppuetaisyys (:let sijainti)
-                      :tr_ajorata (:tr-ajorata kohde)
-                      :tr_kaista (:tr-kaista kohde)
-                      :toimenpide (:toimenpide alikohde)
-                      :sijainti sijainti-geometria}]
-      (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit))))
+  (mapv
+    (fn [alikohde]
+      (let [sijainti (:sijainti alikohde)
+            osoite {:tie (:tr-numero kohde)
+                    :aosa (:aosa sijainti)
+                    :aet (:aet sijainti)
+                    :losa (:losa sijainti)
+                    :loppuet (:let sijainti)}
+            sijainti-geometria (:tierekisteriosoitteelle_viiva (first (q-tieverkko/tierekisteriosoite-viivaksi db osoite)))
+            parametrit {:yllapitokohde (:id kohde)
+                        :nimi (:nimi alikohde)
+                        :tunnus (:tunnus alikohde)
+                        :tr_numero (:tr-numero kohde)
+                        :tr_alkuosa (:aosa sijainti)
+                        :tr_alkuetaisyys (:aet sijainti)
+                        :tr_loppuosa (:losa sijainti)
+                        :tr_loppuetaisyys (:let sijainti)
+                        :tr_ajorata (:tr-ajorata kohde)
+                        :tr_kaista (:tr-kaista kohde)
+                        :toimenpide (:toimenpide alikohde)
+                        :sijainti sijainti-geometria}]
+        (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
+    alikohteet))
 
 (defn paivita-kohde [db kohde-id kohteen-sijainti]
   (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
@@ -86,6 +96,74 @@
          :id
          kohde-id)))
 
+(defn rakenna-ilmoitustiedot [paallystysilmoitus]
+  ;; todo: täytyy kaivaa todennäköisesti vielä tason syvemmältä varsinaiset mäpit
+  {:osoitteet (mapv (fn [alikohde]
+                      (let [kivi (:kivi-ja-sideaine (first (:kivi-ja-sideaineet alikohde)))]
+                        {:kohdeosa-id (:id alikohde)
+                         :rc% (:rc-prosentti alikohde)
+                         :leveys (:leveys alikohde)
+                         :km-arvo (:km-arvo kivi)
+                         :raekoko (:raekoko alikohde)
+                         :pinta-ala (:pinta-ala alikohde)
+                         :esiintyma (:esiintyma kivi)
+                         :muotoarvo (:muotoarvo kivi)
+                         :pitoisuus (:pitoisuus kivi)
+                         ;; todo: mäppää selitteistä koodeiksi
+                         :kuulamylly (:kuulamylly kivi)
+                         :lisaaineet (:lisa-aineet kivi)
+                         :massamenekki (:massamenekki alikohde)
+                         :tyomenetelma (:tyomenetelma alikohde)
+                         :sideainetyyppi (:sideainetyyppi kivi)
+                         :paallystetyyppi (:paallystetyyppi alikohde)
+                         :kokonaismassamaara (:kokonaismassamaara alikohde)
+                         :edellinen-paallystetyyppi (:edellinen-paallystetyyppi alikohde)}))
+                    (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
+   :alustatoimet (mapv (fn [alustatoimi]
+                         (let [sijainti (:sijainti alustatoimi)]
+                           {:aosa (:aosa sijainti)
+                            :aet (:aet sijainti)
+                            :losa (:losa sijainti)
+                            :let (:let sijainti)
+                            :paksuus (:paksuus alustatoimi)
+                            ;; todo: mäppää selitteistä koodeiksi
+                            :verkkotyyppi (:verkkotyyppi alustatoimi)
+                            :verkon-sijainti (:verkon-sijainti alustatoimi)
+                            :verkon-tarkoitus (:verkon-tarkoitus alustatoimi)
+                            :kasittelymenetelma (:kasittelymenetelma alustatoimi)
+                            :tekninen-toimenpide (:tekninen-toimenpide alustatoimi)}))
+                       (:alustatoimenpiteet paallystysilmoitus))
+   :tyot (mapv (fn [tyo]
+                 {;; todo: mäppää selitteistä koodeiksi
+                  :tyo (:tyotehtava tyo)
+                  :tyyppi (:tyyppi tyo)
+                  :yksikko (:yksikko tyo)
+                  :yksikkohinta (:yksikkohinta tyo)
+                  :tilattu-maara (:tilattu-maara tyo)
+                  ;; todo: lisättävä skeemaan :toteutunut-maara
+                  })
+               (:tyot paallystysilmoitus))})
+
+(defn paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
+  (let [ilmoitustiedot (rakenna-ilmoitustiedot paallystysilmoitus)]
+    (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db kohde-id)
+      (q-paallystys/luo-paallystysilmoitus<!
+        db
+        {:paallystyskohde kohde-id
+         :tila nil
+         :ilmoitustiedot ilmoitustiedot
+         :aloituspvm nil
+         :valmispvm_kohde nil
+         :valmispvm_paallystys nil
+         :takuupvm nil
+         :muutoshinta nil
+         :kayttaja kayttaja})
+      (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
+        db
+        {:ilmoitustiedot ilmoitustiedot
+         :muokkaaja kayttaja
+         :id kohde-id}))))
+
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (jdbc/with-db-transaction
     [db db]
@@ -96,7 +174,8 @@
 
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-      (let [kohteen-sijainti (get-in data [:paallystysilmoitus :yllapitokohde :sijainti])
+      (let [paallystysilmoitus (:paallystysilmoitus data)
+            kohteen-sijainti (get-in data [:paallystysilmoitus :yllapitokohde :sijainti])
             alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet]))
             kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
             kohteen-tienumero (:tr-numero kohde)
@@ -104,14 +183,12 @@
         (validointi/tarkista-paallystysilmoitus db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)
 
         (paivita-kohde db kohde-id kohteen-sijainti)
-        (paivita-alikohteet db kohde alikohteet)
 
-        ;; tallenna päällystysilmoituksen tiedot
-        )
-
-      (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-                                   ;; todo: palauta uusi id
-                                   :id nil}))))
+        (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
+              paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)
+              id (paivita-paallystysilmoitus db kohde-id paallystysilmoitus)]
+          (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+                                       :id id}))))))
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
   (let [urakka-id (Integer/parseInt (:id parametit))]

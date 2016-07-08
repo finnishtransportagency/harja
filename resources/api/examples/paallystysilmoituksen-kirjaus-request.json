@@ -73,6 +73,17 @@
           "tekninen-toimenpide": "Rakentaminen"
         }
       }
+    ],
+    "tyot": [
+      {
+        "tyo": {
+          "tyyppi": "tasaukset",
+          "tyotehtava": "työtehtävä",
+          "tilattu-maara": 1.2,
+          "yksikko": "kpl",
+          "yksikkohinta": 55.4
+        }
+      }
     ]
   }
 }

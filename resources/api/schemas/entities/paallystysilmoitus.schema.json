@@ -50,6 +50,12 @@
                     "additionalProperties": false,
                     "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
                   },
+                  "edellinen-paallyste": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/edellinen-paallyste",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
+                  },
                   "toimenpide": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/toimenpide",
                     "type": "string"
@@ -308,8 +314,8 @@
                 "required": true
               },
               "yksikkohinta": {
-                "id": "urn:harja/tyot/0/tyo/number",
-                "type": "string",
+                "id": "urn:harja/tyot/0/tyo/yksikkohinta",
+                "type": "number",
                 "required": true
               }
             }
