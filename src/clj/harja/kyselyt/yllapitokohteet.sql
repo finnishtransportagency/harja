@@ -431,3 +431,13 @@ WHERE id = :kohdeid;
 SELECT exists(SELECT id
               FROM yllapitokohde
               WHERE urakka = :urakka AND id = :kohde);
+
+-- name: paivita-yllapitokohteen-sijainti!
+-- Päivittää ylläpitokohteen
+UPDATE yllapitokohde
+SET
+  tr_alkuosa       = :tr_alkuosa,
+  tr_alkuetaisyys  = :tr_alkuetaisyys,
+  tr_loppuosa      = :tr_loppuosa,
+  tr_loppuetaisyys = :tr_loppuetaisyys
+WHERE id = :id;

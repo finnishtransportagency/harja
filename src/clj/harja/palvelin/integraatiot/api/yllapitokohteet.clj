@@ -68,7 +68,17 @@
           alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet]))]
       (validointi/tarkista-paallystysilmoitus db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)
 
-      ;; hae kohteen tiedot ja tarkista sijainnit vielä kantaa vasten
+      (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
+        db (assoc (clojure.set/rename-keys
+              kohteen-sijainti
+              {:aosa :tr_alkuosa
+               :aet :tr_alkuetaisyys
+               :losa :tr_loppuosa
+               :let :tr_loppuetaisyys})
+             :id
+             kohde-id))
+
+
       ;; tuhoa kohteen-alikohteet
       ;; tallenna uudet alikohteet
       ;; tallenna päällystysilmoituksen tiedot
