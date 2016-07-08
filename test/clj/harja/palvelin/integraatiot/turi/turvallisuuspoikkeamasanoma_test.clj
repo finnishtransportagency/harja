@@ -9,6 +9,7 @@
 
 (deftest tarkista-sanoman-muodostus
   (let [turpo-idt (flatten (q "SELECT id FROM turvallisuuspoikkeama"))]
+    (log/debug "Validoidaan turpo-idt: " (pr-str turpo-idt))
     (doseq [id turpo-idt]
       (log/debug "Validoidaan id:" id)
       (let [data (turi/hae-turvallisuuspoikkeama (luo-liitteidenhallinta) (luo-testitietokanta) id)

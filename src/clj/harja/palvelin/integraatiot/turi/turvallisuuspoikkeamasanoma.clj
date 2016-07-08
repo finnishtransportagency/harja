@@ -109,8 +109,8 @@
 (defn rakenna-tapahtumapaikka [data]
   [:tapahtumapaikka
    [:paikka (:paikan-kuvaus data)]
-   [:eureffinn 1.0] ; TODO Hae
-   [:eureffine 1.0] ; TODO Hae
+   [:eureffinn (second (get-in data [:sijainti :coordinates]))]
+   [:eureffine (first (get-in data [:sijainti :coordinates]))]
    [:tienumero (get-in data [:tr :numero])]
    [:tieaosa (get-in data [:tr :alkuosa])]
    [:tielosa (get-in data [:tr :loppuosa])]
