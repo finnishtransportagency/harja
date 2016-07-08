@@ -28,11 +28,6 @@
                                    :vaylamuoto :tie
                                    :tyontekijanammatti :muu_tyontekija})
 
-(def turpon-tilakuvaukset {:avoin "Avoin"
-                           :kasitelty "Käsitelty"
-                           :taydennetty "Täydennetty"
-                           :suljettu "Suljettu"})
-
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
   (r/wrap
     (into {} (map (juxt :id identity) (:korjaavattoimenpiteet @turvallisuuspoikkeama-atom)))
@@ -269,7 +264,7 @@
                          [:ei-avoimia-korjaavia-toimenpiteitä
                           "Voidaan sulkea vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
                :tyyppi :valinta
-               :valinta-nayta #(or (turpon-tilakuvaukset %)
+               :valinta-nayta #(or (turpodomain/kuvaa-turpon-tila %)
                                    "- valitse -")
                :valinnat [:avoin :kasitelty :taydennetty :suljettu]
                :palstoja 1}
@@ -402,7 +397,7 @@
        {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
         :hae turpodomain/kuvaile-tyontekijan-ammatti}
        {:otsikko "Ku\u00ADvaus" :nimi :kuvaus :tyyppi :string :leveys 45}
-       {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpon-tilakuvaukset
+       {:otsikko "Tila" :nimi :tila :tyyppi :string :leveys 8 :fmt turpodomain/kuvaa-turpon-tila
         :validoi [[:ei-tyhja "Valitse tila"]]}
        {:otsikko "Pois\u00ADsa" :nimi :poissa :tyyppi :string :leveys 5
         :hae (fn [rivi] (str (or (:sairaalavuorokaudet rivi) 0) "+" (or (:sairauspoissaolopaivat rivi) 0)))}

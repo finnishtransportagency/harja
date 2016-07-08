@@ -101,5 +101,10 @@
    :koko_keho           "Koko keho (useat kehon alueet)"
    :ei_tietoa           "Ei tietoa"})
 
+(def kuvaa-turpon-tila {:avoin "Avoin"
+                           :kasitelty "Käsitelty"
+                           :taydennetty "Täydennetty"
+                           :suljettu "Suljettu"})
+
 (def vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
   (henkilovahingon-checkboksien-avaimet-jarjestyksessa vahingoittunut-ruumiinosa))

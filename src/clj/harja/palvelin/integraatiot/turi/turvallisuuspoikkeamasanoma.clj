@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
+            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -236,11 +237,9 @@
 
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
-   [:otsikko "string"]
-   [:luontipvm "2017-08-18"]
-   [:ilmoittaja "string"]
-   [:ilmoittajaorganisaatio "string"]
-   [:tila "Käsitelty"]])
+   [:otsikko (:tapahtuman-otsikko data)]
+   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]
+   [:tila (turpodomain/kuvaa-turpon-tila (:tila data))]])
 
 (defn rakenna-poikkeamatoimenpide [data]
   [:poikkeamatoimenpide
