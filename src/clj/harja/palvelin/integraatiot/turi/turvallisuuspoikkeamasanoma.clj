@@ -232,7 +232,7 @@
           (vammat->numerot (:vammat data))
           (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
           [[:sairauspoissaolot (:sairauspoissaolopaivat data)]
-           [:sairauspoissaolojatkuu (:sairauspoissaolojatkuu data)]
+           [:sairauspoissaolojatkuu (true? (:sairauspoissaolojatkuu data))]
            [:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]])))
 
 (defn rakenna-tapahtumakasittely [data]
@@ -249,21 +249,24 @@
    [:tila "1"]])
 
 (defn rakenna-poikkeamaliite [data]
+  [[:poikkeamaliite
+   [:tiedostonimi "string"]
+   [:tiedosto "ZGVkaXQ="]]
   [:poikkeamaliite
    [:tiedostonimi "string"]
-   [:tiedosto "ZGVkaXQ="]])
+   [:tiedosto "ZGVkaXQ="]]])
 
 (defn muodosta-viesti [data]
   ;; Harjaa koskemattomat XML-sanoman tagit jätetty koodiin kommentoituna, jotta
   ;; voidaan edelleen havainnollistaa koko sanoma
-  [:imp:poikkeama
-   {:xmlns:imp "http://importexport.xml.turi.oikeatoliot.fi"}
-   (rakenna-tapahtumatiedot data)
-   (rakenna-tapahtumapaikka data)
-   (rakenna-syyt-ja-seuraukset data)
-   (rakenna-tapahtumakasittely data)
-   (rakenna-poikkeamatoimenpide data)
-   (rakenna-poikkeamaliite data)])
+  (into [:imp:poikkeama {:xmlns:imp "http://importexport.xml.turi.oikeatoliot.fi"}]
+        (concat
+          [(rakenna-tapahtumatiedot data)
+           (rakenna-tapahtumapaikka data)
+           (rakenna-syyt-ja-seuraukset data)
+           (rakenna-tapahtumakasittely data)
+           (rakenna-poikkeamatoimenpide data)]
+          (rakenna-poikkeamaliite data))))
 
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
