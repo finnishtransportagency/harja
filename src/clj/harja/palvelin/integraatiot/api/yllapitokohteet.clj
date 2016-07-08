@@ -9,13 +9,11 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
-            [harja.domain.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
-
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def testi-paallystysilmoitus
@@ -53,40 +51,67 @@
   )
 
 
+(defn paivita-alikohteet [db kohde alikohteet]
+  (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
+  (doseq [alikohde alikohteet]
+    (let [sijainti (:sijainti alikohde)
+          osoite {:tie (:tr-numero kohde)
+                  :aosa (:aosa sijainti)
+                  :aet (:aet sijainti)
+                  :losa (:losa sijainti)
+                  :loppuet (:let sijainti)}
+          sijainti-geometria (:tierekisteriosoitteelle_viiva (first (q-tieverkko/tierekisteriosoite-viivaksi db osoite)))
+          parametrit {:yllapitokohde (:id kohde)
+                      :nimi (:nimi alikohde)
+                      :tunnus (:tunnus alikohde)
+                      :tr_numero (:tr-numero kohde)
+                      :tr_alkuosa (:aosa sijainti)
+                      :tr_alkuetaisyys (:aet sijainti)
+                      :tr_loppuosa (:losa sijainti)
+                      :tr_loppuetaisyys (:let sijainti)
+                      :tr_ajorata (:tr-ajorata kohde)
+                      :tr_kaista (:tr-kaista kohde)
+                      :toimenpide (:toimenpide alikohde)
+                      :sijainti sijainti-geometria}]
+      (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit))))
+
+(defn paivita-kohde [db kohde-id kohteen-sijainti]
+  (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
+    db (assoc (clojure.set/rename-keys
+                kohteen-sijainti
+                {:aosa :tr_alkuosa
+                 :aet :tr_alkuetaisyys
+                 :losa :tr_loppuosa
+                 :let :tr_loppuetaisyys})
+         :id
+         kohde-id)))
+
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
-  (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)]
-    (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
-    (clojure.pprint/pprint data)
+  (jdbc/with-db-transaction
+    [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)]
+      (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
+      (clojure.pprint/pprint data)
 
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-    (let [kohteen-sijainti (get-in data [:paallystysilmoitus :yllapitokohde :sijainti])
-          alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet]))
-          kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          kohteen-tienumero (:tr-numero kohde)
-          alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet]))]
-      (validointi/tarkista-paallystysilmoitus db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)
+      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+      (let [kohteen-sijainti (get-in data [:paallystysilmoitus :yllapitokohde :sijainti])
+            alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet]))
+            kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
+            kohteen-tienumero (:tr-numero kohde)
+            alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet]))]
+        (validointi/tarkista-paallystysilmoitus db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)
 
-      (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
-        db (assoc (clojure.set/rename-keys
-              kohteen-sijainti
-              {:aosa :tr_alkuosa
-               :aet :tr_alkuetaisyys
-               :losa :tr_loppuosa
-               :let :tr_loppuetaisyys})
-             :id
-             kohde-id))
+        (paivita-kohde db kohde-id kohteen-sijainti)
+        (paivita-alikohteet db kohde alikohteet)
 
+        ;; tallenna päällystysilmoituksen tiedot
+        )
 
-      ;; tuhoa kohteen-alikohteet
-      ;; tallenna uudet alikohteet
-      ;; tallenna päällystysilmoituksen tiedot
-      )
-
-    (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-                                 ;; todo: palauta uusi id
-                                 :id nil})))
+      (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+                                   ;; todo: palauta uusi id
+                                   :id nil}))))
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
   (let [urakka-id (Integer/parseInt (:id parametit))]

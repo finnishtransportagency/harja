@@ -441,3 +441,7 @@ SET
   tr_loppuosa      = :tr_loppuosa,
   tr_loppuetaisyys = :tr_loppuetaisyys
 WHERE id = :id;
+
+-- name: poista-yllapitokohteen-kohdeosat!
+DELETE FROM yllapitokohdeosa
+WHERE yllapitokohde = :id;

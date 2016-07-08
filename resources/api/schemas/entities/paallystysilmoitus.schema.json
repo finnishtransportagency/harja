@@ -50,6 +50,10 @@
                     "additionalProperties": false,
                     "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
                   },
+                  "toimenpide": {
+                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/toimenpide",
+                    "type": "string"
+                  },
                   "raekoko": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/raekoko",
                     "type": "integer"
