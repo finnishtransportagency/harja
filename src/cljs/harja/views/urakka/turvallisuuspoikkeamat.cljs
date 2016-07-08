@@ -204,6 +204,7 @@
                                                       (and (= vaihtoehto :ei_tietoa)
                                                            (not (empty? valitut))
                                                            (not (valitut :ei_tietoa)))))]
+           (log "[TURPO] Render lomake: " (pr-str @turvallisuuspoikkeama))
            [:div
             [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
             (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
@@ -230,7 +231,8 @@
                :pakollinen? true
                :validoi [[:ei-tyhja "Valitse tila"]]
                :palstoja 1}
-              {:otsikko "Tapahtunut" :pakollinen? true :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+              {:otsikko "Tapahtunut" :pakollinen? true
+               :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
                :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
               (lomake/ryhma {:rivi? true}
