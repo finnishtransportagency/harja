@@ -125,8 +125,7 @@
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
    [:otsikko (:tapahtuman-otsikko data)]
-   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]
-   [:tila (turpodomain/kuvaa-turpon-tila (:tila data))]])
+   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]])
 
 (defn rakenna-poikkeamatoimenpide [data]
   (mapv (fn [toimenpide]
