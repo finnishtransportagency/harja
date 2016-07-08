@@ -126,21 +126,53 @@
 
 ;; ----- Yllä oleva koodi on wanhaa ------ ;;
 
-(def poikkeama-tyyppi
+(def poikkeamatyyppi->numero
   {:tyotapaturma 8
    :vaaratilanne 32
    :turvallisuushavainto 64
    :muu 16})
 
-(defn poikkeama-tyypit [tyypit]
+(def ammatti->numero
+  {:aluksen_paallikko 1
+   :asentaja 2
+   :asfalttityontekija 3
+   :harjoittelija 4
+   :hitsaaja 5
+   :kunnossapitotyontekija 6
+   :kansimies 7
+   :kiskoilla_liikkuvan_tyokoneen_kuljettaja 8
+   :konemies 9
+   :kuorma-autonkuljettaja 10
+   :liikenteenohjaaja 11
+   :mittamies 12
+   :panostaja 13
+   :peramies 14
+   :porari 15
+   :rakennustyontekija 16
+   :ratatyontekija 17
+   :ratatyosta_vastaava 18
+   :sukeltaja 19
+   :sahkotoiden_ammattihenkilo 20
+   :tilaajan_edustaja 21
+   :turvalaiteasentaja 22
+   :turvamies 23
+   :tyokoneen_kuljettaja 24
+   :tyonjohtaja 25
+   :valvoja 26
+   :veneenkuljettaja 27
+   :vaylanhoitaja 28
+   :muu_tyontekija 29
+   :tyomaan_ulkopuolinen 30})
+
+(defn poikkeamatyypit->numerot [tyypit]
   (mapv
-    (fn [tyyppi] [:tyyppi (poikkeama-tyyppi tyyppi)])
+    (fn [tyyppi] [:tyyppi (poikkeamatyyppi->numero tyyppi)])
     tyypit))
 
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
-          (poikkeama-tyypit (:tyyppi data))
+          (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
           [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]])))
 
@@ -150,8 +182,8 @@
 
 (defn rakenna-syyt-ja-seuraukset [data]
   [:syytjaseuraukset
-   [:seuraukset "string"]
-   [:ammatti "28"]
+   [:seuraukset (:seuraukset data)]
+   [:ammatti (ammatti->numero data)]
    [:ammattimuutarkenne "anyType"]
    [:vammanlaatu "11"]
    [:vahingoittunutruumiinosa "10"]
