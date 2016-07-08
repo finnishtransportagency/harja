@@ -230,9 +230,9 @@
            [:ammattimuutarkenne (:tyontekijanammattimuu data)]]
           (vammat->numerot (:vammat data))
           (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
-          [[:sairauspoissaolot "3"]
-           [:sairauspoissaolojatkuu "true"]
-           [:sairaalahoitovuorokaudet "3"]])))
+          [[:sairauspoissaolot (:sairauspoissaolopaivat data)]
+           [:sairauspoissaolojatkuu (:sairauspoissaolojatkuu data)]
+           [:sairaalahoitovuorokaudet (:sairaalavuorokaudet data)]])))
 
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
