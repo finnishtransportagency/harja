@@ -6,7 +6,8 @@
             [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
@@ -26,9 +27,13 @@
       liitteet)))
 
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
-  (let [turvallisuuspoikkeama (first (into []
-                                           q/turvallisuuspoikkeama-xf
-                                           (q/hae-turvallisuuspoikkeama db id)))]
+  (let [turvallisuuspoikkeama (first (konv/sarakkeet-vektoriin
+                                       (into []
+                                             q/turvallisuuspoikkeama-xf
+                                             (q/hae-turvallisuuspoikkeama db id))
+                                       {:korjaavatoimenpide :korjaavattoimenpiteet
+                                        :liite :liitteet
+                                        :kommentti :kommentit}))]
     (if turvallisuuspoikkeama
       (let [liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
         (assoc turvallisuuspoikkeama
