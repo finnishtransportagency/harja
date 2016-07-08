@@ -8,6 +8,9 @@
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]))
 
 (deftest tarkista-sanoman-muodostus
-  (let [data (turi/hae-turvallisuuspoikkeama (luo-liitteidenhallinta) (luo-testitietokanta) 1)
-        xml (sanoma/muodosta data)]
-    (is (xml/validoi "xsd/turi/" "poikkeama-rest.xsd" xml)) "Tehty sanoma on XSD-skeeman mukainen"))
+  (let [turpo-idt (flatten (q "SELECT id FROM turvallisuuspoikkeama"))]
+    (doseq [id turpo-idt]
+      (log/debug "Validoidaan id:" id)
+      (let [data (turi/hae-turvallisuuspoikkeama (luo-liitteidenhallinta) (luo-testitietokanta) id)
+           xml (sanoma/muodosta data)]
+       (is (xml/validoi "xsd/turi/" "poikkeama-rest.xsd" xml)) "Tehty sanoma on XSD-skeeman mukainen"))))
