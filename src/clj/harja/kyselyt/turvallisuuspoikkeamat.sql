@@ -162,6 +162,8 @@ SELECT
   t.urakka,
   t.tapahtunut,
   t.kasitelty,
+  t.tapahtuman_otsikko                  AS "tapahtuman-otsikko",
+  t.paikan_kuvaus                       AS "paikan-kuvaus",
   t.tyontekijanammatti,
   t.tyontekijanammatti_muu              AS tyontekijanammattimuu,
   t.kuvaus,
@@ -170,6 +172,7 @@ SELECT
   t.sairaalavuorokaudet,
   t.vahingoittuneet_ruumiinosat         AS vahingoittuneetruumiinosat,
   t.sairauspoissaolo_jatkuu             AS sairauspoissaolojatkuu,
+  t.tila,
   t.sijainti,
   t.tr_numero,
   t.tr_alkuetaisyys,
@@ -178,6 +181,8 @@ SELECT
   t.tr_loppuosa,
   t.vakavuusaste,
   t.vahinkoluokittelu,
+  t.vaarallisten_aineiden_kuljetus      AS "vaarallisten-aineiden-kuljetus",
+  t.vaarallisten_aineiden_vuoto         AS "vaarallisten-aineiden-vuoto",
   t.tyyppi,
   t.vaylamuoto,
   t.toteuttaja,
@@ -195,6 +200,9 @@ SELECT
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
+  k.otsikko                             AS korjaavatoimenpide_otsikko,
+  k.toteuttaja                          AS korjaavatoimenpide_toteuttaja,
+  k.tila                                AS korjaavatoimenpide_tila,
 
   kom.id                                AS kommentti_id,
   kom.tekija                            AS kommentti_tekija,
@@ -475,23 +483,6 @@ VALUES
 UPDATE turvallisuuspoikkeama
 SET lahetetty = now(), lahetys_onnistunut = :onnistunut
 WHERE id = :id;
-
---name: hae-turvallisuuspoikkeaman-korjaavat-toimenpiteet
-SELECT
-  id,
-  kuvaus,
-  suoritettu
-FROM korjaavatoimenpide
-WHERE turvallisuuspoikkeama = :id AND poistettu IS NOT TRUE;
-
---name: hae-turvallisuuspoikkeaman-kommentit
-SELECT
-  k.id,
-  k.tekija,
-  k.kommentti
-FROM kommentti k
-  INNER JOIN turvallisuuspoikkeama_kommentti tpk ON tpk.kommentti = k.id
-WHERE tpk.turvallisuuspoikkeama = :id;
 
 --name: hae-turvallisuuspoikkeaman-liitteet
 SELECT

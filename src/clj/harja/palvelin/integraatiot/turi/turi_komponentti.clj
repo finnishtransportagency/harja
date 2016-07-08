@@ -25,19 +25,16 @@
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
   (let [turvallisuuspoikkeama (first (q/hae-turvallisuuspoikkeama db id))]
     (if turvallisuuspoikkeama
-      (let [korjaavat-toimenpiteet (q/hae-turvallisuuspoikkeaman-korjaavat-toimenpiteet db id)
-            kommentit (q/hae-turvallisuuspoikkeaman-kommentit db id)
-            liitteet (hae-liitteet liitteiden-hallinta db id)]
+      (let [liitteet (hae-liitteet liitteiden-hallinta db id)]
         (assoc turvallisuuspoikkeama
-          :korjaavat-toimenpiteet korjaavat-toimenpiteet
-          :kommentit kommentit
           :liitteet liitteet))
       (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]
         (log/error virhe)
         (throw+ {:type :tuntematon-turvallisuuspoikkeama
                  :error virhe})))))
 
-(defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta url kayttajatunnus salasana]} id]
+(defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta
+                                                   url kayttajatunnus salasana]} id]
   (when-not (empty? url)
     (log/debug (format "Lähetetään turvallisuuspoikkeama (id: %s) TURI:n" id))
     (try
@@ -74,7 +71,8 @@
 (defrecord Turi [asetukset]
   component/Lifecycle
   (start [this]
-    (let [{url :url kayttajatunnus :kayttajatunnus salasana :salasana paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
+    (let [{url :url kayttajatunnus :kayttajatunnus
+           salasana :salasana paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
       (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" url))
       (assoc
         (assoc this

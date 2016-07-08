@@ -13,36 +13,11 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
-(def turvallisuuspoikkeama-xf
-  (comp (map #(konv/string->keyword % :korjaavatoimenpide_tila))
-        (map konv/alaviiva->rakenne)
-        (geo/muunna-pg-tulokset :sijainti)
-        (map #(konv/array->set % :tyyppi))
-        (map #(assoc % :vaaralliset-aineet (into #{} (remove nil?
-                                                             [(when (:vaarallisten-aineiden-kuljetus %)
-                                                                :vaarallisten-aineiden-kuljetus)
-                                                              (when (:vaarallisten-aineiden-vuoto %)
-                                                                :vaarallisten-aineiden-vuoto)]))))
-        (map #(dissoc % :vaarallisten-aineiden-kuljetus))
-        (map #(dissoc % :vaarallisten-aineiden-vuoto))
-        (map #(konv/string-set->keyword-set % :tyyppi))
-        (map #(konv/array->set % :vahinkoluokittelu))
-        (map #(konv/string-set->keyword-set % :vahinkoluokittelu))
-        (map #(konv/array->set % :vahingoittuneetruumiinosat))
-        (map #(konv/string-set->keyword-set % :vahingoittuneetruumiinosat))
-        (map #(konv/array->set % :vammat))
-        (map #(konv/string-set->keyword-set % :vammat))
-        (map #(konv/string->keyword % :vakavuusaste))
-        (map #(konv/string->keyword % :tila))
-        (map #(konv/string->keyword % :vaylamuoto))
-        (map #(konv/string->keyword % :tyontekijanammatti))
-        (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
-
 (defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
-          turvallisuuspoikkeama-xf
+          q/turvallisuuspoikkeama-xf
           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
     {:korjaavatoimenpide :korjaavattoimenpiteet}))
 
@@ -54,7 +29,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
   (let [tulos (as-> (first (konv/sarakkeet-vektoriin (into []
-                                                           turvallisuuspoikkeama-xf
+                                                           q/turvallisuuspoikkeama-xf
                                                            (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
                                                      {:kommentti :kommentit
                                                       :korjaavatoimenpide :korjaavattoimenpiteet
