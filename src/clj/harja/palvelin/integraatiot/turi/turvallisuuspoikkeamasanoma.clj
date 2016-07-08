@@ -184,7 +184,7 @@
 (defn rakenna-syyt-ja-seuraukset [data]
   [:syytjaseuraukset
    [:seuraukset (:seuraukset data)]
-   [:ammatti (ammatti->numero data)]
+   [:ammatti (ammatti->numero (:tyontekijanammatti data))]
    [:ammattimuutarkenne "anyType"]
    [:vammanlaatu "11"]
    [:vahingoittunutruumiinosa "10"]
