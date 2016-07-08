@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://importexport.xml.turi.oikeatoliot.fi"
-           targetNamespace="http://importexport.xml.turi.oikeatoliot.fi" elementFormDefault="unqualified"
-           attributeFormDefault="unqualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://importexport.xml.turi.oikeatoliot.fi" targetNamespace="http://importexport.xml.turi.oikeatoliot.fi" elementFormDefault="unqualified" attributeFormDefault="unqualified">
     <xs:element name="poikkeama">
         <xs:complexType>
             <xs:sequence>
@@ -22,10 +20,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:long">
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -55,11 +53,11 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -105,39 +103,39 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:long">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
-                                        <xs:enumeration value="128"/>
-                                        <xs:enumeration value="256"/>
-                                        <xs:enumeration value="512"/>
-                                        <xs:enumeration value="1024"/>
-                                        <xs:enumeration value="2048"/>
-                                        <xs:enumeration value="4096"/>
-                                        <xs:enumeration value="8192"/>
-                                        <xs:enumeration value="16384"/>
-                                        <xs:enumeration value="32768"/>
-                                        <xs:enumeration value="65536"/>
-                                        <xs:enumeration value="131072"/>
-                                        <xs:enumeration value="262144"/>
-                                        <xs:enumeration value="524288"/>
-                                        <xs:enumeration value="1048576"/>
-                                        <xs:enumeration value="2097152"/>
-                                        <xs:enumeration value="4194304"/>
-                                        <xs:enumeration value="8388608"/>
-                                        <xs:enumeration value="16777216"/>
-                                        <xs:enumeration value="33554432"/>
-                                        <xs:enumeration value="67108864"/>
-                                        <xs:enumeration value="134217728"/>
-                                        <xs:enumeration value="268435456"/>
-                                        <xs:enumeration value="536870912"/>
-                                        <xs:enumeration value="1073741824"/>
-                                        <xs:enumeration value="2147483648"/>
-                                        <xs:enumeration value="4294967296"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
+                                        <xs:enumeration value="128" />
+                                        <xs:enumeration value="256" />
+                                        <xs:enumeration value="512" />
+                                        <xs:enumeration value="1024" />
+                                        <xs:enumeration value="2048" />
+                                        <xs:enumeration value="4096" />
+                                        <xs:enumeration value="8192" />
+                                        <xs:enumeration value="16384" />
+                                        <xs:enumeration value="32768" />
+                                        <xs:enumeration value="65536" />
+                                        <xs:enumeration value="131072" />
+                                        <xs:enumeration value="262144" />
+                                        <xs:enumeration value="524288" />
+                                        <xs:enumeration value="1048576" />
+                                        <xs:enumeration value="2097152" />
+                                        <xs:enumeration value="4194304" />
+                                        <xs:enumeration value="8388608" />
+                                        <xs:enumeration value="16777216" />
+                                        <xs:enumeration value="33554432" />
+                                        <xs:enumeration value="67108864" />
+                                        <xs:enumeration value="134217728" />
+                                        <xs:enumeration value="268435456" />
+                                        <xs:enumeration value="536870912" />
+                                        <xs:enumeration value="1073741824" />
+                                        <xs:enumeration value="2147483648" />
+                                        <xs:enumeration value="4294967296" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -154,19 +152,18 @@
                                         32 = Veturi
                                         64 = Ratatyökone
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        1,2,4,8,16,32,64,128,512,1024,4096,8192,4194304,8388608
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,4,8,16,32,64,128,512,1024,4096,8192,4194304,8388608
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -183,19 +180,18 @@
                                         32 = Veturi
                                         64 = Ratatyökone
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        1
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -204,13 +200,12 @@
                                     <xs:documentation>
                                         Ohitusmatka metreinä
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        4,64
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 4,64
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0"/>
+                                        <xs:minInclusive value="0" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -219,12 +214,11 @@
                                     <xs:documentation>
                                         Raiteella este
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        4,16
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 4,16
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean"/>
+                                    <xs:restriction base="xs:boolean" />
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="jannitekatkotyyppi" minOccurs="0">
@@ -235,33 +229,29 @@
                                         1 = Jännitekatko suoritettu suunnitelman vastaiseseti
                                         2 = Katkosuunnitelmassa turvallisuusvirhe
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        536870912
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 536870912
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="viestintatyyppi" minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        1 = Poikkeama liikennöintiin liittyvässä määrämuotoisessa tai muutoin
-                                        ohjeistetussa viestinnässä
-                                        2 = Poikkeama ratatyöhön liittyvässä määrämuotoisessa tai muutoin ohjeistetussa
-                                        viestinnässä
+                                        1 = Poikkeama liikennöintiin liittyvässä määrämuotoisessa tai muutoin ohjeistetussa viestinnässä
+                                        2 = Poikkeama ratatyöhön liittyvässä määrämuotoisessa tai muutoin ohjeistetussa viestinnässä
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        4294967296
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 4294967296
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -274,15 +264,14 @@
                                         4 = Prosessipoikkeama (ei aiheuta korjaavia toimenpiteitä)
                                         8 = Prosessipoikkeama (aiheuttaa korjaavia toimenpiteitä)
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        268435456
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 268435456
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -297,17 +286,16 @@
                                         4 = Tekninen syy
                                         5 = Muut syyt
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        16
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 16
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="3"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="5"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="3" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="5" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -319,14 +307,13 @@
                                         1 = Jarrujen laahaaminen
                                         2 = Kuuma laakeri
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        32
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 32
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -338,8 +325,7 @@
                                                 <xs:documentation>
                                                     VAK-aine
 
-                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin
-                                                    seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
+                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
                                                 </xs:documentation>
                                             </xs:annotation>
                                             <xs:simpleType>
@@ -356,14 +342,13 @@
                                                     1 = Kalusto suistui
                                                     2 = Kalusto törmäsi
 
-                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin
-                                                    seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
+                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
                                                 </xs:documentation>
                                             </xs:annotation>
                                             <xs:simpleType>
                                                 <xs:restriction base="xs:long">
-                                                    <xs:enumeration value="1"/>
-                                                    <xs:enumeration value="2"/>
+                                                    <xs:enumeration value="1" />
+                                                    <xs:enumeration value="2" />
                                                 </xs:restriction>
                                             </xs:simpleType>
                                         </xs:element>
@@ -375,14 +360,13 @@
                                                     1 = Nestevuoto
                                                     2 = Kaasuvuoto
 
-                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin
-                                                    seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
+                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
                                                 </xs:documentation>
                                             </xs:annotation>
                                             <xs:simpleType>
                                                 <xs:restriction base="xs:int">
-                                                    <xs:enumeration value="1"/>
-                                                    <xs:enumeration value="2"/>
+                                                    <xs:enumeration value="1" />
+                                                    <xs:enumeration value="2" />
                                                 </xs:restriction>
                                             </xs:simpleType>
                                         </xs:element>
@@ -399,16 +383,15 @@
                                         4 = Ratatyöyksikkö
                                         8 = Muu
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        8
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -425,19 +408,18 @@
                                         32 = Moottoripyörä
                                         64 = Muu
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        8
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -452,17 +434,16 @@
                                         8 = Risteysmerkit
                                         16 = Ilman risteysmerkkejä
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        8
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -476,16 +457,15 @@
                                         4 = Vaunujen väli
                                         8 = Junayksiköiden väli
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        128
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 128
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -498,15 +478,14 @@
                                         2 = Tavaravaunussa
                                         4 = Junayksikössä
 
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        256
+                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 256
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -518,8 +497,7 @@
                                         1 = Ei-tahallinen
                                         2 = Tahallinen
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        256
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 256
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -537,14 +515,13 @@
                                         1 = Luvaton liikkuminen radalla
                                         2 = Ei-luvaton liikkuminen radalla
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        512
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 512
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -558,16 +535,15 @@
                                         4 = Onnettomuus liikkuvassa yksikössä
                                         8 = Onnettomuus yksiköstä poistuttaessa
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        1024
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1024
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -584,19 +560,18 @@
                                         32 = Kaapelivaurio
                                         64 = Muu
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        2048,67108864
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 2048,67108864
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -609,15 +584,14 @@
                                         2 = VR:n raide
                                         4 = Yksityisraide
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        2048,67108864
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 2048,67108864
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -630,15 +604,14 @@
                                         2 = Asetinlaite- tai kauko-ohjausvika
                                         4 = Vaihdevika
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        67108864
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 67108864
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -647,8 +620,7 @@
                                     <xs:documentation>
                                         Tapahtuman lisätieto
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        16384,32768,1048576,2097152,4194304,8388608
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 16384,32768,1048576,2097152,4194304,8388608
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -665,14 +637,13 @@
                                         1 = Tapahtui junassa
                                         2 = Tapahtui asemalla
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        65536
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 65536
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -686,16 +657,15 @@
                                         4 = Rakennus
                                         8 = Muu
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        131072
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 131072
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -712,19 +682,18 @@
                                         32 = Rakennus
                                         64 = Muu
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        262144
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 262144
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -733,8 +702,7 @@
                                     <xs:documentation>
                                         Varkauden kohde
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        524288
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 524288
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -761,29 +729,27 @@
                                         1024 = Ratatöiden suojaamisvirhe ja kulkutien turvaamisvirhe
                                         2048 = Kulkutien turvaamisvirhe ja ratatyön suojaamisvirhe
                                         4096 = Ratatyöilmoitus läpikäymättä
-                                        8192 = Ratatyöprosessin virhe: vaiheita ei toteuteta järjestyksessä suojaus,
-                                        merkintä, lupa
+                                        8192 = Ratatyöprosessin virhe: vaiheita ei toteuteta järjestyksessä suojaus, merkintä, lupa
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        8388608
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8388608
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
-                                        <xs:enumeration value="128"/>
-                                        <xs:enumeration value="256"/>
-                                        <xs:enumeration value="512"/>
-                                        <xs:enumeration value="1024"/>
-                                        <xs:enumeration value="2048"/>
-                                        <xs:enumeration value="4096"/>
-                                        <xs:enumeration value="8192"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
+                                        <xs:enumeration value="128" />
+                                        <xs:enumeration value="256" />
+                                        <xs:enumeration value="512" />
+                                        <xs:enumeration value="1024" />
+                                        <xs:enumeration value="2048" />
+                                        <xs:enumeration value="4096" />
+                                        <xs:enumeration value="8192" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -794,8 +760,7 @@
 
                                         Kuka toimi urakoitsijana vaaratilanteen aikana?
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        8388608
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8388608
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -811,8 +776,7 @@
 
                                         Kuka vastasi ratatöistä vaaratilanteen aikana?
 
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista:
-                                        8388608
+                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8388608
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -826,13 +790,12 @@
                                     <xs:documentation>
                                         Junanumero
 
-                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista
-                                        arvoista: 1,2,4
+                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista arvoista: 1,2,4
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0"/>
+                                        <xs:minInclusive value="0" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -848,18 +811,17 @@
                                         16 = Infrarakentaminen
                                         32 = Ulkopuolinen vaihtotyö
 
-                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista
-                                        arvoista: 16
+                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista arvoista: 16
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -877,11 +839,11 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -900,10 +862,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -922,10 +884,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -944,10 +906,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -996,8 +958,8 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1033,22 +995,22 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
-                                        <xs:enumeration value="16"/>
-                                        <xs:enumeration value="32"/>
-                                        <xs:enumeration value="64"/>
-                                        <xs:enumeration value="128"/>
-                                        <xs:enumeration value="256"/>
-                                        <xs:enumeration value="512"/>
-                                        <xs:enumeration value="1024"/>
-                                        <xs:enumeration value="2048"/>
-                                        <xs:enumeration value="4096"/>
-                                        <xs:enumeration value="8192"/>
-                                        <xs:enumeration value="16384"/>
-                                        <xs:enumeration value="32768"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="64" />
+                                        <xs:enumeration value="128" />
+                                        <xs:enumeration value="256" />
+                                        <xs:enumeration value="512" />
+                                        <xs:enumeration value="1024" />
+                                        <xs:enumeration value="2048" />
+                                        <xs:enumeration value="4096" />
+                                        <xs:enumeration value="8192" />
+                                        <xs:enumeration value="16384" />
+                                        <xs:enumeration value="32768" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1062,8 +1024,8 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0"/>
-                                        <xs:maxInclusive value="9999999"/>
+                                        <xs:minInclusive value="0" />
+                                        <xs:maxInclusive value="9999999" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1092,10 +1054,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1110,11 +1072,7 @@
                                     <xs:documentation>
                                         Oma arvio tapahtumaan johtaneista syistä
 
-                                        Kirjataan mahdollisimman tarkasti, mikä aiheutti onnettomuuden tai
-                                        vaaratilanteen ja miksi se tapahtui. Kirjauksessa tulee käydä esille mitkä
-                                        koneet, laitteet tai materiaalit ovat liittyneet tapahtumaan tai sen syntyyn,
-                                        ovatko ympäristö, organisaation toiminta- ja johtamistavat tai työmenetelmät
-                                        vaikuttaneet tapahtumaan tai aiheuttaneet tapahtuman.
+                                        Kirjataan mahdollisimman tarkasti, mikä aiheutti onnettomuuden tai vaaratilanteen ja miksi se tapahtui. Kirjauksessa tulee käydä esille mitkä koneet, laitteet tai materiaalit ovat liittyneet tapahtumaan tai sen syntyyn, ovatko ympäristö, organisaation toiminta- ja johtamistavat tai työmenetelmät vaikuttaneet tapahtumaan tai aiheuttaneet tapahtuman.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -1136,10 +1094,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:long">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                        <xs:enumeration value="4"/>
-                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="4" />
+                                        <xs:enumeration value="8" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1148,8 +1106,7 @@
                                     <xs:documentation>
                                         Aiheutuneet seuraukset
 
-                                        Kirjataan tarkasti tapahtumasta tai vaaratilanteesta aiheutuneet seuraukset
-                                        (vahingot).
+                                        Kirjataan tarkasti tapahtumasta tai vaaratilanteesta aiheutuneet seuraukset (vahingot).
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -1166,7 +1123,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0"/>
+                                        <xs:minInclusive value="0" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1180,7 +1137,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200"/>
+                                        <xs:maxLength value="200" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1211,8 +1168,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                             </xs:element>
-                            <xs:element name="vahingoittunutruumiinosa" type="vahingoittunutruumiinosaType"
-                                        minOccurs="0">
+                            <xs:element name="vahingoittunutruumiinosa" type="vahingoittunutruumiinosaType"  minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Vahingoittunut ruumiinosa
@@ -1231,7 +1187,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0"/>
+                                        <xs:minInclusive value="0" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1244,7 +1200,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean"/>
+                                    <xs:restriction base="xs:boolean" />
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="sairaalahoitovuorokaudet" minOccurs="0">
@@ -1266,8 +1222,7 @@
                                     <xs:documentation>
                                         Korjaavat toimenpiteet
 
-                                        Tehtävät ja/tai korjaavat toimenpiteet, joita havainnon kirjaaja esittää
-                                        poikkeaman käsittelyn pohjaksi.
+                                        Tehtävät ja/tai korjaavat toimenpiteet, joita havainnon kirjaaja esittää poikkeaman käsittelyn pohjaksi.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -1374,7 +1329,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean"/>
+                                    <xs:restriction base="xs:boolean" />
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tila" minOccurs="0">
@@ -1398,9 +1353,7 @@
                                     <xs:documentation>
                                         Lisätietoja
 
-                                        Mikäli tapahtumaan halutaan liittää enemmän lisätietoa, se voidaan kirjata
-                                        lisätietoihin, kuten viittaukset muihin selvityksiin, esim. urakoitsijan omaan
-                                        järjestelmään tehdyn poikkeamailmoituksen numero.
+                                        Mikäli tapahtumaan halutaan liittää enemmän lisätietoa, se voidaan kirjata lisätietoihin, kuten viittaukset muihin selvityksiin, esim. urakoitsijan omaan järjestelmään tehdyn poikkeamailmoituksen numero.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -1416,7 +1369,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean"/>
+                                    <xs:restriction base="xs:boolean" />
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="palautepyydettyosoite" minOccurs="0">
@@ -1429,7 +1382,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="80"/>
+                                        <xs:maxLength value="80" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1442,7 +1395,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean"/>
+                                    <xs:restriction base="xs:boolean" />
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="palautekanava" minOccurs="0">
@@ -1455,7 +1408,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="20"/>
+                                        <xs:maxLength value="20" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1519,16 +1472,15 @@
                                         Tila
 
                                         0 = Avoin: toimenpide toteuttamatta
-                                        1 = Siirretty: toimenpide siirretty esimerkiksi toisen hankkeen tai
-                                        organisaation toteutettavaksi
+                                        1 = Siirretty: toimenpide siirretty esimerkiksi toisen hankkeen tai organisaation toteutettavaksi
                                         2 = Suljettu: toimenpide toteutettu
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="0"/>
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="0" />
+                                        <xs:enumeration value="1" />
+                                        <xs:enumeration value="2" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1539,7 +1491,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean"/>
+                                    <xs:restriction base="xs:boolean" />
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="maarapvm" type="xs:date" minOccurs="0">
@@ -1562,7 +1514,7 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="tiedosto" type="xs:base64Binary"/>
+                            <xs:element name="tiedosto" type="xs:base64Binary" />
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -4792,8 +4744,7 @@
             </xs:enumeration>
             <xs:enumeration value="16">
                 <xs:annotation>
-                    <xs:documentation>Rakennustyöntekijä (rakennusmies, purku-, muotti-, raudoitus-, betoni-)
-                    </xs:documentation>
+                    <xs:documentation>Rakennustyöntekijä (rakennusmies, purku-, muotti-, raudoitus-, betoni-)</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="17">
