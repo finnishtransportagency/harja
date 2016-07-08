@@ -5,6 +5,7 @@
 (def +kohteissa-viallisia-sijainteja+ "viallisia-sijainteja")
 (def +viallinen-yllapitokohteen-sijainti+ "viallinen-kohteen-sijainti")
 (def +viallinen-yllapitokohdeosan-sijainti+ "viallinen-alikohteen-sijainti")
+(def +viallinen-alustatoimenpiteen-sijainti+ "viallinen-alustatoimenpiteen-sijainti")
 
 (defn tee-virhe [koodi viesti]
   {:koodi koodi :viesti viesti})
@@ -76,6 +77,18 @@
                                (validoi-kohteen-osoite kohde-id kohteen-sijainti)
                                (validoi-alikohteet kohde-id kohteen-sijainti alikohteet)))]
 
+    (when (not (empty? virheet))
+      (throw+ {:type +kohteissa-viallisia-sijainteja+
+               :virheet virheet}))))
+
+(defn tarkista-alustatoimenpiteiden-sijainnit
+  "Varmistaa että kaikkien alustatoimenpiteiden sijainnit ovat kohteen sijainnin sisällä"
+  [kohde-id kohteen-sijainti alustatoimet]
+  (let [virheet (mapv (fn [{:keys [sijainti]}]
+                        (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
+                          (tee-virhe +viallinen-alustatoimenpiteen-sijainti+
+                                     (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))))
+                      alustatoimet)]
     (when (not (empty? virheet))
       (throw+ {:type +kohteissa-viallisia-sijainteja+
                :virheet virheet}))))

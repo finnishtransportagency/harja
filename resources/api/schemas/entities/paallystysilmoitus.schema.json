@@ -178,7 +178,7 @@
         }
       }
     },
-    "alustatoimepiteet": {
+    "alustatoimenpiteet": {
       "sijainti": {
         "id": "urn:harja/alustatoimepiteet/0/alustatoimepide/sijainti",
         "type": "object",
@@ -230,11 +230,11 @@
       "verkon-sijainti": {
         "id": "urn:harja/alustatoimepiteet/0/alustatoimepide/verkon-sijainti",
         "enum": [
-          "Ajoradan päällyste",
-          "Pienaluetyöt",
-          "Tasaukset",
-          "Jyrsinnät",
-          "Muut"
+          "Päällysteessä",
+          "Kantavan kerroksen yläpinnassa",
+          "Kantavassa kerroksessa",
+          "Kantavan kerroksen alapinnassa",
+          "Muu sijainti"
         ]
       },
       "tekninen-toimenpide": {

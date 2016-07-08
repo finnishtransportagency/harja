@@ -89,17 +89,20 @@
                  :virheet [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}]})))))
 
 
+(defn sijainneissa-virheita? [db tienumero sijainnit]
+  (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
+                db
+                tienumero
+                (:aosa %)
+                (:aet %)
+                (:losa %)
+                (:let %))
+              sijainnit))
+
 (defn validoi-kohteiden-sijainnit-tieverkolla [db tienumero kohteen-sijainti alikohteet]
   (let [sijainnit (conj (mapv :sijainti alikohteet) kohteen-sijainti)]
     (when
-      (not-every? #(q-tieverkko/onko-tierekisteriosoite-validi?
-                    db
-                    tienumero
-                    (:aosa %)
-                    (:aet %)
-                    (:losa %)
-                    (:let %))
-                  sijainnit)
+      (sijainneissa-virheita? db tienumero sijainnit)
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi :viallisia-tieosia
                           :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]}))))
@@ -111,3 +114,21 @@
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet virheet})))
   (validoi-kohteiden-sijainnit-tieverkolla db kohteen-tienumero kohteen-sijainti alikohteet))
+
+(defn tarkista-alustatoimenpiteet [db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet]
+  (try+
+    (kohteet/tarkista-alustatoimenpiteiden-sijainnit kohde-id kohteen-sijainti alustatoimenpiteet)
+    (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet virheet})))
+  (when (not (empty? alustatoimenpiteet))
+    (let [sijainnit (mapv :sijainti alustatoimenpiteet)]
+      (when
+        (sijainneissa-virheita? db kohteen-tienumero sijainnit)
+        (throw+ {:type virheet/+viallinen-kutsu+
+                 :virheet [{:koodi :viallisia-tieosia
+                            :viesti "Alustatoimenpiteet sisältävät sijainteja, joita ei löydy tieverkolta"}]})))))
+
+(defn tarkista-paallystysilmoitus [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet]
+  (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+  (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet))

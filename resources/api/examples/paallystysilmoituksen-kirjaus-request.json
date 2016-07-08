@@ -15,10 +15,10 @@
   "paallystysilmoitus": {
     "yllapitokohde": {
       "sijainti": {
-        "aosa": 810,
-        "aet": 137,
-        "losa": 814,
-        "let": 1912
+        "aosa": 20,
+        "aet": 1,
+        "losa": 5,
+        "let": 15
       },
       "alikohteet": [
         {
@@ -26,10 +26,10 @@
             "nimi": "1. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 810,
-              "aet": 137,
-              "losa": 812,
-              "let": 1
+              "aosa": 20,
+              "aet": 1,
+              "losa": 5,
+              "let": 15
             },
             "paallystetyyppi": "avoin asfaltti",
             "raekoko": 12,
@@ -55,6 +55,20 @@
           }
         }
       ]
+    },
+    "alustatoimenpiteet": {
+      "sijainti": {
+        "aosa": 20,
+        "aet": 1,
+        "losa": 5,
+        "let": 15
+      },
+      "kasittelymenetelma": "Massanvaihto",
+      "paksuus": 1.2,
+      "verkkotyyppi": "Teräsverkko",
+      "verkon-tarkoitus": "Tasaukset",
+      "verkon-sijainti": "Päällysteessä",
+      "tekninen-toimenpide": "Rakentaminen"
     }
   }
 }
