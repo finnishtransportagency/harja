@@ -56,19 +56,23 @@
         }
       ]
     },
-    "alustatoimenpiteet": {
-      "sijainti": {
-        "aosa": 20,
-        "aet": 1,
-        "losa": 5,
-        "let": 15
-      },
-      "kasittelymenetelma": "Massanvaihto",
-      "paksuus": 1.2,
-      "verkkotyyppi": "Teräsverkko",
-      "verkon-tarkoitus": "Tasaukset",
-      "verkon-sijainti": "Päällysteessä",
-      "tekninen-toimenpide": "Rakentaminen"
-    }
+    "alustatoimenpiteet": [
+      {
+        "alustatoimenpide": {
+          "sijainti": {
+            "aosa": 20,
+            "aet": 1,
+            "losa": 5,
+            "let": 15
+          },
+          "kasittelymenetelma": "Massanvaihto",
+          "paksuus": 1.2,
+          "verkkotyyppi": "Teräsverkko",
+          "verkon-tarkoitus": "Tasaukset",
+          "verkon-sijainti": "Päällysteessä",
+          "tekninen-toimenpide": "Rakentaminen"
+        }
+      }
+    ]
   }
 }
