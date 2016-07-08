@@ -155,7 +155,7 @@ FROM turvallisuuspoikkeama t
 
 WHERE t.id = :id AND t.urakka = :urakka;
 
--- name: hae-turvallisuuspoikkeama
+-- name: hae-turvallisuuspoikkeama-lahetettavaksi-turiin
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
 SELECT
   t.id,
@@ -197,6 +197,8 @@ SELECT
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
 
+  u.sampoid                             AS "urakka-sampoid",
+
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
   k.suoritettu                          AS korjaavatoimenpide_suoritettu,
@@ -227,6 +229,9 @@ SELECT
   l.kuvaus                              AS liite_kuvaus
 
 FROM turvallisuuspoikkeama t
+  LEFT JOIN urakka u
+    ON t.urakka = u.id
+
   LEFT JOIN korjaavatoimenpide k
     ON t.id = k.turvallisuuspoikkeama
        AND k.poistettu IS NOT TRUE

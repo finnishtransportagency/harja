@@ -30,7 +30,7 @@
   (let [turvallisuuspoikkeama (first (konv/sarakkeet-vektoriin
                                        (into []
                                              q/turvallisuuspoikkeama-xf
-                                             (q/hae-turvallisuuspoikkeama db id))
+                                             (q/hae-turvallisuuspoikkeama-lahetettavaksi-turiin db id))
                                        {:korjaavatoimenpide :korjaavattoimenpiteet
                                         :liite :liitteet
                                         :kommentti :kommentit}))]
