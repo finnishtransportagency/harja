@@ -138,195 +138,112 @@
     tyypit))
 
 (defn rakenna-tapahtumatiedot [data]
+  ;; Harjaa koskemattomat XML-sanoman tagit jätetty koodiin kommentoituna, jotta
+  ;; voidaan edelleen havainnollistaa koko sanoma
   (into [:tapahtumantiedot]
         (concat
           (poikkeama-tyypit (:tyyppi data))
-          [[:tapahtumapvm
-           "2007-10-26"]
-          [:tapahtumaaika
-           "20:44:14"]
-          [:poikkeamalaji
-           "2"]
-          [:tapahtuma
-           "2"]
-          [:yksikko
-           "64"]
-          [:vastapuolenyksikko
-           "32"]
-          [:ohitusmatkametreina
-           "3"]
-          [:raiteellaeste
-           "true"]
-          [:jannitekatkotyyppi
-           "2"]
-          [:viestintatyyppi
-           "1"]
-          [:vaarakulkutietyyppi
-           "2"]
-          [:vaarakulkutiesyy
-           "5"]
-          [:kuumakayntityyppi
-           "2"]
+          [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
+          [:tapahtumaaika "20:44:14"] ;; TODO parsi kello
+          #_[:poikkeamalaji "2"]
+          [:tapahtuma "2"]
+          [:yksikko "64"]
+          [:vastapuolenyksikko "32"]
+          [:ohitusmatkametreina "3"]
+          [:raiteellaeste "true"]
+          [:jannitekatkotyyppi "2"]
+          [:viestintatyyppi "1"]
+          [:vaarakulkutietyyppi "2"]
+          [:vaarakulkutiesyy "5"]
+          [:kuumakayntityyppi "2"]
           [:vakvaunuja
-           [:vakaine
-            "string"]
-           [:vakseuraus
-            "2"]
-           [:vakvuotolaji
-            "2"]]
-          [:raideliikenneosapuoli
-           "2"]
-          [:tieliikenneosapuoli
-           "4"]
-          [:tasoristeyksenvarustelu
-           "4"]
-          [:katkeamisvali
-           "2"]
-          [:ovenpaikka
-           "4"]
-          [:tahallisuus
-           "1"]
-          [:luvallisuus
-           "1"]
-          [:henkiloonnettomuustyyppi
-           "4"]
-          [:ratavauriotyyppi
-           "1"]
-          [:ratavauriopaikka
-           "1"]
-          [:radanjaturvalaitteidenviantarkennus
-           "4"]
-          [:tapahtumanlisatieto
-           "string"]
-          [:jarjestyshairionpaikka
-           "2"]
-          [:ilkivallankohde
-           "4"]
-          [:tulipalonkohde
-           "4"]
-          [:varkaudenkohde
-           "string"]
-          [:vaaratilanteentyyppi
-           "1024"]
-          [:urakoitsija
-           "string"]
-          [:ratatyostavastaava
-           "string"]
-          [:junanumero
-           "3"]
-          [:vaihtotyonvastuuyksikko
-           "32"]
-          [:syy
-           "1"]
-          [:teknisenviantyyppi
-           "2"]
-          [:virheentyyppi
-           "4"]
-          [:ulkopuolisensyyntyyppi
-           "1"]
-          [:muunsyynkuvaus
-           "string"]
-          [:kuvaus
-           "string"]])))
+           [:vakaine "string"]
+           [:vakseuraus "2"]
+           [:vakvuotolaji "2"]]
+          [:raideliikenneosapuoli "2"]
+          [:tieliikenneosapuoli "4"]
+          [:tasoristeyksenvarustelu "4"]
+          [:katkeamisvali "2"]
+          [:ovenpaikka "4"]
+          [:tahallisuus "1"]
+          [:luvallisuus "1"]
+          [:henkiloonnettomuustyyppi "4"]
+          [:ratavauriotyyppi "1"]
+          [:ratavauriopaikka "1"]
+          [:radanjaturvalaitteidenviantarkennus "4"]
+          [:tapahtumanlisatieto "string"]
+          [:jarjestyshairionpaikka "2"]
+          [:ilkivallankohde "4"]
+          [:tulipalonkohde "4"]
+          [:varkaudenkohde "string"]
+          [:vaaratilanteentyyppi "1024"]
+          [:urakoitsija "string"]
+          [:ratatyostavastaava "string"]
+          [:junanumero "3"]
+          [:vaihtotyonvastuuyksikko "32"]
+          [:syy "1"]
+          [:teknisenviantyyppi "2"]
+          [:virheentyyppi "4"]
+          [:ulkopuolisensyyntyyppi "1"]
+          [:muunsyynkuvaus "string"]
+          [:kuvaus "string"]])))
 
 (defn rakenna-tapahtumapaikka [data]
   [:tapahtumapaikka
-   [:tapahtumapaikkaradalla
-    "2"]
-   [:ratapaikka
-    "Rsn"]
-   [:paikantarkenne
-    "128"]
-   [:kmsijainti
-    "3"]
-   [:paikka
-    "string"]
-   [:tapahtumaalue
-    "8"]])
+   [:tapahtumapaikkaradalla "2"]
+   [:ratapaikka "Rsn"]
+   [:paikantarkenne "128"]
+   [:kmsijainti "3"]
+   [:paikka "string"]
+   [:tapahtumaalue "8"]])
 
 (defn rakenna-syyt-ja-seuraukset [data]
   [:syytjaseuraukset
-   [:arviosyista
-    "string"]
-   [:tapahtumaanliittyy
-    "1"]
-   [:seuraukset
-    "string"]
-   [:liikennekatkonkesto
-    "3"]
-   [:tehtava
-    "string"]
-   [:ammatti
-    "28"]
-   [:ammattimuutarkenne
-    "anyType"]
-   [:vammanlaatu
-    "11"]
-   [:vahingoittunutruumiinosa
-    "10"]
-   [:sairauspoissaolot
-    "3"]
-   [:sairauspoissaolojatkuu
-    "true"]
-   [:sairaalahoitovuorokaudet
-    "3"]
-   [:toimenpiteet
-    "string"]
-   [:eho
-    "string"]])
+   [:arviosyista "string"]
+   [:tapahtumaanliittyy "1"]
+   [:seuraukset "string"]
+   [:liikennekatkonkesto "3"]
+   [:tehtava "string"]
+   [:ammatti "28"]
+   [:ammattimuutarkenne "anyType"]
+   [:vammanlaatu "11"]
+   [:vahingoittunutruumiinosa "10"]
+   [:sairauspoissaolot "3"]
+   [:sairauspoissaolojatkuu "true"]
+   [:sairaalahoitovuorokaudet "3"]
+   [:toimenpiteet "string"]
+   [:eho "string"]])
 
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
-   [:tuttiid
-    "string"]
-   [:otsikko
-    "string"]
-   [:luontipvm
-    "2017-08-18"]
-   [:ilmoittaja
-    "string"]
-   [:ilmoittajaorganisaatio
-    "string"]
-   [:vuorossaolija
-    "string"]
-   [:ilmoitettupoliisille
-    "true"]
-   [:tila
-    "Käsitelty"]
-   [:lisatiedot
-    "string"]
-   [:palautepyydetty
-    "true"]
-   [:palautepyydettyosoite
-    "string"]
-   [:palauteannettu
-    "false"]
-   [:palautekanava
-    "string"]])
+   [:tuttiid "string"]
+   [:otsikko "string"]
+   [:luontipvm "2017-08-18"]
+   [:ilmoittaja "string"]
+   [:ilmoittajaorganisaatio "string"]
+   [:vuorossaolija "string"]
+   [:ilmoitettupoliisille "true"]
+   [:tila "Käsitelty"]
+   [:lisatiedot "string"]
+   [:palautepyydetty "true"]
+   [:palautepyydettyosoite "string"]
+   [:palauteannettu "false"]
+   [:palautekanava "string"]])
 
 (defn rakenna-poikkeamatoimenpide [data]
   [:poikkeamatoimenpide
-   [:otsikko
-    "string"]
-   [:kuvaus
-    "string"]
-   [:toteuttaja
-    "string"]
-   [:toteutus
-    "string"]
-   [:tila
-    "1"]
-   [:pakollinen
-    "false"]
-   [:maarapvm
-    "2004-01-03"]])
+   [:otsikko "string"]
+   [:kuvaus "string"]
+   [:toteuttaja "string"]
+   [:toteutus "string"]
+   [:tila "1"]
+   [:pakollinen "false"]
+   [:maarapvm "2004-01-03"]])
 
 (defn rakenna-poikkeamaliite [data]
   [:poikkeamaliite
-   [:tiedostonimi
-    "string"]
-   [:tiedosto
-    "ZGVkaXQ="]])
+   [:tiedostonimi "string"]
+   [:tiedosto "ZGVkaXQ="]])
 
 (defn muodosta-viesti [data]
   [:imp:poikkeama
