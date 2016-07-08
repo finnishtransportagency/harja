@@ -174,7 +174,8 @@
         (concat
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
-          [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]])))
+           [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
+           [:kuvaus (:kuvaus data)]])))
 
 (defn rakenna-tapahtumapaikka [data]
   [:tapahtumapaikka
