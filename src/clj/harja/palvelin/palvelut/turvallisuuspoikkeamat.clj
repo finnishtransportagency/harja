@@ -13,7 +13,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
-(defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
+(defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
@@ -25,7 +25,7 @@
   (when kayttaja-id
     (first (q/hae-vastuuhenkilon-tiedot db kayttaja-id))))
 
-(defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
+(defn hae-urakan-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
   (let [tulos (as-> (first (konv/sarakkeet-vektoriin (into []
@@ -197,9 +197,9 @@
     (when turi
       ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
       (turi/laheta-turvallisuuspoikkeama turi id)))
-  (hae-turvallisuuspoikkeamat db
-                              user
-                              {:urakka-id (:urakka tp)
+  (hae-urakan-turvallisuuspoikkeamat db
+                                     user
+                                     {:urakka-id (:urakka tp)
                                :alku (first hoitokausi)
                                :loppu (second hoitokausi)}))
 
@@ -217,7 +217,7 @@
     (julkaise-palvelut (:http-palvelin this)
                        :hae-turvallisuuspoikkeamat
                        (fn [user tiedot]
-                         (hae-turvallisuuspoikkeamat (:db this) user tiedot))
+                         (hae-urakan-turvallisuuspoikkeamat (:db this) user tiedot))
 
                        :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat
                        (fn [user hakuehdot]
@@ -225,7 +225,7 @@
 
                        :hae-turvallisuuspoikkeama
                        (fn [user tiedot]
-                         (hae-turvallisuuspoikkeama (:db this) user tiedot))
+                         (hae-urakan-turvallisuuspoikkeama (:db this) user tiedot))
 
                        :tallenna-turvallisuuspoikkeama
                        (fn [user tiedot]
