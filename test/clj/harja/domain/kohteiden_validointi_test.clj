@@ -83,9 +83,22 @@
         monta-alikohdetta [{:tunnus "A"
                             :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
                            {:tunnus "B"
-                            :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
+                            :sijainti {:aosa 2, :aet 2, Te:losa 3, :let 3}}
                            {:tunnus "C"
                             :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]]
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde yksi-alikohde)
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde kaksi-alikohdetta)
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde monta-alikohdetta)))
+
+(deftest tarkista-alustatoimenpiteiden-validius
+  (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
+        alustatoimenpiteet [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
+                            {:sijainti {:aosa 2, :aet 2, :losa 5, :let 3}}]]
+    (is (thrown+?
+          #(tasmaa-poikkeus
+            %
+            yllapitokohteet/+kohteissa-viallisia-sijainteja+
+            yllapitokohteet/+viallinen-alustatoimenpiteen-sijainti+
+            "Alustatoimenpide ei ole kohteen (id: 1) sisällä.")
+          (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde alustatoimenpiteet))
+        "Kohteen ulkopuolinen alikohde otettiin kiinni")))
