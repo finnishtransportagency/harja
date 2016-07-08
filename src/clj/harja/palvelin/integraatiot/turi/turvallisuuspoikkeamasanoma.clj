@@ -132,6 +132,11 @@
    :turvallisuushavainto 64
    :muu 16})
 
+(defn poikkeamatyypit->numerot [tyypit]
+  (mapv
+    (fn [tyyppi] [:tyyppi (poikkeamatyyppi->numero tyyppi)])
+    tyypit))
+
 (def ammatti->numero
   {:aluksen_paallikko 1
    :asentaja 2
@@ -180,10 +185,10 @@
    :muut 13
    :ei_tietoa 14})
 
-(defn poikkeamatyypit->numerot [tyypit]
+(defn vammat->numerot [vammat]
   (mapv
-    (fn [tyyppi] [:tyyppi (poikkeamatyyppi->numero tyyppi)])
-    tyypit))
+    (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
+    vammat))
 
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
@@ -198,15 +203,16 @@
    [:paikka (:paikan-kuvaus data)]])
 
 (defn rakenna-syyt-ja-seuraukset [data]
-  [:syytjaseuraukset
-   [:seuraukset (:seuraukset data)]
-   [:ammatti (ammatti->numero (:tyontekijanammatti data))]
-   [:ammattimuutarkenne (:tyontekijanammattimuu data)]
-   [:vammanlaatu "11"]
-   [:vahingoittunutruumiinosa "10"]
-   [:sairauspoissaolot "3"]
-   [:sairauspoissaolojatkuu "true"]
-   [:sairaalahoitovuorokaudet "3"]])
+  (into [:syytjaseuraukset]
+        (concat
+          [[:seuraukset (:seuraukset data)]
+           [:ammatti (ammatti->numero (:tyontekijanammatti data))]
+           [:ammattimuutarkenne (:tyontekijanammattimuu data)]]
+          (vammat->numerot (:vammat data))
+          [[:vahingoittunutruumiinosa "10"]
+           [:sairauspoissaolot "3"]
+           [:sairauspoissaolojatkuu "true"]
+           [:sairaalahoitovuorokaudet "3"]])))
 
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
