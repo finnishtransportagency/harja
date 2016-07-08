@@ -1,5 +1,6 @@
 <imp:poikkeama xmlns:imp="http://importexport.xml.turi.oikeatoliot.fi">
     <tapahtumantiedot>
+        <sampourakkaid>string</sampourakkaid>
         <!--Zero or more repetitions:-->
         <tyyppi>32</tyyppi>
         <tapahtumapvm>2007-10-26</tapahtumapvm>
@@ -7,108 +8,57 @@
         <tapahtumaaika>20:44:14</tapahtumaaika>
         <!--Optional:-->
         <poikkeamalaji>2</poikkeamalaji>
-        <!--Zero or more repetitions:-->
-        <tapahtuma>2</tapahtuma>
-        <!--Optional:-->
-        <yksikko>64</yksikko>
-        <!--Optional:-->
-        <vastapuolenyksikko>32</vastapuolenyksikko>
-        <!--Optional:-->
-        <ohitusmatkametreina>3</ohitusmatkametreina>
-        <!--Optional:-->
-        <raiteellaeste>true</raiteellaeste>
-        <!--Optional:-->
-        <jannitekatkotyyppi>2</jannitekatkotyyppi>
-        <!--Optional:-->
-        <viestintatyyppi>1</viestintatyyppi>
-        <!--Optional:-->
-        <vaarakulkutietyyppi>2</vaarakulkutietyyppi>
-        <!--Optional:-->
-        <vaarakulkutiesyy>5</vaarakulkutiesyy>
-        <!--Optional:-->
-        <kuumakayntityyppi>2</kuumakayntityyppi>
-        <!--Optional:-->
-        <vakvaunuja>
-            <!--Optional:-->
-            <vakaine>string</vakaine>
-            <!--Zero or more repetitions:-->
-            <vakseuraus>2</vakseuraus>
-            <!--Optional:-->
-            <vakvuotolaji>2</vakvuotolaji>
-        </vakvaunuja>
-        <!--Optional:-->
-        <raideliikenneosapuoli>2</raideliikenneosapuoli>
-        <!--Optional:-->
-        <tieliikenneosapuoli>4</tieliikenneosapuoli>
-        <!--Optional:-->
-        <tasoristeyksenvarustelu>4</tasoristeyksenvarustelu>
-        <!--Optional:-->
-        <katkeamisvali>2</katkeamisvali>
-        <!--Optional:-->
-        <ovenpaikka>4</ovenpaikka>
-        <!--Optional:-->
-        <tahallisuus>1</tahallisuus>
-        <!--Optional:-->
-        <luvallisuus>1</luvallisuus>
-        <!--Optional:-->
-        <henkiloonnettomuustyyppi>4</henkiloonnettomuustyyppi>
-        <!--Optional:-->
-        <ratavauriotyyppi>1</ratavauriotyyppi>
-        <!--Optional:-->
-        <ratavauriopaikka>1</ratavauriopaikka>
-        <!--Optional:-->
-        <radanjaturvalaitteidenviantarkennus>4</radanjaturvalaitteidenviantarkennus>
-        <!--Optional:-->
-        <tapahtumanlisatieto>string</tapahtumanlisatieto>
-        <!--Optional:-->
-        <jarjestyshairionpaikka>2</jarjestyshairionpaikka>
-        <!--Optional:-->
-        <ilkivallankohde>4</ilkivallankohde>
-        <!--Optional:-->
-        <tulipalonkohde>4</tulipalonkohde>
-        <!--Optional:-->
-        <varkaudenkohde>string</varkaudenkohde>
-        <!--Optional:-->
-        <vaaratilanteentyyppi>1024</vaaratilanteentyyppi>
-        <!--Optional:-->
-        <urakoitsija>string</urakoitsija>
-        <!--Optional:-->
-        <ratatyostavastaava>string</ratatyostavastaava>
         <!--Optional:-->
         <junanumero>3</junanumero>
         <!--Optional:-->
-        <vaihtotyonvastuuyksikko>32</vaihtotyonvastuuyksikko>
+        <vaihtotyonvastuuyksikko>16</vaihtotyonvastuuyksikko>
         <!--Optional:-->
-        <syy>1</syy>
+        <syy>8</syy>
         <!--Optional:-->
-        <teknisenviantyyppi>2</teknisenviantyyppi>
+        <teknisenviantyyppi>1</teknisenviantyyppi>
         <!--Optional:-->
-        <virheentyyppi>4</virheentyyppi>
+        <virheentyyppi>1</virheentyyppi>
         <!--Optional:-->
-        <ulkopuolisensyyntyyppi>1</ulkopuolisensyyntyyppi>
+        <ulkopuolisensyyntyyppi>8</ulkopuolisensyyntyyppi>
         <!--Optional:-->
         <muunsyynkuvaus>string</muunsyynkuvaus>
         <kuvaus>string</kuvaus>
     </tapahtumantiedot>
     <tapahtumapaikka>
         <!--Optional:-->
-        <tapahtumapaikkaradalla>2</tapahtumapaikkaradalla>
+        <tapahtumapaikkaradalla>1</tapahtumapaikkaradalla>
         <!--Optional:-->
-        <ratapaikka>Rsn</ratapaikka>
+        <ratapaikka>Kjr</ratapaikka>
         <!--Optional:-->
-        <paikantarkenne>128</paikantarkenne>
+        <paikantarkenne>256</paikantarkenne>
         <!--Optional:-->
         <kmsijainti>3</kmsijainti>
         <!--Optional:-->
         <paikka>string</paikka>
         <!--Optional:-->
         <tapahtumaalue>8</tapahtumaalue>
+        <!--Optional:-->
+        <eureffinn>1.051732E7</eureffinn>
+        <!--Optional:-->
+        <eureffine>1.051732E7</eureffine>
+        <!--Optional:-->
+        <tienimi>string</tienimi>
+        <!--Optional:-->
+        <tienumero>3</tienumero>
+        <!--Optional:-->
+        <tieaosa>3</tieaosa>
+        <!--Optional:-->
+        <tielosa>3</tielosa>
+        <!--Optional:-->
+        <tieaet>3</tieaet>
+        <!--Optional:-->
+        <tielet>3</tielet>
     </tapahtumapaikka>
     <syytjaseuraukset>
         <!--Optional:-->
         <arviosyista>string</arviosyista>
         <!--Zero or more repetitions:-->
-        <tapahtumaanliittyy>1</tapahtumaanliittyy>
+        <tapahtumaanliittyy>8</tapahtumaanliittyy>
         <!--Optional:-->
         <seuraukset>string</seuraukset>
         <!--Optional:-->
@@ -116,32 +66,28 @@
         <!--Optional:-->
         <tehtava>string</tehtava>
         <!--Optional:-->
-        <ammatti>28</ammatti>
+        <ammatti>7</ammatti>
         <!--Optional:-->
         <ammattimuutarkenne>anyType</ammattimuutarkenne>
         <!--Optional:-->
-        <vammanlaatu>11</vammanlaatu>
+        <vammanlaatu>6</vammanlaatu>
         <!--Optional:-->
-        <vahingoittunutruumiinosa>10</vahingoittunutruumiinosa>
+        <vahingoittunutruumiinosa>5</vahingoittunutruumiinosa>
         <!--Optional:-->
         <sairauspoissaolot>3</sairauspoissaolot>
         <!--Optional:-->
-        <sairauspoissaolojatkuu>true</sairauspoissaolojatkuu>
+        <sairauspoissaolojatkuu>false</sairauspoissaolojatkuu>
         <!--Optional:-->
         <sairaalahoitovuorokaudet>3</sairaalahoitovuorokaudet>
         <!--Optional:-->
         <toimenpiteet>string</toimenpiteet>
-        <!--Optional:-->
-        <eho>string</eho>
     </syytjaseuraukset>
     <!--Optional:-->
     <tapahtumankasittely>
         <!--Optional:-->
-        <tuttiid>string</tuttiid>
-        <!--Optional:-->
         <otsikko>string</otsikko>
         <!--Optional:-->
-        <luontipvm>2017-08-18</luontipvm>
+        <luontipvm>2019-08-19</luontipvm>
         <!--Optional:-->
         <ilmoittaja>string</ilmoittaja>
         <!--Optional:-->
@@ -151,17 +97,7 @@
         <!--Optional:-->
         <ilmoitettupoliisille>true</ilmoitettupoliisille>
         <!--Optional:-->
-        <tila>Käsitelty</tila>
-        <!--Optional:-->
         <lisatiedot>string</lisatiedot>
-        <!--Optional:-->
-        <palautepyydetty>true</palautepyydetty>
-        <!--Optional:-->
-        <palautepyydettyosoite>string</palautepyydettyosoite>
-        <!--Optional:-->
-        <palauteannettu>false</palauteannettu>
-        <!--Optional:-->
-        <palautekanava>string</palautekanava>
     </tapahtumankasittely>
     <!--Zero or more repetitions:-->
     <poikkeamatoimenpide>
@@ -177,11 +113,11 @@
         <!--Optional:-->
         <pakollinen>false</pakollinen>
         <!--Optional:-->
-        <maarapvm>2004-01-03</maarapvm>
+        <maarapvm>2002-11-16+02:00</maarapvm>
     </poikkeamatoimenpide>
     <!--Zero or more repetitions:-->
     <poikkeamaliite>
         <tiedostonimi>string</tiedostonimi>
-        <tiedosto>ZGVkaXQ=</tiedosto>
+        <tiedosto>YWM=</tiedosto>
     </poikkeamaliite>
 </imp:poikkeama>

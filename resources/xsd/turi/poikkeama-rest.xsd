@@ -6,6 +6,18 @@
                 <xs:element name="tapahtumantiedot">
                     <xs:complexType>
                         <xs:sequence>
+                            <xs:element name="sampourakkaid" minOccurs="1" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmoitusta koskevan urakan tunniste Liikenneviraston Sampo-järjestelmässä.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="40"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
                             <xs:element name="tyyppi" minOccurs="0" maxOccurs="unbounded">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -58,730 +70,6 @@
                                         <xs:enumeration value="4" />
                                         <xs:enumeration value="8" />
                                         <xs:enumeration value="16" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="tapahtuma" minOccurs="0" maxOccurs="unbounded">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tapahtuman luokittelu
-
-                                        1 = Törmäys
-                                        2 = Suistuminen
-                                        4 = Seis-opasteen luvaton ohitus
-                                        8 = Tasoristeysonnettomuus
-                                        16 = Väärä kulkutie
-                                        32 = Lämmin- ja kuumakäynti
-                                        64 = Opasteen vaihtuminen
-                                        128 = Yksikön katkeaminen
-                                        256 = Liikkuvan kaluston avonainen ovi
-                                        512 = Radallaliikkujan allejäänti
-                                        1024 = Muu henkilöonnettomuus
-                                        2048 = Ratavaurio
-                                        4096 = Akselin rikkoutuminen
-                                        8192 = Pyörän rikkoutuminen
-                                        16384 = Tasoristeyksen puomien rikkoutuminen
-                                        32768 = Väärä opaste
-                                        65536 = Järjestyshäiriö
-                                        131072 = Ilkivalta
-                                        262144 = Tulipalo
-                                        524288 = Varkaus
-                                        1048576 = Eläimen allejäänti
-                                        2097152 = Rautatieliikenneturvallisuutta vaarantava toiminta
-                                        4194304 = Kaluston karkaaminen
-                                        8388608 = Ratatyömaiden vaaratilanteet
-                                        16777216 = Raili-viat
-                                        33554432 = Muu turvallisuuspoikkeama
-                                        67108864 = Radan ja turvalaitteiden viat
-                                        134217728 = Kulkutien turvaamisvirhe
-                                        268435456 = Virheellinen reititys
-                                        536870912 = Jännitekatko
-                                        1073741824 = Nopeusrajoitusprosessi
-                                        2147483648 = Ennakkotietojärjestelmässä virhe
-                                        4294967296 = Virheellinen viestintä
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:long">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                        <xs:enumeration value="128" />
-                                        <xs:enumeration value="256" />
-                                        <xs:enumeration value="512" />
-                                        <xs:enumeration value="1024" />
-                                        <xs:enumeration value="2048" />
-                                        <xs:enumeration value="4096" />
-                                        <xs:enumeration value="8192" />
-                                        <xs:enumeration value="16384" />
-                                        <xs:enumeration value="32768" />
-                                        <xs:enumeration value="65536" />
-                                        <xs:enumeration value="131072" />
-                                        <xs:enumeration value="262144" />
-                                        <xs:enumeration value="524288" />
-                                        <xs:enumeration value="1048576" />
-                                        <xs:enumeration value="2097152" />
-                                        <xs:enumeration value="4194304" />
-                                        <xs:enumeration value="8388608" />
-                                        <xs:enumeration value="16777216" />
-                                        <xs:enumeration value="33554432" />
-                                        <xs:enumeration value="67108864" />
-                                        <xs:enumeration value="134217728" />
-                                        <xs:enumeration value="268435456" />
-                                        <xs:enumeration value="536870912" />
-                                        <xs:enumeration value="1073741824" />
-                                        <xs:enumeration value="2147483648" />
-                                        <xs:enumeration value="4294967296" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="yksikko" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Yksikkö/Kalusto
-
-                                        1 = Juna
-                                        2 = Vaihtotyöyksikkö
-                                        4 = Ratatyöyksikkö
-                                        8 = Vaunu/vaunuja
-                                        16 = Muu
-                                        32 = Veturi
-                                        64 = Ratatyökone
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,4,8,16,32,64,128,512,1024,4096,8192,4194304,8388608
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="vastapuolenyksikko" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Vastapuolen yksikkö/kalusto
-
-                                        1 = Juna
-                                        2 = Vaihtotyöyksikkö
-                                        4 = Ratatyöyksikkö
-                                        8 = Vaunu/vaunuja
-                                        16 = Muu
-                                        32 = Veturi
-                                        64 = Ratatyökone
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="ohitusmatkametreina" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Ohitusmatka metreinä
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 4,64
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="raiteellaeste" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Raiteella este
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 4,16
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="jannitekatkotyyppi" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Jännitekatkon tyyppi
-
-                                        1 = Jännitekatko suoritettu suunnitelman vastaiseseti
-                                        2 = Katkosuunnitelmassa turvallisuusvirhe
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 536870912
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="viestintatyyppi" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        1 = Poikkeama liikennöintiin liittyvässä määrämuotoisessa tai muutoin ohjeistetussa viestinnässä
-                                        2 = Poikkeama ratatyöhön liittyvässä määrämuotoisessa tai muutoin ohjeistetussa viestinnässä
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 4294967296
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="vaarakulkutietyyppi" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Virheellisen reitityksen tyyppi
-
-                                        2 = Kulkutien turvaaminen vapaalle (aiheuttaa vaikeuksia matkustajille)
-                                        4 = Prosessipoikkeama (ei aiheuta korjaavia toimenpiteitä)
-                                        8 = Prosessipoikkeama (aiheuttaa korjaavia toimenpiteitä)
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 268435456
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="vaarakulkutiesyy" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Väärän kulkutien syy
-
-                                        1 = Inhimillinen virhe
-                                        2 = Käsin tehty kulkutie
-                                        3 = Virheelliset reititykset
-                                        4 = Tekninen syy
-                                        5 = Muut syyt
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 16
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="3" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="5" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="kuumakayntityyppi" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Kuumakäynnin tyyppi
-
-                                        1 = Jarrujen laahaaminen
-                                        2 = Kuuma laakeri
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 32
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="vakvaunuja" minOccurs="0">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="vakaine" minOccurs="0">
-                                            <xs:annotation>
-                                                <xs:documentation>
-                                                    VAK-aine
-
-                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
-                                                </xs:documentation>
-                                            </xs:annotation>
-                                            <xs:simpleType>
-                                                <xs:restriction base="xs:string">
-                                                    <xs:maxLength value="40"/>
-                                                </xs:restriction>
-                                            </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="vakseuraus" minOccurs="0" maxOccurs="unbounded">
-                                            <xs:annotation>
-                                                <xs:documentation>
-                                                    Seuraukset VAK-vaunuille
-
-                                                    1 = Kalusto suistui
-                                                    2 = Kalusto törmäsi
-
-                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
-                                                </xs:documentation>
-                                            </xs:annotation>
-                                            <xs:simpleType>
-                                                <xs:restriction base="xs:long">
-                                                    <xs:enumeration value="1" />
-                                                    <xs:enumeration value="2" />
-                                                </xs:restriction>
-                                            </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="vakvuotolaji" minOccurs="0">
-                                            <xs:annotation>
-                                                <xs:documentation>
-                                                    Vuotolaji
-
-                                                    1 = Nestevuoto
-                                                    2 = Kaasuvuoto
-
-                                                    Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1,2,8,16,32,128,4096,8192,131072
-                                                </xs:documentation>
-                                            </xs:annotation>
-                                            <xs:simpleType>
-                                                <xs:restriction base="xs:int">
-                                                    <xs:enumeration value="1" />
-                                                    <xs:enumeration value="2" />
-                                                </xs:restriction>
-                                            </xs:simpleType>
-                                        </xs:element>
-                                    </xs:sequence>
-                                </xs:complexType>
-                            </xs:element>
-                            <xs:element name="raideliikenneosapuoli" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tasoristeysonnettomuuden raideliikenneosapuoli
-
-                                        1 = Juna
-                                        2 = Vaihtotyöyksikkö
-                                        4 = Ratatyöyksikkö
-                                        8 = Muu
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="tieliikenneosapuoli" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tasoristeysonnettomuuden tieliikenneosapuoli
-
-                                        1 = Henkilöauto
-                                        2 = Kuorma-auto
-                                        4 = Linja-auto
-                                        8 = Pakettiauto
-                                        16 = Polkupyörä
-                                        32 = Moottoripyörä
-                                        64 = Muu
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="tasoristeyksenvarustelu" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tasoristeyksen varustelu
-
-                                        1 = Puolipuomit
-                                        2 = Valo- tai äänivaroituslaitos
-                                        4 = Stop-merkit
-                                        8 = Risteysmerkit
-                                        16 = Ilman risteysmerkkejä
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="katkeamisvali" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Katkeamisväli
-
-                                        1 = Veturin ja vaunujen väli
-                                        2 = Vetureiden väli
-                                        4 = Vaunujen väli
-                                        8 = Junayksiköiden väli
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 128
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="ovenpaikka" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Oven paikka
-
-                                        1 = Matkustajavaunussa
-                                        2 = Tavaravaunussa
-                                        4 = Junayksikössä
-
-                                        Tämä kenttä on pakollinen, jos tapahtuma-kentällä on jokin seuraavista arvoista: 256
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="tahallisuus" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tahallisuus
-
-                                        1 = Ei-tahallinen
-                                        2 = Tahallinen
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 256
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1"/>
-                                        <xs:enumeration value="2"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="luvallisuus" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Liikkumisen luvallisuus
-
-                                        1 = Luvaton liikkuminen radalla
-                                        2 = Ei-luvaton liikkuminen radalla
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 512
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="henkiloonnettomuustyyppi" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Henkilöonnettomuuden tyyppi
-
-                                        1 = Liikkuvasta yksiköstä putoaminen
-                                        2 = Onnettomuus yksikköön noustaessa
-                                        4 = Onnettomuus liikkuvassa yksikössä
-                                        8 = Onnettomuus yksiköstä poistuttaessa
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 1024
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="ratavauriotyyppi" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Ratavaurion tyyppi
-
-                                        1 = Kiskon katkeama
-                                        2 = Kiskon taipuminen
-                                        4 = Raiteen nurjahdus
-                                        8 = Vaihteen aukiajo
-                                        16 = Routavaurio
-                                        32 = Kaapelivaurio
-                                        64 = Muu
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 2048,67108864
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="ratavauriopaikka" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Ratavaurion paikka
-
-                                        1 = Valtion rataverkko
-                                        2 = VR:n raide
-                                        4 = Yksityisraide
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 2048,67108864
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="radanjaturvalaitteidenviantarkennus" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Radan ja turvalaitteiden vian tarkennus
-
-                                        1 = Eriste- tai akselinlaskentavika
-                                        2 = Asetinlaite- tai kauko-ohjausvika
-                                        4 = Vaihdevika
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 67108864
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="tapahtumanlisatieto" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tapahtuman lisätieto
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 16384,32768,1048576,2097152,4194304,8388608
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="jarjestyshairionpaikka" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Järjestyshäiriön paikka
-
-                                        1 = Tapahtui junassa
-                                        2 = Tapahtui asemalla
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 65536
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="ilkivallankohde" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Ilkivallan kohde
-
-                                        1 = Liikkuva kalusto
-                                        2 = Rata tai ratalaitteet
-                                        4 = Rakennus
-                                        8 = Muu
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 131072
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="tulipalonkohde" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tulipalon kohde
-
-                                        1 = Veturi
-                                        2 = Vaunu
-                                        4 = Junayksikkö
-                                        8 = Ratatyökone
-                                        16 = Rata tai ratalaitteet
-                                        32 = Rakennus
-                                        64 = Muu
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 262144
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="varkaudenkohde" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Varkauden kohde
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 524288
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="50"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="vaaratilanteentyyppi" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Vaaratilanteen tyyppi
-
-                                        1 = Työmaan aiheuttamat vaaratilanteet liikenteelle
-                                        2 = Työkoneet liian lähellä liikennöityä raidetta
-                                        4 = Työmaan aiheuttamat vauriot radan rakenteissa
-                                        8 = Virheet turvamiesmenettelyssä
-                                        16 = Virheellinen/väärä paikkatieto
-                                        32 = Muut häiriöt rautatieliikenteelle
-                                        64 = Liikenteen aiheuttamat vaaratilanteet työmaalle
-                                        128 = Luvaton ratatyö
-                                        256 = Virheellinen dokumentaatio
-                                        512 = Ratatyön suojaamisvirhe
-                                        1024 = Ratatöiden suojaamisvirhe ja kulkutien turvaamisvirhe
-                                        2048 = Kulkutien turvaamisvirhe ja ratatyön suojaamisvirhe
-                                        4096 = Ratatyöilmoitus läpikäymättä
-                                        8192 = Ratatyöprosessin virhe: vaiheita ei toteuteta järjestyksessä suojaus, merkintä, lupa
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8388608
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                        <xs:enumeration value="128" />
-                                        <xs:enumeration value="256" />
-                                        <xs:enumeration value="512" />
-                                        <xs:enumeration value="1024" />
-                                        <xs:enumeration value="2048" />
-                                        <xs:enumeration value="4096" />
-                                        <xs:enumeration value="8192" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="urakoitsija" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Urakoitsija
-
-                                        Kuka toimi urakoitsijana vaaratilanteen aikana?
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8388608
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="80"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="ratatyostavastaava" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Ratatyöstä vastaava
-
-                                        Kuka vastasi ratatöistä vaaratilanteen aikana?
-
-                                        Tämä kenttä on käytössä, jos tapahtuma-kentällä on jokin seuraavista arvoista: 8388608
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="80"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -1061,6 +349,62 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
+                            <xs:element name="eureffinn" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:double">
+                                        <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="eureffine" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:double">
+                                        <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="tienimi" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="200" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="tienumero" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:int">
+                                        <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="tieaosa" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:int">
+                                        <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="tielosa" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:int">
+                                        <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="tieaet" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:int">
+                                        <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="tielet" minOccurs="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:int">
+                                        <xs:minInclusive value="0" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -1231,40 +575,12 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="eho" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        EHO
-
-                                        Lisää tähän käyttökeskusksesta saatu EHO-numero.
-
-                                        Tämä kenttä on käytössä, jos tyyppi-kentällä on jokin seuraavista arvoista: 1
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="20"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
                 <xs:element name="tapahtumankasittely" minOccurs="0">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="tuttiid" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        TUTTI-järjestelmän käyttämä tunniste poikkeamalle.
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="20"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
                             <xs:element name="otsikko" minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -1332,22 +648,6 @@
                                     <xs:restriction base="xs:boolean" />
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="tila" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Tapahtuman tila
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:enumeration value="Avoin"/>
-                                        <xs:enumeration value="Käsitelty"/>
-                                        <xs:enumeration value="Täydennetty"/>
-                                        <xs:enumeration value="Suljettu"/>
-                                        <xs:enumeration value="Tilastoitu"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
                             <xs:element name="lisatiedot" minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -1359,56 +659,6 @@
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="2000"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="palautepyydetty" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Onko pyydetty palautetta?
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="palautepyydettyosoite" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Palautteen sähköpostiosoite
-
-                                        Tämä kenttä on pakollinen, jos palautepyydetty-kentän arvo on 1 (True)
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="80" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="palauteannettu" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Onko annettu palautetta?
-
-                                        Tämä kenttä on pakollinen, jos palautepyydetty-kentän arvo on 1 (True)
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="palautekanava" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Palautteen antokanava
-
-                                        Tämä kenttä on pakollinen, jos palauteannettu-kentän arvo on 1 (True)
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                        <xs:maxLength value="20" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
