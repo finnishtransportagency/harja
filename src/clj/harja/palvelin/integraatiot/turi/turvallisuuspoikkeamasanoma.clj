@@ -190,6 +190,26 @@
     (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
     vammat))
 
+(def vahingoittunut-ruumiinosa->numero
+  {:paan_alue 1
+   :silmat 2
+   :niska_ja_kaula 3
+   :selka 4
+   :vartalo 5
+   :sormi_kammen 6
+   :ranne 7
+   :muu_kasi 8
+   :nilkka 9
+   :jalkatera_ja_varvas 10
+   :muu_jalka 11
+   :koko_keho 12
+   :ei_tietoa 13})
+
+(defn vahingoittuneet-ruumiinosat->numerot [vammat]
+  (mapv
+    (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
+    vammat))
+
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
@@ -209,8 +229,8 @@
            [:ammatti (ammatti->numero (:tyontekijanammatti data))]
            [:ammattimuutarkenne (:tyontekijanammattimuu data)]]
           (vammat->numerot (:vammat data))
-          [[:vahingoittunutruumiinosa "10"]
-           [:sairauspoissaolot "3"]
+          (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
+          [[:sairauspoissaolot "3"]
            [:sairauspoissaolojatkuu "true"]
            [:sairaalahoitovuorokaudet "3"]])))
 
