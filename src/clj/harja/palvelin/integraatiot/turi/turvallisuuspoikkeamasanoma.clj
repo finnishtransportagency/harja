@@ -138,8 +138,6 @@
    [:tiedosto "ZGVkaXQ="]]])
 
 (defn muodosta-viesti [data]
-  ;; Harjaa koskemattomat XML-sanoman tagit jätetty koodiin kommentoituna, jotta
-  ;; voidaan edelleen havainnollistaa koko sanoma
   (into [:imp:poikkeama {:xmlns:imp "http://importexport.xml.turi.oikeatoliot.fi"}]
         (concat
           [(rakenna-tapahtumatiedot data)
