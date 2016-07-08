@@ -84,11 +84,12 @@
 (defn tarkista-alustatoimenpiteiden-sijainnit
   "Varmistaa että kaikkien alustatoimenpiteiden sijainnit ovat kohteen sijainnin sisällä"
   [kohde-id kohteen-sijainti alustatoimet]
-  (let [virheet (mapv (fn [{:keys [sijainti]}]
-                        (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
-                          (tee-virhe +viallinen-alustatoimenpiteen-sijainti+
-                                     (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))))
-                      alustatoimet)]
+  (let [virheet (remove nil?
+                        (mapv (fn [{:keys [sijainti]}]
+                                (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
+                                  (tee-virhe +viallinen-alustatoimenpiteen-sijainti+
+                                             (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))))
+                              alustatoimet))]
     (when (not (empty? virheet))
       (throw+ {:type +kohteissa-viallisia-sijainteja+
                :virheet virheet}))))

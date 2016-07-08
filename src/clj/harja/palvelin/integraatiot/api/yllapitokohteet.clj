@@ -65,7 +65,7 @@
           alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet]))
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           kohteen-tienumero (:tr-numero kohde)
-          alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallysysilmoitus :alustatoimenpiteet]))]
+          alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet]))]
       (validointi/tarkista-paallystysilmoitus db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)
 
       ;; hae kohteen tiedot ja tarkista sijainnit vielä kantaa vasten
