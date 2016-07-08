@@ -92,6 +92,11 @@
     (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
     vammat))
 
+(def korjaava-toimenpide-tila->numero
+  {:avoin 0
+   :siirretty 1
+   :suljettu 2})
+
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
@@ -123,11 +128,13 @@
    [:tila (turpodomain/kuvaa-turpon-tila (:tila data))]])
 
 (defn rakenna-poikkeamatoimenpide [data]
-  [:poikkeamatoimenpide
-   [:otsikko "string"]
-   [:kuvaus "string"]
-   [:toteuttaja "string"]
-   [:tila "1"]])
+  (mapv (fn [toimenpide]
+          [:poikkeamatoimenpide
+           [:otsikko (:otsikko toimenpide)]
+           [:kuvaus (:kuvaus toimenpide)]
+           [:toteuttaja (:toteuttaja toimenpide)]
+           [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
+        (:korjaavattoimenpiteet data)))
 
 (defn rakenna-poikkeamaliite [data]
   (mapv (fn [liite]
@@ -142,8 +149,8 @@
           [(rakenna-tapahtumatiedot data)
            (rakenna-tapahtumapaikka data)
            (rakenna-syyt-ja-seuraukset data)
-           (rakenna-tapahtumakasittely data)
-           (rakenna-poikkeamatoimenpide data)]
+           (rakenna-tapahtumakasittely data)]
+          (rakenna-poikkeamatoimenpide data)
           (rakenna-poikkeamaliite data))))
 
 (defn muodosta [data]
