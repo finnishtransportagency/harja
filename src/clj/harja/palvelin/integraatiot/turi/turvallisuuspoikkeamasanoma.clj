@@ -130,13 +130,11 @@
    [:tila "1"]])
 
 (defn rakenna-poikkeamaliite [data]
-  ;; TODO Rakenna
-  [[:poikkeamaliite
-   [:tiedostonimi "string"]
-   [:tiedosto "ZGVkaXQ="]]
-  [:poikkeamaliite
-   [:tiedostonimi "string"]
-   [:tiedosto "ZGVkaXQ="]]])
+  (mapv (fn [liite]
+          [:poikkeamaliite
+           [:tiedostonimi (:nimi liite)]
+           [:tiedosto (:sisalto liite)]])
+        (:liitteet data)))
 
 (defn muodosta-viesti [data]
   (into [:imp:poikkeama {:xmlns:imp "http://importexport.xml.turi.oikeatoliot.fi"}]
