@@ -83,7 +83,7 @@
         monta-alikohdetta [{:tunnus "A"
                             :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
                            {:tunnus "B"
-                            :sijainti {:aosa 2, :aet 2, Te:losa 3, :let 3}}
+                            :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
                            {:tunnus "C"
                             :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]]
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde yksi-alikohde)
