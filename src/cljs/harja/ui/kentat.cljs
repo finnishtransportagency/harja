@@ -704,10 +704,10 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
-        hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
+        hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
         virheet (atom nil)
@@ -792,9 +792,15 @@
            [:table
             [:thead
              [:tr
-              [:th "Tie"]
-              [:th "aosa"]
-              [:th "aet"]
+              [:th
+               [:span "Tie"]
+               (when pakollinen? [:span.required-tahti " *"])]
+              [:th
+               [:span "aosa"]
+               (when pakollinen? [:span.required-tahti " *"])]
+              [:th
+               [:span "aet"]
+               (when pakollinen? [:span.required-tahti " *"])]
               [:th "losa"]
               [:th "let"]]]
             [:tbody
