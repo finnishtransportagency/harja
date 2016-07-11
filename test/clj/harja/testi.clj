@@ -18,7 +18,9 @@
 (def jarjestelma nil)
 
 (Locale/setDefault (Locale. "fi" "FI"))
-(log/set-config! [:appenders :standard-out :min-level] :debug)
+;; TODO debug jos ei Jenkinsissä
+;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
+(log/set-config! [:appenders :standard-out :min-level] :info)
 
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"

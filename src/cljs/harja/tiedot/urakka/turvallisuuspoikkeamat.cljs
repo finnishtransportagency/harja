@@ -28,10 +28,11 @@
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
 
 (defn hae-kayttajat [hakuparametrit]
-  (k/post! :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat {:urakka-id (:urakka-id hakuparametrit)
-                                                                :etunimi (:etunimi hakuparametrit)
-                                                                :sukunimi (:sukunimi hakuparametrit)
-                                                                :kayttajanimi (:kayttajanimi hakuparametrit)}))
+  (k/post! :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat
+           {:urakka-id (:urakka-id hakuparametrit)
+            :etunimi (:etunimi hakuparametrit)
+            :sukunimi (:sukunimi hakuparametrit)
+            :kayttajanimi (:kayttajanimi hakuparametrit)}))
 
 (defonce haetut-turvallisuuspoikkeamat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

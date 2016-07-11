@@ -86,14 +86,14 @@
 
 (defn hae-korjaavat-toimenpiteet [turpo-id]
   (as-> (q (str "SELECT
-                        kuvaus,
-                        suoritettu,
-                        otsikko,
-                        vastuuhenkilo,
-                        toteuttaja,
-                        tila
-                        FROM korjaavatoimenpide
-                        WHERE turvallisuuspoikkeama = " turpo-id ";"))
+                  kuvaus,
+                  suoritettu,
+                  otsikko,
+                  vastuuhenkilo,
+                  toteuttaja,
+                  tila
+                  FROM korjaavatoimenpide
+                  WHERE turvallisuuspoikkeama = " turpo-id ";"))
         toimenpide
         (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
 
