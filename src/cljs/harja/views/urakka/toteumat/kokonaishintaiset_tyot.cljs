@@ -118,11 +118,12 @@
         ;; myös tehtävät haetaan uudelleen..
         tehtavat (reaction (let [valittu-tpi-id (get-in @muokattu [:tehtava :toimenpideinstanssi :id])
                                  tpi-tiedot (some #(when (= valittu-tpi-id (:tpi_id %)) %) @u/urakan-toimenpideinstanssit)
-                                 kaikki-tehtavat @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
-                             (into [] (keep (fn [[_ _ t3 t4]]
-                                              (when (= (:koodi t3) (:t3_koodi tpi-tiedot))
-                                                t4))
-                                            kaikki-tehtavat))))]
+                                 kaikki-tehtavat @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
+                                 tpin-tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                                                (when (= (:koodi t3) (:t3_koodi tpi-tiedot))
+                                                                  t4))
+                                                              kaikki-tehtavat))]
+                             (sort-by :nimi tpin-tehtavat)))]
     (fnc []
          [:div
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
