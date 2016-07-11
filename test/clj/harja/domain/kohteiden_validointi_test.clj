@@ -88,7 +88,21 @@
                             :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]]
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde yksi-alikohde)
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde kaksi-alikohdetta)
-    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde monta-alikohdetta)))
+    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde monta-alikohdetta)
+    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 {:aosa 1
+                                                                  :aet 1
+                                                                  :losa 5
+                                                                  :let 16}
+                                                               [{:tunnus "A",
+                                                                 :sijainti {:aosa 1,
+                                                                            :aet 1,
+                                                                            :losa 2,
+                                                                            :let 1}}
+                                                                {:tunnus "B",
+                                                                 :sijainti {:aosa 2,
+                                                                            :aet 1,
+                                                                            :losa 5,
+                                                                            :let 16}}])))
 
 (deftest tarkista-alustatoimenpiteiden-validius
   (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
@@ -101,4 +115,4 @@
             yllapitokohteet/+viallinen-alustatoimenpiteen-sijainti+
             "Alustatoimenpide ei ole kohteen (id: 1) sisällä.")
           (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde alustatoimenpiteet))
-        "Kohteen ulkopuolinen alikohde otettiin kiinni")))
+        "Kohteen ulkopuolinen alustatoimenpide otettiin kiinni")))

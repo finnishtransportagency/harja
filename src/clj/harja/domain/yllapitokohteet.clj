@@ -82,6 +82,7 @@
 (defn tarkista-alustatoimenpiteiden-sijainnit
   "Varmistaa että kaikkien alustatoimenpiteiden sijainnit ovat kohteen sijainnin sisällä"
   [kohde-id kohteen-sijainti alustatoimet]
+  ;; todo: käytä keep removen sijasta?
   (let [virheet (remove nil?
                         (mapv (fn [{:keys [sijainti]}]
                                 (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
@@ -89,5 +90,6 @@
                                              (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))))
                               alustatoimet))]
     (when (not (empty? virheet))
+      ;; todo: käytä virheet/heita-poikkeus
       (throw+ {:type +kohteissa-viallisia-sijainteja+
                :virheet virheet}))))

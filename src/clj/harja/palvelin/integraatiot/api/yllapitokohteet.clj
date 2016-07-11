@@ -55,7 +55,7 @@
          :id
          kohde-id)))
 
-(defn paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
+(defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
   (let [ilmoitustiedot (paallystysilmoitus/rakenna paallystysilmoitus)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
                              (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
@@ -82,8 +82,7 @@
       (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))
       (assoc :tyot (mapv :tyo (get-in data [:paallystysilmoitus :tyot])))))
 
-(defn validoi-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus]
-  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+(defn validoi-paallystysilmoitus [db  urakka-id kohde paallystysilmoitus]
   (validointi/tarkista-urakan-kohde db urakka-id (:id kohde))
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (:alikohteet paallystysilmoitus)
@@ -96,8 +95,9 @@
         alikohteet (:alikohteet paallystysilmoitus)]
     (paivita-kohde db (:id kohde) kohteen-sijainti)
     (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
+          ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
-      (paivita-paallystysilmoitus db kayttaja (:id kohde) paallystysilmoitus))))
+      (luo-tai-paivita-paallystysilmoitus db kayttaja (:id kohde) paallystysilmoitus))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
@@ -107,7 +107,8 @@
           kohde-id (Integer/parseInt kohde-id)
           paallystysilmoitus (pura-paallystysilmoitus data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          _ (validoi-paallystysilmoitus db kayttaja urakka-id kohde paallystysilmoitus)
+          _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+          _ (validoi-paallystysilmoitus db urakka-id kohde paallystysilmoitus)
           id (tallenna-paallystysilmoitus db kayttaja kohde paallystysilmoitus)]
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")

@@ -501,31 +501,6 @@ documentation:
                    application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
-          /paikkausilmoitus:
-            post:
-              is: [secured]
-              description: Paikkausilmoituksen kirjaus
-              body:
-                application/json:
-                  example: !include examples/ilmoitustoimenpiteen-kirjaaminen-request.json
-                  schema: ilmoitustoimenpiteen-kirjaaminen-request
-              responses:
-                200:
-                  body:
-                    application/json:
-                     example: !include examples/onnistunut-kirjaus-response.json
-                     schema: kirjaus-response
-                500:
-                  body:
-                    application/json:
-                      example: !include examples/virhe-response.json
-                      schema: virhe-response
-                400:
-                  body:
-                   application/json:
-                     example: !include examples/virhe-response.json
-                     schema: virhe-response
-
 
 /varusteet:
   is: [secured]
