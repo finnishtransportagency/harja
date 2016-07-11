@@ -10,6 +10,7 @@
             [harja.palvelin.integraatiot.sampo.kasittely.toimenpiteet :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.organisaatiot :as organisaatiot]
             [harja.palvelin.integraatiot.sampo.kasittely.yhteyshenkilot :as yhteyshenkilot]
+            [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.lukot :as lukot])
@@ -41,7 +42,8 @@
                           (sopimukset/kasittele-sopimukset db sopimukset)
                           (toimenpiteet/kasittele-toimenpiteet db toimenpiteet)
                           (organisaatiot/kasittele-organisaatiot db organisaatiot)
-                          (yhteyshenkilot/kasittele-yhteyshenkilot db yhteyshenkilot)))]
+                          (yhteyshenkilot/kasittele-yhteyshenkilot db yhteyshenkilot)
+                          (valitavoitteet/kasittele-valitavoitteet db)))]
       kuittaukset)))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
