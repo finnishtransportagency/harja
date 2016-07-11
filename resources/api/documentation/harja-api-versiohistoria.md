@@ -2,6 +2,18 @@
 <b>Julkaistu: 4.7.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.1. Julkaistu 6.7.2016:
+    - Turvallisuuspoikkeama yhtenäistetty TURI:n kanssa, mistä johtuen tehty seuraavat muutokset:
+    - Poistettu kenttä: paattynyt
+    - Poistettu kenttä: tyotehtava
+    - Poistettu kenttä: laatija (jatkossa tallennetaan suoraan API-käyttäjän id:nä)
+    - Uusi pakollinen kenttä: otsikko (string, max. 1024 merkkiä)
+    - Uusi vapaaehtoinen kenttä: paikan_kuvaus (string, max. 2048 merkkiä)
+    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_kuljetus (boolean)
+    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_vuoto (boolean, true vain jos sisälsi kuljetuksen)
+    - Myös korjaaviin toimenpiteisiin on tehty muutoksia:
+    - Uusi vapaaehtoinen kenttä: otsikko (string, max 2048 merkkiä)
+    - Uusi vapaaehtoinen kenttä: toteuttaja (string, max 1024 merkkiä)
 - Versionumero: 0.2.0. Julkaistu 4.7.2016:
     - Teiden ylläpidon rajapintojen työstäminen aloitettu. Ensimmäinen toteutettava on rajapinta ylläpitourakan kohteiden haku.
 - Versionumero: 0.1.8. Julkaistu 1.7.2016:
