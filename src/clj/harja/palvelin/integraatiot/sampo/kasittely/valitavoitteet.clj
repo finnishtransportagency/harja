@@ -8,13 +8,13 @@
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn kasittele-valitavoitteet [db]
-  (log/debug "Käsitellään valtakunnalliset välitavoitteet")
-  (try
-    ;; TODO
-    (catch Exception e
-      (log/error e "Tapahtui poikkeus asetettaessa Sampo-urakalle valtakunnallisia välitavoitteita "
-      (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Operation" "Internal Error")]
-        (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
-                 :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]}))))))
+(defn lisaa-urakan-puuttuvat-valtakunnalliset-valitavoitteet [db sampo-id]
+
+  )
+
+(defn kasittele-urakka [db {:keys [sampo-id]}]
+  (log/debug "Käsitellään sampo-id:n " sampo-id " urakan valtakunnalliset välitavoitteet")
+  (lisaa-urakan-puuttuvat-valtakunnalliset-valitavoitteet db sampo-id))
+
+(defn kasittele-valitavoitteet [db urakat]
+  (mapv #(kasittele-urakka db %) urakat))

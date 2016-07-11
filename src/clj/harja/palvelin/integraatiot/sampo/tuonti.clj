@@ -26,24 +26,29 @@
     (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus)
     lisatietoja))
 
-(defn tuo-data [db viestin-sisalto]
+(defn tuo-sampo-viestin-data [db data]
+  (let [hankkeet (:hankkeet data)
+        urakat (:urakat data)
+        sopimukset (:sopimukset data)
+        toimenpiteet (:toimenpideinstanssit data)
+        organisaatiot (:organisaatiot data)
+        yhteyshenkilot (:yhteyshenkilot data)
+        kuittaukset (doall
+                      (concat
+                        (hankkeet/kasittele-hankkeet db hankkeet)
+                        (urakat/kasittele-urakat db urakat)
+                        (sopimukset/kasittele-sopimukset db sopimukset)
+                        (toimenpiteet/kasittele-toimenpiteet db toimenpiteet)
+                        (organisaatiot/kasittele-organisaatiot db organisaatiot)
+                        (yhteyshenkilot/kasittele-yhteyshenkilot db yhteyshenkilot)))]
+    kuittaukset))
+
+(defn- kasittele-sisaanluku [db viestin-sisalto]
   (jdbc/with-db-transaction [db db]
     (let [data (sampo-sanoma/lue-viesti viestin-sisalto)
-          hankkeet (:hankkeet data)
-          urakat (:urakat data)
-          sopimukset (:sopimukset data)
-          toimenpiteet (:toimenpideinstanssit data)
-          organisaatiot (:organisaatiot data)
-          yhteyshenkilot (:yhteyshenkilot data)
-          kuittaukset (doall
-                        (concat
-                          (hankkeet/kasittele-hankkeet db hankkeet)
-                          (urakat/kasittele-urakat db urakat)
-                          (sopimukset/kasittele-sopimukset db sopimukset)
-                          (toimenpiteet/kasittele-toimenpiteet db toimenpiteet)
-                          (organisaatiot/kasittele-organisaatiot db organisaatiot)
-                          (yhteyshenkilot/kasittele-yhteyshenkilot db yhteyshenkilot)
-                          (valitavoitteet/kasittele-valitavoitteet db)))]
+          kuittaukset (tuo-sampo-viestin-data db data)]
+      ;; Välitavoitteiden käsittely tapahtuu sisäisesti, ei tarvitse kuittausta
+      (valitavoitteet/kasittele-valitavoitteet db (:urakat data))
       kuittaukset)))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
@@ -57,7 +62,7 @@
                                                                  viesti-id
                                                                  viestin-sisalto)]
     (try+
-      (let [tuonti (fn [] (tuo-data db viestin-sisalto))
+      (let [tuonti (fn [] (kasittele-sisaanluku db viestin-sisalto))
             kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
