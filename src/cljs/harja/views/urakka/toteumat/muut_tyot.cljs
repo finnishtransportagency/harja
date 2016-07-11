@@ -258,21 +258,22 @@
               :fmt           #(:tpi_nimi %)
               :aseta aseta-toimenpide
               :palstoja 1}
-             {:otsikko       "Tehtävä" :nimi :tehtava
-              :pakollinen?   true
-              :hae           #(get-in % [:tehtava :toimenpidekoodi])
-              :valinta-arvo  #(:id (nth % 3))
+             {:otsikko "Tehtävä" :nimi :tehtava
+              :pakollinen? true
+              :hae #(get-in % [:tehtava :toimenpidekoodi])
+              :valinta-arvo #(:id (nth % 3))
               :valinta-nayta #(if % (:nimi (nth % 3))
                                     ;; näytä myös poistettu toimenopidekoodi lomakkeessa (HAR-2140)
                                     (if (get-in @muokattu [:toteuma :id])
                                       (get-in @muokattu [:tehtava :nimi])
                                       "- Valitse tehtävä -"))
-              :tyyppi        :valinta
-              :valinnat-fn   #(urakan-toimenpiteet/toimenpideinstanssin-tehtavat
-                               (get-in @muokattu [:toimenpideinstanssi :tpi_id])
-                               toimenpideinstanssit tehtavat-tasoineen)
-              :validoi       [[:ei-tyhja "Valitse tehtävä"]]
-              :aseta         aseta-tehtava
+              :tyyppi :valinta
+              :valinnat-fn (fn [] (let [tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                                                   (get-in @muokattu [:toimenpideinstanssi :tpi_id])
+                                                   toimenpideinstanssit tehtavat-tasoineen)]
+                                    (sort-by #(:nimi (get % 3)) tehtavat)))
+              :validoi [[:ei-tyhja "Valitse tehtävä"]]
+              :aseta aseta-tehtava
               :palstoja 1}
 
              {:otsikko "Aloitus" :pakollinen? true :nimi :alkanut :tyyppi :pvm
