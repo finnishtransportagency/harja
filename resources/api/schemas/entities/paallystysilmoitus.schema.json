@@ -308,6 +308,11 @@
                 "type": "number",
                 "required": true
               },
+              "toteutunut-maara": {
+                "id": "urn:harja/tyot/0/tyo/toteutunut-maara",
+                "type": "number",
+                "required": true
+              },
               "yksikko": {
                 "id": "urn:harja/tyot/0/tyo/yksikko",
                 "type": "string",

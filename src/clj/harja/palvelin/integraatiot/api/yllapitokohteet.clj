@@ -14,7 +14,8 @@
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [cheshire.core :as cheshire])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def testidata
@@ -98,7 +99,8 @@
 
 (defn rakenna-ilmoitustiedot [paallystysilmoitus]
   ;; todo: täytyy kaivaa todennäköisesti vielä tason syvemmältä varsinaiset mäpit
-  {:osoitteet (mapv (fn [alikohde]
+  (let [data {:osoitteet
+              (mapv (fn [alikohde]
                       (let [kivi (:kivi-ja-sideaine (first (:kivi-ja-sideaineet alikohde)))]
                         {:kohdeosa-id (:id alikohde)
                          :rc% (:rc-prosentti alikohde)
@@ -119,34 +121,36 @@
                          :kokonaismassamaara (:kokonaismassamaara alikohde)
                          :edellinen-paallystetyyppi (:edellinen-paallystetyyppi alikohde)}))
                     (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
-   :alustatoimet (mapv (fn [alustatoimi]
-                         (let [sijainti (:sijainti alustatoimi)]
-                           {:aosa (:aosa sijainti)
-                            :aet (:aet sijainti)
-                            :losa (:losa sijainti)
-                            :let (:let sijainti)
-                            :paksuus (:paksuus alustatoimi)
-                            ;; todo: mäppää selitteistä koodeiksi
-                            :verkkotyyppi (:verkkotyyppi alustatoimi)
-                            :verkon-sijainti (:verkon-sijainti alustatoimi)
-                            :verkon-tarkoitus (:verkon-tarkoitus alustatoimi)
-                            :kasittelymenetelma (:kasittelymenetelma alustatoimi)
-                            :tekninen-toimenpide (:tekninen-toimenpide alustatoimi)}))
-                       (:alustatoimenpiteet paallystysilmoitus))
-   :tyot (mapv (fn [tyo]
-                 {;; todo: mäppää selitteistä koodeiksi
-                  :tyo (:tyotehtava tyo)
-                  :tyyppi (:tyyppi tyo)
-                  :yksikko (:yksikko tyo)
-                  :yksikkohinta (:yksikkohinta tyo)
-                  :tilattu-maara (:tilattu-maara tyo)
-                  ;; todo: lisättävä skeemaan :toteutunut-maara
-                  })
-               (:tyot paallystysilmoitus))})
+              :alustatoimet (mapv (fn [alustatoimi]
+                                    (let [alustatoimi (:alustatoimenpide alustatoimi)
+                                          sijainti (:sijainti alustatoimi)]
+                                      {:aosa (:aosa sijainti)
+                                       :aet (:aet sijainti)
+                                       :losa (:losa sijainti)
+                                       :let (:let sijainti)
+                                       :paksuus (:paksuus alustatoimi)
+                                       ;; todo: mäppää selitteistä koodeiksi
+                                       :verkkotyyppi (:verkkotyyppi alustatoimi)
+                                       :verkon-sijainti (:verkon-sijainti alustatoimi)
+                                       :verkon-tarkoitus (:verkon-tarkoitus alustatoimi)
+                                       :kasittelymenetelma (:kasittelymenetelma alustatoimi)
+                                       :tekninen-toimenpide (:tekninen-toimenpide alustatoimi)}))
+                                  (:alustatoimenpiteet paallystysilmoitus))
+              :tyot (mapv (fn [tyo]
+                            (let [tyo (:tyo tyo)]
+                              {;; todo: mäppää selitteistä koodeiksi
+                              :tyo (:tyotehtava tyo)
+                              :tyyppi (:tyyppi tyo)
+                              :yksikko (:yksikko tyo)
+                              :yksikkohinta (:yksikkohinta tyo)
+                              :tilattu-maara (:tilattu-maara tyo)
+                              :toteutunut-maara (:tilattu-maara tyo)}))
+                          (:tyot paallystysilmoitus))}]
+    (cheshire/encode data)))
 
 (defn paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
   (let [ilmoitustiedot (rakenna-ilmoitustiedot paallystysilmoitus)]
-    (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db kohde-id)
+    (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
       (q-paallystys/luo-paallystysilmoitus<!
         db
         {:paallystyskohde kohde-id
@@ -157,11 +161,12 @@
          :valmispvm_paallystys nil
          :takuupvm nil
          :muutoshinta nil
-         :kayttaja kayttaja})
+         :kayttaja (:id kayttaja)})
       (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
         db
         {:ilmoitustiedot ilmoitustiedot
-         :muokkaaja kayttaja
+         ;; todo: tarkista pitääkö kaivaa id erikseen mäpistä
+         :muokkaaja (:id kayttaja)
          :id kohde-id}))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
@@ -186,7 +191,7 @@
 
         (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
               paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)
-              id (paivita-paallystysilmoitus db kohde-id paallystysilmoitus)]
+              id (paivita-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus)]
           (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
                                        :id id}))))))
 

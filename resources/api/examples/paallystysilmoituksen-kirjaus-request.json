@@ -80,6 +80,7 @@
           "tyyppi": "tasaukset",
           "tyotehtava": "työtehtävä",
           "tilattu-maara": 1.2,
+          "toteutunut-maara": 1.2,
           "yksikko": "kpl",
           "yksikkohinta": 55.4
         }
