@@ -115,8 +115,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   (loop [rivit []
          rivi []
          palstoja 0
-         [s & skeemat] (remove nil? skeemat)
-         ]
+         [s & skeemat] (remove nil? skeemat)]
     (if-not s
       (if-not (empty? rivi)
         (conj rivit rivi)
@@ -184,7 +183,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 
 (defn kentta
-  "UI yhdelle kentälle, renderöi otsikon ja "
+  "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s}
    data atom-fn muokattava?
    muokattu? virheet varoitukset huomautukset]
