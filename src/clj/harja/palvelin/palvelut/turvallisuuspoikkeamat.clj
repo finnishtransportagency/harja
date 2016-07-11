@@ -111,6 +111,10 @@
                    turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
                    ilmoituksetlahetetty tila]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
+        vaarallisten-aineiden-kuljetus? (boolean (some #{:vaarallisten-aineiden-kuljetus}
+                                                      vaaralliset-aineet))
+        vaarallisten-aineiden-vuoto? (boolean (some #{:vaarallisten-aineiden-vuoto}
+                                                    vaaralliset-aineet))
         parametrit
         (merge oletusparametrit
                tr
@@ -141,12 +145,10 @@
                 :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi
                 :tapahtuman_otsikko otsikko
                 :paikan_kuvaus paikan-kuvaus
-                :vaarallisten_aineiden_kuljetus
-                (boolean (some #{:vaarallisten-aineiden-kuljetus}
-                               vaaralliset-aineet))
-                :vaarallisten_aineiden_vuoto
-                (boolean (some #{:vaarallisten-aineiden-vuoto}
-                               vaaralliset-aineet))
+                :vaarallisten_aineiden_kuljetus vaarallisten-aineiden-kuljetus?
+                :vaarallisten_aineiden_vuoto (if vaarallisten-aineiden-kuljetus?
+                                               false
+                                               vaarallisten-aineiden-vuoto?)
                 :tila (name tila)
                 :ilmoitukset_lahetetty (when ilmoituksetlahetetty
                                          (konv/sql-timestamp ilmoituksetlahetetty))})]
