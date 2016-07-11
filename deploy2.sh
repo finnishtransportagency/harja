@@ -35,6 +35,7 @@ pushd vagrant
 sh migrate_test.sh > /dev/null
 popd
 
+echo "Ajetaan yksikkötestit"
 sh unit.sh
 
 echo ""
