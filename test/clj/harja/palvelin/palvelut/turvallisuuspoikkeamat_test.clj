@@ -40,9 +40,7 @@
     (is (= (count vastaus) 1))
     (is (match vastaus [{:id _
                          :ilmoituksetlahetetty nil
-                         :kasitelty (_ :guard #(and (= (t/year (c/from-sql-date %)) 2005)
-                                                    (= (t/month (c/from-sql-date %)) 10)
-                                                    (= (t/day (c/from-sql-date %)) 5)))
+                         :kasitelty nil
                          :kommentti {:tyyppi nil}
                          :korjaavattoimenpiteet []
                          :kuvaus "Sepolla oli kiire lastata laatikot, ja torni kaatui päälle. Ehti onneksi pois alta niin ei henki lähtenyt."
@@ -57,7 +55,7 @@
                          :tapahtunut (_ :guard #(and (= (t/year (c/from-sql-date %)) 2005)
                                                      (= (t/month (c/from-sql-date %)) 9)
                                                      (= (t/day (c/from-sql-date %)) 30)))
-                         :tila nil
+                         :tila :avoin
                          :tr {:alkuetaisyys 6
                               :alkuosa 6
                               :loppuetaisyys 6
