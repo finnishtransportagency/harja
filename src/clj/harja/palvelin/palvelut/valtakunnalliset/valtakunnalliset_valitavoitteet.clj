@@ -106,16 +106,15 @@
                                       :luoja (:id user)})))
 
 (defn- luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet
-  "Luo uudet valtakunnalliset kertaluontoisten välitavoitteet
+  "Luo uudet valtakunnalliset kertaluontoisten välitavoitteet annettuihin (ei-päättyneisiin) urakoihin.
+
   Jos takaraja on annettu, kopioidaan välitavoite urakkaan vain jos
-  se on valittua tyyppiä, takaraja osuu urakan voimassaoloajalle eikä urakka ole päättynyt.
+  se on valittua tyyppiä ja takaraja osuu urakan voimassaoloajalle.
+
   Jos takarajaa ei ole annettu, kopioidaan välitavoite kaikkiin
-  oikeantyyppisiin käynnissä oleviin ja tuleviin urakoihin."
-  [db user valitavoitteet]
-  (let [urakat-kaynissa-tulossa (into []
-                                      (map #(konv/string->keyword % :tyyppi))
-                                      (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))]
-    (doseq [{:keys [takaraja nimi urakkatyyppi] :as valitavoite} valitavoitteet]
+  valittua tyyppiä oleviin urakoihin."
+  [db user valitavoitteet urakat-kaynnissa-tulossa]
+  (doseq [{:keys [takaraja nimi urakkatyyppi] :as valitavoite} valitavoitteet]
       (let [id (:id (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
                       db
                       {:takaraja (konv/sql-date takaraja)
@@ -131,21 +130,19 @@
                                          (pvm/valissa? (c/from-date takaraja)
                                                        (c/from-date (:alkupvm urakka))
                                                        (c/from-date (:loppupvm urakka)))))
-                                     urakat-kaynissa-tulossa)
+                                     urakat-kaynnissa-tulossa)
                                    (filter
                                      #(= (:urakkatyyppi valitavoite) (:tyyppi %))
-                                     urakat-kaynissa-tulossa))]
-        (kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin db user valitavoite id linkitettavat-urakat)))))
+                                     urakat-kaynnissa-tulossa))]
+        (kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin db
+                                                                       user
+                                                                       valitavoite
+                                                                       id
+                                                                       linkitettavat-urakat))))
 
 (defn- kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
-  [db user valitavoite valitavoite-kannassa-id]
-  (let [urakat-kaynnissa-tulossa (into []
-                     (map #(konv/string->keyword % :tyyppi))
-                     (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))
-        linkitettavat-urakat (filter
-                               #(= (:urakkatyyppi valitavoite) (:tyyppi %))
-                               urakat-kaynnissa-tulossa)]
-    (doseq [urakka linkitettavat-urakat]
+  [db user valitavoite valtakunnallinen-valitavoite-id urakat]
+  (doseq [urakka urakat]
      (let [urakan-jaljella-olevat-vuodet (range (max (t/year (t/now))
                                                      (t/year (c/from-date (:alkupvm urakka))))
                                                 (inc (t/year (c/from-date (:loppupvm urakka)))))]
@@ -158,38 +155,48 @@
                                                                                  (:takaraja-toistokuukausi valitavoite)
                                                                                  (:takaraja-toistopaiva valitavoite))))
                                            :nimi (:nimi valitavoite)
-                                           :valtakunnallinen_valitavoite valitavoite-kannassa-id
-                                           :luoja (:id user)}))))))
+                                           :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
+                                           :luoja (:id user)})))))
 
 (defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet
   "Luo uudet valtakunnalliset toistuvat välitavoitteet.
-   Kopioi välitavoitteen käynnissä oleviin ja tuleviin urakoihin kertaalleen per urakkavuosi"
-  [db user valitavoitteet]
-    (doseq [{:keys [takaraja nimi urakkatyyppi
-                    takaraja-toistopaiva takaraja-toistokuukausi] :as valitavoite} valitavoitteet]
-      (let [id (:id (q/lisaa-valtakunnallinen-toistuva-valitavoite<!
-                  db
-                  {:nimi nimi
-                   :urakkatyyppi (name urakkatyyppi)
-                   :takaraja_toistopaiva takaraja-toistopaiva
-                   :takaraja_toistokuukausi takaraja-toistokuukausi
-                   :tyyppi "toistuva"
-                   :luoja (:id user)}))]
-        (kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin db user valitavoite id))))
+
+   Luo välitavoitteen annettuihin (ei-päättyneisiin) urakoihin
+   kertaalleen per urakkavuosi jos urakka on annettua tyyppiä."
+  [db user valitavoitteet urakat-kaynnissa-tulossa]
+  (doseq [{:keys [nimi urakkatyyppi takaraja-toistopaiva takaraja-toistokuukausi] :as valitavoite}
+          valitavoitteet]
+    (let [linkitettavat-urakat (filter
+                                 #(= (:urakkatyyppi valitavoite) (:tyyppi %))
+                                 urakat-kaynnissa-tulossa)
+          id (:id (q/lisaa-valtakunnallinen-toistuva-valitavoite<!
+                    db
+                    {:nimi nimi
+                     :urakkatyyppi (name urakkatyyppi)
+                     :takaraja_toistopaiva takaraja-toistopaiva
+                     :takaraja_toistokuukausi takaraja-toistokuukausi
+                     :tyyppi "toistuva"
+                     :luoja (:id user)}))]
+      (kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin db user valitavoite id linkitettavat-urakat))))
 
 (defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet]
-  (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db
-                                                             user
-                                                             (filter #(and (= (:tyyppi %) :kertaluontoinen)
-                                                                           (< (:id %) 0)
-                                                                           (not (:poistettu %)))
-                                                                     valitavoitteet))
-  (luo-uudet-valtakunnalliset-toistuvat-valitavoitteet db
-                                                       user
-                                                       (filter #(and (= (:tyyppi %) :toistuva)
-                                                                     (< (:id %) 0)
-                                                                     (not (:poistettu %)))
-                                                               valitavoitteet)))
+  (let [urakat-kaynnissa-tulossa (into []
+                                       (map #(konv/string->keyword % :tyyppi))
+                                       (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))]
+    (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db
+                                                               user
+                                                               (filter #(and (= (:tyyppi %) :kertaluontoinen)
+                                                                             (< (:id %) 0)
+                                                                             (not (:poistettu %)))
+                                                                       valitavoitteet)
+                                                               urakat-kaynnissa-tulossa)
+    (luo-uudet-valtakunnalliset-toistuvat-valitavoitteet db
+                                                         user
+                                                         (filter #(and (= (:tyyppi %) :toistuva)
+                                                                       (< (:id %) 0)
+                                                                       (not (:poistettu %)))
+                                                                 valitavoitteet)
+                                                         urakat-kaynnissa-tulossa)))
 
 (defn- paivita-valtakunnalliseen-valitavoitteeseen-linkitetyt-valitavoitteet
   "Päivittää valtakunnalliseen välitavoitteeseen linkitetyt urakkakohtaiset välitavoitteet

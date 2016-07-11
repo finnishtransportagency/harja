@@ -27,8 +27,12 @@
                   (:id valtakunnallinen-vt)
                   [{:id urakka-id}])
                 (= (:tyyppi valtakunnallinen-vt) :toistuva)
-                nil ;TODO Lisää toistuva
-                ))))))
+                (valtakunnallinen-vt-palvelu/kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
+                  db
+                  nil
+                  valtakunnallinen-vt
+                  (:id valtakunnallinen-vt)
+                  [{:id urakka-id}])))))))
 
 (defn kasittele-urakka [db {:keys [sampo-id]}]
   (log/debug "Käsitellään sampo-id:n " sampo-id " urakan valtakunnalliset välitavoitteet")
