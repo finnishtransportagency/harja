@@ -198,8 +198,8 @@
   (hae-urakan-turvallisuuspoikkeamat db
                                      user
                                      {:urakka-id (:urakka tp)
-                               :alku (first hoitokausi)
-                               :loppu (second hoitokausi)}))
+                                      :alku (first hoitokausi)
+                                      :loppu (second hoitokausi)}))
 
 (defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))
