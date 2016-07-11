@@ -15,50 +15,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
-            [cheshire.core :as cheshire])
+            [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitus])
   (:use [slingshot.slingshot :only [throw+ try+]]))
-
-(def testidata
-  {:otsikko
-   {:lahettaja
-    {:jarjestelma "Urakoitsijan järjestelmä",
-     :organisaatio {:nimi "Urakoitsija", :ytunnus "1234567-8"}},
-    :viestintunniste {:id 123},
-    :lahetysaika "2016-01-30T12:00:00Z"},
-   :paallystysilmoitus
-   {:yllapitokohde
-    {:sijainti {:aosa 1, :aet 1, :losa 5, :let 16},
-     :alikohteet
-     [{:alikohde
-       {:leveys 1.2,
-        :kokonaismassamaara 12.3,
-        :sijainti {:aosa 1, :aet 1, :losa 5, :let 16},
-        :kivi-ja-sideaineet
-        [{:kivi-ja-sideaine
-          {:esiintyma "testi",
-           :km-arvo "testi",
-           :muotoarvo "testi",
-           :sideainetyyppi "1",
-           :pitoisuus 1.2,
-           :lisa-aineet "lisäaineet"}}],
-        :tunnus "A",
-        :pinta-ala 2.2,
-        :massamenekki 22,
-        :kuulamylly "N14",
-        :nimi "1. testialikohde",
-        :raekoko 12,
-        :tyomenetelma "Uraremix",
-        :rc-prosentti 54,
-        :paallystetyyppi "avoin asfaltti"}}]},
-    :alustatoimenpiteet
-    [{:alustatoimenpide
-      {:sijainti {:aosa 1, :aet 1, :losa 5, :let 15},
-       :kasittelymenetelma "Massanvaihto",
-       :paksuus 1.2,
-       :verkkotyyppi "Teräsverkko",
-       :verkon-tarkoitus "Tasaukset",
-       :verkon-sijainti "Päällysteessä",
-       :tekninen-toimenpide "Rakentaminen"}}]}})
 
 (defn paivita-alikohteet [db kohde alikohteet]
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
@@ -97,59 +55,11 @@
          :id
          kohde-id)))
 
-(defn rakenna-ilmoitustiedot [paallystysilmoitus]
-  ;; todo: täytyy kaivaa todennäköisesti vielä tason syvemmältä varsinaiset mäpit
-  (let [data {:osoitteet
-              (mapv (fn [alikohde]
-                      (let [kivi (:kivi-ja-sideaine (first (:kivi-ja-sideaineet alikohde)))]
-                        {:kohdeosa-id (:id alikohde)
-                         :rc% (:rc-prosentti alikohde)
-                         :leveys (:leveys alikohde)
-                         :km-arvo (:km-arvo kivi)
-                         :raekoko (:raekoko alikohde)
-                         :pinta-ala (:pinta-ala alikohde)
-                         :esiintyma (:esiintyma kivi)
-                         :muotoarvo (:muotoarvo kivi)
-                         :pitoisuus (:pitoisuus kivi)
-                         ;; todo: mäppää selitteistä koodeiksi
-                         :kuulamylly (:kuulamylly kivi)
-                         :lisaaineet (:lisa-aineet kivi)
-                         :massamenekki (:massamenekki alikohde)
-                         :tyomenetelma (:tyomenetelma alikohde)
-                         :sideainetyyppi (:sideainetyyppi kivi)
-                         :paallystetyyppi (:paallystetyyppi alikohde)
-                         :kokonaismassamaara (:kokonaismassamaara alikohde)
-                         :edellinen-paallystetyyppi (:edellinen-paallystetyyppi alikohde)}))
-                    (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
-              :alustatoimet (mapv (fn [alustatoimi]
-                                    (let [alustatoimi (:alustatoimenpide alustatoimi)
-                                          sijainti (:sijainti alustatoimi)]
-                                      {:aosa (:aosa sijainti)
-                                       :aet (:aet sijainti)
-                                       :losa (:losa sijainti)
-                                       :let (:let sijainti)
-                                       :paksuus (:paksuus alustatoimi)
-                                       ;; todo: mäppää selitteistä koodeiksi
-                                       :verkkotyyppi (:verkkotyyppi alustatoimi)
-                                       :verkon-sijainti (:verkon-sijainti alustatoimi)
-                                       :verkon-tarkoitus (:verkon-tarkoitus alustatoimi)
-                                       :kasittelymenetelma (:kasittelymenetelma alustatoimi)
-                                       :tekninen-toimenpide (:tekninen-toimenpide alustatoimi)}))
-                                  (:alustatoimenpiteet paallystysilmoitus))
-              :tyot (mapv (fn [tyo]
-                            (let [tyo (:tyo tyo)]
-                              {;; todo: mäppää selitteistä koodeiksi
-                              :tyo (:tyotehtava tyo)
-                              :tyyppi (:tyyppi tyo)
-                              :yksikko (:yksikko tyo)
-                              :yksikkohinta (:yksikkohinta tyo)
-                              :tilattu-maara (:tilattu-maara tyo)
-                              :toteutunut-maara (:tilattu-maara tyo)}))
-                          (:tyot paallystysilmoitus))}]
-    (cheshire/encode data)))
-
 (defn paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
-  (let [ilmoitustiedot (rakenna-ilmoitustiedot paallystysilmoitus)]
+  (let [ilmoitustiedot (paallystysilmoitus/rakenna paallystysilmoitus)]
+    ;; todo: poista
+    (clojure.pprint/pprint paallystysilmoitus)
+    (println ilmoitustiedot)
     (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
       (q-paallystys/luo-paallystysilmoitus<!
         db
@@ -165,35 +75,45 @@
       (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
         db
         {:ilmoitustiedot ilmoitustiedot
-         ;; todo: tarkista pitääkö kaivaa id erikseen mäpistä
          :muokkaaja (:id kayttaja)
          :id kohde-id}))))
 
+(defn pura-paallystysilmoitus [data]
+  (-> (:paallystysilmoitus data)
+      (assoc :alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet])))
+      (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))
+      (assoc :tyot (mapv :tyo (get-in data [:paallystysilmoitus :tyot])))))
+
+(defn validoi-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus]
+  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+  (validointi/tarkista-urakan-kohde db urakka-id (:id kohde))
+  (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
+        alikohteet (:alikohteet paallystysilmoitus)
+        alustatoimenpiteet (:alustatoimenpiteet paallystysilmoitus)
+        kohteen-tienumero (:tr-numero kohde)]
+    (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
+
+(defn tallenna-paallystysilmoitus [db kayttaja kohde paallystysilmoitus]
+  (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
+        alikohteet (:alikohteet paallystysilmoitus)]
+    (paivita-kohde db (:id kohde) kohteen-sijainti)
+    (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
+          paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
+      (paivita-paallystysilmoitus db kayttaja (:id kohde) paallystysilmoitus))))
+
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
   (jdbc/with-db-transaction
     [db db]
     (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)]
-      (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
-      (clojure.pprint/pprint data)
-
-      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
-      (let [paallystysilmoitus (:paallystysilmoitus data)
-            kohteen-sijainti (get-in data [:paallystysilmoitus :yllapitokohde :sijainti])
-            alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet]))
-            kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-            kohteen-tienumero (:tr-numero kohde)
-            alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet]))]
-        (validointi/tarkista-paallystysilmoitus db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)
-
-        (paivita-kohde db kohde-id kohteen-sijainti)
-
-        (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
-              paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)
-              id (paivita-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus)]
-          (tee-kirjausvastauksen-body {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-                                       :id id}))))))
+          kohde-id (Integer/parseInt kohde-id)
+          paallystysilmoitus (pura-paallystysilmoitus data)
+          kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
+          _ (validoi-paallystysilmoitus db kayttaja urakka-id kohde paallystysilmoitus)
+          id (tallenna-paallystysilmoitus db kayttaja kohde paallystysilmoitus)]
+      (tee-kirjausvastauksen-body
+        {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+         :id id}))))
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
   (let [urakka-id (Integer/parseInt (:id parametit))]
