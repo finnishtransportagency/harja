@@ -27,7 +27,7 @@
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 (log/set-config! [:appenders :standard-out :min-level] (if (ollaanko-jenkinsissa?)
                                                          :info
-                                                         :debug)
+                                                         :debug))
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
