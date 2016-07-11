@@ -156,7 +156,7 @@
                        " " (:sukunimi @istunto/kayttaja)))}
     {:otsikko "Vastuuhenkilö"
      :nimi :vastuuhenkilo
-     :leveys 20
+     :leveys 25
      :fmt #(str (:etunimi %) " " (:sukunimi %))
      :tyyppi :komponentti
      :komponentti (fn [rivi] [:button.nappi-ensisijainen.nappi-grid
@@ -174,7 +174,7 @@
      :tyyppi :string
      :pituus-max 1024}
     {:otsikko "Korjaus suoritettu" :nimi :suoritettu :fmt pvm/pvm :leveys 15 :tyyppi :pvm}
-    {:otsikko "Kuvaus" :nimi :kuvaus :leveys 40 :tyyppi :text :koko [80 :auto]}]
+    {:otsikko "Kuvaus" :nimi :kuvaus :leveys 25 :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
 (defn- voi-tallentaa? [tp]
