@@ -56,24 +56,25 @@
          kohde-id)))
 
 (defn paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
-  (let [ilmoitustiedot (paallystysilmoitus/rakenna paallystysilmoitus)]
-    (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
-      (q-paallystys/luo-paallystysilmoitus<!
-        db
-        {:paallystyskohde kohde-id
-         :tila nil
-         :ilmoitustiedot ilmoitustiedot
-         :aloituspvm nil
-         :valmispvm_kohde nil
-         :valmispvm_paallystys nil
-         :takuupvm nil
-         :muutoshinta nil
-         :kayttaja (:id kayttaja)})
-      (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
-        db
-        {:ilmoitustiedot ilmoitustiedot
-         :muokkaaja (:id kayttaja)
-         :id kohde-id}))))
+  (let [ilmoitustiedot (paallystysilmoitus/rakenna paallystysilmoitus)
+        paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
+                             (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
+                               db
+                               {:ilmoitustiedot ilmoitustiedot
+                                :muokkaaja (:id kayttaja)
+                                :id kohde-id})
+                             (q-paallystys/luo-paallystysilmoitus<!
+                               db
+                               {:paallystyskohde kohde-id
+                                :tila "aloitettu"
+                                :ilmoitustiedot ilmoitustiedot
+                                :aloituspvm nil
+                                :valmispvm_kohde nil
+                                :valmispvm_paallystys nil
+                                :takuupvm nil
+                                :muutoshinta nil
+                                :kayttaja (:id kayttaja)}))]
+    (str (:id paallystysilmoitus))))
 
 (defn pura-paallystysilmoitus [data]
   (-> (:paallystysilmoitus data)
