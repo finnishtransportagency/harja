@@ -51,7 +51,10 @@
                                     (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
           "Virheitä ei tapahtunut käsittelyssä.")))
 
-  (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä."))
+  (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
+
+  (is (= (count (q "SELECT * FROM valitavoite WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))
+         10)))
 
 
 ;; REPL-testausta varten. Älä poista.
