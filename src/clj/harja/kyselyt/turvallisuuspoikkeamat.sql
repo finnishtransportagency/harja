@@ -94,8 +94,6 @@ SELECT
   t.lahetetty,
   t.lahetys_onnistunut                  AS lahetysonnistunut,
   t.ilmoitukset_lahetetty               AS ilmoituksetlahetetty,
-  t.laatija_etunimi                     AS laatijaetunimi,
-  t.laatija_sukunimi                    AS laatijasukunimi,
   t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
@@ -191,8 +189,6 @@ SELECT
   t.lahetetty,
   t.lahetys_onnistunut                  AS lahetysonnistunut,
   t.ilmoitukset_lahetetty               AS ilmoituksetlahetetty,
-  t.laatija_etunimi                     AS laatijaetunimi,
-  t.laatija_sukunimi                    AS laatijasukunimi,
   t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
@@ -339,8 +335,7 @@ SET
   sairauspoissaolo_jatkuu             = :sairauspoissaolo_jatkuu,
   aiheutuneet_seuraukset              = :aiheutuneet_seuraukset,
   vaylamuoto                          = :vaylamuoto :: vaylamuoto,
-  laatija_etunimi                     = :laatija_etunimi,
-  laatija_sukunimi                    = :laatija_sukunimi,
+  laatija                             = :laatija,
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
   ilmoitukset_lahetetty               = :ilmoitukset_lahetetty
@@ -391,8 +386,7 @@ SET urakka                            = :urakka,
   vaylamuoto                          = :vaylamuoto :: vaylamuoto,
   turvallisuuskoordinaattori_etunimi  = :turvallisuuskoordinaattori_etunimi,
   turvallisuuskoordinaattori_sukunimi = :turvallisuuskoordinaattori_sukunimi,
-  laatija_etunimi                     = :laatija_etunimi,
-  laatija_sukunimi                    = :laatija_sukunimi
+  laatija                             = :laatija
 WHERE ulkoinen_id = :ulkoinen_id AND
       luoja = :luoja;
 
@@ -429,8 +423,7 @@ INSERT INTO turvallisuuspoikkeama
  sairauspoissaolo_jatkuu,
  aiheutuneet_seuraukset,
  vaylamuoto,
- laatija_etunimi,
- laatija_sukunimi,
+ laatija,
  turvallisuuskoordinaattori_etunimi,
  turvallisuuskoordinaattori_sukunimi,
  ilmoittaja_etunimi,
@@ -470,8 +463,7 @@ VALUES
     :sairauspoissaolo_jatkuu,
     :aiheutuneet_seuraukset,
     :vaylamuoto :: vaylamuoto,
-    :laatija_etunimi,
-    :laatija_sukunimi,
+    :laatija,
     :turvallisuuskoordinaattori_etunimi,
     :turvallisuuskoordinaattori_sukunimi,
     :ilmoittaja_etunimi,

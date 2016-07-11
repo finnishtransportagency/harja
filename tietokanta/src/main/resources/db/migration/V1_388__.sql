@@ -4,6 +4,9 @@
 
 ALTER TABLE turvallisuuspoikkeama DROP COLUMN paattynyt;
 ALTER TABLE turvallisuuspoikkeama DROP COLUMN tyotehtava;
+ALTER TABLE turvallisuuspoikkeama DROP COLUMN laatija_etunimi;
+ALTER TABLE turvallisuuspoikkeama DROP COLUMN laatija_sukunimi;
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN laatija integer REFERENCES kayttaja (id);
 
 CREATE TYPE turvallisuuspoikkeama_tila AS ENUM ('avoin','kasitelty','taydennetty', 'suljettu');
 

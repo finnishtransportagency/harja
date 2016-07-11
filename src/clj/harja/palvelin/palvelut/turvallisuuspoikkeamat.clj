@@ -107,7 +107,7 @@
                    kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
-                   laatijaetunimi laatijasukunimi otsikko paikan-kuvaus vaaralliset-aineet
+                   otsikko paikan-kuvaus vaaralliset-aineet
                    turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
                    ilmoituksetlahetetty tila]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
@@ -139,8 +139,7 @@
                 :sairauspoissaolo_jatkuu sairauspoissaolojatkuu
                 :aiheutuneet_seuraukset seuraukset
                 :vaylamuoto (name vaylamuoto)
-                :laatija_etunimi laatijaetunimi
-                :laatija_sukunimi laatijasukunimi
+                :laatija (:id user)
                 :turvallisuuskoordinaattori_etunimi turvallisuuskoordinaattorietunimi
                 :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi
                 :tapahtuman_otsikko otsikko

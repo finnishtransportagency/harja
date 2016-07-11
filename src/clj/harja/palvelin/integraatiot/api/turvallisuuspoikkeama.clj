@@ -101,8 +101,7 @@
                         :vaylamuoto vaylamuoto
                         :turvallisuuskoordinaattori_etunimi (:etunimi turvallisuuskoordinaattori)
                         :turvallisuuskoordinaattori_sukunimi (:sukunimi turvallisuuskoordinaattori)
-                        :laatija_etunimi (:etunimi laatija)
-                        :laatija_sukunimi (:sukunimi laatija)
+                        :laatija (:id kirjaaja)
                         :ulkoinen_id (:id tunniste)
                         :ilmoitukset_lahetetty nil
                         :lahde "harja-api"}))]
@@ -113,7 +112,7 @@
   (let [{:keys [tunniste sijainti kuvaus vaylamuoto luokittelu ilmoittaja seuraukset henkilovahinko
                 tapahtumapaivamaara paattynyt kasitelty vahinkoluokittelu vakavuusaste
                 otsikko paikan_kuvaus vaarallisten_aineiden_kuljetus vaarallisten_aineiden_vuoto
-                toteuttaja tilaaja turvallisuuskoordinaattori laatija]} data
+                toteuttaja tilaaja turvallisuuskoordinaattori]} data
         {:keys [tyontekijanammatti ammatinselite tyotehtava vahingoittuneetRuumiinosat
                 aiheutuneetVammat sairauspoissaolopaivat sairaalahoitovuorokaudet sairauspoissaoloJatkuu]} henkilovahinko
         tie (:tie sijainti)
@@ -163,8 +162,7 @@
        :vaylamuoto vaylamuoto
        :turvallisuuskoordinaattori_etunimi (:etunimi turvallisuuskoordinaattori)
        :turvallisuuskoordinaattori_sukunimi (:sukunimi turvallisuuskoordinaattori)
-       :laatija_etunimi (:etunimi laatija)
-       :laatija_sukunimi (:sukunimi laatija)
+       :laatija (:id kirjaaja)
        :ulkoinen_id (:id tunniste)
        :luoja (:id kirjaaja)})
     (turvallisuuspoikkeamat/hae-turvallisuuspoikkeaman-id-ulkoisella-idlla

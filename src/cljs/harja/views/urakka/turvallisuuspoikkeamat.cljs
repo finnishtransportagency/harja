@@ -297,6 +297,13 @@
             :nimi :tilaaja
             :tyyppi :string
             :palstoja 1}
+           {:otsikko "Laatija"
+            :nimi :laatija
+            :leveys 20
+            :tyyppi :string
+            :muokattava? (constantly false)
+            :fmt (fn [_] (str (:etunimi @istunto/kayttaja)
+                              " " (:sukunimi @istunto/kayttaja)))}
            {:otsikko "Vaaralliset aineet" :nimi :vaaralliset-aineet :tyyppi :checkbox-group
             :vaihtoehto-nayta turpodomain/turpo-vaaralliset-aineet
             :disabloi vaaralliset-aineet-disablointi-fn
@@ -310,16 +317,6 @@
                           :palstoja 1}
                          {:otsikko "Sukunimi"
                           :nimi :turvallisuuskoordinaattorisukunimi
-                          :tyyppi :string
-                          :palstoja 1})
-           (lomake/ryhma {:otsikko "Laatija"
-                          :uusi-rivi? true}
-                         {:otsikko "Etunimi"
-                          :nimi :laatijaetunimi
-                          :tyyppi :string
-                          :palstoja 1}
-                         {:otsikko "Sukunimi"
-                          :nimi :laatijasukunimi
                           :tyyppi :string
                           :palstoja 1})
            (when henkilovahinko-valittu?

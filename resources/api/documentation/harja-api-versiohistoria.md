@@ -6,6 +6,7 @@
     - Turvallisuuspoikkeama yhtenäistetty TURI:n kanssa, mistä johtuen tehty seuraavat muutokset:
     - Poistettu kenttä: paattynyt
     - Poistettu kenttä: tyotehtava
+    - Poistettu kenttä: laatija (jatkossa tallennetaan suoraan API-käyttäjän id:nä)
     - Uusi pakollinen kenttä: otsikko (string, max. 1024 merkkiä)
     - Uusi vapaaehtoinen kenttä: paikan_kuvaus (string, max. 2048 merkkiä)
     - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_kuljetus (boolean)

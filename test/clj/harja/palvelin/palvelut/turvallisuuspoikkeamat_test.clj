@@ -110,8 +110,6 @@
                         tilaaja,
                         turvallisuuskoordinaattori_etunimi,
                         turvallisuuskoordinaattori_sukunimi,
-                        laatija_etunimi,
-                        laatija_sukunimi,
                         tapahtuman_otsikko,
                         paikan_kuvaus,
                         vaarallisten_aineiden_kuljetus,
@@ -226,8 +224,6 @@
                            nil
                            nil
                            nil
-                           nil
-                           nil
                            "Kävi möhösti"
                            "Metsätie"
                            true
@@ -301,8 +297,6 @@
                            nil
                            nil
                            "tie"
-                           nil
-                           nil
                            nil
                            nil
                            nil

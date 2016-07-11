@@ -107,12 +107,6 @@
             "additionalProperties": false,
             "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
           },
-          "laatija": {
-            "id": "urn:harja/laatija",
-            "type": "object",
-            "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/henkilo.schema.json"
-          },
           "kuvaus": {
             "id": "urn:harja/turvallisuuspoikkeamat/0/kuvaus",
             "type": "string"

@@ -58,8 +58,6 @@
                         tilaaja,
                         turvallisuuskoordinaattori_etunimi,
                         turvallisuuskoordinaattori_sukunimi,
-                        laatija_etunimi,
-                        laatija_sukunimi,
                         tapahtuman_otsikko,
                         paikan_kuvaus,
                         vaarallisten_aineiden_kuljetus,
@@ -157,8 +155,6 @@
                            "Paula Projektipäällikkö"
                            "Mikko"
                            "Meikäläinen"
-                           "Urho"
-                           "Urakoitsija"
                            "Aura-auto suistui tieltä"
                            "Liukas tie keskellä metsää."
                            true
@@ -221,8 +217,6 @@
                              "Paula Projektipäällikkö"
                              "Mikko"
                              "Meikäläinen"
-                             "Urho"
-                             "Urakoitsija"
                              "Aura-auto suistui tieltä"
                              "Liukas tie metsän reunalla."
                              true
