@@ -17,7 +17,10 @@ ALTER TABLE turvallisuuspoikkeama ALTER COLUMN kuvaus TYPE VARCHAR(4000);
 ALTER TABLE turvallisuuspoikkeama ALTER COLUMN aiheutuneet_seuraukset TYPE VARCHAR(4000);
 
 -- Migratoi wanha data
-UPDATE turvallisuuspoikkeama SET tila = 'avoin'::turvallisuuspoikkeama_tila;
+UPDATE turvallisuuspoikkeama SET tila = CASE WHEN (kasitelty IS NOT NULL)
+    THEN 'suljettu'::turvallisuuspoikkeama_tila
+    ELSE 'avoin'::turvallisuuspoikkeama_tila
+    END;
 UPDATE turvallisuuspoikkeama SET vaarallisten_aineiden_kuljetus = FALSE;
 UPDATE turvallisuuspoikkeama SET vaarallisten_aineiden_vuoto = FALSE;
 
@@ -33,4 +36,8 @@ ALTER TABLE korjaavatoimenpide ADD COLUMN vastuuhenkilo integer REFERENCES kaytt
 ALTER TABLE korjaavatoimenpide ADD COLUMN toteuttaja VARCHAR(1024);
 ALTER TABLE korjaavatoimenpide ADD COLUMN tila korjaavatoimenpide_tila;
 
-UPDATE korjaavatoimenpide SET tila = 'avoin'::korjaavatoimenpide_tila;
+-- Migratoi wanha data
+UPDATE korjaavatoimenpide SET tila = CASE WHEN (suoritettu IS NOT NULL)
+    THEN 'suljettu'::turvallisuuspoikkeama_tila
+    ELSE 'avoin'::turvallisuuspoikkeama_tila
+    END;

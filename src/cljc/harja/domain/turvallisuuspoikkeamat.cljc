@@ -17,7 +17,7 @@
    :vakava "Vakava"})
 
 (def turpo-vaaralliset-aineet
-  {:vaarallisten-aineiden-kuljetus  "Mukana vaarallisten aineiden kuljetus"
+  {:vaarallisten-aineiden-kuljetus "Mukana vaarallisten aineiden kuljetus"
    :vaarallisten-aineiden-vuoto "Vuoto tapahtunut"})
 
 (def turpo-tyontekijan-ammatit

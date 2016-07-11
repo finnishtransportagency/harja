@@ -54,8 +54,6 @@
    urakka]
 
   (log/debug "Tallennetaan korjaavatoimenpide (" id ") turvallisuuspoikkeamalle " tp-id ".")
-  (log/debug "TP:" (pr-str korjaavatoimenpide))
-  ;; Jos tämä assertti failaa, joku on hassusti
   (assert
     (or (nil? turvallisuuspoikkeama) (= turvallisuuspoikkeama tp-id))
     "Korjaavan toimenpiteen 'turvallisuuspoikkeama' pitäisi olla joko tyhjä (uusi korjaava), tai sama kuin parametrina

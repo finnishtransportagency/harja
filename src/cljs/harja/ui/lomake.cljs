@@ -115,8 +115,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   (loop [rivit []
          rivi []
          palstoja 0
-         [s & skeemat] (remove nil? skeemat)
-         ]
+         [s & skeemat] (remove nil? skeemat)]
     (if-not s
       (if-not (empty? rivi)
         (conj rivit rivi)
