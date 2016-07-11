@@ -145,7 +145,7 @@
                 :tapahtuman_otsikko otsikko
                 :paikan_kuvaus paikan-kuvaus
                 :vaarallisten_aineiden_kuljetus vaarallisten-aineiden-kuljetus?
-                :vaarallisten_aineiden_vuoto (if vaarallisten-aineiden-kuljetus?
+                :vaarallisten_aineiden_vuoto (if (not vaarallisten-aineiden-kuljetus?)
                                                false
                                                vaarallisten-aineiden-vuoto?)
                 :tila (name tila)
