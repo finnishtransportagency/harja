@@ -49,7 +49,11 @@
   (let [viesti-id (.getJMSMessageID viesti)
         korrelaatio-id (.getJMSCorrelationID viesti)
         viestin-sisalto (.getText viesti)
-        tapahtuma-id (integraatioloki/kirjaa-saapunut-jms-viesti integraatioloki "sampo" "sisaanluku" viesti-id viestin-sisalto)]
+        tapahtuma-id (integraatioloki/kirjaa-saapunut-jms-viesti integraatioloki
+                                                                 "sampo"
+                                                                 "sisaanluku"
+                                                                 viesti-id
+                                                                 viestin-sisalto)]
     (try+
       (let [tuonti (fn [] (tuo-data db viestin-sisalto))
             kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]
