@@ -36,13 +36,19 @@
           data (xml/lue xml)]
       (is (xml/validoi +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
 
-      (is (= "UrakkaMessageId" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
+      (is (= "UrakkaMessageId" (first (z/xml-> data
+                                               (fn [kuittaus]
+                                                 (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
           "Kuittaus on tehty oikeaan viestiin.")
 
-      (is (= "Project" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
+      (is (= "Project" (first (z/xml-> data
+                                       (fn [kuittaus]
+                                         (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
           "Kuittauksen tyyppi on Project eli urakka.")
 
-      (is (= "NA" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
+      (is (= "NA" (first (z/xml-> data
+                                  (fn [kuittaus]
+                                    (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
           "Virheitä ei tapahtunut käsittelyssä.")))
 
   (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä."))
