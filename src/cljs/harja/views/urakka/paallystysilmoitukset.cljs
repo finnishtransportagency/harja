@@ -56,7 +56,7 @@
      "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or @muutokset-kokonaishintaan 0))
      "Yhteensä: " (fmt/euro-opt @toteuman-kokonaishinta)]))
 
-(defn asiaktarkastus
+(defn asiatarkastus
   "Asiatarkastusosio konsultille."
   [valmis-asiatarkastukseen?]
   (let [muokattava? (and
@@ -405,7 +405,7 @@
                                                                 #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
                    (:kommentit lomakedata-nyt)]})]
               @kohteen-tiedot]
-             [asiaktarkastus valmis-kasiteltavaksi?]]
+             [asiatarkastus valmis-kasiteltavaksi?]]
 
             [:div.col-md-6
              [:div
