@@ -248,6 +248,7 @@
                              :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)})
               {:otsikko "Tierekisteriosoite"
                :nimi :tr
+               :pakollinen? true
                :tyyppi :tierekisteriosoite
                :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
                                  #(swap! turvallisuuspoikkeama assoc :sijainti %))}
