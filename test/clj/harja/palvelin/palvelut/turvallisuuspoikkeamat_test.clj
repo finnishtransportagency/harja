@@ -26,7 +26,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -72,6 +72,7 @@
 
 (defn poista-tp-taulusta
   [kuvaus]
+  (log/debug "Poistetaan testi-turpo")
   (let [id (ffirst (q (str "SELECT id FROM turvallisuuspoikkeama WHERE kuvaus='" kuvaus "'")))]
     (u (str "DELETE FROM korjaavatoimenpide WHERE turvallisuuspoikkeama=" id))
     (u (str "DELETE FROM turvallisuuspoikkeama_kommentti WHERE turvallisuuspoikkeama=" id))
@@ -151,7 +152,7 @@
 (deftest tallenna-turvallisuuspoikkeama-test
   (let [urakka-id @oulun-alueurakan-2005-2010-id
         tp {:urakka urakka-id
-            :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
+            :tapahtunut (pvm/luo-pvm (+ 1900 105) 6 1)
             :tyontekijanammatti :kuorma-autonkuljettaja
             :kuvaus "e2e taas punaisena"
             :vammat #{:luunmurtumat}
@@ -197,7 +198,7 @@
       (is (match uusin-tp [_
                            1
                            (_ :guard #(and (= (t/year %) 2005)
-                                           (= (t/month %) 9)
+                                           (= (t/month %) 6)
                                            (= (t/day %) 30)))
                            (_ :guard #(some? %))
                            (_ :guard #(some? %))
