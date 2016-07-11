@@ -475,6 +475,10 @@ WHERE u.id IN (:idt);
 -- single?: true
 SELECT sampoid FROM urakka where id = :urakka;
 
+-- name: hae-urakan-id-sampo-idlla
+-- single?: true
+SELECT id FROM urakka where sampoid = :sampoid;
+
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
    SET takuu_loppupvm = :loppupvm

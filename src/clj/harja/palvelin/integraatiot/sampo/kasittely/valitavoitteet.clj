@@ -1,20 +1,39 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet
   "Valtakunnallisten välitavoitteiden asettaminen tuodulle Sampo-urakalle"
   (:require [taoensso.timbre :as log]
-            [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
-            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit]
-            [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat])
+            [harja.kyselyt.valitavoitteet :as valitavoitteet-q]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.palvelin.palvelut.valitavoitteet.valtakunnalliset-valitavoitteet :as valtakunnallinen-vt-palvelu]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn lisaa-urakan-puuttuvat-valtakunnalliset-valitavoitteet [db sampo-id]
-
-  )
+(defn lisaa-urakalle-puuttuvat-valtakunnalliset-valitavoitteet [db sampo-id]
+  (let [urakka-id (urakat-q/hae-urakan-sampo-id db sampo-id)
+        valtakunnalliset-vt (into []
+                                  (map #(konv/string->keyword % :urakkatyyppi :tyyppi))
+                                  (valitavoitteet-q/hae-valtakunnalliset-valitavoitteet db))]
+    (doseq [valtakunnallinen-vt valtakunnalliset-vt]
+      (let [linkitetyt (valitavoitteet-q/hae-valitavoitteeseen-linkitetyt-valitavoitteet-urakassa
+                         db
+                         (:id valtakunnallinen-vt)
+                         urakka-id)]
+        (when (empty? linkitetyt)
+          ;; Valtakunnallista välitavoitetta ei ole liitetty urakkaan, lisätään se.
+          (cond (= (:tyyppi valtakunnallinen-vt) :kertaluontoinen)
+                (valtakunnallinen-vt-palvelu/kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin
+                  db
+                  nil ;; Onko useria tässä?
+                  valtakunnallinen-vt ;; TODO Tarkista sisältääkö oikeat tiedot
+                  (:id valtakunnallinen-vt)
+                  [urakka-id] ;; TODO Passaa urakan tiedot
+                  )
+                (= (:tyyppi valtakunnallinen-vt) :toistuva)
+                nil ;TODO Lisää toistuva
+                ))))))
 
 (defn kasittele-urakka [db {:keys [sampo-id]}]
   (log/debug "Käsitellään sampo-id:n " sampo-id " urakan valtakunnalliset välitavoitteet")
-  (lisaa-urakan-puuttuvat-valtakunnalliset-valitavoitteet db sampo-id))
+  (lisaa-urakalle-puuttuvat-valtakunnalliset-valitavoitteet db sampo-id))
 
 (defn kasittele-valitavoitteet [db urakat]
   (mapv #(kasittele-urakka db %) urakat))
