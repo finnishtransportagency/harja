@@ -22,11 +22,10 @@
           (cond (= (:tyyppi valtakunnallinen-vt) :kertaluontoinen)
                 (valtakunnallinen-vt-palvelu/kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin
                   db
-                  nil ;; Onko useria tässä?
-                  valtakunnallinen-vt ;; TODO Tarkista sisältääkö oikeat tiedot
+                  nil
+                  valtakunnallinen-vt
                   (:id valtakunnallinen-vt)
-                  [urakka-id] ;; TODO Passaa urakan tiedot
-                  )
+                  [{:id urakka-id}])
                 (= (:tyyppi valtakunnallinen-vt) :toistuva)
                 nil ;TODO Lisää toistuva
                 ))))))
