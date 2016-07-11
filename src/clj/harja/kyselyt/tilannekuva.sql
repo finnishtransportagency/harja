@@ -130,10 +130,8 @@ SELECT
   t.id,
   t.urakka,
   t.tapahtunut,
-  t.paattynyt,
   t.kasitelty,
   t.tyontekijanammatti,
-  t.tyotehtava,
   t.kuvaus,
   t.vammat,
   t.sairauspoissaolopaivat,
@@ -149,15 +147,13 @@ SELECT
 
   k.id              AS korjaavatoimenpide_id,
   k.kuvaus          AS korjaavatoimenpide_kuvaus,
-  k.suoritettu      AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
+  k.suoritettu      AS korjaavatoimenpide_suoritettu
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama
                                     AND k.poistettu IS NOT TRUE
 WHERE
   (t.urakka IS NULL OR t.urakka IN (:urakat)) AND
   (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
-   t.paattynyt BETWEEN :alku AND :loppu OR
    t.kasitelty BETWEEN :alku AND :loppu);
 
 -- name: hae-paallystykset-nykytilanteeseen

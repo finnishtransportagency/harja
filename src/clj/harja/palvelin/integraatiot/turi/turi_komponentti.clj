@@ -6,7 +6,8 @@
             [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava])
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defprotocol TurvallisuusPoikkeamanLahetys
@@ -18,26 +19,32 @@
 (defn kasittele-turin-vastaus [db id _]
   (q/lokita-lahetys<! db true id))
 
-(defn hae-liitteet [liitteiden-hallinta db id]
-  (let [liitteet (q/hae-turvallisuuspoikkeaman-liitteet db id)]
-    (mapv (fn [liite] (assoc liite :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite)))) liitteet)))
+(defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
+  (let [liitteet (:liitteet turvallisuuspoikkeama)]
+    (mapv
+      (fn [liite]
+        (assoc liite :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite))))
+      liitteet)))
 
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
-  (let [turvallisuuspoikkeama (first (q/hae-turvallisuuspoikkeama db id))]
+  (let [turvallisuuspoikkeama (first (konv/sarakkeet-vektoriin
+                                       (into []
+                                             q/turvallisuuspoikkeama-xf
+                                             (q/hae-turvallisuuspoikkeama-lahetettavaksi-turiin db id))
+                                       {:korjaavatoimenpide :korjaavattoimenpiteet
+                                        :liite :liitteet
+                                        :kommentti :kommentit}))]
     (if turvallisuuspoikkeama
-      (let [korjaavat-toimenpiteet (q/hae-turvallisuuspoikkeaman-korjaavat-toimenpiteet db id)
-            kommentit (q/hae-turvallisuuspoikkeaman-kommentit db id)
-            liitteet (hae-liitteet liitteiden-hallinta db id)]
+      (let [liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
         (assoc turvallisuuspoikkeama
-          :korjaavat-toimenpiteet korjaavat-toimenpiteet
-          :kommentit kommentit
           :liitteet liitteet))
       (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]
         (log/error virhe)
         (throw+ {:type :tuntematon-turvallisuuspoikkeama
                  :error virhe})))))
 
-(defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta url kayttajatunnus salasana]} id]
+(defn laheta-turvallisuuspoikkeama-turiin [{:keys [db integraatioloki liitteiden-hallinta
+                                                   url kayttajatunnus salasana]} id]
   (when-not (empty? url)
     (log/debug (format "Lähetetään turvallisuuspoikkeama (id: %s) TURI:n" id))
     (try
@@ -74,7 +81,8 @@
 (defrecord Turi [asetukset]
   component/Lifecycle
   (start [this]
-    (let [{url :url kayttajatunnus :kayttajatunnus salasana :salasana paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
+    (let [{url :url kayttajatunnus :kayttajatunnus
+           salasana :salasana paivittainen-lahetysaika :paivittainen-lahetysaika} asetukset]
       (log/debug (format "Käynnistetään TURI-komponentti (URL: %s)" url))
       (assoc
         (assoc this

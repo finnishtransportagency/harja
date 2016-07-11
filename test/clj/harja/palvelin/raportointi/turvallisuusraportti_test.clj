@@ -115,8 +115,6 @@
                        :otsikko "Vakavuusaste"}
                       {:leveys 14
                        :otsikko "Ammatti"}
-                      {:leveys 14
-                       :otsikko "Työ­tehtävä"}
                       {:leveys 9
                        :otsikko "Sairaala­vuoro­kaudet"}
                       {:leveys 9
@@ -125,7 +123,6 @@
                        "Ty­ö­ta­pa­tur­ma"
                        "Vakava"
                        "Porari"
-                       "Lastaus"
                        1
                        7]
                        ["Yhteensä"
@@ -215,8 +212,6 @@
                        :otsikko "Vakavuusaste"}
                       {:leveys 14
                        :otsikko "Ammatti"}
-                      {:leveys 14
-                       :otsikko "Työ­tehtävä"}
                       {:leveys 9
                        :otsikko "Sairaala­vuoro­kaudet"}
                       {:leveys 9
@@ -225,7 +220,6 @@
                        "Ty­ö­ta­pa­tur­ma"
                        "Vakava"
                        "Porari"
-                       "Lastaus"
                        1
                        7]
                        ["Yhteensä"

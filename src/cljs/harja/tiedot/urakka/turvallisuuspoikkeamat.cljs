@@ -11,9 +11,10 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
-(def +uusi-turvallisuuspoikkeama+ {:vakavuusaste :lieva
-                                   :vaylamuoto :tie
-                                   :tyontekijanammatti :muu_tyontekija})
+
+(def kayttajahakulomake-data (atom nil))
+(def kayttajahakutulokset-data (atom []))
+
 (defonce valittu-turvallisuuspoikkeama (atom nil))
 
 (defn hae-urakan-turvallisuuspoikkeamat
@@ -25,6 +26,13 @@
 (defn hae-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (k/post! :hae-turvallisuuspoikkeama {:urakka-id                urakka-id
                                        :turvallisuuspoikkeama-id turvallisuuspoikkeama-id}))
+
+(defn hae-kayttajat [hakuparametrit]
+  (k/post! :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat
+           {:urakka-id (:urakka-id hakuparametrit)
+            :etunimi (:etunimi hakuparametrit)
+            :sukunimi (:sukunimi hakuparametrit)
+            :kayttajanimi (:kayttajanimi hakuparametrit)}))
 
 (defonce haetut-turvallisuuspoikkeamat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

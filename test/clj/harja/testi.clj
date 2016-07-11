@@ -18,11 +18,16 @@
 (def jarjestelma nil)
 
 (Locale/setDefault (Locale. "fi" "FI"))
-(log/set-config! [:appenders :standard-out :min-level] :debug)
+
 
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
+
+;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
+(log/set-config! [:appenders :standard-out :min-level] (if (ollaanko-jenkinsissa?)
+                                                         :info
+                                                         :debug))
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
