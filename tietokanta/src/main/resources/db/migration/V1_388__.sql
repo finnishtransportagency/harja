@@ -38,6 +38,6 @@ ALTER TABLE korjaavatoimenpide ADD COLUMN tila korjaavatoimenpide_tila;
 
 -- Migratoi wanha data
 UPDATE korjaavatoimenpide SET tila = CASE WHEN (suoritettu IS NOT NULL)
-    THEN 'suljettu'::korjaavatoimenpide_tila
+    THEN 'toteutettu'::korjaavatoimenpide_tila
     ELSE 'avoin'::korjaavatoimenpide_tila
     END;
