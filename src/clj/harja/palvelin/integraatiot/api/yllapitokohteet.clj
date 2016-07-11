@@ -57,9 +57,6 @@
 
 (defn paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
   (let [ilmoitustiedot (paallystysilmoitus/rakenna paallystysilmoitus)]
-    ;; todo: poista
-    (clojure.pprint/pprint paallystysilmoitus)
-    (println ilmoitustiedot)
     (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
       (q-paallystys/luo-paallystysilmoitus<!
         db

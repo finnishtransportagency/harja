@@ -68,7 +68,7 @@
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1.2,
           "verkkotyyppi": "Teräsverkko",
-          "verkon-tarkoitus": "Tasaukset",
+          "verkon-tarkoitus": "Muiden routavaurioiden ehkäisy",
           "verkon-sijainti": "Päällysteessä",
           "tekninen-toimenpide": "Rakentaminen"
         }
@@ -77,7 +77,7 @@
     "tyot": [
       {
         "tyo": {
-          "tyyppi": "tasaukset",
+          "tyyppi": "Ajoradan päällyste",
           "tyotehtava": "työtehtävä",
           "tilattu-maara": 1.2,
           "toteutunut-maara": 1.2,

@@ -29,6 +29,10 @@
   "Hakee API:n päällysteen arvon koodilla"
   (:api-arvo (first (filter #(= (:koodi %) koodi) +paallystetyypit+))))
 
+(defn hae-koodi-apin-paallysteella[koodi]
+  "Hakee koodin API:n päällysteellä"
+  (:koodi (first (filter #(= (:api-arvo %) koodi) +paallystetyypit+))))
+
 (defn kuvaile-paatostyyppi [paatos]
   (case paatos
     :hyvaksytty "Hyväksytty"

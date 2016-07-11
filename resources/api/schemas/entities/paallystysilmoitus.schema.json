@@ -244,11 +244,12 @@
               "verkon-tarkoitus": {
                 "id": "urn:harja/alustatoimepiteet/0/alustatoimepide/verkon-tarkoitus",
                 "enum": [
-                  "Ajoradan päällyste",
-                  "Pienaluetyöt",
-                  "Tasaukset",
-                  "Jyrsinnät",
-                  "Muut"
+                  "Pituushalkeamien ehkäisy",
+                  "Muiden routavaurioiden ehkäisy",
+                  "Levennyksen tukeminen",
+                  "Painumien ehkäisy",
+                  "Moniongelmaisen tukeminen",
+                  "Muu tarkoitus"
                 ]
               },
               "verkon-sijainti": {
@@ -291,11 +292,11 @@
                 "id": "urn:harja/tyot/0/tyo/tyyppi",
                 "required": true,
                 "enum": [
-                  "ajoradan-paallyste",
-                  "pienaluetyot",
-                  "tasaukset",
-                  "jyrsinnat",
-                  "muut"
+                  "Ajoradan päällyste",
+                  "Pienaluetyöt",
+                  "Tasaukset",
+                  "Jyrsinnät",
+                  "Muut"
                 ]
               },
               "tyotehtava": {

@@ -28,17 +28,18 @@
                                :tyomenetelma "Uraremix",
                                :rc-prosentti 54,
                                :paallystetyyppi "avoin asfaltti",
+                               :edellinen-paallystetyyppi "pehmeä asfalttibetoni (v)",
                                :id 36}]},
                             :alustatoimenpiteet
                             [{:sijainti {:aosa 1, :aet 1, :losa 5, :let 15},
                               :kasittelymenetelma "Massanvaihto",
                               :paksuus 1.2,
                               :verkkotyyppi "Teräsverkko",
-                              :verkon-tarkoitus "Tasaukset",
+                              :verkon-tarkoitus "Muiden routavaurioiden ehkäisy",
                               :verkon-sijainti "Päällysteessä",
                               :tekninen-toimenpide "Rakentaminen"}],
                             :tyot
-                            [{:tyyppi "tasaukset",
+                            [{:tyyppi "Jyrsinnät",
                               :tyotehtava "työtehtävä",
                               :tilattu-maara 1.2,
                               :toteutunut-maara 1.2,
@@ -67,36 +68,36 @@
                               :paallystetyyppi "avoin asfaltti"}]}
         ilmoitusdata (clojure.walk/keywordize-keys (cheshire/decode (paallystysilmoitus/rakenna paallystysilmoitus)))
         odotettu-data {:osoitteet [{:kohdeosa-id 36,
-                                    :edellinen-paallystetyyppi nil,
+                                    :edellinen-paallystetyyppi 22,
                                     :lisaaineet "lisäaineet",
                                     :leveys 1.2,
                                     :kokonaismassamaara 12.3,
-                                    :sideainetyyppi "1",
+                                    :sideainetyyppi 1,
                                     :muotoarvo "testi",
                                     :esiintyma "testi",
                                     :pitoisuus 1.2,
                                     :pinta-ala 2.2,
                                     :massamenekki 22,
-                                    :kuulamylly nil,
+                                    :kuulamylly 4,
                                     :raekoko 12,
-                                    :tyomenetelma "Uraremix",
+                                    :tyomenetelma 72,
                                     :rc% 54,
-                                    :paallystetyyppi "avoin asfaltti",
+                                    :paallystetyyppi 11,
                                     :km-arvo "testi"}],
-                       :alustatoimet [{:verkkotyyppi "Teräsverkko",
+                       :alustatoimet [{:verkkotyyppi 1,
                                        :aosa 1,
                                        :let 15,
-                                       :verkon-tarkoitus "Tasaukset",
-                                       :kasittelymenetelma "Massanvaihto",
+                                       :verkon-tarkoitus 2,
+                                       :kasittelymenetelma 1,
                                        :losa 5,
                                        :aet 1,
-                                       :tekninen-toimenpide "Rakentaminen",
+                                       :tekninen-toimenpide 1,
                                        :paksuus 1.2,
-                                       :verkon-sijainti "Päällysteessä"}],
+                                       :verkon-sijainti 1}],
                        :tyot [{:tilattu-maara 1.2
                                :toteutunut-maara 1.2
                                :tyo "työtehtävä"
-                               :tyyppi "tasaukset"
+                               :tyyppi "jyrsinnat"
                                :yksikko "kpl"
                                :yksikkohinta 55.4}]}]
     (is (= odotettu-data ilmoitusdata))))
