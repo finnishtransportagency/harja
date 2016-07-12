@@ -4,6 +4,7 @@
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
             [hiccup.core :refer [html]]
+            [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [com.stuartsierra.component :as component]
@@ -53,8 +54,13 @@
 
   (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
 
-  (is (= (count (q "SELECT * FROM valitavoite WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))
-         10)))
+  (let [urakan-valitavoitteet (map first (q "SELECT nimi
+                                  FROM valitavoite
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))]
+    (is (= (count (filter #(= "Koko Suomi aurattu" %) urakan-valitavoitteet)) 1))
+    (is (= (count (filter #(= "Kaikkien urakoiden kalusto huollettu" %) urakan-valitavoitteet)) 1))
+    (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 4))
+    (is (= (count urakan-valitavoitteet) 6))))
 
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri

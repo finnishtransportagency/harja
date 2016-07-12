@@ -8,7 +8,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn lisaa-urakalle-puuttuvat-valtakunnalliset-valitavoitteet [db sampo-id]
-  (let [urakka (urakat-q/hae-urakan-perustiedot-sampo-idlla db sampo-id)
+  (let [urakka (first (urakat-q/hae-urakan-perustiedot-sampo-idlla db sampo-id))
         valtakunnalliset-vt (into []
                                   (map #(konv/string->keyword % :urakkatyyppi :tyyppi))
                                   (valitavoitteet-q/hae-valtakunnalliset-valitavoitteet db))]

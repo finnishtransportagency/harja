@@ -476,7 +476,6 @@ WHERE u.id IN (:idt);
 SELECT sampoid FROM urakka where id = :urakka;
 
 -- name: hae-urakan-perustiedot-sampo-idlla
--- single?: true
 SELECT
   id,
   nimi,
