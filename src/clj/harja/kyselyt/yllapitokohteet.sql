@@ -425,3 +425,23 @@ WHERE yllapitokohde = :yllapitokohde AND
 UPDATE yllapitokohde
 SET lahetetty = :lahetetty, lahetys_onnistunut = :onnistunut, lahetysvirhe = :lahetysvirhe
 WHERE id = :kohdeid;
+
+-- name: onko-olemassa-urakalla?
+-- single?: true
+SELECT exists(SELECT id
+              FROM yllapitokohde
+              WHERE urakka = :urakka AND id = :kohde);
+
+-- name: paivita-yllapitokohteen-sijainti!
+-- Päivittää ylläpitokohteen
+UPDATE yllapitokohde
+SET
+  tr_alkuosa       = :tr_alkuosa,
+  tr_alkuetaisyys  = :tr_alkuetaisyys,
+  tr_loppuosa      = :tr_loppuosa,
+  tr_loppuetaisyys = :tr_loppuetaisyys
+WHERE id = :id;
+
+-- name: poista-yllapitokohteen-kohdeosat!
+DELETE FROM yllapitokohdeosa
+WHERE yllapitokohde = :id;
