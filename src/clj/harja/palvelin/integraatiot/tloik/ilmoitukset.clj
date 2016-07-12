@@ -39,7 +39,7 @@
                                                                         (:sijainti ilmoitus)))]
     (first (urakat/hae-urakka db urakka-id))))
 
-(defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id]
+(defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
   (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")
   (let [ilmoitustoimenpide-id (:id (ilmoitukset-q/luo-ilmoitustoimenpide<!
                                      db {:ilmoitus ilmoitus-id
@@ -73,7 +73,7 @@
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-                          ilmoitus viesti-id korrelaatio-id tapahtuma-id]
+                          ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja]
   (let [urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)
         paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
@@ -90,7 +90,7 @@
 
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-id)
+      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-id jms-lahettaja)
       (laheta-ilmoitus-paivystajille db ilmoitus paivystajat urakka-id ilmoitusasetukset))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
@@ -105,7 +105,7 @@
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono viesti]
+(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono viesti jms-lahettaja]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
@@ -116,7 +116,7 @@
     (try+
      (if-let [urakka (hae-urakka db ilmoitus)]
        (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-                           ilmoitus viesti-id korrelaatio-id tapahtuma-id)
+                           ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja)
        (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
                                     korrelaatio-id tapahtuma-id))
       (catch Exception e
