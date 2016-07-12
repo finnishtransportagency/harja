@@ -56,16 +56,16 @@
      "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or @muutokset-kokonaishintaan 0))
      "Yhteensä: " (fmt/euro-opt @toteuman-kokonaishinta)]))
 
-(defn asiaktarkastus
+(defn asiatarkastus
   "Asiatarkastusosio konsultille."
   [valmis-asiatarkastukseen?]
   (let [muokattava? (and
-                      (oikeudet/on-muu-oikeus? "asiatarkastus"
-                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id @nav/valittu-urakka)
-                                               @istunto/kayttaja)
-                      (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
-                      (false? @paallystys/paallystysilmoituslomake-lukittu?))
+                     (oikeudet/on-muu-oikeus? "asiatarkastus"
+                                              oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                              (:id @nav/valittu-urakka)
+                                              @istunto/kayttaja)
+                     (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
+                     (false? @paallystys/paallystysilmoituslomake-lukittu?))
         asiatarkastus
         (r/wrap {:asiatarkastus-tarkastusaika
                  (:asiatarkastus-tarkastusaika @paallystys/paallystysilmoitus-lomakedata)
@@ -79,17 +79,12 @@
                  (:asiatarkastus-lisatiedot @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
-                         #(-> %
-                              (assoc :asiatarkastus-tarkastusaika
-                                     (:asiatarkastus-tarkastusaika uusi-arvo))
-                              (assoc :asiatarkastus-tarkastaja
-                                     (:asiatarkastus-tarkastaja uusi-arvo))
-                              (assoc :asiatarkastus-tekninen-osa
-                                     (:asiatarkastus-tekninen-osa uusi-arvo))
-                              (assoc :asiatarkastus-taloudellinen-osa
-                                     (:asiatarkastus-taloudellinen-osa uusi-arvo))
-                              (assoc :asiatarkastus-lisatiedot
-                                     (:asiatarkastus-lisatiedot uusi-arvo))))))]
+                         #(assoc %
+                                 :asiatarkastus-tarkastusaika (:asiatarkastus-tarkastusaika uusi-arvo)
+                                 :asiatarkastus-tarkastaja (:asiatarkastus-tarkastaja uusi-arvo)
+                                 :asiatarkastus-tekninen-osa (:asiatarkastus-tekninen-osa uusi-arvo)
+                                 :asiatarkastus-taloudellinen-osa (:asiatarkastus-taloudellinen-osa uusi-arvo)
+                                 :asiatarkastus-lisatiedot (:asiatarkastus-lisatiedot uusi-arvo)))))]
 
     (when @valmis-asiatarkastukseen?
       [:div.pot-asiatarkastus
@@ -145,13 +140,10 @@
                  (:kasittelyaika-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
-                         #(-> %
-                              (assoc :paatos-tekninen-osa
-                                     (:paatos-tekninen uusi-arvo))
-                              (assoc :perustelu-tekninen-osa
-                                     (:perustelu-tekninen-osa uusi-arvo))
-                              (assoc :kasittelyaika-tekninen-osa
-                                     (:kasittelyaika-tekninen-osa uusi-arvo))))))
+                         #(assoc %
+                              :paatos-tekninen-osa (:paatos-tekninen uusi-arvo)
+                              :perustelu-tekninen-osa (:perustelu-tekninen-osa uusi-arvo)
+                              :kasittelyaika-tekninen-osa (:kasittelyaika-tekninen-osa uusi-arvo)))))
         paatos-taloudellinen-osa
         (r/wrap {:paatos-taloudellinen
                  (:paatos-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)
@@ -161,13 +153,10 @@
                  (:kasittelyaika-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
-                         #(-> %
-                              (assoc :paatos-taloudellinen-osa
-                                     (:paatos-taloudellinen uusi-arvo))
-                              (assoc :perustelu-taloudellinen-osa
-                                     (:perustelu-taloudellinen-osa uusi-arvo))
-                              (assoc :kasittelyaika-taloudellinen-osa
-                                     (:kasittelyaika-taloudellinen-osa uusi-arvo))))))]
+                         #(assoc %
+                              :paatos-taloudellinen-osa (:paatos-taloudellinen uusi-arvo)
+                              :perustelu-taloudellinen-osa (:perustelu-taloudellinen-osa uusi-arvo)
+                              :kasittelyaika-taloudellinen-osa (:kasittelyaika-taloudellinen-osa uusi-arvo)))))]
 
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
@@ -273,6 +262,17 @@
                        (urakka/lukitse-urakan-yha-sidonta! urakka-id)
                        (reset! paallystys/paallystysilmoitukset vastaus)
                        (reset! paallystys/paallystysilmoitus-lomakedata nil))}]]))
+
+(defn- tr-vali-paakohteen-sisalla? [lomakedata _ rivi]
+  (when-not (and (<= (:tr-alkuosa lomakedata) (:aosa rivi) (:tr-loppuosa lomakedata))
+                 (<= (:tr-alkuosa lomakedata) (:losa rivi) (:tr-loppuosa lomakedata))
+                 (if (= (:tr-alkuosa lomakedata) (:aosa rivi))
+                   (>= (:aet rivi) (:tr-alkuetaisyys lomakedata))
+                   true)
+                 (if (= (:tr-loppuosa lomakedata) (:losa rivi))
+                   (<= (:let rivi) (:tr-loppuetaisyys lomakedata))
+                   true))
+    "Ei pääkohteen sisällä"))
 
 (defn paallystysilmoituslomake []
   (let [lomake-kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
@@ -405,7 +405,7 @@
                                                                 #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
                    (:kommentit lomakedata-nyt)]})]
               @kohteen-tiedot]
-             [asiaktarkastus valmis-kasiteltavaksi?]]
+             [asiatarkastus valmis-kasiteltavaksi?]]
 
             [:div.col-md-6
              [:div
@@ -531,62 +531,63 @@
                :pituus-max 256}]
              paallystystoimenpiteet]
 
-            [grid/muokkaus-grid
-             {:otsikko "Alustalle tehdyt toimet"
-              :voi-muokata? tekninen-osa-voi-muokata?
-              :uusi-id (inc (count @alustalle-tehdyt-toimet))
-              :virheet alustalle-tehdyt-toimet-virheet}
-             [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
-               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
-              {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
-              {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
-              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
-               :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
-              {:otsikko "Käsittely\u00ADmenetelmä"
-               :nimi :kasittelymenetelma
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
-                                (if rivi
-                                  (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse menetelmä -"))
-               :valinnat pot/+alustamenetelmat+
-               :leveys "30%"}
-              {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
-               :tyyppi :positiivinen-numero :tasaa :oikea}
-              {:otsikko "Verkko\u00ADtyyppi"
-               :nimi :verkkotyyppi
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
-               :valinnat pot/+verkkotyypit+
-               :leveys "25%"}
-              {:otsikko "Verkon sijainti"
-               :nimi :verkon-sijainti
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
-               :valinnat pot/+verkon-sijainnit+
-               :leveys "25%"}
-              {:otsikko "Verkon tarkoitus"
-               :nimi :verkon-tarkoitus
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
-               :valinnat pot/+verkon-tarkoitukset+
-               :leveys "25%"}
-              {:otsikko "Tekninen toimen\u00ADpide"
-               :nimi :tekninen-toimenpide
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
-               :valinnat pot/+tekniset-toimenpiteet+
-               :leveys "30%"}]
-             alustalle-tehdyt-toimet]]
+            (let [tr-validaattori (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)]
+              [grid/muokkaus-grid
+               {:otsikko "Alustalle tehdyt toimet"
+                :voi-muokata? tekninen-osa-voi-muokata?
+                :uusi-id (inc (count @alustalle-tehdyt-toimet))
+                :virheet alustalle-tehdyt-toimet-virheet}
+               [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
+                 :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
+                 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
+                 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
+                 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
+                 :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
+                {:otsikko "Käsittely\u00ADmenetelmä"
+                 :nimi :kasittelymenetelma
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta (fn [rivi]
+                                  (if rivi
+                                    (str (:lyhenne rivi) " - " (:nimi rivi))
+                                    "- Valitse menetelmä -"))
+                 :valinnat pot/+alustamenetelmat+
+                 :leveys "30%"}
+                {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
+                 :tyyppi :positiivinen-numero :tasaa :oikea}
+                {:otsikko "Verkko\u00ADtyyppi"
+                 :nimi :verkkotyyppi
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
+                 :valinnat pot/+verkkotyypit+
+                 :leveys "25%"}
+                {:otsikko "Verkon sijainti"
+                 :nimi :verkon-sijainti
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
+                 :valinnat pot/+verkon-sijainnit+
+                 :leveys "25%"}
+                {:otsikko "Verkon tarkoitus"
+                 :nimi :verkon-tarkoitus
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
+                 :valinnat pot/+verkon-tarkoitukset+
+                 :leveys "25%"}
+                {:otsikko "Tekninen toimen\u00ADpide"
+                 :nimi :tekninen-toimenpide
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
+                 :valinnat pot/+tekniset-toimenpiteet+
+                 :leveys "30%"}]
+               alustalle-tehdyt-toimet])]
 
            [:fieldset.lomake-osa
             [:h3 "Taloudellinen osa"]
