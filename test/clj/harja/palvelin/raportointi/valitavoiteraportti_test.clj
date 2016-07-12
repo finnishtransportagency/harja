@@ -66,7 +66,7 @@
                    {:leveys 10
                     :otsikko "Kommentti"}]
                   [{:otsikko "Ajoissa valmistuneet (25%)"}
-                   ["Koko Suomi aurattu"
+                   ["Koko urakan alue aurattu"
                     "29.05.2014"
                     (_ :guard #(str/starts-with? % "01.05.2014"))
                     "Homma hoidettu hyvästi ennen tavoitepäivää!"]
