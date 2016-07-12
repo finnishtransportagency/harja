@@ -131,7 +131,10 @@ SELECT
   l.koko                                AS liite_koko,
   l.nimi                                AS liite_nimi,
   l.liite_oid                           AS liite_oid,
-  l.pikkukuva                           AS liite_pikkukuva
+  l.pikkukuva                           AS liite_pikkukuva,
+
+  ka.etunimi                            AS "laatija-etunimi",
+  ka.sukunimi                           AS "laatija-sukunimi"
 
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k
@@ -142,6 +145,8 @@ FROM turvallisuuspoikkeama t
     ON t.id = tl.turvallisuuspoikkeama
   LEFT JOIN liite l
     ON l.id = tl.liite
+
+  LEFT JOIN kayttaja ka ON k.laatija = ka.id
 
   LEFT JOIN turvallisuuspoikkeama_kommentti tpk
     ON t.id = tpk.turvallisuuspoikkeama
