@@ -29,8 +29,11 @@
 
 (defprotocol Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
-    "Lisää uuden kuuntelijan annetulle jonolle. Jos jonolla on monta kuuntelijaa, viestit välitetään jokaiselle kuuntelijalle.
-Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti. Kuuntelija blokkaa käsittelyn ajan, joten samasta jonosta voidaan lukea vain yksi viesti kerrallaan. Jos käsittelijä haluaa tehdä jotain pitkäaikaista, täytyy sen hoitaa se uudessa säikeessä.")
+    "Lisää uuden kuuntelijan annetulle jonolle. Jos jonolla on monta kuuntelijaa,
+    viestit välitetään jokaiselle kuuntelijalle.
+    Kuuntelijafunktiolle annetaan suoraan javax.jms.Message objekti.
+    Kuuntelija blokkaa käsittelyn ajan, joten samasta jonosta voidaan lukea vain yksi viesti kerrallaan.
+    Jos käsittelijä haluaa tehdä jotain pitkäaikaista, täytyy sen hoitaa se uudessa säikeessä.")
 
   (laheta [this jono viesti] [this jono viesti otsikot]
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n."))
