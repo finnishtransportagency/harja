@@ -107,7 +107,6 @@
   se on valittua tyyppiä."
   [db user {:keys [takaraja urakkatyyppi nimi] :as valitavoite}
    valtakunnallinen-valitavoite-id urakat-kaynnissa-tulossa]
-  (log/debug "Urakka on: " (pr-str urakat-kaynnissa-tulossa) " ja tavoite on: " valitavoite)
   (let [linkitettavat-urakat (if takaraja
                                (filter
                                  (fn [urakka]
