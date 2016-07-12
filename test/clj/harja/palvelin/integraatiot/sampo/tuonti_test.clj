@@ -67,8 +67,8 @@
   [])
 
 #_(deftest aja-testipatteri
-  (let [siirtoja (count testidatapatteri)
-        viestit (atom [])]
+  (let [SIIRTOJA (COUNT TESTIDATAPATTERI)
+        VIESTIT (ATOM [])]
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (doseq [testidata testidatapatteri]
       (println "Lähetetään: " testidata)

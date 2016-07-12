@@ -480,7 +480,8 @@ SELECT
   id,
   nimi,
   alkupvm,
-  loppupvm
+  loppupvm,
+  tyyppi
 FROM urakka where sampoid = :sampoid;
 
 -- name: aseta-takuun-loppupvm!

@@ -8,7 +8,9 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn lisaa-urakalle-puuttuvat-valtakunnalliset-valitavoitteet [db sampo-id]
-  (let [urakka (first (urakat-q/hae-urakan-perustiedot-sampo-idlla db sampo-id))
+  (let [urakka (first (into []
+                            (map #(konv/string->keyword % :tyyppi))
+                            (urakat-q/hae-urakan-perustiedot-sampo-idlla db sampo-id)))
         valtakunnalliset-vt (into []
                                   (map #(konv/string->keyword % :urakkatyyppi :tyyppi))
                                   (valitavoitteet-q/hae-valtakunnalliset-valitavoitteet db))]
@@ -20,14 +22,14 @@
         (when (empty? linkitetyt)
           ;; Valtakunnallista välitavoitetta ei ole liitetty urakkaan, lisätään se.
           (cond (= (:tyyppi valtakunnallinen-vt) :kertaluontoinen)
-                (valtakunnallinen-vt-palvelu/kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin
+                (valtakunnallinen-vt-palvelu/kopioi-valtakunnallinen-kertaluontoinen-valitavoite-sopiviin-urakoihin
                   db
                   nil
                   valtakunnallinen-vt
                   (:id valtakunnallinen-vt)
                   [urakka])
                 (= (:tyyppi valtakunnallinen-vt) :toistuva)
-                (valtakunnallinen-vt-palvelu/kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
+                (valtakunnallinen-vt-palvelu/kopioi-valtakunnallinen-toistuva-valitavoite-sopiviin-urakoihin
                   db
                   nil
                   valtakunnallinen-vt
