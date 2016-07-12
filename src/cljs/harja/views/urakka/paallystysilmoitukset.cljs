@@ -531,62 +531,63 @@
                :pituus-max 256}]
              paallystystoimenpiteet]
 
-            [grid/muokkaus-grid
-             {:otsikko "Alustalle tehdyt toimet"
-              :voi-muokata? tekninen-osa-voi-muokata?
-              :uusi-id (inc (count @alustalle-tehdyt-toimet))
-              :virheet alustalle-tehdyt-toimet-virheet}
-             [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
-               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
-              {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
-              {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
-              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
-              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
-               :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
-              {:otsikko "Käsittely\u00ADmenetelmä"
-               :nimi :kasittelymenetelma
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta (fn [rivi]
-                                (if rivi
-                                  (str (:lyhenne rivi) " - " (:nimi rivi))
-                                  "- Valitse menetelmä -"))
-               :valinnat pot/+alustamenetelmat+
-               :leveys "30%"}
-              {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
-               :tyyppi :positiivinen-numero :tasaa :oikea}
-              {:otsikko "Verkko\u00ADtyyppi"
-               :nimi :verkkotyyppi
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
-               :valinnat pot/+verkkotyypit+
-               :leveys "25%"}
-              {:otsikko "Verkon sijainti"
-               :nimi :verkon-sijainti
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
-               :valinnat pot/+verkon-sijainnit+
-               :leveys "25%"}
-              {:otsikko "Verkon tarkoitus"
-               :nimi :verkon-tarkoitus
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
-               :valinnat pot/+verkon-tarkoitukset+
-               :leveys "25%"}
-              {:otsikko "Tekninen toimen\u00ADpide"
-               :nimi :tekninen-toimenpide
-               :tyyppi :valinta
-               :valinta-arvo :koodi
-               :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
-               :valinnat pot/+tekniset-toimenpiteet+
-               :leveys "30%"}]
-             alustalle-tehdyt-toimet]]
+            (let [tr-validaattori (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)]
+              [grid/muokkaus-grid
+               {:otsikko "Alustalle tehdyt toimet"
+                :voi-muokata? tekninen-osa-voi-muokata?
+                :uusi-id (inc (count @alustalle-tehdyt-toimet))
+                :virheet alustalle-tehdyt-toimet-virheet}
+               [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
+                 :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
+                 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
+                 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
+                 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
+                 :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
+                {:otsikko "Käsittely\u00ADmenetelmä"
+                 :nimi :kasittelymenetelma
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta (fn [rivi]
+                                  (if rivi
+                                    (str (:lyhenne rivi) " - " (:nimi rivi))
+                                    "- Valitse menetelmä -"))
+                 :valinnat pot/+alustamenetelmat+
+                 :leveys "30%"}
+                {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
+                 :tyyppi :positiivinen-numero :tasaa :oikea}
+                {:otsikko "Verkko\u00ADtyyppi"
+                 :nimi :verkkotyyppi
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
+                 :valinnat pot/+verkkotyypit+
+                 :leveys "25%"}
+                {:otsikko "Verkon sijainti"
+                 :nimi :verkon-sijainti
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
+                 :valinnat pot/+verkon-sijainnit+
+                 :leveys "25%"}
+                {:otsikko "Verkon tarkoitus"
+                 :nimi :verkon-tarkoitus
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
+                 :valinnat pot/+verkon-tarkoitukset+
+                 :leveys "25%"}
+                {:otsikko "Tekninen toimen\u00ADpide"
+                 :nimi :tekninen-toimenpide
+                 :tyyppi :valinta
+                 :valinta-arvo :koodi
+                 :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
+                 :valinnat pot/+tekniset-toimenpiteet+
+                 :leveys "30%"}]
+               alustalle-tehdyt-toimet])]
 
            [:fieldset.lomake-osa
             [:h3 "Taloudellinen osa"]
