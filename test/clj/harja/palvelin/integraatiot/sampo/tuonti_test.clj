@@ -59,8 +59,8 @@
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))]
     (is (= (count (filter #(= "Koko Suomi aurattu" %) urakan-valitavoitteet)) 1))
     (is (= (count (filter #(= "Kaikkien urakoiden kalusto huollettu" %) urakan-valitavoitteet)) 1))
-    (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 4))
-    (is (= (count urakan-valitavoitteet) 6))))
+    (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 5))
+    (is (= (count urakan-valitavoitteet) 7))))
 
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
