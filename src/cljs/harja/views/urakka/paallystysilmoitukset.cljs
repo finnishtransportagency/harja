@@ -266,8 +266,12 @@
 (defn- tr-vali-paakohteen-sisalla? [lomakedata _ rivi]
   (when-not (and (<= (:tr-alkuosa lomakedata) (:aosa rivi) (:tr-loppuosa lomakedata))
                  (<= (:tr-alkuosa lomakedata) (:losa rivi) (:tr-loppuosa lomakedata))
-                 (>= (:aet rivi) (:tr-alkuetaisyys lomakedata))
-                 (<= (:let rivi) (:tr-loppuetaisyys lomakedata)))
+                 (if (= (:tr-alkuosa lomakedata) (:aosa rivi))
+                   (>= (:aet rivi) (:tr-alkuetaisyys lomakedata))
+                   true)
+                 (if (= (:tr-loppuosa lomakedata) (:losa rivi))
+                   (<= (:let rivi) (:tr-loppuetaisyys lomakedata))
+                   true))
     "Ei pääkohteen sisällä"))
 
 (defn paallystysilmoituslomake []
