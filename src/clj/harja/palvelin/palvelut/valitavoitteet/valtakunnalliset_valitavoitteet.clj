@@ -106,7 +106,7 @@
   Jos takarajaa ei ole annettu, kopioidaan välitavoite urakkaan jos
   se on valittua tyyppiä."
   [db user {:keys [takaraja urakkatyyppi nimi] :as valitavoite}
-   valtakunnallinen-valitavoite-id urakat-kaynnissa-tulossa]
+   valtakunnallinen-valitavoite-id urakat]
   (let [linkitettavat-urakat (if takaraja
                                (filter
                                  (fn [urakka]
@@ -116,11 +116,11 @@
                                      (pvm/valissa? (c/from-date takaraja)
                                                    (c/from-date (:alkupvm urakka))
                                                    (c/from-date (:loppupvm urakka)))))
-                                 urakat-kaynnissa-tulossa)
+                                 urakat)
                                (filter
                                  #(and (= urakkatyyppi (:tyyppi %))
                                        (= (pvm/ennen? (t/now) (c/from-date (:loppupvm %)))))
-                                 urakat-kaynnissa-tulossa))]
+                                 urakat))]
     (doseq [urakka linkitettavat-urakat]
       (log/debug "Lisätään kertaluontoinen välitavoite " nimi " urakkaan " (:nimi urakka))
       (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
@@ -132,7 +132,7 @@
 (defn- luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet
   "Luo uudet valtakunnalliset kertaluontoisten välitavoitteet ja aloittaa niiden
   kopioinnin annettuihin urakoihin."
-  [db user valitavoitteet urakat-kaynnissa-tulossa]
+  [db user valitavoitteet urakat]
   (doseq [{:keys [takaraja nimi urakkatyyppi] :as valitavoite} valitavoitteet]
     (let [id (:id (q/lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
                     db
@@ -145,7 +145,7 @@
                                                                               user
                                                                               valitavoite
                                                                               id
-                                                                              urakat-kaynnissa-tulossa))))
+                                                                              urakat))))
 
 (defn kopioi-valtakunnallinen-toistuva-valitavoite-sopiviin-urakoihin
   "Luo välitavoitteen annettuihin urakoihin kertaalleen per urakkavuosi
@@ -187,21 +187,21 @@
                      :luoja (:id user)}))]
       (kopioi-valtakunnallinen-toistuva-valitavoite-sopiviin-urakoihin db user valitavoite id urakat))))
 
-(defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet urakat-kaynnissa-tulossa]
+(defn- luo-uudet-valtakunnalliset-valitavoitteet [db user valitavoitteet urakat]
   (luo-uudet-valtakunnalliset-kertaluontoiset-valitavoitteet db
                                                              user
                                                              (filter #(and (= (:tyyppi %) :kertaluontoinen)
                                                                            (< (:id %) 0)
                                                                            (not (:poistettu %)))
                                                                      valitavoitteet)
-                                                             urakat-kaynnissa-tulossa)
+                                                             urakat)
   (luo-uudet-valtakunnalliset-toistuvat-valitavoitteet db
                                                        user
                                                        (filter #(and (= (:tyyppi %) :toistuva)
                                                                      (< (:id %) 0)
                                                                      (not (:poistettu %)))
                                                                valitavoitteet)
-                                                       urakat-kaynnissa-tulossa))
+                                                       urakat))
 
 (defn- paivita-valtakunnalliseen-valitavoitteeseen-linkitetyt-valitavoitteet
   "Päivittää valtakunnalliseen välitavoitteeseen linkitetyt urakkakohtaiset välitavoitteet
@@ -247,12 +247,12 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-valitavoitteet user)
   (log/debug "Tallenna valtakunnalliset välitavoitteet " (pr-str valitavoitteet))
   (jdbc/with-db-transaction [db db]
-    (let [urakat-kaynnissa-tulossa (into []
-                                         (map #(konv/string->keyword % :tyyppi))
-                                         (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))]
+    (let [urakat-kaynnissa-tai-tulossa (into []
+                                             (map #(konv/string->keyword % :tyyppi))
+                                             (urakat-q/hae-kaynnissa-olevat-ja-tulevat-urakat db))]
       (poista-poistetut-valtakunnalliset-valitavoitteet db user valitavoitteet)
-      (luo-uudet-valtakunnalliset-valitavoitteet db user valitavoitteet urakat-kaynnissa-tulossa)
-      (paivita-valtakunnalliset-valitavoitteet db user valitavoitteet urakat-kaynnissa-tulossa)
+      (luo-uudet-valtakunnalliset-valitavoitteet db user valitavoitteet urakat-kaynnissa-tai-tulossa)
+      (paivita-valtakunnalliset-valitavoitteet db user valitavoitteet urakat-kaynnissa-tai-tulossa)
       (hae-valtakunnalliset-valitavoitteet db user))))
 
 (defrecord Valitavoitteet []
