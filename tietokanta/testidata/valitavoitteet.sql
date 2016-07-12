@@ -36,7 +36,7 @@ VALUES ((SELECT id
 
 -- Valtakunnalliset (kertaluontoiset)
 
-INSERT INTO valitavoite (urakka, urakkatyyppi, nimi, takaraja, tyyppi, poistettu)
+INSERT INTO valitavoite (urakka, nimi, urakkatyyppi, takaraja, tyyppi, poistettu)
 VALUES (null,
        'Koko Suomi aurattu',
        'hoito',
@@ -70,7 +70,7 @@ VALUES (null,
 
 -- Valtakunnalliset (toistuvat)
 
-INSERT INTO valitavoite (urakka, urakkatyyppi, nimi, takaraja_toistopaiva, takaraja_toistokuukausi, tyyppi, poistettu)
+INSERT INTO valitavoite (urakka, nimi, urakkatyyppi, takaraja_toistopaiva, takaraja_toistokuukausi, tyyppi, poistettu)
 VALUES (null,
        'Koko Suomen liikenneympäristö hoidettu',
        'hoito',
