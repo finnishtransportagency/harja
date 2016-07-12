@@ -79,7 +79,7 @@
         paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
                                            paivystajat nil)
-        ilmoittaja-urakan-organisaatiossa? (:exists
+        ilmoittaja-urakan-urakoitsijan-organisaatiossa? (:exists
                                              (first (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa
                                                       db
                                                       {:urakka urakka-id
@@ -88,7 +88,7 @@
         ilmoitus-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
 
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
-    (if ilmoittaja-urakan-organisaatiossa?
+    (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
       (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-id)
       (laheta-ilmoitus-paivystajille db ilmoitus paivystajat urakka-id ilmoitusasetukset))
 
