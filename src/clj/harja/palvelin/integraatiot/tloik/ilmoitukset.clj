@@ -45,12 +45,24 @@
                                            paivystajat nil)]
     (ilmoitus/tallenna-ilmoitus db ilmoitus)
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
+    ;; todo: tarkista löytyykö ilmoittaja nimellä kannasta urakan urakoitsijan organisaatiosta.
+    ;; haku tehdään nimellä käyttäjätaulusta organisaatio ja verrataan urakan urakoitsijan organisaatioon.
+    ;; jos on urakan organisaatiossa, ei lähetetäviestejä
     (if (empty? paivystajat)
       (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
       (doseq [paivystaja paivystajat]
         (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
                                   paivystaja)))
-    (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
+    (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)
+
+    ;; todo: jos ilmoittaja on urakan organisaatiossa, merkitse ilmoitus vastaanotetuksi
+    ;; (lisää uusi kuittaus kantaan ja lähetä se t-loik:n) --> laheta-ilmoitustoimenpide
+
+    ;; todo: testaus: Kirjaa uusi ilmoitus Oulun alueurakkalle. Laita ilmoittajaksi YIT:n
+    ;; organisaatiossa oleva henkilö (joka löytyy kannasta).
+    ;; Kääri koko testi with-fake-http requestiin
+    ;; Lopuksi tarkista, että T-LOIK lähetysjonoon ilmestyy vastaanottokuittaus
+    ))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id
                                    korrelaatio-id tapahtuma-id]

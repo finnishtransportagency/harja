@@ -51,8 +51,7 @@
   <selite>auraustarve</selite>
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
-  </harja:ilmoitus>
-")
+  </harja:ilmoitus>")
 
 (defn luo-tloik-komponentti []
   (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
