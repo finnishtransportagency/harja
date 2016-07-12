@@ -10,7 +10,8 @@
             [harja.kyselyt.toimenpideinstanssit :as toimenpiteet]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
             [harja.kyselyt.organisaatiot :as organisaatiot]
-            [harja.tyokalut.merkkijono :as merkkijono])
+            [harja.tyokalut.merkkijono :as merkkijono]
+            [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi hallintayksikko]
@@ -61,6 +62,7 @@
       (paivita-sopimukset db sampo-id)
       (paivita-toimenpiteet db sampo-id)
       (maksuerat/perusta-maksuerat-hoidon-urakoille db)
+      (valitavoitteet/kasittele-urakan-valitavoitteet db sampo-id)
 
       (log/debug "Urakka käsitelty onnistuneesti")
       (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Project"))

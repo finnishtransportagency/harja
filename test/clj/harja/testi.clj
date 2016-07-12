@@ -71,6 +71,9 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn luo-temppitietokanta []
   (tietokanta/luo-tietokanta temppitietokanta))
 
+(defn luo-liitteidenhallinta []
+  (liitteet/->Liitteet))
+
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
 

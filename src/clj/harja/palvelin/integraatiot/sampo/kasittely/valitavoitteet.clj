@@ -36,9 +36,6 @@
                   (:id valtakunnallinen-vt)
                   [urakka])))))))
 
-(defn kasittele-urakka [db {:keys [sampo-id]}]
+(defn kasittele-urakan-valitavoitteet [db sampo-id]
   (log/debug "Käsitellään sampo-id:n " sampo-id " urakan valtakunnalliset välitavoitteet")
   (lisaa-urakalle-puuttuvat-valtakunnalliset-valitavoitteet db sampo-id))
-
-(defn kasittele-valitavoitteet [db urakat]
-  (mapv #(kasittele-urakka db %) urakat))

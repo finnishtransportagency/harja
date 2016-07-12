@@ -47,8 +47,6 @@
   (jdbc/with-db-transaction [db db]
     (let [data (sampo-sanoma/lue-viesti viestin-sisalto)
           kuittaukset (tuo-sampo-viestin-data db data)]
-      ;; Välitavoitteiden käsittely tapahtuu sisäisesti, ei tarvitse kuittausta
-      (valitavoitteet/kasittele-valitavoitteet db (:urakat data))
       kuittaukset)))
 
 (defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
