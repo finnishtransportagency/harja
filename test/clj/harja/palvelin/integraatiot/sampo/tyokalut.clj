@@ -124,6 +124,7 @@
 (defn poista-urakka []
   (u "update sopimus set urakka = null where urakka in (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from yhteyshenkilo_urakka where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
+  (u "delete from valitavoite where urakka = (select id from urakka where sampoid = 'TESTIURAKKA')")
   (u "delete from urakka where sampoid = 'TESTIURAKKA'"))
 
 (defn hae-urakat []
