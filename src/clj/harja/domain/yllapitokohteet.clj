@@ -12,7 +12,7 @@
   {:koodi koodi :viesti viesti})
 
 (defn validoi-sijainti [{:keys [aosa aet losa let] :as sijainti}]
-  ;; Käytetään täydellä namespacella, jotta voidaan destrukturoida loppuetäisyys (let)
+  ;; Käytetään täydellä namespacella, jotta voidaan destrukturoida loppuetäisyys (let).
   (clojure.core/let [virhe (fn [viesti] (tee-virhe +viallinen-yllapitokohteen-sijainti+ (format viesti sijainti)))
                      negatiivinen? #(and % (> 0 %))
                      validaattorit [{:validaattori #(nil? aosa) :virhe (virhe "Alkuosa puuttuu. Sijainti: %s")}
