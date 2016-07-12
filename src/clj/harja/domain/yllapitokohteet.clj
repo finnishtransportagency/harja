@@ -1,6 +1,7 @@
 (ns harja.domain.yllapitokohteet
   "Ylläpitokohteiden yhteisiä apureita"
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [throw+]])
+  (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
 (def +kohteissa-viallisia-sijainteja+ "viallisia-sijainteja")
 (def +viallinen-yllapitokohteen-sijainti+ "viallinen-kohteen-sijainti")
@@ -10,9 +11,20 @@
 (defn tee-virhe [koodi viesti]
   {:koodi koodi :viesti viesti})
 
-(defn validoi-kohteen-osoite [kohde-id kohteen-sijainti]
-  (when (> (:aosa kohteen-sijainti) (:losa kohteen-sijainti))
-    [(tee-virhe +viallinen-yllapitokohteen-sijainti+ (format "Kohteen (id: %s) alkuosa on loppuosaa isompi" kohde-id))]))
+(defn validoi-sijainti [{:keys [aosa aet losa let] :as sijainti}]
+  ;; Käytetään täydellä namespacella, jotta voidaan destrukturoida loppuetäisyys (let)
+  (clojure.core/let [virhe (fn [viesti] (tee-virhe +viallinen-yllapitokohteen-sijainti+ (format viesti sijainti)))
+                     negatiivinen? #(and % (> 0 %))
+                     validaattorit [{:validaattori #(nil? aosa) :virhe (virhe "Alkuosa puuttuu. Sijainti: %s")}
+                                    {:validaattori #(nil? aet) :virhe (virhe "Alkuetaisyys puuttuu. Sijainti: %s")}
+                                    {:validaattori #(nil? losa) :virhe (virhe "Loppuosa puuttuu. Sijainti: %s")}
+                                    {:validaattori #(nil? let) :virhe (virhe "Loppuetäisyys puuttuu. Sijainti: %s")}
+                                    {:validaattori #(negatiivinen? aosa) :virhe (virhe "Alkuosa ei saa olla negatiivinen. Sijainti: %s")}
+                                    {:validaattori #(negatiivinen? aet) :virhe (virhe "Alkuetäisyys ei saa olla negatiivinen. Sijainti: %s")}
+                                    {:validaattori #(negatiivinen? losa) :virhe (virhe "Lopppuosa ei saa olla negatiivinen. Sijainti: %s")}
+                                    {:validaattori #(negatiivinen? let) :virhe (virhe "Loppuetäisyys ei saa olla negatiivinen. Sijainti: %s")}
+                                    {:validaattori #(> aosa losa) :virhe (virhe "Alkuosa on loppuosaa isompi. Sijainti: %s")}]]
+    (keep #(when ((:validaattori %)) (:virhe %)) validaattorit)))
 
 (defn alikohde-kohteen-sisalla? [kohteen-sijainti alikohteen-sijainti]
   (and (<= (:aosa kohteen-sijainti) (:aosa alikohteen-sijainti))
@@ -24,7 +36,7 @@
   (mapv (fn [{:keys [tunnus sijainti]}]
           (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
             (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                       (format "Alikohde (tunnus: %s) ei ole kohteen (id: %s) sisällä." tunnus kohde-id))))
+                       (format "Alikohde (tunnus: %s) ei ole kohteen (id: %s) sisällä. Sijainti: %s." tunnus kohde-id sijainti))))
         alikohteet))
 
 (defn tarkista-alikohteet-tayttavat-kohteen [kohde-id kohteen-sijainti alikohteet]
@@ -55,15 +67,20 @@
           (if (seuraava-jatkaa-edellista? seuraava edellinen)
             (assoc edellinen :edellinen seuraava)
             {:edellinen seuraava
-             :virheet (lisaa-virhe edellinen seuraava)}))
+             :virheet   (lisaa-virhe edellinen seuraava)}))
         {:virheet [] :edellinen (first alikohteet)}
         (rest alikohteet)))))
 
+(defn tarkista-alikohteiden-sijainnit [alikohteet]
+  (flatten (mapv #(validoi-sijainti (:sijainti %)) alikohteet)))
+
 (defn validoi-alikohteet [kohde-id kohteen-sijainti alikohteet]
-  (concat
-    (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
-    (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
-    (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet)))
+  (when alikohteet
+    (concat
+      (tarkista-alikohteiden-sijainnit alikohteet)
+      (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
+      (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
+      (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet))))
 
 (defn tarkista-kohteen-ja-alikohteiden-sijannit
   "Tekee yksinkertaisen tarkastuksen, jolloin kohde on validi ja alikohteet ovat sen sisällä ja muodostavat yhteinäisen
@@ -72,24 +89,22 @@
 
   (let [alikohteet (when alikohteet (sort-by (juxt #(get-in % [:sijainti :aosa]) #(get-in % [:sijainti :aet])) alikohteet))
         virheet (remove nil? (concat
-                               (validoi-kohteen-osoite kohde-id kohteen-sijainti)
+                               (validoi-sijainti kohteen-sijainti)
                                (validoi-alikohteet kohde-id kohteen-sijainti alikohteet)))]
 
     (when (not (empty? virheet))
-      (throw+ {:type +kohteissa-viallisia-sijainteja+
-               :virheet virheet}))))
+      (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet))))
 
 (defn tarkista-alustatoimenpiteiden-sijainnit
   "Varmistaa että kaikkien alustatoimenpiteiden sijainnit ovat kohteen sijainnin sisällä"
   [kohde-id kohteen-sijainti alustatoimet]
-  ;; todo: käytä keep removen sijasta?
-  (let [virheet (remove nil?
-                        (mapv (fn [{:keys [sijainti]}]
-                                (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
-                                  (tee-virhe +viallinen-alustatoimenpiteen-sijainti+
-                                             (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))))
-                              alustatoimet))]
+  (let [virheet (flatten
+                  (keep (fn [{:keys [sijainti]}]
+                          (concat
+                            (validoi-sijainti sijainti)
+                            [(when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
+                               (tee-virhe +viallinen-alustatoimenpiteen-sijainti+
+                                          (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id)))]))
+                        alustatoimet))]
     (when (not (empty? virheet))
-      ;; todo: käytä virheet/heita-poikkeus
-      (throw+ {:type +kohteissa-viallisia-sijainteja+
-               :virheet virheet}))))
+      (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet))))
