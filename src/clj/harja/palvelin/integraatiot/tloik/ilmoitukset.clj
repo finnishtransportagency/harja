@@ -45,30 +45,27 @@
         ilmoitus-id (:ilmoitus-id ilmoitus)
         paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
-                                           paivystajat nil)]
+                                           paivystajat nil)
+        ilmoittaja-urakan-organisaatiossa? (:exists
+                                             (first (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa
+                                                      db
+                                                      {:urakka urakka-id
+                                                       :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
+                                                       :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])})))]
     (ilmoitus/tallenna-ilmoitus db ilmoitus)
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
-    (when-not (:exists (first (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa
-                                db
-                                {:urakka urakka-id
-                                 :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
-                                 :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])})))
+    (if ilmoittaja-urakan-organisaatiossa?
+      ;; todo: jos ilmoittaja on urakan organisaatiossa, merkitse ilmoitus vastaanotetuksi
+      ;; (lisää uusi kuittaus kantaan ja lähetä se t-loik:n) --> laheta-ilmoitustoimenpide
+
+      ;; Lähetetään päivystäjille ilmoitus
       (if (empty? paivystajat)
         (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
         (doseq [paivystaja paivystajat]
           (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
                                     paivystaja))))
 
-    (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)
-
-    ;; todo: jos ilmoittaja on urakan organisaatiossa, merkitse ilmoitus vastaanotetuksi
-    ;; (lisää uusi kuittaus kantaan ja lähetä se t-loik:n) --> laheta-ilmoitustoimenpide
-
-    ;; todo: testaus: Kirjaa uusi ilmoitus Oulun alueurakkalle. Laita ilmoittajaksi YIT:n
-    ;; organisaatiossa oleva henkilö (joka löytyy kannasta).
-    ;; Kääri koko testi with-fake-http requestiin
-    ;; Lopuksi tarkista, että T-LOIK lähetysjonoon ilmestyy vastaanottokuittaus
-    ))
+    (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id
                                    korrelaatio-id tapahtuma-id]

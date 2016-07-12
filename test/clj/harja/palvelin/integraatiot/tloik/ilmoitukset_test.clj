@@ -122,3 +122,8 @@
 
     (is (= 0 (count (hae-ilmoitus))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
+
+;; todo: urakoitsiojan tekemä TTP testaus: Kirjaa uusi ilmoitus Oulun alueurakkalle. Laita ilmoittajaksi YIT:n
+;; organisaatiossa oleva henkilö (joka löytyy kannasta).
+;; Kääri koko testi with-fake-http requestiin
+;; Lopuksi tarkista, että T-LOIK lähetysjonoon ilmestyy vastaanottokuittaus
