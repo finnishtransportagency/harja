@@ -11,6 +11,7 @@
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.kayttajat :as kayttajat-q]
+            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu])
   (:use [slingshot.slingshot :only [try+]]))
@@ -51,12 +52,32 @@
                                                       db
                                                       {:urakka urakka-id
                                                        :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
-                                                       :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])})))]
-    (ilmoitus/tallenna-ilmoitus db ilmoitus)
+                                                       :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])})))
+        ilmoitus-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
+
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-organisaatiossa?
       ;; todo: jos ilmoittaja on urakan organisaatiossa, merkitse ilmoitus vastaanotetuksi
       ;; (lisää uusi kuittaus kantaan ja lähetä se t-loik:n) --> laheta-ilmoitustoimenpide
+      (ilmoitukset-q/luo-ilmoitustoimenpide<! db {:ilmoitus ilmoitus-id
+                                                  :ilmoitusid (:ilmoitus-id ilmoitus)
+                                                  :kuitattu nil
+                                                  :vapaateksti nil
+                                                  :kuittaustyyppi "vastaanotto"
+                                                  :kuittaaja_henkilo_etunimi nil
+                                                  :kuittaaja_henkilo_sukunimi nil
+                                                  :kuittaaja_henkilo_matkapuhelin nil
+                                                  :kuittaaja_henkilo_tyopuhelin nil
+                                                  :kuittaaja_henkilo_sahkoposti nil
+                                                  :kuittaaja_organisaatio_nimi nil
+                                                  :kuittaaja_organisaatio_ytunnus nil
+                                                  :kasittelija_henkilo_etunimi nil
+                                                  :kasittelija_henkilo_sukunimi nil
+                                                  :kasittelija_henkilo_matkapuhelin nil
+                                                  :kasittelija_henkilo_tyopuhelin nil
+                                                  :kasittelija_henkilo_sahkoposti nil
+                                                  :kasittelija_organisaatio_nimi nil
+                                                  :kasittelija_organisaatio_ytunnus nil})
 
       ;; Lähetetään päivystäjille ilmoitus
       (if (empty? paivystajat)

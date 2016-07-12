@@ -40,7 +40,8 @@
     id)
   (paivita-ilmoittaja db id ilmoittaja)
   (paivita-lahettaja db id lahettaja)
-  (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id))
+  (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
+  id)
 
 (defn luo-ilmoitus [db urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi valitetty urakkatyyppi otsikko paikankuvaus lisatieto yhteydenottopyynto ilmoittaja lahettaja selitteet sijainti vastaanottaja]}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
@@ -64,15 +65,17 @@
 (defn tallenna-ilmoitus [db ilmoitus]
   (log/debug "Käsitellään ilmoitusta T-LOIK:sta id:llä: " (:ilmoitus-id ilmoitus) ", joka välitettiin viestillä id: " (:viesti-id ilmoitus))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
-        id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
-        urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus)))]
-    (if id
-      (paivita-ilmoitus db id urakka-id ilmoitus)
-      (luo-ilmoitus db urakka-id ilmoitus))
+        nykyinen-id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
+        urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus) (:sijainti ilmoitus)))
+        uusi-id (if nykyinen-id
+                  (paivita-ilmoitus db nykyinen-id urakka-id ilmoitus)
+                  (luo-ilmoitus db urakka-id ilmoitus))]
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" ilmoitus))
     (if-not urakka-id
       (throw+ {:type virheet/+urakkaa-ei-loydy+})
-      urakka-id)))
+      urakka-id)
+
+    uusi-id))
 
 
 
