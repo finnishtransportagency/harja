@@ -263,6 +263,13 @@
                        (reset! paallystys/paallystysilmoitukset vastaus)
                        (reset! paallystys/paallystysilmoitus-lomakedata nil))}]]))
 
+(defn- tr-vali-paakohteen-sisalla? [lomakedata _ rivi]
+  (when-not (and (<= (:tr-alkuosa lomakedata) (:aosa rivi) (:tr-loppuosa lomakedata))
+                 (<= (:tr-alkuosa lomakedata) (:losa rivi) (:tr-loppuosa lomakedata))
+                 (>= (:aet rivi) (:tr-alkuetaisyys lomakedata))
+                 (<= (:let rivi) (:tr-loppuetaisyys lomakedata)))
+    "Ei pääkohteen sisällä"))
+
 (defn paallystysilmoituslomake []
   (let [lomake-kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                                           (:id @nav/valittu-urakka))
@@ -526,13 +533,13 @@
               :uusi-id (inc (count @alustalle-tehdyt-toimet))
               :virheet alustalle-tehdyt-toimet-virheet}
              [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
-               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+               :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
               {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+               :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
               {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
-               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+               :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
               {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
-               :validoi [[:ei-tyhja "Tieto puuttuu"]] :tasaa :oikea}
+               :validoi [[:ei-tyhja "Tieto puuttuu"] (partial tr-vali-paakohteen-sisalla? lomakedata-nyt)] :tasaa :oikea}
               {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
                :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
               {:otsikko "Käsittely\u00ADmenetelmä"
