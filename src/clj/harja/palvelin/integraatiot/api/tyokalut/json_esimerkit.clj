@@ -45,4 +45,5 @@
 (def +tyokoneenseuranta-kirjaus+ "api/examples/tyokoneenseurannan-kirjaus-request.json")
 
 (def +urakan-yllapitokohteiden-haku+ "api/examples/urakan-yllapitokohteiden-haku-response.json")
+(def +paallystysilmoituksen-kirjaus+ "api/examples/paallystysilmoituksen-kirjaus-request.json")
 

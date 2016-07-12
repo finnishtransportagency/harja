@@ -180,11 +180,11 @@
                              paattynyt (:paattynyt tapahtuma)
                              kasitelty (:kasitelty tapahtuma)]
                          (tee-arvolistaus-popup "Turvallisuuspoikkeama"
-                                                [(when (and tapahtunut paattynyt)
-                                                   ["Tapahtunut" (pvm/pvm-aika tapahtunut) " - " (pvm/pvm-aika paattynyt)])
+                                                [(when tapahtunut
+                                                   ["Tapahtunut" (pvm/pvm-aika tapahtunut)])
                                                  (when kasitelty
                                                    ["Käsitelty" (pvm/pvm-aika kasitelty)])
-                                                 ["Työ\u00ADtehtävä" (turpodomain/kuvaile-tyontekijan-ammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                                                 ["Työn\u00ADtekijä" (turpodomain/kuvaile-tyontekijan-ammatti tapahtuma)]
                                                  ["Vammat" (str/join ", " (map turpodomain/vammat (:vammat tapahtuma)))]
                                                  ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
                                                  ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]

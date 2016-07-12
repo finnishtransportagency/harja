@@ -141,7 +141,6 @@ WHERE id = :id
       AND urakka IS NULL;
 
 -- name: hae-valitavoitteeseen-linkitetyt-valitavoitteet
--- Merkitsee valtakunnallisen välitavoitteen poistetuksi
 SELECT
   v.id,
   v.nimi,
@@ -154,6 +153,22 @@ FROM valitavoite v
   JOIN urakka u ON v.urakka = u.id
 WHERE v.poistettu = FALSE
       AND v.valtakunnallinen_valitavoite = :id
+ORDER BY v.takaraja ASC;
+
+-- name: hae-valitavoitteeseen-linkitetyt-valitavoitteet-urakassa
+SELECT
+  v.id,
+  v.nimi,
+  v.valmis_pvm as "valmispvm",
+  u.id as urakka_id,
+  u.nimi as urakka_nimi,
+  u.alkupvm as urakka_alkupvm,
+  u.loppupvm as urakka_loppupvm
+FROM valitavoite v
+  JOIN urakka u ON v.urakka = u.id
+WHERE v.poistettu = FALSE
+      AND v.valtakunnallinen_valitavoite = :id
+      AND urakka = :urakkaid
 ORDER BY v.takaraja ASC;
 
 -- name: paivita-kertaluontoiseen-valitavoitteeseen-linkitetty-muokkaamaton-valitavoite!

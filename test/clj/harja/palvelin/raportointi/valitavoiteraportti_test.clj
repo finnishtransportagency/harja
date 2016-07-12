@@ -49,8 +49,8 @@
                                  :konteksti "urakka"
                                  :urakka-id (hae-oulun-alueurakan-2014-2019-id)})]
     (is (vector? vastaus))
-    (is (match [vastaus]
-               [[:raportti
+    (is (match vastaus
+               [:raportti
                  {:nimi "Välitavoiteraportti"
                   :orientaatio :landscape}
                  [:taulukko
@@ -84,5 +84,5 @@
                    ["Sepon mökkitie suolattu"
                     (_ :guard #(str/starts-with? % "24.12.2014"))
                     "-"
-                    nil]]]]]
+                    nil]]]]
                true))))

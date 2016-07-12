@@ -161,7 +161,6 @@
                            (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                            (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
                            (or (turpodomain/kuvaile-tyontekijan-ammatti %) "")
-                           (or (:tyotehtava %) "")
                            (or (:sairaalavuorokaudet %) "")
                            (or (:sairauspoissaolopaivat %) ""))
 
@@ -184,7 +183,6 @@
                  {:otsikko "Tyyppi" :leveys 24}
                  {:otsikko "Vakavuusaste" :leveys 15}
                  {:otsikko "Ammatti" :leveys 14}
-                 {:otsikko "Työ\u00ADtehtävä" :leveys 14}
                  {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
                  {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}])))
 

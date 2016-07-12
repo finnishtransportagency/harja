@@ -35,6 +35,8 @@ schemas:
  - tielupien-haku-response: !include schemas/tielupien-haku-response.schema.json
  - tietyoilmoituksen-kirjaus-request: !include schemas/tietyoilmoituksen-kirjaus-request.schema.json
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
+ - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
+ - paallystysilmoituksen-kirjaus-request: !include schemas/paallystysilmoituksen-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -473,6 +475,32 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
+        /{id}:
+          description: Yksittäisen ylläpitokohteen hallinta
+          /paallystysilmoitus:
+            post:
+              is: [secured]
+              description: Päällystysilmoituksen kirjaus. Päällystysilmoituksen kautta on mahdollista päivittää varsinaisen kohteen sijaintia sekä alikohteita. Alikohteet päivitetään aina vanhojen päälle. Alustalle tehdyt toimepiteet sekä alikohteet täytyvät aina osua pääkohteen sisään. Sen lisäksi alikohteiden osoitteisiin ei saa jäädä välejä eivätkä ne saa mennä päällekkäin.
+              body:
+                application/json:
+                  example: !include examples/ilmoitustoimenpiteen-kirjaaminen-request.json
+                  schema: paallystysilmoituksen-kirjaus-request
+              responses:
+                200:
+                  body:
+                    application/json:
+                     example: !include examples/onnistunut-kirjaus-response.json
+                     schema: kirjaus-response
+                500:
+                  body:
+                    application/json:
+                      example: !include examples/virhe-response.json
+                      schema: virhe-response
+                400:
+                  body:
+                   application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
 
 /varusteet:
   is: [secured]

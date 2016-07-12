@@ -21,7 +21,7 @@
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]
             [harja.transit :as transit]
-            [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn tulosta-virhe! [asiat e]
@@ -200,7 +200,7 @@
     (when (tk/valittu? turvallisuus tk/turvallisuuspoikkeamat)
      (let [tulos (konv/sarakkeet-vektoriin
                    (into []
-                         turvallisuuspoikkeamat/turvallisuuspoikkeama-xf
+                         turvallisuuspoikkeamat-q/turvallisuuspoikkeama-xf
                          (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
                                                        (konv/sql-date loppu)))
                    {:korjaavatoimenpide :korjaavattoimenpiteet})]

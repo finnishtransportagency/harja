@@ -9,64 +9,87 @@
             [harja.kyselyt.turvallisuuspoikkeamat :as q]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
-(def turvallisuuspoikkeama-xf
-  (comp (map konv/alaviiva->rakenne)
-        (geo/muunna-pg-tulokset :sijainti)
-        (map #(konv/array->set % :tyyppi))
-        (map #(konv/string-set->keyword-set % :tyyppi))
-        (map #(konv/array->set % :vahinkoluokittelu))
-        (map #(konv/string-set->keyword-set % :vahinkoluokittelu))
-        (map #(konv/array->set % :vahingoittuneetruumiinosat))
-        (map #(konv/string-set->keyword-set % :vahingoittuneetruumiinosat))
-        (map #(konv/array->set % :vammat))
-        (map #(konv/string-set->keyword-set % :vammat))
-        (map #(konv/string->keyword % :vakavuusaste))
-        (map #(konv/string->keyword % :vaylamuoto))
-        (map #(konv/string->keyword % :tyontekijanammatti))
-        (map #(konv/string-polusta->keyword % [:kommentti :tyyppi]))))
-
-(defn hae-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
+(defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (konv/sarakkeet-vektoriin
     (into []
-          turvallisuuspoikkeama-xf
+          q/turvallisuuspoikkeama-xf
           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
     {:korjaavatoimenpide :korjaavattoimenpiteet}))
 
-(defn hae-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
+(defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
+  (when kayttaja-id
+    (first (q/hae-vastuuhenkilon-tiedot db kayttaja-id))))
+
+(defn hae-urakan-turvallisuuspoikkeama [db user {:keys [urakka-id turvallisuuspoikkeama-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
   (log/debug "Haetaan turvallisuuspoikkeama " turvallisuuspoikkeama-id " urakalle " urakka-id)
-  (let [tulos (-> (first (konv/sarakkeet-vektoriin (into []
-                                                         turvallisuuspoikkeama-xf
-                                                         (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
-                                                   {:kommentti :kommentit
-                                                    :korjaavatoimenpide :korjaavattoimenpiteet
-                                                    :liite :liitteet}))
-
-                  (update-in [:kommentit]
-                             (fn [kommentit]
-                               (sort-by :aika (map #(if (nil? (:id (:liite %)))
-                                                     (dissoc % :liite)
-                                                     %)
-                                                   kommentit)))))]
+  (let [tulos (as-> (first (konv/sarakkeet-vektoriin (into []
+                                                           q/turvallisuuspoikkeama-xf
+                                                           (q/hae-urakan-turvallisuuspoikkeama db turvallisuuspoikkeama-id urakka-id))
+                                                     {:kommentti :kommentit
+                                                      :korjaavatoimenpide :korjaavattoimenpiteet
+                                                      :liite :liitteet}))
+                    turpo
+                    (assoc turpo :korjaavattoimenpiteet
+                                 (mapv #(assoc % :vastuuhenkilo
+                                                 (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
+                                       (:korjaavattoimenpiteet turpo)))
+                    (update-in turpo [:kommentit]
+                               (fn [kommentit]
+                                 (sort-by :aika (map #(if (nil? (:id (:liite %)))
+                                                       (dissoc % :liite)
+                                                       %)
+                                                     kommentit)))))]
+    (log/debug "Tulos: " (pr-str tulos))
     tulos))
 
-(defn luo-tai-paivita-korjaavatoimenpide
-  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu vastaavahenkilo poistettu]}]
+(defn- luo-tai-paivita-korjaavatoimenpide
+  [db user tp-id {:keys [id turvallisuuspoikkeama kuvaus suoritettu poistettu
+                         otsikko tila vastuuhenkilo toteuttaja] :as korjaavatoimenpide}
+   urakka]
 
   (log/debug "Tallennetaan korjaavatoimenpide (" id ") turvallisuuspoikkeamalle " tp-id ".")
-  ;; Jos tämä assertti failaa, joku on hassusti
   (assert
     (or (nil? turvallisuuspoikkeama) (= turvallisuuspoikkeama tp-id))
     "Korjaavan toimenpiteen 'turvallisuuspoikkeama' pitäisi olla joko tyhjä (uusi korjaava), tai sama kuin parametrina
     annettu turvallisuuspoikkeaman id.")
 
+  (log/debug "Tallenna korjaava toimenpide " (pr-str korjaavatoimenpide))
   (if-not (or (nil? id) (neg? id))
-    (q/paivita-korjaava-toimenpide<! db kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo (or poistettu false) id tp-id)
+    (q/paivita-korjaava-toimenpide<!
+      db
+      {:otsikko otsikko
+       :tila (name tila)
+       :vastuuhenkilo (:id vastuuhenkilo)
+       :toteuttaja toteuttaja
+       :kuvaus kuvaus
+       :suoritettu (when suoritettu
+                     (konv/sql-timestamp suoritettu))
+       :laatija (:id user)
+       :poistettu (or poistettu false)
+       :id id
+       :tp tp-id
+       :urakka urakka})
+    (q/luo-korjaava-toimenpide<! db {:tp tp-id
+                                     :otsikko otsikko
+                                     :tila (name tila)
+                                     :vastuuhenkilo (:id vastuuhenkilo)
+                                     :toteuttaja toteuttaja
+                                     :kuvaus kuvaus
+                                     :suoritettu (when suoritettu
+                                                   (konv/sql-timestamp suoritettu))
+                                     :laatija (:id user)})))
 
-    (q/luo-korjaava-toimenpide<! db tp-id kuvaus (konv/sql-timestamp suoritettu) vastaavahenkilo)))
+(defn- luo-tai-paivita-korjaavat-toimenpiteet [db user korjaavattoimenpiteet tp-id urakka]
+  (when-not (empty? korjaavattoimenpiteet)
+    (doseq [korjaavatoimenpide korjaavattoimenpiteet]
+      (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
+      (luo-tai-paivita-korjaavatoimenpide db user tp-id korjaavatoimenpide urakka))))
 
 (def oletusparametrit {:ulkoinen_id nil
                        :ilmoittaja_etunimi nil
@@ -79,25 +102,28 @@
                        :ilmoitukset_lahetetty nil
                        :lahde "harja-ui"})
 
-(defn luo-tai-paivita-turvallisuuspoikkeama
-  [db user {:keys [id urakka tapahtunut paattynyt kasitelty tyontekijanammatti tyontekijanammattimuu
-                   tyotehtava kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
+(defn- luo-tai-paivita-turvallisuuspoikkeama
+  [db user {:keys [id urakka tapahtunut tyontekijanammatti tyontekijanammattimuu
+                   kuvaus vammat sairauspoissaolopaivat sairaalavuorokaudet sijainti tr
                    vahinkoluokittelu vakavuusaste vahingoittuneetruumiinosat tyyppi
                    sairauspoissaolojatkuu seuraukset vaylamuoto toteuttaja tilaaja
-                   laatijaetunimi laatijasukunimi
+                   otsikko paikan-kuvaus vaaralliset-aineet
                    turvallisuuskoordinaattorietunimi turvallisuuskoordinaattorisukunimi
-                   ilmoituksetlahetetty]}]
+                   ilmoituksetlahetetty tila]}]
   (let [sijainti (and sijainti (geo/geometry (geo/clj->pg sijainti)))
+        vaarallisten-aineiden-kuljetus? (boolean (some #{:vaarallisten-aineiden-kuljetus}
+                                                      vaaralliset-aineet))
+        vaarallisten-aineiden-vuoto? (boolean (some #{:vaarallisten-aineiden-vuoto}
+                                                    vaaralliset-aineet))
         parametrit
         (merge oletusparametrit
                tr
                {:urakka urakka
                 :tapahtunut (konv/sql-timestamp tapahtunut)
-                :paattynyt (konv/sql-timestamp paattynyt)
-                :kasitelty (konv/sql-timestamp kasitelty)
+                :kasitelty (when (= tila :suljettu)
+                             (konv/sql-timestamp (c/to-date (t/now))))
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
-                :tehtava tyotehtava
                 :kuvaus kuvaus
                 :vammat (konv/seq->array vammat)
                 :poissa sairauspoissaolopaivat
@@ -113,60 +139,92 @@
                 :sairauspoissaolo_jatkuu sairauspoissaolojatkuu
                 :aiheutuneet_seuraukset seuraukset
                 :vaylamuoto (name vaylamuoto)
-                :laatija_etunimi laatijaetunimi
-                :laatija_sukunimi laatijasukunimi
+                :laatija (:id user)
                 :turvallisuuskoordinaattori_etunimi turvallisuuskoordinaattorietunimi
                 :turvallisuuskoordinaattori_sukunimi turvallisuuskoordinaattorisukunimi
-                :ilmoitukset_lahetetty (konv/sql-timestamp ilmoituksetlahetetty)})]
+                :tapahtuman_otsikko otsikko
+                :paikan_kuvaus paikan-kuvaus
+                :vaarallisten_aineiden_kuljetus vaarallisten-aineiden-kuljetus?
+                :vaarallisten_aineiden_vuoto (if (not vaarallisten-aineiden-kuljetus?)
+                                               false
+                                               vaarallisten-aineiden-vuoto?)
+                :tila (name tila)
+                :ilmoitukset_lahetetty (when ilmoituksetlahetetty
+                                         (konv/sql-timestamp ilmoituksetlahetetty))})]
     (if id
       (do (q/paivita-turvallisuuspoikkeama! db (assoc parametrit :id id))
           id)
       (:id (q/luo-turvallisuuspoikkeama<! db parametrit)))))
 
-(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi]
-  (jdbc/with-db-transaction [c db]
-    (let [id (luo-tai-paivita-turvallisuuspoikkeama c user tp)]
-      (when uusi-kommentti
-        (log/debug "Turvallisuuspoikkeamalle lisätään uusi kommentti.")
-        (let [liite (some->> uusi-kommentti
-                             :liite
-                             :id
-                             (liitteet/hae-urakan-liite-id c (:urakka tp))
-                             first
-                             :id)
-              kommentti (kommentit/luo-kommentti<! c
-                                                   nil
-                                                   (:kommentti uusi-kommentti)
-                                                   liite
-                                                   (:id user))]
-          (q/liita-kommentti<! c id (:id kommentti))))
+(defn- tallenna-turvallisuuspoikkeaman-kommentti [db user uusi-kommentti urakka tp-id]
+  (when uusi-kommentti
+    (log/debug "Turvallisuuspoikkeamalle lisätään uusi kommentti.")
+    (let [liite (some->> uusi-kommentti
+                         :liite
+                         :id
+                         (liitteet/hae-urakan-liite-id db urakka)
+                         first
+                         :id)
+          kommentti (kommentit/luo-kommentti<! db
+                                               nil
+                                               (:kommentti uusi-kommentti)
+                                               liite
+                                               (:id user))]
+      (q/liita-kommentti<! db tp-id (:id kommentti)))))
 
-      (when-not (empty? korjaavattoimenpiteet)
-        (doseq [korjaavatoimenpide korjaavattoimenpiteet]
-          (log/debug "Lisätään turvallisuuspoikkeamalle korjaava toimenpide, tai muokataan sitä.")
-          (luo-tai-paivita-korjaavatoimenpide c user id korjaavatoimenpide)))
-      id)))
+(defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
+  (jdbc/with-db-transaction [db db]
+    (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
+      (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
+      (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
+      tp-id)))
+
+(defn- vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan [db urakka-id turvallisuuspoikkeama-id]
+  (when turvallisuuspoikkeama-id
+    (let [turpon-todellinen-urakka-id (:urakka (first
+                                                 (q/hae-turvallisuuspoikkeaman-urakka db turvallisuuspoikkeama-id)))]
+      (log/debug "Tarkistetaan, että väitetty urakka-id " urakka-id " = " turpon-todellinen-urakka-id)
+      (when (not= turpon-todellinen-urakka-id urakka-id)
+        (throw (SecurityException. "Annettu turvallisuuspoikkeama ei kuulu väitettyyn urakkaan."))))))
 
 (defn tallenna-turvallisuuspoikkeama [turi db user {:keys [tp korjaavattoimenpiteet uusi-kommentti hoitokausi]}]
   (log/debug "Tallennetaan turvallisuuspoikkeama " (:id tp) " urakkaan " (:urakka tp))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka tp))
-  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti hoitokausi)]
+  ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
+  (vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan db (:urakka tp) (:id tp))
+  (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti (:urakka tp))]
     (when turi
+      ;; Turi-lähetystä ei pidä sitoa transaktioon, muuten voi jäädä jumiin.
       (turi/laheta-turvallisuuspoikkeama turi id)))
-  (hae-turvallisuuspoikkeamat db user {:urakka-id (:urakka tp) :alku (first hoitokausi) :loppu (second hoitokausi)}))
+  (hae-urakan-turvallisuuspoikkeamat db
+                                     user
+                                     {:urakka-id (:urakka tp)
+                                      :alku (first hoitokausi)
+                                      :loppu (second hoitokausi)}))
+
+(defn hae-hakulomakkeen-kayttajat [db user hakuehdot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user (:urakka-id hakuehdot))
+  (log/debug "Haetaan käyttäjät hakuehdoilla: " (pr-str hakuehdot))
+  (jdbc/with-db-transaction [db db]
+    (into [] (q/hae-kayttajat-parametreilla db {:kayttajanimi (or (:kayttajanimi hakuehdot) "")
+                                                :etunimi (or (:etunimi hakuehdot) "")
+                                                :sukunimi (or (:sukunimi hakuehdot) "")}))))
 
 (defrecord Turvallisuuspoikkeamat []
   component/Lifecycle
   (start [this]
     (julkaise-palvelut (:http-palvelin this)
-
                        :hae-turvallisuuspoikkeamat
                        (fn [user tiedot]
-                         (hae-turvallisuuspoikkeamat (:db this) user tiedot))
+                         (hae-urakan-turvallisuuspoikkeamat (:db this) user tiedot))
+
+                       :hae-turvallisuuspoikkeaman-hakulomakkeen-kayttajat
+                       (fn [user hakuehdot]
+                         (hae-hakulomakkeen-kayttajat (:db this) user hakuehdot))
 
                        :hae-turvallisuuspoikkeama
                        (fn [user tiedot]
-                         (hae-turvallisuuspoikkeama (:db this) user tiedot))
+                         (hae-urakan-turvallisuuspoikkeama (:db this) user tiedot))
 
                        :tallenna-turvallisuuspoikkeama
                        (fn [user tiedot]

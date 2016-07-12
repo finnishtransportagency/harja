@@ -196,3 +196,18 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
+
+-- name: onko-paallystysilmoitus-olemassa-kohteelle?
+-- single?: true
+SELECT exists(SELECT *
+              FROM paallystysilmoitus
+              WHERE paallystyskohde = :id);
+
+-- name: paivita-paallystysilmoituksen-ilmoitustiedot<!
+-- Päivittää päällystysilmoituksen ilmoitustiedot
+UPDATE paallystysilmoitus
+SET
+  ilmoitustiedot       = :ilmoitustiedot :: JSONB,
+  muokattu             = NOW(),
+  muokkaaja            = :muokkaaja
+WHERE paallystyskohde = :id;

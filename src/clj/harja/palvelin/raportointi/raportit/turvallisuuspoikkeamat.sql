@@ -3,11 +3,9 @@
 SELECT
 t.id,
 t.tapahtunut,
-t.paattynyt,
 t.kasitelty,
 t.tyontekijanammatti,
 t.tyontekijanammatti_muu as tyontekijanammattimuu,
-t.tyotehtava,
 t.kuvaus,
 t.vammat,
 t.sairauspoissaolopaivat,

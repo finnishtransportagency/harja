@@ -53,19 +53,16 @@
         "etunimi": "Mikko",
         "sukunimi": "Meikäläinen"
       },
-      "laatija": {
-        "id" : 654486,
-        "etunimi": "Urho",
-        "sukunimi": "Urakoitisja"
-      },
+      "otsikko": "Aura-auto suistui tieltä",
       "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
-      "paattynyt": "2016-01-30T12:00:00Z",
       "kasitelty": "2016-01-30T12:00:00Z",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
+      "paikan_kuvaus": "Liukas tie keskellä metsää.",
+      "vaarallisten_aineiden_kuljetus": true,
+      "vaarallisten_aineiden_vuoto": false,
       "henkilovahinko": {
         "tyontekijanammatti": "muu_tyontekija",
         "ammatinselite": "Auraaja",
-        "tyotehtava": "Auraus",
         "aiheutuneetVammat": ["luunmurtumat"],
         "vahingoittuneetRuumiinosat": ["selka", "vartalo"],
         "sairauspoissaoloJatkuu": true,
@@ -77,6 +74,8 @@
       "seuraukset": "Kaikki selvisivät hengissä",
       "korjaavatToimenpiteet": [
         {
+          "otsikko": "Kaadetaan pensaikko",
+          "toteuttaja": "Erkki Esimerkki",
           "kuvaus": "Kaadetaan risteystä pimentävä pensaikko",
           "suoritettu": "2016-01-30T12:00:00Z",
           "vastaavahenkilo": {
