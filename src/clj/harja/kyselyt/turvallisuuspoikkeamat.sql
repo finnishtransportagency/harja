@@ -111,6 +111,8 @@ SELECT
   k.otsikko                             AS korjaavatoimenpide_otsikko,
   k.vastuuhenkilo                       AS korjaavatoimenpide_vastuuhenkilo,
   k.toteuttaja                          AS korjaavatoimenpide_toteuttaja,
+  k_ka.etunimi                          AS "korjaavatoimenpide_laatija-etunimi",
+  k_ka.sukunimi                         AS "korjaavatoimenpide_laatija-sukunimi",
 
   kom.id                                AS kommentti_id,
   kom.tekija                            AS kommentti_tekija,
@@ -146,7 +148,8 @@ FROM turvallisuuspoikkeama t
   LEFT JOIN liite l
     ON l.id = tl.liite
 
-  LEFT JOIN kayttaja ka ON k.laatija = ka.id
+  LEFT JOIN kayttaja ka ON t.laatija = ka.id
+  LEFT JOIN kayttaja k_ka ON k.laatija = k_ka.id
 
   LEFT JOIN turvallisuuspoikkeama_kommentti tpk
     ON t.id = tpk.turvallisuuspoikkeama

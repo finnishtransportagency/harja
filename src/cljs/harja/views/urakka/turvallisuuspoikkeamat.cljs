@@ -134,7 +134,7 @@
     [kayttajahaku-modal-sisalto korjaava-toimenpide toimenpiteet-atom urakka]))
 
 (defn korjaavattoimenpiteet
-  [toimenpiteet]
+  [toimenpiteet turvallisuuspoikkeama]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"}
    [{:otsikko "Otsikko"
@@ -159,8 +159,11 @@
      :leveys 20
      :tyyppi :string
      :muokattava? (constantly false)
-     :fmt (fn [_] (str (:etunimi @istunto/kayttaja)
-                       " " (:sukunimi @istunto/kayttaja)))}
+     :hae (fn [rivi] (if (:uusi? (meta turvallisuuspoikkeama))
+                    ;; Laatijaksi tullaan liittämään nykyinen käyttäjä
+                    (str (:etunimi @istunto/kayttaja) " " (:sukunimi @istunto/kayttaja))
+                    (str (:laatija-etunimi rivi)
+                         " " (:laatija-sukunimi rivi))))}
     {:otsikko "Vastuuhenkilö"
      :nimi :vastuuhenkilo
      :leveys 25
@@ -377,7 +380,7 @@
                          {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                           :palstoja 2
                           :uusi-rivi? true
-                          :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)]}
+                          :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama) @turvallisuuspoikkeama]}
                          {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                           :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                          {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
