@@ -17,7 +17,8 @@
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
-(def +testi-ilmoitus-sanoma+ "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+(def +testi-ilmoitus-sanoma+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
   <versionumero>1</versionumero>
