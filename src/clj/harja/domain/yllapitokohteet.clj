@@ -95,16 +95,23 @@
     (when (not (empty? virheet))
       (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet))))
 
+(defn validoi-alustatoimenpide [kohde-id kohteen-sijainti sijainti]
+  (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
+    [(tee-virhe +viallinen-alustatoimenpiteen-sijainti+
+                (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id))]))
+
 (defn tarkista-alustatoimenpiteiden-sijainnit
   "Varmistaa että kaikkien alustatoimenpiteiden sijainnit ovat kohteen sijainnin sisällä"
   [kohde-id kohteen-sijainti alustatoimet]
-  (let [virheet (flatten
-                  (keep (fn [{:keys [sijainti]}]
-                          (concat
-                            (validoi-sijainti sijainti)
-                            [(when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
-                               (tee-virhe +viallinen-alustatoimenpiteen-sijainti+
-                                          (format "Alustatoimenpide ei ole kohteen (id: %s) sisällä." kohde-id)))]))
-                        alustatoimet))]
+  (let [virheet
+        (flatten
+          (keep (fn [{:keys [sijainti]}]
+                 (let [kohteenvirheet
+                       (concat
+                         (validoi-sijainti sijainti)
+                         (validoi-alustatoimenpide kohde-id kohteen-sijainti sijainti))]
+                   (println "kohteen virheet:" kohteenvirheet)
+                   kohteenvirheet))
+               alustatoimet))]
     (when (not (empty? virheet))
       (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet))))

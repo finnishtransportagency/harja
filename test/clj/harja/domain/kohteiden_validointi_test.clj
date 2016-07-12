@@ -6,6 +6,8 @@
             [harja.domain.yllapitokohteet :as yllapitokohteet]))
 
 (defn tasmaa-poikkeus [{:keys [type virheet]} tyyppi koodi viesti]
+  (println "type: " type)
+  (println "virheet: " virheet)
   (and
     (= tyyppi type)
     (some (fn [virhe] (and (= koodi (:koodi virhe)) (.contains (:viesti virhe) viesti)))
@@ -83,10 +85,21 @@
                            {:tunnus   "B"
                             :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
                            {:tunnus   "C"
-                            :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]]
+                            :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]
+        yksi-alustatoimenpide [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}]
+        kaksi-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
+                                   {:sijainti {:aosa 2, :aet 2, :losa 4, :let 4}}]
+        monta-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
+                                   {:sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
+                                   {:sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]]
+
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde yksi-alikohde)
     (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde kaksi-alikohdetta)
-    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde monta-alikohdetta)))
+    (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde monta-alikohdetta)
+
+    (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde yksi-alustatoimenpide)
+    (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde kaksi-alustatoimenpidetta)
+    (yllapitokohteet/tarkista-alustatoimenpiteiden-sijainnit 1 kohde monta-alustatoimenpidetta)))
 
 (deftest tarkista-alustatoimenpiteiden-validius
   (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
