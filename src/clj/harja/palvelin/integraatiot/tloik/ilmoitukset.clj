@@ -36,7 +36,9 @@
                                                                         (:sijainti ilmoitus)))]
     (first (urakat/hae-urakka db urakka-id))))
 
-(defn kasittele-ilmoitus [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
+(defn kasittele-ilmoitus
+  "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
+  [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
                           ilmoitus viesti-id korrelaatio-id tapahtuma-id]
   (let [urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)
@@ -45,6 +47,7 @@
                                            paivystajat nil)]
     (ilmoitus/tallenna-ilmoitus db ilmoitus)
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
+    (log/debug "[ILMOITUS] " (pr-str ilmoitus))
     ;; todo: tarkista löytyykö ilmoittaja nimellä kannasta urakan urakoitsijan organisaatiosta.
     ;; haku tehdään nimellä käyttäjätaulusta organisaatio ja verrataan urakan urakoitsijan organisaatioon.
     ;; jos on urakan organisaatiossa, ei lähetetäviestejä
