@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paallystysilmoitus');
+=======
 -- Yhtenäistä Harjan turvallisuuspoikkeama TURI:n kanssa
 
 -- Turvallisuuspoikkeaman päivitys
@@ -44,3 +47,4 @@ UPDATE korjaavatoimenpide SET tila = CASE WHEN (suoritettu IS NOT NULL)
     THEN 'toteutettu'::korjaavatoimenpide_tila
     ELSE 'avoin'::korjaavatoimenpide_tila
     END;
+>>>>>>> develop

@@ -44,10 +44,6 @@
       "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijaselite",
       "type": "string"
     },
-    "tyotehtava": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/tyotehtava",
-      "type": "string"
-    },
     "aiheutuneetVammat": {
       "id": "urn:harja/turvallisuuspoikkeamat/0/aiheutuneetVammat",
       "type": "array",
