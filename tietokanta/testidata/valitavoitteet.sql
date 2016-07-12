@@ -36,39 +36,58 @@ VALUES ((SELECT id
 
 -- Valtakunnalliset (kertaluontoiset)
 
-INSERT INTO valitavoite (urakka, nimi, takaraja, tyyppi, poistettu)
+INSERT INTO valitavoite (urakka, urakkatyyppi, nimi, takaraja, tyyppi, poistettu)
 VALUES (null,
        'Koko Suomi aurattu',
+       'hoito',
+       '2019-05-29',
+       'kertaluontoinen'::valitavoite_tyyppi,
+       false),
+       (null,
+       'Koko Suomi tiemerkitty',
+       'tiemerkinta',
        '2019-05-29',
        'kertaluontoinen'::valitavoite_tyyppi,
        false),
        (null,
        'Liikennemerkit tarkistettu',
+       'hoito',
        '2015-05-29',
        'kertaluontoinen'::valitavoite_tyyppi,
        true),
        (null,
        'Kaikkien urakoiden kalusto huollettu',
+       'hoito',
        null,
        'kertaluontoinen'::valitavoite_tyyppi,
        false),
        (null,
        'Koko Suomi suolattu',
+       'hoito',
        '2005-8-23',
        'kertaluontoinen'::valitavoite_tyyppi,
        false);
 
 -- Valtakunnalliset (toistuvat)
 
-INSERT INTO valitavoite (urakka, nimi, takaraja_toistopaiva, takaraja_toistokuukausi, tyyppi, poistettu)
+INSERT INTO valitavoite (urakka, urakkatyyppi, nimi, takaraja_toistopaiva, takaraja_toistokuukausi, tyyppi, poistettu)
 VALUES (null,
        'Koko Suomen liikenneympäristö hoidettu',
+       'hoito',
        1,
        1,
        'toistuva'::valitavoite_tyyppi,
        false),
        (null,
+       'Koko Suomi päällystetty',
+       'tiemerkinta',
+       6,
+       6,
+       'toistuva'::valitavoite_tyyppi,
+       false),
+       (null,
        'Kaikki tiet putsattu',
+       'hoito',
        1,
        1,
        'toistuva'::valitavoite_tyyppi,
