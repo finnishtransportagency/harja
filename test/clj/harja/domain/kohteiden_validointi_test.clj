@@ -6,8 +6,6 @@
             [harja.domain.yllapitokohteet :as yllapitokohteet]))
 
 (defn tasmaa-poikkeus [{:keys [type virheet]} tyyppi koodi viesti]
-  (println "type: " type)
-  (println "virheet: " virheet)
   (and
     (= tyyppi type)
     (some (fn [virhe] (and (= koodi (:koodi virhe)) (.contains (:viesti virhe) viesti)))
@@ -25,11 +23,11 @@
 
 (deftest tarkista-alikohteen-validius
   (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
-        alikohteet [{:tunnus   "A"
+        alikohteet [{:tunnus "A"
                      :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                    {:tunnus   "B"
+                    {:tunnus "B"
                      :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
-                    {:tunnus   "C"
+                    {:tunnus "C"
                      :sijainti {:aosa 3, :aet 3, :losa 5, :let 5}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
@@ -41,13 +39,13 @@
         "Kohteen ulkopuolinen alikohde otettiin kiinni"))
 
   (let [kohde {:aosa 1 :aet 1 :losa 5 :let 5}
-        alikohteet [{:tunnus   "A"
+        alikohteet [{:tunnus "A"
                      :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                    {:tunnus   "B"
+                    {:tunnus "B"
                      :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
-                    {:tunnus   "C"
+                    {:tunnus "C"
                      :sijainti {:aosa 3, :aet 3, :losa 4, :let 1}}
-                    {:tunnus   "D"
+                    {:tunnus "D"
                      :sijainti {:aosa 4, :aet 4, :losa 5, :let 5}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
@@ -59,9 +57,9 @@
         "Alikohteet jotka eivät muodosta yhtenäistä osaa otettiin kiinni"))
 
   (let [kohde {:aosa 1 :aet 1 :losa 1 :let 1}
-        alikohteet [{:tunnus   "A"
+        alikohteet [{:tunnus "A"
                      :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                    {:tunnus   "B"
+                    {:tunnus "B"
                      :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}]]
     (is (thrown+?
           #(tasmaa-poikkeus
@@ -74,17 +72,17 @@
 
 (deftest tarkista-validi-kohde
   (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
-        yksi-alikohde [{:tunnus   "A"
+        yksi-alikohde [{:tunnus "A"
                         :sijainti {:aosa 1, :aet 1, :losa 4, :let 4}}]
-        kaksi-alikohdetta [{:tunnus   "A"
+        kaksi-alikohdetta [{:tunnus "A"
                             :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                           {:tunnus   "B"
+                           {:tunnus "B"
                             :sijainti {:aosa 2, :aet 2, :losa 4, :let 4}}]
-        monta-alikohdetta [{:tunnus   "A"
+        monta-alikohdetta [{:tunnus "A"
                             :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                           {:tunnus   "B"
+                           {:tunnus "B"
                             :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
-                           {:tunnus   "C"
+                           {:tunnus "C"
                             :sijainti {:aosa 3, :aet 3, :losa 4, :let 4}}]
         yksi-alustatoimenpide [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}]
         kaksi-alustatoimenpidetta [{:sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}

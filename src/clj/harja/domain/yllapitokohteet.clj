@@ -24,7 +24,8 @@
                                     {:validaattori #(negatiivinen? losa) :virhe (virhe "Lopppuosa ei saa olla negatiivinen. Sijainti: %s")}
                                     {:validaattori #(negatiivinen? let) :virhe (virhe "Loppuetäisyys ei saa olla negatiivinen. Sijainti: %s")}
                                     {:validaattori #(> aosa losa) :virhe (virhe "Alkuosa on loppuosaa isompi. Sijainti: %s")}]]
-    (keep #(when ((:validaattori %)) (:virhe %)) validaattorit)))
+    (keep (fn [{:keys [validaattori virhe]}]
+            (when (validaattori) virhe)) validaattorit)))
 
 (defn alikohde-kohteen-sisalla? [kohteen-sijainti alikohteen-sijainti]
   (and (<= (:aosa kohteen-sijainti) (:aosa alikohteen-sijainti))
@@ -67,7 +68,7 @@
           (if (seuraava-jatkaa-edellista? seuraava edellinen)
             (assoc edellinen :edellinen seuraava)
             {:edellinen seuraava
-             :virheet   (lisaa-virhe edellinen seuraava)}))
+             :virheet (lisaa-virhe edellinen seuraava)}))
         {:virheet [] :edellinen (first alikohteet)}
         (rest alikohteet)))))
 
@@ -106,12 +107,11 @@
   (let [virheet
         (flatten
           (keep (fn [{:keys [sijainti]}]
-                 (let [kohteenvirheet
-                       (concat
-                         (validoi-sijainti sijainti)
-                         (validoi-alustatoimenpide kohde-id kohteen-sijainti sijainti))]
-                   (println "kohteen virheet:" kohteenvirheet)
-                   kohteenvirheet))
-               alustatoimet))]
+                  (let [kohteenvirheet
+                        (concat
+                          (validoi-sijainti sijainti)
+                          (validoi-alustatoimenpide kohde-id kohteen-sijainti sijainti))]
+                    kohteenvirheet))
+                alustatoimet))]
     (when (not (empty? virheet))
       (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet))))
