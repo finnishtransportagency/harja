@@ -56,7 +56,6 @@
   (is (= (count (q "SELECT * FROM valitavoite WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))
          10)))
 
-
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
   [])

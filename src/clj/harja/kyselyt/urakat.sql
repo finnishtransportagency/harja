@@ -475,9 +475,14 @@ WHERE u.id IN (:idt);
 -- single?: true
 SELECT sampoid FROM urakka where id = :urakka;
 
--- name: hae-urakan-id-sampo-idlla
+-- name: hae-urakan-perustiedot-sampo-idlla
 -- single?: true
-SELECT id FROM urakka where sampoid = :sampoid;
+SELECT
+  id,
+  nimi,
+  alkupvm,
+  loppupvm
+FROM urakka where sampoid = :sampoid;
 
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
