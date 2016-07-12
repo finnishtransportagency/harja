@@ -13,7 +13,8 @@
             [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
-            [harja.palvelin.palvelut.urakat :as urakkapalvelu])
+            [harja.palvelin.palvelut.urakat :as urakkapalvelu]
+            [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def +xsd-polku+ "xsd/tloik/")
@@ -38,6 +39,37 @@
                                                                         (:sijainti ilmoitus)))]
     (first (urakat/hae-urakka db urakka-id))))
 
+(defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id]
+  (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")
+  (let [ilmoitustoimenpide-id (:id (ilmoitukset-q/luo-ilmoitustoimenpide<!
+                                     db {:ilmoitus ilmoitus-id
+                                         :ilmoitusid (:ilmoitus-id ilmoitus)
+                                         :kuitattu nil
+                                         :vapaateksti nil
+                                         :kuittaustyyppi "vastaanotto"
+                                         :kuittaaja_henkilo_etunimi nil
+                                         :kuittaaja_henkilo_sukunimi nil
+                                         :kuittaaja_henkilo_matkapuhelin nil
+                                         :kuittaaja_henkilo_tyopuhelin nil
+                                         :kuittaaja_henkilo_sahkoposti nil
+                                         :kuittaaja_organisaatio_nimi nil
+                                         :kuittaaja_organisaatio_ytunnus nil
+                                         :kasittelija_henkilo_etunimi nil
+                                         :kasittelija_henkilo_sukunimi nil
+                                         :kasittelija_henkilo_matkapuhelin nil
+                                         :kasittelija_henkilo_tyopuhelin nil
+                                         :kasittelija_henkilo_sahkoposti nil
+                                         :kasittelija_organisaatio_nimi nil
+                                         :kasittelija_organisaatio_ytunnus nil}))]
+    (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)))
+
+(defn- laheta-ilmoitus-paivystajille [db ilmoitus paivystajat urakka-id ilmoitusasetukset]
+  (if (empty? paivystajat)
+    (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
+    (doseq [paivystaja paivystajat]
+      (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
+                                paivystaja))))
+
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
@@ -57,34 +89,8 @@
 
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-organisaatiossa?
-      ;; todo: jos ilmoittaja on urakan organisaatiossa, merkitse ilmoitus vastaanotetuksi
-      ;; (lisää uusi kuittaus kantaan ja lähetä se t-loik:n) --> laheta-ilmoitustoimenpide
-      (ilmoitukset-q/luo-ilmoitustoimenpide<! db {:ilmoitus ilmoitus-id
-                                                  :ilmoitusid (:ilmoitus-id ilmoitus)
-                                                  :kuitattu nil
-                                                  :vapaateksti nil
-                                                  :kuittaustyyppi "vastaanotto"
-                                                  :kuittaaja_henkilo_etunimi nil
-                                                  :kuittaaja_henkilo_sukunimi nil
-                                                  :kuittaaja_henkilo_matkapuhelin nil
-                                                  :kuittaaja_henkilo_tyopuhelin nil
-                                                  :kuittaaja_henkilo_sahkoposti nil
-                                                  :kuittaaja_organisaatio_nimi nil
-                                                  :kuittaaja_organisaatio_ytunnus nil
-                                                  :kasittelija_henkilo_etunimi nil
-                                                  :kasittelija_henkilo_sukunimi nil
-                                                  :kasittelija_henkilo_matkapuhelin nil
-                                                  :kasittelija_henkilo_tyopuhelin nil
-                                                  :kasittelija_henkilo_sahkoposti nil
-                                                  :kasittelija_organisaatio_nimi nil
-                                                  :kasittelija_organisaatio_ytunnus nil})
-
-      ;; Lähetetään päivystäjille ilmoitus
-      (if (empty? paivystajat)
-        (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
-        (doseq [paivystaja paivystajat]
-          (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
-                                    paivystaja))))
+      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-id)
+      (laheta-ilmoitus-paivystajille db ilmoitus paivystajat urakka-id ilmoitusasetukset))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 
