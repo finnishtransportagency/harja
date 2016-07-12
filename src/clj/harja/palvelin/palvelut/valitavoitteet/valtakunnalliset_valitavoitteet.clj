@@ -96,7 +96,7 @@
                                       (get-in poistettava [:urakka :id])
                                       (:id poistettava))))))
 
-(defn- kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin
+(defn kopioi-valtakunnallinen-kertaluontoinen-valitavoite-urakoihin
   [db user valitavoite valtakunnallinen-valitavoite-id urakat]
   (doseq [urakka urakat]
     (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
@@ -140,7 +140,7 @@
                                                                      id
                                                                      linkitettavat-urakat))))
 
-(defn- kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
+(defn kopioi-valtakunnallinen-toistuva-valitavoite-urakoihin
   [db user valitavoite valtakunnallinen-valitavoite-id urakat-kaynnissa-tulossa]
   (doseq [urakka urakat-kaynnissa-tulossa]
     (let [urakan-jaljella-olevat-vuodet (range (max (t/year (t/now))
