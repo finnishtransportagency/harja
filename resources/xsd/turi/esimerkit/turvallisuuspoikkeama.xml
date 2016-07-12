@@ -1,4 +1,4 @@
-<imp:poikkeama xmlns:imp="http://importexport.xml.turi.oikeatoliot.fi">
+<imp:poikkeama xmlns:imp="http://restimport.xml.turi.oikeatoliot.fi">
     <tapahtumantiedot>
         <sampourakkaid>string</sampourakkaid>
         <!--Zero or more repetitions:-->
