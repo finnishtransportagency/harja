@@ -60,12 +60,12 @@
   "Asiatarkastusosio konsultille."
   [valmis-asiatarkastukseen?]
   (let [muokattava? (and
-                      (oikeudet/on-muu-oikeus? "asiatarkastus"
-                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id @nav/valittu-urakka)
-                                               @istunto/kayttaja)
-                      (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
-                      (false? @paallystys/paallystysilmoituslomake-lukittu?))
+                     (oikeudet/on-muu-oikeus? "asiatarkastus"
+                                              oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                              (:id @nav/valittu-urakka)
+                                              @istunto/kayttaja)
+                     (not= (:tila @paallystys/paallystysilmoitus-lomakedata) :lukittu)
+                     (false? @paallystys/paallystysilmoituslomake-lukittu?))
         asiatarkastus
         (r/wrap {:asiatarkastus-tarkastusaika
                  (:asiatarkastus-tarkastusaika @paallystys/paallystysilmoitus-lomakedata)
@@ -79,17 +79,12 @@
                  (:asiatarkastus-lisatiedot @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
-                         #(-> %
-                              (assoc :asiatarkastus-tarkastusaika
-                                     (:asiatarkastus-tarkastusaika uusi-arvo))
-                              (assoc :asiatarkastus-tarkastaja
-                                     (:asiatarkastus-tarkastaja uusi-arvo))
-                              (assoc :asiatarkastus-tekninen-osa
-                                     (:asiatarkastus-tekninen-osa uusi-arvo))
-                              (assoc :asiatarkastus-taloudellinen-osa
-                                     (:asiatarkastus-taloudellinen-osa uusi-arvo))
-                              (assoc :asiatarkastus-lisatiedot
-                                     (:asiatarkastus-lisatiedot uusi-arvo))))))]
+                         #(assoc %
+                                 :asiatarkastus-tarkastusaika (:asiatarkastus-tarkastusaika uusi-arvo)
+                                 :asiatarkastus-tarkastaja (:asiatarkastus-tarkastaja uusi-arvo)
+                                 :asiatarkastus-tekninen-osa (:asiatarkastus-tekninen-osa uusi-arvo)
+                                 :asiatarkastus-taloudellinen-osa (:asiatarkastus-taloudellinen-osa uusi-arvo)
+                                 :asiatarkastus-lisatiedot (:asiatarkastus-lisatiedot uusi-arvo)))))]
 
     (when @valmis-asiatarkastukseen?
       [:div.pot-asiatarkastus
@@ -145,13 +140,10 @@
                  (:kasittelyaika-tekninen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
-                         #(-> %
-                              (assoc :paatos-tekninen-osa
-                                     (:paatos-tekninen uusi-arvo))
-                              (assoc :perustelu-tekninen-osa
-                                     (:perustelu-tekninen-osa uusi-arvo))
-                              (assoc :kasittelyaika-tekninen-osa
-                                     (:kasittelyaika-tekninen-osa uusi-arvo))))))
+                         #(assoc %
+                              :paatos-tekninen-osa (:paatos-tekninen uusi-arvo)
+                              :perustelu-tekninen-osa (:perustelu-tekninen-osa uusi-arvo)
+                              :kasittelyaika-tekninen-osa (:kasittelyaika-tekninen-osa uusi-arvo)))))
         paatos-taloudellinen-osa
         (r/wrap {:paatos-taloudellinen
                  (:paatos-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)
@@ -161,13 +153,10 @@
                  (:kasittelyaika-taloudellinen-osa @paallystys/paallystysilmoitus-lomakedata)}
                 (fn [uusi-arvo]
                   (swap! paallystys/paallystysilmoitus-lomakedata
-                         #(-> %
-                              (assoc :paatos-taloudellinen-osa
-                                     (:paatos-taloudellinen uusi-arvo))
-                              (assoc :perustelu-taloudellinen-osa
-                                     (:perustelu-taloudellinen-osa uusi-arvo))
-                              (assoc :kasittelyaika-taloudellinen-osa
-                                     (:kasittelyaika-taloudellinen-osa uusi-arvo))))))]
+                         #(assoc %
+                              :paatos-taloudellinen-osa (:paatos-taloudellinen uusi-arvo)
+                              :perustelu-taloudellinen-osa (:perustelu-taloudellinen-osa uusi-arvo)
+                              :kasittelyaika-taloudellinen-osa (:kasittelyaika-taloudellinen-osa uusi-arvo)))))]
 
     (when @valmis-kasiteltavaksi?
       [:div.pot-kasittely
