@@ -10,6 +10,7 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu])
   (:use [slingshot.slingshot :only [try+]]))
@@ -47,15 +48,17 @@
                                            paivystajat nil)]
     (ilmoitus/tallenna-ilmoitus db ilmoitus)
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
-    (log/debug "[ILMOITUS] " (pr-str ilmoitus))
-    ;; todo: tarkista löytyykö ilmoittaja nimellä kannasta urakan urakoitsijan organisaatiosta.
-    ;; haku tehdään nimellä käyttäjätaulusta organisaatio ja verrataan urakan urakoitsijan organisaatioon.
-    ;; jos on urakan organisaatiossa, ei lähetetäviestejä
-    (if (empty? paivystajat)
-      (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
-      (doseq [paivystaja paivystajat]
-        (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
-                                  paivystaja)))
+    (when-not (:exists (first (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa
+                                db
+                                {:urakka urakka-id
+                                 :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
+                                 :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])})))
+      (if (empty? paivystajat)
+        (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
+        (doseq [paivystaja paivystajat]
+          (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
+                                    paivystaja))))
+
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)
 
     ;; todo: jos ilmoittaja on urakan organisaatiossa, merkitse ilmoitus vastaanotetuksi
