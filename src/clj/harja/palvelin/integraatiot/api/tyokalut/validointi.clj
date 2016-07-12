@@ -85,8 +85,9 @@
     (do
       (let [viesti (format "Urakalla (id: %s) ei ole kohdetta (id: %s)." urakka-id kohde-id)]
         (log/warn viesti)
-        (throw+ {:type virheet/+viallinen-kutsu+
-                 :virheet [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}]})))))
+        (virheet/heita-poikkeus
+          virheet/+viallinen-kutsu+
+          [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))
 
 
 (defn sijainneissa-virheita? [db tienumero sijainnit]
@@ -103,31 +104,31 @@
   (let [sijainnit (conj (mapv :sijainti alikohteet) kohteen-sijainti)]
     (when
       (sijainneissa-virheita? db tienumero sijainnit)
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet [{:koodi :viallisia-tieosia
-                          :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]}))))
+      (virheet/heita-poikkeus
+        virheet/+viallinen-kutsu+
+        [{:koodi :viallisia-tieosia
+          :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]))))
 
 (defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
   (try+
     (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
     (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet virheet})))
+      (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))
   (validoi-kohteiden-sijainnit-tieverkolla db kohteen-tienumero kohteen-sijainti alikohteet))
 
 (defn tarkista-alustatoimenpiteet [db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet]
   (try+
     (kohteet/tarkista-alustatoimenpiteiden-sijainnit kohde-id kohteen-sijainti alustatoimenpiteet)
     (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet virheet})))
+      (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))
   (when (not (empty? alustatoimenpiteet))
     (let [sijainnit (mapv :sijainti alustatoimenpiteet)]
       (when
         (sijainneissa-virheita? db kohteen-tienumero sijainnit)
-        (throw+ {:type virheet/+viallinen-kutsu+
-                 :virheet [{:koodi :viallisia-tieosia
-                            :viesti "Alustatoimenpiteet sisältävät sijainteja, joita ei löydy tieverkolta"}]})))))
+        (virheet/heita-poikkeus
+          virheet/+viallinen-kutsu+
+          [{:koodi :viallisia-tieosia
+            :viesti "Alustatoimenpiteet sisältävät sijainteja, joita ei löydy tieverkolta"}])))))
 
 (defn tarkista-paallystysilmoitus [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet]
   (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
