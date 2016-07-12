@@ -23,10 +23,12 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def +uusi-turvallisuuspoikkeama+ {:tila :avoin
-                                   :vakavuusaste :lieva
-                                   :vaylamuoto :tie
-                                   :tyontekijanammatti :muu_tyontekija})
+(def +uusi-turvallisuuspoikkeama+
+  ^{:uusi? true}
+  {:tila :avoin
+   :vakavuusaste :lieva
+   :vaylamuoto :tie
+   :tyontekijanammatti :muu_tyontekija})
 
 (defn rakenna-korjaavattoimenpiteet [turvallisuuspoikkeama-atom]
   (r/wrap
@@ -157,8 +159,12 @@
      :leveys 20
      :tyyppi :string
      :muokattava? (constantly false)
-     :fmt (fn [_] (str (:etunimi @istunto/kayttaja)
-                       " " (:sukunimi @istunto/kayttaja)))}
+     :hae (fn [rivi]
+            (if (neg? (:id rivi))
+              ;; Uusi rivi, laatijaksi tullaan liittämään nykyinen käyttäjä
+              (str (:etunimi @istunto/kayttaja) " " (:sukunimi @istunto/kayttaja))
+              (str (:laatija-etunimi rivi)
+                   " " (:laatija-sukunimi rivi))))}
     {:otsikko "Vastuuhenkilö"
      :nimi :vastuuhenkilo
      :leveys 25
@@ -302,8 +308,11 @@
             :leveys 20
             :tyyppi :string
             :muokattava? (constantly false)
-            :fmt (fn [_] (str (:etunimi @istunto/kayttaja)
-                              " " (:sukunimi @istunto/kayttaja)))}
+            :fmt (fn [_] (if (:uusi? (meta @turvallisuuspoikkeama))
+                           ;; Laatijaksi tullaan liittämään nykyinen käyttäjä
+                           (str (:etunimi @istunto/kayttaja) " " (:sukunimi @istunto/kayttaja))
+                           (str (:laatija-etunimi @turvallisuuspoikkeama)
+                                " " (:laatija-sukunimi @turvallisuuspoikkeama))))}
            {:otsikko "Vaaralliset aineet" :nimi :vaaralliset-aineet :tyyppi :checkbox-group
             :vaihtoehto-nayta turpodomain/turpo-vaaralliset-aineet
             :disabloi vaaralliset-aineet-disablointi-fn

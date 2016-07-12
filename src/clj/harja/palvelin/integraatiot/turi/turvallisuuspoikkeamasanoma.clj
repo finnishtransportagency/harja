@@ -151,7 +151,7 @@
         (:liitteet data)))
 
 (defn muodosta-viesti [data]
-  (into [:imp:poikkeama {:xmlns:imp "http://importexport.xml.turi.oikeatoliot.fi"}]
+  (into [:imp:poikkeama {:xmlns:imp "http://restimport.xml.turi.oikeatoliot.fi"}]
         (concat
           [(rakenna-tapahtumatiedot data)
            (rakenna-tapahtumapaikka data)

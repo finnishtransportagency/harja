@@ -4,6 +4,7 @@
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
             [hiccup.core :refer [html]]
+            [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [com.stuartsierra.component :as component]
@@ -36,25 +37,38 @@
           data (xml/lue xml)]
       (is (xml/validoi +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
 
-      (is (= "UrakkaMessageId" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
+      (is (= "UrakkaMessageId" (first (z/xml-> data
+                                               (fn [kuittaus]
+                                                 (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
           "Kuittaus on tehty oikeaan viestiin.")
 
-      (is (= "Project" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
+      (is (= "Project" (first (z/xml-> data
+                                       (fn [kuittaus]
+                                         (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
           "Kuittauksen tyyppi on Project eli urakka.")
 
-      (is (= "NA" (first (z/xml-> data (fn [kuittaus] (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
+      (is (= "NA" (first (z/xml-> data
+                                  (fn [kuittaus]
+                                    (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
           "Virheitä ei tapahtunut käsittelyssä.")))
 
-  (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä."))
+  (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
 
+  (let [urakan-valitavoitteet (map first (q "SELECT nimi
+                                  FROM valitavoite
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))]
+    (is (= (count (filter #(= "Koko Suomi aurattu" %) urakan-valitavoitteet)) 1))
+    (is (= (count (filter #(= "Kaikkien urakoiden kalusto huollettu" %) urakan-valitavoitteet)) 1))
+    (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 5))
+    (is (= (count urakan-valitavoitteet) 7))))
 
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
   [])
 
 #_(deftest aja-testipatteri
-  (let [siirtoja (count testidatapatteri)
-        viestit (atom [])]
+  (let [SIIRTOJA (COUNT TESTIDATAPATTERI)
+        VIESTIT (ATOM [])]
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (doseq [testidata testidatapatteri]
       (println "Lähetetään: " testidata)

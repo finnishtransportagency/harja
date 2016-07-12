@@ -23,6 +23,9 @@
 (def +tyomenetelma+ "Työmenetelmän valinta koodilla"
   (apply s/enum (map :koodi +tyomenetelmat+)))
 
+(defn tyomenetelman-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +tyomenetelmat+))))
+
 (def +alustamenetelmat+
   "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä"
   [{:nimi "Massanvaihto" :lyhenne "MV" :koodi 1}
@@ -44,6 +47,9 @@
 (def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
   (apply s/enum (map :koodi +alustamenetelmat+)))
 
+(defn alustamenetelma-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat+))))
+
 (def +kuulamyllyt+
   [{:nimi "AN5" :koodi 1}
    {:nimi "AN7" :koodi 2}
@@ -56,6 +62,9 @@
 (def +kuulamylly+ "Kuulamylly annetulla koodilla"
   (apply s/enum (map :koodi +kuulamyllyt+)))
 
+(defn kuulamylly-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +kuulamyllyt+))))
+
 (def +verkkotyypit+
   "Verkkotyypit POT-lomake Excelistä"
   [{:nimi "Teräsverkko" :koodi 1}
@@ -65,6 +74,9 @@
 (def +verkkotyyppi+ "Verkkotyypin valinta koodilla"
   (apply s/enum (map :koodi +verkkotyypit+)))
 
+(defn verkkotyyppi-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +verkkotyypit+))))
+
 (def +tekniset-toimenpiteet+
   "Tekniset toimenpidetyypit POT-lomake Excelistä"
   [{:nimi "Rakentaminen" :koodi 1}
@@ -73,6 +85,9 @@
 
 (def +tekninen-toimenpide+ "Teknisen toimenpiteen valinta koodilla"
   (apply s/enum (map :koodi +tekniset-toimenpiteet+)))
+
+(defn tekninentoimenpide-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet+))))
 
 (def +ajoradat+
   "Ajoratavalinnat"
@@ -149,6 +164,9 @@
   "Sideainetyypin valinta koodilla"
   (apply s/enum (map :koodi +sideainetyypit+)))
 
+(defn sideainetyypin-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +sideainetyypit+))))
+
 (def +verkon-tarkoitukset+
   [{:nimi "Pituushalkeamien ehkäisy" :koodi 1}
    {:nimi "Muiden routavaurioiden ehkäisy" :koodi 2}
@@ -161,6 +179,9 @@
   "Verkon tarkoituksen valinta koodilla"
   (apply s/enum (map :koodi +verkon-tarkoitukset+)))
 
+(defn verkon-tarkoitus-koodi-nimella [koodi]
+  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-tarkoitukset+))))
+
 (def +verkon-sijainnit+
   [{:nimi "Päällysteessä" :koodi 1}
    {:nimi "Kantavan kerroksen yläpinnassa" :koodi 2}
@@ -171,6 +192,9 @@
 (def +verkon-sijainti+
   "Verkon sijainnin valinta koodilla"
   (apply s/enum (map :koodi +verkon-sijainnit+)))
+
+(defn verkon-sijainti-koodi-nimella [koodi]
+  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit+))))
 
 (def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
@@ -183,6 +207,9 @@
 (def +paallystystyon-tyyppi+
   "Päällystystyön valinta avaimella"
   (apply s/enum (map :avain +paallystystyon-tyypit+)))
+
+(defn paallystystyontyyppi-avain-nimella [koodi]
+  (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
 
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
