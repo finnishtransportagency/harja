@@ -37,6 +37,7 @@ schemas:
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - paallystysilmoituksen-kirjaus-request: !include schemas/paallystysilmoituksen-kirjaus-request.schema.json
+ - liikenneohjausaidan-kirjaus-request: !include schemas/liikenneohjausaidan-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -475,7 +476,7 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
-        /{id}:
+        /{kohdeid}:
           description: Yksittäisen ylläpitokohteen hallinta
           /paallystysilmoitus:
             post:
@@ -501,7 +502,30 @@ documentation:
                    application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
-
+          /liikenneohjausaita:
+            post:
+              is: [secured]
+              description: Liikenneohjausaidan asetuksen tai sijainnin muutoksen kirjaus. Uusi kirjaus tehdään aina, kun liikenteenohjausaita asetetaan kohteelle tai kun sen sijainti muuttuu. Yksittäiselle ylläpitokohteelle voidaan kirjata useita aitoja, jotka rajaavat työskentelyalueen.
+              body:
+                application/json:
+                  example: !include examples/liikenneohjausaidan-kirjaus-request.json
+                  schema: liikenneohjausaidan-kirjaus-request
+              responses:
+                200:
+                  body:
+                    application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                500:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+                400:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
 /varusteet:
   is: [secured]
   /haku:
