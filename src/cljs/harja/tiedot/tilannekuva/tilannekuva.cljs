@@ -53,7 +53,8 @@ hakutiheys-historiakuva 1200000)
 (defonce suodattimet
          (atom
            {:yllapito        {tk/paallystys false
-                              tk/paikkaus   false}
+                              tk/paikkaus   false
+                              tk/suljetut-tiet false}
             :ilmoitukset     {:tyypit {tk/tpp false
                                        tk/tur false
                                        tk/urk false}
