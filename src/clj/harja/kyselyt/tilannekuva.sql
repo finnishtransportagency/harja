@@ -342,8 +342,8 @@ SELECT
 FROM toimenpidekoodi
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
--- name: hae-liikenneohjausaidat
--- hakee liikenneohjausaitojen geometriat annetulta alueelta
+-- name: hae-suljetut-tieosuudet
+-- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
 -- TODO
 SELECT *
-FROM liikenneohjausaidat;
+FROM suljettu_tieosuus;

@@ -267,8 +267,8 @@
                             :xmax             (:xmax alue)
                             :ymax             (:ymax alue)})))))
 
-(defn- hae-liikenneohjausaidat [db user tiedot urakat]
-  (q/hae-liikenneohjausaidat db))
+(defn- hae-suljetut-tieosuudet [db user tiedot urakat]
+  (q/hae-suljetut-tieosuudet db))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
@@ -282,7 +282,7 @@
 
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat :tarkastukset
-    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :liikenneohjausaidat})
+    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :suljetut-tieosuudet})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
@@ -321,9 +321,9 @@
   (tulosta-tulos! "ilmoitusta"
                   (hae-ilmoitukset db user tiedot urakat)))
 
-(defmethod hae-osio :liikenneohjausaidat [db user tiedot urakat _]
-  (tulosta-tulos! "liikenneohjausaitaa"
-                  (hae-liikenneohjausaidat db user tiedot urakat)))
+(defmethod hae-osio :suljetut-tieosuudet [db user tiedot urakat _]
+  (tulosta-tulos! "suljettua tieosuutta"
+                  (hae-suljetut-tieosuudet db user tiedot urakat)))
 
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try
