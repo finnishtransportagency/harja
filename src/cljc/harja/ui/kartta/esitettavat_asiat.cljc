@@ -451,10 +451,10 @@
      (* (/ Math/PI 180)
         kulma)))
 
-(defmethod asia-kartalle :liikenneohjausaita [aita valittu-fn?]
+(defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
   (assoc aita
-         :type :liikenneohjausaita
-         :nimi "Liikenteenohjausaita"
+         :type :suljettu-tieosuus
+         :nimi "Suljettu tieosuus"
          :selite "Kaista suljettu"
          :alue (maarittele-feature {:sijainti {:type :line
                                                :points (:geometria aita)}}
