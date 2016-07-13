@@ -11,45 +11,52 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "liikenneohjausaita": {
-      "id": "urn:harja/liikenneohjausaita",
+    "suljettu-tieosuus": {
+      "id": "urn:harja/suljettu-tieosuus",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "id": {
-          "id": "urn:harja/liikenneohjausaita/id",
+          "id": "urn:harja/suljettu-tieosuus/id",
           "type": "integer",
           "required": true
         },
-        "sijainti": {
-          "id": "urn:harja/liikenneohjausaita/sijainti",
+        "alkuaidan-sijainti": {
+          "id": "urn:harja/suljettu-tieosuus/alkuaidan-sijainti",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
+          "required": true
+        },
+        "loppuaidan-sijainti": {
+          "id": "urn:harja/suljettu-tieosuus/loppuaidan-sijainti",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/sijainti.schema.json",
           "required": true
         },
         "aika": {
-          "id": "urn:harja/liikenneohjausaita/aika",
+          "id": "urn:harja/suljettu-tieosuus/aika",
           "type": "string",
           "format": "date-time",
           "required": true
         },
         "ajoradat": {
-          "id": "urn:harja/liikenneohjausaita/ajoradat",
+          "id": "urn:harja/suljettu-tieosuus/ajoradat",
           "type": "array",
           "maxItems": 10,
           "items": {
-            "id": "urn:harja/liikenneohjausaita/ajoradat/0",
+            "id": "urn:harja/suljettu-tieosuus/ajoradat/0",
             "type": "integer",
             "minimum": 0
           }
         },
         "kaistat": {
-          "id": "urn:harja/liikenneohjausaita/kaistat",
+          "id": "urn:harja/suljettu-tieosuus/kaistat",
           "type": "array",
           "maxItems": 10,
           "items": {
-            "id": "urn:harja/liikenneohjausaita/kaistat/0",
+            "id": "urn:harja/suljettu-tieosuus/kaistat/0",
             "enum": [
               1,
               11,

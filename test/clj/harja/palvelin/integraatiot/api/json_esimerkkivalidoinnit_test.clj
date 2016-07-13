@@ -66,5 +66,6 @@
 
   (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus
                      json-esimerkit/+paallystysilmoituksen-kirjaus+)))
-  (is (nil? (validoi json-skeemat/liikenneohjausaidan-kirjaus
+
+  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-kirjaus
                      json-esimerkit/+liikenneohjausaidan-kirjaus+))))

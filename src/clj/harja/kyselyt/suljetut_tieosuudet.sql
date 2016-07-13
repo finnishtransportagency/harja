@@ -1,12 +1,11 @@
 -- name: onko-olemassa?
 -- single?: true
 SELECT exists(SELECT *
-              FROM liikenneohjausaidat
+              FROM suljettu_tieosuus
               WHERE aita_id = :id AND jarjestelma = :jarjestelma);
 
--- name: luo-liikenteenohjausaita<!
--- Luo uuden päällystysilmoituksen
-INSERT INTO liikenneohjausaidat
+-- name: luo-suljettu-tieosuus<!
+INSERT INTO suljettu_tieosuus
 (jarjestelma,
  aita_id, sijainti,
  vastaanotettu,

@@ -77,6 +77,6 @@
 (def +paallystysilmoituksen-kirjaus+ "api/schemas/paallystysilmoituksen-kirjaus-request.schema.json")
 (def paallystysilmoituksen-kirjaus (tee-validaattori +paallystysilmoituksen-kirjaus+))
 
-(def +liikenneohjausaidan-kirjaus+ "api/schemas/liikenneohjausaidan-kirjaus-request.schema.json")
-(def liikenneohjausaidan-kirjaus (tee-validaattori +liikenneohjausaidan-kirjaus+))
+(def +suljetun-tieosuuden-kirjaus+ "api/schemas/liikenneohjausaidan-kirjaus-request.schema.json")
+(def suljetun-tieosuuden-kirjaus (tee-validaattori +suljetun-tieosuuden-kirjaus+))
 

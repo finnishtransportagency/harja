@@ -37,7 +37,7 @@ schemas:
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - paallystysilmoituksen-kirjaus-request: !include schemas/paallystysilmoituksen-kirjaus-request.schema.json
- - liikenneohjausaidan-kirjaus-request: !include schemas/liikenneohjausaidan-kirjaus-request.schema.json
+ - suljetun-tieosuuden-kirjaus-request: !include schemas/suljetun-tieosuuden-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -502,14 +502,14 @@ documentation:
                    application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
-          /liikenneohjausaita:
+          /suljettu-tieosuus:
             post:
               is: [secured]
-              description: Liikenneohjausaidan asetuksen tai sijainnin muutoksen kirjaus. Uusi kirjaus tehdään aina, kun liikenteenohjausaita asetetaan kohteelle tai kun sen sijainti muuttuu. Yksittäiselle ylläpitokohteelle voidaan kirjata useita aitoja, jotka rajaavat työskentelyalueen.
+              description: Suljetun tieosuuden kirjaaminen. Uusi kirjaus tehdään aina, kun tieosuus suljetaan tai kun sen sijainti muuttuu. Osuuden sijanti määräytyy kohteen alkuun ja loppuun asetettujen liikenneohjausaitojen sijaintien perusteella.
               body:
                 application/json:
-                  example: !include examples/liikenneohjausaidan-kirjaus-request.json
-                  schema: liikenneohjausaidan-kirjaus-request
+                  example: !include examples/suljetun-tieosuuden-kirjaus-request.json
+                  schema: suljetun-tieosuuden-kirjaus-request
               responses:
                 200:
                   body:

@@ -10,7 +10,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
-            [harja.kyselyt.liikenneohjausaidat :as q-liikenneohjausaidat]
+            [harja.kyselyt.suljetut_tieosuudet :as q-liikenneohjausaidat]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
@@ -73,7 +73,7 @@
    {:palvelu :kirjaa-paallystysilmoitus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/liikenneohjausaita"
     :tyyppi :POST
-    :kutsu-skeema json-skeemat/liikenneohjausaidan-kirjaus
+    :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-liikenneohjausaita db kayttaja parametrit data))}])
 
