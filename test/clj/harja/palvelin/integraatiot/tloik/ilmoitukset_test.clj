@@ -7,7 +7,6 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-sonja]]
@@ -30,15 +29,15 @@
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
-                        (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                   {:sahkoposti-sisaan-jono "email-to-harja"
-                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                    :sahkoposti-ulos-jono "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                       (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                  {:sahkoposti-sisaan-jono         "email-to-harja"
+                                                   :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                   :sahkoposti-ulos-jono           "harja-to-email"
+                                                   :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
-                    {:url "http://localhost:28080/sendsms"
+                    {:url            "http://localhost:28080/sendsms"
                      :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
@@ -79,8 +78,8 @@
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                     #(swap! viestit conj (.getText %)))
-    (let [hae-ilmoitukset #(api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"]
-                                                   kayttaja portti)]
+    (let [ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"]
+                                                       kayttaja portti))]
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
@@ -96,38 +95,12 @@
       (is (= 1 (count (hae-ilmoitus)))
           "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä")
 
-      (let [{:keys [status body]} (hae-ilmoitukset)]
+      (let [{:keys [status body]} @ilmoitushaku]
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
         (is (= (-> (cheshire/decode body)
                    (get "ilmoitukset")
                    count) 1) "Ilmoituksia on vastauksessa yksi")))
     (poista-ilmoitus)))
-
-(deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
-  (try
-    (with-fake-http []
-      (let [kuittausviestit (atom [])
-            ilmoitustoimenpideviestit (atom [])]
-        (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
-                        #(swap! kuittausviestit conj (.getText %)))
-        (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+
-                        #(swap! ilmoitustoimenpideviestit conj (.getText %)))
-
-        (sonja/laheta (:sonja jarjestelma)
-                      +tloik-ilmoitusviestijono+
-                      +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)
-
-
-        (odota-ehdon-tayttymista #(and (= 1 (count @kuittausviestit))
-                                       (= 1 (count @ilmoitustoimenpideviestit)))
-                                 "Kuittaus ilmoitukseen vastaanotettu ja ilmoitustoimenpide on lähetetty." 100000)
-
-        (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-        (is (= (first (hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi")
-
-      (poista-ilmoitus))
-  (catch IllegalArgumentException e
-    (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
 
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+

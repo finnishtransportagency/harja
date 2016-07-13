@@ -4,8 +4,7 @@
             [org.httpkit.client :as http]))
 
 (defn post-kutsu
-  "Tekee synkronisen POST-kutsun APIin.
-  Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
+  "Tekee POST-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
   Body on json string (tai muu http-kitin ymmärtämä input)."
   [api-polku-vec kayttaja portti body]
   @(http/post (reduce str (concat ["http://localhost:" portti] api-polku-vec))
@@ -14,16 +13,14 @@
                          "Content-Type"    "application/json"}}))
 
 (defn get-kutsu
-  "Tekee synkronisen GET-kutsun APIin.
-  Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen."
+  "Tekee GET-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen."
   [api-polku-vec kayttaja portti]
   @(http/get (reduce str (concat ["http://localhost:" portti] api-polku-vec))
              {:headers {"OAM_REMOTE_USER" kayttaja
                         "Content-Type"    "application/json"}}))
 
 (defn put-kutsu
-  "Tekee synkronisen PUT-kutsun APIin.
-  Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
+  "Tekee PUT-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
   Body on json string (tai muu http-kitin ymmärtämä input)."
   [api-polku-vec kayttaja portti body]
   @(http/put (reduce str (concat ["http://localhost:" portti] api-polku-vec))
@@ -32,8 +29,7 @@
                         "Content-Type"    "application/json"}}))
 
 (defn delete-kutsu
-  "Tekee synkronisen DELETE-kutsun APIin.
-  Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
+  "Tekee DELETE-kutsun APIin. Polku on vektori (esim [\"/api/foo/\" arg \"/bar\"]), joka on palvelimen juureen relatiivinen.
   Body on json string (tai muu http-kitin ymmärtämä input)."
   [api-polku-vec kayttaja portti body]
   @(http/delete (reduce str (concat ["http://localhost:" portti] api-polku-vec))
