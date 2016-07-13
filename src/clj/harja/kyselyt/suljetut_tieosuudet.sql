@@ -9,7 +9,7 @@ INSERT INTO suljettu_tieosuus
 (jarjestelma,
  osuus_id,
  alkuaidan_sijainti,
- loppaidan_sijainti,
+ loppuaidan_sijainti,
  asetettu,
  kaistat,
  ajoradat,
@@ -29,12 +29,12 @@ VALUES
 -- name: paivita-suljettu-tieosuus!
 UPDATE suljettu_tieosuus
 SET
-  alkuaidan_sijainti = ST_MakePoint(:alkux, :alkuy) :: POINT,
-  loppaidan_sijainti = ST_MakePoint(:loppux, :loppuy) :: POINT,
-  kaistat            = :kaistat :: INTEGER [],
-  ajoradat           = :ajoradat :: INTEGER [],
-  muokattu           = now(),
-  asetettu           = :asetettu
+  alkuaidan_sijainti  = ST_MakePoint(:alkux, :alkuy) :: POINT,
+  loppuaidan_sijainti = ST_MakePoint(:loppux, :loppuy) :: POINT,
+  kaistat             = :kaistat :: INTEGER [],
+  ajoradat            = :ajoradat :: INTEGER [],
+  muokattu            = now(),
+  asetettu            = :asetettu
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
 
 -- name: merkitse-suljettu-tieosuus-poistetuksi!
