@@ -68,4 +68,4 @@
                      json-esimerkit/+paallystysilmoituksen-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/suljetun-tieosuuden-kirjaus
-                     json-esimerkit/+liikenneohjausaidan-kirjaus+))))
+                     json-esimerkit/+suljetun-tieosuuden-kirjaus+))))

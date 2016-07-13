@@ -47,5 +47,5 @@
 (def +urakan-yllapitokohteiden-haku+ "api/examples/urakan-yllapitokohteiden-haku-response.json")
 (def +paallystysilmoituksen-kirjaus+ "api/examples/paallystysilmoituksen-kirjaus-request.json")
 
-(def +liikenneohjausaidan-kirjaus+ "api/examples/liikenneohjausaidan-kirjaus-request.json")
+(def +suljetun-tieosuuden-kirjaus+ "api/examples/suljetun-tieosuuden-kirjaus-request.json")
 
