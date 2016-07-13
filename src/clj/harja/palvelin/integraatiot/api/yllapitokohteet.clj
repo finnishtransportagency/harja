@@ -6,7 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-timestamp]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
@@ -68,7 +68,7 @@
                       :alkuy (:y alkukoordinaatit)
                       :loppux (:x loppukoordinaatit)
                       :loppuy (:y loppukoordinaatit)
-                      :asetettu (:aika suljettu-tieosuus)
+                      :asetettu (aika-string->java-sql-timestamp (:aika suljettu-tieosuus))
                       :kaistat (konv/seq->array (:kaistat suljettu-tieosuus))
                       :ajoradat (konv/seq->array (:ajoradat suljettu-tieosuus))
                       :yllapitokohde kohde-id
