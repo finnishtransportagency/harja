@@ -451,6 +451,15 @@
      (* (/ Math/PI 180)
         kulma)))
 
+(defmethod asia-kartalle :liikenneohjausaita [aita valittu-fn?]
+  (assoc aita
+         :type :liikenneohjausaita
+         :nimi "Liikenteenohjausaita"
+         :selite "Kaista suljettu"
+         :alue (maarittele-feature {:sijainti {:type :line
+                                               :points (:geometria aita)}}
+                                   (valittu-fn? aita))))
+
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
