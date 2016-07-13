@@ -80,8 +80,24 @@
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Suljettu tieosuus kirjattu onnistuneesti.")}))))
 
-(defn poista-suljettu-tieosuus [db kayttaja parametrit data]
-  )
+(defn poista-suljettu-tieosuus [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko suljettu-tieosuus]}]
+  (log/debug (format "Poistetaan urakan (id: %s) kohteelta (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)
+        jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+        id (:id suljettu-tieosuus)
+        parametrit {:jarjestelma jarjestelma
+                    :osuusid id
+                    :poistettu (aika-string->java-sql-timestamp (:aika suljettu-tieosuus))
+                    :poistaja (:id kayttaja)}]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+    (validointi/tarkista-suljettu-tieosuus db id jarjestelma)
+    (merkitse-suljettu-tieosuus-poistetuksi! db parametrit)))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet

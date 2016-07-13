@@ -36,3 +36,8 @@ SET
   muokattu           = now(),
   asetettu           = :asetettu
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
+
+-- name: merkitse-suljettu-tieosuus-poistetuksi!
+UPDATE suljettu_tieosuus
+SET asetettu = :poistettu, poistaja = :poistaja
+WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
