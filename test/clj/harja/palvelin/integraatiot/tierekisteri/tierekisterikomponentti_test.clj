@@ -113,12 +113,12 @@
 (deftest tarkista-urakan-tietueiden-haku
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-urakan-tietueet-response.xml"))]
     (with-fake-http
-      [(str +testi-tierekisteri-url+ "/haetietue") vastaus-xml]
+      [(str +testi-tierekisteri-url+ "/haeurakantietueet") vastaus-xml]
       (let [vastausdata (tierekisteri/hae-urakan-tietueet (:tierekisteri jarjestelma)
                                                           (hae-oulun-alueurakan-2014-2019-id)
                                                           "tl506"
-                                                          "2015-05-25" )
-            odotettu-tietue {} ;; Kopioi tämä vastauksesta ja vertaa suoraan (tarvittaessa core.matchilla)]
+                                                          "2015-05-25")
+            odotettu-tietue {}] ;; TODO Kopioi tämä vastauksesta ja vertaa suoraan (tarvittaessa core.matchilla)]
         (is (true? (:onnistunut vastausdata)))
         (is (= odotettu-tietue (:tietueet vastausdata)))))))
 
