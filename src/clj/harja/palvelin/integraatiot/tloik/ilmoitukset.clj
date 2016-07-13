@@ -73,7 +73,7 @@
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-                          ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja]
+   ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja]
   (let [urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)
         paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
@@ -106,7 +106,7 @@
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono viesti jms-lahettaja]
+(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono jms-lahettaja viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
@@ -115,11 +115,11 @@
         {:keys [viesti-id ilmoitus-id] :as ilmoitus}
         (lue-ilmoitus sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti)]
     (try+
-     (if-let [urakka (hae-urakka db ilmoitus)]
-       (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-                           ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja)
-       (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
-                                    korrelaatio-id tapahtuma-id))
+      (if-let [urakka (hae-urakka db ilmoitus)]
+        (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
+                            ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja)
+        (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
+                                     korrelaatio-id tapahtuma-id))
       (catch Exception e
         (log/error e (format "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta"
                              " (id: %s, viesti id: %s)" ilmoitus-id viesti-id))
