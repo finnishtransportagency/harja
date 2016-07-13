@@ -514,7 +514,8 @@
                                                                  sopimus-id
                                                                  toteuma-id))
                        (do
-                         (log/debug "Haetaan kok. hint. reitit aikavälillä ja toimenpidekoodilla")
+                         (log/debug (str "Haetaan kok. hint. reitit parametreilla "
+                                         (pr-str alkupvm loppupvm toimenpidekoodi)))
                          (q/hae-kokonaishintaisten-toiden-reitit db
                                                                 urakka-id
                                                                 sopimus-id
