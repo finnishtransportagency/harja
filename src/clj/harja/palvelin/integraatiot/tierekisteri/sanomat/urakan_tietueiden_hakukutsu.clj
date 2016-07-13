@@ -23,5 +23,5 @@
       (do
         (log/error "Urakan tietueiden hakukutsua ei voida lähettää. Kutsu XML ei ole validi.")
         (throw+
-          {:type :tietueiden-haku-epaonnistui
+          {:type :urakan-tietueiden-haku-epaonnistui
            :virheet [{:koodi :ei-validi-xml :viesti "Urakan tietueiden hakukutsu Tierekisteriin ei ole validi"}]})))))

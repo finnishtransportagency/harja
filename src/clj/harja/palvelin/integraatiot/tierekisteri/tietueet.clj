@@ -38,14 +38,14 @@
           (kasittele-tietuehakuvastaus xml url tietolaji tierekisteriosoitevali voimassaolopvm))))))
 
 (defn kasittele-urakan-tietuehakuvastaus [xml url urakka tietolajitunniste tilannepvm]
-  (let [vastaus (str "Urakan tietueiden haku epäonnistui urakalle " urakka " (URL: " url ")
+  (let [virheviesti (str "Urakan tietueiden haku epäonnistui urakalle " urakka " (URL: " url ")
                       tietolajitunnisteella: " tietolajitunniste
                       " & tilannepäivämäärällä: " tilannepvm ".")]
     (kasittele-vastaus
       xml
-      vastaus
-      :tietueiden-haku-epaonnistui
-      vastaus)))
+      virheviesti
+      :urakan-tietueiden-haku-epaonnistui
+      virheviesti)))
 
 (defn hae-urakan-tietueet [db integraatioloki url urakka tietolajitunniste tilannepvm]
   (log/debug "Haetaan tietue urakalle: " (pr-str urakka)
