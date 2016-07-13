@@ -50,9 +50,27 @@
           "maxItems": 10,
           "items": {
             "id": "urn:harja/liikenneohjausaita/kaistat/0",
-            "type": "object",
-            "additionalProperties": false,
-            "$ref": "file:resources/api/schemas/entities/kaista.schema.json"
+            "enum": [
+              1,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29
+            ]
           }
         }
       }

@@ -65,4 +65,6 @@
                      json-esimerkit/+urakan-yllapitokohteiden-haku+)))
 
   (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus
-                     json-esimerkit/+paallystysilmoituksen-kirjaus+))))
+                     json-esimerkit/+paallystysilmoituksen-kirjaus+)))
+  (is (nil? (validoi json-skeemat/liikenneohjausaidan-kirjaus
+                     json-esimerkit/+liikenneohjausaidan-kirjaus+))))
