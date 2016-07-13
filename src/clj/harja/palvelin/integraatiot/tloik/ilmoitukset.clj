@@ -14,7 +14,9 @@
             [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
-            [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet])
+            [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def +xsd-polku+ "xsd/tloik/")
@@ -44,7 +46,7 @@
   (let [ilmoitustoimenpide-id (:id (ilmoitukset-q/luo-ilmoitustoimenpide<!
                                      db {:ilmoitus ilmoitus-id
                                          :ilmoitusid (:ilmoitus-id ilmoitus)
-                                         :kuitattu nil
+                                         :kuitattu (c/to-date (t/now))
                                          :vapaateksti nil
                                          :kuittaustyyppi "vastaanotto"
                                          :kuittaaja_henkilo_etunimi nil
