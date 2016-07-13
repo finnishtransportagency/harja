@@ -97,7 +97,9 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
     (validointi/tarkista-suljettu-tieosuus db id jarjestelma)
-    (merkitse-suljettu-tieosuus-poistetuksi! db parametrit)))
+    (q-suljetut-tieosuudet/merkitse-suljettu-tieosuus-poistetuksi! db parametrit)
+    (tee-kirjausvastauksen-body
+      {:ilmoitukset (str "Suljettu tieosuus poistettu onnistuneesti.")})))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet

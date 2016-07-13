@@ -39,5 +39,5 @@ WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
 
 -- name: merkitse-suljettu-tieosuus-poistetuksi!
 UPDATE suljettu_tieosuus
-SET asetettu = :poistettu, poistaja = :poistaja
+SET poistettu = :poistettu, poistaja = :poistaja
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
