@@ -33,6 +33,27 @@
           "type": "string",
           "format": "date-time",
           "required": true
+        },
+        "ajoradat": {
+          "id": "urn:harja/liikenneohjausaita/ajoradat",
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "id": "urn:harja/liikenneohjausaita/ajoradat/0",
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "kaistat": {
+          "id": "urn:harja/liikenneohjausaita/kaistat",
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "id": "urn:harja/liikenneohjausaita/kaistat/0",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/kaista.schema.json"
+          }
         }
       }
     }
