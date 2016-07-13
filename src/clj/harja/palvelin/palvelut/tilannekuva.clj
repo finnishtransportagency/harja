@@ -270,11 +270,13 @@
 (defn- hae-suljetut-tieosuudet [db user {:keys [toleranssi yllapito alue] :as tiedot} urakat]
   (when (tk/valittu? yllapito tk/suljetut-tiet)
     (log/debug "Haetaan suljetut tieosuudet alueelta " (pr-str alue))
-    (vec (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
-                                        :y1 (:ymin alue)
-                                        :x2 (:xmax alue)
-                                        :y2 (:ymax alue)
-                                        :treshold 100}))))
+    (vec (map (comp #(konv/array->vec % :kaistat)
+                    #(konv/array->vec % :ajoradat))
+              (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
+                                             :y1 (:ymin alue)
+                                             :x2 (:xmax alue)
+                                             :y2 (:ymax alue)
+                                             :treshold 100})))))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]

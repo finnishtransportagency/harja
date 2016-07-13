@@ -456,7 +456,7 @@
   (assoc aita
          :type :suljettu-tieosuus
          :nimi "Suljettu tieosuus"
-         :selite "Kaista suljettu"
+         :selite {:teksti "Kaista suljettu"}
          :alue (maarittele-feature {:sijainti (:geometria aita)}
                                    (valittu-fn? aita))))
 
