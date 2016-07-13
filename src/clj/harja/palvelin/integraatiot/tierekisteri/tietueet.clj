@@ -10,14 +10,15 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-tietuehakuvastaus [xml url tietolajitunniste tierekisteriosoitevali voimassaolopvm]
-  (let [virheviesti (str "Tietueiden haku epäonnistui (URL: " url ") tr-osoitteella: " (pr-str tierekisteriosoitevali)
+  (let [virheviesti (str "Tietueiden haku epäonnistui (URL: " url ")
+                         tr-osoitteella: " (pr-str tierekisteriosoitevali)
                          " & tietolajitunnisteella: " tietolajitunniste
                          " & voimassaolopäivämäärällä: " voimassaolopvm ".")]
     (kasittele-vastaus
-     xml
-     virheviesti
-     :tietueiden-haku-epaonnistui
-     virheviesti)))
+      xml
+      virheviesti
+      :tietueiden-haku-epaonnistui
+      virheviesti)))
 
 (defn hae-tietueet [db integraatioloki url tierekisteriosoitevali tietolaji voimassaolopvm tilannepvm]
   (log/debug "Haetaan tietue tierekisteriosoitteella: " (pr-str tierekisteriosoitevali)
@@ -37,14 +38,14 @@
           (kasittele-tietuehakuvastaus xml url tietolaji tierekisteriosoitevali voimassaolopvm))))))
 
 (defn kasittele-urakan-tietuehakuvastaus [xml url urakka tietolajitunniste tilannepvm]
-  (let [vastaus (str "Urakan tietueiden haku epäonnistui (URL: " url ")
-         tietolajitunnisteella: " tietolajitunniste
-                     " & tilannepäivämäärällä: " tilannepvm ".")]
+  (let [vastaus (str "Urakan tietueiden haku epäonnistui urakalle " urakka " (URL: " url ")
+                      tietolajitunnisteella: " tietolajitunniste
+                      " & tilannepäivämäärällä: " tilannepvm ".")]
     (kasittele-vastaus
-     xml
-     vastaus
-     :tietueiden-haku-epaonnistui
-     vastaus)))
+      xml
+      vastaus
+      :tietueiden-haku-epaonnistui
+      vastaus)))
 
 (defn hae-urakan-tietueet [db integraatioloki url urakka tietolajitunniste tilannepvm]
   (log/debug "Haetaan tietue urakalle: " (pr-str urakka)
