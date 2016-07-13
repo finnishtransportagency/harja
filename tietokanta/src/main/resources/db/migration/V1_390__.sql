@@ -1,5 +1,5 @@
 CREATE TABLE suljettu_tieosuus (
-  id                 INTEGER PRIMARY KEY,
+  id                 SERIAL PRIMARY KEY,
   jarjestelma        VARCHAR(128) NOT NULL,
   osuus_id           INTEGER      NOT NULL,
   alkuaidan_sijainti POINT        NOT NULL,

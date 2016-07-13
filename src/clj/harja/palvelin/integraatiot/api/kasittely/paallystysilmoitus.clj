@@ -96,11 +96,8 @@
 (defn kirjaa-paallystysilmoitus [db kayttaja urakka-id kohde-id data]
   (jdbc/with-db-transaction
     [db db]
-    (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)
-          paallystysilmoitus (pura-paallystysilmoitus data)
+    (let [paallystysilmoitus (pura-paallystysilmoitus data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
           _ (validoi-paallystysilmoitus db urakka-id kohde paallystysilmoitus)
           id (tallenna-paallystysilmoitus db kayttaja kohde paallystysilmoitus)]
       id)))

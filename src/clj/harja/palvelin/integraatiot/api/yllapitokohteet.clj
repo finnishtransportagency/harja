@@ -10,7 +10,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
-            [harja.kyselyt.suljetut_tieosuudet :as q-liikenneohjausaidat]
+            [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
@@ -34,29 +34,51 @@
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
-  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: % toimesta"
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))
+  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
   (jdbc/with-db-transaction
     [db db]
-    (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)
+          id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
       (tee-kirjausvastauksen-body
-       {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-        :id id}))))
+        {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+         :id id}))))
 
-(defn kirjaa-liikenneohjausaita [db kayttaja {:keys [urakka-id kohde-id]} {:keys [id jarjestelma] :as data}]
-  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) liikenneohjausaita käyttäjän: % toimesta"
+(defn kirjaa-suljettu-tieosuus [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko suljettu-tieosuus]}]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))
 
-  (clojure.pprint/pprint data)
-  (if (q-liikenneohjausaidat/onko-olemassa? db {:id id :jarjestelma jarjestelma})
-    (println "uusi")
-    (println "päivitys")
-    #_(q-liikenneohjausaidat/luo-liikenteenohjausaita<! db ))
-  )
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+
+    (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+          alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti suljettu-tieosuus))
+          loppukoordinaatit (:koordinaatit (:loppuaidan-sijainti suljettu-tieosuus))
+          parametrit {:jarjestelma jarjestelma
+                      :osuusid (:id suljettu-tieosuus)
+                      :alkux (:x alkukoordinaatit)
+                      :alkuy (:y alkukoordinaatit)
+                      :loppux (:x loppukoordinaatit)
+                      :loppuy (:y loppukoordinaatit)
+                      :asetettu (:aika suljettu-tieosuus)
+                      :kaistat (konv/seq->array (:kaistat suljettu-tieosuus))
+                      :ajoradat (konv/seq->array (:ajoradat suljettu-tieosuus))
+                      :yllapitokohde kohde-id
+                      :kirjaaja (:id kayttaja)}]
+
+      (if (q-suljetut-tieosuudet/onko-olemassa? db {:id (:id suljettu-tieosuus) :jarjestelma jarjestelma})
+        (q-suljetut-tieosuudet/paivita-suljettu-tieosuus! db parametrit)
+        (q-suljetut-tieosuudet/luo-suljettu-tieosuus<! db parametrit))
+      (tee-kirjausvastauksen-body
+        {:ilmoitukset (str "Suljettu tieosuus kirjattu onnistuneesti.")}))))
 
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
@@ -71,11 +93,11 @@
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystysilmoitus
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/liikenneohjausaita"
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-liikenneohjausaita db kayttaja parametrit data))}])
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle

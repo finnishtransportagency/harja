@@ -2,24 +2,37 @@
 -- single?: true
 SELECT exists(SELECT *
               FROM suljettu_tieosuus
-              WHERE aita_id = :id AND jarjestelma = :jarjestelma);
+              WHERE osuus_id = :id AND jarjestelma = :jarjestelma);
 
 -- name: luo-suljettu-tieosuus<!
 INSERT INTO suljettu_tieosuus
 (jarjestelma,
- aita_id, sijainti,
- vastaanotettu,
- muokattu,
+ osuus_id,
+ alkuaidan_sijainti,
+ loppaidan_sijainti,
+ asetettu,
  kaistat,
  ajoradat,
- yllapitokohde)
+ yllapitokohde,
+ kirjaaja)
 VALUES
   (:jarjestelma,
-   :aitaid,
-   ST_MakePoint(:x, :y) :: POINT,
-   :vastaanotettu,
-   now(),
+   :osuusid,
+   ST_MakePoint(:alkux, :alkuy) :: POINT,
+   ST_MakePoint(:loppux, :loppuy) :: POINT,
+   :asetettu,
    :kaistat :: INTEGER [],
    :ajoradat :: INTEGER [],
-   :yllapitokohde);
+   :yllapitokohde,
+   :kirjaaja);
 
+-- name: paivita-suljettu-tieosuus!
+UPDATE suljettu_tieosuus
+SET
+  alkuaidan_sijainti = ST_MakePoint(:alkux, :alkuy) :: POINT,
+  loppaidan_sijainti = ST_MakePoint(:loppux, :loppuy) :: POINT,
+  kaistat            = :kaistat :: INTEGER [],
+  ajoradat           = :ajoradat :: INTEGER [],
+  muokattu           = now(),
+  asetettu           = :asetettu
+WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
