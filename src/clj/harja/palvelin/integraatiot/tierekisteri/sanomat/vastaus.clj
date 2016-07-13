@@ -86,6 +86,17 @@
            :sijainti (parsi-tietueen-sijainti (z/xml1-> tietue :sijainti))
            :tietolaji (parsi-tietueen-tietolaji (z/xml1-> tietue :tietolaji))})))))
 
+(defn parsi-tietueotsikon-sijainti [data]
+  (let [tie (z/xml1-> data :tie)]
+    {:tie {:numero (xml/parsi-kokonaisluku (z/xml1-> tie :numero z/text))
+           :aet (xml/parsi-kokonaisluku (z/xml1-> tie :aet z/text))
+           :aosa (xml/parsi-kokonaisluku (z/xml1-> tie :aosa z/text))
+           :let (xml/parsi-kokonaisluku (z/xml1-> tie :let z/text))
+           :losa (xml/parsi-kokonaisluku (z/xml1-> tie :losa z/text))
+           :ajr (xml/parsi-kokonaisluku (z/xml1-> tie :ajr z/text))
+           :puoli (xml/parsi-kokonaisluku (z/xml1-> tie :puoli z/text))
+           :alkupvm (xml/parsi-paivamaara (z/xml1-> tie :alkupvm z/text))}}))
+
 (defn parsi-tietueotsikot [data]
   (let [tietueet (z/xml-> data :ns2:tietueotsikot :ns2:tietueotsikko)]
     (doall
@@ -98,7 +109,7 @@
            :piiri (z/xml1-> tietue :piiri z/text)
            :kuntoluokka (z/xml1-> tietue :kuntoluokka z/text)
            :urakka (xml/parsi-kokonaisluku (z/xml1-> tietue :urakka z/text))
-           :sijainti (parsi-tietueen-sijainti (z/xml1-> tietue :sijainti))})))))
+           :sijainti (parsi-tietueotsikon-sijainti (z/xml1-> tietue :sijainti))})))))
 
 (defn lue [viesti]
   (let [data (xml/lue viesti)

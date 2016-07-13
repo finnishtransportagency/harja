@@ -118,9 +118,23 @@
                                                           (hae-oulun-alueurakan-2014-2019-id)
                                                           "tl506"
                                                           "2015-05-25")
-            odotettu-tietue {}] ;; TODO Kopioi tämä vastauksesta ja vertaa suoraan (tarvittaessa core.matchilla)]
+            odotettu-vastaus [{:tietueotsikko {:alkupvm #inst "2006-11-28T22:00:00.000-00:00"
+                                               :karttapvm #inst "2014-06-26T21:00:00.000-00:00"
+                                               :kuntoluokka "1"
+                                               :loppupvm #inst "2009-11-02T22:00:00.000-00:00"
+                                               :piiri "3"
+                                               :sijainti {:tie {:aet 3
+                                                                :ajr 3
+                                                                :alkupvm nil
+                                                                :aosa 3
+                                                                :let 3
+                                                                :losa 3
+                                                                :numero 3
+                                                                :puoli 8}}
+                                               :tunniste "string"
+                                               :urakka 3004}}]]
         (is (true? (:onnistunut vastausdata)))
-        (is (= odotettu-tietue (:tietueet vastausdata)))))))
+        (is (= odotettu-vastaus (:tietueotsikot vastausdata)))))))
 
 (deftest tarkista-tietueen-lisays
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
