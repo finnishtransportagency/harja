@@ -17,3 +17,6 @@ CREATE TABLE suljettu_tieosuus (
 
 INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('api', 'kirjaa-suljettu-tieosuus');
+
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('api', 'poista-suljettu-tieosuus');
