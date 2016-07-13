@@ -12,9 +12,15 @@
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
-  "suljettutieosuus": {
+  "suljettu-tieosuus": {
     "id": 1,
-    "sijainti": {
+    "alkuaidan-sijainti": {
+      "koordinaatit": {
+        "x": 429005,
+        "y": 7198151
+      }
+    },
+    "loppuaidan-sijainti": {
       "koordinaatit": {
         "x": 429005,
         "y": 7198151

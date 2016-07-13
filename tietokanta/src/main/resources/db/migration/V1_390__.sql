@@ -12,5 +12,5 @@ CREATE TABLE suljettu_tieosuus (
   ajoradat           INTEGER [],
   yllapitokohde      INTEGER REFERENCES yllapitokohde (id),
   kirjaaja           INTEGER REFERENCES kayttaja (id),
-  UNIQUE (jarjestelma, aita_id)
+  UNIQUE (jarjestelma, osuus_id)
 );
