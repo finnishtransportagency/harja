@@ -79,4 +79,6 @@
 
 (def +suljetun-tieosuuden-kirjaus+ "api/schemas/suljetun-tieosuuden-kirjaus-request.schema.json")
 (def suljetun-tieosuuden-kirjaus (tee-validaattori +suljetun-tieosuuden-kirjaus+))
+(def +suljetun-tieosuuden-poisto+ "api/schemas/suljetun-tieosuuden-poisto-request.schema.json")
+(def suljetun-tieosuuden-poisto (tee-validaattori +suljetun-tieosuuden-poisto+))
 

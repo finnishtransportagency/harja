@@ -80,6 +80,9 @@
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Suljettu tieosuus kirjattu onnistuneesti.")}))))
 
+(defn poista-suljettu-tieosuus [db kayttaja parametrit data]
+  )
+
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
@@ -97,7 +100,13 @@
     :tyyppi :POST
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}])
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}
+   {:palvelu :kirjaa-suljettu-tieosuus
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
+    :tyyppi :DELETE
+    :kutsu-skeema json-skeemat/suljetun-tieosuuden-poisto
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db] (poista-suljettu-tieosuus db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle
