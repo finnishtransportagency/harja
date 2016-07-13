@@ -125,9 +125,9 @@
         (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
         (is (= (first (hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi")
 
-      (poista-ilmoitus)))
+      (poista-ilmoitus))
   (catch IllegalArgumentException e
-    (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty.")))
+    (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
 
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+
