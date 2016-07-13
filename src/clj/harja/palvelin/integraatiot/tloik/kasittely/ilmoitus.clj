@@ -71,10 +71,8 @@
                   (paivita-ilmoitus db nykyinen-id urakka-id ilmoitus)
                   (luo-ilmoitus db urakka-id ilmoitus))]
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" ilmoitus))
-    (if-not urakka-id
-      (throw+ {:type virheet/+urakkaa-ei-loydy+})
-      urakka-id)
-
+    (when-not urakka-id
+      (throw+ {:type virheet/+urakkaa-ei-loydy+}))
     uusi-id))
 
 
