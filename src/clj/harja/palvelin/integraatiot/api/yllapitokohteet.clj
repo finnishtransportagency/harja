@@ -92,7 +92,7 @@
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
-   {:palvelu :kirjaa-paallystysilmoitus
+   {:palvelu :kirjaa-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus

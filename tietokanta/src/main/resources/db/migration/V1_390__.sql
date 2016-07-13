@@ -14,3 +14,6 @@ CREATE TABLE suljettu_tieosuus (
   kirjaaja           INTEGER REFERENCES kayttaja (id),
   UNIQUE (jarjestelma, osuus_id)
 );
+
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('api', 'kirjaa-suljettu-tieosuus');
