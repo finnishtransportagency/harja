@@ -10,13 +10,8 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.tyokalut.xml :as xml]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
-            [harja.palvelin.palvelut.urakat :as urakkapalvelu]
-            [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [harja.palvelin.palvelut.urakat :as urakkapalvelu])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def +xsd-polku+ "xsd/tloik/")
@@ -41,61 +36,20 @@
                                                                         (:sijainti ilmoitus)))]
     (first (urakat/hae-urakka db urakka-id))))
 
-(defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
-  (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")
-  (let [ilmoitustoimenpide-id (:id (ilmoitukset-q/luo-ilmoitustoimenpide<!
-                                     db {:ilmoitus ilmoitus-id
-                                         :ilmoitusid (:ilmoitus-id ilmoitus)
-                                         :kuitattu (c/to-date (t/now))
-                                         :vapaateksti nil
-                                         :kuittaustyyppi "vastaanotto"
-                                         :kuittaaja_henkilo_etunimi nil
-                                         :kuittaaja_henkilo_sukunimi nil
-                                         :kuittaaja_henkilo_matkapuhelin nil
-                                         :kuittaaja_henkilo_tyopuhelin nil
-                                         :kuittaaja_henkilo_sahkoposti nil
-                                         :kuittaaja_organisaatio_nimi nil
-                                         :kuittaaja_organisaatio_ytunnus nil
-                                         :kasittelija_henkilo_etunimi nil
-                                         :kasittelija_henkilo_sukunimi nil
-                                         :kasittelija_henkilo_matkapuhelin nil
-                                         :kasittelija_henkilo_tyopuhelin nil
-                                         :kasittelija_henkilo_sahkoposti nil
-                                         :kasittelija_organisaatio_nimi nil
-                                         :kasittelija_organisaatio_ytunnus nil}))]
-    (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)))
-
-(defn- laheta-ilmoitus-paivystajille [db ilmoitus paivystajat urakka-id ilmoitusasetukset]
-  (if (empty? paivystajat)
-    (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
-    (doseq [paivystaja paivystajat]
-      (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
-                                paivystaja))))
-
-(defn kasittele-ilmoitus
-  "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
-  [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-   ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja]
+(defn kasittele-ilmoitus [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
+                          ilmoitus viesti-id korrelaatio-id tapahtuma-id]
   (let [urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)
         paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
-                                           paivystajat nil)
-        ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-        ;; FIXME Kysely-namespaceen exists-funktio
-        (:exists
-          (first (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa
-                   db
-                   {:urakka urakka-id
-                    :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
-                    :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])})))
-        ilmoitus-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
-
+                                           paivystajat nil)]
+    (ilmoitus/tallenna-ilmoitus db ilmoitus)
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
-    (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-id jms-lahettaja)
-      (laheta-ilmoitus-paivystajille db ilmoitus paivystajat urakka-id ilmoitusasetukset))
-
+    (if (empty? paivystajat)
+      (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
+      (doseq [paivystaja paivystajat]
+        (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
+                                  paivystaja)))
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id
@@ -108,7 +62,7 @@
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono jms-lahettaja viesti]
+(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
@@ -117,11 +71,11 @@
         {:keys [viesti-id ilmoitus-id] :as ilmoitus}
         (lue-ilmoitus sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti)]
     (try+
-      (if-let [urakka (hae-urakka db ilmoitus)]
-        (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-                            ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja)
-        (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
-                                     korrelaatio-id tapahtuma-id))
+     (if-let [urakka (hae-urakka db ilmoitus)]
+       (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
+                           ilmoitus viesti-id korrelaatio-id tapahtuma-id)
+       (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
+                                    korrelaatio-id tapahtuma-id))
       (catch Exception e
         (log/error e (format "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta"
                              " (id: %s, viesti id: %s)" ilmoitus-id viesti-id))
