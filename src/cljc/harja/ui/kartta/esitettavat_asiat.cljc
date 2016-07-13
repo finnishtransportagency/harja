@@ -452,12 +452,12 @@
         kulma)))
 
 (defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
+  (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
   (assoc aita
          :type :suljettu-tieosuus
          :nimi "Suljettu tieosuus"
          :selite "Kaista suljettu"
-         :alue (maarittele-feature {:sijainti {:type :line
-                                               :points (:geometria aita)}}
+         :alue (maarittele-feature {:sijainti (:geometria aita)}
                                    (valittu-fn? aita))))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]

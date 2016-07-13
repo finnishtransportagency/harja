@@ -268,11 +268,12 @@
                             :ymax             (:ymax alue)})))))
 
 (defn- hae-suljetut-tieosuudet [db user {:keys [toleranssi alue] :as tiedot} urakat]
-  (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
-                                 :y1 (:ymin alue)
-                                 :x2 (:xmax alue)
-                                 :y2 (:ymax alue)
-                                 :treshold 100}))
+  (log/debug "Haetaan suljetut tieosuudet alueelta " (pr-str alue))
+  (vec (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
+                                      :y1 (:ymin alue)
+                                      :x2 (:xmax alue)
+                                      :y2 (:ymax alue)
+                                      :treshold 100})))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
