@@ -7,8 +7,9 @@ CREATE TABLE liikenneohjausaidat (
   asetettu      TIMESTAMP,
   muokattu      TIMESTAMP,
   poistettu     TIMESTAMP,
-  kaistat        INTEGER [],
-  ajoradat       INTEGER [],
+  kaistat       INTEGER [],
+  ajoradat      INTEGER [],
   yllapitokohde INTEGER REFERENCES yllapitokohde (id),
+  kirjaaja      INTEGER REFERENCES kayttaja (id),
   UNIQUE (jarjestelma, aita_id)
 );
