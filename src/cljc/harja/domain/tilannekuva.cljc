@@ -32,7 +32,8 @@
 
  [paallystys :paallystys "Päällystystyöt"]
  [paikkaus :paikkaus "Paikkaustyöt"]
-
+ [suljetut-tiet :suljetut-tieosuudet "Suljetut tieosuudet"]
+ 
  [auraus-ja-sohjonpoisto     "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
  [suolaus                    "suolaus"                "Suolaus"]
  [pistehiekoitus             "pistehiekoitus"         "Pistehiekoitus"]

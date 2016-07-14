@@ -341,3 +341,26 @@ SELECT
   id
 FROM toimenpidekoodi
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
+
+-- name: hae-suljetut-tieosuudet
+-- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
+SELECT st.geometria AS "geometria",
+  ypk.nimi                                                       AS "yllapitokohteen-nimi",
+  ypk.kohdenumero                                                AS "yllapitokohteen-numero",
+  st.kaistat                                                     AS "kaistat",
+  st.ajoradat                                                    AS "ajoradat",
+  st.asetettu                                                    AS "aika",
+  st.tr_tie                                                      AS "tie",
+  st.tr_aosa                                                     AS "aosa",
+  st.tr_aet                                                      AS "aet",
+  st.tr_losa                                                     AS "losa",
+  st.tr_let                                                      AS "let"
+FROM suljettu_tieosuus st
+  LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
+WHERE st.poistettu IS NULL
+      AND ((:urakat) IS NULL OR (SELECT bool_or(ST_Intersects(au.alue,st.geometria))
+                                   FROM urakka u
+                             INNER JOIN hanke h ON h.id=u.hanke
+                             INNER JOIN alueurakka au ON au.alueurakkanro = h.alueurakkanro
+	                          WHERE u.id IN (:urakat)))
+      AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.geometria);
