@@ -226,7 +226,7 @@
           virheet (atom {})
           g (grid/grid-ohjaus)
           toiminnot-komponentti
-          (fn [_ index]
+          (fn [_ {:keys [index]}]
             [:span
              [:button.nappi-ensisijainen
               {:on-click

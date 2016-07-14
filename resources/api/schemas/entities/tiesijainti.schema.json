@@ -42,7 +42,7 @@
       "minimum": 0
     },
     "kaista": {
-      "id": "urn:harja/sijainti/tie/ajr",
+      "id": "urn:harja/sijainti/tie/kaista",
       "enum": [
         1,
         11,
