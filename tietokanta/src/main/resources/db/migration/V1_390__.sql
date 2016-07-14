@@ -22,6 +22,8 @@ CREATE TABLE suljettu_tieosuus (
   UNIQUE (jarjestelma, osuus_id)
 );
 
+CREATE INDEX suljettu_tieosuus_geom_index ON suljettu_tieosuus USING GIST (geometria );
+
 INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('api', 'kirjaa-suljettu-tieosuus');
 
