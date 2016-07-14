@@ -44,6 +44,7 @@ SET
   ajoradat            = :ajoradat :: INTEGER [],
   muokattu            = now(),
   asetettu            = :asetettu,
+  poistettu           = NULL,
   tr_tie              = :tr_tie,
   tr_aosa             = :tr_aosa,
   tr_aet              = :tr_aet,
