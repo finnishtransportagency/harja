@@ -18,6 +18,7 @@ CREATE TABLE suljettu_tieosuus (
   tr_aet              INTEGER,
   tr_losa             INTEGER,
   tr_let              INTEGER,
+  geometria           GEOMETRY,
   UNIQUE (jarjestelma, osuus_id)
 );
 

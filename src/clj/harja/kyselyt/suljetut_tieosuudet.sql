@@ -18,7 +18,8 @@ INSERT INTO suljettu_tieosuus (jarjestelma,
                                tr_aosa,
                                tr_aet,
                                tr_losa,
-                               tr_let)
+                               tr_let,
+                               geometria)
 VALUES (
   :jarjestelma,
   :osuusid,
@@ -33,7 +34,13 @@ VALUES (
   :tr_aosa,
   :tr_aet,
   :tr_losa,
-  :tr_let);
+  :tr_let,
+  (SELECT geometria
+   FROM tieviivat_pisteille(ST_Collect
+                            (ST_MakePoint(:alkux, :alkuy),
+                             ST_MakePoint(:loppux, :loppuy)),
+                            CAST(10000 AS INTEGER))
+     AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY)));
 
 -- name: paivita-suljettu-tieosuus!
 UPDATE suljettu_tieosuus
@@ -49,7 +56,13 @@ SET
   tr_aosa             = :tr_aosa,
   tr_aet              = :tr_aet,
   tr_losa             = :tr_losa,
-  tr_let              = :tr_let
+  tr_let              = :tr_let,
+  geometria           = (SELECT geometria
+                         FROM tieviivat_pisteille(ST_Collect
+                                                  (ST_MakePoint(:alkux, :alkuy),
+                                                   ST_MakePoint(:loppux, :loppuy)),
+                                                  CAST(10000 AS INTEGER))
+                           AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY))
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
 
 -- name: merkitse-suljettu-tieosuus-poistetuksi!
