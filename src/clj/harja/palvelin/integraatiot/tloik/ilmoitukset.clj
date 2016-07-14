@@ -82,13 +82,7 @@
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
                                            paivystajat nil)
         ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-        ;; FIXME Kysely-namespaceen exists-funktio
-        (:exists
-          (first (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa
-                   db
-                   {:urakka urakka-id
-                    :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
-                    :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])})))
+        (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)
         ilmoitus-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
 
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
