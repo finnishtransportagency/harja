@@ -37,8 +37,8 @@
               {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
           (kasittele-tietuehakuvastaus xml url tietolaji tierekisteriosoitevali voimassaolopvm))))))
 
-(defn kasittele-urakan-tietuehakuvastaus [xml url urakka tietolajitunniste tilannepvm]
-  (let [virheviesti (str "Urakan tietueiden haku epäonnistui urakalle " urakka " (URL: " url ")
+(defn kasittele-urakan-tietuehakuvastaus [xml url alueurakkanumero tietolajitunniste tilannepvm]
+  (let [virheviesti (str "Urakan tietueiden haku epäonnistui urakalle " alueurakkanumero " (URL: " url ")
                       tietolajitunnisteella: " tietolajitunniste
                       " & tilannepäivämäärällä: " tilannepvm ".")]
     (kasittele-vastaus
@@ -47,18 +47,18 @@
       :urakan-tietueiden-haku-epaonnistui
       virheviesti)))
 
-(defn hae-urakan-tietueet [db integraatioloki url urakka tietolajitunniste tilannepvm]
-  (log/debug "Haetaan tietue urakalle: " (pr-str urakka)
+(defn hae-urakan-tietueet [db integraatioloki url alueurakkanumero tietolajitunniste tilannepvm]
+  (log/debug "Haetaan tietue urakalle: " (pr-str alueurakkanumero)
              ", tietolajitunnisteella " tietolajitunniste)
   (let [url (str url "/haeurakantietueet")]
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "tierekisteri" "hae-urakan-tietueet"
       (fn [konteksti]
         (let [kutsudata (urakan-tietuiden-kutsusanoma/muodosta-kutsu
-                          urakka
+                          alueurakkanumero
                           tietolajitunniste
                           tilannepvm)
               otsikot {"Content-Type" "text/xml; charset=utf-8"}
               http-asetukset {:metodi :POST :url url :otsikot otsikot}
               {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
-          (kasittele-urakan-tietuehakuvastaus xml url urakka tietolajitunniste tilannepvm))))))
+          (kasittele-urakan-tietuehakuvastaus xml url alueurakkanumero tietolajitunniste tilannepvm))))))

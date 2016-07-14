@@ -3,21 +3,21 @@
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
-            [hiccup.core :refer [html]])
+            [hiccup.core :refer [html]]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +xsd-polku+ "xsd/tierekisteri/skeemat/")
 
-(defn muodosta-xml-sisalto [urakka tietolajitunniste tilannepvm]
+(defn muodosta-xml-sisalto [alueurakkanumero tietolajitunniste tilannepvm]
   [:ns2:haeUrakanTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeUrakanTietueet"}
-   [:urakka-id urakka]
-   ;; todo: formatoi iso-8601
-   [:tilannepvm tilannepvm]
+   [:urakka-id alueurakkanumero]
+   [:tilannepvm (pvm/iso-8601->pvm tilannepvm)]
    [:tietolaji tietolajitunniste]])
 
-(defn muodosta-kutsu [urakka tietolajitunniste tilannepvm]
-  (let [sisalto (muodosta-xml-sisalto urakka tietolajitunniste tilannepvm)
+(defn muodosta-kutsu [alueurakkanumero tietolajitunniste tilannepvm]
+  (let [sisalto (muodosta-xml-sisalto alueurakkanumero tietolajitunniste tilannepvm)
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validoi +xsd-polku+ "haeUrakanTietueet.xsd" xml)
       xml
