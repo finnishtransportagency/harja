@@ -264,7 +264,8 @@
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2
             :tyyppi :komponentti
-            :komponentti [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]}
+            :komponentti (fn [_]
+                           [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet])}
 
            (when-not jarjestelman-lisaama-toteuma?
              {:tyyppi :tierekisteriosoite

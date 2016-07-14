@@ -347,14 +347,15 @@
 
              {:tyyppi :komponentti :nimi :rahaohje
               :palstoja 2
-              :komponentti [yleiset/vihje
-                            (str (if (= :paivanhinta (:hinnoittelu @muokattu))
+              :komponentti (fn [_]
+                             [yleiset/vihje
+                             (str (if (= :paivanhinta (:hinnoittelu @muokattu))
                                     "Voit syöttää tehdyn työn määrän mutta se ei vaikuta kokonaishintaan. "
                                     "Kokonaiskustannus on muutoshinta kerrottuna tehdyn työn määrällä. ")
-                                 (if (:yksikkohinta-suunniteltu? @muokattu)
-                                   "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelun Muutos- ja lisätyöt -osiosta."
-                                   "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
-                                  varten Suunnittelun Muutos- ja lisätyöt -osioon."))]}
+                                  (if (:yksikkohinta-suunniteltu? @muokattu)
+                                    "Ylläoleva sopimushinta on muutos- ja lisätöiden hintaluettelosta. Hinnasto löytyy Suunnittelun Muutos- ja lisätyöt -osiosta."
+                                    "Syötä tähän työn sopimushinta muutos- ja lisätöiden hintaluettelosta. Hinta tallennetaan seuraavaa käyttökertaa
+                                   varten Suunnittelun Muutos- ja lisätyöt -osioon."))])}
 
              {:otsikko "Suorittaja" :nimi :suorittajan-nimi
               :hae     #(if (get-in @muokattu [:suorittajan :nimi])

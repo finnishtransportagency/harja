@@ -134,10 +134,11 @@
     [kayttajahaku-modal-sisalto korjaava-toimenpide toimenpiteet-atom urakka]))
 
 (defn korjaavattoimenpiteet
-  [toimenpiteet toimenpiteet-virheet-atom]
+  [toimenpiteet turvallisuuspoikkeama toimenpiteet-virheet-atom muokkaa-lomaketta-fn]
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"
-    :muutos #(reset! toimenpiteet-virheet-atom (grid/hae-virheet %))}
+    :muutos #(do (reset! toimenpiteet-virheet-atom (grid/hae-virheet %))
+                 (muokkaa-lomaketta-fn @turvallisuuspoikkeama))}
    [{:otsikko "Otsikko"
      :nimi :otsikko
      :leveys 20
@@ -213,7 +214,6 @@
                                                    (and (= vaihtoehto :ei_tietoa)
                                                         (not (empty? valitut))
                                                         (not (valitut :ei_tietoa)))))]
-        (log "[TURPO] Render lomake: " (pr-str @turvallisuuspoikkeama))
         [:div
          [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
          (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
@@ -224,6 +224,7 @@
            :muokkaa! #(let [tarkistettu-lomakedata (if (= (:vaaralliset-aineet %) #{:vaarallisten-aineiden-vuoto})
                                                      (assoc % :vaaralliset-aineet #{})
                                                      %)]
+                       (log "[TURPO] Lomake muuttuu, uusi: " (pr-str tarkistettu-lomakedata))
                        (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
            :footer [napit/palvelinkutsu-nappi
@@ -370,23 +371,26 @@
            {:otsikko "Kommentit" :nimi :kommentit
             :tyyppi :komponentti
             :palstoja 2
-            :komponentti [kommentit/kommentit {:voi-kommentoida? true
-                                               :voi-liittaa true
-                                               :placeholder "Kirjoita kommentti..."
-                                               :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
-                                                                       #(swap! turvallisuuspoikkeama assoc :uusi-kommentti %))}
-                          (:kommentit @turvallisuuspoikkeama)]}
+            :komponentti (fn [_]
+                           [kommentit/kommentit {:voi-kommentoida? true
+                                                 :voi-liittaa true
+                                                 :placeholder "Kirjoita kommentti..."
+                                                 :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
+                                                                         #(swap! turvallisuuspoikkeama assoc :uusi-kommentti %))}
+                            (:kommentit @turvallisuuspoikkeama)])}
            (lomake/ryhma {:otsikko "Poikkeaman käsittely"}
                          {:otsikko "Poikkeama kirjattu" :nimi :luotu :fmt pvm/pvm-aika-opt :tyyppi :string
                           :muokattava? (constantly false)
-                          :uusi-rivi? true
-                          }
+                          :uusi-rivi? true}
                          {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                           :palstoja 2
                           :uusi-rivi? true
-                          :komponentti [korjaavattoimenpiteet
-                                        (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)
-                                        toimenpiteet-virheet]}
+                          :komponentti (fn [{:keys [muokkaa-lomaketta]}]
+                                         [korjaavattoimenpiteet
+                                          (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)
+                                          turvallisuuspoikkeama
+                                          toimenpiteet-virheet
+                                          muokkaa-lomaketta])}
                          {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                           :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                          {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %

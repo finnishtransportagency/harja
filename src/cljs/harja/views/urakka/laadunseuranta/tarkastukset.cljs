@@ -322,16 +322,18 @@
            {:otsikko "Vakio\u00ADhavainnot"
             :nimi :vakiohavainnot
             :tyyppi :komponentti
-            :komponentti [:span (str/join ", " (:vakiohavainnot tarkastus))]
+            :komponentti (fn [_]
+                           [:span (str/join ", " (:vakiohavainnot tarkastus))])
             :palstoja 2})
 
          (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
            {:otsikko "Liitteet" :nimi :liitteet
             :tyyppi :komponentti
-            :komponentti [liitteet/liitteet urakka-id (:liitteet tarkastus)
-                          {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
-                                                    #(swap! tarkastus-atom assoc :uusi-liite %))
-                           :uusi-liite-teksti "Lisää liite tarkastukseen"}]})
+            :komponentti (fn [_]
+                           [liitteet/liitteet urakka-id (:liitteet tarkastus)
+                           {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
+                                                     #(swap! tarkastus-atom assoc :uusi-liite %))
+                            :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
          (when voi-kirjoittaa?
            {:rivi? true
             :uusi-rivi? true
@@ -340,22 +342,23 @@
             :vihje (if (:laatupoikkeamaid tarkastus)
                      "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
                      "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
-            :komponentti [napit/palvelinkutsu-nappi
-                          (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
-                          (fn []
-                            (go
-                              (let [tarkastus (<! (tarkastukset/tallenna-tarkastus urakka-id tarkastus (:nakyma optiot)))
-                                    tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
-                                                                  tarkastus
-                                                                  (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
-                                tarkastus-ja-laatupoikkeama)))
-                          {:disabled (validoi-tarkastuslomake tarkastus)
-                           :kun-onnistuu (fn [tarkastus]
-                                           (reset! tarkastus-atom tarkastus)
-                                           (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
-                           :virheviesti "Tarkastuksen tallennus epäonnistui."
-                           :ikoni (ikonit/livicon-arrow-right)
-                           :luokka :nappi-toissijainen}]})]
+            :komponentti (fn [_]
+                           [napit/palvelinkutsu-nappi
+                           (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
+                           (fn []
+                             (go
+                               (let [tarkastus (<! (tarkastukset/tallenna-tarkastus urakka-id tarkastus (:nakyma optiot)))
+                                     tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
+                                                                   tarkastus
+                                                                   (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
+                                 tarkastus-ja-laatupoikkeama)))
+                           {:disabled (validoi-tarkastuslomake tarkastus)
+                            :kun-onnistuu (fn [tarkastus]
+                                            (reset! tarkastus-atom tarkastus)
+                                            (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
+                            :virheviesti "Tarkastuksen tallennus epäonnistui."
+                            :ikoni (ikonit/livicon-arrow-right)
+                            :luokka :nappi-toissijainen}])})]
         tarkastus]])))
 
 
