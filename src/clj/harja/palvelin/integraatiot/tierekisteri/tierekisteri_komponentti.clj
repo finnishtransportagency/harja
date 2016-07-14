@@ -22,7 +22,7 @@
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietueet [this tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm])
-  (hae-urakan-tietueet [this db urakka tietolajitunniste tilannepvm])
+  (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm])
   (paivita-tietue [this tiedot])
   (poista-tietue [this tiedot])
@@ -48,7 +48,7 @@
 
   (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm]
     (validoi-tietolajitunniste tietolajitunniste)
-    (let [alueurakkanumero (urakat-q/hae-urakan-alueurakkanumero (:db this) urakka)]
+    (let [alueurakkanumero (:alueurakkanro (urakat-q/hae-urakan-alueurakkanumero (:db this) urakka))]
       (when-not (empty? tierekisteri-api-url)
         (tietueet/hae-urakan-tietueet
           (:db this) (:integraatioloki this) tierekisteri-api-url alueurakkanumero tietolajitunniste tilannepvm))))
