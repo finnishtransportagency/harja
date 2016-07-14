@@ -5,26 +5,35 @@ SELECT exists(SELECT *
               WHERE osuus_id = :id AND jarjestelma = :jarjestelma);
 
 -- name: luo-suljettu-tieosuus<!
-INSERT INTO suljettu_tieosuus
-(jarjestelma,
- osuus_id,
- alkuaidan_sijainti,
- loppuaidan_sijainti,
- asetettu,
- kaistat,
- ajoradat,
- yllapitokohde,
- kirjaaja)
-VALUES
-  (:jarjestelma,
-   :osuusid,
-   ST_MakePoint(:alkux, :alkuy) :: POINT,
-   ST_MakePoint(:loppux, :loppuy) :: POINT,
-   :asetettu,
-   :kaistat :: INTEGER [],
-   :ajoradat :: INTEGER [],
-   :yllapitokohde,
-   :kirjaaja);
+INSERT INTO suljettu_tieosuus (jarjestelma,
+                               osuus_id,
+                               alkuaidan_sijainti,
+                               loppuaidan_sijainti,
+                               asetettu,
+                               kaistat,
+                               ajoradat,
+                               yllapitokohde,
+                               kirjaaja,
+                               tr_tie,
+                               tr_aosa,
+                               tr_aet,
+                               tr_losa,
+                               tr_let)
+VALUES (
+  :jarjestelma,
+  :osuusid,
+  ST_MakePoint(:alkux, :alkuy) :: POINT,
+  ST_MakePoint(:loppux, :loppuy) :: POINT,
+  :asetettu,
+  :kaistat :: INTEGER [],
+  :ajoradat :: INTEGER [],
+  :yllapitokohde,
+  :kirjaaja,
+  :tr_tie,
+  :tr_aosa,
+  :tr_aet,
+  :tr_losa,
+  :tr_let);
 
 -- name: paivita-suljettu-tieosuus!
 UPDATE suljettu_tieosuus
@@ -34,7 +43,12 @@ SET
   kaistat             = :kaistat :: INTEGER [],
   ajoradat            = :ajoradat :: INTEGER [],
   muokattu            = now(),
-  asetettu            = :asetettu
+  asetettu            = :asetettu,
+  tr_tie              = :tr_tie,
+  tr_aosa             = :tr_aosa,
+  tr_aet              = :tr_aet,
+  tr_losa             = :tr_losa,
+  tr_let              = :tr_let
 WHERE osuus_id = :osuusid AND jarjestelma = :jarjestelma;
 
 -- name: merkitse-suljettu-tieosuus-poistetuksi!

@@ -13,6 +13,11 @@ CREATE TABLE suljettu_tieosuus (
   yllapitokohde       INTEGER REFERENCES yllapitokohde (id),
   kirjaaja            INTEGER REFERENCES kayttaja (id),
   poistaja            INTEGER REFERENCES kayttaja (id),
+  tr_tie              INTEGER,
+  tr_aosa             INTEGER,
+  tr_aet              INTEGER,
+  tr_losa             INTEGER,
+  tr_let              INTEGER,
   UNIQUE (jarjestelma, osuus_id)
 );
 

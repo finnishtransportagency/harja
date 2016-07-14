@@ -11,11 +11,13 @@
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
+            [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus])
-  (:use [slingshot.slingshot :only [throw+ try+]]))
+  (:use [slingshot.slingshot :only [throw+ try+]])
+  (:import (org.postgresql.util PSQLException)))
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
   (let [urakka-id (Integer/parseInt (:id parametit))]
@@ -48,6 +50,15 @@
         {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
          :id id}))))
 
+(defn hae-tr-osoite [db alkukoordinaatit loppukoordinaatit]
+  (try
+    (first (q-tieverkko/hae-tr-osoite-valille db
+                                              (:x alkukoordinaatit) (:y alkukoordinaatit)
+                                              (:x loppukoordinaatit) (:y loppukoordinaatit)
+                                              10000))
+    (catch PSQLException e
+      (log/error e "Virhe hakiessa tierekisteriosoitetta suljetulle tieosuudelle"))))
+
 (defn kirjaa-suljettu-tieosuus [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko suljettu-tieosuus]}]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
                      urakka-id
@@ -62,6 +73,7 @@
     (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
           alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti suljettu-tieosuus))
           loppukoordinaatit (:koordinaatit (:loppuaidan-sijainti suljettu-tieosuus))
+          tr-osoite (hae-tr-osoite db alkukoordinaatit loppukoordinaatit)
           parametrit {:jarjestelma jarjestelma
                       :osuusid (:id suljettu-tieosuus)
                       :alkux (:x alkukoordinaatit)
@@ -72,13 +84,20 @@
                       :kaistat (konv/seq->array (:kaistat suljettu-tieosuus))
                       :ajoradat (konv/seq->array (:ajoradat suljettu-tieosuus))
                       :yllapitokohde kohde-id
-                      :kirjaaja (:id kayttaja)}]
+                      :kirjaaja (:id kayttaja)
+                      :tr_tie (:tie tr-osoite)
+                      :tr_aosa (:aosa tr-osoite)
+                      :tr_aet (:aet tr-osoite)
+                      :tr_losa (:losa tr-osoite)
+                      :tr_let (:let tr-osoite)}]
 
       (if (q-suljetut-tieosuudet/onko-olemassa? db {:id (:id suljettu-tieosuus) :jarjestelma jarjestelma})
         (q-suljetut-tieosuudet/paivita-suljettu-tieosuus! db parametrit)
         (q-suljetut-tieosuudet/luo-suljettu-tieosuus<! db parametrit))
-      (tee-kirjausvastauksen-body
-        {:ilmoitukset (str "Suljettu tieosuus kirjattu onnistuneesti.")}))))
+      (let [vastaus (cond-> {:ilmoitukset (str "Suljettu tieosuus kirjattu onnistuneesti.")}
+                            (nil? tr-osoite)
+                            (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
+        (tee-kirjausvastauksen-body vastaus)))))
 
 (defn poista-suljettu-tieosuus [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko suljettu-tieosuus]}]
   (log/debug (format "Poistetaan urakan (id: %s) kohteelta (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
