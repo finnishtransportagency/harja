@@ -126,10 +126,11 @@
 (defmethod nayta-popup :suljettu-tieosuus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
                        (tee-arvolistaus-popup "Suljettu tieosuus"
-                                              [["Ylläpitokohde" (:yllapitokohteen-nimi tapahtuma)]
-                                               ["Numero" (:yllapitokohteen-numero tapahtuma)]
-                                               ["Kaistat" (clojure.string/join "," (map str (:kaistat tapahtuma)))]
-                                               ["Ajoradat" (clojure.string/join "," (map str (:ajoradat tapahtuma)))]])))
+                                              [["Ylläpitokohde" (str (:yllapitokohteen-nimi tapahtuma) " (" (:yllapitokohteen-numero tapahtuma) ")")]
+                                               ["Aika" (pvm/pvm-aika(:aika tapahtuma))]
+                                               ["Osoite" (tierekisteri/tierekisteriosoite-tekstina tapahtuma {:teksti-tie? false})]
+                                               ["Kaistat" (clojure.string/join ", " (map str (:kaistat tapahtuma)))]
+                                               ["Ajoradat" (clojure.string/join ", " (map str (:ajoradat tapahtuma)))]])))
 
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))

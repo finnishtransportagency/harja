@@ -344,16 +344,23 @@ WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
 -- name: hae-suljetut-tieosuudet
 -- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
-SELECT (SELECT geometria
-        FROM tieviivat_pisteille(ST_Collect(CAST(st.alkuaidan_sijainti AS geometry),
-                                            CAST(st.loppuaidan_sijainti AS geometry)), CAST(:treshold AS INTEGER))
-	     AS vali(alku geometry, loppu geometry, geometria geometry)) AS geometria,
-	ypk.nimi AS "yllapitokohteen-nimi",
-	ypk.kohdenumero AS "yllapitokohteen-numero",
-	st.kaistat AS "kaistat",
-	st.ajoradat AS "ajoradat"
-  FROM suljettu_tieosuus st
-   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
-  WHERE st.poistettu IS NULL
-    AND (ST_Contains(ST_MakeEnvelope(:x1,:y1,:x2,:y2), CAST(st.loppuaidan_sijainti AS geometry))
-         OR ST_Contains(ST_MakeEnvelope(:x1,:y1,:x2,:y2), CAST(st.alkuaidan_sijainti AS geometry)));
+SELECT
+  (SELECT geometria
+   FROM tieviivat_pisteille(ST_Collect(CAST(st.alkuaidan_sijainti AS GEOMETRY),
+                                       CAST(st.loppuaidan_sijainti AS GEOMETRY)), CAST(:treshold AS INTEGER))
+     AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY)) AS geometria,
+  ypk.nimi                                                       AS "yllapitokohteen-nimi",
+  ypk.kohdenumero                                                AS "yllapitokohteen-numero",
+  st.kaistat                                                     AS "kaistat",
+  st.ajoradat                                                    AS "ajoradat",
+  st.asetettu                                                    AS "aika",
+  st.tr_tie                                                      AS "tie",
+  st.tr_aosa                                                     AS "aosa",
+  st.tr_aet                                                      AS "aet",
+  st.tr_losa                                                     AS "losa",
+  st.tr_let                                                      AS "let"
+FROM suljettu_tieosuus st
+  LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
+WHERE st.poistettu IS NULL
+      AND (ST_Contains(ST_MakeEnvelope(:x1, :y1, :x2, :y2), CAST(st.loppuaidan_sijainti AS GEOMETRY))
+           OR ST_Contains(ST_MakeEnvelope(:x1, :y1, :x2, :y2), CAST(st.alkuaidan_sijainti AS GEOMETRY)));
