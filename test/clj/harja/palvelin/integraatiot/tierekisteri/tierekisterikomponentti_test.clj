@@ -165,7 +165,6 @@
             vastausdata (tierekisteri/lisaa-tietue (:tierekisteri jarjestelma) tietue)]
         (is (true? (:onnistunut vastausdata)))))))
 
-
 (deftest tarkista-tietueen-muokkaus
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
     (with-fake-http
