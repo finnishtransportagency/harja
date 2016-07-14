@@ -344,11 +344,7 @@ WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
 
 -- name: hae-suljetut-tieosuudet
 -- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
-SELECT
-  (SELECT geometria
-   FROM tieviivat_pisteille(ST_Collect(CAST(st.alkuaidan_sijainti AS GEOMETRY),
-                                       CAST(st.loppuaidan_sijainti AS GEOMETRY)), CAST(:treshold AS INTEGER))
-     AS vali(alku GEOMETRY, loppu GEOMETRY, geometria GEOMETRY)) AS geometria,
+SELECT st.geometria AS "geometria",
   ypk.nimi                                                       AS "yllapitokohteen-nimi",
   ypk.kohdenumero                                                AS "yllapitokohteen-numero",
   st.kaistat                                                     AS "kaistat",
@@ -362,5 +358,4 @@ SELECT
 FROM suljettu_tieosuus st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
-      AND (ST_Contains(ST_MakeEnvelope(:x1, :y1, :x2, :y2), CAST(st.loppuaidan_sijainti AS GEOMETRY))
-           OR ST_Contains(ST_MakeEnvelope(:x1, :y1, :x2, :y2), CAST(st.alkuaidan_sijainti AS GEOMETRY)));
+      AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.geometria);

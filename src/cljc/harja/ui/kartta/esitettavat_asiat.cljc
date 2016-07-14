@@ -458,7 +458,9 @@
          :nimi "Suljettu tieosuus"
          :selite {:teksti "Kaista suljettu"}
          :alue (maarittele-feature {:sijainti (:geometria aita)}
-                                   (valittu-fn? aita))))
+                                   (valittu-fn? aita)
+                                   nil
+                                   [ulkoasu/suljettu-tieosuus])))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
