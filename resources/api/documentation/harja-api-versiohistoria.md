@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.2.0</b>
-<b>Julkaistu: 4.7.2016</b>
+<b>Nykyinen versio: 0.2.2</b>
+<b>Julkaistu: 13.7.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.2. Julkaistu 13.7.2016:
+    - Lisätty rajapinnat suljettujen tieosien kirjaamiselle ja poistolle. 
 - Versionumero: 0.2.1. Julkaistu 6.7.2016:
     - Turvallisuuspoikkeama yhtenäistetty TURI:n kanssa, mistä johtuen tehty seuraavat muutokset:
     - Poistettu kenttä: paattynyt

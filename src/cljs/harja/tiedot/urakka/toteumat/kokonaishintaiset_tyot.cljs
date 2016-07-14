@@ -89,11 +89,10 @@
                                        [(:alkanut valittu-toteuma) (:paattynyt valittu-toteuma)])]
               {:urakka-id urakka-id
                :sopimus-id sopimus-id
+               :toteuma-id (:id valittu-toteuma)
                :alkupvm alkupvm
                :loppupvm loppupvm
-               :tehtava (if valittu-paivakohtainen-tehtava
-                          (:toimenpidekoodi valittu-paivakohtainen-tehtava)
-                          (get-in valittu-toteuma [:tehtava :toimenpidekoodi :id]))})))))
+               :toimenpidekoodi (:toimenpidekoodi valittu-paivakohtainen-tehtava)})))))
 
 ;; Piirretään kartalle reitit, jotka haetaan kun summariviä klikataan JA
 ;; valitun toteuman reitti.

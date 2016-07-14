@@ -122,16 +122,16 @@
 
 (defn- valintakasittelija [t]
   (let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat (:toimenpideinstanssi t) @u/urakan-toimenpideinstanssit @u/urakan-toimenpiteet-ja-tehtavat)
-        urakan-hoitokauden-yks-hint-tyot (filter tyo-hoitokaudella? @u/urakan-yks-hint-tyot)]
-    (filter
-      (fn [tehtava]
-        (> (:yksikkohinta (tehtavan-tiedot tehtava urakan-hoitokauden-yks-hint-tyot)) 0))
-      urakan-tpi-tehtavat)))
+        urakan-hoitokauden-yks-hint-tyot (filter tyo-hoitokaudella? @u/urakan-yks-hint-tyot)
+        suunnitellut-tehtavat (filter
+                                (fn [tehtava]
+                                  (> (:yksikkohinta (tehtavan-tiedot tehtava urakan-hoitokauden-yks-hint-tyot)) 0))
+                                urakan-tpi-tehtavat)]
+    (sort-by #(:nimi (get % 3)) suunnitellut-tehtavat)))
 
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]
   (let [nelostason-tehtavat (map nelostason-tehtava @u/urakan-toimenpiteet-ja-tehtavat)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit]
-
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."
       :voi-muokata? (not jarjestelman-lisaama-toteuma?)

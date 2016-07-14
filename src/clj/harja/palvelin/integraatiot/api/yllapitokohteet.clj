@@ -6,113 +6,18 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-timestamp]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat :as yllapitokohdesanomat]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
-            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitus])
-  (:use [slingshot.slingshot :only [throw+ try+]]))
-
-(defn paivita-alikohteet [db kohde alikohteet]
-  (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
-  (mapv
-    (fn [alikohde]
-      (let [sijainti (:sijainti alikohde)
-            osoite {:tie (:tr-numero kohde)
-                    :aosa (:aosa sijainti)
-                    :aet (:aet sijainti)
-                    :losa (:losa sijainti)
-                    :loppuet (:let sijainti)}
-            sijainti-geometria (:tierekisteriosoitteelle_viiva (first (q-tieverkko/tierekisteriosoite-viivaksi db osoite)))
-            parametrit {:yllapitokohde (:id kohde)
-                        :nimi (:nimi alikohde)
-                        :tunnus (:tunnus alikohde)
-                        :tr_numero (:tr-numero kohde)
-                        :tr_alkuosa (:aosa sijainti)
-                        :tr_alkuetaisyys (:aet sijainti)
-                        :tr_loppuosa (:losa sijainti)
-                        :tr_loppuetaisyys (:let sijainti)
-                        :tr_ajorata (:tr-ajorata kohde)
-                        :tr_kaista (:tr-kaista kohde)
-                        :toimenpide (:toimenpide alikohde)
-                        :sijainti sijainti-geometria}]
-        (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
-    alikohteet))
-
-(defn paivita-kohde [db kohde-id kohteen-sijainti]
-  (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
-    db (assoc (clojure.set/rename-keys
-                kohteen-sijainti
-                {:aosa :tr_alkuosa
-                 :aet :tr_alkuetaisyys
-                 :losa :tr_loppuosa
-                 :let :tr_loppuetaisyys})
-         :id
-         kohde-id)))
-
-(defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
-  (let [ilmoitustiedot (paallystysilmoitus/rakenna paallystysilmoitus)
-        paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
-                             (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
-                               db
-                               {:ilmoitustiedot ilmoitustiedot
-                                :muokkaaja (:id kayttaja)
-                                :id kohde-id})
-                             (q-paallystys/luo-paallystysilmoitus<!
-                               db
-                               {:paallystyskohde kohde-id
-                                :tila "aloitettu"
-                                :ilmoitustiedot ilmoitustiedot
-                                :aloituspvm nil
-                                :valmispvm_kohde nil
-                                :valmispvm_paallystys nil
-                                :takuupvm nil
-                                :muutoshinta nil
-                                :kayttaja (:id kayttaja)}))]
-    (str (:id paallystysilmoitus))))
-
-(defn pura-paallystysilmoitus [data]
-  (-> (:paallystysilmoitus data)
-      (assoc :alikohteet (mapv :alikohde (get-in data [:paallystysilmoitus :yllapitokohde :alikohteet])))
-      (assoc :alustatoimenpiteet (mapv :alustatoimenpide (get-in data [:paallystysilmoitus :alustatoimenpiteet])))
-      (assoc :tyot (mapv :tyo (get-in data [:paallystysilmoitus :tyot])))))
-
-(defn validoi-paallystysilmoitus [db  urakka-id kohde paallystysilmoitus]
-  (validointi/tarkista-urakan-kohde db urakka-id (:id kohde))
-  (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-        alikohteet (:alikohteet paallystysilmoitus)
-        alustatoimenpiteet (:alustatoimenpiteet paallystysilmoitus)
-        kohteen-tienumero (:tr-numero kohde)]
-    (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
-
-(defn tallenna-paallystysilmoitus [db kayttaja kohde paallystysilmoitus]
-  (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-        alikohteet (:alikohteet paallystysilmoitus)]
-    (paivita-kohde db (:id kohde) kohteen-sijainti)
-    (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
-          ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
-          paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
-      (luo-tai-paivita-paallystysilmoitus db kayttaja (:id kohde) paallystysilmoitus))))
-
-(defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
-  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus" urakka-id kohde-id))
-  (jdbc/with-db-transaction
-    [db db]
-    (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)
-          paallystysilmoitus (pura-paallystysilmoitus data)
-          kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-          _ (validoi-paallystysilmoitus db urakka-id kohde paallystysilmoitus)
-          id (tallenna-paallystysilmoitus db kayttaja kohde paallystysilmoitus)]
-      (tee-kirjausvastauksen-body
-        {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-         :id id}))))
+            [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus])
+  (:use [slingshot.slingshot :only [throw+ try+]])
+  (:import (org.postgresql.util PSQLException)))
 
 (defn hae-yllapitokohteet [db parametit kayttaja]
   (let [urakka-id (Integer/parseInt (:id parametit))]
@@ -130,6 +35,91 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
+(defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+  (jdbc/with-db-transaction
+    [db db]
+    (let [urakka-id (Integer/parseInt urakka-id)
+          kohde-id (Integer/parseInt kohde-id)
+          id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
+      (tee-kirjausvastauksen-body
+        {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+         :id id}))))
+
+(defn hae-tr-osoite [db alkukoordinaatit loppukoordinaatit]
+  (try
+    (first (q-tieverkko/hae-tr-osoite-valille db
+                                              (:x alkukoordinaatit) (:y alkukoordinaatit)
+                                              (:x loppukoordinaatit) (:y loppukoordinaatit)
+                                              10000))
+    (catch PSQLException e
+      (log/error e "Virhe hakiessa tierekisteriosoitetta suljetulle tieosuudelle"))))
+
+(defn kirjaa-suljettu-tieosuus [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko suljettu-tieosuus]}]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+
+    (let [jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+          alkukoordinaatit (:koordinaatit (:alkuaidan-sijainti suljettu-tieosuus))
+          loppukoordinaatit (:koordinaatit (:loppuaidan-sijainti suljettu-tieosuus))
+          tr-osoite (hae-tr-osoite db alkukoordinaatit loppukoordinaatit)
+          parametrit {:jarjestelma jarjestelma
+                      :osuusid (:id suljettu-tieosuus)
+                      :alkux (:x alkukoordinaatit)
+                      :alkuy (:y alkukoordinaatit)
+                      :loppux (:x loppukoordinaatit)
+                      :loppuy (:y loppukoordinaatit)
+                      :asetettu (aika-string->java-sql-timestamp (:aika suljettu-tieosuus))
+                      :kaistat (konv/seq->array (:kaistat suljettu-tieosuus))
+                      :ajoradat (konv/seq->array (:ajoradat suljettu-tieosuus))
+                      :yllapitokohde kohde-id
+                      :kirjaaja (:id kayttaja)
+                      :tr_tie (:tie tr-osoite)
+                      :tr_aosa (:aosa tr-osoite)
+                      :tr_aet (:aet tr-osoite)
+                      :tr_losa (:losa tr-osoite)
+                      :tr_let (:let tr-osoite)}]
+
+      (if (q-suljetut-tieosuudet/onko-olemassa? db {:id (:id suljettu-tieosuus) :jarjestelma jarjestelma})
+        (q-suljetut-tieosuudet/paivita-suljettu-tieosuus! db parametrit)
+        (q-suljetut-tieosuudet/luo-suljettu-tieosuus<! db parametrit))
+      (let [vastaus (cond-> {:ilmoitukset (str "Suljettu tieosuus kirjattu onnistuneesti.")}
+                            (nil? tr-osoite)
+                            (assoc :varoitukset "Annetulle tieosuudelle ei saatu haettua tierekisteriosoitetta."))]
+        (tee-kirjausvastauksen-body vastaus)))))
+
+(defn poista-suljettu-tieosuus [db kayttaja {:keys [urakka-id kohde-id]} {:keys [otsikko suljettu-tieosuus]}]
+  (log/debug (format "Poistetaan urakan (id: %s) kohteelta (id: %s) suljettu tieosuus käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)
+        jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
+        id (:id suljettu-tieosuus)
+        parametrit {:jarjestelma jarjestelma
+                    :osuusid id
+                    :poistettu (aika-string->java-sql-timestamp (:aika suljettu-tieosuus))
+                    :poistaja (:id kayttaja)}]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (validointi/tarkista-urakan-kohde db urakka-id kohde-id)
+    (validointi/tarkista-suljettu-tieosuus db id jarjestelma)
+    (q-suljetut-tieosuudet/merkitse-suljettu-tieosuus-poistetuksi! db parametrit)
+    (tee-kirjausvastauksen-body
+      {:ilmoitukset (str "Suljettu tieosuus poistettu onnistuneesti.")})))
+
 (def palvelut
   [{:palvelu :hae-yllapitokohteet
     :polku "/api/urakat/:id/yllapitokohteet"
@@ -141,7 +131,19 @@
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}])
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
+   {:palvelu :kirjaa-suljettu-tieosuus
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}
+   {:palvelu :kirjaa-suljettu-tieosuus
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
+    :tyyppi :DELETE
+    :kutsu-skeema json-skeemat/suljetun-tieosuuden-poisto
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db] (poista-suljettu-tieosuus db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle

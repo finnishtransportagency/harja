@@ -267,6 +267,18 @@
                             :xmax             (:xmax alue)
                             :ymax             (:ymax alue)})))))
 
+(defn- hae-suljetut-tieosuudet [db user {:keys [toleranssi yllapito alue] :as tiedot} urakat]
+  (when (tk/valittu? yllapito tk/suljetut-tiet)
+    (vec (map (comp #(konv/array->vec % :kaistat)
+                    #(konv/array->vec % :ajoradat))
+              (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
+                                             :y1 (:ymin alue)
+                                             :x2 (:xmax alue)
+                                             :y2 (:ymax alue)
+                                             :urakat (when-not (every? nil? urakat)
+                                                       urakat)
+                                             :treshold 100})))))
+
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
   (when-not (empty? urakat)
@@ -279,7 +291,7 @@
 
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat :tarkastukset
-    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset})
+    :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :suljetut-tieosuudet})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
 (defmethod hae-osio :toteumat [db user tiedot urakat _]
@@ -317,6 +329,10 @@
 (defmethod hae-osio :ilmoitukset [db user tiedot urakat _]
   (tulosta-tulos! "ilmoitusta"
                   (hae-ilmoitukset db user tiedot urakat)))
+
+(defmethod hae-osio :suljetut-tieosuudet [db user tiedot urakat _]
+  (tulosta-tulos! "suljettua tieosuutta"
+                  (hae-suljetut-tieosuudet db user tiedot urakat)))
 
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try
