@@ -498,18 +498,30 @@
 
     (q/poista-tehtava! db (:id user) (:id tiedot))))
 
-(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tehtava]}]
+(defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user
+                                                      {:keys [urakka-id sopimus-id toteuma-id
+                                                              alkupvm loppupvm toimenpidekoodi]}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (let [reitit (into []
                      (comp
                        (harja.geo/muunna-pg-tulokset :reitti)
                        (map konv/alaviiva->rakenne))
-                     (q/hae-kokonaishintaisten-toiden-reitit db
-                                                             urakka-id
-                                                             sopimus-id
-                                                             (konv/sql-date alkupvm)
-                                                             (konv/sql-date loppupvm)
-                                                             tehtava))
+                     (if toteuma-id
+                       (do
+                         (log/debug "Haetaan kok. hint. reitit toteuma-id:llä: " toteuma-id)
+                         (q/hae-kokonaishintaisen-toteuman-reitti db
+                                                                 urakka-id
+                                                                 sopimus-id
+                                                                 toteuma-id))
+                       (do
+                         (log/debug (str "Haetaan kok. hint. reitit parametreilla "
+                                         (pr-str alkupvm loppupvm toimenpidekoodi)))
+                         (q/hae-kokonaishintaisten-toiden-reitit db
+                                                                urakka-id
+                                                                sopimus-id
+                                                                (konv/sql-date alkupvm)
+                                                                (konv/sql-date loppupvm)
+                                                                toimenpidekoodi))))
         kasitellyt-reitit (konv/sarakkeet-vektoriin
                             reitit
                             {:reittipiste :reittipisteet
