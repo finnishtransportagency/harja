@@ -275,7 +275,7 @@
                                              :y1 (:ymin alue)
                                              :x2 (:xmax alue)
                                              :y2 (:ymax alue)
-                                             :urakat (when-not (empty? urakat)
+                                             :urakat (when-not (every? nil? urakat)
                                                        urakat)
                                              :treshold 100})))))
 
