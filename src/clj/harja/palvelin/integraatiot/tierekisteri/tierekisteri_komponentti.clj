@@ -47,6 +47,7 @@
 
   (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm]
     (validoi-tietolajitunniste tietolajitunniste)
+    ;; todo: urakka id:llä pitäisi hakea alueurakkanumero ja käyttää sitä haussa
     (when-not (empty? tierekisteri-api-url)
       (tietueet/hae-urakan-tietueet
         (:db this) (:integraatioloki this) tierekisteri-api-url urakka tietolajitunniste tilannepvm)))
