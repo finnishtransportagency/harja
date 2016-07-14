@@ -12,6 +12,7 @@
   [:ns2:haeUrakanTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeUrakanTietueet"}
    [:urakka-id urakka]
+   ;; todo: formatoi iso-8601
    [:tilannepvm tilannepvm]
    [:tietolaji tietolajitunniste]])
 
