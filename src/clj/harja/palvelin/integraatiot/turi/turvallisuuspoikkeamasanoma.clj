@@ -113,15 +113,15 @@
    [:eureffine (first (get-in data [:sijainti :coordinates]))]
    [:tienumero (get-in data [:tr :numero])]
    [:tieaosa (get-in data [:tr :alkuosa])]
-   [:tielosa (get-in data [:tr :loppuosa])]
+   (when (get-in data [:tr :loppuosa]) [:tielosa (get-in data [:tr :loppuosa])])
    [:tieaet (get-in data [:tr :alkuetaisyys])]
-   [:tielet (get-in data [:tr :loppuetaisyys])]])
+   (when (get-in data [:tr :loppuetaisyys]) [:tielet (get-in data [:tr :loppuetaisyys])])])
 
 (defn rakenna-syyt-ja-seuraukset [data]
   (into [:syytjaseuraukset]
         (concat
           [[:seuraukset (:seuraukset data)]
-           [:ammatti (ammatti->numero (:tyontekijanammatti data))]
+           (when (ammatti->numero (:tyontekijanammatti data)) [:ammatti (ammatti->numero (:tyontekijanammatti data))])
            [:ammattimuutarkenne (:tyontekijanammattimuu data)]]
           (vammat->numerot (:vammat data))
           (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
@@ -137,10 +137,10 @@
 (defn rakenna-poikkeamatoimenpide [data]
   (mapv (fn [toimenpide]
           [:poikkeamatoimenpide
-           [:otsikko (:otsikko toimenpide)]
-           [:kuvaus (:kuvaus toimenpide)]
-           [:toteuttaja (:toteuttaja toimenpide)]
-           [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
+             [:otsikko (:otsikko toimenpide)]
+             [:kuvaus (:kuvaus toimenpide)]
+             [:toteuttaja (:toteuttaja toimenpide)]
+             [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
         (:korjaavattoimenpiteet data)))
 
 (defn rakenna-poikkeamaliite [data]
