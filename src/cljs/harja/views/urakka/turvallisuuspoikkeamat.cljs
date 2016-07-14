@@ -134,9 +134,10 @@
     [kayttajahaku-modal-sisalto korjaava-toimenpide toimenpiteet-atom urakka]))
 
 (defn korjaavattoimenpiteet
-  [toimenpiteet]
+  [toimenpiteet toimenpiteet-virheet-atom]
   [grid/muokkaus-grid
-   {:tyhja "Ei korjaavia toimenpiteitä"}
+   {:tyhja "Ei korjaavia toimenpiteitä"
+    :muutos #(reset! toimenpiteet-virheet-atom (grid/hae-virheet %))}
    [{:otsikko "Otsikko"
      :nimi :otsikko
      :leveys 20
@@ -188,14 +189,16 @@
     {:otsikko "Kuvaus" :nimi :kuvaus :leveys 25 :tyyppi :text :koko [80 :auto]}]
    toimenpiteet])
 
-(defn- voi-tallentaa? [tp]
+(defn- voi-tallentaa? [tp toimenpiteet-virheet]
   (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
+       (empty? toimenpiteet-virheet)
        (if-not (:id tp)
          (lomake/voi-tallentaa-ja-muokattu? tp)
          (lomake/voi-tallentaa? tp))))
 
 (defn turvallisuuspoikkeaman-tiedot []
-  (let [turvallisuuspoikkeama (reaction @tiedot/valittu-turvallisuuspoikkeama)]
+  (let [turvallisuuspoikkeama (reaction @tiedot/valittu-turvallisuuspoikkeama)
+        toimenpiteet-virheet (atom nil)]
     (fnc []
       (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                          ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
@@ -232,7 +235,7 @@
                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                      :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
-                     :disabled (not (voi-tallentaa? @turvallisuuspoikkeama))}]}
+                     :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]}
           [{:otsikko "Tapahtuman otsikko"
             :nimi :otsikko
             :tyyppi :string
@@ -381,7 +384,9 @@
                          {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
                           :palstoja 2
                           :uusi-rivi? true
-                          :komponentti [korjaavattoimenpiteet (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)]}
+                          :komponentti [korjaavattoimenpiteet
+                                        (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)
+                                        toimenpiteet-virheet]}
                          {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
                           :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
                          {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %

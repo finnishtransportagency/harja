@@ -58,7 +58,8 @@
                  konteksti :http {:metodi :POST
                                   :url url
                                   :kayttajatunnus kayttajatunnus
-                                  :salasana salasana})
+                                  :salasana salasana
+                                  :otsikot {"Content-Type" "text/xml"}})
                (kasittele-turin-vastaus db id)))
         {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
       (catch Throwable t

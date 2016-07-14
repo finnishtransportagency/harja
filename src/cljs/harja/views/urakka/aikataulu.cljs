@@ -128,11 +128,16 @@
               :muokattava? paallystysurakoitsijana?})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
-            :komponentti (fn [rivi]
+            :komponentti (fn [rivi {:keys [muokataan?]}]
                            (if (:valmis-tiemerkintaan rivi)
                              [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
                              (if (= (:nakyma optiot) :paallystys)
-                               [valmis-tiemerkintaan (:id rivi) urakka-id]
+                               ;; Voi merkitä valmiiksi tiemerkintään vain päällystysurakassa
+                               ;; Ei kuitenkaan jos gridi on muokkaustilassa, sillä päivämääränä asettaminen
+                               ;; dialogista resetoi muokkaustilan
+                               (if muokataan?
+                                 [:span]
+                                 [valmis-tiemerkintaan (:id rivi) urakka-id])
                                [:span "Ei"])))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-valmis-viimeistaan :tyyppi :pvm

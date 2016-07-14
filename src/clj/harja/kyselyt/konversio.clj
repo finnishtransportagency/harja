@@ -6,7 +6,8 @@
             [clj-time.coerce :as coerce]
             [taoensso.timbre :as log]
             [clj-time.format :as format]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc])
+  (:import (clojure.lang Keyword)))
 
 
 (defn yksi
@@ -19,9 +20,9 @@
   "Muuntaa (ja poistaa) :org_* kentät muotoon :organisaatio {:id ..., :nimi ..., ...}."
   [rivi]
   (-> rivi
-      (assoc :organisaatio {:id      (:org_id rivi)
-                            :nimi    (:org_nimi rivi)
-                            :tyyppi  (some-> rivi :org_tyyppi keyword)
+      (assoc :organisaatio {:id (:org_id rivi)
+                            :nimi (:org_nimi rivi)
+                            :tyyppi (some-> rivi :org_tyyppi keyword)
                             :lyhenne (:org_lyhenne rivi)
                             :ytunnus (:org_ytunnus rivi)})
       (dissoc :org_id :org_nimi :org_tyyppi :org_lyhenne :org_ytunnus)))
@@ -62,20 +63,20 @@
   ([kaikki-rivit sarake-vektori group-fn]
    (sarakkeet-vektoriin kaikki-rivit sarake-vektori group-fn :id))
   ([kaikki-rivit sarake-vektori group-fn lapsi-ok-fn]
-  (vec
-   (for [[id rivit] (group-by group-fn kaikki-rivit)]
-     (loop [rivi (first rivit)
-            [[sarake vektori] & sarakkeet] (seq sarake-vektori)]
-       (if-not sarake
-         rivi
-         (recur (-> rivi
-                    (dissoc sarake)
-                    (assoc vektori (vec (into #{}
-                                              (keep #(when-let [lapsi (get % sarake)]
-                                                       (when (lapsi-ok-fn lapsi)
-                                                         lapsi))
-                                                    rivit)))))
-                sarakkeet)))))))
+   (vec
+     (for [[id rivit] (group-by group-fn kaikki-rivit)]
+       (loop [rivi (first rivit)
+              [[sarake vektori] & sarakkeet] (seq sarake-vektori)]
+         (if-not sarake
+           rivi
+           (recur (-> rivi
+                      (dissoc sarake)
+                      (assoc vektori (vec (into #{}
+                                                (keep #(when-let [lapsi (get % sarake)]
+                                                        (when (lapsi-ok-fn lapsi)
+                                                          lapsi))
+                                                      rivit)))))
+                  sarakkeet)))))))
 
 (defn alaviiva->rakenne
   "Muuntaa mäpin avaimet alaviivalla sisäiseksi rakenteeksi, esim.
@@ -150,7 +151,10 @@
 (defn seq->array
   "Muuntaa yksittäisen arvon Clojure-sekvenssistä JDBC arrayksi."
   [vektori]
-  (str "{" (clojure.string/join "," (map name vektori)) "}"))
+  (let [kasittele #(if (or (= Keyword (type %)) (= String (type %)))
+                    (name %)
+                    (str %))]
+    (str "{" (clojure.string/join "," (map kasittele vektori)) "}")))
 
 (defn string-vector->keyword-vector
   "Muuntaa mapin kentän vectorissa olevat stringit keywordeiksi."
@@ -219,4 +223,4 @@
 (extend-protocol jdbc/ISQLValue
   java.util.Date
   (sql-value [v]
-      (sql-timestamp v)))
+    (sql-timestamp v)))

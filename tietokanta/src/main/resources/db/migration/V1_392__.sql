@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('tierekisteri', 'hae-urakan-tietueet');
+=======
 CREATE TABLE suljettu_tieosuus (
   id                  SERIAL PRIMARY KEY,
   jarjestelma         VARCHAR(128) NOT NULL,
@@ -29,3 +32,4 @@ VALUES ('api', 'kirjaa-suljettu-tieosuus');
 
 INSERT INTO integraatio (jarjestelma, nimi)
 VALUES ('api', 'poista-suljettu-tieosuus');
+>>>>>>> develop
