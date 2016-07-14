@@ -313,7 +313,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                true)
                 muokkaa-kenttaa-fn (fn [nimi]
                                      (fn [uudet-tiedot]
-                                       (log "[TURPO] Validoidaan ja muokataan")
                                        (-> uudet-tiedot
                                            (validoi skeema)
                                            (assoc ::muokatut (conj (or muokatut #{}) nimi))

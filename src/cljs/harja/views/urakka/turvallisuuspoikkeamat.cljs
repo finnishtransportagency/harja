@@ -65,7 +65,6 @@
                              :kun-virhe (fn [_]
                                           (reset! tiedot/kayttajahakutulokset-data []))
                              :kun-onnistuu (fn [vastaus]
-                                             (log "[TURPO] Käyttäjät haettu onnistuneesti: " (pr-str vastaus))
                                              (reset! tiedot/kayttajahakutulokset-data vastaus))}]}
     [{:otsikko "Etunimi"
       :nimi :etunimi
@@ -224,7 +223,6 @@
            :muokkaa! #(let [tarkistettu-lomakedata (if (= (:vaaralliset-aineet %) #{:vaarallisten-aineiden-vuoto})
                                                      (assoc % :vaaralliset-aineet #{})
                                                      %)]
-                       (log "[TURPO] Lomake muuttuu, uusi: " (pr-str tarkistettu-lomakedata))
                        (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
            :footer [napit/palvelinkutsu-nappi
