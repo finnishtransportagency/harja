@@ -27,9 +27,9 @@
     "koneellinen vesakonraivaus",
     "l- ja p-alueiden puhdistus",
     "liikennemerkkien puhdistus",
-    "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito seka reunapaalujen kunnossapito",
+    "liik., opast., ja ohjausl.hoito seka reunapaalujen kun.pito",
     "linjahiekoitus",
-    "lumen siirto",
+    "lumensiirto",
     "lumivallien madaltaminen",
     "muu",
     "ojitus",
@@ -48,12 +48,6 @@
     "sulamisveden haittojen torjunta",
     "suolaus",
     "tiestotarkastus"})
-
-(defn kanta-enum->skeema-enum [tehtava]
-  (case tehtava
-    "liik., opast., ja ohjausl. hoito seka reunapaalujen kun.pito"
-    "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"
-    tehtava))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-uusi
   (let [kutsu (api-tyokalut/post-kutsu
@@ -83,10 +77,9 @@
                   ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_uusi.json"
                                                                 slurp
                                                                 (.replace "__TEHTAVA__" tehtava)))]
-      (let [tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
+      (let [tehtavat-kannassa (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
                          (konv/array->set))
-            tehtava-kannassa (first (map kanta-enum->skeema-enum tehtavat))]
+            tehtava-kannassa (first tehtavat-kannassa)]
         (is (= 200 (:status kutsu)))
-        (is (= tehtava
-               tehtava-kannassa)
-            (str "Tehtävä '" tehtava-kannassa "' raportoitu onnistuneesti"))))))
+        (is (= tehtava-kannassa tehtava)
+            (str "Tehtävä '" tehtava "' raportoitu onnistuneesti"))))))

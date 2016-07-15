@@ -12,19 +12,12 @@
 
 (def +tyokone-seurantakirjaus-url+ "/api/seuranta/tyokone")
 
-(defn skeema-enum->kanta-enum [tehtava]
-  (let [enum-nimi (case tehtava
-                    "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"
-                    "liik., opast., ja ohjausl. hoito seka reunapaalujen kun.pito"
-                    tehtava)]
-    enum-nimi))
-
 (defn arrayksi [db v]
   (with-open [conn (.getConnection (:datasource db))]
     (.createArrayOf conn "text" (to-array v))))
 
 (defn- tallenna-seurantakirjaus [_ data kayttaja db]
-  (validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
+  #_(validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
                                                                (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
                                                                kayttaja)
   (doseq [havainto (:havainnot data)]
@@ -43,9 +36,7 @@
                                     (get-in havainto [:havainto :sijainti :koordinaatit :y])
                                     (get-in havainto [:havainto :suunta])
                                     urakka-id
-                                    (arrayksi db (as-> (get-in havainto [:havainto :suoritettavatTehtavat])
-                                                       tehtavat
-                                                       (map skeema-enum->kanta-enum tehtavat))))))
+                                    (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat])))))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defrecord Tyokoneenseuranta []
