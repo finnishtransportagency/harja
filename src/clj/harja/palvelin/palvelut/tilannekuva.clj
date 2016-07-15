@@ -214,7 +214,7 @@
     (when nykytilanne?
      (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
        (when-not (empty? haettavat-toimenpiteet)
-         (let [tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")
+         (let [tpi-str (konv/seq->array haettavat-toimenpiteet)
                valitun-alueen-geometria
                (if urakka-id
                  (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria
