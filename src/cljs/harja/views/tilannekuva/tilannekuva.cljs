@@ -121,7 +121,7 @@
                (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
             [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
              [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
-              {:width "200px"
+              {:width "230px" ;; 100% ei toimi tässä kontekstissa, joten määritetään leveydeksi paneelin leveys
                :on-change (fn [uusi-tila]
                             ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
                             (when (not= :osittain-valittu uusi-tila)
