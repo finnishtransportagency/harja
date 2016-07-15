@@ -40,9 +40,7 @@ CREATE TYPE suoritettavatehtava AS
        'liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito',
        'lumen siirto',
        'palteen poisto',
-       'päällystetyn tien sorapientareen täyttö'
-
-       );
+       'päällystetyn tien sorapientareen täyttö');
 
 ALTER TABLE tyokonehavainto ALTER COLUMN tehtavat TYPE suoritettavatehtava[] USING tehtavat::text::suoritettavatehtava[];
 ALTER TABLE toimenpidekoodi ALTER COLUMN suoritettavatehtava TYPE suoritettavatehtava USING suoritettavatehtava::text::suoritettavatehtava;
