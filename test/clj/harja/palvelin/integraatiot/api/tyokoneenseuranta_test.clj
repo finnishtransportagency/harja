@@ -80,7 +80,6 @@
 (deftest kaikkien-tehtavien-kirjaus-toimii
   (doseq [tehtava skeeman-tehtavat]
     (let [kutsu (api-tyokalut/post-kutsu
-                  ;; kokonaan uusi tyokone, kantaan pitäisi tulla uusi rivi
                   ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_uusi.json"
                                                                 slurp
                                                                 (.replace "__TEHTAVA__" tehtava)))]
