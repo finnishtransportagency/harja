@@ -37,7 +37,7 @@ CREATE TYPE suoritettavatehtava AS
        'tma-laite'
 
        -- Nämä olivat skeemassa, mutta puuttuvat kannasta(?)
-       'liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito',
+       'liikennemerkkien ym. kunnossapito', -- max. 63 merkkiä, skeemassa: "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"
        'lumen siirto',
        'palteen poisto',
        'päällystetyn tien sorapientareen täyttö');
