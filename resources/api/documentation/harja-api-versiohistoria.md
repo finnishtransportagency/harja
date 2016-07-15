@@ -4,7 +4,7 @@
 <b>Versiohistoria:</b>
 - Versionumero: 0.2.3. Julkaistu 15.7.2016:
     - Yhtenäistetty työkoneiden tehtävien enum-arvot kannan omien enumien kanssa, mistä johtuen tehtävien nimiin tehty pieniä muutoksia.
-    - Seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa: paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite
+    - Ylläpito-urakoissa seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa: paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite
 - Versionumero: 0.2.2. Julkaistu 13.7.2016:
     - Lisätty rajapinnat suljettujen tieosien kirjaamiselle ja poistolle. 
 - Versionumero: 0.2.1. Julkaistu 6.7.2016:
