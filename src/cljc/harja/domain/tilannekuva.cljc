@@ -33,6 +33,10 @@
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
   [suljetut-tiet :suljetut-tieosuudet "Suljetut tieosuudet"]
+  [paaasfalttilevittimet :paaasfalttilevittimet "Pääasfalttilevittimet"]
+  [remix-laitteet :remix-laitteet "Remix-laitteet"]
+  [sekoitus-ja-stabilointijyrsimet :sekoitus-ja-stabilointijyrsimet "Sekoitus- ja stabilointijyrsimet"]
+  [tma-laitteet :tma-laitteet "TMA-laitteet"]
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
@@ -78,6 +82,13 @@
 
 (def tehtavien-jarjestys
   {:ilmoitukset {:tyypit [tpp tur urk]}
+   :yllapito [paallystys
+              paikkaus
+              suljetut-tiet
+              paaasfalttilevittimet
+              remix-laitteet
+              sekoitus-ja-stabilointijyrsimet
+              tma-laitteet]
    :talvi [auraus-ja-sohjonpoisto
            suolaus
            liuossuolaus

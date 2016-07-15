@@ -54,7 +54,11 @@ hakutiheys-historiakuva 1200000)
   (atom
     {:yllapito {tk/paallystys false
                 tk/paikkaus false
-                tk/suljetut-tiet false}
+                tk/suljetut-tiet false
+                tk/paaasfalttilevittimet false
+                tk/remix-laitteet false
+                tk/sekoitus-ja-stabilointijyrsimet false
+                tk/tma-laitteet false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
                             tk/urk false}
