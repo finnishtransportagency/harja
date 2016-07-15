@@ -244,7 +244,7 @@
                                   valitun-alueen-geometria
                                   urakat
                                   tpi-haku-str
-                                  haettavat-tyokoneet))))))))
+                                  tyokone-haku-str))))))))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
   (let [koodit (some->> (union talvi kesa)
