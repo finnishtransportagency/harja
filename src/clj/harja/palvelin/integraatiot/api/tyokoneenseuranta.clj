@@ -16,9 +16,8 @@
   (let [enum-nimi (case tehtava
                     "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"
                     "liik., opast., ja ohjausl. hoito seka reunapaalujen kun.pito"
-                    tehtava)
-        ilman-skandeja (fmt/ilman-suomalaisia-skandeja enum-nimi)]
-    ilman-skandeja))
+                    tehtava)]
+    enum-nimi))
 
 (defn arrayksi [db v]
   (with-open [conn (.getConnection (:datasource db))]
