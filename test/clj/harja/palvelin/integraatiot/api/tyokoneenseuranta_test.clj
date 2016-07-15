@@ -27,7 +27,7 @@
     "koneellinen vesakonraivaus",
     "l- ja p-alueiden puhdistus",
     "liikennemerkkien puhdistus",
-    "liik., opast., ja ohjausl.hoito seka reunapaalujen kun.pito",
+    "liik. opast. ja ohjausl. hoito seka reunapaalujen kun.pito",
     "linjahiekoitus",
     "lumensiirto",
     "lumivallien madaltaminen",

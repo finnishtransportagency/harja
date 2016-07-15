@@ -42,7 +42,7 @@
   [liikennemerkkien-puhdistus "liikennemerkkien puhdistus"
    "Liikennemerkkien puhdistus"]
   [liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito
-   "liik., opast., ja ohjausl.hoito seka reunapaalujen kun.pito"
+   "liik. opast. ja ohjausl. hoito seka reunapaalujen kun.pito"
    "Liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"]
   [palteen-poisto "palteen poisto" "Palteen poisto"]
   [paallystetyn-tien-sorapientareen-taytto
