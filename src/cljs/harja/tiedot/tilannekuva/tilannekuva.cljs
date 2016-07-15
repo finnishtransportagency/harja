@@ -55,10 +55,10 @@ hakutiheys-historiakuva 1200000)
     {:yllapito {tk/paallystys false
                 tk/paikkaus false
                 tk/suljetut-tiet false
-                tk/paaasfalttilevittimet false
-                tk/remix-laitteet false
-                tk/sekoitus-ja-stabilointijyrsimet false
-                tk/tma-laitteet false}
+                tk/paaasfalttilevitin false
+                tk/remix-laite false
+                tk/sekoitus-ja-stabilointijyrsin false
+                tk/tma-laite false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
                             tk/urk false}

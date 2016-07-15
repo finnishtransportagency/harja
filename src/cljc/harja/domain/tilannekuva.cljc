@@ -33,10 +33,10 @@
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
   [suljetut-tiet :suljetut-tieosuudet "Suljetut tieosuudet"]
-  [paaasfalttilevittimet :paaasfalttilevittimet "Pääasfalttilevittimet"]
-  [remix-laitteet :remix-laitteet "Remix-laitteet"]
-  [sekoitus-ja-stabilointijyrsimet :sekoitus-ja-stabilointijyrsimet "Sekoitus- ja stabilointijyrsimet"]
-  [tma-laitteet :tma-laitteet "TMA-laitteet"]
+  [paaasfalttilevitin :paaasfalttilevitin "Pääasfalttilevittimet"]
+  [remix-laite :remix-laite "Remix-laitteet"]
+  [sekoitus-ja-stabilointijyrsin :sekoitus-ja-stabilointijyrsin "Sekoitus- ja stabilointijyrsimet"]
+  [tma-laite :tma-laite "TMA-laitteet"]
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
@@ -85,10 +85,10 @@
    :yllapito [paallystys
               paikkaus
               suljetut-tiet
-              paaasfalttilevittimet
-              remix-laitteet
-              sekoitus-ja-stabilointijyrsimet
-              tma-laitteet]
+              paaasfalttilevitin
+              remix-laite
+              sekoitus-ja-stabilointijyrsin
+              tma-laite]
    :talvi [auraus-ja-sohjonpoisto
            suolaus
            liuossuolaus
