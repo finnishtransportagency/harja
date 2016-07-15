@@ -31,10 +31,10 @@ CREATE TYPE suoritettavatehtava AS
        'paannejaan poisto',
 
        -- Nämä olivat skeemassa, mutta puuttuvat kannasta(?)
-       'liik., opast., ja ohjausl. hoito sekä reunapaalujen kun.pito', -- max. 63 merkkiä, skeemassa: "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"
+       'liik., opast., ja ohjausl. hoito seka reunapaalujen kun.pito', -- max. 63 merkkiä, skeemassa: "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"
        'lumen siirto',
        'palteen poisto',
-       'päällystetyn tien sorapientareen täyttö');
+       'paallystetyn tien sorapientareen taytto');
 
 ALTER TABLE tyokonehavainto ALTER COLUMN tehtavat TYPE suoritettavatehtava[] USING tehtavat::text::suoritettavatehtava[];
 ALTER TABLE toimenpidekoodi ALTER COLUMN suoritettavatehtava TYPE suoritettavatehtava USING suoritettavatehtava::text::suoritettavatehtava;
