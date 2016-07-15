@@ -97,7 +97,7 @@
                                       :ei-valittu
                                       :osittain-valittu)))]
     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-      (let [ryhman-elementtien-avaimet (or (get-in tiedot/jarjestys ryhma-polku)
+      (let [ryhman-elementtien-avaimet (or (get-in tk/tehtavien-jarjestys ryhma-polku)
                                            (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
             auki? (fn [] (or @oma-auki-tila
                              (and kokoelma-atom
