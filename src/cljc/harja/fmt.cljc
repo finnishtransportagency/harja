@@ -340,3 +340,12 @@
           (>= paivat vuosi)
           (let [vuodet (int (/ paivat vuosi))]
             (str vuodet " " (if (= vuodet 1) "vuosi" "vuotta"))))))
+
+(defn ilman-suomalaisia-skandeja [teksti]
+  (str/join (map #(case %
+                   "Ä" "A"
+                   "ä" "a"
+                   "Ö" "O"
+                   "ö" "o"
+                   %)
+                 (str/split teksti #""))))

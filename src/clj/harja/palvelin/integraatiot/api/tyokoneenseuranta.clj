@@ -2,12 +2,23 @@
   (:require [compojure.core :refer [POST]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tyokoneseuranta :as tks]
+            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [clojure.string :as str]
+            [harja.fmt :as fmt]))
 
 (def +tyokone-seurantakirjaus-url+ "/api/seuranta/tyokone")
+
+(defn skeema-enum->kanta-enum [tehtava]
+  (let [enum-nimi (case tehtava
+                    "liikennemerkkien, opasteiden ja liikenteenohjauslaitteiden hoito sekä reunapaalujen kunnossapito"
+                    "liik., opast., ja ohjausl. hoito seka reunapaalujen kun.pito"
+                    tehtava)
+        ilman-skandeja (fmt/ilman-suomalaisia-skandeja enum-nimi)]
+    ilman-skandeja))
 
 (defn arrayksi [db v]
   (with-open [conn (.getConnection (:datasource db))]
@@ -33,7 +44,9 @@
                                     (get-in havainto [:havainto :sijainti :koordinaatit :y])
                                     (get-in havainto [:havainto :suunta])
                                     urakka-id
-                                    (arrayksi db (get-in havainto [:havainto :suoritettavatTehtavat])))))
+                                    (arrayksi db (as-> (get-in havainto [:havainto :suoritettavatTehtavat])
+                                                       tehtavat
+                                                       (map skeema-enum->kanta-enum tehtavat))))))
   (tee-kirjausvastauksen-body {:ilmoitukset "Kirjauksen tallennus onnistui"}))
 
 (defrecord Tyokoneenseuranta []
