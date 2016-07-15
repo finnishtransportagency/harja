@@ -756,7 +756,7 @@ documentation:
   /tyokone:
     post:
       is: [secured]
-      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mieluusti 5-15 sekunnin intervalilla ja otoskoolla.
+      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mukaan mieluusti 5-15 sekunnin intervalilla ja otoskoolla.
       body:
         application/json:
           example: !include examples/tyokoneenseurannan-kirjaus-request.json
