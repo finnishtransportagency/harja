@@ -26,6 +26,7 @@ CREATE TYPE suoritettavatehtava AS
       'paallystetyn tien sorapientareen taytto',
       'siltojen puhdistus',
       'sorastus',
+      'sorapientareen taytto',
       'sorateiden muokkaushoylays',
       'sorateiden polynsidonta',
       'sorateiden tasaus',
