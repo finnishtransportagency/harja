@@ -29,7 +29,7 @@
         "havaintoaika": "2016-01-30T12:00:00Z",
         "urakkaid": 4,
         "suoritettavatTehtavat": [
-          "suolaus"
+          "__TEHTAVA__"
         ]
       }
     }
