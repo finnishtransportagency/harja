@@ -118,7 +118,7 @@
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
   [tyyppi oikeus urakka-id kayttaja]
   (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
-      (let [roolit-joilla-oikeus (map first (filter #((second %) tyyppi) (:roolien-oikeudet oikeus)))]
+      (let [roolit-joilla-oikeus (set (map first (filter #((second %) tyyppi) (:roolien-oikeudet oikeus))))]
         (and (not (empty? roolit-joilla-oikeus))
              (or (roolit/roolissa? kayttaja roolit-joilla-oikeus)
                  (and urakka-id
