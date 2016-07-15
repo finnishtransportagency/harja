@@ -121,7 +121,8 @@
                (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
             [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
              [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
-              {:on-change (fn [uusi-tila]
+              {:width "200px"
+               :on-change (fn [uusi-tila]
                             ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
                             (when (not= :osittain-valittu uusi-tila)
                               (reset! suodattimet-atom
