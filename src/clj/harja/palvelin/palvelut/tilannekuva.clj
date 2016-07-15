@@ -212,14 +212,15 @@
   (when-not (empty? urakat)
     (when nykytilanne?
      (let [haettavat-toimenpiteet (haettavat (union talvi kesa))
-           haettavat-tyokoneet (filter #(#{:paaasfalttilevitin
+           haettavat-tyokonetyypit (filter #(#{:paaasfalttilevitin
                                            :remix-laite
                                            :sekoitus-ja-stabilointijyrsin
                                            :tma-laite} %)
                                        (haettavat yllapito))]
-       (when-not (empty? haettavat-toimenpiteet)
+       (when (or (not (empty? haettavat-toimenpiteet))
+                  (not (empty? haettavat-tyokonetyypit)))
          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
-               tyokone-haku-str (konv/seq->array haettavat-tyokoneet)
+               tyokone-haku-str (konv/seq->array haettavat-tyokonetyypit)
                valitun-alueen-geometria
                (if urakka-id
                  (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria
