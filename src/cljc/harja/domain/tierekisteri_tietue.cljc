@@ -42,6 +42,7 @@
     (let [tietolaji (:tunniste tietolajin-kuvaus)
           kenttien-kuvaukset (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)
           string-osat (map (partial muodosta-kentta tietolaji arvot-map) kenttien-kuvaukset)]
+      ;; TODO Castaa oikeaksi tietotyypiksi
       (str/join string-osat)))
 
 (defn- pura-kentta [arvot-merkkijono
