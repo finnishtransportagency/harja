@@ -4,20 +4,20 @@
         :clj [[taoensso.timbre :as log]])
             [harja.tyokalut.merkkijono :as merkkijono]))
 
-(defn jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
+(defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
   (sort-by :jarjestysnumero (filter :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))))
 
-(defn heita-poikkeus [tietolaji virhe]
+(defn- heita-poikkeus [tietolaji virhe]
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
     (throw (Exception. viesti))))
 
-(defn validoi-arvo [tietolaji {:keys [kenttatunniste pakollinen pituus]} arvo]
+(defn- validoi-arvo [tietolaji {:keys [kenttatunniste pakollinen pituus]} arvo]
   (when (and pakollinen (not arvo))
     (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
   (when (< pituus (count arvo))
     (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä: " kenttatunniste " maksimipituus: " pituus))))
 
-(defn hae-arvo
+(defn- hae-arvo
   "Ottaa arvot-stringin ja etsii sieltä halutun arvon käyttäen apuna kenttien-kuvaukset -mappia."
   [arvot-merkkijono kenttien-kuvaukset jarjestysnumero]
   (let [jarjestysnumeron-kentta (first (filter #(= (:jarjestysnumero %) jarjestysnumero)

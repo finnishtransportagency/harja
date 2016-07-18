@@ -2263,9 +2263,9 @@
                              :tietotyyppi :merkkijono
                              :pituus 3}]
         arvot-string "tes  ti   testi     123"]
-    (is (= "testi" (tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 3)))
-    (is (= "ti" (tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 2)))
-    (is (= "123" (tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 4)))))
+    (is (= "testi" (#'tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 3)))
+    (is (= "ti" (#'tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 2)))
+    (is (= "123" (#'tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 4)))))
 
 (deftest tarkista-paivamaarien-kasittely
   (let [testikentat [{:kenttatunniste "a"
@@ -2273,7 +2273,7 @@
                       :tietotyyppi :paivamaara
                       :pituus 10}]
         testiarvot "2009-03-23"]
-    (is (= "2009-03-23" (tierekisteri-tietue/hae-arvo testiarvot testikentat 1)))))
+    (is (= "2009-03-23" (#'tierekisteri-tietue/hae-arvo testiarvot testikentat 1)))))
 
 
 (deftest tarkista-arvojen-muodostaminen
