@@ -45,6 +45,14 @@
       (oikeudet "W+") :organisaatio
       (oikeudet "W") :urakka)))
 
+(defn- on-nimetty-oikeus? [nimi kayttooikeus rooli]
+  (let [oikeudet (roolin-oikeudet kayttooikeus rooli)]
+    (println "ON-nimetty-oikeus? nimi: " nimi ", kayttooikeus: " kayttooikeus ", rooli: " rooli)
+    (cond
+      (oikeudet (str nimi "*")) :kaikki
+      (oikeudet (str nimi "+")) :organisaatio
+      (oikeudet nimi) :urakka)))
+
 (defn- on-oikeus-urakkaan? [oikeus-pred urakka-id organisaatio-id organisaation-urakka?
                             {rooli :rooli
                              roolin-urakka-id :urakka-id
@@ -74,12 +82,13 @@
       nil)))
 
 (defn- on-oikeus?
-  "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
+  "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
                                    urakkaroolit organisaatioroolit] :as kayttaja}]
   (let [oikeus-pred (partial (case tyyppi
                                :luku on-lukuoikeus?
-                               :kirjoitus on-kirjoitusoikeus?)
+                               :kirjoitus on-kirjoitusoikeus?
+                               (partial on-nimetty-oikeus? tyyppi))
                              oikeus)
         kaikki-urakkaroolit (apply concat (vals urakkaroolit))
         kaikki-organisaatioroolit (apply concat (vals organisaatioroolit))
@@ -117,12 +126,8 @@
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
   [tyyppi oikeus urakka-id kayttaja]
-  (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
-      (let [roolit-joilla-oikeus (set (map first (filter #((second %) tyyppi) (:roolien-oikeudet oikeus))))]
-        (and (not (empty? roolit-joilla-oikeus))
-             (or (roolit/roolissa? kayttaja roolit-joilla-oikeus)
-                 (and urakka-id
-                      (roolit/rooli-urakassa? kayttaja roolit-joilla-oikeus urakka-id)))))))
+  (on-oikeus? tyyppi oikeus urakka-id kayttaja))
+
 (defn voi-lukea?
   #?(:cljs
      ([oikeus]
