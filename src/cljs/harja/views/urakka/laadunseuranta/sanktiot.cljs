@@ -33,10 +33,13 @@
     (not (lomake/voi-tallentaa-ja-muokattu? sanktio))))
 
 (defn sanktion-tiedot
-  []
+  [optiot]
   (let [muokattu (atom @tiedot/valittu-sanktio)
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                               (:id @nav/valittu-urakka))]
+                                               (:id @nav/valittu-urakka))
+        yllapito? (or (= :paallystys (:nakyma optiot))
+                      (= :paikkaus (:nakyma optiot))
+                      (= :tiemerkinta (:nakyma optiot)))]
     (fn []
       [:div
        [napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
@@ -131,43 +134,46 @@
           :valinta-nayta #(or % "Ei sidota indeksiin")
           :palstoja 1}
 
-         {:otsikko "Laji" :tyyppi :valinta
-          :pakollinen? true
-          :palstoja 1
-          :nimi :laji
-          :hae (comp keyword :laji)
-          :aseta #(assoc %1 :laji %2 :tyyppi nil)
-          :valinnat [:A :B :C]
-          :valinta-nayta #(case %
-                           :A "Ryhmä A"
-                           :B "Ryhmä B"
-                           :C "Ryhmä C"
-                           "- valitse -")
-          :validoi [[:ei-tyhja "Valitse laji"]]}
+         (when-not yllapito?
+           {:otsikko "Laji" :tyyppi :valinta
+            :pakollinen? true
+            :palstoja 1
+            :nimi :laji
+            :hae (comp keyword :laji)
+            :aseta #(assoc %1 :laji %2 :tyyppi nil)
+            :valinnat [:A :B :C]
+            :valinta-nayta #(case %
+                             :A "Ryhmä A"
+                             :B "Ryhmä B"
+                             :C "Ryhmä C"
+                             "- valitse laji -")
+            :validoi [[:ei-tyhja "Valitse laji"]]})
 
-         {:otsikko "Tyyppi" :tyyppi :valinta
-          :palstoja 1
-          :pakollinen? true
-          :nimi :tyyppi
-          :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                   (assoc sanktio
-                     :tyyppi tyyppi
-                     :toimenpideinstanssi
-                     (when tpk
-                       (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-          ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
-          :valinnat-fn (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
-          :valinta-nayta :nimi
-          :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
-         {:otsikko "Toimenpide"
-          :pakollinen? true
-          :nimi :toimenpideinstanssi
-          :tyyppi :valinta
-          :valinta-arvo :tpi_id
-          :valinta-nayta :tpi_nimi
-          :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
-          :palstoja 1
-          :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}]
+         (when-not yllapito?
+           {:otsikko "Tyyppi" :tyyppi :valinta
+            :palstoja 1
+            :pakollinen? true
+            :nimi :tyyppi
+            :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                     (assoc sanktio
+                       :tyyppi tyyppi
+                       :toimenpideinstanssi
+                       (when tpk
+                         (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
+            ;; TODO: Kysely ei palauta sanktiotyyppien lajeja, joten tässä se pitää dissocata. Onko ok? Laatupoikkeamassa käytetään.
+            :valinnat-fn (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
+            :valinta-nayta #(if % (:nimi %) " - valitse tyyppi -")
+            :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
+         (when-not yllapito?
+           {:otsikko "Toimenpide"
+            :pakollinen? true
+            :nimi :toimenpideinstanssi
+            :tyyppi :valinta
+            :valinta-arvo :tpi_id
+            :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+            :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
+            :palstoja 1
+            :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})]
         @muokattu]])))
 
 (defn sanktiolistaus
@@ -192,7 +198,7 @@
        {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea}]
       sanktiot]]))
 
-(defn sanktiot []
+(defn sanktiot [optiot]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (komp/sisaan-ulos #(do
@@ -203,5 +209,5 @@
       [:span
        [kartta/kartan-paikka]
        (if @tiedot/valittu-sanktio
-         [sanktion-tiedot]
+         [sanktion-tiedot optiot]
          [sanktiolistaus])])))
