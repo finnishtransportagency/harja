@@ -21,4 +21,15 @@ SELECT * FROM laske_hoitokauden_asiakastyytyvaisyysbonus(
 DELETE FROM laskutusyhteenveto_cache
  WHERE (:urakka::INTEGER IS NULL OR urakka = :urakka) AND
        alkupvm >= :alkupvm::date AND
-       loppupvm <= :loppupvm::date
+       loppupvm <= :loppupvm::date;
+
+-- name: hae-yks-hint-tehtavien-maarat-aikaan-asti
+SELECT
+    toimenpidekoodi as tehtava_id,
+    SUM(maara) as maara
+FROM toteuma_tehtava tt
+    JOIN toteuma t ON tt.toteuma = t.id
+    JOIN urakka u ON t.urakka = u.id
+WHERE urakka = :urakkaid
+    AND t.paattynyt <= :loppupvm
+GROUP BY toimenpidekoodi;

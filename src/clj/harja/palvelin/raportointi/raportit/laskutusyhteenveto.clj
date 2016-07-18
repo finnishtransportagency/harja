@@ -9,7 +9,8 @@
             [clj-time.local :as l]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot :as yks-hint-tyot]))
 
 (defn hae-laskutusyhteenvedon-tiedot
   [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
@@ -27,6 +28,8 @@
                                                      (konv/sql-date alkupvm)
                                                      (konv/sql-date loppupvm)
                                                      urakka-id))))
+
+(defn hae-toteutuneet-tehtavat [])
 
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]
@@ -105,8 +108,30 @@
                                  (if kyseessa-vuosi-vali?
                                    (str "Vuonna " (pvm/vuosi (l/to-local-date-time alkupvm)) " yhteensä" " \u20AC")
                                    (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) " yhteensä"))))
-        tiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
-        avaimet (map name (keys (first tiedot)))
+        laskutustiedot (hae-laskutusyhteenvedon-tiedot db user parametrit)
+        toteutuneet-maarat-tahan-asti (as-> (laskutus-q/hae-yks-hint-tehtavien-maarat-aikaan-asti db urakka-id loppupvm)
+                                            toteumat
+                                            (yks-hint-tyot/liita-toteumiin-suunnittelutiedot
+                                              alkupvm
+                                              loppupvm
+                                              toteumat
+                                              (yks-hint-tyot/hae-urakan-yks-hint-suunnittelutiedot db urakka-id)))
+        suunnitellut-kustannukset-yhteensa (reduce (fn [tulos {:keys [suunniteltu_maara yksikkohinta]}]
+                                                     (+ tulos (if (and suunniteltu_maara yksikkohinta)
+                                                                (* suunniteltu_maara yksikkohinta)
+                                                                0)))
+                                                   0
+                                                   toteutuneet-maarat-tahan-asti)
+        toteutuneet-kustannukset-yhteensa (reduce (fn [tulos {:keys [maara yksikkohinta]}]
+                                                    (+ tulos (if (and maara yksikkohinta)
+                                                               (* maara yksikkohinta)
+                                                               0)))
+                                                  0
+                                                  toteutuneet-maarat-tahan-asti)
+        toteumat-ilman-suunnitelmaa (filter
+                                       #(nil? (:suunniteltu_maara %))
+                                       toteutuneet-maarat-tahan-asti)
+        avaimet (map name (keys (first laskutustiedot)))
         ;; poistetaan suolasakot-kentät, koska sen nil voi aiheutua myös lämpötilojen puuttumisesta.
         ;; Halutaan selvittää mahd. tarkasti erikseen puuttuuko indeksiarvoja, lämpötiloja vai molempia
         laskutettu-korotus-kentat (mapv keyword (filter #(and
@@ -115,18 +140,18 @@
         laskutetaan-korotus-kentat (mapv keyword (filter #(and
                                                            (re-find #"laskutetaan_ind_korotus" %)
                                                            (not (re-find #"suolasakot_laskutetaan_ind_korotus" %))) avaimet))
-        indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (first (keep #(some nil? (vals (select-keys % laskutettu-korotus-kentat))) tiedot))
-        indeksiarvo-puuttuu-valitulta-kklta? (first (keep #(some nil? (vals (select-keys % laskutetaan-korotus-kentat))) tiedot))
+        indeksiarvo-puuttuu-jo-laskutetulta-ajalta? (first (keep #(some nil? (vals (select-keys % laskutettu-korotus-kentat))) laskutustiedot))
+        indeksiarvo-puuttuu-valitulta-kklta? (first (keep #(some nil? (vals (select-keys % laskutetaan-korotus-kentat))) laskutustiedot))
 
-        perusluku-puuttuu? (not (:perusluku (first tiedot)))
-        talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
+        perusluku-puuttuu? (not (:perusluku (first laskutustiedot)))
+        talvisuolasakko-kaytossa? (some :suolasakko_kaytossa laskutustiedot)
         suolasakkojen-laskenta-epaonnistui? (some
                                               #(nil? (val %))
-                                              (select-keys (first (filter #(= "Talvihoito" (:nimi %)) tiedot))
+                                              (select-keys (first (filter #(= "Talvihoito" (:nimi %)) laskutustiedot))
                                                            [:suolasakot_laskutetaan :suolasakot_laskutettu]))
         nayta-etta-lampotila-puuttuu? (when (and talvisuolasakko-kaytossa? suolasakkojen-laskenta-epaonnistui?)
                                         (first (keep #(true? (:lampotila_puuttuu %))
-                                                     tiedot)))
+                                                     laskutustiedot)))
         varoitus-lampotilojen-puuttumisesta (if nayta-etta-lampotila-puuttuu?
                                               " Lämpötilatietoja puuttuu. "
                                               " ")
@@ -165,47 +190,47 @@
                                     yhteenveto-teksti kyseessa-kk-vali?
                                     tiedot (or summa-fmt fmt/luku-indeksikorotus)))
                         [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
-                          :kht_laskutettu :kht_laskutetaan tiedot]
+                          :kht_laskutettu :kht_laskutetaan laskutustiedot]
                          [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
-                          :yht_laskutettu :yht_laskutetaan tiedot]
+                          :yht_laskutettu :yht_laskutetaan laskutustiedot]
                          [" Sanktiot " " Ei sanktioita "
-                          :sakot_laskutettu :sakot_laskutetaan tiedot]
+                          :sakot_laskutettu :sakot_laskutetaan laskutustiedot]
                          (when talvisuolasakko-kaytossa?
                            [" Talvisuolasakko (autom. laskettu) " " Ei talvisuolasakkoa "
-                            :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
+                            :suolasakot_laskutettu :suolasakot_laskutetaan laskutustiedot fmt/euro-ei-voitu-laskea])
                          [" Muutos- ja lisätyöt sekä vahinkojen korjaukset " " Ei muutos- ja lisätöitä "
-                          :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+                          :muutostyot_laskutettu :muutostyot_laskutetaan laskutustiedot]
                          [" Äkilliset hoitotyöt " " Ei äkillisiä hoitotöitä "
-                          :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
+                          :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan laskutustiedot]
                          [" Bonukset " " Ei bonuksia "
-                          :bonukset_laskutettu :bonukset_laskutetaan tiedot]
+                          :bonukset_laskutettu :bonukset_laskutetaan laskutustiedot]
                          [" Erilliskustannukset (muut kuin bonukset) " " Ei erilliskustannuksia "
-                          :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
+                          :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan laskutustiedot]
                          [" Kokonaishintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot]
+                          :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus laskutustiedot]
                          [" Yksikköhintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot]
+                          :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus laskutustiedot]
                          [" Sanktioiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
+                          :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus laskutustiedot]
                          (when talvisuolasakko-kaytossa?
                            [" Talvisuolasakon indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
-                            :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
+                            :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus laskutustiedot fmt/euro-ei-voitu-laskea])
                          [" Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
+                          :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus laskutustiedot]
                          [" Äkillisten hoitotöiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot]
+                          :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus laskutustiedot]
                          [" Bonusten indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus tiedot]
+                          :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus laskutustiedot]
                          [" Erilliskustannusten indeksitarkistukset (muut kuin bonukset) " " Ei indeksitarkistuksia "
-                          :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
+                          :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus laskutustiedot]
                          [" Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
-                          :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot]
+                          :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus laskutustiedot]
                          [" Kaikki indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
-                          :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot]
+                          :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus laskutustiedot]
                          [" Kaikki paitsi kok.hint. työt yhteensä " " Ei kustannuksia "
-                          :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
+                          :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan laskutustiedot]
                          [" Kaikki yhteensä " " Ei kustannuksia "
-                          :kaikki_laskutettu :kaikki_laskutetaan tiedot]]))]
+                          :kaikki_laskutettu :kaikki_laskutetaan laskutustiedot]]))]
 
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}
@@ -213,4 +238,14 @@
                 varoitus-tietojen-puuttumisesta
                 (if (empty? taulukot)
                   [:teksti " Ei laskutettavaa"]
-                  taulukot)]))))
+                  taulukot)
+                (when-not (empty? taulukot)
+                  [:yhteenveto
+                  [[(str "Suunnitellut yksikköhintaiset työt " (fmt/pvm loppupvm) " asti")
+                    (fmt/euro suunnitellut-kustannukset-yhteensa)]
+                   [(str "Toteutuneet yksikköhintaiset työt " (fmt/pvm loppupvm) " asti")
+                    (str (fmt/euro toteutuneet-kustannukset-yhteensa)
+                         (when-not (empty? toteumat-ilman-suunnitelmaa)
+                           (str " (ei sisällä toteumia, joille ei löytynyt suunnittelutietoja: "
+                           (count toteumat-ilman-suunnitelmaa)
+                           "kpl)")))]]])]))))
