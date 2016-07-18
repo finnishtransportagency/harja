@@ -2305,9 +2305,9 @@
                       :tietotyyppi :merkkijono
                       :pituus 3}]
         testiarvot "tes  ti   testi     123"]
-    (is (= "testi" (tierekisteri-tietue/hae-arvo testiarvot testikentat 3 10)))
-    (is (= "ti" (tierekisteri-tietue/hae-arvo testiarvot testikentat 2 5)))
-    (is (= "123" (tierekisteri-tietue/hae-arvo testiarvot testikentat 4 3)))))
+    (is (= "testi" (tierekisteri-tietue/hae-arvo testiarvot testikentat 3)))
+    (is (= "ti" (tierekisteri-tietue/hae-arvo testiarvot testikentat 2)))
+    (is (= "123" (tierekisteri-tietue/hae-arvo testiarvot testikentat 4)))))
 
 (deftest tarkista-paivamaarien-kasittely
   (let [testikentat [{:kenttatunniste "a"

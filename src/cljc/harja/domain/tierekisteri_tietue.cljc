@@ -23,9 +23,14 @@
 
 (defn hae-arvo
   "Ottaa arvot stringinä ja etsii sieltä halutun arvon käyttäen apuna kenttien-kuvaukset -mappia."
-  [arvot-merkkijono kenttien-kuvaukset jarjestysnumero pituus]
-  (let [alkuindeksi (apply + (map :pituus (filter #(> jarjestysnumero (:jarjestysnumero %)) kenttien-kuvaukset)))
-        loppuindeksi (+ alkuindeksi pituus)
+  [arvot-merkkijono kenttien-kuvaukset jarjestysnumero]
+  (let [jarjestysnumeron-kentta (first (filter #(= (:jarjestysnumero %) jarjestysnumero)
+                                         kenttien-kuvaukset))
+        alkuindeksi (apply +
+                           (map :pituus
+                                (filter #(< (:jarjestysnumero %) jarjestysnumero)
+                                        kenttien-kuvaukset)))
+        loppuindeksi (+ alkuindeksi (:pituus jarjestysnumeron-kentta))
         teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))]
     ;; todo: tarviiko castata tietotyypin mukaan?
     teksti))
