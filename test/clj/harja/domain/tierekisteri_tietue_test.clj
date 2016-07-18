@@ -2246,26 +2246,26 @@
      :ylaraja nil}]})
 
 (deftest tarkista-kentan-arvon-hakeminen-merkkijonosta
-  (let [testikentat [{:kenttatunniste "a"
-                      :jarjestysnumero 1
-                      :tietotyyppi :merkkijono
-                      :pituus 5}
-                     {:kenttatunniste "b"
-                      :jarjestysnumero 2
-                      :tietotyyppi :merkkijono
-                      :pituus 5}
-                     {:kenttatunniste "c"
-                      :jarjestysnumero 3
-                      :tietotyyppi :merkkijono
-                      :pituus 10}
-                     {:kenttatunniste "d"
-                      :jarjestysnumero 4
-                      :tietotyyppi :merkkijono
-                      :pituus 3}]
-        testiarvot "tes  ti   testi     123"]
-    (is (= "testi" (tierekisteri-tietue/hae-arvo testiarvot testikentat 3)))
-    (is (= "ti" (tierekisteri-tietue/hae-arvo testiarvot testikentat 2)))
-    (is (= "123" (tierekisteri-tietue/hae-arvo testiarvot testikentat 4)))))
+  (let [kenttien-kuvaukset [{:kenttatunniste "a"
+                             :jarjestysnumero 1
+                             :tietotyyppi :merkkijono
+                             :pituus 5}
+                            {:kenttatunniste "b"
+                             :jarjestysnumero 2
+                             :tietotyyppi :merkkijono
+                             :pituus 5}
+                            {:kenttatunniste "c"
+                             :jarjestysnumero 3
+                             :tietotyyppi :merkkijono
+                             :pituus 10}
+                            {:kenttatunniste "d"
+                             :jarjestysnumero 4
+                             :tietotyyppi :merkkijono
+                             :pituus 3}]
+        arvot-string "tes  ti   testi     123"]
+    (is (= "testi" (tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 3)))
+    (is (= "ti" (tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 2)))
+    (is (= "123" (tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 4)))))
 
 (deftest tarkista-paivamaarien-kasittely
   (let [testikentat [{:kenttatunniste "a"
@@ -2294,23 +2294,21 @@
            [{:avain "a" :arvo "testi"}
             {:avain "b" :arvo "1"}]))))
 
-;; TODO Tätä ei kai tarvitse koska skeemassa ei ole enää avain arvo -mappeja vaan yksi mappi jossa kaikki
-#_(deftest tarkista-arvojen-purku
-  (is (= [{:avain "a" :arvo "testi"}
-          {:avain "b" :arvo "1"}]
-         (tierekisteri-tietue/pura-arvot
-           {:tunniste "tl506",
-            :ominaisuudet
-            [{:kenttatunniste "a"
-              :jarjestysnumero 1
-              :pakollinen true
-              :tietotyyppi :merkkijono
-              :pituus 20}
-             {:kenttatunniste "b"
-              :jarjestysnumero 2
-              :tietotyyppi :merkkijono
-              :pituus 10}]}
-           "testi               1         "))))
+(deftest tarkista-arvojen-purku
+  (let [vastaus (tierekisteri-tietue/pura-arvot
+                  "testi               1         "
+                  {:tunniste "tl506",
+                   :ominaisuudet
+                   [{:kenttatunniste "a"
+                     :jarjestysnumero 1
+                     :pakollinen true
+                     :tietotyyppi :merkkijono
+                     :pituus 20}
+                    {:kenttatunniste "b"
+                     :jarjestysnumero 2
+                     :tietotyyppi :merkkijono
+                     :pituus 10}]})]
+    (is (= [{"a" "testi"} {"b" "1"}] vastaus))))
 
 ;; TODO Tätä ei kai tarvitse koska skeemassa ei ole enää avain arvo -mappeja vaan yksi mappi jossa kaikki
 #_(deftest tarkista-validoinnit

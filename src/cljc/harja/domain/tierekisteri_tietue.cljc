@@ -1,6 +1,7 @@
 (ns harja.domain.tierekisteri-tietue
   (:require [clojure.string :as str]
-    #?@(:cljs [[harja.loki :refer [log]]])
+    #?@(:cljs [[harja.loki :refer [log]]]
+        :clj [[taoensso.timbre :as log]])
             [harja.tyokalut.merkkijono :as merkkijono]))
 
 (defn jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
@@ -17,10 +18,10 @@
     (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä: " kenttatunniste " maksimipituus: " pituus))))
 
 (defn hae-arvo
-  "Ottaa arvot stringinä ja etsii sieltä halutun arvon käyttäen apuna kenttien-kuvaukset -mappia."
+  "Ottaa arvot-stringin ja etsii sieltä halutun arvon käyttäen apuna kenttien-kuvaukset -mappia."
   [arvot-merkkijono kenttien-kuvaukset jarjestysnumero]
   (let [jarjestysnumeron-kentta (first (filter #(= (:jarjestysnumero %) jarjestysnumero)
-                                         kenttien-kuvaukset))
+                                               kenttien-kuvaukset))
         alkuindeksi (apply +
                            (map :pituus
                                 (filter #(< (:jarjestysnumero %) jarjestysnumero)
@@ -30,32 +31,34 @@
     ;; todo: tarviiko castata tietotyypin mukaan?
     teksti))
 
-
-;; TODO Tätä ei kai tarvitse koska skeemassa ei ole enää avain arvo -mappeja vaan yksi mappi jossa kaikki
+; TODO Ota käyttöön
 #_(defn muodosta-kentta [tietolaji {:keys [pituus kenttatunniste] :as kentan-kuvaus} arvot]
     (let [arvo (:arvo (first (filter #(= kenttatunniste (:avain %)) arvot)))]
       (validoi-arvo tietolaji kentan-kuvaus arvo)
       (merkkijono/tayta-oikealle pituus arvo)))
 
+; TODO Ota käyttöön
+#_(defn muodosta-arvot [tietolajin-kuvaus arvot]
+    (let [tietolaji (:tunniste tietolajin-kuvaus)
+          kentat (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)]
+      (str/join (mapv #(muodosta-kentta tietolaji % arvot) kentat))))
 
-;; TODO Tätä ei kai tarvitse koska skeemassa ei ole enää avain arvo -mappeja vaan yksi mappi jossa kaikki
-#_(defn pura-kentta [tietolaji kenttien-kuvaukset
-                   {:keys [jarjestysnumero kenttatunniste] :as kentan-kuvaus}
-                   arvot-merkkijono]
+(defn- pura-kentta [arvot-merkkijono
+                    tietolaji
+                    kenttien-kuvaukset
+                    {:keys [jarjestysnumero kenttatunniste] :as kentan-kuvaus}]
   (let [arvo (hae-arvo arvot-merkkijono kenttien-kuvaukset jarjestysnumero)]
     (validoi-arvo tietolaji kentan-kuvaus arvo)
-    {:avain kenttatunniste :arvo arvo}))
+    {kenttatunniste arvo}))
 
-;; TODO Tätä ei kai tarvitse koska skeemassa ei ole enää avain arvo -mappeja vaan yksi mappi jossa kaikki
-#_(defn muodosta-arvot [tietolajin-kuvaus arvot]
+(defn pura-arvot
+  "Ottaa arvot-stringin ja purkaa sen mapiksi käyttäen apuna annettua tietolajin kuvausta.
+  Tietolajin kuvaus on tierekisterin palauttama kuvaus tietolajista, muunnettuna Clojure-mapiksi."
+  [arvot-merkkijono tietolajin-kuvaus]
   (let [tietolaji (:tunniste tietolajin-kuvaus)
-        kentat (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)]
-    (str/join (mapv #(muodosta-kentta tietolaji % arvot) kentat))))
-
-;; TODO Tätä ei kai tarvitse koska skeemassa ei ole enää avain arvo -mappeja vaan yksi mappi jossa kaikki
-#_(defn pura-arvot [tietolajin-kuvaus arvot]
-  (let [tietolaji (:tunniste tietolajin-kuvaus)
-        kentat (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)]
-    (mapv #(pura-kentta tietolaji kentat % arvot) kentat)))
+        kenttien-kuvaukset (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)]
+    (mapv
+      (partial pura-kentta arvot-merkkijono tietolaji kenttien-kuvaukset)
+      kenttien-kuvaukset)))
 
 
