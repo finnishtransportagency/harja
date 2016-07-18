@@ -28,7 +28,6 @@
                                         kenttien-kuvaukset)))
         loppuindeksi (+ alkuindeksi (:pituus jarjestysnumeron-kentta))
         teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))]
-    ;; todo: tarviiko castata tietotyypin mukaan?
     teksti))
 
 (defn- muodosta-kentta [tietolaji arvot-map {:keys [pituus kenttatunniste] :as kentan-kuvaus}]
