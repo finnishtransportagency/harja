@@ -2313,6 +2313,7 @@
   (let [testikentat [{:kenttatunniste "a"
                       :jarjestysnumero 1
                       :tietotyyppi :paivamaara
-                      :pituus 8}]]
-    "2009-03-23"))
+                      :pituus 10}]
+        testiarvot "2009-03-23"]
+    (is (= "2009-03-23" (tierekisteri-tietue/hae-arvo testiarvot testikentat 1)))))
 
