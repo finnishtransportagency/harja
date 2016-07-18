@@ -47,7 +47,6 @@
 
 (defn- on-nimetty-oikeus? [nimi kayttooikeus rooli]
   (let [oikeudet (roolin-oikeudet kayttooikeus rooli)]
-    (println "ON-nimetty-oikeus? nimi: " nimi ", kayttooikeus: " kayttooikeus ", rooli: " rooli)
     (cond
       (oikeudet (str nimi "*")) :kaikki
       (oikeudet (str nimi "+")) :organisaatio
