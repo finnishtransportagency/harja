@@ -237,10 +237,7 @@
                              :yht_laskutetaan_ind_korotus                     0.0M
                              :yht_laskutettu                                  0.0M
                              :yht_laskutettu_ind_korotettuna                  0.0M
-                             :yht_laskutettu_ind_korotus                      0.0M}
-
-          ]
-
+                             :yht_laskutettu_ind_korotus                      0.0M}]
 
       (is (= haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita))
       (is (= odotetut-talvihoito haetut-tiedot-oulu-talvihoito) "laskutusyhteenvedon-tiedot talvihoito")
