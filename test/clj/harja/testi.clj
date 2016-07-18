@@ -24,8 +24,13 @@
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
 
+(defn travis? []
+  (= "true" (System/getProperty "TRAVIS")))
+
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
-(log/set-config! [:appenders :standard-out :min-level] (if (ollaanko-jenkinsissa?)
+;; eikä tehdä traviksen logeista turhan pitkiä
+(log/set-config! [:appenders :standard-out :min-level] (if (or (ollaanko-jenkinsissa?)
+                                                               (travis?))
                                                          :info
                                                          :debug))
 
@@ -185,6 +190,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                     :organisaation-urakat #{}
                      :urakkaroolit {}})
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava

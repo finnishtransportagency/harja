@@ -59,10 +59,12 @@
              :organisaatio urakoitsija
              :organisaation-urakat urakoitsijan-urakat})
 
+(def ^:const livi {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"})
+
 ;; Tilaajan käyttäjä
 (def tilaajan-kayttaja {:roolit #{"Tilaajan_Kayttaja"}
                         :urakkaroolit {}
-                        :organisaatio {:id 1 :tyyppi "liikennevirasto" :nimi "Liikennevirasto"}
+                        :organisaatio livi
                         :organisaation-urakat #{}})
 
 ;; Urakoitsijan laatupäällikkö
@@ -78,6 +80,13 @@
                    :organisaatioroolit {}
                    :organisaatio urakoitsija
                    :organisaation-urakat urakoitsijan-urakat})
+
+;; Tilaajan laadunvalvoja
+(def tilaajan-lv {:roolit #{}
+                  :urakkaroolit {1 #{"Tilaajan_laadunvalvoja"}}
+                  :organisaatioroolit {}
+                  :organisaatio livi
+                  :organisaation-urakat #{}})
 
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
@@ -148,3 +157,18 @@
 
 (deftest urakan-turvallisuusvalvoja-eri-elyn-urakassa
   (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus 4 ely-tv-eri-elyssa)))
+
+(deftest tilaajan-laadunvalvoja-voi-tehda-asiatarkastuksen
+  ;; Tilaajan laadunvalvoja voi tehdä
+  (is (oikeudet/on-muu-oikeus? "asiatarkastus" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                               1 tilaajan-lv))
+
+  ;; Ei voi tehdä muuhun urakkaan, koska rooli on urakkarooli
+  (is (not (oikeudet/on-muu-oikeus? "asiatarkastus"
+                                    oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                    2 tilaajan-lv)))
+
+  ;; Urakoitsijan pk ei voi tehdä
+  (is (not (oikeudet/on-muu-oikeus? "asiatarkastus"
+                                    oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                    1 ur-uvh))))
