@@ -21,15 +21,19 @@
     (validoi-arvo tietolaji kentan-kuvaus arvo)
     (merkkijono/tayta-oikealle pituus arvo)))
 
-(defn hae-arvo [kenttien-kuvaukset jarjestysnumero pituus arvot]
+(defn hae-arvo
+  "Ottaa arvot stringinä ja etsii sieltä halutun arvon käyttäen apuna kenttien-kuvaukset -mappia."
+  [arvot-merkkijono kenttien-kuvaukset jarjestysnumero pituus]
   (let [alkuindeksi (apply + (map :pituus (filter #(> jarjestysnumero (:jarjestysnumero %)) kenttien-kuvaukset)))
         loppuindeksi (+ alkuindeksi pituus)
-        teksti (clojure.string/trim (subs arvot alkuindeksi loppuindeksi))]
+        teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))]
     ;; todo: tarviiko castata tietotyypin mukaan?
     teksti))
 
-(defn pura-kentta [tietolaji kenttien-kuvaukset {:keys [pituus jarjestysnumero kenttatunniste] :as kentan-kuvaus} arvot]
-  (let [arvo (hae-arvo kenttien-kuvaukset jarjestysnumero pituus arvot)]
+(defn pura-kentta [tietolaji kenttien-kuvaukset
+                   {:keys [pituus jarjestysnumero kenttatunniste] :as kentan-kuvaus}
+                   arvot-merkkijono]
+  (let [arvo (hae-arvo arvot-merkkijono kenttien-kuvaukset jarjestysnumero pituus)]
     (validoi-arvo tietolaji kentan-kuvaus arvo)
     {:avain kenttatunniste :arvo arvo}))
 
