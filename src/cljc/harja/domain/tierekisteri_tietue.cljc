@@ -31,17 +31,19 @@
     ;; todo: tarviiko castata tietotyypin mukaan?
     teksti))
 
-; TODO Ota käyttöön
-#_(defn muodosta-kentta [tietolaji {:keys [pituus kenttatunniste] :as kentan-kuvaus} arvot]
-    (let [arvo (:arvo (first (filter #(= kenttatunniste (:avain %)) arvot)))]
-      (validoi-arvo tietolaji kentan-kuvaus arvo)
-      (merkkijono/tayta-oikealle pituus arvo)))
+(defn- muodosta-kentta [tietolaji arvot-map {:keys [pituus kenttatunniste] :as kentan-kuvaus}]
+  (let [arvo (get arvot-map kenttatunniste)]
+    (validoi-arvo tietolaji kentan-kuvaus arvo)
+    (merkkijono/tayta-oikealle pituus arvo)))
 
-; TODO Ota käyttöön
-#_(defn muodosta-arvot [tietolajin-kuvaus arvot]
+(defn tietolajin-arvot-map->string
+  "Ottaa arvot-mapin ja purkaa sen stringiksi käyttäen apuna annettua tietolajin kuvausta.
+  Tietolajin kuvaus on tierekisterin palauttama kuvaus tietolajista, muunnettuna Clojure-mapiksi."
+  [arvot-map tietolajin-kuvaus]
     (let [tietolaji (:tunniste tietolajin-kuvaus)
-          kentat (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)]
-      (str/join (mapv #(muodosta-kentta tietolaji % arvot) kentat))))
+          kenttien-kuvaukset (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)
+          string-osat (map (partial muodosta-kentta tietolaji arvot-map) kenttien-kuvaukset)]
+      (str/join string-osat)))
 
 (defn- pura-kentta [arvot-merkkijono
                     tietolaji
@@ -51,14 +53,15 @@
     (validoi-arvo tietolaji kentan-kuvaus arvo)
     {kenttatunniste arvo}))
 
-(defn pura-arvot
+(defn tietolajin-arvot-merkkijono->map
   "Ottaa arvot-stringin ja purkaa sen mapiksi käyttäen apuna annettua tietolajin kuvausta.
   Tietolajin kuvaus on tierekisterin palauttama kuvaus tietolajista, muunnettuna Clojure-mapiksi."
   [arvot-merkkijono tietolajin-kuvaus]
   (let [tietolaji (:tunniste tietolajin-kuvaus)
-        kenttien-kuvaukset (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)]
-    (mapv
-      (partial pura-kentta arvot-merkkijono tietolaji kenttien-kuvaukset)
-      kenttien-kuvaukset)))
+        kenttien-kuvaukset (jarjesta-ja-suodata-tietolajin-kuvaus tietolajin-kuvaus)
+        map-osat (mapv
+                   (partial pura-kentta arvot-merkkijono tietolaji kenttien-kuvaukset)
+                   kenttien-kuvaukset)]
+    (reduce merge map-osat)))
 
 
