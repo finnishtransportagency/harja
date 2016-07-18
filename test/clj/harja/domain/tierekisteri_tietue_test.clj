@@ -2276,7 +2276,7 @@
     (is (= "2009-03-23" (#'tierekisteri-tietue/hae-arvo testiarvot testikentat 1)))))
 
 
-(deftest tarkista-arvojen-muodostaminen
+(deftest testaa-tietolajin-arvot-map->string
   (let [muunnos (tierekisteri-tietue/tietolajin-arvot-map->string
                   {"a" "testi"
                    "b" "1"}
@@ -2294,7 +2294,7 @@
     (is (= "testi               1         "
            muunnos))))
 
-(deftest tarkista-arvojen-purku
+(deftest testaa-tietolajin-arvot-merkkijono->map
   (let [muunnos (tierekisteri-tietue/tietolajin-arvot-merkkijono->map
                   "testi               1         "
                   {:tunniste "tl506",
