@@ -56,6 +56,7 @@
 (def bitumi-indeksi-leveys 10)
 (def kaasuindeksi-leveys 10)
 (def yhteensa-leveys 10)
+(def yllapitokohdetyyppi-leveys 10)
 
 ;; Ylläpitokohdeosien sarakkeiden leveydet
 (def nimi-leveys 20)
@@ -146,9 +147,9 @@
                            (:validoi let))
             :muokattava? (or (:muokattava? let) (constantly true))}
            (merge
-            {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
-             :muokattava? (constantly false)}
-            pituus)])))
+             {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
+              :muokattava? (constantly false)}
+             pituus)])))
 
 (defn tr-osoite [rivi]
   (let [arvot (map rivi [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys])]
@@ -164,12 +165,12 @@
         ensimmainen (first avaimet)
         viimeinen (last avaimet)]
     (as-> kohdeosat ko
-      (if (not= (tr/alku kohde) (tr/alku (get kohdeosat ensimmainen)))
-        (update-in ko [ensimmainen] merge {:tr-alkuosa aosa :tr-alkuetaisyys alkuet})
-        ko)
-      (if (not= (tr/loppu kohde) (tr/loppu (get kohdeosat viimeinen)))
-        (update-in ko [viimeinen] merge {:tr-loppuosa losa :tr-loppuetaisyys loppuet})
-        ko))))
+          (if (not= (tr/alku kohde) (tr/alku (get kohdeosat ensimmainen)))
+            (update-in ko [ensimmainen] merge {:tr-alkuosa aosa :tr-alkuetaisyys alkuet})
+            ko)
+          (if (not= (tr/loppu kohde) (tr/loppu (get kohdeosat viimeinen)))
+            (update-in ko [viimeinen] merge {:tr-loppuosa losa :tr-loppuetaisyys loppuet})
+            ko))))
 
 (defn validoi-tr-osoite [grid tr-sijainnit-atom tr-virheet-atom]
   (let [haetut (into #{} (keys @tr-sijainnit-atom))]
@@ -216,16 +217,16 @@
           [sopimus-id _] @u/valittu-sopimusnumero
           urakka-id (:id @nav/valittu-urakka)
           grid-data (atom
-                     (if (empty? kohdeosat)
-                       {1 {:tr-numero tie
-                           :tr-alkuosa aosa :tr-alkuetaisyys alkuet
-                           :tr-loppuosa losa :tr-loppuetaisyys loppuet}}
-                       (varmista-alku-ja-loppu (zipmap (iterate inc 1) kohdeosat)
-                                               (tr/nouseva-jarjestys kohde))))
+                      (if (empty? kohdeosat)
+                        {1 {:tr-numero tie
+                            :tr-alkuosa aosa :tr-alkuetaisyys alkuet
+                            :tr-loppuosa losa :tr-loppuetaisyys loppuet}}
+                        (varmista-alku-ja-loppu (zipmap (iterate inc 1) kohdeosat)
+                                                (tr/nouseva-jarjestys kohde))))
           virheet (atom {})
           g (grid/grid-ohjaus)
           toiminnot-komponentti
-          (fn [_ index]
+          (fn [_ {:keys [index]}]
             [:span
              [:button.nappi-ensisijainen
               {:on-click
@@ -240,15 +241,15 @@
               (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]])
           osan-pituus (atom {})
           osa-olemassa #(when-let [osa (and % (js/parseInt %))]
-                          (cond
-                            (< osa aosa)
-                            "Osa ei voi olla ennen kohteen alkua"
+                         (cond
+                           (< osa aosa)
+                           "Osa ei voi olla ennen kohteen alkua"
 
-                            (> osa losa)
-                            "Osa ei voi olla kohteen lopun jälkeen"
+                           (> osa losa)
+                           "Osa ei voi olla kohteen lopun jälkeen"
 
-                            (not (contains? @osan-pituus osa))
-                            (str "Tiellä " tie " ei ole osaa  " %)))
+                           (not (contains? @osan-pituus osa))
+                           (str "Tiellä " tie " ei ole osaa  " %)))
           pituus (fn [tieosa]
                    (tr/laske-tien-pituus @osan-pituus tieosa))
           osan-maksimipituus (fn [key]
@@ -259,79 +260,79 @@
                                        (str "Osan " osa " maksimietäisyys on " pit))))))]
       (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
       (komp/luo
-       (fn [urakka kohdeosat {yllapitokohde-id :id :as kohde}]
-         (let [kohdeosia (count @grid-data)]
-           [:div
-            [grid/muokkaus-grid
-             {:ohjaus g
-              :virheet virheet
-              :muutos #(validoi-tr-osoite % tr-sijainnit tr-virheet)
-              :validoi-aina? true
-              :nayta-virheet? :fokus
-              :otsikko "Tierekisterikohteet"
-              ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
-              :voi-lisata? false
-              :piilota-toiminnot? true
-              :paneelikomponentit [(fn []
-                                     [napit/palvelinkutsu-nappi
-                                      [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-                                      (let [sijainnit @tr-sijainnit
-                                            osat (into []
-                                                       (map (fn [osa]
-                                                              (assoc osa :sijainti
-                                                                         (sijainnit (tr-osoite osa)))))
-                                                       (vals @grid-data))]
-                                        #(tiedot/tallenna-yllapitokohdeosat! urakka-id
-                                                                             sopimus-id
-                                                                             yllapitokohde-id
-                                                                             osat))
-                                      {:disabled (do (log "VIRHEET: " (pr-str @virheet))
-                                                     (or (not (empty? @virheet))
-                                                         (not kirjoitusoikeus?)))
-                                       :luokka "nappi-myonteinen grid-tallenna"
-                                       :virheviesti "Tallentaminen epäonnistui."
-                                       :kun-onnistuu (fn [vastaus]
-                                                       (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
-                                                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-                                                       (kohdeosat-paivitetty-fn vastaus)
-                                                       (resetoi-tr-tiedot)
-                                                       (viesti/nayta! "Kohdeosat tallennettu."
-                                                                      :success viesti/viestin-nayttoaika-keskipitka))}])]
-              :voi-poistaa? (constantly false)
-              :tunniste hash
-              :muokkaa-footer (fn [g]
-                                [:span "Tierekisterikohteiden pituus yhteensä: "
-                                 (fmt/pituus (reduce + 0 (keep pituus (vals @grid-data))))])}
-             (into []
-                   (remove
-                    nil?
-                    (concat
-                     (tierekisteriosoite-sarakkeet
-                      tr-leveys
-                      [{:nimi :nimi}
-                       {:nimi :tunnus}
-                       {:nimi :tr-numero :muokattava? (constantly false)}
-                       {:nimi :tr-ajorata}
-                       {:nimi :tr-kaista}
-                       {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
-                                                         (pos? rivi))
-                        :validoi [osa-olemassa]}
-                       {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
-                                                              (pos? rivi))
-                        :validoi [(osan-maksimipituus :tr-alkuosa)]}
-                       {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
-                                                          (< rivi (dec kohdeosia)))
-                        :validoi [osa-olemassa]}
-                       {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
-                                                               (< rivi (dec kohdeosia)))
-                        :validoi [(osan-maksimipituus :tr-loppuosa)]}
-                       {:hae (partial tr/laske-tien-pituus @osan-pituus)}])
-                     [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
-                      {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
-                       :komponentti toiminnot-komponentti}])))
+        (fn [urakka kohdeosat {yllapitokohde-id :id :as kohde}]
+          (let [kohdeosia (count @grid-data)]
+            [:div
+             [grid/muokkaus-grid
+              {:ohjaus g
+               :virheet virheet
+               :muutos #(validoi-tr-osoite % tr-sijainnit tr-virheet)
+               :validoi-aina? true
+               :nayta-virheet? :fokus
+               :otsikko "Tierekisterikohteet"
+               ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
+               :voi-lisata? false
+               :piilota-toiminnot? true
+               :paneelikomponentit [(fn []
+                                      [napit/palvelinkutsu-nappi
+                                       [yleiset/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+                                       (let [sijainnit @tr-sijainnit
+                                             osat (into []
+                                                        (map (fn [osa]
+                                                               (assoc osa :sijainti
+                                                                          (sijainnit (tr-osoite osa)))))
+                                                        (vals @grid-data))]
+                                         #(tiedot/tallenna-yllapitokohdeosat! urakka-id
+                                                                              sopimus-id
+                                                                              yllapitokohde-id
+                                                                              osat))
+                                       {:disabled (do (log "VIRHEET: " (pr-str @virheet))
+                                                      (or (not (empty? @virheet))
+                                                          (not kirjoitusoikeus?)))
+                                        :luokka "nappi-myonteinen grid-tallenna"
+                                        :virheviesti "Tallentaminen epäonnistui."
+                                        :kun-onnistuu (fn [vastaus]
+                                                        (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
+                                                        (urakka/lukitse-urakan-yha-sidonta! urakka-id)
+                                                        (kohdeosat-paivitetty-fn vastaus)
+                                                        (resetoi-tr-tiedot)
+                                                        (viesti/nayta! "Kohdeosat tallennettu."
+                                                                       :success viesti/viestin-nayttoaika-keskipitka))}])]
+               :voi-poistaa? (constantly false)
+               :tunniste hash
+               :muokkaa-footer (fn [g]
+                                 [:span "Tierekisterikohteiden pituus yhteensä: "
+                                  (fmt/pituus (reduce + 0 (keep pituus (vals @grid-data))))])}
+              (into []
+                    (remove
+                      nil?
+                      (concat
+                        (tierekisteriosoite-sarakkeet
+                          tr-leveys
+                          [{:nimi :nimi}
+                           {:nimi :tunnus}
+                           {:nimi :tr-numero :muokattava? (constantly false)}
+                           {:nimi :tr-ajorata}
+                           {:nimi :tr-kaista}
+                           {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
+                                                             (pos? rivi))
+                            :validoi [osa-olemassa]}
+                           {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
+                                                                  (pos? rivi))
+                            :validoi [(osan-maksimipituus :tr-alkuosa)]}
+                           {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
+                                                              (< rivi (dec kohdeosia)))
+                            :validoi [osa-olemassa]}
+                           {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
+                                                                   (< rivi (dec kohdeosia)))
+                            :validoi [(osan-maksimipituus :tr-loppuosa)]}
+                           {:hae (partial tr/laske-tien-pituus @osan-pituus)}])
+                        [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
+                         {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
+                          :komponentti toiminnot-komponentti}])))
 
-             (r/wrap @grid-data
-                     #(swap! grid-data tiedot/kasittele-paivittyneet-kohdeosat %))]]))))))
+              (r/wrap @grid-data
+                      #(swap! grid-data tiedot/kasittele-paivittyneet-kohdeosat %))]]))))))
 
 
 
@@ -339,15 +340,15 @@
   (let [kohteet (vec kohteet)
         rivi (some #(when (= (:id (nth kohteet %))
                              id)
-                      %)
+                     %)
                    (range 0 (count kohteet)))]
     (if rivi
       (assoc-in kohteet [rivi :kohdeosat] kohdeosat)
       kohteet)))
 
 (defn yllapitokohteet [urakka kohteet-atom optiot]
-  (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
-        tr-virheet (atom {}) ;; virheelliset TR sijainnit
+  (let [tr-sijainnit (atom {})                              ;; onnistuneesti haetut TR-sijainnit
+        tr-virheet (atom {})                                ;; virheelliset TR sijainnit
         tallenna (reaction (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
                              :ei-mahdollinen
                              (:tallenna optiot)))]
@@ -383,7 +384,12 @@
                    {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :nimi :kohdenumero :tyyppi :string :leveys id-leveys
                     :validoi [[:uniikki "Sama kohdenumero voi esiintyä vain kerran."]]}
                    {:otsikko "Koh\u00ADteen ni\u00ADmi" :nimi :nimi
-                    :tyyppi :string :leveys kohde-leveys}]
+                    :tyyppi :string :leveys kohde-leveys}
+                   {:otsikko "Tyyppi"
+                    :nimi :yllapitokohdetyyppi :tyyppi :string :leveys yllapitokohdetyyppi-leveys
+                    :muokattava? (constantly false) :fmt #({:paallyste "Päällyste"
+                                                            :sora "Sora"
+                                                            :kevytliikenne "Kevytliikenne"} %)}]
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil

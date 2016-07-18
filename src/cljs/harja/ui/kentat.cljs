@@ -320,7 +320,8 @@
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina? disabloi]} data]
+(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
+                                               tyhjenna-kaikki? nayta-rivina? disabloi]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
@@ -704,10 +705,10 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
-        hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
+        hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
         virheet (atom nil)
@@ -792,9 +793,15 @@
            [:table
             [:thead
              [:tr
-              [:th "Tie"]
-              [:th "aosa"]
-              [:th "aet"]
+              [:th
+               [:span "Tie"]
+               (when pakollinen? [:span.required-tahti " *"])]
+              [:th
+               [:span "aosa"]
+               (when pakollinen? [:span.required-tahti " *"])]
+              [:th
+               [:span "aet"]
+               (when pakollinen? [:span.required-tahti " *"])]
               [:th "losa"]
               [:th "let"]]]
             [:tbody
@@ -832,6 +839,3 @@
      [:span.alkuetaisyys alkuetaisyys]
      [:span.loppuosa loppuosa] " / "
      [:span.loppuetaisyys loppuetaisyys]]))
-
-(defmethod tee-kentta :komponentti [{:keys [komponentti rivi index muokataan?]}]
-  (komponentti rivi index muokataan?))

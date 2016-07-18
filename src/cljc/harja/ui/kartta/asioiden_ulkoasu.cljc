@@ -307,3 +307,7 @@ tr-viiva {:color  puhtaat/tummanharmaa
 (def ^{:doc "TR-valinnan ikoni"}
 tr-ikoni {:img    (pinni-ikoni "musta")
           :zindex 21})
+
+(def suljettu-tieosuus {:color puhtaat/oranssi
+                        :zindex 22})
+

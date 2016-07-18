@@ -175,6 +175,7 @@
     <xs:complexType name="kohde">
         <xs:sequence>
             <xs:element name="yha-id" type="xs:long" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
             <xs:element name="kohdetyotyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
@@ -201,6 +202,7 @@
         <xs:sequence>
             <xs:element name="yha-id" type="xs:long" minOccurs="0" maxOccurs="1"/>
             <xs:element name="harja-id" type="xs:int" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="kohdetyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyyppi"/>
             <xs:element name="kohdetyotyyppi" nillable="false" minOccurs="1" maxOccurs="1" type="kohdetyotyyppi"/>
             <xs:element name="nimi" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
@@ -282,18 +284,11 @@
                     </xs:restriction>
                 </xs:simpleType>
             </xs:element>
-            <xs:element name="massamaara" minOccurs="0" maxOccurs="1" type="xs:decimal">
-                <xs:annotation>
-                    <xs:documentation>
-                        Yksikkö: kg/m2
-                    </xs:documentation>
-                </xs:annotation>
-            </xs:element>
-            <xs:element name="kokonaismassamaara" minOccurs="0" maxOccurs="1">
+            <xs:element name="massamenekki" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
                     <xs:annotation>
                         <xs:documentation>
-                            Yksikkö: tonni
+                            Yksikkö: kg/m2
                         </xs:documentation>
                     </xs:annotation>
                     <xs:restriction base="xs:int">
@@ -301,6 +296,13 @@
                         <xs:maxInclusive value="999"/>
                     </xs:restriction>
                 </xs:simpleType>
+            </xs:element>
+            <xs:element name="kokonaismassamaara" minOccurs="0" maxOccurs="1" type="xs:decimal">
+                <xs:annotation>
+                    <xs:documentation>
+                        Yksikkö: tonni
+                    </xs:documentation>
+                </xs:annotation>
             </xs:element>
             <xs:element name="rc-prosentti" minOccurs="0" maxOccurs="1">
                 <xs:simpleType>
@@ -373,6 +375,32 @@
         <xs:restriction base="xs:string">
             <xs:enumeration value="paallystys"/>
             <xs:enumeration value="paikkaus"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="kohdetyyppi">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        päällyste
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="2">
+                <xs:annotation>
+                    <xs:documentation>
+                        kevytliikenne
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
+            <xs:enumeration value="3">
+                <xs:annotation>
+                    <xs:documentation>
+                        sora
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
         </xs:restriction>
     </xs:simpleType>
 
@@ -483,7 +511,7 @@
             <xs:enumeration value="22">
                 <xs:annotation>
                     <xs:documentation>
-                        pehmeär ab / pehmeä bitumi
+                        pehmeät ab / pehmeä bitumi
                     </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>

@@ -582,11 +582,37 @@ FROM toteuma_tehtava tt
 WHERE
   t.urakka = :urakkaid
   AND t.sopimus = :sopimusid
-  AND t.alkanut >= :alkanut
-  AND t.paattynyt <= :paattynyt
+  AND t.alkanut >= :alkupvm
+  AND t.alkanut <= :loppupvm
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
-  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava);
+  AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
+
+-- name: hae-kokonaishintaisen-toteuman-reitti
+SELECT
+  mk.nimi             AS materiaali_nimi,
+  tm.maara            AS materiaali_maara,
+  tt.toteuma          AS toteumaid,
+  t.alkanut           AS alkanut,
+  t.paattynyt         AS paattynyt,
+  t.reitti,
+  t.suorittajan_nimi  AS suorittaja_nimi,
+  t.lisatieto         AS lisatieto,
+  tk.nimi             AS tehtava_toimenpide,
+  tt.maara            AS tehtava_maara,
+  tk.id               AS tehtava_id
+FROM toteuma_tehtava tt
+  JOIN toteuma t ON tt.toteuma = t.id
+  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+  LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
+  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+WHERE
+  t.urakka = :urakkaid
+  AND t.sopimus = :sopimusid
+  AND t.id = :toteumaid
+  AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
+  AND t.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-kokonaishintaiset-toteumat-paivakohtaisina-summina
 SELECT

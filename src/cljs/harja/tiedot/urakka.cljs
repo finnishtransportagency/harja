@@ -264,10 +264,11 @@
          (reaction (let [tpi @valittu-toimenpideinstanssi
                          tehtavat @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
                      (reset! valittu-kokonaishintainen-tehtava nil)
-                     (into [] (keep (fn [[_ _ t3 t4]]
-                                      (when (= (:koodi t3) (:t3_koodi tpi))
-                                        t4))
-                                    tehtavat)))))
+                     (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                       (when (= (:koodi t3) (:t3_koodi tpi))
+                                         t4))
+                                     tehtavat))]
+                       (sort-by :nimi tehtavat)))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)
@@ -286,10 +287,11 @@
          (reaction (let [tpi @valittu-toimenpideinstanssi
                          tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
                      (reset! valittu-yksikkohintainen-tehtava nil)
-                     (into [] (keep (fn [[_ _ t3 t4]]
-                                      (when (= (:koodi t3) (:t3_koodi tpi))
-                                        t4))
-                                    tehtavat)))))
+                     (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                       (when (= (:koodi t3) (:t3_koodi tpi))
+                                         t4))
+                                     tehtavat))]
+                       (sort-by :nimi tehtavat)))))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)

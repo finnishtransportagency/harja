@@ -5,7 +5,7 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]))
 
-(def kayttaja "fastroi")
+(def kayttaja "destia")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja

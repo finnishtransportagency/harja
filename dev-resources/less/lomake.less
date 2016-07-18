@@ -42,12 +42,16 @@
     margin-left: 0.5em;
   }
 
-  .required label.control-label:after {
+  .required-tahti {
     content: " *";
     color: red;
     font-size: (0.8 * @fontin-koko-leipateksti);
     position: relative;
     top: -0.15em;
+  }
+
+  .required label.control-label:after {
+    .required-tahti();
   }
 
   .kentan-yksikko {
@@ -152,19 +156,6 @@
 .lomake-yksikko {
   height: 34px;
   line-height: 34px;
-}
-
-.lomake-vihje {
-  .vihjeen-sisalto {
-    margin: 5px 0;
-    .livicon-info-circle {
-      color: @sininen5;
-    }
-  }
-
-  .vihjeen-lisarivi {
-    margin-left: 15px;
-  }
 }
 
 .lomake-yleinen-huomautus {

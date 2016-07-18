@@ -12,10 +12,14 @@
             [cljs-time.core :as t]
             [cljs.core.async :refer [<!]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def tallennus-kaynnissa? (atom false))
 
 (defn valmiustilan-kuvaus [{:keys [valmis takaraja]}]
   (if-not takaraja
@@ -32,7 +36,7 @@
         kommentti (atom "")
         tallennus-kaynnissa (atom false)]
     (fn [{aseta-tavoitteet :aseta-tavoitteet} ur vt]
-      [:div {:style {:position "relative" }}
+      [:div {:style {:position "relative"}}
        (when @tallennus-kaynnissa
          (y/lasipaneeli (y/keskita (y/ajax-loader))))
        [:form
@@ -52,11 +56,13 @@
           {:disabled (nil? @valmis-pvm)
            :on-click #(do (.preventDefault %)
                           (reset! tallennus-kaynnissa true)
-                          (go (when-let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
-                                                                         @valmis-pvm @kommentti))]
-                                (aseta-tavoitteet res)
-                                (reset! tallennus-kaynnissa false)))
-                          (log "merkitään " (pr-str vt) " valmiiksi"))}
+                          (go (let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
+                                                                    @valmis-pvm @kommentti))]
+                                (if (k/virhe? res)
+                                  (viesti/nayta! "Valmiiksi merkitseminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+                                  (do
+                                    (aseta-tavoitteet res)
+                                    (reset! tallennus-kaynnissa false))))))}
           "Merkitse valmiiksi"]]]])))
 
 (defn valitavoite-lomake [opts ur vt]
@@ -83,75 +89,143 @@
        ;; Ei ole valmis, sallitaan urakoitsijan käyttäjän merkitä se valmiiksi
        [valitavoite-valmis-lomake opts ur vt])]))
 
+(defn- urakan-valitavoitteet [urakka
+                              kaikki-valitavoitteet-atom
+                              urakan-valitavoitteet-atom]
+  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))]
+    [grid/grid
+     {:otsikko "Urakan välitavoitteet"
+      :tyhja (if (nil? @urakan-valitavoitteet-atom)
+               [y/ajax-loader "Välitavoitteita haetaan..."]
+               "Ei välitavoitteita")
+      :tallenna (when voi-muokata?
+                  #(go (reset! tallennus-kaynnissa? true)
+                       (go
+                         (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                           (if (k/virhe? vastaus)
+                             (viesti/nayta! "Tallentaminen epäonnistui"
+                                            :warning viesti/viestin-nayttoaika-lyhyt)
+                             (reset! kaikki-valitavoitteet-atom vastaus)))
+                         (reset! tallennus-kaynnissa? false))))
+
+      :vetolaatikot (into {}
+                          (map
+                            (juxt :id
+                                  (partial valitavoite-lomake
+                                           {:aseta-tavoitteet
+                                            #(reset! kaikki-valitavoitteet-atom %)} urakka)))
+                          @urakan-valitavoitteet-atom)}
+
+     [{:tyyppi :vetolaatikon-tila :leveys 5}
+      {:otsikko "Nimi" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+      {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
+                                                                   (pvm/pvm-opt %)
+                                                                   "Ei takarajaa")
+       :tyyppi :pvm}
+      {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
+       :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
+     @urakan-valitavoitteet-atom]))
+
+(defn- valtakunnalliset-valitavoitteet [urakka
+                                        kaikki-valitavoitteet-atom
+                                        valtakunnalliset-valitavoitteet-atom]
+  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))]
+    [:div
+     [grid/grid
+      {:otsikko "Valtakunnalliset välitavoitteet"
+       :tyhja (if (nil? @valtakunnalliset-valitavoitteet-atom)
+                [y/ajax-loader "Välitavoitteita haetaan..."]
+                "Ei välitavoitteita")
+       :tallenna (when voi-muokata?
+                   #(go (reset! tallennus-kaynnissa? true)
+                        (go
+                          (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                            (if (k/virhe? vastaus)
+                              (viesti/nayta! "Tallentaminen epäonnistui"
+                                             :warning viesti/viestin-nayttoaika-lyhyt)
+                              (reset! kaikki-valitavoitteet-atom vastaus)))
+                          (reset! tallennus-kaynnissa? false))))
+       :vetolaatikot (into {}
+                           (map
+                             (juxt :id
+                                   (partial valitavoite-lomake
+                                            {:aseta-tavoitteet
+                                             #(reset! kaikki-valitavoitteet-atom %)} urakka)))
+                           @valtakunnalliset-valitavoitteet-atom)
+       :voi-lisata? false
+       :voi-poistaa? (constantly false)}
+
+      [{:tyyppi :vetolaatikon-tila :leveys 5}
+       {:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 55
+        :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
+        :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
+       {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+       {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
+        :nimi :valtakunnallinen-takaraja :hae #(cond
+                                                (:valtakunnallinen-takaraja %)
+                                                (pvm/pvm-opt (:valtakunnallinen-takaraja %))
+
+                                                (and (:valtakunnallinen-takarajan-toistopaiva %)
+                                                     (:valtakunnallinen-takarajan-toistokuukausi %))
+                                                (str "Vuosittain "
+                                                     (:valtakunnallinen-takarajan-toistopaiva %)
+                                                     "."
+                                                     (:valtakunnallinen-takarajan-toistokuukausi %))
+
+                                                :default
+                                                "Ei takarajaa")
+        :tyyppi :pvm
+        :muokattava? (constantly false)}
+       {:otsikko "Taka\u00ADraja ura\u00ADkassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
+       {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
+        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
+      @valtakunnalliset-valitavoitteet-atom]
+     [yleiset/vihje (str "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. "
+                         (when voi-muokata?
+                           "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))]]))
+
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
-  (let [tavoitteet (atom nil)
-        vaihda-urakka! (fn [ur]
-                         (go (reset! tavoitteet (<! (vt/hae-urakan-valitavoitteet (:id ur))))))
-        tallennus-kaynnissa (atom false)]
-    (vaihda-urakka! ur)
+  (let [tallennus-kaynnissa (atom false)]
     (komp/luo
+      (komp/lippu vt/nakymassa?)
+      (fn [ur]
+        [:div.valitavoitteet {:style {:position "relative"}}
+         (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
+         [urakan-valitavoitteet
+          ur
+          vt/valitavoitteet
+          vt/urakan-valitavoitteet]
+         [valtakunnalliset-valitavoitteet
+          ur
+          vt/valitavoitteet
+          vt/valtakunnalliset-valitavoitteet]
 
-     {:component-will-receive-props (fn [_ & [_ ur]]
-                                      (log "uusi urakka: " (pr-str (dissoc ur :alue)))
-                                      (vaihda-urakka! ur))}
+         ;; PENDING Kommentoidaan toistaiseksi tämä ylläpidon demo pois hämmentämästä
+         ;; Ylläpidon välitavoitteita pohditaan myöhemmin
+         #_(when (and (= (:sopimustyyppi @nav/valittu-urakka) :kokonaisurakka)
+                      (or (= (:tyyppi @nav/valittu-urakka) :paallystys)
+                          (= (:tyyppi @nav/valittu-urakka) :paikkaus)))
+             [grid/grid
+              {:otsikko "Kohteiden välitavoitteet"
+               :tunniste :yha-id
+               :tallenna nil
+               :vetolaatikot (into {}
+                                   (map
+                                     (juxt :id
+                                           (partial valitavoite-lomake
+                                                    {:aseta-tavoitteet #(reset! vt/valitavoitteet %)} ur)))
+                                   @vt/valitavoitteet)
+               }
 
-     (fn [ur]
-       [:div.valitavoitteet {:style {:position "relative"}}
-
-        (when @tallennus-kaynnissa (y/lasipaneeli (y/keskita (y/ajax-loader))))
-        [grid/grid
-         {:otsikko "Urakan välitavoitteet"
-          :tyhja (if (nil? @tavoitteet)
-                   [y/ajax-loader "Välitavoitteita haetaan..."]
-                   "Ei välitavoitteita")
-          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur))
-                      #(go (reset! tallennus-kaynnissa true)
-                           (go
-                             (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
-                             (reset! tallennus-kaynnissa false))))
-
-          :vetolaatikot (into {}
-                              (map
-                               (juxt :id
-                                     (partial valitavoite-lomake
-                                              {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
-                              @tavoitteet)}
-
-         [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-          {:otsikko "Nimi" :leveys "55%" :nimi :nimi :tyyppi :string :pituus-max 128}
-          {:otsikko "Takaraja" :leveys "20%" :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
-          {:otsikko "Tila" :leveys "25%" :tyyppi :string :muokattava? (constantly false)
-           :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
-         @tavoitteet]
-
-
-        (when (and (= (:sopimustyyppi @nav/valittu-urakka) :kokonaisurakka)
-                   (or (= (:tyyppi @nav/valittu-urakka) :paallystys)
-                       (= (:tyyppi @nav/valittu-urakka) :paikkaus)))
-          [grid/grid
-         {:otsikko "Kohteiden välitavoitteet"
-          :tunniste :yha-id
-          :tallenna #(go (reset! tallennus-kaynnissa true)
-                         (go
-                           (reset! tavoitteet (<! (vt/tallenna! (:id ur) %)))
-                           (reset! tallennus-kaynnissa false)))
-
-          :vetolaatikot (into {}
-                              (map
-                               (juxt :id
-                                     (partial valitavoite-lomake
-                                              {:aseta-tavoitteet #(reset! tavoitteet %)} ur)))
-                              @tavoitteet)}
-
-         [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-          {:otsikko "YHA-ID" :leveys "15%" :nimi :yha-id :tyyppi :string :pituus-max 128 :muokattava? (constantly false)}
-          {:otsikko "Kohde" :leveys "60%" :nimi :kohde :tyyppi :string :muokattava? (constantly false)}
-          {:otsikko "Tila" :leveys "20%" :tyyppi :string :muokattava? (constantly false)
-           :nimi :tila }]
-         [{:yha-id 1 :kohde "Mt 22 Ruohonjuuren pätkä" :tila "Kaikki valmiina"} ; FIXME Hardkoodattu testidata
-          {:yha-id 2 :kohde "Mt 22 Terilän silta" :tila "Kaikki valmiina"}
-          {:yha-id 3 :kohde "Mt 22 Matulan  pätkä" :tila "Kohde kesken"}
-          {:yha-id 4 :kohde "Mt 22 koskenlaskijan kuru" :tila "Kohde kesken"}
-          {:yha-id 5 :kohde "Mt 22 rampit" :tila "Kaikki valmiina"}]])]))))
+              [{:tyyppi :vetolaatikon-tila :leveys "5%"}
+               {:otsikko "YHA-ID" :leveys "15%" :nimi :yha-id :tyyppi :string :pituus-max 128 :muokattava? (constantly false)}
+               {:otsikko "Kohde" :leveys "60%" :nimi :kohde :tyyppi :string :muokattava? (constantly false)}
+               {:otsikko "Tila" :leveys "20%" :tyyppi :string :muokattava? (constantly false)
+                :nimi :tila}]
+              [{:yha-id 1 :kohde "Mt 22 Ruohonjuuren pätkä" :tila "Kaikki valmiina"}
+               {:yha-id 2 :kohde "Mt 22 Terilän silta" :tila "Kaikki valmiina"}
+               {:yha-id 3 :kohde "Mt 22 Matulan  pätkä" :tila "Kohde kesken"}
+               {:yha-id 4 :kohde "Mt 22 koskenlaskijan kuru" :tila "Kohde kesken"}
+               {:yha-id 5 :kohde "Mt 22 rampit" :tila "Kaikki valmiina"}]])]))))

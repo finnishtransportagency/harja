@@ -130,10 +130,8 @@ SELECT
   t.id,
   t.urakka,
   t.tapahtunut,
-  t.paattynyt,
   t.kasitelty,
   t.tyontekijanammatti,
-  t.tyotehtava,
   t.kuvaus,
   t.vammat,
   t.sairauspoissaolopaivat,
@@ -149,15 +147,13 @@ SELECT
 
   k.id              AS korjaavatoimenpide_id,
   k.kuvaus          AS korjaavatoimenpide_kuvaus,
-  k.suoritettu      AS korjaavatoimenpide_suoritettu,
-  k.vastaavahenkilo AS korjaavatoimenpide_vastaavahenkilo
+  k.suoritettu      AS korjaavatoimenpide_suoritettu
 FROM turvallisuuspoikkeama t
   LEFT JOIN korjaavatoimenpide k ON t.id = k.turvallisuuspoikkeama
                                     AND k.poistettu IS NOT TRUE
 WHERE
   (t.urakka IS NULL OR t.urakka IN (:urakat)) AND
   (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
-   t.paattynyt BETWEEN :alku AND :loppu OR
    t.kasitelty BETWEEN :alku AND :loppu);
 
 -- name: hae-paallystykset-nykytilanteeseen
@@ -345,3 +341,26 @@ SELECT
   id
 FROM toimenpidekoodi
 WHERE suoritettavatehtava :: TEXT IN (:toimenpiteet);
+
+-- name: hae-suljetut-tieosuudet
+-- hakee liikenneohjausaidoilla suljettujen tieosuuksien geometriat
+SELECT st.geometria AS "geometria",
+  ypk.nimi                                                       AS "yllapitokohteen-nimi",
+  ypk.kohdenumero                                                AS "yllapitokohteen-numero",
+  st.kaistat                                                     AS "kaistat",
+  st.ajoradat                                                    AS "ajoradat",
+  st.asetettu                                                    AS "aika",
+  st.tr_tie                                                      AS "tie",
+  st.tr_aosa                                                     AS "aosa",
+  st.tr_aet                                                      AS "aet",
+  st.tr_losa                                                     AS "losa",
+  st.tr_let                                                      AS "let"
+FROM suljettu_tieosuus st
+  LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
+WHERE st.poistettu IS NULL
+      AND ((:urakat) IS NULL OR (SELECT bool_or(ST_Intersects(au.alue,st.geometria))
+                                   FROM urakka u
+                             INNER JOIN hanke h ON h.id=u.hanke
+                             INNER JOIN alueurakka au ON au.alueurakkanro = h.alueurakkanro
+	                          WHERE u.id IN (:urakat)))
+      AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.geometria);

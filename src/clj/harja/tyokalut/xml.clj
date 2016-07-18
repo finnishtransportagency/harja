@@ -65,10 +65,13 @@
 (defn formatoi-paivamaara [paivamaara]
   (.format (SimpleDateFormat. "yyyy-MM-dd") paivamaara))
 
+(defn formatoi-kellonaika [paivamaara]
+  (.format (SimpleDateFormat. "HH:mm:ss") paivamaara))
+
 (defn parsi-kokonaisluku [data]
   (when (and data (not (empty? data))) (Integer/parseInt data)))
 
-(defn parsi-reaaliluku [data]
+(defn parsi-desimaaliluku [data]
   (when (and data (not (empty? data))) (Double/parseDouble data)))
 
 (defn parsi-totuusarvo [data]

@@ -54,8 +54,8 @@
 
 (defn muodosta-kohteiden-lahetysvirheet [virheet]
   (let [virhe-viestit (string/join ", " (mapv (fn [{:keys [kohde-yha-id selite]}]
-                                           (str (when kohde-yha-id (str "Kohde id: " kohde-yha-id ", ")) "Virhe: " selite))
-                                         virheet))]
+                                                (str (when kohde-yha-id (str "Kohde id: " kohde-yha-id ", ")) "Virhe: " selite))
+                                              virheet))]
     (str "YHA palautti seuraavat virheet: " virhe-viestit)))
 
 (defn kasittele-urakan-kohdelahetysvastaus [db sisalto otsikot kohteet]

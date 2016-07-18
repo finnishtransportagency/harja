@@ -204,7 +204,7 @@
   (log/debug "Tarkistetaan onko POT lukittu...")
   (if (= :lukittu (:tila paallystysilmoitus-kannassa))
     (do (log/debug "POT on lukittu, ei voi päivittää!")
-        (throw (RuntimeException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
+        (throw (SecurityException. "Päällystysilmoitus on lukittu, ei voi päivittää!")))
     (log/debug "POT ei ole lukittu, vaan " (pr-str (:tila paallystysilmoitus-kannassa)))))
 
 (defn- paivita-kasittelytiedot [db user urakka-id

@@ -29,7 +29,7 @@
                                                            {:id yllapitokohde})))]
     (when (and (not= kohteen-urakka urakka-id)
                (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
-      (throw (RuntimeException. (str "Ylläpitokohde " yllapitokohde " ei kuulu valittuun urakkaan "
+      (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde " ei kuulu valittuun urakkaan "
                                      urakka-id " vaan urakkaan " kohteen-urakka
                                      ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
@@ -41,6 +41,7 @@
     (let [vastaus (into []
                         (comp (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
                               (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
+                              (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))
                               (map #(assoc % :kohdeosat
                                              (into []
                                                    paallystys-q/kohdeosa-xf
@@ -48,7 +49,7 @@
                                                      db {:urakka urakka-id
                                                          :sopimus sopimus-id
                                                          :yllapitokohde (:id %)})))))
-                        (q/hae-urakan-yllapitokohteet db {:urakka urakka-id
+                        (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                           :sopimus sopimus-id}))
           osien-pituudet-tielle
           (fmap
@@ -166,12 +167,12 @@
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                       yllapitoluokka tyyppi
+                                       yllapitoluokka yllapitokohdetyyppi yllapitokohdetyotyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
                                        kaasuindeksi poistettu nykyinen-paallyste
                                        keskimaarainen-vuorokausiliikenne
                                        indeksin-kuvaus]}]
-  (log/debug "Luodaan uusi ylläpitokohde tyyppiä " tyyppi)
+  (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
     (q/luo-yllapitokohde<! db
                            {:urakka urakka-id
@@ -192,8 +193,8 @@
                             :arvonvahennykset arvonvahennykset
                             :bitumi_indeksi bitumi-indeksi
                             :kaasuindeksi kaasuindeksi
-                            :tyyppi (when tyyppi
-                                      (name tyyppi))
+                            :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
+                            :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
                             :indeksin_kuvaus indeksin-kuvaus})))
 
 (defn- paivita-yllapitokohde [db user urakka-id
@@ -256,13 +257,14 @@
       paallystyskohteet)))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
-                                  {:keys [nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
+                                  {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu sijainti]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
                               {:yllapitokohde yllapitokohde-id
                                :nimi nimi
+                               :tunnus tunnus
                                :tr_numero tr-numero
                                :tr_alkuosa tr-alkuosa
                                :tr_alkuetaisyys tr-alkuetaisyys

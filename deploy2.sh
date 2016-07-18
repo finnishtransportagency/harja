@@ -35,14 +35,8 @@ pushd vagrant
 sh migrate_test.sh > /dev/null
 popd
 
-if [ -z "$UNIT" ] || [ "$UNIT" = true ]; then
-  # msg "Voit estää unit testien ajamisen antamalla toiseksi parametriksi jotain muuta kuin true"
-  # echo ""
-  sh unit.sh
-else
-  msg "Who said you're not responsible? It doesn't matter that you were tricked, you know now that your actions inflicted grievous damage. Do you take responsibility for them or not? Well, what are you going to do?"
-  sh unit.sh
-fi
+echo "Ajetaan yksikkötestit"
+sh unit.sh
 
 echo ""
 echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"

@@ -1,9 +1,27 @@
-<b>Nykyinen versio: 0.1.8</b>
-<b>Julkaistu: 22.6.2016</b>
+<b>Nykyinen versio: 0.2.2</b>
+<b>Julkaistu: 13.7.2016</b>
 
 <b>Versiohistoria:</b>
-- Versionumero: 0.1.8. Julkaistu 22.6.2016:
-    - Varusterajapinnat päivitetty. Jatkossa varusteiden ja laitteiden teknisten arvojen parsinta tehdään Harjan puolella. Samalla mahdollistettu usean varustetoteuman sekä yksittäisen varustetoteuman sisällä usean toimenpiteen kirjaaminen kerralla. 
+- Versionumero: 0.2.3. Julkaistu 18.7.2016:
+    - Varusterajapinnat päivitetty. Jatkossa varusteiden ja laitteiden teknisten arvojen parsinta tehdään Harjan puolella. Samalla mahdollistettu usean varustetoteuman sekä yksittäisen varustetoteuman sisällä usean toimenpiteen kirjaaminen kerralla.
+- Versionumero: 0.2.2. Julkaistu 13.7.2016:
+    - Lisätty rajapinnat suljettujen tieosien kirjaamiselle ja poistolle. 
+- Versionumero: 0.2.1. Julkaistu 6.7.2016:
+    - Turvallisuuspoikkeama yhtenäistetty TURI:n kanssa, mistä johtuen tehty seuraavat muutokset:
+    - Poistettu kenttä: paattynyt
+    - Poistettu kenttä: tyotehtava
+    - Poistettu kenttä: laatija (jatkossa tallennetaan suoraan API-käyttäjän id:nä)
+    - Uusi pakollinen kenttä: otsikko (string, max. 1024 merkkiä)
+    - Uusi vapaaehtoinen kenttä: paikan_kuvaus (string, max. 2048 merkkiä)
+    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_kuljetus (boolean)
+    - Uusi vapaaehtoinen kenttä: vaarallisten_aineiden_vuoto (boolean, true vain jos sisälsi kuljetuksen)
+    - Myös korjaaviin toimenpiteisiin on tehty muutoksia:
+    - Uusi vapaaehtoinen kenttä: otsikko (string, max 2048 merkkiä)
+    - Uusi vapaaehtoinen kenttä: toteuttaja (string, max 1024 merkkiä)
+- Versionumero: 0.2.0. Julkaistu 4.7.2016:
+    - Teiden ylläpidon rajapintojen työstäminen aloitettu. Ensimmäinen toteutettava on rajapinta ylläpitourakan kohteiden haku.
+- Versionumero: 0.1.8. Julkaistu 1.7.2016:
+    - Urakkahaku palauttaa kokonaishintaiset ja yksikköhintaiset tehtävät omassa elementissään. Tehtävät ovat jatkossa vakiojoukko, jonka Harjan pääkäyttäjä määrittää ja näin ollen eivät enää ole riippuvaisia urakkakohtaisista suunnitelmatiedoista. Samalla päivitetty lista työkoneiden reaaliaikaseurannan tehtävistä.
 - Versionumero: 0.1.7. Julkaistu 16.5.2016:
     - Siltatarkastuksen kirjaamisessa mahdollisuus antaa tarkastuskohteelle arvo "eiPade", joka tarkoittaa, ettei kyseistä ominaisuutta voida arvioida tässä sillassa. Arvo voi olla myös tyhjä string, joka tulkitaan arvoksi eiPade.
 - Versionumero: 0.1.6. Julkaistu 20.5.2016:

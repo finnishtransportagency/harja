@@ -123,6 +123,15 @@
                                           "Takaisin tilannekuvaan"]}
                                [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}}))))
 
+(defmethod nayta-popup :suljettu-tieosuus-klikattu [tapahtuma]
+  (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
+                       (tee-arvolistaus-popup "Suljettu tieosuus"
+                                              [["Ylläpitokohde" (str (:yllapitokohteen-nimi tapahtuma) " (" (:yllapitokohteen-numero tapahtuma) ")")]
+                                               ["Aika" (pvm/pvm-aika(:aika tapahtuma))]
+                                               ["Osoite" (tierekisteri/tierekisteriosoite-tekstina tapahtuma {:teksti-tie? false})]
+                                               ["Kaistat" (clojure.string/join ", " (map str (:kaistat tapahtuma)))]
+                                               ["Ajoradat" (clojure.string/join ", " (map str (:ajoradat tapahtuma)))]])))
+
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
   (kartta/keskita-kartta-pisteeseen (:sijainti tapahtuma))
@@ -180,11 +189,11 @@
                              paattynyt (:paattynyt tapahtuma)
                              kasitelty (:kasitelty tapahtuma)]
                          (tee-arvolistaus-popup "Turvallisuuspoikkeama"
-                                                [(when (and tapahtunut paattynyt)
-                                                   ["Tapahtunut" (pvm/pvm-aika tapahtunut) " - " (pvm/pvm-aika paattynyt)])
+                                                [(when tapahtunut
+                                                   ["Tapahtunut" (pvm/pvm-aika tapahtunut)])
                                                  (when kasitelty
                                                    ["Käsitelty" (pvm/pvm-aika kasitelty)])
-                                                 ["Työ\u00ADtehtävä" (turpodomain/kuvaile-tyontekijan-ammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                                                 ["Työn\u00ADtekijä" (turpodomain/kuvaile-tyontekijan-ammatti tapahtuma)]
                                                  ["Vammat" (str/join ", " (map turpodomain/vammat (:vammat tapahtuma)))]
                                                  ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
                                                  ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]

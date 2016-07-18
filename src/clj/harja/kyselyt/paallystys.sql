@@ -19,7 +19,7 @@ FROM yllapitokohde
                                      AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
-      AND tyyppi = 'paallystys' :: yllapitokohdetyyppi
+      AND yllapitokohdetyotyyppi = 'paallystys' :: yllapitokohdetyotyyppi
       AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
@@ -64,7 +64,12 @@ SELECT
   ypko.tr_loppuosa                AS kohdeosa_losa,
   ypko.tr_loppuetaisyys           AS kohdeosa_let,
   ypko.tr_ajorata                 AS "kohdeosa_ajorata",
-  ypko.tr_kaista                  AS "kohdeosa_kaista"
+  ypko.tr_kaista                  AS "kohdeosa_kaista",
+  ypk.tr_numero                       AS "tr-numero",
+  ypk.tr_alkuosa                      AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                 AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                     AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                AS "tr-loppuetaisyys"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
@@ -191,3 +196,18 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää päällystysilmoitukseen uuden kommentin
 INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES (:paallystysilmoitus, :kommentti);
+
+-- name: onko-paallystysilmoitus-olemassa-kohteelle?
+-- single?: true
+SELECT exists(SELECT *
+              FROM paallystysilmoitus
+              WHERE paallystyskohde = :id);
+
+-- name: paivita-paallystysilmoituksen-ilmoitustiedot<!
+-- Päivittää päällystysilmoituksen ilmoitustiedot
+UPDATE paallystysilmoitus
+SET
+  ilmoitustiedot       = :ilmoitustiedot :: JSONB,
+  muokattu             = NOW(),
+  muokkaaja            = :muokkaaja
+WHERE paallystyskohde = :id;

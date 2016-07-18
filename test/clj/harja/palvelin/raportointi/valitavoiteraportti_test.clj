@@ -49,8 +49,8 @@
                                  :konteksti "urakka"
                                  :urakka-id (hae-oulun-alueurakan-2014-2019-id)})]
     (is (vector? vastaus))
-    (is (match [vastaus]
-               [[:raportti
+    (is (match vastaus
+               [:raportti
                  {:nimi "Välitavoiteraportti"
                   :orientaatio :landscape}
                  [:taulukko
@@ -66,7 +66,7 @@
                    {:leveys 10
                     :otsikko "Kommentti"}]
                   [{:otsikko "Ajoissa valmistuneet (25%)"}
-                   ["Koko Suomi aurattu"
+                   ["Koko urakan alue aurattu"
                     "29.05.2014"
                     (_ :guard #(str/starts-with? % "01.05.2014"))
                     "Homma hoidettu hyvästi ennen tavoitepäivää!"]
@@ -84,5 +84,5 @@
                    ["Sepon mökkitie suolattu"
                     (_ :guard #(str/starts-with? % "24.12.2014"))
                     "-"
-                    nil]]]]]
+                    nil]]]]
                true))))

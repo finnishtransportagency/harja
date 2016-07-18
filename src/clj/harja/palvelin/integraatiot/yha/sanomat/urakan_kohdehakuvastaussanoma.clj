@@ -19,7 +19,7 @@
 
 (defn lue-tierekisteriosoitevali [tierekisteriosoitevali]
   (merge
-    {:karttapaivamaara  (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)}
+    {:karttapaivamaara (z/xml1-> tierekisteriosoitevali :karttapaivamaara z/text xml/parsi-paivamaara)}
     (into {}
           (map (juxt identity #(z/xml1-> tierekisteriosoitevali % z/text xml/parsi-kokonaisluku)))
           [:ajorata :kaista :aosa :aet :losa :let :tienumero])))
@@ -27,7 +27,7 @@
 (defn lue-paallystystoimenpide [paallystystoimenpide]
   (hash-map :uusi-paallyste (z/xml1-> paallystystoimenpide :uusi-paallyste z/text xml/parsi-kokonaisluku)
             :raekoko (z/xml1-> paallystystoimenpide :raekoko z/text xml/parsi-kokonaisluku)
-            :kokonaismassamaara (z/xml1-> paallystystoimenpide :kokonaismassamaara z/text xml/parsi-kokonaisluku)
+            :kokonaismassamaara (z/xml1-> paallystystoimenpide :kokonaismassamaara z/text xml/parsi-desimaaliluku)
             :rc-prosentti (z/xml1-> paallystystoimenpide :rc-prosentti z/text xml/parsi-kokonaisluku)
             :kuulamylly (z/xml1-> paallystystoimenpide :kuulamylly z/text xml/parsi-kokonaisluku)
             :paallystetyomenetelma (z/xml1-> paallystystoimenpide :paallystetyomenetelma z/text xml/parsi-kokonaisluku)))
@@ -41,10 +41,18 @@
             :paallystystoimenpide (z/xml1-> alikohde :paallystystoimenpide lue-paallystystoimenpide)))
         (z/xml-> alikohteet :alikohde)))
 
+(defn kasittele-kohdetyyppi [tyyppi]
+  (case tyyppi
+    1 "paallyste"
+    2 "sora"
+    3 "kevytliikenne"
+    "paallyste"))
+
 (defn lue-kohteet [data]
   (mapv (fn [kohde]
           (hash-map :yha-id (z/xml1-> kohde :yha-id z/text xml/parsi-kokonaisluku)
-                    :kohdetyyppi (z/xml1-> kohde :kohdetyotyyppi z/text keyword)
+                    :yllapitokohdetyyppi (kasittele-kohdetyyppi (z/xml1-> kohde :kohdetyyppi z/text keyword))
+                    :yllapitokohdetyotyyppi (z/xml1-> kohde :kohdetyotyyppi z/text keyword)
                     :nimi (z/xml1-> kohde :nimi z/text)
                     :yllapitoluokka (z/xml1-> kohde :yllapitoluokka z/text xml/parsi-kokonaisluku)
                     :keskimaarainen-vuorokausiliikenne (z/xml1-> kohde :keskimaarainen-vuorokausiliikenne z/text xml/parsi-kokonaisluku)

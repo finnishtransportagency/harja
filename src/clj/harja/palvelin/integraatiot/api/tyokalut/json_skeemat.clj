@@ -69,5 +69,14 @@
 (def +tyokoneenseuranta-kirjaus+ "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json")
 (def tyokoneenseuranta-kirjaus (tee-validaattori "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json"))
 
-(def +turvallisuuspoikkeama-kirjaus+ "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json")
-(def turvallisuuspoikkeama-kirjaus (tee-validaattori "api/schemas/turvallisuuspoikkeamien-kirjaus-request.schema.json"))
+(def +urakan-yllapitokohteiden-haku-vastaus+ "api/schemas/urakan-yllapitokohteet-response.schema.json")
+(def urakan-yllapitokohteiden-haku-vastaus (tee-validaattori +urakan-yllapitokohteiden-haku-vastaus+))
+
+(def +paallystysilmoituksen-kirjaus+ "api/schemas/paallystysilmoituksen-kirjaus-request.schema.json")
+(def paallystysilmoituksen-kirjaus (tee-validaattori +paallystysilmoituksen-kirjaus+))
+
+(def +suljetun-tieosuuden-kirjaus+ "api/schemas/suljetun-tieosuuden-kirjaus-request.schema.json")
+(def suljetun-tieosuuden-kirjaus (tee-validaattori +suljetun-tieosuuden-kirjaus+))
+(def +suljetun-tieosuuden-poisto+ "api/schemas/suljetun-tieosuuden-poisto-request.schema.json")
+(def suljetun-tieosuuden-poisto (tee-validaattori +suljetun-tieosuuden-poisto+))
+

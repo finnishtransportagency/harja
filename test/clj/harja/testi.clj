@@ -18,11 +18,21 @@
 (def jarjestelma nil)
 
 (Locale/setDefault (Locale. "fi" "FI"))
-(log/set-config! [:appenders :standard-out :min-level] :info)
+
 
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
+
+(defn travis? []
+  (= "true" (System/getProperty "TRAVIS")))
+
+;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
+;; eikä tehdä traviksen logeista turhan pitkiä
+(log/set-config! [:appenders :standard-out :min-level] (if (or (ollaanko-jenkinsissa?)
+                                                               (travis?))
+                                                         :info
+                                                         :debug))
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
@@ -65,6 +75,9 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 (defn luo-temppitietokanta []
   (tietokanta/luo-tietokanta temppitietokanta))
+
+(defn luo-liitteidenhallinta []
+  (liitteet/->Liitteet))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -177,6 +190,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                     :organisaation-urakat #{}
                      :urakkaroolit {}})
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
