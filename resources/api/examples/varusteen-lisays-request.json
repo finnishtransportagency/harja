@@ -37,64 +37,22 @@
         },
         "tietolaji": {
           "tunniste": "tl506",
-          "arvot": [
-            {
-              "avain": "LMNUMERO",
-              "arvo": "9987"
-            },
-            {
-              "avain": "SIVUTIE",
-              "arvo": "2"
-            },
-            {
-              "avain": "LMALA",
-              "arvo": "2"
-            },
-            {
-              "avain": "LMVANHA",
-              "arvo": "0"
-            },
-            {
-              "avain": "LMTYYPPI",
-              "arvo": "1"
-            },
-            {
-              "avain": "LMKAUSI",
-              "arvo": "0"
-            },
-            {
-              "avain": "LMKIINNIT",
-              "arvo": "1"
-            },
-            {
-              "avain": "LMMATER",
-              "arvo": "1"
-            },
-            {
-              "avain": "LMTEKSTI",
-              "arvo": "Testi liikennemerkki"
-            },
-            {
-              "avain": "LMOMIST",
-              "arvo": "Omistaja"
-            },
-            {
-              "avain": "OPASTETUNN",
-              "arvo": ""
-            },
-            {
-              "avain": "KUNTOLUOKK",
-              "arvo": "4"
-            },
-            {
-              "avain": "TUNNISTE",
-              "arvo": "123456789"
-            },
-            {
-              "avain": "URAKKA",
-              "arvo": "400"
-            }
-          ]
+          "arvot": {
+            "LMNUMERO": "9987",
+            "SIVUTIE": "2",
+            "LMALA": "2",
+            "LMVANHA": "0",
+            "LMTYYPPI": "1",
+            "LMKAUSI": "0",
+            "LMKIINNIT": "1",
+            "LMMATER": "1",
+            "LMTEKSTI": "Testi liikennemerkki",
+            "LMOMIST": "Omistaja",
+            "OPASTETUNN": "",
+            "KUNTOLUOKK": "4",
+            "TUNNISTE": "123456789",
+            "URAKKA": "400"
+          }
         }
       }
     }

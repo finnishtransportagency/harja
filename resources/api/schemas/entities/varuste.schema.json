@@ -133,9 +133,7 @@
         "arvot": {
           "id": "urn:harja/tietolaji/arvot",
           "type": "object",
-          "required": true,
-          "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tietueen-arvot.schema.json"
+          "required": true
         }
       },
       "additionalProperties": false
