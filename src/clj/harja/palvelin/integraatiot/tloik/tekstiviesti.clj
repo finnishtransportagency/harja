@@ -39,7 +39,7 @@
                         :viesti (format "Tuntematon ilmoitustoimenpide: %s" toimenpide)}]})))
 
 (defn parsi-viestinumero [numero]
-  (if (merkkijono/onko-kokonaisluku? numero)
+  (if (merkkijono/vaadi-kokonaisluku numero)
     (Integer/parseInt numero)
     (throw+ {:type :tuntematon-viestinumero
              :virheet [{:koodi :tuntematon-viestinumero

@@ -27,9 +27,9 @@
 
 (deftest tarkista-paivamaarien-kasittely
   (let [kenttien-kuvaukset [{:kenttatunniste "a"
-                      :jarjestysnumero 1
-                      :tietotyyppi :paivamaara
-                      :pituus 10}]
+                             :jarjestysnumero 1
+                             :tietotyyppi :paivamaara
+                             :pituus 10}]
         arvot-string "2009-03-23"]
     (is (= "2009-03-23" (#'tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 1)))))
 
@@ -83,13 +83,13 @@
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Pakollinen arvo puuttuu kentästä: tie"
-                         (tierekisteri-tietue/tietolajin-arvot-map->string
-                           {"tie" nil}
-                           tietolajin-kuvaus))
-       "Puuttuva pakollinen arvo huomattiin")
-  (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä: tunniste maksimipituus: 20"
-                        (tierekisteri-tietue/tietolajin-arvot-map->string
-                          {"tie" "123"
-                           "tunniste" "1234567890112345678901"}
-                          tietolajin-kuvaus))
-      "Liian pitkä arvo huomattiin")))
+                          (tierekisteri-tietue/tietolajin-arvot-map->string
+                            {"tie" nil}
+                            tietolajin-kuvaus))
+        "Puuttuva pakollinen arvo huomattiin")
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä: tunniste maksimipituus: 20"
+                          (tierekisteri-tietue/tietolajin-arvot-map->string
+                            {"tie" "123"
+                             "tunniste" "1234567890112345678901"}
+                            tietolajin-kuvaus))
+        "Liian pitkä arvo huomattiin")))

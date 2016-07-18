@@ -8,13 +8,13 @@
 (defn tayta-oikealle [pituus merkkijono]
   (format (str "%1$-" pituus "s") merkkijono))
 
-(defn onko-kokonaisluku? [arvo]
+(defn vaadi-kokonaisluku [arvo]
   (try
     (Integer/parseInt arvo)
     true
     (catch NumberFormatException e false)))
 
-(defn onko-paivamaara? [arvo]
+(defn vaadi-iso-8601-paivamaara [arvo]
   (try
     (.parse (SimpleDateFormat. "yyyy-MM-dd") arvo)
     true
