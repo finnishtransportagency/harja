@@ -207,7 +207,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          [:span.kentan-label otsikko]
          (when yksikko [:span.kentan-yksikko yksikko])]])
      (if (= tyyppi :komponentti)
-       [:div.komponentti (komponentti {:muokkaa-lomaketta muokkaa})]
+       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)})]
        (if muokattava?
          (do (have #(contains? % :tyyppi) s)
              [tee-kentta (assoc s :lomake? true) arvo])
@@ -339,7 +339,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                   virheet
                                   varoitukset
                                   huomautukset
-                                  (muokkaa-kenttaa-fn "komponentti")]]
+                                  #(muokkaa-kenttaa-fn (:nimi %))]]
                      (if otsikko
                        ^{:key i}
                        [:span
