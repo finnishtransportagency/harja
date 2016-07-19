@@ -123,7 +123,7 @@
                            toteuma-id
                            varustetoteuma
                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                           (get-in toimenpiteen-tiedot [:varuste :tunniste])
+                           nil
                            "lisatty"
                            toimenpiteen-tiedot
                            tietolajin-arvot-string))
