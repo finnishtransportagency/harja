@@ -93,7 +93,7 @@
                                 toimenpiteen-tiedot toimenpiteen-arvot-tekstina]
   (:id (toteumat/luo-varustetoteuma<!
          db
-         "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
+         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
          toteuma-id
          toimenpide
          tietolaji
@@ -114,89 +114,56 @@
          (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
          (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr]))))
 
-(defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
+(defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma tietolajin-arvot-string
+                                  toimenpiteen-tiedot toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
-  (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
-                            tierekisteri
-                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                            nil)
-        tietolaji [:varuste :tietue :tietolaji :tunniste]
-        tietolajin-arvot [:varuste :tietue :tietolaji :arvot]]
-    (validoi-tietolajin-arvot
-      tietolaji
-      tietolajin-arvot
-      tietojalin-kuvaus)
-    ;; FIXME Tallennetaanko myös lisääjä / päivittäjä johonkin?
-    (luo-uusi-varustetoteuma db
-                             kirjaaja
-                             toteuma-id
-                             varustetoteuma
-                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                             "lisatty"
-                             toimenpiteen-tiedot
-                             (muunna-tietolajin-arvot-stringiksi
-                               tietojalin-kuvaus
-                               tietolajin-arvot))))
+  ; FIXME Tallennetaanko myös lisääjä johonkin?
+  (luo-uusi-varustetoteuma db
+                           kirjaaja
+                           toteuma-id
+                           varustetoteuma
+                           (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                           "lisatty"
+                           toimenpiteen-tiedot
+                           tietolajin-arvot-string))
 
-(defn- tallenna-varusteen-paivitys [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
+(defn- tallenna-varusteen-paivitys [db kirjaaja varustetoteuma tietolajin-arvot-string
+                                    toimenpiteen-tiedot toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
-  (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
-                            tierekisteri
-                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                            nil)
-        tietolaji [:varuste :tietue :tietolaji :tunniste]
-        tietolajin-arvot [:varuste :tietue :tietolaji :arvot]]
-    (validoi-tietolajin-arvot
-      tietolaji
-      tietolajin-arvot
-      tietojalin-kuvaus)
-    ;; FIXME Tallennetaanko myös päivittäjä johonkin?
-    (luo-uusi-varustetoteuma db
-                             kirjaaja
-                             toteuma-id
-                             varustetoteuma
-                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                             "paivitetty"
-                             toimenpiteen-tiedot
-                             (muunna-tietolajin-arvot-stringiksi
-                               tietojalin-kuvaus
-                               tietolajin-arvot))))
+  ;; FIXME Tallennetaanko myös päivittäjä johonkin?
+  (luo-uusi-varustetoteuma db
+                           kirjaaja
+                           toteuma-id
+                           varustetoteuma
+                           (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                           "paivitetty"
+                           toimenpiteen-tiedot
+                           tietolajin-arvot-string))
 
 (defn- tallenna-varusteen-poisto [db kirjaaja varustetoteuma toimenpiteen-tiedot toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: poistettu varuste")
-    ;; FIXME Tallennetaanko myös poistaja johonkin?
-    (luo-uusi-varustetoteuma db
-                             kirjaaja
-                             toteuma-id
-                             varustetoteuma
-                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                             "poistettu"
-                             toimenpiteen-tiedot
-                             nil))
+  ;; FIXME Tallennetaanko myös poistaja johonkin?
+  (luo-uusi-varustetoteuma db
+                           kirjaaja
+                           toteuma-id
+                           varustetoteuma
+                           (:tietolajitunniste toimenpiteen-tiedot)
+                           "poistettu"
+                           toimenpiteen-tiedot
+                           nil))
 
-(defn- tallenna-varusteen-tarkastus [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
+(defn- tallenna-varusteen-tarkastus [db kirjaaja varustetoteuma toimenpiteen-tiedot tietolajin-arvot-string
+                                     toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: tarkastettu varaste")
-  (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
-                            tierekisteri
-                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                            nil)
-        tietolaji [:varuste :tietue :tietolaji :tunniste]
-        tietolajin-arvot [:varuste :tietue :tietolaji :arvot]]
-    (validoi-tietolajin-arvot
-      tietolaji
-      tietolajin-arvot
-      tietojalin-kuvaus)
-    ;; FIXME Tallennetaanko myös tarkastaja johonkin?
-    (luo-uusi-varustetoteuma db
-                             kirjaaja
-                             toteuma-id
-                             varustetoteuma
-                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                             "tarkastettu"
-                             toimenpiteen-tiedot
-                             (muunna-tietolajin-arvot-stringiksi
-                               tietojalin-kuvaus
-                               tietolajin-arvot))))
+  ;; FIXME Tallennetaanko myös tarkastaja johonkin?
+  (luo-uusi-varustetoteuma db
+                           kirjaaja
+                           toteuma-id
+                           varustetoteuma
+                           (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                           "tarkastus"
+                           toimenpiteen-tiedot
+                           tietolajin-arvot-string))
 
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman"
@@ -205,24 +172,40 @@
   (log/debug "Tallennetaan toteuman varustetietodot")
   (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
     (let [toimenpide-tyyppi (first (keys toimenpide))
-          toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
+          toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
+          tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
+          tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
+          tietolajin-arvot-string (when tietolajin-arvot
+                                    (let [tietolajin-kuvaus
+                                          (tierekisteri/hae-tietolajit
+                                            tierekisteri
+                                            (get-in toimenpiteen-tiedot tietolaji)
+                                            nil)]
+                                      (validoi-tietolajin-arvot
+                                        tietolaji
+                                        tietolajin-arvot
+                                        tietolajin-kuvaus)
+                                      (muunna-tietolajin-arvot-stringiksi
+                                        tietolajin-kuvaus
+                                        tietolajin-arvot)))]
+
       (condp = toimenpide-tyyppi
 
         :varusteen-lisays
-        (tallenna-varusteen-lisays db kirjaaja tierekisteri
-                                   varustetoteuma toimenpiteen-tiedot toteuma-id)
+        (tallenna-varusteen-lisays db kirjaaja varustetoteuma tietolajin-arvot-string
+                                   toimenpiteen-tiedot toteuma-id)
 
         :varusteen-poisto
-        (tallenna-varusteen-poisto db kirjaaja
-                                   varustetoteuma toimenpiteen-tiedot toteuma-id)
+        (tallenna-varusteen-poisto db kirjaaja varustetoteuma
+                                   toimenpiteen-tiedot toteuma-id)
 
         :varusteen-paivitys
-        (tallenna-varusteen-paivitys db kirjaaja tierekisteri
-                                     varustetoteuma toimenpiteen-tiedot toteuma-id)
+        (tallenna-varusteen-paivitys db kirjaaja varustetoteuma tietolajin-arvot-string
+                                     toimenpiteen-tiedot toteuma-id)
 
         :varusteen-tarkastus
-        (tallenna-varusteen-tarkastus db kirjaaja tierekisteri
-                                      varustetoteuma toimenpiteen-tiedot toteuma-id)))))
+        (tallenna-varusteen-tarkastus db kirjaaja varustetoteuma toimenpiteen-tiedot
+                                      tietolajin-arvot-string toteuma-id)))))
 
 (defn- tallenna-toteumat [db tierekisteri urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
