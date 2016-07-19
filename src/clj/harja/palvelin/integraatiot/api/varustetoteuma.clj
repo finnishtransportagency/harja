@@ -21,6 +21,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
+;; TODO Temppivastaus, katsotaan saadaanko lisätiedot mukaan
 (defn- tee-onnistunut-vastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti."}))
 
@@ -31,7 +32,7 @@
     (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
                                  :id (when uusi-id uusi-id)}))
 
-(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
+(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja otsikko {:keys [varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         varustetoteuma (assoc-in varustetoteuma [:varuste :tunniste] livitunniste)
@@ -40,32 +41,32 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       (assoc (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)) :uusi-id livitunniste))))
 
-(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
+(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko {:keys [varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-paivityssanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/paivita-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
+(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja otsikko {:keys [varustetoteuma]}]
   (log/debug "Poistetaan varuste tierekisteristä")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/poista-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-;; FIXME Rikki
-#_(defn- paivita-muutos-tierekisteriin
+(defn- paivita-muutos-tierekisteriin
     "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
     Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
     nähdään, että toteumaa on yritetty kirjata."
-    [tierekisteri db kirjaaja data]
+    [tierekisteri db kirjaaja otsikko varustetoteuma]
     (when tierekisteri
-      (case (get-in data [:varustetoteuma :varuste :toimenpide])
-        "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
-        "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
-        "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
-        "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
+      ;; TODO Lähetä jokainen toimenpide erikseen
+      (case (get-in varustetoteuma [:varustetoteuma :varuste :toimenpide])
+        "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko varustetoteuma)
+        "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko varustetoteuma)
+        "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko varustetoteuma)
+        "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko varustetoteuma))))
 
 (defn- poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman " toteuma-id " vanhat varustetiedot")
@@ -230,10 +231,9 @@
                                                kirjaaja
                                                varustetoteuma)))))
 
-(defn- laheta-kirjaus-tierekisteriin [db tierekisteri kirjaaja varustetoteumat]
+(defn- laheta-kirjaus-tierekisteriin [db tierekisteri kirjaaja otsikko varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
-    ;; FIXME Päivitä käyttämään uutta tietomallia
-    #_(let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja varustetoteuma)]
+    (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja otsikko varustetoteuma)]
         (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu"))))
 
 (defn- validoi-tehtavat [db varustetoteumat]
@@ -243,7 +243,7 @@
 (defn kirjaa-toteuma
   "Varustetoteuman kirjauksessa kirjataan yksi tai useampi toteuma.
    Jokainen toteuma voi sisältää useita toimenpiteitä (varusteen lisäys, poisto, päivitys, tarkastus)"
-  [tierekisteri db {id :id} {:keys [varustetoteumat] :as payload} kirjaaja]
+  [tierekisteri db {id :id} {:keys [otsikko varustetoteumat] :as payload} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id
                " kayttäjän:" (:kayttajanimi kirjaaja)
@@ -251,7 +251,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
     (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
-    (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja varustetoteumat)
+    (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)
     (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []
