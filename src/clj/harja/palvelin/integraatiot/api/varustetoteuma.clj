@@ -16,7 +16,9 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [clj-time.core :as t])
+            [harja.domain.tierekisteri-tietue :as tr-tietue]
+            [clj-time.core :as t]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- tee-onnistunut-vastaus []
@@ -71,17 +73,24 @@
     db
     toteuma-id))
 
-(defn- validoi-tietolajin-arvot [arvot tietolajin-kuvaus ]
-  ;; TODO
-  )
+(defn validoi-tietolajin-arvot
+  "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
+  Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
+  [arvot tietolajin-kuvaus]
+  (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
+        ok? nil]
+    (when-not ok?
+      (throw+ {:type virheet/+viallinen-kutsu+ :virheet
+               [{:koodi :arvot-eivat-vastaa-tietolajin-kuvausta
+                 :viesti (str "Annetut tietolajin arvot eivät vastaa tierekisteristä saatua tietolajin kuvausta")}]}))))
 
 (defn- muunna-tietolajiarvot-mapiksi [tierekisteri tietolajitunniste arvot-map]
-  (validoi-tietolajin-arvot arvot-map (tierekisteri/hae-tietolajit
-                                       tierekisteri
-                                       tietolajitunniste
-                                       (t/now))) ;; TODO onko muutospvm tänään?
-  ;; TODO Muunna käyttäen harja.domain.tierekisteri-tietue
-  )
+  (let [tietolajin-kuvaus (tierekisteri/hae-tietolajit
+                            tierekisteri
+                            tietolajitunniste
+                            (t/now))] ;; TODO onko muutospvm tänään?
+    (validoi-tietolajin-arvot arvot-map tietolajin-kuvaus)
+    (tr-tietue/tietolajin-arvot-map->string arvot-map tietolajin-kuvaus)))
 
 (defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
   ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, entä nyt? päätelläänkö toimenpiteen tieosoitteesta?

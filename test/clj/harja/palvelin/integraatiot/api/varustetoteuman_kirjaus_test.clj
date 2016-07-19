@@ -30,3 +30,19 @@
           varuste-arvot-kannassa (first (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
       (is (string? varuste-arvot-kannassa))))) ;; FIXME Testaa että arvot oikein
+
+(deftest tietolajin-arvojen-validointi-toimii
+  (let [arvot-rajapinnasta {:LMNUMERO "9987"
+                            :SIVUTIE "2"}
+        kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (api-varustetoteuma/validoi-tietolajin-arvot arvot-rajapinnasta kenttien-kuvaukset)))
