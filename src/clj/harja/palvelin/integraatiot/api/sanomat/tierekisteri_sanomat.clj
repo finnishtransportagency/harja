@@ -13,7 +13,7 @@
        (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
        (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)))
 
-(defn luo-varusteen-lisayssanoma [otsikko kirjaaja varustetoteuma]
+(defn luo-varusteen-lisayssanoma [otsikko kirjaaja varustetoteuma toimenpide]
   {:lisaaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                              (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                              "")
@@ -42,7 +42,7 @@
                            :arvot             (get-in varustetoteuma [:varuste :arvot])}}
    :lisatty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
 
-(defn luo-varusteen-paivityssanoma [otsikko kirjaaja varustetoteuma]
+(defn luo-varusteen-paivityssanoma [otsikko kirjaaja varustetoteuma toimenpide]
   {:paivittaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                                 (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                                 "")
@@ -72,7 +72,7 @@
 
    :paivitetty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
 
-(defn luo-varusteen-poistosanoma [otsikko kirjaaja varustetoteuma]
+(defn luo-varusteen-poistosanoma [otsikko kirjaaja varustetoteuma toimenpide]
   {:poistaja          {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                                        (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                                        "")
