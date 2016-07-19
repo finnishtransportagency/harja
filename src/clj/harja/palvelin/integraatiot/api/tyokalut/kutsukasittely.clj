@@ -276,12 +276,11 @@
 
 (defn kasittele-kutsu-async
   "Käsittelee asynkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
-  lähetetty data  on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
+  lähetetty data on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
   tuleva data validoidaan käyttäen annettuja JSON-skeemoja.
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (with-channel request channel

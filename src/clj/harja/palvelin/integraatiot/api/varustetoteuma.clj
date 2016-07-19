@@ -18,11 +18,17 @@
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
+(defn- tee-onnistunut-vastaus []
+  (tee-kirjausvastauksen-body {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti."}))
+
+;; FIXME Nyt kun varustetoteumia voi kirjata kerralla monta,
+;; pitäisi kai kerätä kaikkien tierekisterin pyyntöjen vastaukset yhteen jotta voidaan näyttää
+;; vastauksessa?
+#_(defn- tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
   (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
                                :id (when uusi-id uusi-id)}))
 
-(defn lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
+(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         varustetoteuma (assoc-in varustetoteuma [:varuste :tunniste] livitunniste)
@@ -31,21 +37,21 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       (assoc (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)) :uusi-id livitunniste))))
 
-(defn paivita-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
+(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Päivitetään varuste tierekisteriin")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-paivityssanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/paivita-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn poista-varuste-tierekisterista [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
+(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Poistetaan varuste tierekisteristä")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma otsikko kirjaaja varustetoteuma)]
     (let [vastaus (tierekisteri/poista-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn paivita-muutos-tierekisteriin
+(defn- paivita-muutos-tierekisteriin
   "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
@@ -57,13 +63,13 @@
       "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
       "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
 
-(defn poista-toteuman-varustetiedot [db toteuma-id]
+(defn- poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
   (toteumat/poista-toteuman-varustetiedot!
     db
     toteuma-id))
 
-(defn tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
+(defn- tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
                                             kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
   (jdbc/with-db-transaction
     [db db]
@@ -91,7 +97,7 @@
                                                    (:ajr tr)
                                                    id))))
 
-(defn tallenna-toteuma [db urakka-id kirjaaja data]
+(defn- tallenna-toteuma [db urakka-id kirjaaja data]
   (jdbc/with-db-transaction [db db]
     (let [toteuma (assoc (get-in data [:varustetoteuma :toteuma]) :reitti nil)
           toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)
@@ -107,16 +113,20 @@
       (poista-toteuman-varustetiedot db toteuma-id)
       (tallenna-varuste db kirjaaja varustetiedot toteuma-id))))
 
+(defn- kasittele-varustetoteumat [db urakka-id kirjaaja varustetoteuma]
+  (tallenna-toteuma db urakka-id kirjaaja data)
+
+  (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja data)]
+    (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu")))
+
 (defn kirjaa-toteuma [tierekisteri db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
+    ;; FIXME Tarkista tehtävät kaikista varustetoteumista
     (toteuman-validointi/tarkista-tehtavat db (get-in data [:varustetoteuma :toteuma :tehtavat]))
-    (tallenna-toteuma db urakka-id kirjaaja data)
-
-    (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja data)]
-      (log/debug "Tietojen päivitys tierekisteriin suoritettu")
-      (tee-onnistunut-vastaus vastaus))))
+    (kasittele-varustetoteumat db urakka-id kirjaaja (:varustetoteumat data))
+    (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []
   component/Lifecycle
@@ -124,13 +134,15 @@
     (julkaise-reitti
       http :lisaa-varustetoteuma
       (POST "/api/urakat/:id/toteumat/varuste" request
-        (kasittele-kutsu-async db
-                         integraatioloki
-                         :lisaa-varustetoteuma
-                         request
-                         json-skeemat/varustetoteuman-kirjaus
-                         json-skeemat/kirjausvastaus
-                         (fn [parametit data kayttaja db] (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
+        (kasittele-kutsu-async
+          db
+          integraatioloki
+          :lisaa-varustetoteuma
+          request
+          json-skeemat/varustetoteuman-kirjaus
+          json-skeemat/kirjausvastaus
+          (fn [parametit data kayttaja db]
+            (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-varustetoteuma)
