@@ -179,7 +179,7 @@
                                           tietolajin-kuvaus
                                           (tierekisteri/hae-tietolajit
                                             tierekisteri
-                                            (get-in toimenpiteen-tiedot tietolaji)
+                                            tietolaji
                                             nil)]
                                       (validoi-tietolajin-arvot
                                         tietolaji
