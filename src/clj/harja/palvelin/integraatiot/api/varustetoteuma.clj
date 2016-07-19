@@ -78,6 +78,7 @@
   Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
   [arvot tietolajin-kuvaus]
   (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
+
         ok? nil]
     (when-not ok?
       (throw+ {:type virheet/+viallinen-kutsu+ :virheet

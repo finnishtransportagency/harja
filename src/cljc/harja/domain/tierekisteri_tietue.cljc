@@ -16,7 +16,7 @@
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
     (throw (Exception. viesti))))
 
-(defn- validoi-arvo [tietolaji {:keys [kenttatunniste pakollinen pituus]} arvo]
+(defn- validoi-arvo [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
   (when (and pakollinen (not arvo))
     (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
   (when (< pituus (count arvo))
@@ -42,9 +42,8 @@
                                 (filter #(< (:jarjestysnumero %) jarjestysnumero)
                                         kenttien-kuvaukset)))
         loppuindeksi (+ alkuindeksi (:pituus jarjestysnumeron-kentta))
-        arvo-teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))
-        arvo-castattu (muunna-teksti-kentan-mukaiseen-tyyppiin arvo-teksti jarjestysnumeron-kentta)]
-    arvo-castattu))
+        arvo-teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))]
+    arvo-teksti))
 
 (defn- muunna-kentta-stringiksi [arvo kentan-kuvaus]
   (condp = (:tietotyyppi kentan-kuvaus)
@@ -54,10 +53,9 @@
     :koodisto arvo))
 
 (defn- muodosta-kentta [tietolaji arvot-map {:keys [pituus kenttatunniste] :as kentan-kuvaus}]
-  (let [arvo (get arvot-map kenttatunniste)
-        arvo-tekstina (muunna-kentta-stringiksi arvo kentan-kuvaus)]
-    (validoi-arvo tietolaji kentan-kuvaus arvo-tekstina)
-    (merkkijono/tayta-oikealle pituus arvo-tekstina)))
+  (let [arvo (get arvot-map kenttatunniste)]
+    (validoi-arvo arvo kentan-kuvaus tietolaji)
+    (merkkijono/tayta-oikealle pituus arvo)))
 
 (defn tietolajin-arvot-map->string
   "Ottaa arvot-mapin ja purkaa sen stringiksi käyttäen apuna annettua tietolajin kuvausta.
@@ -73,7 +71,7 @@
                     kenttien-kuvaukset
                     {:keys [jarjestysnumero kenttatunniste] :as kentan-kuvaus}]
   (let [arvo (hae-arvo arvot-merkkijono kenttien-kuvaukset jarjestysnumero)]
-    (validoi-arvo tietolaji kentan-kuvaus arvo)
+    (validoi-arvo arvo kentan-kuvaus tietolaji)
     {kenttatunniste arvo}))
 
 (defn tietolajin-arvot-merkkijono->map

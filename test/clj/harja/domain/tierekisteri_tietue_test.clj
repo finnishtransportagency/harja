@@ -33,9 +33,7 @@
                              :pituus 10}]
         arvot-string "2009-03-23"
         muunnos (#'tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 1)]
-    (is (= (t/day muunnos) 23))
-    (is (= (t/month muunnos) 3))
-    (is (= (t/year muunnos) 2009))))
+    (is (= muunnos "2009-03-23"))))
 
 
 (deftest testaa-arvot-mapin-muuntaminen-merkkijonoksi
