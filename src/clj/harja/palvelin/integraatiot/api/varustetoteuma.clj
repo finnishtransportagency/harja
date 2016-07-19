@@ -148,9 +148,9 @@
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman"
   [db tierekisteri toteuma-id kirjaaja varustetoteuma]
+  (poista-toteuman-varustetiedot db toteuma-id)
   (log/debug "Tallennetaan toteuman varustetietodot")
   (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
-    (poista-toteuman-varustetiedot db toteuma-id)
     (let [toimenpide-tyyppi (first (keys toimenpide))
           toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
       (condp = toimenpide-tyyppi
