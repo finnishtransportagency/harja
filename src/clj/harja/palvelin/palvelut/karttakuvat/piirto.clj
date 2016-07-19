@@ -177,5 +177,4 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        {:timeout piirron-aikakatkaisu-ms
         :on-timed-out (piirra-varoitus g koko varoitusteksti)}
        [{alue :alue :as asia} ch]
-       (print ".")
        (piirra g asia alue ruudukko)))))
