@@ -173,10 +173,10 @@
   (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
     (let [toimenpide-tyyppi (first (keys toimenpide))
           toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-          tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
           tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
           tietolajin-arvot-string (when tietolajin-arvot
-                                    (let [tietolajin-kuvaus
+                                    (let [tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
+                                          tietolajin-kuvaus
                                           (tierekisteri/hae-tietolajit
                                             tierekisteri
                                             (get-in toimenpiteen-tiedot tietolaji)
