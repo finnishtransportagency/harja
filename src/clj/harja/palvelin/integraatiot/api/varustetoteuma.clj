@@ -92,6 +92,7 @@
 (defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
   ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, entä nyt? päätelläänkö toimenpiteen tieosoitteesta?
   ;; FIXME Tallennetaanko myös lisääjä johonkin?
+  (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
   (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
                             tierekisteri
                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
