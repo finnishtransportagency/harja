@@ -95,7 +95,7 @@
   (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
                             tierekisteri
                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                            (t/now)) ;; TODO onko muutospvm tänään?
+                            nil)
         tietolaji [:varuste :tietue :tietolaji :tunniste]
         tietolajin-arvot [:varuste :tietue :tietolaji :arvot]]
     (validoi-tietolajin-arvot
