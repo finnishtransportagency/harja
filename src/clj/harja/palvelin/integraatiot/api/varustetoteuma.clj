@@ -75,35 +75,30 @@
   )
 
 (defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma toimenpiteen-tiedot toteuma-id]
-  (let [sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
-        aika (aika-string->java-sql-date
-               (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))]
-    (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
-    #_(api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
-    ;; FIXME Tallennetaanko myös lisääjä johonkin?
-    ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, päätelläänkö nyt toimenpiteen tieosoitteesta?
-    (:id (toteumat/luo-varustetoteuma<!
-                    db
-                    "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
-                    toteuma-id
-                    "lisatty"
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                    (muunna-tietolajiarvot-mapiksi (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
-                    nil ;; FIXME karttapvm puuttuu
-                    ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
-                    (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
-                    (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt])
-                    nil ; FIXME Piiri puuttuu?
-                    nil ; FIXME Kuntoluokitus puuttuu?
-                    nil ; FIXME tierekisteriurakkakoodi puuttuu?
-                    (:id kirjaaja)
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
-                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])))))
+  ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, entä nyt? päätelläänkö toimenpiteen tieosoitteesta?
+  ;; FIXME Tallennetaanko myös lisääjä johonkin?
+  (:id (toteumat/luo-varustetoteuma<!
+         db
+         "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
+         toteuma-id
+         "lisatty"
+         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+         (muunna-tietolajiarvot-mapiksi (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
+         nil ;; FIXME karttapvm puuttuu
+         ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
+         (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
+         (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt])
+         nil ; FIXME Piiri puuttuu?
+         nil ; FIXME Kuntoluokitus puuttuu?
+         nil ; FIXME tierekisteriurakkakoodi puuttuu?
+         (:id kirjaaja)
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr]))))
 
 (defn- tallenna-varusteen-paivitys []
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
