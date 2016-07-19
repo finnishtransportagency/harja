@@ -97,13 +97,12 @@
                                                    (:ajr tr)
                                                    id))))
 
-(defn- tallenna-toteuma [db urakka-id kirjaaja data]
-  (jdbc/with-db-transaction [db db]
-    (let [toteuma (assoc (get-in data [:varustetoteuma :toteuma]) :reitti nil)
+(defn- tallenna-toteuma [db urakka-id kirjaaja varustetoteuma]
+  (let [toteuma (assoc (get-in varustetoteuma [:varustetoteuma :toteuma]) :reitti nil)
           toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)
-          varustetiedot (get-in data [:varustetoteuma :varuste])
-          sijainti (get-in data [:varustetoteuma :sijainti])
-          aika (aika-string->java-sql-date (get-in data [:varustetoteuma :toteuma :alkanut]))]
+          varustetiedot (get-in varustetoteuma [:varustetoteuma :varuste])
+          sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
+          aika (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))]
       (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
       (log/debug "Aloitetaan sijainnin tallennus")
       (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
@@ -111,21 +110,35 @@
       (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
       (log/debug "Aloitetaan toteuman varustetietojen tallentaminen")
       (poista-toteuman-varustetiedot db toteuma-id)
-      (tallenna-varuste db kirjaaja varustetiedot toteuma-id))))
+      (tallenna-varuste db kirjaaja varustetiedot toteuma-id)))
 
-(defn- kasittele-varustetoteumat [db urakka-id kirjaaja varustetoteuma]
-  (tallenna-toteuma db urakka-id kirjaaja data)
+(defn- tallenna-toteumat [db urakka-id kirjaaja varustetoteumat]
+  (jdbc/with-db-transaction [db db]
+    (doseq [varustetoteuma varustetoteumat]
+      (tallenna-toteuma db urakka-id kirjaaja varustetoteuma))))
 
-  (let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja data)]
-    (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu")))
+(defn- laheta-kirjaus-tierekisteriin [db tierekisteri kirjaaja varustetoteumat]
+  (doseq [varustetoteuma varustetoteumat]
+    ;; FIXME Päivitä käyttämään uutta tietomallia
+    #_(let [vastaus (paivita-muutos-tierekisteriin tierekisteri db kirjaaja varustetoteuma)]
+        (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu"))))
 
-(defn kirjaa-toteuma [tierekisteri db {id :id} data kirjaaja]
+(defn- validoi-tehtavat [db varustetoteumat]
+  (doseq [varustetoteuma varustetoteumat]
+    (toteuman-validointi/tarkista-tehtavat db (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat]))))
+
+(defn kirjaa-toteuma
+  "Varustetoteuman kirjauksessa kirjataan yksi tai useampi toteuma.
+   Jokainen toteuma voi sisältää useita toimenpiteitä (varusteen lisäys, poisto, päivitys, tarkastus)"
+  [tierekisteri db {id :id} {:keys [varustetoteumat] :as payload} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
-    (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja) " (id:" (:id kirjaaja) " tekemänä.")
+    (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id
+               " kayttäjän:" (:kayttajanimi kirjaaja)
+               " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    ;; FIXME Tarkista tehtävät kaikista varustetoteumista
-    (toteuman-validointi/tarkista-tehtavat db (get-in data [:varustetoteuma :toteuma :tehtavat]))
-    (kasittele-varustetoteumat db urakka-id kirjaaja (:varustetoteumat data))
+    (validoi-tehtavat db varustetoteumat)
+    (tallenna-toteumat db urakka-id kirjaaja varustetoteumat)
+    (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja varustetoteumat)
     (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []
