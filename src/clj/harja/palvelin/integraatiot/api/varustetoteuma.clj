@@ -93,10 +93,10 @@
                                 toimenpiteen-tiedot toimenpiteen-arvot-tekstina]
   (:id (toteumat/luo-varustetoteuma<!
          db
-         tietolaji
+         tunniste
          toteuma-id
          toimenpide
-         tunniste
+         tietolaji
          toimenpiteen-arvot-tekstina
          nil ;; FIXME karttapvm puuttuu
          ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
