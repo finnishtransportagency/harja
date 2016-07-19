@@ -53,7 +53,8 @@
     (with-fake-http
       []
       (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
-        (is (true? (:onnistunut vastausdata)))))))
+        (is (true? (:onnistunut vastausdata)))
+        (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))))))
 
 (deftest tarkista-tietueiden-haku
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietueet-response.xml"))]
