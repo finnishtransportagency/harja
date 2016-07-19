@@ -24,7 +24,7 @@
     (.next (.executeQuery ps))))
 
 
-(def get-notifications (->> (Class/forName "org.postgresql.jdbc4.Jdbc4Connection")
+(def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
                             .getMethods
                             (filter #(= (.getName %) "getNotifications"))
                             first))
@@ -62,11 +62,11 @@
                                                                                      get-notifications
                                                                                      C3P0ProxyConnection/RAW_CONNECTION
                                                                                      (into-array Object [])))]
-                    (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification)) 
+                    (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
                     (doseq [kasittelija (get @kuuntelijat (.getName notification))]
                       ;; Käsittelijä ei sitten saa blockata
                       (kasittelija (.getParameter notification)))))
-                
+
                 (Thread/sleep 150)
                 (recur))))
     this)
@@ -82,7 +82,7 @@
   (kuuroudu! [this kanava]
     (swap! kuuntelijat #(dissoc % kanava))
     (u @connection (str "UNLISTEN " kanava ";")))
-  
+
   Kuuntele
   (kuuntele! [_ kanava callback]
     (let [kanava (kanava-nimi kanava)]
@@ -99,7 +99,3 @@
 
 (defn luo-tapahtumat []
   (->Tapahtumat (atom nil) (atom nil) (atom false)))
-
-
-  
-    
