@@ -354,6 +354,12 @@
      [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
       [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
 
+(defonce kuuntele-kartan-paivitys
+  (t/kuuntele! :karttakuva
+               #(reset! paivitetaan-karttaa-tila (if (= :lataus-alkoi (:tila %))
+                                                   true
+                                                   false))))
+
 (defn aseta-paivitetaan-karttaa-tila! [uusi-tila]
   (reset! paivitetaan-karttaa-tila uusi-tila))
 

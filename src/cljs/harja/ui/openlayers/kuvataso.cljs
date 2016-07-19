@@ -8,13 +8,22 @@
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :refer [karttakuva-url]]
             [harja.ui.openlayers.taso :refer [Taso]]
-            [cljs-time.core :as t]))
+            [cljs-time.core :as t]
+            [harja.asiakas.tapahtumat :as tapahtumat]))
 
-(defn- ol-kuva [extent resolution url]
-  (ol.Image. extent resolution 1 nil url "use-credentials"
-             ol.source.Image/defaultImageLoadFunction))
+(defn- ol-kuva [extent resolution url lataus-aloitettu lataus-valmis]
+  (let [kuva (ol.Image. extent resolution 1 nil url "use-credentials"
+                        ol.source.Image/defaultImageLoadFunction)]
+    (.addEventListener kuva "change"
+                       #(cond
+                          (and lataus-aloitettu (= 1 (.-state kuva)))
+                          (lataus-aloitettu)
 
-(defn hae-fn [parametrit]
+                          (and lataus-valmis (= 2 (.-state kuva)))
+                          (lataus-valmis)))
+    kuva))
+
+(defn hae-fn [parametrit lataus-aloitettu lataus-valmis]
   (let [kuva (atom nil)]
     (fn [extent resolution pixel-ratio projection]
       (second
@@ -29,9 +38,10 @@
                     [url image]
                     (do (log "KUVA URL: " url " => " uusi-url)
                         [uusi-url
-                         (ol-kuva extent resolution uusi-url)])))))))))
+                         (ol-kuva extent resolution uusi-url
+                                  lataus-aloitettu lataus-valmis)])))))))))
 
-(defrecord Kuvataso [projection extent z-index  selitteet parametrit]
+(defrecord Kuvataso [projection extent z-index selitteet parametrit]
   Taso
   (aseta-z-index [this z-index]
     (assoc this :z-index z-index))
@@ -45,7 +55,11 @@
           luo? (nil? ol-layer)
           source (if (and sama? (not luo?))
                    (.getSource ol-layer)
-                   (kuvataso.Lahde. (hae-fn parametrit)
+                   (kuvataso.Lahde. (hae-fn parametrit
+                                            #(tapahtumat/julkaise!
+                                              {:aihe :karttakuva :tila :lataus-alkoi})
+                                            #(tapahtumat/julkaise!
+                                              {:aihe :karttakuva :tila :lataus-valmis}))
                                     #js {:projection projection
                                          :imageExtent extent}))
 
