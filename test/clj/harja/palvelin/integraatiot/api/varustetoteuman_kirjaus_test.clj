@@ -46,3 +46,36 @@
                               :tietotyyppi :merkkijono
                               :pituus 10}]}]
     (api-varustetoteuma/validoi-tietolajin-arvot "tl506" arvot-rajapinnasta kenttien-kuvaukset)))
+
+(deftest tietolajin-arvojen-validointi-toimii
+  (let [arvot-rajapinnasta {:SIVUTIE "2"}
+        kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (is (thrown? Exception
+                 (api-varustetoteuma/validoi-tietolajin-arvot "tl506" arvot-rajapinnasta kenttien-kuvaukset)))))
+
+(deftest tietolajin-arvojen-validointi-toimii
+  (let [arvot-rajapinnasta {:LMNUMERO "9987"
+                            :SIVUTIE "12345678900"}
+        kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (is (thrown? Exception
+                 (api-varustetoteuma/validoi-tietolajin-arvot "tl506" arvot-rajapinnasta kenttien-kuvaukset)))))
