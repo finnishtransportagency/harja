@@ -51,17 +51,18 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn- paivita-muutos-tierekisteriin
-  "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
-  Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
-  nähdään, että toteumaa on yritetty kirjata."
-  [tierekisteri db kirjaaja data]
-  (when tierekisteri
-    (case (get-in data [:varustetoteuma :varuste :toimenpide])
-      "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
-      "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
-      "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
-      "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
+;; FIXME Rikki
+#_(defn- paivita-muutos-tierekisteriin
+    "Päivittää varustetoteuman Tierekisteriin. On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
+    Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
+    nähdään, että toteumaa on yritetty kirjata."
+    [tierekisteri db kirjaaja data]
+    (when tierekisteri
+      (case (get-in data [:varustetoteuma :varuste :toimenpide])
+        "lisatty" (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja data)
+        "paivitetty" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data)
+        "poistettu" (poista-varuste-tierekisterista tierekisteri kirjaaja data)
+        "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
 
 (defn- poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
@@ -69,43 +70,39 @@
     db
     toteuma-id))
 
-(defn- tallenna-toimenpide [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                                kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
-  (jdbc/with-db-transaction
-    [db db]
-    (let [tr (:tie sijainti)
-          ;; jeesql 20 parametrin rajoituksen vuoksi luonti kahdessa erässä
-          id (:id (toteumat/luo-varustetoteuma<!
+(defn- muunna-tietolajiarvot-mapiksi [arvot-map]
+  ;; TODO Muunna käyttäen harja.domain.tierekisteri-tietue
+  )
+
+(defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma toimenpiteen-tiedot toteuma-id]
+  (let [sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
+        aika (aika-string->java-sql-date
+               (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))]
+    (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
+    #_(api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
+    ;; FIXME Tallennetaanko myös lisääjä johonkin?
+    ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, päätelläänkö nyt toimenpiteen tieosoitteesta?
+    (:id (toteumat/luo-varustetoteuma<!
                     db
-                    tunniste
+                    "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
                     toteuma-id
-                    toimenpide
-                    tietolaji
-                    arvot
-                    (aika-string->java-sql-date karttapvm)
+                    "lisatty"
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                    (muunna-tietolajiarvot-mapiksi (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
+                    nil ;; FIXME karttapvm puuttuu
                     alkupvm
                     loppupvm
                     piiri
                     kuntoluokitus
                     tierekisteriurakkakoodi
-                    (:id kirjaaja)))]
-      (toteumat/paivita-varustetoteuman-tr-osoite! db
-                                                   (:numero tr)
-                                                   (:aosa tr) (:aet tr)
-                                                   (:losa tr) (:let tr)
-                                                   (:puoli tr)
-                                                   (:ajr tr)
-                                                   id))))
-
-(defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma toimenpide toteuma-id]
-  (let [sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
-        aika (aika-string->java-sql-date
-               (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))]
-    (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
-    (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
-    ;; TODO Lisää / päivitä toteumaan reittipiste
-    ;; TODO
-    (tallenna-toimenpide db kirjaaja varustetiedot toteuma-id)))
+                    (:id kirjaaja)
+                    (:numero tr)
+                    (:aosa tr)
+                    (:aet tr)
+                    (:losa tr)
+                    (:let tr)
+                    (:puoli tr)
+                    (:ajr tr)))))
 
 (defn- tallenna-varusteen-paivitys []
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
@@ -141,14 +138,21 @@
 
       (log/debug "Tallennetaan toteuman varustetietodot")
       (poista-toteuman-varustetiedot db toteuma-id)
-      (when (:varusteen-lisays toimenpide)
-        (tallenna-varusteen-lisays db kirjaaja varustetoteuma toimenpide toteuma-id))
-      (when (:varusteen-poisto toimenpide)
-        (tallenna-varusteen-poisto))
-      (when (:varusteen-paivitys toimenpide)
-        (tallenna-varusteen-paivitys))
-      (when (:varusteen-tarkastus toimenpide)
-        (tallenna-varusteen-tarkastus)))))
+      (let [toimenpide-tyyppi (first (keys toimenpide))
+            toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
+        (condp = toimenpide-tyyppi
+
+          :varusteen-lisays
+          (tallenna-varusteen-lisays db kirjaaja varustetoteuma toimenpiteen-tiedot toteuma-id)
+
+          :varusteen-poisto
+          (tallenna-varusteen-poisto)
+
+          :varusteen-paivitys
+          (tallenna-varusteen-paivitys)
+
+          :varusteen-tarkastus
+          (tallenna-varusteen-tarkastus)))))
 
 (defn- tallenna-toteumat [db urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
