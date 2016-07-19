@@ -176,11 +176,10 @@
           tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
           tietolajin-arvot-string (when tietolajin-arvot
                                     (let [tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
-                                          tietolajin-kuvaus
-                                          (tierekisteri/hae-tietolajit
-                                            tierekisteri
-                                            tietolaji
-                                            nil)]
+                                          tietolajin-kuvaus (tierekisteri/hae-tietolajit
+                                                              tierekisteri
+                                                              tietolaji
+                                                              nil)]
                                       (validoi-tietolajin-arvot
                                         tietolaji
                                         tietolajin-arvot
@@ -190,7 +189,6 @@
                                         tietolajin-arvot)))]
 
       (condp = toimenpide-tyyppi
-
         :varusteen-lisays
         (tallenna-varusteen-lisays db kirjaaja varustetoteuma tietolajin-arvot-string
                                    toimenpiteen-tiedot toteuma-id)
