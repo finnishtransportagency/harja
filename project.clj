@@ -38,7 +38,7 @@
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  [org.postgresql/postgresql "9.4.1209"]
                  ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
-                 [clojunauts/postgis-jdbc "2.1.0SVN"]
+                 [webjure/postgis-jdbc "2.1.7"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.2"]
