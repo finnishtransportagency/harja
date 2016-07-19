@@ -89,14 +89,14 @@
     (clojure.walk/stringify-keys arvot-map)
     tietolajin-kuvaus))
 
-(defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma tietolaji toimenpide
+(defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma tietolaji tunniste toimenpide
                                 toimenpiteen-tiedot toimenpiteen-arvot-tekstina]
   (:id (toteumat/luo-varustetoteuma<!
          db
-         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+         tietolaji
          toteuma-id
          toimenpide
-         tietolaji
+         tunniste
          toimenpiteen-arvot-tekstina
          nil ;; FIXME karttapvm puuttuu
          ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
@@ -123,6 +123,7 @@
                            toteuma-id
                            varustetoteuma
                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                           (get-in toimenpiteen-tiedot [:varuste :tunniste])
                            "lisatty"
                            toimenpiteen-tiedot
                            tietolajin-arvot-string))
@@ -136,6 +137,7 @@
                            toteuma-id
                            varustetoteuma
                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                           (get-in toimenpiteen-tiedot [:varuste :tunniste])
                            "paivitetty"
                            toimenpiteen-tiedot
                            tietolajin-arvot-string))
@@ -148,6 +150,7 @@
                            toteuma-id
                            varustetoteuma
                            (:tietolajitunniste toimenpiteen-tiedot)
+                           (:tunniste toimenpiteen-tiedot)
                            "poistettu"
                            toimenpiteen-tiedot
                            nil))
@@ -161,6 +164,7 @@
                            toteuma-id
                            varustetoteuma
                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                           (get-in toimenpiteen-tiedot [:varuste :tunniste])
                            "tarkastus"
                            toimenpiteen-tiedot
                            tietolajin-arvot-string))
