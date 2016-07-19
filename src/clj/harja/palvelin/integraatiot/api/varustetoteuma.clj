@@ -25,8 +25,8 @@
 ;; pitäisi kai kerätä kaikkien tierekisterin pyyntöjen vastaukset yhteen jotta voidaan näyttää
 ;; vastauksessa?
 #_(defn- tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
-  (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
-                               :id (when uusi-id uusi-id)}))
+    (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
+                                 :id (when uusi-id uusi-id)}))
 
 (defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja {:keys [otsikko varustetoteuma]}]
   (log/debug "Lisätään varuste tierekisteriin")
@@ -69,8 +69,8 @@
     db
     toteuma-id))
 
-(defn- tallenna-varuste [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                            kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
+(defn- tallenna-toimenpide [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
+                                             kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
   (jdbc/with-db-transaction
     [db db]
     (let [tr (:tie sijainti)
@@ -97,20 +97,55 @@
                                                    (:ajr tr)
                                                    id))))
 
+(defn- tallenna-varusteen-lisays []
+  (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
+  ;; TODO
+  #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
+
+(defn- tallenna-varusteen-paivitys []
+  (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
+  ;; TODO
+  #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
+
+(defn- tallenna-varusteen-poisto []
+  (log/debug "Tallennetaan varustetoteuman toimenpide: poistettu varaste")
+  ;; TODO
+  #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
+
+(defn- tallenna-varusteen-tarkastus []
+  (log/debug "Tallennetaan varustetoteuman toimenpide: tarkastettu varaste")
+  ;; TODO
+  #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
+
+(defn- tallenna-varustetoteuman-toimenpiteet [db kirjaaja toimenpiteet toteuma-id]
+  (doseq [toimenpide toimenpiteet]
+    (when (:varusteen-lisays toimenpide)
+      (tallenna-varusteen-lisays))
+    (when (:varusteen-poisto toimenpide)
+      (tallenna-varusteen-poisto))
+    (when (:varusteen-paivitys toimenpide)
+      (tallenna-varusteen-paivitys))
+    (when (:varusteen-tarkastus toimenpide)
+      (tallenna-varusteen-tarkastus))))
+
 (defn- tallenna-toteuma [db urakka-id kirjaaja varustetoteuma]
   (let [toteuma (assoc (get-in varustetoteuma [:varustetoteuma :toteuma]) :reitti nil)
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)
-          varustetiedot (get-in varustetoteuma [:varustetoteuma :varuste])
-          sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
-          aika (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))]
-      (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
-      (log/debug "Aloitetaan sijainnin tallennus")
-      (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
-      (log/debug "Aloitetaan toteuman tehtävien tallennus")
+        ;varustetiedot (get-in varustetoteuma [:varustetoteuma :varuste])
+        ;sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
+        aika (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))]
+    (log/debug "Tallennetaan toteuman perustiedot")
+    (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+      (log/debug "Tallennetaan sijainti reittipisteenä")
+      ; FIXME Sijainti on nykyään erikseen jokaisella toimenpiteellä. Miten pitäisi tallentaa?
+      #_(api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
+      (log/debug "Tallennetaan toteuman tehtävät")
       (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
-      (log/debug "Aloitetaan toteuman varustetietojen tallentaminen")
+      (log/debug "Tallennetaan toteuman varustetietodot")
       (poista-toteuman-varustetiedot db toteuma-id)
-      (tallenna-varuste db kirjaaja varustetiedot toteuma-id)))
+      (tallenna-varustetoteuman-toimenpiteet db
+                                             kirjaaja
+                                             (get-in varustetoteuma [:varustetoteuma :toimenpiteet])
+                                             toteuma-id))))
 
 (defn- tallenna-toteumat [db urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
