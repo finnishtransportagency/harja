@@ -68,7 +68,7 @@
         "tarkastus" (paivita-varuste-tierekisteriin tierekisteri kirjaaja data))))
 
 (defn- poista-toteuman-varustetiedot [db toteuma-id]
-  (log/debug "Poistetaan toteuman vanhat varustetiedot (jos löytyy) " toteuma-id)
+  (log/debug "Poistetaan toteuman " toteuma-id " vanhat varustetiedot")
   (toteumat/poista-toteuman-varustetiedot!
     db
     toteuma-id))
@@ -134,7 +134,7 @@
   #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
 
 (defn- tallenna-varusteen-poisto []
-  (log/debug "Tallennetaan varustetoteuman toimenpide: poistettu varaste")
+  (log/debug "Tallennetaan varustetoteuman toimenpide: poistettu varuste")
   ;; TODO
   #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
 
@@ -144,48 +144,47 @@
   ;; TODO
   #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
 
-(defn- tallenna-varustetoteuma
-  "Luo jokaisesta varustetoteuman toimenpiteestä oman toteuman
-   Toteuman tiedot ovat pääosin samat jokaisella toimenpiteellä, mutta mm.
-   sijainti on eri."
-  [db tierekisteri urakka-id kirjaaja varustetoteuma]
+(defn- tallenna-varustetoteuman-toimenpiteet
+  "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman"
+  [db tierekisteri toteuma-id kirjaaja varustetoteuma]
   (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
-    (log/debug "Tallennetaan toteuman perustiedot")
-    (let [toteuma (assoc
-                    (get-in varustetoteuma [:varustetoteuma :toteuma])
-                    :reitti nil)
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+    (log/debug "Tallennetaan toteuman varustetietodot")
+    (poista-toteuman-varustetiedot db toteuma-id)
+    (let [toimenpide-tyyppi (first (keys toimenpide))
+          toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
+      (condp = toimenpide-tyyppi
 
-      (log/debug "Tallennetaan toteuman tehtävät")
-      (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+        :varusteen-lisays
+        (tallenna-varusteen-lisays db kirjaaja tierekisteri
+                                   varustetoteuma toimenpiteen-tiedot toteuma-id)
 
-      (log/debug "Tallennetaan toteuman varustetietodot")
-      (poista-toteuman-varustetiedot db toteuma-id)
-      (let [toimenpide-tyyppi (first (keys toimenpide))
-            toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
-        (condp = toimenpide-tyyppi
+        :varusteen-poisto
+        (tallenna-varusteen-poisto)
 
-          :varusteen-lisays
-          (tallenna-varusteen-lisays db kirjaaja tierekisteri
-                                     varustetoteuma toimenpiteen-tiedot toteuma-id)
+        :varusteen-paivitys
+        (tallenna-varusteen-paivitys)
 
-          :varusteen-poisto
-          (tallenna-varusteen-poisto)
-
-          :varusteen-paivitys
-          (tallenna-varusteen-paivitys)
-
-          :varusteen-tarkastus
-          (tallenna-varusteen-tarkastus))))))
+        :varusteen-tarkastus
+        (tallenna-varusteen-tarkastus)))))
 
 (defn- tallenna-toteumat [db tierekisteri urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
     (doseq [varustetoteuma varustetoteumat]
-      (tallenna-varustetoteuma db
-                               tierekisteri
-                               urakka-id
-                               kirjaaja
-                               varustetoteuma))))
+      (log/debug "Tallennetaan toteuman perustiedot")
+      (let [toteuma (assoc
+                      (get-in varustetoteuma [:varustetoteuma :toteuma])
+                      :reitti nil)
+            toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+        (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
+
+        (log/debug "Tallennetaan toteuman tehtävät")
+        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+
+        (tallenna-varustetoteuman-toimenpiteet db
+                                               tierekisteri
+                                               toteuma-id
+                                               kirjaaja
+                                               varustetoteuma)))))
 
 (defn- laheta-kirjaus-tierekisteriin [db tierekisteri kirjaaja varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
