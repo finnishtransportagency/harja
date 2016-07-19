@@ -90,19 +90,20 @@
                     (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
                     (muunna-tietolajiarvot-mapiksi (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
                     nil ;; FIXME karttapvm puuttuu
-                    alkupvm
-                    loppupvm
-                    piiri
-                    kuntoluokitus
-                    tierekisteriurakkakoodi
+                    ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
+                    (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
+                    (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt])
+                    nil ; FIXME Piiri puuttuu?
+                    nil ; FIXME Kuntoluokitus puuttuu?
+                    nil ; FIXME tierekisteriurakkakoodi puuttuu?
                     (:id kirjaaja)
-                    (:numero tr)
-                    (:aosa tr)
-                    (:aet tr)
-                    (:losa tr)
-                    (:let tr)
-                    (:puoli tr)
-                    (:ajr tr)))))
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
+                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])))))
 
 (defn- tallenna-varusteen-paivitys []
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
