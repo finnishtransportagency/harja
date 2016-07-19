@@ -200,7 +200,7 @@
 (defn kirjaa-toteuma
   "Varustetoteuman kirjauksessa kirjataan yksi tai useampi toteuma.
    Jokainen toteuma voi sisältää useita toimenpiteitä (varusteen lisäys, poisto, päivitys, tarkastus)"
-  [db tierekisteri {id :id} {:keys [varustetoteumat] :as payload} kirjaaja]
+  [tierekisteri db {id :id} {:keys [varustetoteumat] :as payload} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id
                " kayttäjän:" (:kayttajanimi kirjaaja)
@@ -225,7 +225,7 @@
           json-skeemat/varustetoteuman-kirjaus
           json-skeemat/kirjausvastaus
           (fn [parametit data kayttaja db]
-            (kirjaa-toteuma db tierekisteri parametit data kayttaja)))))
+            (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-varustetoteuma)
