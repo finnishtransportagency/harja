@@ -1,10 +1,11 @@
 (ns harja.palvelin.integraatiot.api.validointi.toteumat
   (:require [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [taoensso.timbre :as log]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodi]))
 
-(defn tarkasta-pvmvalin-validiteetti [alku loppu]
+(defn validoi-toteuman-pvm-vali [alku loppu]
   (when (.after (aika-string->java-sql-date alku) (aika-string->java-sql-date loppu))
     (virheet/heita-viallinen-apikutsu-poikkeus {:koodi  :toteuman-aika-viallinen
                                                 :viesti "Totauman alkuaika on loppuajan jälkeen."})))

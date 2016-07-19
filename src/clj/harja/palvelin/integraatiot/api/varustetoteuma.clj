@@ -132,11 +132,13 @@
   (let [toteuma (assoc (get-in varustetoteuma [:varustetoteuma :toteuma]) :reitti nil)
         ;varustetiedot (get-in varustetoteuma [:varustetoteuma :varuste])
         ;sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
-        aika (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))]
+        ;aika (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
+        ]
     (log/debug "Tallennetaan toteuman perustiedot")
     (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
       (log/debug "Tallennetaan sijainti reittipisteenä")
-      ; FIXME Sijainti on nykyään erikseen jokaisella toimenpiteellä. Miten pitäisi tallentaa?
+      ; FIXME Sijainti on nykyään erikseen jokaisella toimenpiteellä.
+      ;; Miten pitäisi tallentaa? Tallennetaanko jokaisesta toimenpiteestä oma toteuma omalla sijainnilla?
       #_(api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
       (log/debug "Tallennetaan toteuman tehtävät")
       (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
