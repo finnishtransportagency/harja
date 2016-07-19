@@ -23,7 +23,11 @@
 (use-fixtures :once (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
 
-(defn tarkista-validi-ja-virheelinen-kutsu [vastaus-resurssi tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus]
+(defn tarkista-validi-ja-virheelinen-kutsu [vastaus-resurssi
+                                            tierekisteri-resurssi
+                                            validi-kutsu
+                                            virheellinen-kutsu
+                                            oletettu-vastaus]
   (let [vastaus-xml (slurp (io/resource vastaus-resurssi))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ tierekisteri-resurssi) vastaus-xml
@@ -41,7 +45,11 @@
         virheellinen-kutsu "/api/varusteet/tietolaji"
         tierekisteri-resurssi "/haetietolaji"
         oletettu-vastaus "Pakollista parametria: tunniste ei ole annettu"]
-    (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
+    (tarkista-validi-ja-virheelinen-kutsu vastaus-xml
+                                          tierekisteri-resurssi
+                                          validi-kutsu
+                                          virheellinen-kutsu
+                                          oletettu-vastaus)))
 
 (deftest tarkista-tietueiden-haku
   (let [vastaus-xml "xsd/tierekisteri/esimerkit/hae-tietueet-response.xml"
@@ -49,7 +57,11 @@
         virheellinen-kutsu "/api/varusteet/haku"
         tierekisteri-resurssi "/haetietueet"
         oletettu-vastaus "Pakollista parametria: tietolajitunniste ei ole annettu"]
-    (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
+    (tarkista-validi-ja-virheelinen-kutsu vastaus-xml
+                                          tierekisteri-resurssi
+                                          validi-kutsu
+                                          virheellinen-kutsu
+                                          oletettu-vastaus)))
 
 (deftest tarkista-tietueen-haku
   (let [vastaus-xml "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"
@@ -57,7 +69,11 @@
         virheellinen-kutsu "/api/varusteet/varuste"
         tierekisteri-resurssi "/haetietue"
         oletettu-vastaus "Pakollista parametria: tunniste ei ole annettu"]
-    (tarkista-validi-ja-virheelinen-kutsu vastaus-xml tierekisteri-resurssi validi-kutsu virheellinen-kutsu oletettu-vastaus)))
+    (tarkista-validi-ja-virheelinen-kutsu vastaus-xml
+                                          tierekisteri-resurssi
+                                          validi-kutsu
+                                          virheellinen-kutsu
+                                          oletettu-vastaus)))
 
 (deftest tarkista-usean-tietuen-palautuminen
   (let [vastaus-xml "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<ns2:vastaus xmlns:ns2=\"http://www.solita.fi/harja/tierekisteri/vastaus\">\n    <ns2:status>OK</ns2:status>\n    <ns2:tietueet>\n        <ns2:tietue>\n            <tunniste>1245rgfsd</tunniste>\n            <alkupvm>2015-03-03+02:00</alkupvm>\n            <loppupvm>2015-03-03+02:00</loppupvm>\n            <karttapvm>2015-03-03+02:00</karttapvm>\n            <piiri>1</piiri>\n            <kuntoluokka>1</kuntoluokka>\n            <urakka>100</urakka>\n            <sijainti>\n                <koordinaatit>\n                    <x>0</x>\n                    <y>0</y>\n                    <z>0</z>\n                </koordinaatit>\n                <linkki>\n                    <id>1</id>\n                    <marvo>10</marvo>\n                </linkki>\n                <tie>\n                    <numero>1</numero>\n                    <aet>1</aet>\n                    <aosa>1</aosa>\n                    <let>1</let>\n                    <losa>1</losa>\n                    <ajr>1</ajr>\n                    <puoli>1</puoli>\n                </tie>\n            </sijainti>\n            <tietolaji>\n                <tietolajitunniste>tl506</tietolajitunniste>\n                <arvot>9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40</arvot>\n            </tietolaji>\n        </ns2:tietue>\n        <ns2:tietue>\n            <tunniste>1245rgfsd</tunniste>\n            <alkupvm>2015-03-03+02:00</alkupvm>\n            <loppupvm>2015-03-03+02:00</loppupvm>\n            <karttapvm>2015-03-03+02:00</karttapvm>\n            <piiri>1</piiri>\n            <kuntoluokka>1</kuntoluokka>\n            <urakka>100</urakka>\n            <sijainti>\n                <koordinaatit>\n                    <x>0</x>\n                    <y>0</y>\n                    <z>0</z>\n                </koordinaatit>\n                <linkki>\n                    <id>1</id>\n                    <marvo>10</marvo>\n                </linkki>\n                <tie>\n                    <numero>1</numero>\n                    <aet>1</aet>\n                    <aosa>1</aosa>\n                    <let>1</let>\n                    <losa>1</losa>\n                    <ajr>1</ajr>\n                    <puoli>1</puoli>\n                </tie>\n            </sijainti>\n            <tietolaji>\n                <tietolajitunniste>tl506</tietolajitunniste>\n                <arvot>9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40</arvot>\n            </tietolaji>\n        </ns2:tietue>\n    </ns2:tietueet>\n</ns2:vastaus>\n"
