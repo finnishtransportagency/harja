@@ -20,7 +20,7 @@
              :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
              :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
              :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
-   :tietue  {:tunniste    (get-in varustetoteuma [:varuste :tunniste])
+   :tietue  {:tunniste    (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
              :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))
              :loppupvm    (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :paattynyt]))
              :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
