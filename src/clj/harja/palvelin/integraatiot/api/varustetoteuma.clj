@@ -89,17 +89,15 @@
     (clojure.walk/stringify-keys arvot-map)
     tietolajin-kuvaus))
 
-(defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpide
+(defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma tietolaji toimenpide
                                 toimenpiteen-tiedot toimenpiteen-arvot-tekstina]
   (:id (toteumat/luo-varustetoteuma<!
          db
          "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
          toteuma-id
          toimenpide
-         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-         (muunna-tietolajin-arvot-stringiksi
-           tietojalin-kuvaus
-           tietolajin-arvot)
+         tietolaji
+         toimenpiteen-arvot-tekstina
          nil ;; FIXME karttapvm puuttuu
          ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
          (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
@@ -128,32 +126,77 @@
       tietolaji
       tietolajin-arvot
       tietojalin-kuvaus)
+    ;; FIXME Tallennetaanko myös lisääjä / päivittäjä johonkin?
     (luo-uusi-varustetoteuma db
                              kirjaaja
                              toteuma-id
                              varustetoteuma
+                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
                              "lisatty"
                              toimenpiteen-tiedot
                              (muunna-tietolajin-arvot-stringiksi
                                tietojalin-kuvaus
                                tietolajin-arvot))))
 
-(defn- tallenna-varusteen-paivitys []
+(defn- tallenna-varusteen-paivitys [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
-  ;; TODO Lisää / päivitä toteumaan reittipiste
-  ;; TODO
-  #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
+  (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
+                            tierekisteri
+                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                            nil)
+        tietolaji [:varuste :tietue :tietolaji :tunniste]
+        tietolajin-arvot [:varuste :tietue :tietolaji :arvot]]
+    (validoi-tietolajin-arvot
+      tietolaji
+      tietolajin-arvot
+      tietojalin-kuvaus)
+    ;; FIXME Tallennetaanko myös päivittäjä johonkin?
+    (luo-uusi-varustetoteuma db
+                             kirjaaja
+                             toteuma-id
+                             varustetoteuma
+                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                             "paivitetty"
+                             toimenpiteen-tiedot
+                             (muunna-tietolajin-arvot-stringiksi
+                               tietojalin-kuvaus
+                               tietolajin-arvot))))
 
-(defn- tallenna-varusteen-poisto []
+(defn- tallenna-varusteen-poisto [db kirjaaja varustetoteuma toimenpiteen-tiedot toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: poistettu varuste")
-  ;; TODO
-  #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
+    ;; FIXME Tallennetaanko myös poistaja johonkin?
+    (luo-uusi-varustetoteuma db
+                             kirjaaja
+                             toteuma-id
+                             varustetoteuma
+                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                             "poistettu"
+                             toimenpiteen-tiedot
+                             nil))
 
-(defn- tallenna-varusteen-tarkastus []
+(defn- tallenna-varusteen-tarkastus [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: tarkastettu varaste")
-  ;; TODO Lisää / päivitä toteumaan reittipiste
-  ;; TODO
-  #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
+  (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
+                            tierekisteri
+                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                            nil)
+        tietolaji [:varuste :tietue :tietolaji :tunniste]
+        tietolajin-arvot [:varuste :tietue :tietolaji :arvot]]
+    (validoi-tietolajin-arvot
+      tietolaji
+      tietolajin-arvot
+      tietojalin-kuvaus)
+    ;; FIXME Tallennetaanko myös tarkastaja johonkin?
+    (luo-uusi-varustetoteuma db
+                             kirjaaja
+                             toteuma-id
+                             varustetoteuma
+                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                             "tarkastettu"
+                             toimenpiteen-tiedot
+                             (muunna-tietolajin-arvot-stringiksi
+                               tietojalin-kuvaus
+                               tietolajin-arvot))))
 
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman"
@@ -170,13 +213,16 @@
                                    varustetoteuma toimenpiteen-tiedot toteuma-id)
 
         :varusteen-poisto
-        (tallenna-varusteen-poisto)
+        (tallenna-varusteen-poisto db kirjaaja
+                                   varustetoteuma toimenpiteen-tiedot toteuma-id)
 
         :varusteen-paivitys
-        (tallenna-varusteen-paivitys)
+        (tallenna-varusteen-paivitys db kirjaaja tierekisteri
+                                     varustetoteuma toimenpiteen-tiedot toteuma-id)
 
         :varusteen-tarkastus
-        (tallenna-varusteen-tarkastus)))))
+        (tallenna-varusteen-tarkastus db kirjaaja tierekisteri
+                                      varustetoteuma toimenpiteen-tiedot toteuma-id)))))
 
 (defn- tallenna-toteumat [db tierekisteri urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
@@ -192,7 +238,6 @@
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
 
         ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä. Entä nyt?
-        ;; FIXME Tallennetaanko myös lisääjä johonkin?
 
         (tallenna-varustetoteuman-toimenpiteet db
                                                tierekisteri
