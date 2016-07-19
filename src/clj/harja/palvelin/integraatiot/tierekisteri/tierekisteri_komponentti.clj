@@ -32,7 +32,8 @@
   (stop [this] this)
 
   TierekisteriPalvelut
-  (hae-tietolajit [this tietolajitunniste muutospvm]
+  (hae-tietolajit
+    [this tietolajitunniste muutospvm]
     (validoi-tietolajitunniste tietolajitunniste)
     (when (not (empty? tierekisteri-api-url))
       (tietolajit/hae-tietolajit

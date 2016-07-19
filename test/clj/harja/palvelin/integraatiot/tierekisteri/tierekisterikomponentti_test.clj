@@ -5,7 +5,8 @@
             [harja.testi :refer :all]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
-            [org.httpkit.fake :refer [with-fake-http]]))
+            [org.httpkit.fake :refer [with-fake-http]]
+            [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
@@ -17,6 +18,7 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tarkista-tietolajin-haku
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
@@ -37,6 +39,21 @@
                                    :pituus          12,
                                    :ylaraja         nil}]
           (is (= odotettu-ominaisuus ominaisuus)))))))
+
+(deftest tarkista-tietolajin-haku-cachesta
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
+  (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
+    ;; Cache on tyhjä, joten vastaus haetaan tierekisteristä HTTP-kutsulla
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
+      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+        (is (true? (:onnistunut vastausdata)))))
+
+    ;; Tehdään kysely uudestaan, vastauksen täytyy palautua cachesta eli HTTP-requestia ei lähde
+    (with-fake-http
+      []
+      (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
+        (is (true? (:onnistunut vastausdata)))))))
 
 (deftest tarkista-tietueiden-haku
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietueet-response.xml"))]
