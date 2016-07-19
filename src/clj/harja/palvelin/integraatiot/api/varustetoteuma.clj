@@ -77,9 +77,10 @@
   "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
    Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
   [tietolaji arvot tietolajin-kuvaus]
-  (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))]
+  (let [arvot (clojure.walk/stringify-keys arvot)
+        kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))]
     (doseq [kentan-kuvaus kenttien-kuvaukset]
-      (tr-tietolaji/validoi-arvo (get arvot (:kenttatunniste kentan-kuvaus))
+      (tr-tietolaji/validoi-arvo (clojure.walk/stringify-keys (get arvot (:kenttatunniste kentan-kuvaus)))
                                  kentan-kuvaus
                                  tietolaji))))
 
@@ -94,11 +95,13 @@
   (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
                             tierekisteri
                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                            (t/now))] ;; TODO onko muutospvm tänään?
+                            (t/now)) ;; TODO onko muutospvm tänään?
+        tietolaji [:varuste :tietue :tietolaji :tunniste]
+        tietolajin-arvot [:varuste :tietue :tietolaji :arvot]]
     (validoi-tietolajin-arvot
-      tietojalin-kuvaus
-      (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-      (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
+      tietolaji
+      tietolajin-arvot
+      tietojalin-kuvaus)
     (:id (toteumat/luo-varustetoteuma<!
            db
            "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
@@ -107,7 +110,7 @@
            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
            (muunna-tietolajin-arvot-stringiksi
              tietojalin-kuvaus
-             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
+             tietolajin-arvot)
            nil ;; FIXME karttapvm puuttuu
            ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
            (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
