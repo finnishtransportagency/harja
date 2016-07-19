@@ -89,9 +89,34 @@
     (clojure.walk/stringify-keys arvot-map)
     tietolajin-kuvaus))
 
+(defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpide
+                                toimenpiteen-tiedot toimenpiteen-arvot-tekstina]
+  (:id (toteumat/luo-varustetoteuma<!
+         db
+         "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
+         toteuma-id
+         toimenpide
+         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+         (muunna-tietolajin-arvot-stringiksi
+           tietojalin-kuvaus
+           tietolajin-arvot)
+         nil ;; FIXME karttapvm puuttuu
+         ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
+         (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
+         (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
+         nil ; FIXME Piiri puuttuu?
+         nil ; FIXME Kuntoluokitus puuttuu?
+         nil ; FIXME tierekisteriurakkakoodi puuttuu?
+         (:id kirjaaja)
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
+         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr]))))
+
 (defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
-  ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä. Entä nyt?
-  ;; FIXME Tallennetaanko myös lisääjä johonkin?
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
   (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
                             tierekisteri
@@ -103,30 +128,15 @@
       tietolaji
       tietolajin-arvot
       tietojalin-kuvaus)
-    (:id (toteumat/luo-varustetoteuma<!
-           db
-           "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
-           toteuma-id
-           "lisatty"
-           (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-           (muunna-tietolajin-arvot-stringiksi
-             tietojalin-kuvaus
-             tietolajin-arvot)
-           nil ;; FIXME karttapvm puuttuu
-           ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
-           (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
-           (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
-           nil ; FIXME Piiri puuttuu?
-           nil ; FIXME Kuntoluokitus puuttuu?
-           nil ; FIXME tierekisteriurakkakoodi puuttuu?
-           (:id kirjaaja)
-           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
-           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])))))
+    (luo-uusi-varustetoteuma db
+                             kirjaaja
+                             toteuma-id
+                             varustetoteuma
+                             "lisatty"
+                             toimenpiteen-tiedot
+                             (muunna-tietolajin-arvot-stringiksi
+                               tietojalin-kuvaus
+                               tietolajin-arvot))))
 
 (defn- tallenna-varusteen-paivitys []
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
@@ -180,6 +190,9 @@
 
         (log/debug "Tallennetaan toteuman tehtävät")
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+
+        ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä. Entä nyt?
+        ;; FIXME Tallennetaanko myös lisääjä johonkin?
 
         (tallenna-varustetoteuman-toimenpiteet db
                                                tierekisteri
