@@ -113,8 +113,8 @@
              tietolajin-arvot)
            nil ;; FIXME karttapvm puuttuu
            ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
-           (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
-           (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt])
+           (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
+           (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
            nil ; FIXME Piiri puuttuu?
            nil ; FIXME Kuntoluokitus puuttuu?
            nil ; FIXME tierekisteriurakkakoodi puuttuu?
