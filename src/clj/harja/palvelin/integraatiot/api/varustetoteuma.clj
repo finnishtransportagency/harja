@@ -75,7 +75,7 @@
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
-  Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
+   Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
   [tietolaji arvot tietolajin-kuvaus]
   (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))]
     (doseq [kentan-kuvaus kenttien-kuvaukset]
@@ -83,46 +83,46 @@
                                  kentan-kuvaus
                                  tietolaji))))
 
-(defn- muunna-tietolajiarvot-stringiksi [tierekisteri tietolaji arvot-map]
-  (let [tietolajin-kuvaus (tierekisteri/hae-tietolajit
-                            tierekisteri
-                            tietolaji
-                            (t/now)) ;; TODO onko muutospvm tänään?
-        ;; API:n JSON on muunnettu Clojure-dataksi niin, että avaimet ovat keywordeja.
-        ;; Tietolajin kuvauksen käsittelijä haluaa kuitenkin mapin, jossa avaimet ovat stringejä
-        arvot-map (clojure.walk/stringify-keys arvot-map)]
-    (validoi-tietolajin-arvot tietolaji arvot-map tietolajin-kuvaus)
-    ;; TODO Varmista, että validointivirheen viesti näkyy API:n kutsujalle
-    (tr-tietolaji/tietolajin-arvot-map->string arvot-map tietolajin-kuvaus)))
+(defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
+  (tr-tietolaji/tietolajin-arvot-map->string
+    (clojure.walk/stringify-keys arvot-map)
+    tietolajin-kuvaus))
 
 (defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
   ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, entä nyt? päätelläänkö toimenpiteen tieosoitteesta?
   ;; FIXME Tallennetaanko myös lisääjä johonkin?
-  (:id (toteumat/luo-varustetoteuma<!
-         db
-         "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
-         toteuma-id
-         "lisatty"
-         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-         (muunna-tietolajiarvot-stringiksi
-           tierekisteri
+  (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
+                            tierekisteri
+                            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                            (t/now))] ;; TODO onko muutospvm tänään?
+    (validoi-tietolajin-arvot
+      tietojalin-kuvaus
+      (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+      (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
+    (:id (toteumat/luo-varustetoteuma<!
+           db
+           "" ;; FIXME Varustetoteuman tunniste, tätäkö ei enää tule?
+           toteuma-id
+           "lisatty"
            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-           (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
-         nil ;; FIXME karttapvm puuttuu
-         ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
-         (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
-         (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt])
-         nil ; FIXME Piiri puuttuu?
-         nil ; FIXME Kuntoluokitus puuttuu?
-         nil ; FIXME tierekisteriurakkakoodi puuttuu?
-         (:id kirjaaja)
-         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
-         (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr]))))
+           (muunna-tietolajin-arvot-stringiksi
+             tietojalin-kuvaus
+             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
+           nil ;; FIXME karttapvm puuttuu
+           ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
+           (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
+           (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt])
+           nil ; FIXME Piiri puuttuu?
+           nil ; FIXME Kuntoluokitus puuttuu?
+           nil ; FIXME tierekisteriurakkakoodi puuttuu?
+           (:id kirjaaja)
+           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])
+           (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])))))
 
 (defn- tallenna-varusteen-paivitys []
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")

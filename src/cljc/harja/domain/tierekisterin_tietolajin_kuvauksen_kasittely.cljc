@@ -17,6 +17,7 @@
     (throw (Exception. viesti))))
 
 (defn validoi-arvo [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
+  (log/debug "Validoidaan arvo " (pr-str arvo) " kentän kuvauksella: " (pr-str kentan-kuvaus))
   (when (and pakollinen (not arvo))
     (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
   (when (< pituus (count arvo))
