@@ -90,7 +90,7 @@
     tietolajin-kuvaus))
 
 (defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
-  ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, entä nyt? päätelläänkö toimenpiteen tieosoitteesta?
+  ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä. Entä nyt?
   ;; FIXME Tallennetaanko myös lisääjä johonkin?
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
   (let [tietojalin-kuvaus (tierekisteri/hae-tietolajit
@@ -148,8 +148,8 @@
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman"
   [db tierekisteri toteuma-id kirjaaja varustetoteuma]
+  (log/debug "Tallennetaan toteuman varustetietodot")
   (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
-    (log/debug "Tallennetaan toteuman varustetietodot")
     (poista-toteuman-varustetiedot db toteuma-id)
     (let [toimenpide-tyyppi (first (keys toimenpide))
           toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
