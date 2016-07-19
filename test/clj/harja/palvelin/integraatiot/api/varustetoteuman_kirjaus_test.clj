@@ -45,4 +45,4 @@
                               :jarjestysnumero 2
                               :tietotyyppi :merkkijono
                               :pituus 10}]}]
-    (api-varustetoteuma/validoi-tietolajin-arvot arvot-rajapinnasta kenttien-kuvaukset)))
+    (api-varustetoteuma/validoi-tietolajin-arvot "tl506" arvot-rajapinnasta kenttien-kuvaukset)))

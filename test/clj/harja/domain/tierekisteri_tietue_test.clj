@@ -1,7 +1,7 @@
 (ns harja.domain.tierekisteri-tietue-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
-            [harja.domain.tierekisteri-tietue :as tierekisteri-tietue]
+            [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tierekisteri-tietue]
             [clj-time.core :as t]))
 
 (deftest tarkista-kentan-arvon-hakeminen-merkkijonosta

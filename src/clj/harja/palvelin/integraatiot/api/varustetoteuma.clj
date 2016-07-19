@@ -16,7 +16,7 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [harja.domain.tierekisteri-tietue :as tr-tietue]
+            [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [clj-time.core :as t]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -76,22 +76,24 @@
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
   Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
-  [arvot tietolajin-kuvaus]
-  (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
+  [tietolaji arvot tietolajin-kuvaus]
+  (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))]
+    (doseq [kentan-kuvaus kenttien-kuvaukset]
+      (tr-tietolaji/validoi-arvo (get arvot (:kenttatunniste kentan-kuvaus))
+                                 kentan-kuvaus
+                                 tietolaji))))
 
-        ok? nil]
-    (when-not ok?
-      (throw+ {:type virheet/+viallinen-kutsu+ :virheet
-               [{:koodi :arvot-eivat-vastaa-tietolajin-kuvausta
-                 :viesti (str "Annetut tietolajin arvot eivät vastaa tierekisteristä saatua tietolajin kuvausta")}]}))))
-
-(defn- muunna-tietolajiarvot-mapiksi [tierekisteri tietolajitunniste arvot-map]
+(defn- muunna-tietolajiarvot-stringiksi [tierekisteri tietolaji arvot-map]
   (let [tietolajin-kuvaus (tierekisteri/hae-tietolajit
                             tierekisteri
-                            tietolajitunniste
-                            (t/now))] ;; TODO onko muutospvm tänään?
-    (validoi-tietolajin-arvot arvot-map tietolajin-kuvaus)
-    (tr-tietue/tietolajin-arvot-map->string arvot-map tietolajin-kuvaus)))
+                            tietolaji
+                            (t/now)) ;; TODO onko muutospvm tänään?
+        ;; API:n JSON on muunnettu Clojure-dataksi niin, että avaimet ovat keywordeja.
+        ;; Tietolajin kuvauksen käsittelijä haluaa kuitenkin mapin, jossa avaimet ovat stringejä
+        arvot-map (clojure.walk/stringify-keys arvot-map)]
+    (validoi-tietolajin-arvot tietolaji arvot-map tietolajin-kuvaus)
+    ;; TODO Varmista, että validointivirheen viesti näkyy API:n kutsujalle
+    (tr-tietolaji/tietolajin-arvot-map->string arvot-map tietolajin-kuvaus)))
 
 (defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
   ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, entä nyt? päätelläänkö toimenpiteen tieosoitteesta?
@@ -102,7 +104,7 @@
          toteuma-id
          "lisatty"
          (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-         (muunna-tietolajiarvot-mapiksi
+         (muunna-tietolajiarvot-stringiksi
            tierekisteri
            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
            (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))

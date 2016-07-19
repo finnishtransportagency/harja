@@ -1,4 +1,4 @@
-(ns harja.domain.tierekisteri-tietue
+(ns harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely
   "Muntaa tierekisterin tietolajin arvot string-merkkijonosta
    Clojure-mapiksi ja päinvastoin."
   (:require [clojure.string :as str]
@@ -16,7 +16,7 @@
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
     (throw (Exception. viesti))))
 
-(defn- validoi-arvo [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
+(defn validoi-arvo [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
   (when (and pakollinen (not arvo))
     (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
   (when (< pituus (count arvo))
