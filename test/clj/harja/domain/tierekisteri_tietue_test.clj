@@ -38,7 +38,7 @@
     (is (= (t/year muunnos) 2009))))
 
 
-(deftest testaa-tietolajin-arvot-map->string
+(deftest testaa-arvot-mapin-muuntaminen-merkkijonoksi
   (let [muunnos (tierekisteri-tietue/tietolajin-arvot-map->string
                   {"a" "testi"
                    "b" "1"}
@@ -56,7 +56,7 @@
     (is (= "testi               1         "
            muunnos))))
 
-(deftest testaa-tietolajin-arvot-merkkijono->map
+(deftest testaa-arvot-merkkijonon-muuntaminen-mapiksi
   (let [muunnos (tierekisteri-tietue/tietolajin-arvot-merkkijono->map
                   "testi               1         "
                   {:tunniste "tl506",
