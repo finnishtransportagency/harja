@@ -23,6 +23,9 @@
 (use-fixtures :once (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
 
+;; TODO Pura erikseen validiin ja virheellisen kutsun testaamiseen,
+;; tekee tästä hieman selvemmän
+
 (defn tarkista-validi-ja-virheelinen-kutsu [vastaus-resurssi
                                             tierekisteri-resurssi
                                             validi-kutsu
@@ -34,6 +37,7 @@
        (str "http://localhost:" portti validi-kutsu) :allow
        (str "http://localhost:" portti virheellinen-kutsu) :allow]
       (let [vastaus (api-tyokalut/get-kutsu [validi-kutsu] kayttaja portti)]
+        (println "Vastaus saatiin: " (pr-str vastaus))
         (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla"))
       (let [vastaus (api-tyokalut/get-kutsu [virheellinen-kutsu] kayttaja portti)]
         (is (= 400 (:status vastaus)) "Haku puutteellisilla parametreillä palauttaa virheen")
