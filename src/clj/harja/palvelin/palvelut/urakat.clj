@@ -14,11 +14,12 @@
 (def ^{:const true} oletus-toleranssi 50)
 
 (defn kayttajan-urakat-aikavalilta
-  "Palauttaa vektorin mäppejä. Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  "Palauttaa vektorin mäppejä.
+  Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
-  ([db user oikeus] (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeus]
+   (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
   ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
-
    (konv/sarakkeet-vektoriin
      (into []
           (comp
@@ -73,23 +74,25 @@
          (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt))))
 
 (defn kayttajan-urakat-aikavalilta-alueineen
-  "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan vielä niiden geometriat."
-  ([db user oikeus] (kayttajan-urakat-aikavalilta-alueineen db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan niiden geometriat."
+  ([db user oikeus]
+   (kayttajan-urakat-aikavalilta-alueineen db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
   ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
    (kayttajan-urakat-aikavalilta-alueineen db user oikeus urakka-id urakoitsija urakkatyyppi
                                            hallintayksikot alku loppu oletus-toleranssi))
   ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu toleranssi]
-   (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeus urakka-id urakoitsija urakkatyyppi
+   (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeus urakka-id
+                                                         urakoitsija urakkatyyppi
                                                          hallintayksikot alku loppu)
          urakka-idt (mapcat
-                      (fn [aluekokonaisuus]
-                        (map :id (:urakat aluekokonaisuus)))
-                      aluekokonaisuudet)
+                     (fn [aluekokonaisuus]
+                       (map :id (:urakat aluekokonaisuus)))
+                     aluekokonaisuudet)
          urakat-alueineen (into {} (map
-                                     (fn [ur]
-                                       [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
-                                                                      (get-in ur [:alueurakka :alue]))])
-                                     (urakoiden-alueet db user oikeus urakka-idt toleranssi)))]
+                                    (fn [ur]
+                                      [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
+                                                                     (get-in ur [:alueurakka :alue]))])
+                                    (urakoiden-alueet db user oikeus urakka-idt toleranssi)))]
      (mapv
        (fn [au]
          (assoc au :urakat (mapv

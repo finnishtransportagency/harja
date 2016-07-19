@@ -79,7 +79,7 @@ datan kartalla esitettävässä muodossa.")
                                    RenderingHints/VALUE_ANTIALIAS_ON)))
           [x1 _ x2 _] extent]
       (aseta-kuvan-koordinaatisto g kuva extent)
-      (piirra-karttakuvaan extent (/ (- x2 x1) w) g asiat)
+      (piirra-karttakuvaan extent [w h] (/ (- x2 x1) w) g asiat)
 
     ;;; TÄMÄN viivan pitäisi menna vasen ala nurkasta oikea ylä nurkkaan
                                         ;(.drawLine g (nth extent 0) (nth extent 1) (nth extent 2) (nth extent 3))
