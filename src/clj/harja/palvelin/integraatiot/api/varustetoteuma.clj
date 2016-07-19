@@ -70,7 +70,7 @@
     toteuma-id))
 
 (defn- tallenna-toimenpide [db kirjaaja {:keys [tunniste tietolaji toimenpide arvot karttapvm sijainti
-                                             kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
+                                                kuntoluokitus piiri tierekisteriurakkakoodi alkupvm loppupvm]} toteuma-id]
   (jdbc/with-db-transaction
     [db db]
     (let [tr (:tie sijainti)
@@ -99,11 +99,13 @@
 
 (defn- tallenna-varusteen-lisays []
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
+  ;; TODO Lisää / päivitä toteumaan reittipiste
   ;; TODO
   #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
 
 (defn- tallenna-varusteen-paivitys []
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
+  ;; TODO Lisää / päivitä toteumaan reittipiste
   ;; TODO
   #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
 
@@ -114,21 +116,11 @@
 
 (defn- tallenna-varusteen-tarkastus []
   (log/debug "Tallennetaan varustetoteuman toimenpide: tarkastettu varaste")
+  ;; TODO Lisää / päivitä toteumaan reittipiste
   ;; TODO
   #_(tallenna-toimenpide db kirjaaja varustetiedot toteuma-id))
 
-(defn- tallenna-varustetoteuman-toimenpiteet [db kirjaaja toimenpiteet toteuma-id]
-  (doseq [toimenpide toimenpiteet]
-    (when (:varusteen-lisays toimenpide)
-      (tallenna-varusteen-lisays))
-    (when (:varusteen-poisto toimenpide)
-      (tallenna-varusteen-poisto))
-    (when (:varusteen-paivitys toimenpide)
-      (tallenna-varusteen-paivitys))
-    (when (:varusteen-tarkastus toimenpide)
-      (tallenna-varusteen-tarkastus))))
-
-(defn- tallenna-toteuma [db urakka-id kirjaaja varustetoteuma]
+#_(defn- tallenna-toteuma [db urakka-id kirjaaja varustetoteuma]
   (let [toteuma (assoc (get-in varustetoteuma [:varustetoteuma :toteuma]) :reitti nil)
         ;varustetiedot (get-in varustetoteuma [:varustetoteuma :varuste])
         ;sijainti (get-in varustetoteuma [:varustetoteuma :sijainti])
@@ -149,10 +141,40 @@
                                              (get-in varustetoteuma [:varustetoteuma :toimenpiteet])
                                              toteuma-id))))
 
+
+(defn- tallenna-varustetoteuman-toimenpiteet [db urakka-id kirjaaja varustetoteuma]
+  (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
+    (let [toteuma (assoc
+                    (get-in varustetoteuma [:varustetoteuma :toteuma])
+                    :reitti nil)
+          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+      (log/debug "Tallennetaan toteuman tehtävät")
+      (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+      (log/debug "Tallennetaan toteuman varustetietodot")
+      (poista-toteuman-varustetiedot db toteuma-id)
+
+      (when (:varusteen-lisays toimenpide)
+        (tallenna-varusteen-lisays))
+      (when (:varusteen-poisto toimenpide)
+        (tallenna-varusteen-poisto))
+      (when (:varusteen-paivitys toimenpide)
+        (tallenna-varusteen-paivitys))
+      (when (:varusteen-tarkastus toimenpide)
+        (tallenna-varusteen-tarkastus)))))
+
+(defn- tallenna-varustetoteuma [db urakka-id kirjaaja varustetoteuma]
+  ;; Jokaisesta tehdystä toimenpiteestä luodaan oma toteuma
+  ;; Toteuman tiedot ovat pääosin samat jokaisella toimenpiteellä, mutta mm.
+  ;; sijainti on eri.
+  (tallenna-varustetoteuman-toimenpiteet db
+                                         urakka-id
+                                         kirjaaja
+                                         varustetoteuma))
+
 (defn- tallenna-toteumat [db urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
     (doseq [varustetoteuma varustetoteumat]
-      (tallenna-toteuma db urakka-id kirjaaja varustetoteuma))))
+      (tallenna-varustetoteuma db urakka-id kirjaaja varustetoteuma))))
 
 (defn- laheta-kirjaus-tierekisteriin [db tierekisteri kirjaaja varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
