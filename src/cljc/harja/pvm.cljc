@@ -17,7 +17,8 @@
             [clj-time.local :as l])
     #?(:clj
             [taoensso.timbre :as log])
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clj-time.format :as f])
 
   #?(:cljs (:import (goog.date DateTime))
      :clj
@@ -655,10 +656,15 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                              (nth pvm-vector 2))))))
 #?(:clj
    (defn iso-8601->pvm
-     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi"
+     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
      [teksti]
-     (let [format (SimpleDateFormat. "yyyy-MM-dd")]
-       (.format format (.parse format teksti)))))
+     (f/parse (f/formatter "yyyy-MM-dd") teksti)))
+
+#?(:clj
+   (defn pvm->iso-8601
+     "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD) muotoon."
+     [pvm]
+     (f/unparse (f/formatter "yyyy-MM-dd") pvm)))
 
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]

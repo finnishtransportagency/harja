@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.varusteet
-  "Varusteiden API-kutsut"
+  "Varusteiden API-kutsut."
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET DELETE PUT]]
             [taoensso.timbre :as log]

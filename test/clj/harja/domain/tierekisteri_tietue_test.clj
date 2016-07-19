@@ -1,7 +1,8 @@
 (ns harja.domain.tierekisteri-tietue-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
-            [harja.domain.tierekisteri-tietue :as tierekisteri-tietue]))
+            [harja.domain.tierekisteri-tietue :as tierekisteri-tietue]
+            [clj-time.core :as t]))
 
 (deftest tarkista-kentan-arvon-hakeminen-merkkijonosta
   (let [kenttien-kuvaukset [{:kenttatunniste "a"
@@ -30,8 +31,11 @@
                              :jarjestysnumero 1
                              :tietotyyppi :paivamaara
                              :pituus 10}]
-        arvot-string "2009-03-23"]
-    (is (= "2009-03-23" (#'tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 1)))))
+        arvot-string "2009-03-23"
+        muunnos (#'tierekisteri-tietue/hae-arvo arvot-string kenttien-kuvaukset 1)]
+    (is (= (t/day muunnos) 23))
+    (is (= (t/month muunnos) 3))
+    (is (= (t/year muunnos) 2009))))
 
 
 (deftest testaa-tietolajin-arvot-map->string

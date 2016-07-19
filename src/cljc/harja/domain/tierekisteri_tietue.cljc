@@ -1,4 +1,6 @@
 (ns harja.domain.tierekisteri-tietue
+  "Muntaa tierekisterin tietolajin arvot string-merkkijonosta
+   Clojure-mapiksi ja päinvastoin."
   (:require [clojure.string :as str]
     #?@(:cljs [[harja.loki :refer [log]]]
         :clj  [
@@ -20,14 +22,14 @@
   (when (< pituus (count arvo))
     (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä: " kenttatunniste " maksimipituus: " pituus))))
 
-(defn- castaa-teksti-kentan-mukaiseen-tyyppiin [arvo-tekstina kentan-kuvaus]
+(defn- muunna-teksti-kentan-mukaiseen-tyyppiin [arvo-tekstina kentan-kuvaus]
   (condp = (:tietotyyppi kentan-kuvaus)
-    "merkkijono" arvo-tekstina
-    "numeerinen" (when-not (merkkijono/vaadi-kokonaisluku
-                             (Integer/parseInt arvo-tekstina)))
-    "paivamaara" (when-not (merkkijono/vaadi-iso-8601-paivamaara
-                             (pvm/iso-8601->pvm arvo-tekstina)))
-    "koodisto"))
+    :merkkijono arvo-tekstina
+    :numeerinen (do (merkkijono/vaadi-kokonaisluku arvo-tekstina)
+                    (Integer/parseInt arvo-tekstina))
+    :paivamaara (do (merkkijono/vaadi-iso-8601-paivamaara arvo-tekstina)
+                    (pvm/iso-8601->pvm arvo-tekstina))
+    :koodisto arvo-tekstina))
 
 (defn- hae-arvo
   "Ottaa arvot-stringin ja etsii sieltä halutun arvon käyttäen apuna kenttien-kuvaukset -mappia.
@@ -41,21 +43,21 @@
                                         kenttien-kuvaukset)))
         loppuindeksi (+ alkuindeksi (:pituus jarjestysnumeron-kentta))
         arvo-teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))
-        arvo-castattu (castaa-teksti-kentan-mukaiseen-tyyppiin arvo-teksti jarjestysnumeron-kentta)]
+        arvo-castattu (muunna-teksti-kentan-mukaiseen-tyyppiin arvo-teksti jarjestysnumeron-kentta)]
     arvo-castattu))
 
-(defn- castaa-kentta-stringiksi [arvo kentan-kuvaus]
+(defn- muunna-kentta-stringiksi [arvo kentan-kuvaus]
   (condp = (:tietotyyppi kentan-kuvaus)
-    "merkkijono" arvo
-    "numeerinen" (str arvo)
-    "paivamaara"
-    "koodisto"
-    ))
+    :merkkijono arvo
+    :numeerinen (str arvo)
+    :paivamaara (pvm/pvm->iso-8601 arvo)
+    :koodisto arvo))
 
 (defn- muodosta-kentta [tietolaji arvot-map {:keys [pituus kenttatunniste] :as kentan-kuvaus}]
-  (let [arvo (get arvot-map kenttatunniste)]
-    (validoi-arvo tietolaji kentan-kuvaus arvo)
-    (merkkijono/tayta-oikealle pituus arvo)))
+  (let [arvo (get arvot-map kenttatunniste)
+        arvo-tekstina (muunna-kentta-stringiksi arvo kentan-kuvaus)]
+    (validoi-arvo tietolaji kentan-kuvaus arvo-tekstina)
+    (merkkijono/tayta-oikealle pituus arvo-tekstina)))
 
 (defn tietolajin-arvot-map->string
   "Ottaa arvot-mapin ja purkaa sen stringiksi käyttäen apuna annettua tietolajin kuvausta.
