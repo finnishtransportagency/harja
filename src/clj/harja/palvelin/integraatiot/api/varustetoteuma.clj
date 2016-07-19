@@ -148,7 +148,7 @@
           (tallenna-varusteen-paivitys)
 
           :varusteen-tarkastus
-          (tallenna-varusteen-tarkastus)))))
+          (tallenna-varusteen-tarkastus))))))
 
 (defn- tallenna-toteumat [db urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
