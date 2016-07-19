@@ -15,7 +15,8 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
-            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
+            [clj-time.core :as t])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- tee-onnistunut-vastaus []
@@ -70,11 +71,19 @@
     db
     toteuma-id))
 
-(defn- muunna-tietolajiarvot-mapiksi [arvot-map]
+(defn- validoi-tietolajin-arvot [arvot tietolajin-kuvaus ]
+  ;; TODO
+  )
+
+(defn- muunna-tietolajiarvot-mapiksi [tierekisteri tietolajitunniste arvot-map]
+  (validoi-tietolajin-arvot arvot-map (tierekisteri/hae-tietolajit
+                                       tierekisteri
+                                       tietolajitunniste
+                                       (t/now))) ;; TODO onko muutospvm tänään?
   ;; TODO Muunna käyttäen harja.domain.tierekisteri-tietue
   )
 
-(defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma toimenpiteen-tiedot toteuma-id]
+(defn- tallenna-varusteen-lisays [db kirjaaja tierekisteri varustetoteuma toimenpiteen-tiedot toteuma-id]
   ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, entä nyt? päätelläänkö toimenpiteen tieosoitteesta?
   ;; FIXME Tallennetaanko myös lisääjä johonkin?
   (:id (toteumat/luo-varustetoteuma<!
@@ -83,7 +92,10 @@
          toteuma-id
          "lisatty"
          (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-         (muunna-tietolajiarvot-mapiksi (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
+         (muunna-tietolajiarvot-mapiksi
+           tierekisteri
+           (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+           (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]))
          nil ;; FIXME karttapvm puuttuu
          ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
          (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut])
@@ -121,7 +133,7 @@
   "Luo jokaisesta varustetoteuman toimenpiteestä oman toteuman
    Toteuman tiedot ovat pääosin samat jokaisella toimenpiteellä, mutta mm.
    sijainti on eri."
-  [db urakka-id kirjaaja varustetoteuma]
+  [db tierekisteri urakka-id kirjaaja varustetoteuma]
   (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
     (log/debug "Tallennetaan toteuman perustiedot")
     (let [toteuma (assoc
@@ -139,7 +151,8 @@
         (condp = toimenpide-tyyppi
 
           :varusteen-lisays
-          (tallenna-varusteen-lisays db kirjaaja varustetoteuma toimenpiteen-tiedot toteuma-id)
+          (tallenna-varusteen-lisays db kirjaaja tierekisteri
+                                     varustetoteuma toimenpiteen-tiedot toteuma-id)
 
           :varusteen-poisto
           (tallenna-varusteen-poisto)
@@ -150,10 +163,11 @@
           :varusteen-tarkastus
           (tallenna-varusteen-tarkastus))))))
 
-(defn- tallenna-toteumat [db urakka-id kirjaaja varustetoteumat]
+(defn- tallenna-toteumat [db tierekisteri urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
     (doseq [varustetoteuma varustetoteumat]
       (tallenna-varustetoteuma db
+                               tierekisteri
                                urakka-id
                                kirjaaja
                                varustetoteuma))))
@@ -171,14 +185,14 @@
 (defn kirjaa-toteuma
   "Varustetoteuman kirjauksessa kirjataan yksi tai useampi toteuma.
    Jokainen toteuma voi sisältää useita toimenpiteitä (varusteen lisäys, poisto, päivitys, tarkastus)"
-  [tierekisteri db {id :id} {:keys [varustetoteumat] :as payload} kirjaaja]
+  [db tierekisteri {id :id} {:keys [varustetoteumat] :as payload} kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
     (log/debug "Kirjataan uusi varustetoteuma urakalle id:" urakka-id
                " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
-    (tallenna-toteumat db urakka-id kirjaaja varustetoteumat)
+    (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
     (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja varustetoteumat)
     (tee-onnistunut-vastaus)))
 
@@ -196,7 +210,7 @@
           json-skeemat/varustetoteuman-kirjaus
           json-skeemat/kirjausvastaus
           (fn [parametit data kayttaja db]
-            (kirjaa-toteuma tierekisteri db parametit data kayttaja)))))
+            (kirjaa-toteuma db tierekisteri parametit data kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-varustetoteuma)
