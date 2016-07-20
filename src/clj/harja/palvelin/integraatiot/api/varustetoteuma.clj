@@ -296,8 +296,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
     (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
-    ;; FIXME Korjaa tierekisteriin lähetyssanomat
-    #_(laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)
+    (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)
     (tee-onnistunut-vastaus)))
 
 (defrecord Varustetoteuma []
