@@ -33,6 +33,7 @@
             [harja.palvelin.raportointi.raportit.toimenpideajat]
             [harja.palvelin.raportointi.raportit.toimenpidepaivat]
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
+            [harja.palvelin.raportointi.raportit.indeksitarkistus]
             [harja.domain.oikeudet :as oikeudet]
             [new-reliquary.core :as nr]))
 
@@ -53,7 +54,7 @@
   (jdbc/query (:db *raportin-suoritus*)
               haku-ja-parametrit))
 
-(def tarvitsee-write-tietokannan #{:laskutusyhteenveto})
+(def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus})
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id]
                                            :as parametrit} raportti]
