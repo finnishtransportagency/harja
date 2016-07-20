@@ -139,11 +139,6 @@
                               :yTunnus      "1234567-8"}
                     :tietue  {:tunniste    "HARJ951547ZK"
                               :alkupvm     "2015-05-22"
-                              :loppupvm    nil
-                              :karttapvm   nil
-                              :piiri       nil
-                              :kuntoluokka nil
-                              :urakka      nil
                               :sijainti    {:tie {:numero  "89"
                                                   :aet     "12"
                                                   :aosa    "1"
@@ -169,11 +164,6 @@
                                  :yTunnus      "1234567-8"}
                     :tietue     {:tunniste    "HARJ951547ZK"
                                  :alkupvm     "2015-05-22"
-                                 :loppupvm    nil
-                                 :karttapvm   nil
-                                 :piiri       nil
-                                 :kuntoluokka nil
-                                 :urakka      nil
                                  :sijainti    {:tie {:numero  "89"
                                                      :aet     "12"
                                                      :aosa    "1"
