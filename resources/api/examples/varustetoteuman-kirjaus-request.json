@@ -94,7 +94,7 @@
                 }
               },
               "poistettu": "2016-01-01T00:00:00Z",
-              "tunniste": "HARJ951547ZK",
+              "tunniste": "HARJ951547",
               "tietolajitunniste": "tl505"
             }
           },
@@ -110,7 +110,7 @@
               },
               "paivitetty": "2016-01-01T00:00:00Z",
               "varuste": {
-                "tunniste": "HARJ951547ZK",
+                "tunniste": "HARJ951547",
                 "tilannepvm": "2016-01-01T00:00:00Z",
                 "tietue": {
                   "alkupvm": "2016-01-01T00:00:00Z",
@@ -158,7 +158,7 @@
               },
               "tarkastettu": "2016-01-01T00:00:00Z",
               "varuste": {
-                "tunniste": "HARJ951547ZK",
+                "tunniste": "HARJ951547",
                 "tietue": {
                   "alkupvm": "2016-01-01T00:00:00Z",
                   "sijainti": {

@@ -144,7 +144,7 @@
                               :jarjestelma  "FastMekka"
                               :organisaatio "Asfaltia Oy"
                               :yTunnus      "1234567-8"}
-                    :tietue  {:tunniste    "HARJ951547ZK"
+                    :tietue  {:tunniste    "HARJ951547"
                               :alkupvm     "2015-05-22"
                               :sijainti    {:tie {:numero  "89"
                                                   :aet     "12"
@@ -169,7 +169,7 @@
                                  :jarjestelma  "FastMekka"
                                  :organisaatio "Asfaltia Oy"
                                  :yTunnus      "1234567-8"}
-                    :tietue     {:tunniste    "HARJ951547ZK"
+                    :tietue     {:tunniste    "HARJ951547"
                                  :alkupvm     "2015-05-22"
                                  :sijainti    {:tie {:numero  "89"
                                                      :aet     "12"
@@ -180,7 +180,7 @@
                                                      :puoli   "1"
                                                      :alkupvm nil}}
                                  :tietolaji   {:tietolajitunniste "tl505"
-                                               :arvot             "HARJ951547ZK        2                           HARJ951547ZK          01  "}}
+                                               :arvot             "HARJ951547          2                           HARJ951547            01  "}}
 
                     :paivitetty "2015-05-26+03:00"}
             vastausdata (tierekisteri/paivita-tietue (:tierekisteri jarjestelma) tietue)]
@@ -194,7 +194,7 @@
                                         :jarjestelma  "FastMekka"
                                         :organisaatio "Asfaltia Oy"
                                         :yTunnus      "1234567-8"}
-                    :tunniste          "HARJ951547ZK"
+                    :tunniste          "HARJ951547"
                     :tietolajitunniste "tl505"
                     :poistettu         "2015-05-26+03:00"}
             vastausdata (tierekisteri/poista-tietue (:tierekisteri jarjestelma) tiedot)]
@@ -221,7 +221,7 @@
                                                           {:etunimi "Keijo" :sukunimi "Käsittelijä"}
                                                           "HAR123"
                                                           lisaystoimenpide
-                                                          "HARJ951547ZK        2                           HARJ951547ZK          01  ")
+                                                          "HARJ951547          2                           HARJ951547            01  ")
         tr-sanoma-xml (tr-lisayssanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "lisaaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
@@ -231,7 +231,7 @@
                          (json/read-str)
                          (clojure.walk/keywordize-keys))
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
-        lisaystoimenpide (:varusteen-lisays (first (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
+        lisaystoimenpide (:varusteen-paivitys (get (get-in varustetoteuma [:varustetoteuma :toimenpiteet]) 2))
         tr-sanoma (tr-sanomat/luo-varusteen-paivityssanoma (:otsikko pyyntosanoma)
                                                            {:etunimi "Keijo" :sukunimi "Käsittelijä"}
                                                            lisaystoimenpide
@@ -245,7 +245,7 @@
                          (json/read-str)
                          (clojure.walk/keywordize-keys))
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
-        lisaystoimenpide (:varusteen-lisays (first (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
+        lisaystoimenpide (:varusteen-poisto (second (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
         tr-sanoma (tr-sanomat/luo-varusteen-poistosanoma (:otsikko pyyntosanoma)
                                                          {:etunimi "Keijo" :sukunimi "Käsittelijä"}
                                                          lisaystoimenpide)
