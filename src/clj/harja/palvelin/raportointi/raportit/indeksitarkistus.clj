@@ -43,7 +43,7 @@
                        [(reduce + kentan-arvot)])))
        (let [summat (for [kentta kentat]
                       (reduce + (map #(summa-kk % kentta) kuukaudet)))]
-         [(into ["Yhteensä:"]
+         [(into ["Yhteensä"]
                 (concat
                  summat
                  [(reduce + summat)]))])))]))
