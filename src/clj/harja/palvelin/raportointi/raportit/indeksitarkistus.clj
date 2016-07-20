@@ -6,10 +6,7 @@
             [taoensso.timbre :as log]
             [harja.tyokalut.functor :refer [fmap]]))
 
-(def ly (atom nil))
-
 (defn summa [laskutusyhteenvedot avain]
-  (reset! ly laskutusyhteenvedot)
   (reduce + 0
           (keep avain laskutusyhteenvedot)))
 
@@ -57,7 +54,6 @@
                                                   :urakkatyyppi "hoito"
                                                   :alku alkupvm :loppu loppupvm})
         urakka-idt (mapv :urakka-id urakat)
-        _ (log/info "URAKAT: " urakka-idt, "USER: " (pr-str user))
         kuukaudet (yleinen/kuukausivalit alkupvm loppupvm)
         laskutusyhteenvedot-kk (zipmap kuukaudet
                                        (map
