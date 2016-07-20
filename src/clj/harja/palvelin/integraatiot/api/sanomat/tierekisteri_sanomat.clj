@@ -32,7 +32,7 @@
                                  :tilannepvm (get-in toimenpide [:varuste :tilannepvm])}}
              :tietolaji   {:tietolajitunniste (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
                            :arvot             arvot}}
-   :lisatty (xml/json-date-time->xml-xs-date (get-in toimenpide [:toteuma :alkanut :tunniste]))})
+   :lisatty (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))})
 
 (defn luo-varusteen-paivityssanoma [otsikko kirjaaja toimenpide arvot]
   {:paivittaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
