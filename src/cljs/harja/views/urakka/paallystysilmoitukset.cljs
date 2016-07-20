@@ -395,15 +395,15 @@
                  {:otsikko "Kommentit" :nimi :kommentit
                   :palstoja 2
                   :tyyppi :komponentti
-                  :komponentti
-                  [kommentit/kommentit {:voi-kommentoida?
-                                        (not= :lukittu (:tila lomakedata-nyt))
-                                        :voi-liittaa false
-                                        :palstoja 40
-                                        :placeholder "Kirjoita kommentti..."
-                                        :uusi-kommentti (r/wrap (:uusi-kommentti lomakedata-nyt)
-                                                                #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
-                   (:kommentit lomakedata-nyt)]})]
+                  :komponentti (fn [_]
+                                 [kommentit/kommentit {:voi-kommentoida?
+                                                      (not= :lukittu (:tila lomakedata-nyt))
+                                                      :voi-liittaa false
+                                                      :palstoja 40
+                                                      :placeholder "Kirjoita kommentti..."
+                                                      :uusi-kommentti (r/wrap (:uusi-kommentti lomakedata-nyt)
+                                                                              #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
+                                 (:kommentit lomakedata-nyt)])})]
               @kohteen-tiedot]
              [asiatarkastus valmis-kasiteltavaksi?]]
 
