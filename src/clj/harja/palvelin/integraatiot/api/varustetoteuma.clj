@@ -30,7 +30,7 @@
   (tee-kirjausvastauksen-body
     {:ilmoitukset
      (str "Varustetoteuma kirjattu onnistuneesti: " (map #(str/join ", " (:lisatietoja %)) vastaukset))
-     :idt (map #(str/join ", " (:uusi-id %)) vastaukset)}))
+     :idt (map #(str/join ", " (:uusi-id %)) vastaukset)})) ;; TODO Lisätyt id:t järjestyksessä
 
 (defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
   (tr-tietolaji/tietolajin-arvot-map->string
@@ -47,7 +47,7 @@
     ;; TODO Varmista, että mahdollinen exception päätyy API-kutsujalle asti
     (tr-tietolaji/validoi-tietolajin-arvot
       tietolaji
-      (clojure.walk/stringify-keys arvot)
+      (clojure.walk/stringify-keys arvot) ;; Käytä muuntimessa oikeita keywordeja
       tietolajin-kuvaus)
     (muunna-tietolajin-arvot-stringiksi
       tietolajin-kuvaus
@@ -93,6 +93,12 @@
   On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
+  ;; FIXME KUn lisätään uusi varuste meille niin luodaan sinne heti livitunniste ja tallennetaan se kantaan.
+  ;; Kun saadaan vastaus tierekisteristä, merkitään kantaan että lähetetty tierekisteriin.
+  ;; Edelleen tosin mahdollisa että lähtee tierekisteriin mutta vastausta ei ehditä saada --> mietintämyssyyn
+  ;; HUOM! Tämän takia jos tulee sama viesti uudelleen niin saa tuhota toteuman varustetoteumaa vaan pitää päivittää.
+  ;; Tunnistetaan päivitettävät asiat toteuma-id:n perusteella. Jos huomataan että on lähetetty jo tierekisteriin nii nasia on ok.
+  ;; Voisi kokella lähettää saman viestin useaan kertaan.
   [tierekisteri db kirjaaja otsikko varustetoteuma]
   (when tierekisteri
     (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
@@ -106,7 +112,7 @@
                                         tietolajin-arvot
                                         tietolaji))]
 
-        (condp = toimenpide-tyyppi
+        (condp = toimenpide-tyyppi ;; TODO Case
           :varusteen-lisays
           (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko
                                         toimenpiteen-tiedot tietolajin-arvot-string)
@@ -139,7 +145,6 @@
           :tietolaji tietolaji
           :arvot toimenpiteen-arvot-tekstina
           :karttapvm (get-in toimenpiteen-tiedot [:varuste :tietue :karttapvm])
-          ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
           :alkupvm (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
           :loppupvm (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
           :piiri (get-in toimenpiteen-tiedot [:varuste :tietue :piiri])
@@ -156,6 +161,7 @@
 
 (defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma tietolajin-arvot-string
                                   toimenpide toteuma-id]
+  ;; TODO Yhdistä yhtenäiset osat
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
   (luo-uusi-varustetoteuma db
                            kirjaaja
@@ -224,7 +230,7 @@
                                       tierekisteri
                                       tietolajin-arvot
                                       tietolaji))]
-      (condp = toimenpide-tyyppi
+      (condp = toimenpide-tyyppi ;; TODO Case
         :varusteen-lisays
         (tallenna-varusteen-lisays db kirjaaja varustetoteuma tietolajin-arvot-string
                                    toimenpiteen-tiedot toteuma-id)
@@ -255,6 +261,7 @@
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
 
         ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä. Entä nyt?
+        ;; --> yhdistä toimenpiteiden geometria toteuma:n reitiksi. (ks. toteuma -> reitin tallennus)
 
         (tallenna-varustetoteuman-toimenpiteet db
                                                tierekisteri

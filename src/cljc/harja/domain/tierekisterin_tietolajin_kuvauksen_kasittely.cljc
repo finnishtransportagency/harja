@@ -20,6 +20,7 @@
   "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset."
   [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
   (log/debug "Validoidaan arvo " (pr-str arvo) " kentän kuvauksella: " (pr-str kentan-kuvaus))
+  ;; TODO tyyppivalidointi vielä numerolle ja pvm:lle
   (when (and pakollinen (not arvo))
     (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
   (when (< pituus (count arvo))
@@ -30,7 +31,7 @@
    Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
   [tietolaji arvot tietolajin-kuvaus]
   (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
-        ylimaaraiset-kentat (filter
+        ylimaaraiset-kentat (filter ;; TODO Set difference
                               (fn [arvo]
                                 (not (some? (first (filter
                                                      (fn [kentan-kuvaus]
@@ -67,6 +68,7 @@
                                 (filter #(< (:jarjestysnumero %) jarjestysnumero)
                                         kenttien-kuvaukset)))
         loppuindeksi (+ alkuindeksi (:pituus jarjestysnumeron-kentta))
+        ;; TODO Require string ns
         arvo-teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))]
     arvo-teksti))
 

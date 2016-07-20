@@ -12,6 +12,7 @@
   (atom {}))
 
 (defn- cacheta-tietolajin-kuvaus
+  ;; FIXME ÄLÄ CACHETA JOS TULI VIRHEVASTAUS
   "Ottaa tierekisteristä saadun vastauksen haetulle tietolajille ja cachettaa sen.
    Cacheen menee siis koko vastaus, jotta kutsuja saa aina saman vastauksen riippumatta
    siitä tehtiinkö haku oikeasti vai haettiinko se cachesta."
