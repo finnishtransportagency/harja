@@ -166,19 +166,20 @@
            (when-not (empty? pohjavesialueet)
              {:otsikko "Pohjavesialueiden käyttörajat"
               :nimi :pohjavesialueet :palstoja 2 :tyyppi :komponentti
-              :komponentti [grid/muokkaus-grid {:piilota-toiminnot? true
-                                                :voi-poistaa? (constantly false)
-                                                :voi-lisata? false
-                                                :jos-tyhja "Urakan alueella ei pohjavesialueita"}
-                            [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
-                              :hae #(hae-pohjavesialueen-nimi %)}
-                             {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
-                             {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
-                              :aseta (fn [rivi arvo]
-                                       (reset! pohjavesialueita-muokattu? true)
-                                       (assoc rivi :talvisuolaraja arvo))
-                              :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
-                            (pohjavesialueet-muokkausdata)]})]
+              :komponentti (fn [_]
+                             [grid/muokkaus-grid {:piilota-toiminnot? true
+                                                 :voi-poistaa? (constantly false)
+                                                 :voi-lisata? false
+                                                 :jos-tyhja "Urakan alueella ei pohjavesialueita"}
+                             [{:otsikko "Pohjavesialue" :muokattava? (constantly false) :leveys "40%"
+                               :hae #(hae-pohjavesialueen-nimi %)}
+                              {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :leveys "23%"}
+                              {:otsikko "Käyttöraja" :nimi :talvisuolaraja :tyyppi :positiivinen-numero
+                               :aseta (fn [rivi arvo]
+                                        (reset! pohjavesialueita-muokattu? true)
+                                        (assoc rivi :talvisuolaraja arvo))
+                               :placeholder "Ei rajoitusta" :leveys "30%" :muokattava? (constantly saa-muokata?)}]
+                             (pohjavesialueet-muokkausdata)])})]
           tiedot]
 
          [grid/grid
