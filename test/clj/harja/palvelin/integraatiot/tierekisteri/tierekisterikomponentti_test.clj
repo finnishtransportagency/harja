@@ -2,11 +2,17 @@
   (:require [clojure.test :refer [deftest is use-fixtures compose-fixtures]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+            [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tr-sanomat]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as tr-lisayssanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-paivityskutsu :as tr-paivityssanoma]
             [harja.testi :refer :all]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
             [org.httpkit.fake :refer [with-fake-http]]
-            [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]))
+            [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
+            [clojure.data.json :as json]
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit :as xml-esimerkit]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
@@ -202,6 +208,22 @@
         (is false "Pitäisi tapahtua poikkeus")
         (catch [:type "ulkoinen-kasittelyvirhe"] {:keys [virheet]}
           (is (.contains (:viesti (first virheet)) "Tietolajia ei löydy")))))))
+
+(deftest tarkista-varusteen-lisayssanoman-luominen
+  (let [xsd-polku "xsd/tierekisteri/skeemat/"
+        pyyntosanoma (-> (slurp (io/resource "api/examples/varustetoteuman-kirjaus-request.json"))
+                        (json/read-str)
+                        (clojure.walk/keywordize-keys))
+        varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
+        lisaystoimenpide (:varusteen-lisays (first (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
+        tr-sanoma (tr-sanomat/luo-varusteen-lisayssanoma (:otsikko pyyntosanoma)
+                                                          {:etunimi "Keijo" :sukunimi "Käsittelijä"}
+                                                          "HAR123"
+                                                          lisaystoimenpide
+                                                          "HARJ951547ZK        2                           HARJ951547ZK          01  ")
+        tr-sanoma-xml (tr-lisayssanoma/muodosta-xml-sisalto tr-sanoma)]
+    (xml/validoi xsd-polku "lisaaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml))
+    (is true "XML-validointi ei heittänyt poikkeusta")))
 
 ;; TODO Lisää testi JSON-payloadien TR-sanomien muodostukselle
 
