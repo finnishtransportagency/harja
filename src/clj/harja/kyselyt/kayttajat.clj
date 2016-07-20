@@ -8,7 +8,14 @@
   {:positional? true})
 
 (defn onko-kayttaja-urakan-organisaatiossa? [db urakka-id kayttaja-id]
-  (:exists (first (harja.kyselyt.kayttajat/onko-kayttaja-urakan-organisaatiossa db urakka-id kayttaja-id))))
+  (:exists (first (onko-kayttaja-urakan-organisaatiossa db urakka-id kayttaja-id))))
 
 (defn onko-kayttaja-organisaatiossa? [db ytunnus kayttaja-id]
-  (:exists (first (harja.kyselyt.kayttajat/onko-kayttaja-organisaatiossa db ytunnus kayttaja-id))))
+  (:exists (first (onko-kayttaja-organisaatiossa db ytunnus kayttaja-id))))
+
+(defn onko-kayttaja-nimella-urakan-organisaatiossa? [db urakka-id ilmoitus]
+  (:exists (first (onko-kayttaja-nimella-urakan-organisaatiossa
+             db
+             {:urakka urakka-id
+              :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
+              :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])}))))
