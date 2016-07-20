@@ -212,11 +212,11 @@
   (when-not (empty? urakat)
     (when nykytilanne?
      (let [haettavat-toimenpiteet (haettavat (union talvi kesa))
-           haettavat-tyokonetyypit (filter #(#{:paaasfalttilevitin
-                                           :remix-laite
-                                           :sekoitus-ja-stabilointijyrsin
-                                           :tma-laite} %)
-                                       (haettavat yllapito))]
+           haettavat-tyokonetyypit (filter #{:paaasfalttilevitin
+                                             :remix-laite
+                                             :sekoitus-ja-stabilointijyrsin
+                                             :tma-laite}
+                                           (haettavat yllapito))]
        (when (or (not (empty? haettavat-toimenpiteet))
                   (not (empty? haettavat-tyokonetyypit)))
          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
