@@ -31,7 +31,7 @@ DECLARE
 BEGIN
   SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
   FROM tieverkko_paloina
-  WHERE ST_DWithin(geom, piste, treshold)
+  WHERE ajorata=0 AND ST_DWithin(geom, piste, treshold)
   ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
   LIMIT 1
   INTO alkuosa;
