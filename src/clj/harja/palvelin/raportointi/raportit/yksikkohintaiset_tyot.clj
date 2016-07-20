@@ -8,7 +8,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
-(defn yhdista-suunnittelurivit-hoitokausiksi
+(defn- yhdista-suunnittelurivit-hoitokausiksi
   "Ottaa vectorin hoitokausien syksyn ja kevään osuutta kuvaavia rivejä.
   Yhdistää syksy-kevät parit yhdeksi riviksi, joka kuvaa kokonaista hoitokautta.
   Palauttaa ainoastaan ne rivit, jotka voitiin yhdistää."
@@ -37,13 +37,18 @@
                                          0)))))))
           syksyrivit)))
 
-(defn hae-urakan-hoitokaudet [db urakka-id]
+(defn hae-urakan-yks-hint-suunnittelutiedot
+  "Hakee urakan yks. hint. suunnittelutiedot niin, että yksi
+   rivi kuvaa yhden tehtävän suunnittelutietoa yhden hoitokauden aikana"
+  [db urakka-id]
   (yhdista-suunnittelurivit-hoitokausiksi
     (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
 (defn liita-toteumiin-suunnittelutiedot
-  "Ottaa hoitokauden alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot.
-  Liittää toteumiin niiden suunnittelutiedot, jos sellainen löytyy suunnittelutiedoista valitulta hoitokaudelta."
+  "Ottaa aikavälin alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot.
+   Liittää jokaiseen toteumaan sen suunnittelutiedot, jos suunnittelutiedoista
+   löytyy sellainen hoitokausi, joka on sama kuin annettu aikaväli tai johon
+   annettu aikaväli osuu kokonaan sisälle."
   [alkupvm loppupvm toteumat hoitokaudet]
   (map
     (fn [toteuma]
@@ -85,7 +90,6 @@
              (c/from-sql-date (:alkupvm hoitokausi))
              (c/from-sql-date (:loppupvm hoitokausi)))))
     hoitokaudet))
-
 
 (defn suunnitelutietojen-nayttamisilmoitus [konteksti alkupvm loppupvm hoitokaudet]
   (when (and (not (aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm hoitokaudet))

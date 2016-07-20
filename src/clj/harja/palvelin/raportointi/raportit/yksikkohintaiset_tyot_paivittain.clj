@@ -20,7 +20,7 @@
 ;; Yhteensä					72 000,00 €	3 000,00 €
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm toimenpide-id] :as parametrit}]
-  (let [suunnittelutiedot (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id)
+  (let [suunnittelutiedot (yks-hint-tyot/hae-urakan-yks-hint-suunnittelutiedot db urakka-id)
         toteumat (hae-yksikkohintaiset-tyot-per-paiva db
                                                       urakka-id alkupvm loppupvm
                                                       (not (nil? toimenpide-id)) toimenpide-id)

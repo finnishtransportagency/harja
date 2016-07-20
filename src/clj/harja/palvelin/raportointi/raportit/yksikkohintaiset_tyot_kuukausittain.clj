@@ -119,7 +119,7 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         suunnittelutiedot (when (= :urakka konteksti)
-                            (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id))
+                            (yks-hint-tyot/hae-urakan-yks-hint-suunnittelutiedot db urakka-id))
         kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti konteksti
                                                                :urakka-id urakka-id
                                                                :hallintayksikko-id hallintayksikko-id
