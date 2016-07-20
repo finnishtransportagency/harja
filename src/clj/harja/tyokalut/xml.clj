@@ -17,8 +17,8 @@
            (java.text SimpleDateFormat ParseException)
            (java.util Date)))
 
-(defn validoi
-  "Validoi annetun XML sisällön vasten annettua XSD-skeemaa. Jos validointi epäonnistuu, heittää poikkeuksen."
+(defn validi-xml?
+  "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
   [xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto]
   (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd-skeema-tiedosto ". XML:n sisältö on:" xml-sisalto)
   (let [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]

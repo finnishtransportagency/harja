@@ -20,7 +20,7 @@
 (defn muodosta-kutsu [tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm]
   (let [sisalto (muodosta-xml-sisalto tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "haeTietueet.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "haeTietueet.xsd" xml)
       xml
       (do
         (log/error "Tietueiden hakukutsua ei voida lähettää. Kutsu XML ei ole validi.")

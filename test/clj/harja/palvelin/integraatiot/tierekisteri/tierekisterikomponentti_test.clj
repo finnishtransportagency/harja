@@ -12,7 +12,8 @@
             [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
             [clojure.data.json :as json]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit :as xml-esimerkit]))
+            [harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit :as xml-esimerkit])
+  (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
@@ -209,7 +210,7 @@
         (catch [:type "ulkoinen-kasittelyvirhe"] {:keys [virheet]}
           (is (.contains (:viesti (first virheet)) "Tietolajia ei löydy")))))))
 
-(deftest tarkista-varusteen-lisayssanoman-luominen
+(deftest tarkista-varustetoteuman-pyyntoesimerkista-muodostuu-validi-lisayssanoma
   (let [xsd-polku "xsd/tierekisteri/skeemat/"
         pyyntosanoma (-> (slurp (io/resource "api/examples/varustetoteuman-kirjaus-request.json"))
                         (json/read-str)
@@ -222,8 +223,7 @@
                                                           lisaystoimenpide
                                                           "HARJ951547ZK        2                           HARJ951547ZK          01  ")
         tr-sanoma-xml (tr-lisayssanoma/muodosta-xml-sisalto tr-sanoma)]
-    (xml/validoi xsd-polku "lisaaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml))
-    (is true "XML-validointi ei heittänyt poikkeusta")))
+    (is (xml/validi-xml? xsd-polku "lisaaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
 ;; TODO Lisää testi JSON-payloadien TR-sanomien muodostukselle
 

@@ -6,7 +6,7 @@
 (def +xsd-polku+ "xsd/tloik/")
 
 (defn lue-kuittaus [viesti]
-  (when (not (xml/validoi +xsd-polku+ "harja-tloik.xsd" viesti))
+  (when (not (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" viesti))
     (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman harja-tloik.xsd mukaan validi.")))
   (let [data (xml/lue viesti)
         kuittaus {:aika           (xml/parsi-aikaleima (z/xml1-> data :aika z/text) "yyyy-MM-dd'T'HH:mm:ss")

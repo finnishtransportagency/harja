@@ -6,7 +6,7 @@
             [clojure.java.io :as io]))
 
 (defn validoi [xsd-polku skeematiedosto esimerkkipolku]
-  (xml/validoi xsd-polku skeematiedosto (slurp (io/resource esimerkkipolku))))
+  (xml/validi-xml? xsd-polku skeematiedosto (slurp (io/resource esimerkkipolku))))
 
 (deftest validoi-tierekisteri-xmlsanomat
   (let [xsd-polku "xsd/tierekisteri/skeemat/"]
