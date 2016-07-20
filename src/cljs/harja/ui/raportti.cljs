@@ -60,6 +60,7 @@
                              :fmt (case (:fmt sarake)
                                     :numero #(fmt/desimaaliluku-opt % 1 true)
                                     :prosentti #(fmt/prosentti-opt % 1)
+                                    :raha #(fmt/desimaaliluku-opt % 2 true)
                                     str)
                              ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
                              :tyyppi (if (:tyyppi sarake)
