@@ -140,30 +140,30 @@
     db
     toteuma-id))
 
-(defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma tietolaji
-                                tunniste toimenpide tie toimenpiteen-arvot-tekstina]
+(defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
+                                tunniste tehty-toimenpide tie toimenpiteen-arvot-tekstina]
   (:id (toteumat/luo-varustetoteuma<!
          db
-         tunniste
-         toteuma-id
-         toimenpide
-         tietolaji
-         toimenpiteen-arvot-tekstina
-         nil ;; FIXME karttapvm puuttuu --> Tarkista skeema
-         ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
-         (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
-         (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
-         nil ; FIXME Piiri puuttuu?
-         nil ; FIXME Kuntoluokitus puuttuu?
-         nil ; FIXME tierekisteriurakkakoodi puuttuu?
-         (:id kirjaaja)
-         (:numero tie)
-         (:aosa tie)
-         (:aet tie)
-         (:losa tie)
-         (:let tie)
-         (:puoli tie)
-         (:ajr tie))))
+         {:tunniste tunniste
+          :toteuma toteuma-id
+          :toimenpide tehty-toimenpide
+          :tietolaji tietolaji
+          :arvot toimenpiteen-arvot-tekstina
+          :karttapvm (get-in toimenpiteen-tiedot [:varuste :tietue :karttapvm])
+          ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
+          :alkupvm (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
+          :loppupvm (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
+          :piiri (get-in toimenpiteen-tiedot [:varuste :tietue :piiri])
+          :kuntoluokka (get-in toimenpiteen-tiedot [:varuste :tietue :kuntoluokitus])
+          :tierekisteriurakkakoodi (get-in toimenpiteen-tiedot [:varuste :tietue :tierekisteriurakkakoodi])
+          :luoja (:id kirjaaja)
+          :tr_numero (:numero tie)
+          :tr_alkuosa (:aosa tie)
+          :tr_alkuetaisyys (:aet tie)
+          :tr_loppuosa (:losa tie)
+          :tr_loppuetaisyys (:let tie)
+          :tr_puoli (:puoli tie)
+          :tr_ajorata (:ajr tie)})))
 
 (defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma tietolajin-arvot-string
                                   toimenpide toteuma-id]
@@ -172,6 +172,7 @@
                            kirjaaja
                            toteuma-id
                            varustetoteuma
+                           toimenpide
                            (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
                            nil
                            "lisatty"
@@ -185,6 +186,7 @@
                            kirjaaja
                            toteuma-id
                            varustetoteuma
+                           toimenpide
                            (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
                            (get-in toimenpide [:varuste :tunniste])
                            "paivitetty"
@@ -197,6 +199,7 @@
                            kirjaaja
                            toteuma-id
                            varustetoteuma
+                           toimenpide
                            (:tietolajitunniste toimenpide)
                            (:tunniste toimenpide)
                            "poistettu"
