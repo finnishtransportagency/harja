@@ -213,6 +213,7 @@
                            kirjaaja
                            toteuma-id
                            varustetoteuma
+                           toimenpide
                            (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
                            (get-in toimenpide [:varuste :tunniste])
                            "tarkastus"
