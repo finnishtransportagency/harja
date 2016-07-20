@@ -1,4 +1,4 @@
-(ns harja.domain.tierekisteri-tietue-test
+(ns harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
             [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tierekisteri-tietue]
@@ -72,7 +72,7 @@
             "b" "1"}
            muunnos))))
 
-(deftest tarkista-validoinnit
+(deftest tarkista-kenttien-validoinnit
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
                            [{:kenttatunniste "tie"
@@ -95,3 +95,70 @@
                              "tunniste" "1234567890112345678901"}
                             tietolajin-kuvaus))
         "Liian pitkä arvo huomattiin")))
+
+(deftest tarkista-tietolajin-arvojen-validointi-menee-lapi
+  (let [arvot {"LMNUMERO" "9987"
+                            "SIVUTIE" "2"}
+        kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (tierekisteri-tietue/validoi-tietolajin-arvot "tl506" arvot kenttien-kuvaukset)
+    (is true "Poikkeusta ei heitetty")))
+
+(deftest tarkista-tietolajin-arvojen-validointi-heittaa-poikkeuksen-kun-avain-puuttuu
+  (let [arvot {"SIVUTIE" "2"}
+        kenttien-kuvaukset {"tunniste" "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (is (thrown? Exception
+                 (tierekisteri-tietue/validoi-tietolajin-arvot "tl506" arvot kenttien-kuvaukset)))))
+
+(deftest tarkista-tietolajin-arvojen-validointi-heittaa-poikkeuksen-kun-ylimaarainen-kentta
+  (let [arvot {"LMNUMERO" "9987"
+                            "SIVUTIE" "12345678900"
+                            "YLIMAARAINEN" "kentta"}
+        kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (is (thrown? Exception
+                 (tierekisteri-tietue/validoi-tietolajin-arvot "tl506" arvot kenttien-kuvaukset)))))
+
+(deftest tarkista-tietolajin-arvojen-validointi-heittaa-poikkeuksen-kun-tyhja-mappi
+  (let [arvot {}
+        kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (is (thrown? Exception
+                 (tierekisteri-tietue/validoi-tietolajin-arvot "tl506" arvot kenttien-kuvaukset)))))

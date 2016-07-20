@@ -16,12 +16,36 @@
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
     (throw (Exception. viesti))))
 
-(defn validoi-arvo [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
+(defn validoi-arvo
+  "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset."
+  [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
   (log/debug "Validoidaan arvo " (pr-str arvo) " kentän kuvauksella: " (pr-str kentan-kuvaus))
   (when (and pakollinen (not arvo))
     (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
   (when (< pituus (count arvo))
     (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä: " kenttatunniste " maksimipituus: " pituus))))
+
+(defn validoi-tietolajin-arvot
+  "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
+   Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
+  [tietolaji arvot tietolajin-kuvaus]
+  (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
+        ylimaaraiset-kentat (filter
+                              (fn [arvo]
+                                (not (some? (first (filter
+                                                     (fn [kentan-kuvaus]
+                                                       (= (:kenttatunniste kentan-kuvaus) arvo))
+                                                     kenttien-kuvaukset)))))
+                              (keys arvot))]
+    (when-not (empty? ylimaaraiset-kentat)
+      (throw (Exception. "Tietolajin arvoissa on ylimääräisiä kenttiä,
+       joita ei löydy tierekisterin tietolajin kuvauksesta: " (str/join ", " ylimaaraiset-kentat))))
+
+    ;; Eli ylimääräisiä kenttiä, validoi annetut kentät
+    (doseq [kentan-kuvaus kenttien-kuvaukset]
+      (validoi-arvo (clojure.walk/stringify-keys (get arvot (:kenttatunniste kentan-kuvaus)))
+                                 kentan-kuvaus
+                                 tietolaji))))
 
 (defn- muunna-teksti-kentan-mukaiseen-tyyppiin [arvo-tekstina kentan-kuvaus]
   (condp = (:tietotyyppi kentan-kuvaus)
