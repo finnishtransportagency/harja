@@ -248,7 +248,7 @@ BEGIN
       let := aet_;
     END IF;
     IF ajoratavalinta=2 THEN
-      RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT))
+      RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, LEAST(1,aet/tr_pituus::FLOAT), LEAST(1,let/tr_pituus::FLOAT)))
                    FROM tieverkko_paloina
                    WHERE tie=tie_
                          AND osa=aosa_
