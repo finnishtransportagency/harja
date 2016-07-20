@@ -18,19 +18,19 @@
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
             [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [clj-time.core :as t]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]]))
 
-;; TODO Temppivastaus, katsotaan saadaanko lisätiedot mukaan
-(defn- tee-onnistunut-vastaus []
-  (tee-kirjausvastauksen-body {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti."}))
-
-;; FIXME Nyt kun varustetoteumia voi kirjata kerralla monta,
-;; pitäisi kai kerätä kaikkien tierekisterin pyyntöjen vastaukset yhteen jotta voidaan näyttää
-;; vastauksessa?
-#_(defn- tee-onnistunut-vastaus [{:keys [lisatietoja uusi-id]}]
-    (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
-                                 :id (when uusi-id uusi-id)}))
+(defn- tee-onnistunut-vastaus [vastaukset]
+  ;; FIXME Jokainen toimenpide on kirjattu tierekisteriin erikseen ja myös vastaus saadaan jokaisesta
+  ;; erikseen. Nyt vastaukset joinataan yhteen str/join:lla. Vastaukset ovat kirjattujen toimenpiteiden
+  ;; mukaisessa järjestyksessä. Voi silti hankalaa ottaa selvää mikä vastaus liittyy mihinkin
+  ;; kirjaukseen, etenkin jos toimenpiteitä kirjattiin monta.
+  (tee-kirjausvastauksen-body
+    {:ilmoitukset
+     (str "Varustetoteuma kirjattu onnistuneesti: " (map #(str/join ", " (:lisatietoja %)) vastaukset))
+     :idt (map #(str/join ", " (:uusi-id %)) vastaukset)}))
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
@@ -75,7 +75,8 @@
                            arvot-string)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
-      (assoc (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)) :uusi-id livitunniste))))
+      (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)
+                     :uusi-id livitunniste))))
 
 (defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide arvot-string]
   (log/debug "Päivitetään varuste tierekisteriin")
@@ -268,15 +269,19 @@
                                                kirjaaja
                                                varustetoteuma)))))
 
-(defn- laheta-kirjaus-tierekisteriin [db tierekisteri kirjaaja otsikko varustetoteumat]
-  (doseq [varustetoteuma varustetoteumat]
-    (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin
-                    tierekisteri
-                    db
-                    kirjaaja
-                    otsikko
-                    varustetoteuma)]
-      (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu"))))
+(defn- laheta-kirjaus-tierekisteriin
+  "Lähettää varustetoteumat tierekisteriin yksi kerrallaan.
+   Palauttaa vectorissa tierekisterikomponentin antamat vastaukset."
+  [db tierekisteri kirjaaja otsikko varustetoteumat]
+  (mapv (fn [varustetoteuma]
+          (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin
+                          tierekisteri
+                          db
+                          kirjaaja
+                          otsikko
+                          varustetoteuma)]
+            vastaus))
+        varustetoteumat))
 
 (defn- validoi-tehtavat [db varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
@@ -293,8 +298,8 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
     (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
-    (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)
-    (tee-onnistunut-vastaus)))
+    (let [tierekisterin-vastaukset (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)]
+      (tee-onnistunut-vastaus tierekisterin-vastaukset))))
 
 (defrecord Varustetoteuma []
   component/Lifecycle
