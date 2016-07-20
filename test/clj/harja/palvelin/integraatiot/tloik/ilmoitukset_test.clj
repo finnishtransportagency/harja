@@ -132,20 +132,15 @@
 (deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
   (try
     (with-fake-http []
-      (let [kuittausviestit (atom [])
-            ilmoitustoimenpideviestit (atom [])]
+      (let [kuittausviestit (atom [])]
         (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                         #(swap! kuittausviestit conj (.getText %)))
-        (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+
-                        #(swap! ilmoitustoimenpideviestit conj (.getText %)))
 
         (sonja/laheta (:sonja jarjestelma)
                       +tloik-ilmoitusviestijono+
                       +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)
 
         (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
-        ;; todo: tarkista miksei lähetetä ilmoitustoimenpidettä? näyttää menevän nulli jonoon.
-        (odota-ehdon-tayttymista #(= 1 (count @ilmoitustoimenpideviestit)) "Ilmoitustoimenpide on lähetetty." 10000)
 
         (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
         (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"

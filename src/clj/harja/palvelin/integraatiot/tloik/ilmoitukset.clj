@@ -83,11 +83,11 @@
                                            paivystajat nil)
         ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)
-        ilmoitus-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
+        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
 
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-id jms-lahettaja)
+      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
       (laheta-ilmoitus-paivystajille db ilmoitus paivystajat urakka-id ilmoitusasetukset))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
