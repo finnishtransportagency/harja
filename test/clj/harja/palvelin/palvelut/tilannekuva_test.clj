@@ -67,8 +67,6 @@
                      tk/lumivallien-madaltaminen        true
                      tk/sulamisveden-haittojen-torjunta true
                      tk/kelintarkastus                  true
-                     ; TODO Poistunut tehtävä?
-                     ;tk/liuossuolaus                    true
                      tk/aurausviitoitus-ja-kinostimet   true
                      tk/lumensiirto                     true
                      tk/paannejaan-poisto               true

@@ -101,9 +101,10 @@
            lumensiirto
            paannejaan-poisto
            muu]
-   :kesa [koneellinen-niitto
-          koneellinen-vesakonraivaus
-          liikennemerkkien-puhdistus
+   :kesa [;; Näitä kolmea ei haluta nähdä tilannekuvassa, mutta tuki niiden näyttämiselle on olemassa
+          ;;koneellinen-niitto
+          ;;koneellinen-vesakonraivaus
+          ;;liikennemerkkien-puhdistus
           liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito
           palteen-poisto
           paallystetyn-tien-sorapientareen-taytto
