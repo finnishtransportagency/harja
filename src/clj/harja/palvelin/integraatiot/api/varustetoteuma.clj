@@ -33,12 +33,26 @@
      :idt (map #(str/join ", " (:uusi-id %)) vastaukset)}))
 
 (defn validoi-tietolajin-arvot
-  "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
+  "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein
+   eli kenttä löytyy tietolajin kuvauksesta, on oikean pituinen eikä kenttiä myöskään puutu.
    Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
   [tietolaji arvot tietolajin-kuvaus]
-  ;; FIXME Tarkista vielä, ettei ole ylimääräisiä kenttiä (tr-tietolaji-namespaceen validointifunktio joka ottaa tämänkin huomioon?)
-  (let [arvot (clojure.walk/stringify-keys arvot)
-        kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))]
+  ;; TODO Varmista, että exception näkyy API:n kutsujalle
+  ;; TODO Yleistä niin, että voidaan käyttää myös tietueiden kirjaukseen
+  (let [arvot (clojure.walk/stringify-keys arvot) ;; Tietolajinkäsittely vaatii
+        kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
+        ylimaaraiset-kentat (filter
+                              (fn [arvo]
+                                (not (some? (first (filter
+                                                     (fn [kentan-kuvaus]
+                                                       (= (:kenttatunniste kentan-kuvaus) arvo))
+                                                     kenttien-kuvaukset)))))
+                              (keys arvot))]
+    (when-not (empty? ylimaaraiset-kentat)
+      (throw (Exception. "Tietolajin arvoissa on ylimääräisiä kenttiä,
+       joita ei löydy tierekisterin tietolajin kuvauksesta: " (str/join ", " ylimaaraiset-kentat))))
+
+    ;; Eli ylimääräisiä kenttiä, validoi annetut kentät
     (doseq [kentan-kuvaus kenttien-kuvaukset]
       (tr-tietolaji/validoi-arvo (clojure.walk/stringify-keys (get arvot (:kenttatunniste kentan-kuvaus)))
                                  kentan-kuvaus
