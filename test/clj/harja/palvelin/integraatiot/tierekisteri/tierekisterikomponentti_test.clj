@@ -203,3 +203,5 @@
         (catch [:type "ulkoinen-kasittelyvirhe"] {:keys [virheet]}
           (is (.contains (:viesti (first virheet)) "Tietolajia ei löydy")))))))
 
+;; TODO Lisää testi JSON-payloadien TR-sanomien muodostukselle
+

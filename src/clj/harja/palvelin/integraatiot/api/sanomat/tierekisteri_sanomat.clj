@@ -13,66 +13,64 @@
        (update-in [:tietue :sijainti] dissoc :koordinaatit :linkki)
        (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)))
 
-(defn luo-varusteen-lisayssanoma [otsikko kirjaaja varustetoteuma toimenpide arvot]
+(defn luo-varusteen-lisayssanoma [otsikko kirjaaja tunniste toimenpide arvot]
   {:lisaaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                              (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                              "")
              :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
              :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
              :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
-   :tietue  {:tunniste    (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
-             :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))
-             :sijainti    {:tie {:numero   (get-in varustetoteuma [:varuste :sijainti :tie :numero])
-                                 :aet      (get-in varustetoteuma [:varuste :sijainti :tie :aet])
-                                 :aosa     (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
-                                 :let      (get-in varustetoteuma [:varuste :sijainti :tie :let])
-                                 :losa     (get-in varustetoteuma [:varuste :sijainti :tie :losa])
-                                 :ajr      (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
-                                 :puoli    (get-in varustetoteuma [:varuste :sijainti :tie :puoli])}}
-             :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
-                           :arvot             (get-in varustetoteuma [:varuste :arvot])}}
-   :lisatty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
+   :tietue  {:tunniste    tunniste
+             :alkupvm     (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))
+             :sijainti    {:tie {:numero   (get-in toimenpide [:varuste :tietue :sijainti :tie :numero])
+                                 :aet      (get-in toimenpide [:varuste :tietue :sijainti :tie :aet])
+                                 :aosa     (get-in toimenpide [:varuste :tietue :sijainti :tie :aosa])
+                                 :let      (get-in toimenpide [:varuste :tietue :sijainti :tie :let])
+                                 :losa     (get-in toimenpide [:varuste :tietue :sijainti :tie :losa])
+                                 :ajr      (get-in toimenpide [:varuste :tietue :sijainti :tie :ajr])
+                                 :puoli    (get-in toimenpide [:varuste :tietue :sijainti :tie :puoli])
+                                 :tilannepvm (get-in toimenpide [:varuste :tilannepvm])}}
+             :tietolaji   {:tietolajitunniste (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
+                           :arvot             arvot}}
+   :lisatty (xml/json-date-time->xml-xs-date (get-in toimenpide [:toteuma :alkanut :tunniste]))})
 
-(defn luo-varusteen-paivityssanoma [otsikko kirjaaja varustetoteuma toimenpide arvot]
+(defn luo-varusteen-paivityssanoma [otsikko kirjaaja toimenpide arvot]
   {:paivittaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                                 (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                                 "")
                 :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                 :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                 :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
-   :tietue     {:tunniste    (get-in varustetoteuma [:varuste :tunniste])
-                :alkupvm     (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))
-                :loppupvm    (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :paattynyt]))
-                :karttapvm   (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:varuste :karttapvm]))
-                :piiri       (get-in varustetoteuma [:varuste :piiri])
-                :kuntoluokka (get-in varustetoteuma [:varuste :kuntoluokitus])
-                :urakka      (get-in varustetoteuma [:varuste :tierekisteriurakkakoodi])
-                :sijainti    {:tie {:numero   (get-in varustetoteuma [:varuste :sijainti :tie :numero])
-                                    :aet      (get-in varustetoteuma [:varuste :sijainti :tie :aet])
-                                    :aosa     (get-in varustetoteuma [:varuste :sijainti :tie :aosa])
-                                    :let      (get-in varustetoteuma [:varuste :sijainti :tie :let])
-                                    :losa     (get-in varustetoteuma [:varuste :sijainti :tie :losa])
-                                    :ajr      (get-in varustetoteuma [:varuste :sijainti :tie :ajr])
-                                    :puoli    (get-in varustetoteuma [:varuste :sijainti :tie :puoli])
-                                    :alkupvm  (xml/json-date-time->xml-xs-date
-                                                (get-in varustetoteuma [:varuste :sijainti :tie :alkupvm]))
-                                    :loppupvm (xml/json-date-time->xml-xs-date
-                                                (get-in varustetoteuma [:varuste :sijainti :tie :loppupvm]))}}
-                :tietolaji   {:tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
-                              :arvot             (get-in varustetoteuma [:varuste :arvot])}}
+   :tietue     {:tunniste    (get-in toimenpide [:varuste :tunniste])
+                :alkupvm     (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))
+                :loppupvm    nil ; FIXME Puuttuu payloadista? --> Tarkista skeema
+                :karttapvm   nil ; FIXME Puuttuu payloadista?
+                :piiri       nil ; FIXME Puttuuu payloadista?
+                :kuntoluokka nil ; FIXME Puuttuu payloadista?
+                :urakka      nil ; FIXME Puuttuu payloadista?
+                :sijainti    {:tie {:numero   (get-in toimenpide [:varuste :tietue :sijainti :tie :numero])
+                                    :aet      (get-in toimenpide [:varuste :tietue :sijainti :tie :aet])
+                                    :aosa     (get-in toimenpide [:varuste :tietue :sijainti :tie :aosa])
+                                    :let      (get-in toimenpide [:varuste :tietue :sijainti :tie :let])
+                                    :losa     (get-in toimenpide [:varuste :tietue :sijainti :tie :losa])
+                                    :ajr      (get-in toimenpide [:varuste :tietue :sijainti :tie :ajr])
+                                    :puoli    (get-in toimenpide [:varuste :tietue :sijainti :tie :puoli])
+                                    :tilannepvm (get-in toimenpide [:varuste :tilannepvm])}}
+                :tietolaji   {:tietolajitunniste (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
+                              :arvot             arvot}}
 
-   :paivitetty (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
+   :paivitetty (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))})
 
-(defn luo-varusteen-poistosanoma [otsikko kirjaaja varustetoteuma toimenpide]
+(defn luo-varusteen-poistosanoma [otsikko kirjaaja toimenpide]
   {:poistaja          {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
                                        (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
                                        "")
                        :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                        :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                        :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
-   :tunniste          (get-in varustetoteuma [:varuste :tunniste])
-   :tietolajitunniste (get-in varustetoteuma [:varuste :tietolaji])
-   :poistettu         (xml/json-date-time->xml-xs-date (get-in varustetoteuma [:toteuma :alkanut]))})
+   :tunniste          (:tunniste toimenpide)
+   :tietolajitunniste (:tietolajitunniste toimenpide)
+   :poistettu         (xml/json-date-time->xml-xs-date (:poistettu toimenpide))})
 
 (defn luo-tietueen-lisayssanoma [data]
   (-> data

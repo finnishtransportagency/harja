@@ -68,11 +68,10 @@
                                      {:keys [varustetoteuma]} toimenpide arvot-string]
   (log/debug "Lisätään varuste tierekisteriin")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
-        varustetoteuma (assoc-in varustetoteuma [:varuste :tunniste] livitunniste)
         valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma
                            otsikko
                            kirjaaja
-                           varustetoteuma
+                           tunniste
                            toimenpide
                            arvot-string]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
@@ -85,7 +84,6 @@
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-paivityssanoma
                            otsikko
                            kirjaaja
-                           varustetoteuma
                            toimenpide
                            arvot-string)]
     (let [vastaus (tierekisteri/paivita-tietue tierekisteri valitettava-data)]
@@ -98,7 +96,6 @@
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma
                            otsikko
                            kirjaaja
-                           varustetoteuma
                            toimenpide)]
     (let [vastaus (tierekisteri/poista-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
@@ -154,7 +151,7 @@
          toimenpide
          tietolaji
          toimenpiteen-arvot-tekstina
-         nil ;; FIXME karttapvm puuttuu
+         nil ;; FIXME karttapvm puuttuu --> Tarkista skeema
          ;; FIXME Tartteeko varustetoteuma omaa alkanut/paattynyt aikaa, näkee suoraan toteumasta?
          (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :alkanut]))
          (aika-string->java-sql-date (get-in varustetoteuma [:varustetoteuma :toteuma :paattynyt]))
