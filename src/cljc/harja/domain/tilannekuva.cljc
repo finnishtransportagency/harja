@@ -105,10 +105,6 @@
           ;;koneellinen-niitto
           ;;koneellinen-vesakonraivaus
           ;;liikennemerkkien-puhdistus
-          liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito
-          palteen-poisto
-          paallystetyn-tien-sorapientareen-taytto
-          ojitus
           sorapientareen-taytto
           sorateiden-polynsidonta
           sorastus
@@ -122,6 +118,10 @@
           liikennemerkkien-puhdistus
           l-ja-p-alueiden-puhdistus
           siltojen-puhdistus
+          liikennemerkkien-opasteiden-ja-liikenteenohjauslaitteiden-hoito-seka-reunapaalujen-kunnossapito
+          palteen-poisto
+          paallystetyn-tien-sorapientareen-taytto
+          ojitus
           muu]})
 
 
