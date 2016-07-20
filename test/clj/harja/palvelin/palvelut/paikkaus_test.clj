@@ -138,9 +138,10 @@
                                  (assoc :perustelu "Hyvä ilmoitus!"))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-paikkausilmoitus +kayttaja-jvh+ {:urakka-id          urakka-id
-                                                                   :sopimus-id         sopimus-id
-                                                                   :paikkausilmoitus paikkausilmoitus})
+                      :tallenna-paikkausilmoitus +kayttaja-jvh+
+                      {:urakka-id          urakka-id
+                       :sopimus-id         sopimus-id
+                       :paikkausilmoitus paikkausilmoitus})
       (let [paikkausilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paikkausilmoitus-paikkauskohteella
                                                         +kayttaja-jvh+ {:urakka-id          urakka-id
