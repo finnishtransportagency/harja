@@ -116,6 +116,7 @@
                        fmt (case (:fmt sarake)
                              :numero #(fmt/desimaaliluku-opt % 1 true)
                              :prosentti #(fmt/prosentti-opt %)
+                             :raha #(fmt/desimaaliluku-opt % 2 true)
                              str)
                        naytettava-arvo (or (if (vector? arvo-datassa)
                                              (muodosta-pdf arvo-datassa)
