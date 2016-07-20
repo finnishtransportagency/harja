@@ -64,22 +64,20 @@
       tietolajin-kuvaus
       arvot)))
 
-(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja otsikko
-                                     {:keys [varustetoteuma]} toimenpide arvot-string]
+(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja otsikko toimenpide arvot-string]
   (log/debug "Lisätään varuste tierekisteriin")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma
                            otsikko
                            kirjaaja
-                           tunniste
+                           livitunniste
                            toimenpide
-                           arvot-string]
+                           arvot-string)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       (assoc (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)) :uusi-id livitunniste))))
 
-(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko
-                                       {:keys [varustetoteuma]} toimenpide arvot-string]
+(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide arvot-string]
   (log/debug "Päivitetään varuste tierekisteriin")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-paivityssanoma
                            otsikko
@@ -90,8 +88,7 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja otsikko
-                                       {:keys [varustetoteuma]} toimenpide]
+(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja otsikko toimenpide]
   (log/debug "Poistetaan varuste tierekisteristä")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma
                            otsikko
@@ -102,39 +99,39 @@
       vastaus)))
 
 (defn- laheta-varustetoteuman-toimenpiteet-tierekisteriin
-    "Päivittää varustetoteumassa tehdyt toimenpiteet Tierekisteriin.
-    On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
-    Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
-    nähdään, että toteumaa on yritetty kirjata."
-    [tierekisteri db kirjaaja otsikko varustetoteuma]
-    (when tierekisteri
-      (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
-        (let [toimenpide-tyyppi (first (keys toimenpide))
-              toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-              tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
-              tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
-              tietolajin-arvot-string (when tietolajin-arvot
-                                        (validoi-ja-muunna-arvot-merkkijonoksi
-                                          tierekisteri
-                                          tietolajin-arvot
-                                          tietolaji))]
+  "Päivittää varustetoteumassa tehdyt toimenpiteet Tierekisteriin.
+  On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
+  Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
+  nähdään, että toteumaa on yritetty kirjata."
+  [tierekisteri db kirjaaja otsikko varustetoteuma]
+  (when tierekisteri
+    (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
+      (let [toimenpide-tyyppi (first (keys toimenpide))
+            toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
+            tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
+            tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
+            tietolajin-arvot-string (when tietolajin-arvot
+                                      (validoi-ja-muunna-arvot-merkkijonoksi
+                                        tierekisteri
+                                        tietolajin-arvot
+                                        tietolaji))]
 
-          (condp = toimenpide-tyyppi
-            :varusteen-lisays
-            (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko
-                                          varustetoteuma toimenpiteen-tiedot tietolajin-arvot-string)
+        (condp = toimenpide-tyyppi
+          :varusteen-lisays
+          (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko
+                                        toimenpiteen-tiedot tietolajin-arvot-string)
 
-            :varusteen-poisto
-            (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
-                                            varustetoteuma toimenpiteen-tiedot)
+          :varusteen-poisto
+          (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
+                                          toimenpiteen-tiedot)
 
-            :varusteen-paivitys
-            (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                            varustetoteuma toimenpiteen-tiedot tietolajin-arvot-string)
+          :varusteen-paivitys
+          (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                          toimenpiteen-tiedot tietolajin-arvot-string)
 
-            :varusteen-tarkastus
-            (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                            varustetoteuma toimenpiteen-tiedot tietolajin-arvot-string))))))
+          :varusteen-tarkastus
+          (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                          toimenpiteen-tiedot tietolajin-arvot-string))))))
 
 (defn- poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman " toteuma-id " vanhat varustetiedot")
@@ -279,7 +276,7 @@
                     kirjaaja
                     otsikko
                     varustetoteuma)]
-        (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu"))))
+      (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu"))))
 
 (defn- validoi-tehtavat [db varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
