@@ -225,5 +225,30 @@
         tr-sanoma-xml (tr-lisayssanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "lisaaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
-;; TODO Lisää testi JSON-payloadien TR-sanomien muodostukselle
+(deftest tarkista-varustetoteuman-esimerkista-muodostuu-validi-paivityssanoma-tierekisteriim
+  (let [xsd-polku "xsd/tierekisteri/skeemat/"
+        pyyntosanoma (-> (slurp (io/resource "api/examples/varustetoteuman-kirjaus-request.json"))
+                         (json/read-str)
+                         (clojure.walk/keywordize-keys))
+        varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
+        lisaystoimenpide (:varusteen-lisays (first (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
+        tr-sanoma (tr-sanomat/luo-varusteen-paivityssanoma (:otsikko pyyntosanoma)
+                                                           {:etunimi "Keijo" :sukunimi "Käsittelijä"}
+                                                           lisaystoimenpide
+                                                           "HARJ951547Z        2                           HARJ951547Z          01  ")
+        tr-sanoma-xml (tr-paivityssanoma/muodosta-xml-sisalto tr-sanoma)]
+    (is (xml/validi-xml? xsd-polku "paivitaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
+
+(deftest tarkista-varustetoteuman-esimerkista-muodostuu-validi-poistosanoma-tierekisteriim
+  (let [xsd-polku "xsd/tierekisteri/skeemat/"
+        pyyntosanoma (-> (slurp (io/resource "api/examples/varustetoteuman-kirjaus-request.json"))
+                         (json/read-str)
+                         (clojure.walk/keywordize-keys))
+        varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
+        lisaystoimenpide (:varusteen-lisays (first (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
+        tr-sanoma (tr-sanomat/luo-varusteen-poistosanoma (:otsikko pyyntosanoma)
+                                                         {:etunimi "Keijo" :sukunimi "Käsittelijä"}
+                                                         lisaystoimenpide)
+        tr-sanoma-xml (tr-poistosanoma/muodosta-xml-sisalto tr-sanoma)]
+    (is (xml/validi-xml? xsd-polku "poistaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
