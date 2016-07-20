@@ -5,6 +5,7 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tr-sanomat]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-lisayskutsu :as tr-lisayssanoma]
             [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-paivityskutsu :as tr-paivityssanoma]
+            [harja.palvelin.integraatiot.tierekisteri.sanomat.tietueen-poistokutsu :as tr-poistosanoma]
             [harja.testi :refer :all]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
