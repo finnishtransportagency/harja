@@ -5,7 +5,8 @@
              [format :as tf]
              [local :as l]]
             [harja.pvm :as pvm]
-            [jeesql.core :refer [defqueries]]))
+            [jeesql.core :refer [defqueries]]
+            [harja.tyokalut.functor :refer [fmap]]))
 
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
@@ -65,6 +66,15 @@
                   (cons (tf/unparse vuosi-ja-kk-fmt kk)
                         (kuukaudet (t/plus kk (t/months 1)))))))]
        (kuukaudet alku)))))
+
+(defn kuukausivalit [alku loppu]
+  (let [alku (l/to-local-date-time alku)
+        loppu (l/to-local-date-time loppu)]
+    (letfn [(kuukaudet [kk]
+              (when-not (t/after? kk loppu)
+                (lazy-seq (cons (fmap c/to-date (pvm/kuukauden-aikavali kk))
+                                (kuukaudet (t/plus kk (t/months 1)))))))]
+      (kuukaudet alku))))
 
 (defn pylvaat-kuukausittain
   [{:keys [otsikko alkupvm loppupvm kuukausittainen-data piilota-arvo? legend]}]
