@@ -17,7 +17,7 @@
     (.createArrayOf conn "text" (to-array v))))
 
 (defn- tallenna-seurantakirjaus [_ data kayttaja db]
-  #_(validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
+  (validointi/tarkista-onko-kayttaja-organisaation-jarjestelma db
                                                                (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])
                                                                kayttaja)
   (doseq [havainto (:havainnot data)]
