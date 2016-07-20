@@ -32,7 +32,40 @@
     (tee-kirjausvastauksen-body {:ilmoitukset (str "Varustetoteuma kirjattu onnistuneesti." (when lisatietoja lisatietoja))
                                  :id (when uusi-id uusi-id)}))
 
-(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja otsikko {:keys [varustetoteuma]} toimenpide]
+(defn validoi-tietolajin-arvot
+  "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
+   Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
+  [tietolaji arvot tietolajin-kuvaus]
+  ;; FIXME Tarkista vielä, ettei ole ylimääräisiä kenttiä (tr-tietolaji-namespaceen validointifunktio joka ottaa tämänkin huomioon?)
+  (let [arvot (clojure.walk/stringify-keys arvot)
+        kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))]
+    (doseq [kentan-kuvaus kenttien-kuvaukset]
+      (tr-tietolaji/validoi-arvo (clojure.walk/stringify-keys (get arvot (:kenttatunniste kentan-kuvaus)))
+                                 kentan-kuvaus
+                                 tietolaji))))
+
+(defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
+  (tr-tietolaji/tietolajin-arvot-map->string
+    (clojure.walk/stringify-keys arvot-map)
+    tietolajin-kuvaus))
+
+(defn- validoi-ja-muunna-arvot-merkkijonoksi
+  "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
+  [tierekisteri arvot tietolaji]
+  (let [tietolajin-kuvaus (tierekisteri/hae-tietolajit
+                            tierekisteri
+                            tietolaji
+                            nil)]
+    (validoi-tietolajin-arvot
+      tietolaji
+      arvot
+      tietolajin-kuvaus)
+    (muunna-tietolajin-arvot-stringiksi
+      tietolajin-kuvaus
+      arvot)))
+
+(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja otsikko
+                                     {:keys [varustetoteuma]} toimenpide arvot-string]
   (log/debug "Lisätään varuste tierekisteriin")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         varustetoteuma (assoc-in varustetoteuma [:varuste :tunniste] livitunniste)
@@ -40,23 +73,27 @@
                            otsikko
                            kirjaaja
                            varustetoteuma
-                           toimenpide)]
+                           toimenpide
+                           arvot-string]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       (assoc (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)) :uusi-id livitunniste))))
 
-(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko {:keys [varustetoteuma]} toimenpide]
+(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko
+                                       {:keys [varustetoteuma]} toimenpide arvot-string]
   (log/debug "Päivitetään varuste tierekisteriin")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-paivityssanoma
                            otsikko
                            kirjaaja
                            varustetoteuma
-                           toimenpide)]
+                           toimenpide
+                           arvot-string)]
     (let [vastaus (tierekisteri/paivita-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja otsikko {:keys [varustetoteuma]} toimenpide]
+(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja otsikko
+                                       {:keys [varustetoteuma]} toimenpide]
   (log/debug "Poistetaan varuste tierekisteristä")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma
                            otsikko
@@ -76,42 +113,37 @@
     (when tierekisteri
       (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
         (let [toimenpide-tyyppi (first (keys toimenpide))
-              toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
+              toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
+              tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
+              tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
+              tietolajin-arvot-string (when tietolajin-arvot
+                                        (validoi-ja-muunna-arvot-merkkijonoksi
+                                          tierekisteri
+                                          tietolajin-arvot
+                                          tietolaji))]
 
           (condp = toimenpide-tyyppi
             :varusteen-lisays
-            (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko varustetoteuma toimenpiteen-tiedot)
+            (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko
+                                          varustetoteuma toimenpiteen-tiedot tietolajin-arvot-string)
 
             :varusteen-poisto
-            (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko varustetoteuma toimenpiteen-tiedot)
+            (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
+                                            varustetoteuma toimenpiteen-tiedot)
 
             :varusteen-paivitys
-            (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko varustetoteuma toimenpiteen-tiedot)
+            (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                            varustetoteuma toimenpiteen-tiedot tietolajin-arvot-string)
 
             :varusteen-tarkastus
-            (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko varustetoteuma toimenpiteen-tiedot))))))
+            (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                            varustetoteuma toimenpiteen-tiedot tietolajin-arvot-string))))))
 
 (defn- poista-toteuman-varustetiedot [db toteuma-id]
   (log/debug "Poistetaan toteuman " toteuma-id " vanhat varustetiedot")
   (toteumat/poista-toteuman-varustetiedot!
     db
     toteuma-id))
-
-(defn validoi-tietolajin-arvot
-  "Tarkistaa, että API:n kautta tulleet tietolajin arvot on annettu oikein.
-   Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
-  [tietolaji arvot tietolajin-kuvaus]
-  (let [arvot (clojure.walk/stringify-keys arvot)
-        kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))]
-    (doseq [kentan-kuvaus kenttien-kuvaukset]
-      (tr-tietolaji/validoi-arvo (clojure.walk/stringify-keys (get arvot (:kenttatunniste kentan-kuvaus)))
-                                 kentan-kuvaus
-                                 tietolaji))))
-
-(defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
-  (tr-tietolaji/tietolajin-arvot-map->string
-    (clojure.walk/stringify-keys arvot-map)
-    tietolajin-kuvaus))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma tietolaji
                                 tunniste toimenpide tie toimenpiteen-arvot-tekstina]
@@ -197,20 +229,13 @@
   (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
     (let [toimenpide-tyyppi (first (keys toimenpide))
           toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
+          tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
           tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
           tietolajin-arvot-string (when tietolajin-arvot
-                                    (let [tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
-                                          tietolajin-kuvaus (tierekisteri/hae-tietolajit
-                                                              tierekisteri
-                                                              tietolaji
-                                                              nil)]
-                                      (validoi-tietolajin-arvot
-                                        tietolaji
-                                        tietolajin-arvot
-                                        tietolajin-kuvaus)
-                                      (muunna-tietolajin-arvot-stringiksi
-                                        tietolajin-kuvaus
-                                        tietolajin-arvot)))]
+                                    (validoi-ja-muunna-arvot-merkkijonoksi
+                                      tierekisteri
+                                      tietolajin-arvot
+                                      tietolaji))]
       (condp = toimenpide-tyyppi
         :varusteen-lisays
         (tallenna-varusteen-lisays db kirjaaja varustetoteuma tietolajin-arvot-string
@@ -251,7 +276,12 @@
 
 (defn- laheta-kirjaus-tierekisteriin [db tierekisteri kirjaaja otsikko varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
-    (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin tierekisteri db kirjaaja otsikko varustetoteuma)]
+    (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin
+                    tierekisteri
+                    db
+                    kirjaaja
+                    otsikko
+                    varustetoteuma)]
         (log/debug "Varustetoteuman kirjaus tierekisteriin suoritettu"))))
 
 (defn- validoi-tehtavat [db varustetoteumat]
