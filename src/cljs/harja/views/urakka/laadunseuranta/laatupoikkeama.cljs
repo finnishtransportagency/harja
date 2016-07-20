@@ -296,22 +296,24 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               {:otsikko "Liitteet" :nimi :liitteet
                :palstoja 2
                :tyyppi :komponentti
-               :komponentti [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet @laatupoikkeama)
-                             {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
-                                                       #(swap! laatupoikkeama assoc :uusi-liite %))
-                              :uusi-liite-teksti "Lisää liite laatupoikkeamaan"}]}
+               :komponentti (fn [_]
+                              [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet @laatupoikkeama)
+                              {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
+                                                        #(swap! laatupoikkeama assoc :uusi-liite %))
+                               :uusi-liite-teksti "Lisää liite laatupoikkeamaan"}])}
 
               (when-not uusi?
                 (lomake/ryhma
                   "Kommentit"
                   {:otsikko "" :nimi :kommentit :tyyppi :komponentti
-                   :komponentti [kommentit/kommentit {:voi-kommentoida? true
-                                                      :voi-liittaa true
-                                                      :liita-nappi-teksti " Lisää liite kommenttiin"
-                                                      :placeholder "Kirjoita kommentti..."
-                                                      :uusi-kommentti (r/wrap (:uusi-kommentti @laatupoikkeama)
-                                                                              #(swap! laatupoikkeama assoc :uusi-kommentti %))}
-                                 (:kommentit @laatupoikkeama)]}))
+                   :komponentti (fn [_]
+                                  [kommentit/kommentit {:voi-kommentoida? true
+                                                       :voi-liittaa true
+                                                       :liita-nappi-teksti " Lisää liite kommenttiin"
+                                                       :placeholder "Kirjoita kommentti..."
+                                                       :uusi-kommentti (r/wrap (:uusi-kommentti @laatupoikkeama)
+                                                                               #(swap! laatupoikkeama assoc :uusi-kommentti %))}
+                                  (:kommentit @laatupoikkeama)])}))
 
               ;; Päätös
               (when (:id @laatupoikkeama)
@@ -381,20 +383,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :nimi :sanktiot
                      :tyyppi :komponentti
                      :palstoja 2
-                     :komponentti [laatupoikkeaman-sanktiot
-                                   (r/wrap (:sanktiot @laatupoikkeama)
-                                           #(swap! laatupoikkeama assoc :sanktiot %))
-                                   sanktio-virheet]})
+                     :komponentti (fn [_]
+                                    [laatupoikkeaman-sanktiot
+                                    (r/wrap (:sanktiot @laatupoikkeama)
+                                            #(swap! laatupoikkeama assoc :sanktiot %))
+                                    sanktio-virheet])})
                   (when (:tarkastusid @laatupoikkeama)
                     {:rivi? true
                      :uusi-rivi? true
                      :nimi :laatupoikkeama
                      :vihje "Tallentaa muutokset ja avaa tarkastuksen, jonka pohjalta laatupoikkeama on tehty."
                      :tyyppi :komponentti
-                     :komponentti [napit/yleinen
-                                   "Avaa tarkastus"
-                                   (fn []
-                                     (tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
-                                     (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
-                                   {:ikoni (ikonit/livicon-arrow-left)}]})))]
+                     :komponentti (fn [_]
+                                    [napit/yleinen
+                                    "Avaa tarkastus"
+                                    (fn []
+                                      (tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
+                                      (avaa-tarkastus (:tarkastusid @laatupoikkeama)))
+                                    {:ikoni (ikonit/livicon-arrow-left)}])})))]
              @laatupoikkeama]])))))))

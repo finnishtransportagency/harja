@@ -226,13 +226,14 @@
                          (= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata)))
                  {:otsikko "Kommentit" :nimi :kommentit
                   :tyyppi :komponentti
-                  :komponentti [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                                     :voi-liittaa false
-                                                     :leveys-col 40
-                                                     :placeholder "Kirjoita kommentti..."
-                                                     :uusi-kommentti (r/wrap (:uusi-kommentti @paikkaus/paikkausilmoitus-lomakedata)
-                                                                             #(swap! paikkaus/paikkausilmoitus-lomakedata assoc :uusi-kommentti %))}
-                                (:kommentit @paikkaus/paikkausilmoitus-lomakedata)]})
+                  :komponentti (fn [_]
+                                 [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
+                                                      :voi-liittaa false
+                                                      :leveys-col 40
+                                                      :placeholder "Kirjoita kommentti..."
+                                                      :uusi-kommentti (r/wrap (:uusi-kommentti @paikkaus/paikkausilmoitus-lomakedata)
+                                                                              #(swap! paikkaus/paikkausilmoitus-lomakedata assoc :uusi-kommentti %))}
+                                 (:kommentit @paikkaus/paikkausilmoitus-lomakedata)])})
                ]
               @kohteen-tiedot]]
 

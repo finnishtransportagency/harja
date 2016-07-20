@@ -163,12 +163,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   (when vihje
     (let [vihjeet (if (vector? vihje) vihje [vihje])]
       [:div {:class
-            (str "inline-block yleinen-pikkuvihje")}
-      [:div.vihjeen-sisalto
-       (harja.ui.ikonit/livicon-info-sign)
-       [:span (str " " (first vihjeet))]
-       (for [vihje (rest vihjeet)]
-         [:div.vihjeen-lisarivi (str "  " vihje)])]])))
+             (str "inline-block yleinen-pikkuvihje")}
+       [:div.vihjeen-sisalto
+        (harja.ui.ikonit/livicon-info-sign)
+        [:span (str " " (first vihjeet))]
+        (for [vihje (rest vihjeet)]
+          [:div.vihjeen-lisarivi (str "  " vihje)])]])))
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
@@ -184,8 +184,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?] :as s}
-   data atom-fn muokattava?
+  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?
+           komponentti] :as s}
+   data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
     [:div.form-group {:class (str (or col-luokka
@@ -206,7 +207,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          [:span.kentan-label otsikko]
          (when yksikko [:span.kentan-yksikko yksikko])]])
      (if (= tyyppi :komponentti)
-       [:div.komponentti (:komponentti s)]
+       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)})]
        (if muokattava?
          (do (have #(contains? % :tyyppi) s)
              [tee-kentta (assoc s :lomake? true) arvo])
@@ -239,26 +240,26 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (defn nayta-rivi
   "UI yhdelle riville"
   [skeemat data atom-fn voi-muokata? nykyinen-fokus aseta-fokus!
-   muokatut virheet varoitukset huomautukset]
+   muokatut virheet varoitukset huomautukset muokkaa]
   (let [rivi? (-> skeemat meta :rivi?)
         col-luokka (when rivi?
                      (col-luokat (count skeemat)))]
     [:div.row.lomakerivi
      (doall
-      (for [{:keys [nimi muokattava?] :as s} skeemat
-            :let [muokattava? (and voi-muokata?
-                                   (or (nil? muokattava?)
-                                       (muokattava? data)))]]
-        ^{:key nimi}
-        [kentta (assoc s
-                       :col-luokka col-luokka
-                       :focus (= nimi nykyinen-fokus)
-                       :on-focus #(aseta-fokus! nimi))
-         data atom-fn muokattava?
-         (get muokatut nimi)
-         (get virheet nimi)
-         (get varoitukset nimi)
-         (get huomautukset nimi)]))]))
+       (for [{:keys [nimi muokattava?] :as s} skeemat
+             :let [muokattava? (and voi-muokata?
+                                    (or (nil? muokattava?)
+                                        (muokattava? data)))]]
+         ^{:key nimi}
+         [kentta (assoc s
+                   :col-luokka col-luokka
+                   :focus (= nimi nykyinen-fokus)
+                   :on-focus #(aseta-fokus! nimi))
+          data atom-fn muokattava? muokkaa
+          (get muokatut nimi)
+          (get virheet nimi)
+          (get varoitukset nimi)
+          (get huomautukset nimi)]))]))
 
 (defn validoi [tiedot skeema]
   (let [kaikki-skeemat (pura-ryhmat skeema)
@@ -270,10 +271,10 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                           (validointi/puuttuvat-pakolliset-kentat tiedot
                                                                                   kaikki-skeemat))]
     (assoc tiedot
-           ::virheet kaikki-virheet
-           ::varoitukset kaikki-varoitukset
-           ::huomautukset kaikki-huomautukset
-           ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))
+      ::virheet kaikki-virheet
+      ::varoitukset kaikki-varoitukset
+      ::huomautukset kaikki-huomautukset
+      ::puuttuvat-pakolliset-kentat puuttuvat-pakolliset-kentat)))
 
 (defn lomake
   "Geneerinen lomakekomponentti, joka käyttää samaa kenttien määrittelymuotoa kuin grid.
@@ -302,52 +303,54 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
                  voi-muokata?] :as opts} skeema
          {muokatut ::muokatut
-          :as  data}]
+          :as data}]
       (let [{virheet ::virheet
              varoitukset ::varoitukset
              huomautukset ::huomautukset} (validoi data skeema)]
         (kasittele-virhe
-         (let [voi-muokata? (if (some? voi-muokata?)
-                              voi-muokata?
-                              true)
-               muokkaa-kenttaa-fn (fn [nimi]
-                                    (fn [uudet-tiedot]
-                                      (-> uudet-tiedot
-                                          (validoi skeema)
-                                          (assoc ::muokatut (conj (or muokatut #{}) nimi))
-                                          muokkaa!)))]
-                                        ;(lovg "RENDER! fokus = " (pr-str @fokus))
-           [:div.lomake
-            (when otsikko
-              [:h3.lomake-otsikko otsikko])
-            (doall
-             (map-indexed
-              (fn [i skeemat]
-                (let [otsikko (when (otsikko? (first skeemat))
-                                (first skeemat))
-                      skeemat (if otsikko
-                                (rest skeemat)
-                                skeemat)
-                      rivi-ui [nayta-rivi skeemat
-                               data
-                               #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
+          (let [voi-muokata? (if (some? voi-muokata?)
                                voi-muokata?
-                               @fokus
-                               #(reset! fokus %)
-                               muokatut
-                               virheet
-                               varoitukset
-                               huomautukset]]
-                  (if otsikko
-                    ^{:key i}
-                    [:span
-                     [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
-                     rivi-ui]
-                    (with-meta rivi-ui {:key i}))))
-              (rivita skeema)))
+                               true)
+                muokkaa-kenttaa-fn (fn [nimi]
+                                     (fn [uudet-tiedot]
+                                       (-> uudet-tiedot
+                                           (validoi skeema)
+                                           (assoc ::muokatut (conj (or (::muokatut uudet-tiedot)
+                                                                       #{}) nimi))
+                                           muokkaa!)))]
+            ;(lovg "RENDER! fokus = " (pr-str @fokus))
+            [:div.lomake
+             (when otsikko
+               [:h3.lomake-otsikko otsikko])
+             (doall
+               (map-indexed
+                 (fn [i skeemat]
+                   (let [otsikko (when (otsikko? (first skeemat))
+                                   (first skeemat))
+                         skeemat (if otsikko
+                                   (rest skeemat)
+                                   skeemat)
+                         rivi-ui [nayta-rivi skeemat
+                                  data
+                                  #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
+                                  voi-muokata?
+                                  @fokus
+                                  #(reset! fokus %)
+                                  muokatut
+                                  virheet
+                                  varoitukset
+                                  huomautukset
+                                  #(muokkaa-kenttaa-fn (:nimi %))]]
+                     (if otsikko
+                       ^{:key i}
+                       [:span
+                        [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]
+                        rivi-ui]
+                       (with-meta rivi-ui {:key i}))))
+                 (rivita skeema)))
 
-            (when-let [footer (if footer-fn
-                                (footer-fn virheet varoitukset huomautukset)
-                                footer)]
-              [:div.lomake-footer.row
-               [:div.col-md-12 footer]])]))))))
+             (when-let [footer (if footer-fn
+                                 (footer-fn virheet varoitukset huomautukset)
+                                 footer)]
+               [:div.lomake-footer.row
+                [:div.col-md-12 footer]])]))))))
