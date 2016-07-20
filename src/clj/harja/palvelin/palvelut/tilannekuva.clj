@@ -379,9 +379,8 @@
 (defn- hae-karttakuvan-tiedot [db user parametrit]
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
-        ch (async/chan 32 ;; FIXME: ok bufferi?
+        ch (async/chan 32
                        (comp
-                        ;(map #(do (println "KARTTAKUVAAN: " %) %))
                         (map konv/alaviiva->rakenne)
                         (map #(assoc %
                                      :tyyppi :toteuma

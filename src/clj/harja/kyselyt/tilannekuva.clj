@@ -3,7 +3,6 @@
             [harja.geo :as geo]))
 
 (defn muunna-reitti [{reitti :reitti :as rivi}]
-  ;(println "MUUNNA " rivi)
   (assoc rivi
          :reitti (geo/pg->clj reitti)))
 

@@ -265,7 +265,6 @@ WHERE pk.poistettu IS NOT TRUE AND
 -- name: hae-toteumat
 -- fetch-size: 64
 -- row-fn: muunna-reitti
--- FIXME poista tästä "turhaa" tietoa, jota ei renderöinti tarvi
 SELECT
   t.tyyppi,
   ST_Simplify(t.reitti, :toleranssi) as reitti,
