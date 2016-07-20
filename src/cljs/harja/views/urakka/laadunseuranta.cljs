@@ -30,7 +30,7 @@
 
        "Sanktiot" :sanktiot
        (when (oikeudet/urakat-laadunseuranta-sanktiot id)
-         [sanktiot/sanktiot])
+         [sanktiot/sanktiot {:nakyma tyyppi}])
 
        "Siltatarkastukset" :siltatarkastukset
        (when (and (= :hoito tyyppi)
