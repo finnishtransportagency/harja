@@ -141,7 +141,6 @@
 (defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma tietolajin-arvot-string
                                   toimenpide toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
-  ; FIXME Tallennetaanko myös lisääjä johonkin?
   (luo-uusi-varustetoteuma db
                            kirjaaja
                            toteuma-id
@@ -155,7 +154,6 @@
 (defn- tallenna-varusteen-paivitys [db kirjaaja varustetoteuma tietolajin-arvot-string
                                     toimenpide toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: päivitetty varaste")
-  ;; FIXME Tallennetaanko myös päivittäjä johonkin?
   (luo-uusi-varustetoteuma db
                            kirjaaja
                            toteuma-id
@@ -168,7 +166,6 @@
 
 (defn- tallenna-varusteen-poisto [db kirjaaja varustetoteuma toimenpide toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: poistettu varuste")
-  ;; FIXME Tallennetaanko myös poistaja johonkin?
   (luo-uusi-varustetoteuma db
                            kirjaaja
                            toteuma-id
@@ -182,7 +179,6 @@
 (defn- tallenna-varusteen-tarkastus [db kirjaaja varustetoteuma toimenpide tietolajin-arvot-string
                                      toteuma-id]
   (log/debug "Tallennetaan varustetoteuman toimenpide: tarkastettu varaste")
-  ;; FIXME Tallennetaanko myös tarkastaja johonkin?
   (luo-uusi-varustetoteuma db
                            kirjaaja
                            toteuma-id
@@ -215,7 +211,6 @@
                                       (muunna-tietolajin-arvot-stringiksi
                                         tietolajin-kuvaus
                                         tietolajin-arvot)))]
-
       (condp = toimenpide-tyyppi
         :varusteen-lisays
         (tallenna-varusteen-lisays db kirjaaja varustetoteuma tietolajin-arvot-string
