@@ -43,11 +43,11 @@
                 :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
    :tietue     {:tunniste    (get-in toimenpide [:varuste :tunniste])
                 :alkupvm     (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))
-                :loppupvm    nil ; FIXME Puuttuu payloadista? --> Tarkista skeema
-                :karttapvm   nil ; FIXME Puuttuu payloadista?
-                :piiri       nil ; FIXME Puttuuu payloadista?
-                :kuntoluokka nil ; FIXME Puuttuu payloadista?
-                :urakka      nil ; FIXME Puuttuu payloadista?
+                :loppupvm    (get-in toimenpide [:varuste :tietue :loppupvm])
+                :karttapvm   (get-in toimenpide [:varuste :tietue :karttapvm])
+                :piiri       (get-in toimenpide [:varuste :tietue :piiri])
+                :kuntoluokka (get-in toimenpide [:varuste :tietue :kuntoluokka])
+                :urakka      (get-in toimenpide [:varuste :tietue :tierekisteriurakkakoodi])
                 :sijainti    {:tie {:numero   (get-in toimenpide [:varuste :tietue :sijainti :tie :numero])
                                     :aet      (get-in toimenpide [:varuste :tietue :sijainti :tie :aet])
                                     :aosa     (get-in toimenpide [:varuste :tietue :sijainti :tie :aosa])
