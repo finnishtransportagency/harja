@@ -72,7 +72,8 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "tierekisteri" "lisaa-tietue"
       (fn [konteksti]
-        (let [tiedot (aseta-tunniste-arvoihin tiedot)
+        (let [;; TODO Tarvitseeko tätä enää tehdä? Ei voi ainakaan tehdä poisto-toimenpiteelle koska arvoja ei ole
+              ;;tiedot (aseta-tunniste-arvoihin tiedot)
               kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
               http-asetukset (http-asetukset url)
               {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
