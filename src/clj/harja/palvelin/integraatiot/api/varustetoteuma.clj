@@ -197,12 +197,12 @@
                 tietolajin-arvot (get-in toimenpide [:varuste :tietue :tietolaji :arvot])
                 tunniste (if (= toimenpide-tyyppi :varusteen-poisto)
                            (get-in toimenpiteen-tiedot [:varuste :tunniste])
-                           (:tunniste toimenpiteen-tiedot))
+                           (:tunniste toimenpiteen-tiedot)) ;; FIXME Ei oikein toimi?
                 tietolajin-arvot-string (when tietolajin-arvot
                                           (validoi-ja-muunna-arvot-merkkijonoksi
                                             tierekisteri
                                             tietolajin-arvot
-                                            tietolaji))]
+                                            tietolaji))] ;; FIXME Arvot on tyhjä?
             (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
             ;; On mahdollista, että sama toteuma lähetetään useaan kertaan. Tässä tilanteessa
             ;; tarkistetaan, onko toimenpide jo tallennettu. Jos on, sitä ei tallenneta uudelleen."
