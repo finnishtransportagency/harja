@@ -195,7 +195,8 @@
                 toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
                 tietolaji (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
                 tietolajin-arvot (get-in toimenpide [:varuste :tietue :tietolaji :arvot])
-                tunniste (if (= toimenpide-tyyppi :varusteen-poisto)
+                _ (print "Toimenpiteen tyyppi on " (pr-str toimenpide-tyyppi) " ja data: " (pr-str toimenpiteen-tiedot))
+                tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
                            (get-in toimenpiteen-tiedot [:varuste :tunniste])
                            (:tunniste toimenpiteen-tiedot)) ;; FIXME Ei oikein toimi?
                 tietolajin-arvot-string (when tietolajin-arvot
