@@ -189,87 +189,89 @@
    - Kaikille toimenpiteille liitetään niiden varustetoteuman id kannassa.
    - Lisäystoimenpiteelle on lisäksi lisätty Harjan luoma tunniste"
   [db tierekisteri toteuma-id kirjaaja varustetoteuma]
-  (log/debug "Tallennetaan toteuman varustetietodot")
-  (mapv (fn [toimenpide]
-          (let [toimenpide-tyyppi (first (keys toimenpide))
-                toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-                tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
-                tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
-                           (get-in toimenpiteen-tiedot [:varuste :tunniste])
-                           (:tunniste toimenpiteen-tiedot))
-                tietolajin-arvot-string (when tietolajin-arvot
-                                          (validoi-ja-muunna-arvot-merkkijonoksi
-                                            tierekisteri
-                                            tietolajin-arvot
-                                            tietolaji))]
-            (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
-            ;; On mahdollista, että sama toteuma lähetetään useaan kertaan. Tässä tilanteessa
-            ;; tarkistetaan, onko toimenpide jo tallennettu. Jos on, sitä ei tallenneta uudelleen."
-            (if-let [varustetoteuma-id (etsi-varustetoteuman-id db
-                                                                toteuma-id
-                                                                tunniste
-                                                                toimenpiteen-tiedot
-                                                                (toimenpide-tyyppi->toimenpide toimenpide-tyyppi))]
-              (do (log/debug "Toimenpide on jo tallennettu, ohitetaan.")
-                  (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
+  (log/debug "Tallennetaan toteuman toimenpiteet.")
+  (mapv
+    (fn [toimenpide]
+      (let [toimenpide-tyyppi (first (keys toimenpide))
+            _ (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
+            toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
+            tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+            tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
+            tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
+                       (get-in toimenpiteen-tiedot [:varuste :tunniste])
+                       (:tunniste toimenpiteen-tiedot))
+            tietolajin-arvot-string (when tietolajin-arvot
+                                      (validoi-ja-muunna-arvot-merkkijonoksi
+                                        tierekisteri
+                                        tietolajin-arvot
+                                        tietolaji))]
 
-              (case toimenpide-tyyppi
-                :varusteen-lisays
-                (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
-                      varustetoteuma-id (luo-uusi-varustetoteuma db
-                                                                 kirjaaja
-                                                                 toteuma-id
-                                                                 varustetoteuma
-                                                                 toimenpiteen-tiedot
-                                                                 (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                                                                 uusi-livitunniste
-                                                                 "lisatty"
-                                                                 (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
-                                                                 tietolajin-arvot-string)]
-                  (-> toimenpide
-                      (assoc :varustetoteuma-id varustetoteuma-id)
-                      (assoc-in [:varusteen-lisays :varuste :tunniste] uusi-livitunniste)))
+        ;; On mahdollista, että sama toteuma lähetetään useaan kertaan. Tässä tilanteessa
+        ;; tarkistetaan, onko toimenpide jo tallennettu. Jos on, sitä ei tallenneta uudelleen."
+        (if-let [varustetoteuma-id (etsi-varustetoteuman-id db
+                                                            toteuma-id
+                                                            tunniste
+                                                            toimenpiteen-tiedot
+                                                            (toimenpide-tyyppi->toimenpide toimenpide-tyyppi))]
+          (do (log/debug "Toimenpide on jo tallennettu, ohitetaan.")
+              (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
 
-                :varusteen-paivitys
-                (let [varustetoteuma-id (luo-uusi-varustetoteuma db
-                                                                 kirjaaja
-                                                                 toteuma-id
-                                                                 varustetoteuma
-                                                                 toimenpiteen-tiedot
-                                                                 (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                                                                 tunniste
-                                                                 "paivitetty"
-                                                                 (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
-                                                                 tietolajin-arvot-string)]
-                  (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
+          (case toimenpide-tyyppi
+            :varusteen-lisays
+            (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
+                  varustetoteuma-id (luo-uusi-varustetoteuma db
+                                                             kirjaaja
+                                                             toteuma-id
+                                                             varustetoteuma
+                                                             toimenpiteen-tiedot
+                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                                                             uusi-livitunniste
+                                                             "lisatty"
+                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+                                                             tietolajin-arvot-string)]
+              (-> toimenpide
+                  (assoc :varustetoteuma-id varustetoteuma-id)
+                  (assoc-in [:varusteen-lisays :varuste :tunniste] uusi-livitunniste)))
 
-                :varusteen-poisto
-                (let [varustetoteuma-id (luo-uusi-varustetoteuma db
-                                                                 kirjaaja
-                                                                 toteuma-id
-                                                                 varustetoteuma
-                                                                 toimenpiteen-tiedot
-                                                                 (:tietolajitunniste toimenpiteen-tiedot)
-                                                                 tunniste
-                                                                 "poistettu"
-                                                                 (get-in toimenpide [:varuste :tietue :sijainti :tie])
-                                                                 nil)]
-                  (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
+            :varusteen-paivitys
+            (let [varustetoteuma-id (luo-uusi-varustetoteuma db
+                                                             kirjaaja
+                                                             toteuma-id
+                                                             varustetoteuma
+                                                             toimenpiteen-tiedot
+                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                                                             tunniste
+                                                             "paivitetty"
+                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+                                                             tietolajin-arvot-string)]
+              (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
 
-                :varusteen-tarkastus
-                (let [varustetoteuma-id (luo-uusi-varustetoteuma db
-                                                                 kirjaaja
-                                                                 toteuma-id
-                                                                 varustetoteuma
-                                                                 toimenpiteen-tiedot
-                                                                 (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                                                                 tunniste
-                                                                 "tarkastus"
-                                                                 (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
-                                                                 tietolajin-arvot-string)]
-                  (assoc toimenpide :varustetoteuma-id varustetoteuma-id))))))
-        (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
+            :varusteen-poisto
+            (let [varustetoteuma-id (luo-uusi-varustetoteuma db
+                                                             kirjaaja
+                                                             toteuma-id
+                                                             varustetoteuma
+                                                             toimenpiteen-tiedot
+                                                             (:tietolajitunniste toimenpiteen-tiedot)
+                                                             tunniste
+                                                             "poistettu"
+                                                             (get-in toimenpide [:varuste :tietue :sijainti :tie])
+                                                             nil)]
+              (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
+
+            :varusteen-tarkastus
+            (let [varustetoteuma-id (luo-uusi-varustetoteuma db
+                                                             kirjaaja
+                                                             toteuma-id
+                                                             varustetoteuma
+                                                             toimenpiteen-tiedot
+                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                                                             tunniste
+                                                             "tarkastus"
+                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+                                                             tietolajin-arvot-string)]
+              (assoc toimenpide :varustetoteuma-id varustetoteuma-id))))))
+    (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
 (defn- tallenna-toteumat
   "Tallentaa varustetoteumat kantaan. Palauttaa päivitetyt varustetoteumat, joiden metadataan on liitetty
