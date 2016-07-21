@@ -217,20 +217,19 @@
               (case toimenpide-tyyppi
                 :varusteen-lisays
                 (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
-                      toimenpide (assoc-in toimenpide
-                                           [:varusteen-lisays :varuste :tunniste]
-                                           uusi-livitunniste)
                       varustetoteuma-id (luo-uusi-varustetoteuma db
                                                                  kirjaaja
                                                                  toteuma-id
                                                                  varustetoteuma
                                                                  toimenpiteen-tiedot
                                                                  (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                                                                 (get-in toimenpide [:varusteen-lisays :varuste :tunniste])
+                                                                 uusi-livitunniste
                                                                  "lisatty"
                                                                  (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
                                                                  tietolajin-arvot-string)]
-                  (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
+                  (-> toimenpide
+                      (assoc :varustetoteuma-id varustetoteuma-id)
+                      (assoc-in [:varusteen-lisays :varuste :tunniste] uusi-livitunniste)))
 
                 :varusteen-paivitys
                 (let [varustetoteuma-id (luo-uusi-varustetoteuma db
