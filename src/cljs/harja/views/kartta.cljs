@@ -346,6 +346,7 @@
       [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto])))
 
 (def paivitetaan-karttaa-tila (atom false))
+(def karttakuvan-lataus (atom nil))
 
 (defn paivitetaan-karttaa
   []
@@ -356,9 +357,7 @@
 
 (defonce kuuntele-kartan-paivitys
   (t/kuuntele! :karttakuva
-               #(reset! paivitetaan-karttaa-tila (if (= :lataus-alkoi (:tila %))
-                                                   true
-                                                   false))))
+               #(reset! karttakuvan-lataus %)))
 
 (defn aseta-paivitetaan-karttaa-tila! [uusi-tila]
   (reset! paivitetaan-karttaa-tila uusi-tila))
@@ -626,14 +625,19 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 :url   (str (k/wmts-polku) "maasto/wmts")
                                 :layer "taustakartta"}]}]))))
 
+(defn kartan-edistyminen [{:keys [ladattu ladataan] :as progress}]
+  (when (and progress (not= 0 ladattu ladataan))
+    [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}]))
+
 (defn kartta []
-  [:div
+  [:div.karttacontainer
    [paivitetaan-karttaa]
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
    [kartan-ikonien-selitykset]
-   [kartta-openlayers]])
+   [kartta-openlayers]
+   [kartan-edistyminen @karttakuvan-lataus]])
 
 
 ;; Käytä tätä jos haluat luoda rinnakkain sisällön ja kartan näkymääsi
