@@ -107,7 +107,7 @@ datan kartalla esitettävässä muodossa.")
         kuva (kirjoita-kuva
               (luo-kuva parametrit karttakuvadata))]
     {:status  200
-     :headers {"cache-control"               "private, max-age=0, no-cache"
+     :headers {"cache-control"               "private, max-age=300"
                "Content-Type"                "image/png"
                "Content-Length"              (count kuva)
                "Access-Control-Allow-Origin" "*"}
