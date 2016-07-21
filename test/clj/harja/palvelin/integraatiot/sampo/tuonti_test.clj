@@ -35,7 +35,7 @@
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
-      (is (xml/validoi +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
+      (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
 
       (is (= "UrakkaMessageId" (first (z/xml-> data
                                                (fn [kuittaus]

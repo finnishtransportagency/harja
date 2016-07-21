@@ -17,7 +17,7 @@
            (java.text SimpleDateFormat ParseException)
            (java.util Date)))
 
-(defn validoi
+(defn validi-xml?
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
   [xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto]
   (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd-skeema-tiedosto ". XML:n sisältö on:" xml-sisalto)

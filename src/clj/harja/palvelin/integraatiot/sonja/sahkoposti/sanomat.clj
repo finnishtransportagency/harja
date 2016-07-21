@@ -12,7 +12,7 @@
 (def ^:const +sahkoposti-ns+ "http://www.liikennevirasto.fi/xsd/harja/sahkoposti")
 
 (defn- validoi [xml-viesti]
-  (when-not (xml/validoi +xsd-polku+ +sahkoposti-xsd+ xml-viesti)
+  (when-not (xml/validi-xml? +xsd-polku+ +sahkoposti-xsd+ xml-viesti)
     (log/error "Vastaanotettu sähköposti XML-tiedosto ei ole sahkoposti.xsd skeeman mukainen.")
     (throw+ {:type virheet/+invalidi-xml+})))
 
