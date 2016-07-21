@@ -335,7 +335,8 @@ WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
       alkuun pidetään urakoitsijen työkoneiden liikkeet salassa.
       */
       -- (:urakka :: INTEGER IS NULL OR t.urakkaid = :urakka OR t.urakkaid IS NULL) AND
-      t.tehtavat && :toimenpiteet :: suoritettavatehtava[];
+      (t.tehtavat && :toimenpiteet :: suoritettavatehtava [])
+      OR (t.tyokonetyyppi = any(:tyokoneet::text[]));
 
 -- name: hae-toimenpidekoodit
 SELECT
