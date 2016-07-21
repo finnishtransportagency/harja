@@ -386,9 +386,7 @@
                                      :tyyppi :toteuma
                                      :tyyppi-kartalla :toteuma
                                      :tehtavat [(:tehtava %)]))
-                        kartalle-xf
-
-                        ))
+                        kartalle-xf))
         urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                                oikeudet/tilannekuva-nykytilanne
                                                oikeudet/tilannekuva-historia) % user)
