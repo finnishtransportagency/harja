@@ -270,7 +270,7 @@
   [db tierekisteri kirjaaja otsikko varustetoteumat]
   ;; FIXME Jotta ei lähetettäisi samaa toteumaa tierekisteriin useasti, niin
   ;; merkitään kantaan että lähetetty tierekisteriin kun saadaan vastaus tierekisteristä
-  ;; Tämän takia jos sama toteuma vastaanotetaan uudelleen niin ei pitäisi tuhota tuhota dataa vaan katsoa pelkästään onko
+  ;; Tämän takia jos sama toteuma vastaanotetaan uudelleen niin ei pitäisi tuhota dataa vaan katsoa pelkästään onko
   ;; asia jo lisätty meidän kantaan ja onko lähetetty tierekisteriin.
   ;; Tunnistetaan jo aiemmin vastaanotettu viesti toteuma-id:n perusteella.
 
