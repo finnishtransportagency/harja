@@ -94,16 +94,10 @@
     (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
       (let [toimenpide-tyyppi (first (keys toimenpide))
             toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-            tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
             tunniste (if (= toimenpide-tyyppi :varusteen-poisto)
                        (:tunniste toimenpiteen-tiedot)
                        (get-in toimenpiteen-tiedot [:varuste :tunniste]))
-            tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
-            tietolajin-arvot-string (when tietolajin-arvot
-                                      (validoi-ja-muunna-arvot-merkkijonoksi
-                                        tierekisteri
-                                        tietolajin-arvot
-                                        tietolaji))]
+            tietolajin-arvot-string (:arvot-string toimenpide)]
 
         (log/debug "Valmistellaan toimenpiteen lähetys tierekisteriin, tyyppi: " (pr-str toimenpide-tyyppi))
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
@@ -231,6 +225,7 @@
                                                              tietolajin-arvot-string)]
               (-> toimenpide
                   (assoc :varustetoteuma-id varustetoteuma-id)
+                  (assoc :arvot-string tietolajin-arvot-string)
                   (assoc-in [:varusteen-lisays :varuste :tunniste] uusi-livitunniste)))
 
             :varusteen-paivitys
@@ -244,7 +239,9 @@
                                                              "paivitetty"
                                                              (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
                                                              tietolajin-arvot-string)]
-              (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
+              (-> toimenpide
+                  (assoc :arvot-string tietolajin-arvot-string)
+                  (assoc :varustetoteuma-id varustetoteuma-id)))
 
             :varusteen-poisto
             (let [varustetoteuma-id (luo-uusi-varustetoteuma db
@@ -270,7 +267,9 @@
                                                              "tarkastus"
                                                              (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
                                                              tietolajin-arvot-string)]
-              (assoc toimenpide :varustetoteuma-id varustetoteuma-id))))))
+              (-> toimenpide
+                  (assoc :arvot-string tietolajin-arvot-string)
+                  (assoc :varustetoteuma-id varustetoteuma-id)))))))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
 (defn- tallenna-toteumat
