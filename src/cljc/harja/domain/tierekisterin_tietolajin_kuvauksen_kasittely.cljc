@@ -27,7 +27,7 @@
     :paivamaara (try
                   (pvm/iso-8601->pvm arvo)
                   (catch Exception e
-                    (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole iso-8601 pvm (yyyy-MM-DD)."))))
+                    (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601."))))
     :koodisto (when (empty? (filter #(= (str (:koodi %)) arvo) koodisto))
                 (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei sisälly koodistoon.")))))
 

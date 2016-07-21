@@ -156,7 +156,7 @@
                              :jarjestysnumero 1
                              :tietotyyppi :paivamaara
                              :pituus 20}]}]
-    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole iso-8601 pvm (yyyy-MM-DD)."
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole muotoa iso-8601."
                           (tierekisteri-tietue/tietolajin-arvot-map->string
                             {"tunniste" "2010-12"}
                             tietolajin-kuvaus))
