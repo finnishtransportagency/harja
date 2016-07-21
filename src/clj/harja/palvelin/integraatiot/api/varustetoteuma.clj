@@ -48,6 +48,26 @@
       tietolajin-kuvaus
       arvot)))
 
+(def toimenpide-tyyppi->toimenpide
+  {:varusteen-lisays "lisatty"
+   :varusteen-paivitys "paivitetty"
+   :varusteen-poisto "poistettu"
+   :varusteen-tarkastus "tarkastettu"})
+
+(defn- etsi-varustetoteuman-id
+  [db toteuma-id toimenpiteen-tiedot tehty-toimenpide]
+  (first (toteumat-q/hae-varustetoteuman-id
+           db
+           {:toteumaid toteuma-id
+            :tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+            :toimenpide tehty-toimenpide
+            :tr_numero (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+            :tr_aosa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+            :tr_aet (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+            :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+            :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+            :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])})))
+
 (defn- lisaa-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide livitunniste arvot-string]
   (log/debug "Lisätään varuste livitunnisteella " livitunniste " tierekisteriin")
   (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma
@@ -86,7 +106,7 @@
   On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
-  [tierekisteri db kirjaaja otsikko varustetoteuma]
+  [tierekisteri db kirjaaja toteuma-id otsikko varustetoteuma]
   ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
   ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
   ;; sama payload lähetetään Harjaan uudelleen.
@@ -102,23 +122,38 @@
                                         tietolajin-arvot
                                         tietolaji))]
 
-        (case toimenpide-tyyppi
-          :varusteen-lisays
-          (lisaa-varuste-tierekisteriin tierekisteri kirjaaja otsikko toimenpiteen-tiedot
-                                        (get-in toimenpiteen-tiedot [:varuste :tunniste])
-                                        tietolajin-arvot-string)
+        (log/debug "Valmistellaan toimenpiteen lähetys tierekisteriin, tyyppi: " (pr-str toimenpide-tyyppi))
+        ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
+        ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
+        (let [varustetoteuma-id (etsi-varustetoteuman-id db
+                                                         toteuma-id
+                                                         toimenpiteen-tiedot
+                                                         (toimenpide-tyyppi->toimenpide toimenpide-tyyppi))
+              lahetetty? (if varustetoteuma-id
+                           (first (toteumat-q/hae-varustetoteuman-lahetystiedot
+                                    db
+                                    {:id varustetoteuma-id}))
+                           false)]
+          (if lahetetty?
+            (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
 
-          :varusteen-poisto
-          (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
-                                          toimenpiteen-tiedot)
+            (case toimenpide-tyyppi
+              :varusteen-lisays
+              (lisaa-varuste-tierekisteriin tierekisteri kirjaaja otsikko toimenpiteen-tiedot
+                                            (get-in toimenpiteen-tiedot [:varuste :tunniste])
+                                            tietolajin-arvot-string)
 
-          :varusteen-paivitys
-          (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                          toimenpiteen-tiedot tietolajin-arvot-string)
+              :varusteen-poisto
+              (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
+                                              toimenpiteen-tiedot)
 
-          :varusteen-tarkastus
-          (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                          toimenpiteen-tiedot tietolajin-arvot-string))))))
+              :varusteen-paivitys
+              (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                              toimenpiteen-tiedot tietolajin-arvot-string)
+
+              :varusteen-tarkastus
+              (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                              toimenpiteen-tiedot tietolajin-arvot-string))))))))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
                                 tunniste tehty-toimenpide tie toimenpiteen-arvot-tekstina]
@@ -144,19 +179,6 @@
           :tr_puoli (:puoli tie)
           :tr_ajorata (:ajr tie)})))
 
-(defn- onko-jo-tallennettu?
-  "On mahdollista, että sama toteuma lähetetään useaan kertaan. Tässä tilanteessa
-   tarkistetaan, onko toimenpide jo tallennettu. Jos on, sitä ei tallenneta uudelleen."
-  [db toteuma-id tietolaji toimenpide tr-numero aosa aet losa let puoli]
-  (toteumat-q/onko-olemassa-varustetoteuma? db toteuma-id tietolaji toimenpide
-                                            tr-numero aosa aet losa let puoli))
-
-(def toimenpide-tyyppi->toimenpide
-  {:varusteen-lisays "lisatty"
-   :varusteen-paivitys "paivitetty"
-   :varusteen-poisto "poistettu"
-   :varusteen-tarkastus "tarkastettu"})
-
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman"
   [db tierekisteri toteuma-id kirjaaja varustetoteuma]
@@ -172,16 +194,12 @@
                                       tietolajin-arvot
                                       tietolaji))]
       (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
-      (if (onko-jo-tallennettu? db
-                                toteuma-id
-                                (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                                (toimenpide-tyyppi->toimenpide toimenpide-tyyppi)
-                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli]))
+      ;; On mahdollista, että sama toteuma lähetetään useaan kertaan. Tässä tilanteessa
+      ;; tarkistetaan, onko toimenpide jo tallennettu. Jos on, sitä ei tallenneta uudelleen."
+      (if (etsi-varustetoteuman-id db
+                                   toteuma-id
+                                   toimenpiteen-tiedot
+                                   (toimenpide-tyyppi->toimenpide toimenpide-tyyppi))
         (log/debug "Toimenpide on jo tallennettu, ohitetaan.")
         (case toimenpide-tyyppi
           :varusteen-lisays
@@ -263,6 +281,7 @@
                           tierekisteri
                           db
                           kirjaaja
+                          toteuma-id
                           otsikko
                           varustetoteuma)]
             vastaus))

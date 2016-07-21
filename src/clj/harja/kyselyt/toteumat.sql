@@ -786,17 +786,20 @@ UPDATE toteuma
 SET reitti = :reitti
 WHERE id = :id
 
--- name: onko-olemassa-varustetoteuma
-SELECT EXISTS(
-    SELECT id
-    FROM varustetoteuma
-    WHERE
-      toteuma = :toteumaid
-      AND tietolaji = :tietolaji
-      AND toimenpide = :toimenpide :: varustetoteuma_tyyppi
-      AND tr_numero = :tr_numero
-      AND tr_alkuosa = :tr_aosa
-      AND tr_alkuetaisyys = :tr_aet
-      AND tr_loppuosa = :tr_losa
-      AND tr_loppuetaisyys = :tr_let
-      AND tr_puoli = :tr_puoli);
+-- name: hae-varustetoteuman-id
+SELECT id
+FROM varustetoteuma
+WHERE
+  toteuma = :toteumaid
+  AND tietolaji = :tietolaji
+  AND toimenpide = :toimenpide :: varustetoteuma_tyyppi
+  AND tr_numero = :tr_numero
+  AND tr_alkuosa = :tr_aosa
+  AND tr_alkuetaisyys = :tr_aet
+  AND tr_loppuosa = :tr_losa
+  AND tr_loppuetaisyys = :tr_let
+  AND tr_puoli = :tr_puoli;
+
+-- name: hae-varustetoteuman-lahetystiedot
+SELECT lahetetty_tierekisteriin FROM varustetoteuma
+WHERE id = :id;
