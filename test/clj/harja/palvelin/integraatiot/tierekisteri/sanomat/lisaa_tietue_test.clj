@@ -37,7 +37,7 @@
 (deftest tarkista-kutsu
   (let [kutsu-xml (tietue-sanoma/muodosta-kutsu lisattava-testitietue)
         xsd "lisaaTietue.xsd"]
-    (is (xml/validoi +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
+    (is (xml/validi-xml? +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
 
 ; REPL-testausta varten
 #_(defn lisaa-testitietue []

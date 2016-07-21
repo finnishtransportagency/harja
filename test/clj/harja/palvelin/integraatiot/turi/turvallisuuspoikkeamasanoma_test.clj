@@ -14,4 +14,4 @@
       (log/debug "Validoidaan id:" id)
       (let [data (turi/hae-turvallisuuspoikkeama (luo-liitteidenhallinta) (luo-testitietokanta) id)
            xml (sanoma/muodosta data)]
-       (is (xml/validoi "xsd/turi/" "poikkeama-rest.xsd" xml)) "Tehty sanoma on XSD-skeeman mukainen"))))
+        (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml)) "Tehty sanoma on XSD-skeeman mukainen"))))
