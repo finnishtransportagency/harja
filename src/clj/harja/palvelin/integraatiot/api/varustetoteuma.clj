@@ -155,16 +155,15 @@
 
 (defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma tietolajin-arvot-string
                                   toimenpide toteuma-id]
-  ;; TODO Yhdistä yhtenäiset osat tästä ja alemmista funkkareista
+  ;; FIXME Tässä ja alemmissa funkkareissa aika paljon duplikaattikoodia
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
-  ;; TODO Kun lisätään uusi varuste meille niin luodaan sille heti livitunniste ja tallennetaan se kantaan.
   (luo-uusi-varustetoteuma db
                            kirjaaja
                            toteuma-id
                            varustetoteuma
                            toimenpide
                            (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
-                           nil
+                           (get-in toimenpide [:varuste :tunniste])
                            "lisatty"
                            (get-in toimenpide [:varuste :tietue :sijainti :tie])
                            tietolajin-arvot-string))
@@ -243,27 +242,26 @@
                                       tietolajin-arvot-string toteuma-id)))))
 
 (defn- tallenna-toteumat [db tierekisteri urakka-id kirjaaja varustetoteumat]
-  (jdbc/with-db-transaction [db db]
-    (doseq [varustetoteuma varustetoteumat]
-      (log/debug "Tallennetaan toteuman perustiedot")
-      (let [toteuma (assoc
-                      (get-in varustetoteuma [:varustetoteuma :toteuma])
-                      :reitti nil)
-            toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
-        (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
+  (doseq [varustetoteuma varustetoteumat]
+    (log/debug "Tallennetaan toteuman perustiedot")
+    (let [toteuma (assoc
+                    (get-in varustetoteuma [:varustetoteuma :toteuma])
+                    :reitti nil)
+          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+      (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
 
-        (log/debug "Tallennetaan toteuman tehtävät")
-        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+      (log/debug "Tallennetaan toteuman tehtävät")
+      (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
 
-        ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
-        ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
-        ;; Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on yksi piste
+      ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
+      ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
+      ;; Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on yksi piste
 
-        (tallenna-varustetoteuman-toimenpiteet db
-                                               tierekisteri
-                                               toteuma-id
-                                               kirjaaja
-                                               varustetoteuma)))))
+      (tallenna-varustetoteuman-toimenpiteet db
+                                             tierekisteri
+                                             toteuma-id
+                                             kirjaaja
+                                             varustetoteuma))))
 
 (defn- laheta-kirjaus-tierekisteriin
   "Lähettää varustetoteumat tierekisteriin yksi kerrallaan.
@@ -290,6 +288,25 @@
   (doseq [varustetoteuma varustetoteumat]
     (toteuman-validointi/tarkista-tehtavat db (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat]))))
 
+(defn- lisaa-lisaystoimenpiteille-livitunniste [db toimenpiteet]
+  (mapv
+    (fn [toimenpide]
+      (let [tyyppi (first (keys toimenpide))]
+        (if (not= tyyppi :varusteen-lisays)
+          toimenpide
+          (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)]
+            (assoc-in toimenpide [:varusteen-lisays :varuste :tunniste] uusi-livitunniste)))))
+    toimenpiteet))
+
+(defn- lisaa-varustetoteumien-lisaystoimenpiteille-livitunniste [db varustetoteumat]
+  (mapv
+    (fn [varustetoteuma]
+      (assoc-in
+        varustetoteuma
+        [:varustetoteuma :toimenpiteet]
+        (mapv lisaa-lisaystoimenpiteille-livitunniste (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))))
+    varustetoteumat))
+
 (defn kirjaa-toteuma
   "Varustetoteuman kirjauksessa kirjataan yksi tai useampi toteuma.
    Jokainen toteuma voi sisältää useita toimenpiteitä (varusteen lisäys, poisto, päivitys, tarkastus)"
@@ -300,7 +317,9 @@
                " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
-    (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
+    (jdbc/with-db-transaction [db db]
+      (let [varustetoteumat (lisaa-varustetoteumien-lisaystoimenpiteille-livitunniste db varustetoteumat)]
+        (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)))
     (let [tierekisterin-vastaukset (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)]
       (tee-onnistunut-vastaus tierekisterin-vastaukset))))
 
