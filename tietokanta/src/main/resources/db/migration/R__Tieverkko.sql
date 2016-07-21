@@ -247,7 +247,7 @@ BEGIN
 
   ELSE
     -- kootaan osien geometriat yhdeksi viivaksi
-    SELECT ST_LineMerge(ST_Union((CASE
+    SELECT yhdista_viivat_jarjestyksessa(ST_Collect((CASE
                                   WHEN tv.osa=aosa
                                     THEN ST_Line_Substring(tv.geom, ST_LineLocatePoint(tv.geom, apiste), 1)
                                   WHEN tv.osa=bosa
