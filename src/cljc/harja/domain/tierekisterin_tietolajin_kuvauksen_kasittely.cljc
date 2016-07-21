@@ -24,7 +24,10 @@
                   (Integer. arvo)
                   (catch Exception e
                     (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero."))))
-    :paivamaara true ; TODO
+    :paivamaara (try
+                  (pvm/iso-8601->pvm arvo)
+                  (catch Exception e
+                    (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole iso-8601 pvm (yyyy-MM-DD)."))))
     :koodisto true ; TODO
     ))
 

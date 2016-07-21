@@ -86,7 +86,7 @@
                             tietolajin-kuvaus))
         "Puuttuva pakollinen arvo huomattiin")))
 
-(deftest tarkista-pakollisen-kentan-validointi-2
+(deftest tarkista-pakollisen-kentan-validointi-menee-lapi
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
                            [{:kenttatunniste "tie"
@@ -103,7 +103,7 @@
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
                            [{:kenttatunniste "tunniste"
-                             :jarjestysnumero 2
+                             :jarjestysnumero 1
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä 'tunniste', maksimipituus: 20."
@@ -112,11 +112,11 @@
                             tietolajin-kuvaus))
         "Liian pitkä arvo huomattiin")))
 
-(deftest tarkista-liian-pitkan-kentan-validointi-2
+(deftest tarkista-liian-pitkan-kentan-validointi-menee-lapi
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
                            [{:kenttatunniste "tunniste"
-                             :jarjestysnumero 2
+                             :jarjestysnumero 1
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
     (tierekisteri-tietue/tietolajin-arvot-map->string
@@ -128,7 +128,7 @@
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
                            [{:kenttatunniste "tunniste"
-                             :jarjestysnumero 2
+                             :jarjestysnumero 1
                              :tietotyyppi :numeerinen
                              :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole numero."
@@ -137,19 +137,42 @@
                             tietolajin-kuvaus))
         "Ei-numero tyyppinen arvo huomattiin")))
 
-;; TODO Tee
-#_(deftest tarkista-pvm-kentan-validointi
+(deftest tarkista-numero-kentan-validointi-menee-lapi
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
                            [{:kenttatunniste "tunniste"
-                             :jarjestysnumero 2
+                             :jarjestysnumero 1
                              :tietotyyppi :numeerinen
                              :pituus 20}]}]
-    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Arvo ei ole muotoa (yyyy-MM-dd)"
+    (tierekisteri-tietue/tietolajin-arvot-map->string
+                            {"tunniste" "42"}
+                            tietolajin-kuvaus)
+    (is true "Poikkeusta ei heitetty")))
+
+(deftest tarkista-pvm-kentan-validointi
+  (let [tietolajin-kuvaus {:tunniste "tl506",
+                           :ominaisuudet
+                           [{:kenttatunniste "tunniste"
+                             :jarjestysnumero 1
+                             :tietotyyppi :paivamaara
+                             :pituus 20}]}]
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole iso-8601 pvm (yyyy-MM-DD)."
                           (tierekisteri-tietue/tietolajin-arvot-map->string
                             {"tunniste" "2010-12"}
                             tietolajin-kuvaus))
         "Ei-pvm tyyppinen kenttä huomatitin")))
+
+(deftest tarkista-pvm-kentan-validointi-menee-lapi
+  (let [tietolajin-kuvaus {:tunniste "tl506",
+                           :ominaisuudet
+                           [{:kenttatunniste "tunniste"
+                             :jarjestysnumero 2
+                             :tietotyyppi :paivamaara
+                             :pituus 20}]}]
+    (tierekisteri-tietue/tietolajin-arvot-map->string
+                            {"tunniste" "2010-12-12"}
+                            tietolajin-kuvaus)
+    (is true "Poikkeusta ei heitetty")))
 
 ;; TODO Tee
 #_(deftest tarkista-koodisto-kentan-validointi
