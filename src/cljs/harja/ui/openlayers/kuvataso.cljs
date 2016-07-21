@@ -21,6 +21,28 @@
                      "pr" pixel-ratio]
                     parametrit))))
 
+(def kuvatason-lataus (atom {:ladataan 0 :ladattu 0}))
+(defonce julkaise-lataustapahtuma
+  (add-watch kuvatason-lataus ::paivitys
+             (fn [_ _ _ tila]
+               (tapahtumat/julkaise! (assoc tila :aihe :karttakuva)))))
+
+(defn nollaa-jos-valmis [{:keys [ladataan ladattu] :as lataus}]
+  (if (= ladataan ladattu)
+    {:ladataan 0 :ladattu 0}
+    lataus))
+
+(defn aloita-lataus []
+  (swap! kuvatason-lataus (comp nollaa-jos-valmis
+                                #(update % :ladataan inc))))
+
+(defn lataus-valmis []
+  (js/setTimeout
+   (fn []
+     (swap! kuvatason-lataus (comp nollaa-jos-valmis
+                                   #(update % :ladattu inc))))
+   100))
+
 (defrecord Kuvataso [projection extent z-index selitteet parametrit]
   Taso
   (aseta-z-index [this z-index]
@@ -35,7 +57,10 @@
           luo? (nil? ol-layer)
           source (if (and sama? (not luo?))
                    (.getSource ol-layer)
-                   (ol.source.TileImage. #js {:projection projection}))
+                   (doto (ol.source.TileImage. #js {:projection projection})
+                     (.on "tileloadstart" aloita-lataus)
+                     (.on "tileloadend" lataus-valmis)
+                     (.on "tileloaderror" lataus-valmis)))
 
           ol-layer (or ol-layer
                        (ol.layer.Tile.
