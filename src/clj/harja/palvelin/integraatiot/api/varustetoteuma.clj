@@ -102,7 +102,6 @@
         (log/debug "Valmistellaan toimenpiteen lähetys tierekisteriin, tyyppi: " (pr-str toimenpide-tyyppi))
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
         ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
-        (log/debug "Prööt prööt: " (pr-str (:varustetoteuma-id toimenpide)))
         (let [lahetetty? (true? (first (toteumat-q/hae-varustetoteuman-lahetystiedot
                                          db
                                          {:id (:varustetoteuma-id toimenpide)})))]
