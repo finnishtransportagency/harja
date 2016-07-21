@@ -23,14 +23,9 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- tee-onnistunut-vastaus [vastaukset]
-  ;; FIXME Jokainen toimenpide on kirjattu tierekisteriin erikseen ja myös vastaus saadaan jokaisesta
-  ;; erikseen. Nyt vastaukset joinataan yhteen str/join:lla. Vastaukset ovat kirjattujen toimenpiteiden
-  ;; mukaisessa järjestyksessä. Voi silti hankalaa ottaa selvää mikä vastaus liittyy mihinkin
-  ;; kirjaukseen, etenkin jos toimenpiteitä kirjattiin monta.
   (tee-kirjausvastauksen-body
-    {:ilmoitukset
-     (str "Varustetoteuma kirjattu onnistuneesti: " (map #(str/join ", " (:lisatietoja %)) vastaukset))
-     :idt (map #(str/join ", " (:uusi-id %)) vastaukset)})) ;; TODO Lisätyt id:t järjestyksessä
+    {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti."
+     :uudet-idt (mapv :uusi-id vastaukset)}))
 
 (defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
   (tr-tietolaji/tietolajin-arvot-map->string
@@ -53,10 +48,9 @@
       tietolajin-kuvaus
       arvot)))
 
-(defn- lisaa-varuste-tierekisteriin [tierekisteri db kirjaaja otsikko toimenpide arvot-string]
-  (log/debug "Lisätään varuste tierekisteriin")
-  (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
-        valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma
+(defn- lisaa-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide livitunniste arvot-string]
+  (log/debug "Lisätään varuste livitunnisteella " livitunniste " tierekisteriin")
+  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma
                            otsikko
                            kirjaaja
                            livitunniste
@@ -64,8 +58,7 @@
                            arvot-string)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
-      (assoc vastaus :lisatietoja (str " Uuden varusteen livitunniste on: " livitunniste)
-                     :uusi-id livitunniste))))
+      (assoc vastaus :uusi-id livitunniste))))
 
 (defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide arvot-string]
   (log/debug "Päivitetään varuste tierekisteriin")
@@ -94,6 +87,9 @@
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
   [tierekisteri db kirjaaja otsikko varustetoteuma]
+  ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
+  ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
+  ;; sama payload lähetetään Harjaan uudelleen.
   (when tierekisteri
     (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
       (let [toimenpide-tyyppi (first (keys toimenpide))
@@ -108,8 +104,9 @@
 
         (case toimenpide-tyyppi
           :varusteen-lisays
-          (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko
-                                        toimenpiteen-tiedot tietolajin-arvot-string)
+          (lisaa-varuste-tierekisteriin tierekisteri kirjaaja otsikko toimenpiteen-tiedot
+                                        (get-in toimenpiteen-tiedot [:varuste :tunniste])
+                                        tietolajin-arvot-string)
 
           :varusteen-poisto
           (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
@@ -176,15 +173,15 @@
                                       tietolaji))]
       (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
       (if (onko-jo-tallennettu? db
-                                    toteuma-id
-                                    (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-                                    (toimenpide-tyyppi->toimenpide toimenpide-tyyppi)
-                                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-                                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-                                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-                                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-                                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-                                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli]))
+                                toteuma-id
+                                (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                                (toimenpide-tyyppi->toimenpide toimenpide-tyyppi)
+                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+                                (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli]))
         (log/debug "Toimenpide on jo tallennettu, ohitetaan.")
         (case toimenpide-tyyppi
           :varusteen-lisays
@@ -261,13 +258,6 @@
   "Lähettää varustetoteumat tierekisteriin yksi kerrallaan.
    Palauttaa vectorissa tierekisterikomponentin antamat vastaukset."
   [db tierekisteri kirjaaja otsikko varustetoteumat]
-  ;; FIXME Jotta ei lähetettäisi samaa toteumaa tierekisteriin useasti, niin
-  ;; merkitään kantaan että lähetetty tierekisteriin kun saadaan vastaus tierekisteristä
-  ;; Tämän takia jos sama toteuma vastaanotetaan uudelleen niin ei pitäisi tuhota dataa vaan katsoa pelkästään onko
-  ;; asia jo lisätty meidän kantaan ja onko lähetetty tierekisteriin.
-  ;; Tunnistetaan jo aiemmin vastaanotettu viesti toteuma-id:n perusteella.
-
-  ;; FIXME Edelleen tosin mahdollisa että lähtee tierekisteriin mutta vastausta ei ehditä saada --> mietintämyssyyn
   (mapv (fn [varustetoteuma]
           (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin
                           tierekisteri
