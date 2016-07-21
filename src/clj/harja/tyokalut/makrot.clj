@@ -28,7 +28,13 @@
            (do
              (async/close! chan#)
              (when (= ch# timeout#)
-               ~on-timed-out))
+               (do
+                 ;; Imetään tyhjäksi kanava, jotta pending puts
+                 ;; menevät läpi.
+                 (async/go-loop []
+                     (when (async/<! chan#)
+                       (recur)))
+                 ~on-timed-out)))
            (let [~name v#]
              ~@body
              (recur (lue#)))))
