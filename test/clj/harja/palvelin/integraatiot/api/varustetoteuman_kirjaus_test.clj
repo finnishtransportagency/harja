@@ -30,9 +30,9 @@
         poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
-       (str +testi-tierekisteri-url+ "/lisaaTietue") lisaa-tietue-xml
-       (str +testi-tierekisteri-url+ "/paivitaTietue") paivita-tietue-xml
-       (str +testi-tierekisteri-url+ "/poistaTietue") poista-tietue-xml
+       (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
+       (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
+       (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
        #"http?://localhost" :allow]
       (let [varustetoteumat-ennen-pyyntoa (ffirst (q
                                                     (str "SELECT count(*)
