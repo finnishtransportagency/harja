@@ -93,12 +93,6 @@
   On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
-  ;; FIXME KUn lisätään uusi varuste meille niin luodaan sinne heti livitunniste ja tallennetaan se kantaan.
-  ;; Kun saadaan vastaus tierekisteristä, merkitään kantaan että lähetetty tierekisteriin.
-  ;; Edelleen tosin mahdollisa että lähtee tierekisteriin mutta vastausta ei ehditä saada --> mietintämyssyyn
-  ;; HUOM! Tämän takia jos tulee sama viesti uudelleen niin saa tuhota toteuman varustetoteumaa vaan pitää päivittää.
-  ;; Tunnistetaan päivitettävät asiat toteuma-id:n perusteella. Jos huomataan että on lähetetty jo tierekisteriin nii nasia on ok.
-  ;; Voisi kokella lähettää saman viestin useaan kertaan.
   [tierekisteri db kirjaaja otsikko varustetoteuma]
   (when tierekisteri
     (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
@@ -161,8 +155,9 @@
 
 (defn- tallenna-varusteen-lisays [db kirjaaja varustetoteuma tietolajin-arvot-string
                                   toimenpide toteuma-id]
-  ;; TODO Yhdistä yhtenäiset osat
+  ;; TODO Yhdistä yhtenäiset osat tästä ja alemmista funkkareista
   (log/debug "Tallennetaan varustetoteuman toimenpide: lisätty varaste")
+  ;; TODO Kun lisätään uusi varuste meille niin luodaan sille heti livitunniste ja tallennetaan se kantaan.
   (luo-uusi-varustetoteuma db
                            kirjaaja
                            toteuma-id
@@ -273,6 +268,13 @@
   "Lähettää varustetoteumat tierekisteriin yksi kerrallaan.
    Palauttaa vectorissa tierekisterikomponentin antamat vastaukset."
   [db tierekisteri kirjaaja otsikko varustetoteumat]
+  ;; FIXME Jotta ei lähetettäisi samaa toteumaa tierekisteriin useasti, niin
+  ;; merkitään kantaan että lähetetty tierekisteriin kun saadaan vastaus tierekisteristä
+  ;; Tämän takia jos sama toteuma vastaanotetaan uudelleen niin ei pitäisi tuhota tuhota dataa vaan katsoa pelkästään onko
+  ;; asia jo lisätty meidän kantaan ja onko lähetetty tierekisteriin.
+  ;; Tunnistetaan jo aiemmin vastaanotettu viesti toteuma-id:n perusteella.
+
+  ;; FIXME Edelleen tosin mahdollisa että lähtee tierekisteriin mutta vastausta ei ehditä saada --> mietintämyssyyn
   (mapv (fn [varustetoteuma]
           (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin
                           tierekisteri
