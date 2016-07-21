@@ -1,3 +1,36 @@
+CREATE OR REPLACE FUNCTION geometrian_pituus(g geometry, apoint geometry) RETURNS float8 AS $$
+DECLARE
+  lahinosa INTEGER;
+  pituus float8;
+  pala geometry;
+BEGIN
+  IF ST_NumGeometries(g) > 1 THEN
+     SELECT path[1]
+       FROM ST_Dump(g)
+      WHERE ST_DWithin(geom, apoint, 1000)
+      ORDER BY ST_Length(ST_ShortestLine(geom, apoint)) ASC
+      LIMIT 1
+       INTO lahinosa;
+
+     pituus := 0;
+     
+     FOR i IN 1 .. lahinosa LOOP
+        pala := ST_GeometryN(g,i);
+	
+        IF i=lahinosa THEN
+	   pituus := pituus + ST_Length(ST_Line_Substring(pala, 0, ST_LineLocatePoint(pala, apoint)));
+	ELSE
+	   pituus := pituus + ST_Length(pala);
+	END IF;
+     END LOOP;
+
+     RETURN pituus;
+  ELSE
+     RETURN ST_Length(ST_Line_Substring(g,0,ST_LineLocatePoint(ST_LineMerge(g), apoint)));
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION tr_osan_etaisyys(
   piste geometry, tienro INTEGER, treshold INTEGER)
   RETURNS INTEGER
