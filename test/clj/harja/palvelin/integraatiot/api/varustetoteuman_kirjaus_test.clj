@@ -18,16 +18,23 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tallenna-varustetoteuma
-  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+  (let [varustetoteumat-ennen-pyyntoa (ffirst (q
+                                                (str "SELECT count(*)
+                                                       FROM varustetoteuma")))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/varuste"] kayttaja portti
                                                 (-> "test/resurssit/api/varustetoteuma.json"
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))))]
     (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi "
+    (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
+                                                    (str "SELECT count(*)
+                                                       FROM varustetoteuma")))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi "
                                           "FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           varuste-arvot-kannassa (ffirst (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
+      (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen))
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
       (is (string? varuste-arvot-kannassa))))) ;; FIXME Testaa että arvot oikein
 
