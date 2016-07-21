@@ -196,8 +196,8 @@
                 tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
                 tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
                 tunniste (if (= toimenpide-tyyppi :varusteen-poisto)
-                           (:tunniste toimenpiteen-tiedot)
-                           (get-in toimenpiteen-tiedot [:varuste :tunniste]))
+                           (get-in toimenpiteen-tiedot [:varuste :tunniste])
+                           (:tunniste toimenpiteen-tiedot))
                 tietolajin-arvot-string (when tietolajin-arvot
                                           (validoi-ja-muunna-arvot-merkkijonoksi
                                             tierekisteri
