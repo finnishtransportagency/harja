@@ -196,6 +196,7 @@
             tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
                        (get-in toimenpiteen-tiedot [:varuste :tunniste])
                        (:tunniste toimenpiteen-tiedot))
+            tie (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
             tietolajin-arvot-string (when tietolajin-arvot
                                       (validoi-ja-muunna-arvot-merkkijonoksi
                                         tierekisteri
@@ -221,10 +222,10 @@
                                                              toteuma-id
                                                              varustetoteuma
                                                              toimenpiteen-tiedot
-                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                                                             tietolaji
                                                              uusi-livitunniste
                                                              "lisatty"
-                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+                                                             tie
                                                              tietolajin-arvot-string)]
               (-> toimenpide
                   (assoc :varustetoteuma-id varustetoteuma-id)
@@ -237,10 +238,10 @@
                                                              toteuma-id
                                                              varustetoteuma
                                                              toimenpiteen-tiedot
-                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                                                             tietolaji
                                                              tunniste
                                                              "paivitetty"
-                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+                                                             tie
                                                              tietolajin-arvot-string)]
               (-> toimenpide
                   (assoc :arvot-string tietolajin-arvot-string)
@@ -252,10 +253,10 @@
                                                              toteuma-id
                                                              varustetoteuma
                                                              toimenpiteen-tiedot
-                                                             (:tietolajitunniste toimenpiteen-tiedot)
+                                                             tietolaji
                                                              tunniste
                                                              "poistettu"
-                                                             (get-in toimenpide [:varuste :tietue :sijainti :tie])
+                                                             nil
                                                              nil)]
               (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
 
@@ -265,10 +266,10 @@
                                                              toteuma-id
                                                              varustetoteuma
                                                              toimenpiteen-tiedot
-                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                                                             tietolaji
                                                              tunniste
                                                              "tarkastus"
-                                                             (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+                                                             tie
                                                              tietolajin-arvot-string)]
               (-> toimenpide
                   (assoc :arvot-string tietolajin-arvot-string)
