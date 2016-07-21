@@ -204,17 +204,23 @@
                          (q/hae-turvallisuuspoikkeamat db toleranssi urakat (konv/sql-date alku)
                                                        (konv/sql-date loppu)))
                    {:korjaavatoimenpide :korjaavattoimenpiteet})]
-       (log/debug "TURPOT: " (pr-str tulos))
        tulos))))
 
 (defn- hae-tyokoneet
   [db user {:keys [alue alku loppu talvi kesa urakka-id
-                   hallintayksikko nykytilanne?]} urakat]
+                   hallintayksikko nykytilanne? yllapito] :as optiot} urakat]
   (when-not (empty? urakat)
     (when nykytilanne?
-     (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
-       (when-not (empty? haettavat-toimenpiteet)
-         (let [tpi-str (str "{" (clojure.string/join "," haettavat-toimenpiteet) "}")
+     (let [haettavat-toimenpiteet (haettavat (union talvi kesa))
+           haettavat-tyokonetyypit (filter #{:paaasfalttilevitin
+                                             :remix-laite
+                                             :sekoitus-ja-stabilointijyrsin
+                                             :tma-laite}
+                                           (haettavat yllapito))]
+       (when (or (not (empty? haettavat-toimenpiteet))
+                  (not (empty? haettavat-tyokonetyypit)))
+         (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
+               tyokone-haku-str (konv/seq->array haettavat-tyokonetyypit)
                valitun-alueen-geometria
                (if urakka-id
                  (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria
@@ -233,9 +239,13 @@
                    (map #(assoc % :tyyppi :tyokone))
                    (map #(konv/array->set % :tehtavat))
                    (map (juxt :tyokoneid identity)))
-                 (q/hae-tyokoneet db (:xmin alue) (:ymin alue)
+                 (q/hae-tyokoneet db
+                                  (:xmin alue) (:ymin alue)
                                   (:xmax alue) (:ymax alue)
-                                  valitun-alueen-geometria urakat tpi-str))))))))
+                                  valitun-alueen-geometria
+                                  urakat
+                                  tpi-haku-str
+                                  tyokone-haku-str))))))))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
   (let [koodit (some->> (union talvi kesa)

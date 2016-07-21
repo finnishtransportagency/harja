@@ -8,7 +8,7 @@
     [cljs.core.async.macros :refer [go]]))
 
 (def checkbox-tila-keyword->boolean
-  {:valittu    true
+  {:valittu true
    :ei-valittu false})
 
 (def boolean->checkbox-tila-keyword
@@ -16,9 +16,9 @@
    false :ei-valittu})
 
 (def ^:const
-  checkbox-tila->luokka {:valittu          "harja-checkbox-valittu"
-                         :ei-valittu       "harja-checkbox-ei-valittu"
-                         :osittain-valittu "harja-checkbox-osittain-valittu"})
+checkbox-tila->luokka {:valittu "harja-checkbox-valittu"
+                       :ei-valittu "harja-checkbox-ei-valittu"
+                       :osittain-valittu "harja-checkbox-osittain-valittu"})
 
 (defn checkbox
   "Ottaa checkbox-tila atomin, joka määrittelee komponentin tilan.
@@ -29,7 +29,8 @@
   Lisäksi ottaa mapin erilaisia optioita"
   ([tila-atom] (checkbox tila-atom nil {}))
   ([tila-atom nimi] (checkbox tila-atom nimi {}))
-  ([tila-atom nimi {:keys [on-change] :as optiot}]
+  ([tila-atom nimi {:keys [on-change
+                           width] :as optiot}]
    (let [tila @tila-atom
          vaihda-tila (fn []
                        (let [uusi-tila (case tila
@@ -40,11 +41,14 @@
                          (when on-change
                            (on-change uusi-tila))))]
      [:div.harja-checkbox
-      [:div.harja-checkbox-sisalto {:on-click (fn [event]
+      [:div.harja-checkbox-sisalto {:style {:width (or width "100%")}
+                                    :on-click (fn [event]
                                                 (vaihda-tila)
                                                 (.stopPropagation event))}
-       [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka tila)}
-        [:div.harja-checkbox-laatikko-sisalto
-         (when (= :valittu @tila-atom)
-           [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]
-       [:div.harja-checkbox-teksti nimi]]])))
+       [:div.harja-checkbox-column
+        [:div.harja-checkbox-laatikko {:class (checkbox-tila->luokka tila)}
+         [:div.harja-checkbox-laatikko-sisalto
+          (when (= :valittu @tila-atom)
+            [:img.harja-checkbox-rasti {:src "images/rasti.svg"}])]]]
+       [:div.harja-checkbox-column
+        [:div.harja-checkbox-teksti nimi]]]])))

@@ -150,11 +150,11 @@
 
 (defn seq->array
   "Muuntaa yksittäisen arvon Clojure-sekvenssistä JDBC arrayksi."
-  [vektori]
+  [seq]
   (let [kasittele #(if (or (= Keyword (type %)) (= String (type %)))
                     (name %)
                     (str %))]
-    (str "{" (clojure.string/join "," (map kasittele vektori)) "}")))
+    (str "{" (clojure.string/join "," (map kasittele seq)) "}")))
 
 (defn string-vector->keyword-vector
   "Muuntaa mapin kentän vectorissa olevat stringit keywordeiksi."
