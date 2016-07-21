@@ -250,27 +250,34 @@
                                    (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
                                    tietolajin-arvot-string))))))
 
-(defn- tallenna-toteumat [db tierekisteri urakka-id kirjaaja varustetoteumat]
-  (doseq [varustetoteuma varustetoteumat]
-    (log/debug "Tallennetaan toteuman perustiedot")
-    (let [toteuma (assoc
-                    (get-in varustetoteuma [:varustetoteuma :toteuma])
-                    :reitti nil)
-          toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
-      (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
+(defn- tallenna-toteumat
+  "Tallentaa varustetoteumat kantaan. Palauttaa varustetoteumat, joiden metadataan on liitetty
+   toteuman kanta-id."
+  [db tierekisteri urakka-id kirjaaja varustetoteumat]
+  (jdbc/with-db-transaction [db db]
+    (mapv (fn [varustetoteuma]
+            (log/debug "Tallennetaan toteuman perustiedot")
+            (let [toteuma (assoc
+                            (get-in varustetoteuma [:varustetoteuma :toteuma])
+                            :reitti nil)
+                  toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
+              (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
 
-      (log/debug "Tallennetaan toteuman tehtävät")
-      (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+              (log/debug "Tallennetaan toteuman tehtävät")
+              (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
 
-      ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
-      ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
-      ;; Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on yksi piste
+              ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
+              ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
+              ;; Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on yksi piste
 
-      (tallenna-varustetoteuman-toimenpiteet db
-                                             tierekisteri
-                                             toteuma-id
-                                             kirjaaja
-                                             varustetoteuma))))
+              (tallenna-varustetoteuman-toimenpiteet db
+                                                     tierekisteri
+                                                     toteuma-id
+                                                     kirjaaja
+                                                     varustetoteuma)
+
+              (with-meta varustetoteuma {:toteuma-id toteuma-id})))
+          varustetoteumat)))
 
 (defn- laheta-kirjaus-tierekisteriin
   "Lähettää varustetoteumat tierekisteriin yksi kerrallaan.
@@ -281,7 +288,7 @@
                           tierekisteri
                           db
                           kirjaaja
-                          toteuma-id
+                          (:toteuma-id (meta varustetoteuma))
                           otsikko
                           varustetoteuma)]
             vastaus))
@@ -320,10 +327,9 @@
                " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
-    (jdbc/with-db-transaction [db db]
-      (let [varustetoteumat (lisaa-varustetoteumien-lisaystoimenpiteille-livitunniste db varustetoteumat)]
-        (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)))
-    (let [tierekisterin-vastaukset (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)]
+    (let [varustetoteumat (lisaa-varustetoteumien-lisaystoimenpiteille-livitunniste db varustetoteumat)
+          varustetoteumat (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
+          tierekisterin-vastaukset (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)]
       (tee-onnistunut-vastaus tierekisterin-vastaukset))))
 
 (defrecord Varustetoteuma []
