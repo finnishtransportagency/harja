@@ -20,5 +20,5 @@ SELECT o.id, o.nimi, o.tyyppi as organisaatiotyyppi
   FROM organisaatio o
  WHERE o.id = :id;
 
- -- name: hae-hallintayksikon-geometria
- SELECT alue FROM organisaatio WHERE id = :id;
+-- name: hae-hallintayksikon-geometria
+SELECT alue FROM organisaatio WHERE id = :id;

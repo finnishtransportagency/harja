@@ -263,7 +263,8 @@ WHERE pk.poistettu IS NOT TRUE AND
       (pi.aloituspvm < :loppu AND (pi.valmispvm_kohde IS NULL OR pi.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
--- FIXME: poista tästä "turhaa" tietoa, jota ei renderöinti tarvi
+-- fetch-size: 64
+-- row-fn: muunna-reitti
 SELECT
   t.tyyppi,
   ST_Simplify(t.reitti, :toleranssi) as reitti,
