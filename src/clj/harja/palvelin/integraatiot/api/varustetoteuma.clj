@@ -106,7 +106,7 @@
                                         tietolajin-arvot
                                         tietolaji))]
 
-        (condp = toimenpide-tyyppi ;; TODO Case
+        (case toimenpide-tyyppi
           :varusteen-lisays
           (lisaa-varuste-tierekisteriin tierekisteri db kirjaaja otsikko
                                         toimenpiteen-tiedot tietolajin-arvot-string)
@@ -225,7 +225,7 @@
                                       tierekisteri
                                       tietolajin-arvot
                                       tietolaji))]
-      (condp = toimenpide-tyyppi ;; TODO Case
+      (case toimenpide-tyyppi
         :varusteen-lisays
         (tallenna-varusteen-lisays db kirjaaja varustetoteuma tietolajin-arvot-string
                                    toimenpiteen-tiedot toteuma-id)
