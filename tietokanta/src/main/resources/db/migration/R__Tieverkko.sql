@@ -69,6 +69,7 @@ AS $$
 DECLARE
    alkuosa RECORD;
    alkuet NUMERIC;
+   kaikki_ajoradat geometry;   
 BEGIN
    SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
       FROM tieverkko_paloina
@@ -77,8 +78,12 @@ BEGIN
       ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
       LIMIT 1
    INTO alkuosa;
-   
-   SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_LineLocatePoint(alkuosa.geom, piste))) INTO alkuet;
+
+  SELECT yhdista_viivat_jarjestyksessa(ST_Collect(geom))
+    FROM tieverkko_paloina
+   WHERE tie=alkuosa.tie AND osa=alkuosa.osa AND (ajorata=0 OR ajorata=alkuosa.ajorata) INTO kaikki_ajoradat;
+
+   SELECT ST_Length(ST_Line_Substring(kaikki_ajoradat, 0, ST_LineLocatePoint(kaikki_ajoradat, piste))) INTO alkuet;
    
    RETURN alkuet::INTEGER;
 END;
