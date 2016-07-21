@@ -57,6 +57,7 @@
         kuvatut-kenttatunnisteet (into #{} (map :kenttatunniste kenttien-kuvaukset))
         annetut-kenttatunnisteet (into #{} (keys arvot))
         ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)]
+    ;; Tarkista, ettei ole ylimääräisiä kenttiä
     (when-not (empty? ylimaaraiset-kentat)
       (throw (Exception. "Tietolajin arvoissa on ylimääräisiä kenttiä,
        joita ei löydy tierekisterin tietolajin kuvauksesta: " (str/join ", " ylimaaraiset-kentat))))
