@@ -66,6 +66,7 @@
             :tr_aet (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
             :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
             :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+            :tr_ajorata (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])
             :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])})))
 
 (defn- lisaa-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide livitunniste arvot-string]

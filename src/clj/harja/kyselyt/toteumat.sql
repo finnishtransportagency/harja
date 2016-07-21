@@ -798,6 +798,7 @@ WHERE
   AND (:tr_aet IS NULL OR tr_alkuetaisyys = :tr_aet)
   AND (:tr_losa IS NULL OR tr_loppuosa = :tr_losa)
   AND (:tr_let IS NULL OR tr_loppuetaisyys = :tr_let)
+  AND (:tr_ajorata IS NULL or tr_ajorata = :tr_ajorata)
   AND (:tr_puoli IS NULL OR tr_puoli = :tr_puoli);
 
 -- name: hae-varustetoteuman-lahetystiedot
