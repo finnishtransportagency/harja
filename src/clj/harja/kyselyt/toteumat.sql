@@ -791,8 +791,9 @@ SELECT id
 FROM varustetoteuma
 WHERE
   toteuma = :toteumaid
+  AND (tunniste :: VARCHAR IS NULL OR tunniste = :tunniste)
   AND tietolaji = :tietolaji
-  AND toimenpide = (:toimenpide) :: varustetoteuma_tyyppi
+  AND toimenpide = :toimenpide :: varustetoteuma_tyyppi
   AND (:tr_numero :: INTEGER IS NULL OR tr_numero = :tr_numero)
   AND (:tr_aosa :: INTEGER IS NULL OR tr_alkuosa = :tr_aosa)
   AND (:tr_aet :: INTEGER IS NULL OR tr_alkuetaisyys = :tr_aet)
