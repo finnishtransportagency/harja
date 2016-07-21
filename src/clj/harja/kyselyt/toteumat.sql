@@ -793,12 +793,12 @@ WHERE
   toteuma = :toteumaid
   AND tietolaji = :tietolaji
   AND toimenpide = :toimenpide :: varustetoteuma_tyyppi
-  AND tr_numero = :tr_numero
-  AND tr_alkuosa = :tr_aosa
-  AND tr_alkuetaisyys = :tr_aet
-  AND tr_loppuosa = :tr_losa
-  AND tr_loppuetaisyys = :tr_let
-  AND tr_puoli = :tr_puoli;
+  AND (:tr_numero IS NULL OR tr_numero = :tr_numero)
+  AND (:tr_aosa IS NULL OR tr_alkuosa = :tr_aosa)
+  AND (:tr_aet IS NULL OR tr_alkuetaisyys = :tr_aet)
+  AND (:tr_losa IS NULL OR tr_loppuosa = :tr_losa)
+  AND (:tr_let IS NULL OR tr_loppuetaisyys = :tr_let)
+  AND (:tr_puoli IS NULL OR tr_puoli = :tr_puoli);
 
 -- name: hae-varustetoteuman-lahetystiedot
 SELECT lahetetty_tierekisteriin FROM varustetoteuma
