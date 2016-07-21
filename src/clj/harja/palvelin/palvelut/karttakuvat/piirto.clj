@@ -164,7 +164,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        (.setColor g Color/BLACK)
        (.drawString g teksti x y)))))
 
-(def piirron-aikakatkaisu-ms 10000)
+(def piirron-aikakatkaisu-ms 20000)
 
 (defn piirra-karttakuvaan [extent koko px-scale g asiat]
   (binding [*px-scale* px-scale
@@ -174,7 +174,6 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
                (async/to-chan asiat)
                asiat)]
       (go-loop-timeout
-       {:timeout piirron-aikakatkaisu-ms
-        :on-timed-out (piirra-varoitus g koko varoitusteksti)}
+       {:timeout piirron-aikakatkaisu-ms}
        [{alue :alue :as asia} ch]
        (piirra g asia alue ruudukko)))))
