@@ -150,14 +150,14 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
   (save-transform
    g
    (.setTransform g (java.awt.geom.AffineTransform.))
+   (.setFont g (Font. "Dialog" Font/PLAIN 13))
    (let [fm (.getFontMetrics g)
          width (.stringWidth fm teksti)]
-     (.setFont g (Font. "Dialog" Font/PLAIN 14))
      (let [x (float (- (/ w 2) (/ width 2)))
            y (float (- h 10))]
        (.setColor g Color/WHITE)
        (.fillRect g (int (- x 32)) (int (- y 18))
-                  (+ width 120) 24)
+                  (+ width 36) 24)
        (.drawImage g (hae-kuva varoituskuva)
                    (int (- x 30)) (int (- y 18))
                    nil-image-observer)
