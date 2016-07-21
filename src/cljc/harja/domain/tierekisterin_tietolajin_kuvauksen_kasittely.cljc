@@ -8,6 +8,7 @@
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.tyokalut.merkkijono :as merkkijono]
             [clojure.string :as str]
+            [clojure.set :as set]
             [harja.pvm :as pvm]))
 
 (defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
@@ -53,13 +54,9 @@
    Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
   [tietolaji arvot tietolajin-kuvaus]
   (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
-        ylimaaraiset-kentat (filter ;; TODO Set difference
-                              (fn [arvo]
-                                (not (some? (first (filter
-                                                     (fn [kentan-kuvaus]
-                                                       (= (:kenttatunniste kentan-kuvaus) arvo))
-                                                     kenttien-kuvaukset)))))
-                              (keys arvot))]
+        kuvatut-kenttatunnisteet (into #{} (map :kenttatunniste kenttien-kuvaukset))
+        annetut-kenttatunnisteet (into #{} (keys arvot))
+        ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)]
     (when-not (empty? ylimaaraiset-kentat)
       (throw (Exception. "Tietolajin arvoissa on ylimääräisiä kenttiä,
        joita ei löydy tierekisterin tietolajin kuvauksesta: " (str/join ", " ylimaaraiset-kentat))))

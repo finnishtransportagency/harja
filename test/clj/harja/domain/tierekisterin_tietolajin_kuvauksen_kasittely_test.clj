@@ -306,7 +306,7 @@
                             :ominaisuudet
                             [{:kenttatunniste "LMNUMERO"
                               :jarjestysnumero 1
-                              :pakollinen true
+                              :pakollinen false
                               :tietotyyppi :merkkijono
                               :pituus 20}
                              {:kenttatunniste "SIVUTIE"
