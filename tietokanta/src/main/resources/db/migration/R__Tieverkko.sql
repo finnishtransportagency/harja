@@ -31,6 +31,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION etsi_jatkopatka(viiva geometry, jatkopatkat geometry) RETURNS geometry AS $$
+DECLARE
+  tmp geometry;
+  jatkettu geometry;
+BEGIN
+  jatkettu := viiva;
+  FOR i IN 1..ST_NumGeometries(jatkopatkat) LOOP
+     tmp := ST_GeometryN(jatkopatkat, i);
+     IF ST_DWithin(ST_EndPoint(jatkettu), ST_StartPoint(tmp), 5) THEN
+        jatkettu := ST_MakeLine(jatkettu,tmp);
+     ELSEIF ST_DWithin(ST_EndPoint(tmp), ST_StartPoint(jatkettu), 5) THEN
+        RETURN ST_MakeLine(tmp,jatkettu);
+     END IF;
+  END LOOP;
+  RETURN jatkettu;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION yhdista_viivat_jarjestyksessa(viiva geometry) RETURNS geometry AS $$
+DECLARE
+  jarjestetty geometry;
+BEGIN
+    jarjestetty := ST_GeometryN(viiva,1);
+    FOR i IN 1..ST_NumGeometries(viiva) LOOP
+        jarjestetty := etsi_jatkopatka(jarjestetty, viiva);
+    END LOOP;
+  RETURN jarjestetty;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION tr_osan_etaisyys(
   piste geometry, tienro INTEGER, treshold INTEGER)
   RETURNS INTEGER
