@@ -27,21 +27,23 @@
   (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
         lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
         paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
-        poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
+        poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        varustetoteumat-ennen-pyyntoa (ffirst (q
+                                                (str "SELECT count(*)
+                                                       FROM varustetoteuma")))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        payload (-> "test/resurssit/api/varustetoteuma.json"
+                    slurp
+                    (.replace "__ID__" (str ulkoinen-id)))
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
        (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
        (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
        (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
        #"http?://localhost" :allow]
-      (let [varustetoteumat-ennen-pyyntoa (ffirst (q
-                                                    (str "SELECT count(*)
-                                                       FROM varustetoteuma")))
-            ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-            vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/varuste"] kayttaja portti
-                                                    (-> "test/resurssit/api/varustetoteuma.json"
-                                                        slurp
-                                                        (.replace "__ID__" (str ulkoinen-id))))]
+      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
+                                                    payload)]
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
                                                         (str "SELECT count(*)
@@ -53,6 +55,17 @@
           (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen))
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
           ;; FIXME Testaa että arvot oikein
-          (is (string? varuste-arvot-kannassa)))))))
+          (is (string? varuste-arvot-kannassa)))))
 
-;; TODO Testaa että jos kirjataan sama uudestaan niin varustetoteumat eivät lisäänny eikä yritetä tehdä HTTP-requestia tierekisteriin
+    ;; Lähetetään sama pyyntö uudelleen. Varustetoteumien määrä ei saa lisääntyä eikä niitä saa lähettää
+    ;; uudelleen tierekisteriin. Käytännössä mitään ei saa tapahtua.
+
+    (with-fake-http
+      [#"http?://localhost" :allow]
+      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
+                                                    payload)]
+        (is (= 200 (:status vastaus-lisays)))
+        (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
+                                                        (str "SELECT count(*)
+                                                       FROM varustetoteuma")))]
+          (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen)))))))
