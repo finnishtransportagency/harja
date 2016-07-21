@@ -12,8 +12,7 @@
             [clojure.string :as str]
             [harja.geo :as geo]
             [harja.tiedot.navigaatio :as nav]
-            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
-            [reagent.core :as r])
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
