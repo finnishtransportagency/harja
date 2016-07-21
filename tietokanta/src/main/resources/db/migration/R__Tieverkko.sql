@@ -1,3 +1,25 @@
+CREATE OR REPLACE FUNCTION tr_osan_etaisyys(
+  piste geometry, tienro INTEGER, treshold INTEGER)
+  RETURNS INTEGER
+AS $$
+DECLARE
+   alkuosa RECORD;
+   alkuet NUMERIC;
+BEGIN
+   SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
+      FROM tieverkko_paloina
+      WHERE ST_DWithin(geom, piste, treshold)
+        AND tie=tienro
+      ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
+      LIMIT 1
+   INTO alkuosa;
+   
+   SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_LineLocatePoint(alkuosa.geom, piste))) INTO alkuet;
+   
+   RETURN alkuet::INTEGER;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION multiline_project_point(amultils geometry, apoint geometry)
   RETURNS float8 AS
 $$
