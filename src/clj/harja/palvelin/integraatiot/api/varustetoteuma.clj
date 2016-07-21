@@ -52,7 +52,7 @@
   {:varusteen-lisays "lisatty"
    :varusteen-paivitys "paivitetty"
    :varusteen-poisto "poistettu"
-   :varusteen-tarkastus "tarkastettu"})
+   :varusteen-tarkastus "tarkastus"})
 
 (defn- etsi-varustetoteuman-id
   [db toteuma-id toimenpiteen-tiedot tehty-toimenpide]

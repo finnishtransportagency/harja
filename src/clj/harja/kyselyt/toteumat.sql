@@ -784,7 +784,7 @@ WHERE
 -- name: paivita-toteuman-reitti!
 UPDATE toteuma
 SET reitti = :reitti
-WHERE id = :id
+WHERE id = :id;
 
 -- name: hae-varustetoteuman-id
 SELECT id
