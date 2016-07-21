@@ -193,8 +193,8 @@
   (mapv (fn [toimenpide]
           (let [toimenpide-tyyppi (first (keys toimenpide))
                 toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-                tietolaji (get-in varustetoteuma [:varuste :tietue :tietolaji :tunniste])
-                tietolajin-arvot (get-in varustetoteuma [:varuste :tietue :tietolaji :arvot])
+                tietolaji (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
+                tietolajin-arvot (get-in toimenpide [:varuste :tietue :tietolaji :arvot])
                 tunniste (if (= toimenpide-tyyppi :varusteen-poisto)
                            (get-in toimenpiteen-tiedot [:varuste :tunniste])
                            (:tunniste toimenpiteen-tiedot))
