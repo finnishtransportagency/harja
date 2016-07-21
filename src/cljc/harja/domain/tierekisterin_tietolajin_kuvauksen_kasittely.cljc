@@ -40,7 +40,8 @@
     (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä '" kenttatunniste "'."))))
 
 (defn validoi-arvo
-  "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset."
+  "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset.
+   Jos vaatimuksia ei täytetä, heittää poikkeuksen, muuten palauttaa nil."
   [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi koodisto] :as kentan-kuvaus} tietolaji]
   (log/debug "Validoidaan arvo " (pr-str arvo) " kentän kuvauksella: " (pr-str kentan-kuvaus))
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
