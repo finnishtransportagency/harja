@@ -255,8 +255,9 @@
         (log/debug "Tallennetaan toteuman tehtävät")
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
 
-        ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä. Entä nyt?
-        ;; --> yhdistä toimenpiteiden geometria toteuma:n reitiksi. (ks. toteuma -> reitin tallennus)
+        ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
+        ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
+        ;; Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on yksi piste
 
         (tallenna-varustetoteuman-toimenpiteet db
                                                tierekisteri
