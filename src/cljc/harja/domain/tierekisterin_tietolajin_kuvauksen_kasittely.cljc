@@ -7,6 +7,7 @@
             [taoensso.timbre :as log]])
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.tyokalut.merkkijono :as merkkijono]
+            [clojure.string :as str]
             [harja.pvm :as pvm]))
 
 (defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
@@ -16,15 +17,32 @@
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
     (throw (Exception. viesti))))
 
+(defn- validoi-tyyppi [arvo tietolaji kenttatunniste tietotyyppi]
+  (case tietotyyppi
+    :merkkijono true ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
+    :numeerinen (try
+                  (Integer. arvo)
+                  (catch Exception e
+                    (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero."))))
+    :paivamaara true ; TODO
+    :koodisto true ; TODO
+    ))
+
+(defn- validoi-pituus [arvo tietolaji kenttatunniste pituus]
+  (when (< pituus (count arvo))
+    (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä '" kenttatunniste "', maksimipituus: " pituus "."))))
+
+(defn- validoi-pakollisuus [arvo tietolaji kenttatunniste pakollinen]
+  (when (and pakollinen (not arvo))
+    (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä '" kenttatunniste "'."))))
+
 (defn validoi-arvo
   "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset."
-  [arvo {:keys [kenttatunniste pakollinen pituus] :as kentan-kuvaus} tietolaji]
+  [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi] :as kentan-kuvaus} tietolaji]
   (log/debug "Validoidaan arvo " (pr-str arvo) " kentän kuvauksella: " (pr-str kentan-kuvaus))
-  ;; TODO tyyppivalidointi vielä numerolle ja pvm:lle
-  (when (and pakollinen (not arvo))
-    (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä: " kenttatunniste)))
-  (when (< pituus (count arvo))
-    (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä: " kenttatunniste " maksimipituus: " pituus))))
+  (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
+  (validoi-pituus arvo tietolaji kenttatunniste pituus)
+  (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi))
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
@@ -49,7 +67,7 @@
                                  tietolaji))))
 
 (defn- muunna-teksti-kentan-mukaiseen-tyyppiin [arvo-tekstina kentan-kuvaus]
-  (condp = (:tietotyyppi kentan-kuvaus)
+  (case (:tietotyyppi kentan-kuvaus)
     :merkkijono arvo-tekstina
     :numeerinen (do (merkkijono/vaadi-kokonaisluku arvo-tekstina)
                     (Integer/parseInt arvo-tekstina))
@@ -68,12 +86,11 @@
                                 (filter #(< (:jarjestysnumero %) jarjestysnumero)
                                         kenttien-kuvaukset)))
         loppuindeksi (+ alkuindeksi (:pituus jarjestysnumeron-kentta))
-        ;; TODO Require string ns
-        arvo-teksti (clojure.string/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))]
+        arvo-teksti (str/trim (subs arvot-merkkijono alkuindeksi loppuindeksi))]
     arvo-teksti))
 
 (defn- muunna-kentta-stringiksi [arvo kentan-kuvaus]
-  (condp = (:tietotyyppi kentan-kuvaus)
+  (case (:tietotyyppi kentan-kuvaus)
     :merkkijono arvo
     :numeerinen (str arvo)
     :paivamaara (pvm/pvm->iso-8601 arvo)
