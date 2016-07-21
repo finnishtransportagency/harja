@@ -1,45 +1,25 @@
 (ns harja.ui.openlayers.kuvataso
   "Taso, joka hakee kuvan Harja palvelimelta"
   (:require [kuvataso.Lahde]
-            [ol.Image]
-            [ol.layer.Image]
-            [ol.source.Image]
-            [ol.source.ImageStatic]
+            [ol.layer.Tile]
+            [ol.source.TileImage]
+            [ol.extent :as ol-extent]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :refer [karttakuva-url]]
             [harja.ui.openlayers.taso :refer [Taso]]
             [cljs-time.core :as t]
             [harja.asiakas.tapahtumat :as tapahtumat]))
 
-(defn- ol-kuva [extent resolution url lataus-aloitettu lataus-valmis]
-  (let [kuva (ol.Image. extent resolution 1 nil url "use-credentials"
-                        ol.source.Image/defaultImageLoadFunction)]
-    (.addEventListener kuva "change"
-                       #(cond
-                          (and lataus-aloitettu (= 1 (.-state kuva)))
-                          (lataus-aloitettu)
-
-                          (and lataus-valmis (= 2 (.-state kuva)))
-                          (lataus-valmis)))
-    kuva))
-
-(defn hae-fn [parametrit lataus-aloitettu lataus-valmis]
-  (let [kuva (atom nil)]
-    (fn [extent resolution pixel-ratio projection]
-      (second
-       (swap! kuva
-              (fn [[url image]]
-                (let [[x1 y1 x2 y2] extent
-                      uusi-url (apply karttakuva-url
-                                      (concat  ["x1" x1 "y1" y1 "x2" x2 "y2" y2
-                                                "r" resolution "pr" pixel-ratio]
-                                               parametrit))]
-                  (if (= uusi-url url)
-                    [url image]
-                    (do (log "KUVA URL: " url " => " uusi-url)
-                        [uusi-url
-                         (ol-kuva extent resolution uusi-url
-                                  lataus-aloitettu lataus-valmis)])))))))))
+(defn hae-url [source parametrit coord pixel-ratio projection]
+  (let [tile-grid (.getTileGridForProjection source projection)
+        extent (.getTileCoordExtent tile-grid coord
+                               (ol-extent/createEmpty))
+        [x1 y1 x2 y2] extent]
+    (apply karttakuva-url
+           (concat  ["x1" x1 "y1" y1 "x2" x2 "y2" y2
+                     "r" (.getResolution tile-grid (aget coord 0))
+                     "pr" pixel-ratio]
+                    parametrit))))
 
 (defrecord Kuvataso [projection extent z-index selitteet parametrit]
   Taso
@@ -55,19 +35,14 @@
           luo? (nil? ol-layer)
           source (if (and sama? (not luo?))
                    (.getSource ol-layer)
-                   (kuvataso.Lahde. (hae-fn parametrit
-                                            #(tapahtumat/julkaise!
-                                              {:aihe :karttakuva :tila :lataus-alkoi})
-                                            #(tapahtumat/julkaise!
-                                              {:aihe :karttakuva :tila :lataus-valmis}))
-                                    #js {:projection projection
-                                         :imageExtent extent}))
+                   (ol.source.TileImage. #js {:projection projection}))
 
           ol-layer (or ol-layer
-                       (ol.layer.Image.
+                       (ol.layer.Tile.
                         #js {:source source
                              :wrapX true}))]
 
+      (.setTileUrlFunction source (partial hae-url source parametrit))
       (when luo?
         (.addLayer ol3 ol-layer))
 
@@ -79,8 +54,6 @@
         ;; asetetaan uusi source ol layeriiin
         (.setSource ol-layer source))
       [ol-layer ::kuvataso])))
-
-
 
 
 (defn luo-kuvataso [projection extent selitteet parametrit]
