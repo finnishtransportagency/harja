@@ -220,7 +220,7 @@
 
 (deftest tarkista-xmln-validius
   (let [xml (kohteen-lahetyssanoma/muodosta testiurakka testikohteet)]
-    (is (xml/validoi "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
+    (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")))
 
 (deftest tarkista-kokonaishinnan-laskenta
   (is (= 234785M (kohteen-lahetyssanoma/laske-hinta-kokonaishinta testipaallystysilmoitus))

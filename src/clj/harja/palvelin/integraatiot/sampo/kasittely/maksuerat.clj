@@ -60,7 +60,7 @@
                            (update-in maksueran-tiedot [:maksuera :summa] -)
                            maksueran-tiedot)
         maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
-    (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
+    (if (xml/validi-xml? +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
       maksuera-xml
       (do
         (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")

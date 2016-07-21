@@ -41,7 +41,7 @@
 (deftest tarkista-sanoman-validius
   (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ "123"))
         xsd "harja-tloik.xsd"]
-    (is (xml/validoi +xsd-polku+ xsd xml) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
+    (is (xml/validi-xml? +xsd-polku+ xsd xml) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (deftest tarkista-sisalto
   (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ "123"))

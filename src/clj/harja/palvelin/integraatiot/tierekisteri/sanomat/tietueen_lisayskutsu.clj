@@ -23,7 +23,7 @@
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "lisaaTietue.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "lisaaTietue.xsd" xml)
       xml
       (do
         (log/error "Tietueenlisäyspyyntöä ei voida lähettää. Pyynnön XML ei ole validi.")
