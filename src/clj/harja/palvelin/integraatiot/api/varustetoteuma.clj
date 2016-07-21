@@ -102,6 +102,7 @@
         (log/debug "Valmistellaan toimenpiteen lähetys tierekisteriin, tyyppi: " (pr-str toimenpide-tyyppi))
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
         ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
+        (log/debug "Prööt prööt: " (pr-str (:varustetoteuma-id toimenpide)))
         (let [lahetetty? (true? (first (toteumat-q/hae-varustetoteuman-lahetystiedot
                                          db
                                          {:id (:varustetoteuma-id toimenpide)})))]
@@ -163,19 +164,19 @@
    voidaan yksilöidä helposti annetulla tunnisteella. Lisäysoperaatio yksilöidään sen muiden
    tietojen perusteella."
   [db toteuma-id tunniste tietolaji toimenpiteen-tiedot tehty-toimenpide]
-  (first (toteumat-q/hae-varustetoteuman-id
-           db
-           {:toteumaid toteuma-id
-            :tunniste tunniste
-            :tietolaji tietolaji
-            :toimenpide tehty-toimenpide
-            :tr_numero (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-            :tr_aosa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-            :tr_aet (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-            :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-            :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-            :tr_ajorata (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])
-            :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])})))
+  (:id (first (toteumat-q/hae-varustetoteuman-id
+                db
+                {:toteumaid toteuma-id
+                 :tunniste tunniste
+                 :tietolaji tietolaji
+                 :toimenpide tehty-toimenpide
+                 :tr_numero (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+                 :tr_aosa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+                 :tr_aet (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+                 :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+                 :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+                 :tr_ajorata (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])
+                 :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])}))))
 
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman.
