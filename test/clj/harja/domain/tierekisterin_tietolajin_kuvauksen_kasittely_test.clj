@@ -174,12 +174,11 @@
                             tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
 
-;; TODO Tee
-#_(deftest tarkista-koodisto-kentan-validointi
+(deftest tarkista-koodisto-kentan-validointi
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
-                           [{:kenttatunniste "kuntoluokitus",
-                             :selite "Yleinen kuntokuokitus",
+                           [{:kenttatunniste "tunniste",
+                             :selite "Tunniste",
                              :jarjestysnumero 2,
                              :koodisto
                              [{:koodiryhma "kuntoluokk",
@@ -215,11 +214,56 @@
                              :tietotyyppi :koodisto,
                              :pituus 1,
                              :ylaraja nil}]}]
-    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Annettu arvo ei sisälly koodistoon."
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei sisälly koodistoon."
                           (tierekisteri-tietue/tietolajin-arvot-map->string
-                            {"kuntoluokitus" "8"}
+                            {"tunniste" "8"}
                             tietolajin-kuvaus))
         "Koodistoon kuulumaton arvo huomattiin")))
+
+(deftest tarkista-koodisto-kentan-validointi-menee-lapi
+  (let [tietolajin-kuvaus {:tunniste "tl506",
+                           :ominaisuudet
+                           [{:kenttatunniste "tunniste",
+                             :selite "Tunniste",
+                             :jarjestysnumero 2,
+                             :koodisto
+                             [{:koodiryhma "kuntoluokk",
+                               :koodi 1,
+                               :lyhenne "huono",
+                               :selite "Ala-arvoinen",
+                               :muutospvm #inst "2009-03-22T22:00:00.000-00:00"}
+                              {:koodiryhma "kuntoluokk",
+                               :koodi 2,
+                               :lyhenne "välttävä",
+                               :selite "Merkittäviä puutteita",
+                               :muutospvm #inst "2009-03-22T22:00:00.000-00:00"}
+                              {:koodiryhma "kuntoluokk",
+                               :koodi 3,
+                               :lyhenne "tyydyttävä",
+                               :selite "Epäoleellisia puutteita",
+                               :muutospvm #inst "2009-03-22T22:00:00.000-00:00"}
+                              {:koodiryhma "kuntoluokk",
+                               :koodi 4,
+                               :lyhenne "hyvä",
+                               :selite "hyvä",
+                               :muutospvm #inst "2009-03-22T22:00:00.000-00:00"}
+                              {:koodiryhma "kuntoluokk",
+                               :koodi 5,
+                               :lyhenne "erinomaine",
+                               :selite "erinomainen",
+                               :muutospvm #inst "2009-03-22T22:00:00.000-00:00"}],
+                             :desimaalit nil,
+                             :voimassaolo
+                             {:alkupvm #inst "2009-03-22T22:00:00.000-00:00", :loppupvm nil},
+                             :alaraja nil,
+                             :pakollinen false,
+                             :tietotyyppi :koodisto,
+                             :pituus 1,
+                             :ylaraja nil}]}]
+    (tierekisteri-tietue/tietolajin-arvot-map->string
+                            {"tunniste" "3"}
+                            tietolajin-kuvaus)
+    (is true "Poikkeusta ei heitetty")))
 
 (deftest tarkista-tietolajin-arvojen-validointi-menee-lapi
   (let [arvot {"LMNUMERO" "9987"
