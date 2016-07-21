@@ -63,9 +63,12 @@
     (with-fake-http
       [#"http?://localhost" :allow]
       (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
-                                                    payload)]
+                                                    payload)
+            varustetoteumat-uuden-pyynnon-jalkeen (ffirst (q
+                                                            (str "SELECT count(*)
+                                                       FROM varustetoteuma")))]
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
                                                         (str "SELECT count(*)
                                                        FROM varustetoteuma")))]
-          (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen)))))))
+          (is (= varustetoteumat-uuden-pyynnon-jalkeen varustetoteumat-pyynnon-jalkeen)))))))
