@@ -1,3 +1,25 @@
+CREATE OR REPLACE FUNCTION tr_osan_etaisyys(
+  piste geometry, tienro INTEGER, treshold INTEGER)
+  RETURNS INTEGER
+AS $$
+DECLARE
+   alkuosa RECORD;
+   alkuet NUMERIC;
+BEGIN
+   SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
+      FROM tieverkko_paloina
+      WHERE ST_DWithin(geom, piste, treshold)
+        AND tie=tienro
+      ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
+      LIMIT 1
+   INTO alkuosa;
+   
+   SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_LineLocatePoint(alkuosa.geom, piste))) INTO alkuet;
+   
+   RETURN alkuet::INTEGER;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION multiline_project_point(amultils geometry, apoint geometry)
   RETURNS float8 AS
 $$
@@ -31,7 +53,7 @@ DECLARE
 BEGIN
   SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
   FROM tieverkko_paloina
-  WHERE ST_DWithin(geom, piste, treshold)
+  WHERE ajorata=0 AND ST_DWithin(geom, piste, treshold)
   ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
   LIMIT 1
   INTO alkuosa;
@@ -248,7 +270,7 @@ BEGIN
       let := aet_;
     END IF;
     IF ajoratavalinta=2 THEN
-      RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT))
+      RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, LEAST(1,aet/tr_pituus::FLOAT), LEAST(1,let/tr_pituus::FLOAT)))
                    FROM tieverkko_paloina
                    WHERE tie=tie_
                          AND osa=aosa_
