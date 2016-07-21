@@ -27,6 +27,8 @@
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi "
                                           "FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          varuste-arvot-kannassa (first (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
+          varuste-arvot-kannassa (ffirst (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
       (is (string? varuste-arvot-kannassa))))) ;; FIXME Testaa että arvot oikein
+
+;; TODO Testaa että jos kirjataan sama uudestaan niin varustetoteumat eivät lisäänny eikä yritetä tehdä HTTP-requestia tierekisteriin
