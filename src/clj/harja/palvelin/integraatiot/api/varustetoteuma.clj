@@ -162,12 +162,12 @@
   "Etsii toimenpiteen varustetoteuman kannasta. Lisäys- poisto- ja tarkastusoperaatioissa
    voidaan yksilöidä helposti annetulla tunnisteella. Lisäysoperaatio yksilöidään sen muiden
    tietojen perusteella."
-  [db toteuma-id tunniste toimenpiteen-tiedot tehty-toimenpide]
+  [db toteuma-id tunniste tietolaji toimenpiteen-tiedot tehty-toimenpide]
   (first (toteumat-q/hae-varustetoteuman-id
            db
            {:toteumaid toteuma-id
             :tunniste tunniste
-            :tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+            :tietolaji tietolaji
             :toimenpide tehty-toimenpide
             :tr_numero (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
             :tr_aosa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
@@ -189,7 +189,9 @@
       (let [toimenpide-tyyppi (first (keys toimenpide))
             _ (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
             toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-            tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+            tietolaji (if (not= toimenpide-tyyppi :varusteen-poisto)
+                        (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                        (:tietolajitunniste toimenpiteen-tiedot))
             tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
             tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
                        (get-in toimenpiteen-tiedot [:varuste :tunniste])
@@ -205,6 +207,7 @@
         (if-let [varustetoteuma-id (etsi-varustetoteuman-id db
                                                             toteuma-id
                                                             tunniste
+                                                            tietolaji
                                                             toimenpiteen-tiedot
                                                             (toimenpide-tyyppi->toimenpide toimenpide-tyyppi))]
           (do (log/debug "Toimenpide on jo tallennettu, ohitetaan.")
