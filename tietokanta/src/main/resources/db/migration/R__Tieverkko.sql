@@ -83,10 +83,11 @@ DECLARE
   alkuosa RECORD;
   alkuet NUMERIC;
   palojenpit NUMERIC;
+  kaikki_ajoradat geometry;
 BEGIN
   SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
   FROM tieverkko_paloina
-  WHERE ajorata=0 AND ST_DWithin(geom, piste, treshold)
+  WHERE ST_DWithin(geom, piste, treshold)
   ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
   LIMIT 1
   INTO alkuosa;
@@ -95,7 +96,8 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_LineLocatePoint(alkuosa.geom, piste))) INTO alkuet;
+  SELECT ST_Collect(geom) FROM tieverkko_paloina WHERE tie=alkuosa.tie AND osa=alkuosa.osa AND (ajorata=0 OR ajorata=alkuosa.ajorata) INTO kaikki_ajoradat;
+  SELECT geometrian_pituus(kaikki_ajoradat, piste) INTO alkuet;
 
   RETURN ROW(alkuosa.tie, alkuosa.osa, alkuet::INTEGER, 0, 0, ST_ClosestPoint(piste, alkuosa.geom)::geometry);
 END;
