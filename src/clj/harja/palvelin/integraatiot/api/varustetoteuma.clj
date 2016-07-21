@@ -193,8 +193,8 @@
   (mapv (fn [toimenpide]
           (let [toimenpide-tyyppi (first (keys toimenpide))
                 toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-                tietolaji (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
-                tietolajin-arvot (get-in toimenpide [:varuste :tietue :tietolaji :arvot])
+                tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+                tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
                 tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
                            (get-in toimenpiteen-tiedot [:varuste :tunniste])
                            (:tunniste toimenpiteen-tiedot))
@@ -202,7 +202,7 @@
                                           (validoi-ja-muunna-arvot-merkkijonoksi
                                             tierekisteri
                                             tietolajin-arvot
-                                            tietolaji))] ;; FIXME Arvot on tyhjä?
+                                            tietolaji))]
             (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
             ;; On mahdollista, että sama toteuma lähetetään useaan kertaan. Tässä tilanteessa
             ;; tarkistetaan, onko toimenpide jo tallennettu. Jos on, sitä ei tallenneta uudelleen."
