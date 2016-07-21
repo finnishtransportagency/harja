@@ -298,23 +298,20 @@
   (doseq [varustetoteuma varustetoteumat]
     (toteuman-validointi/tarkista-tehtavat db (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat]))))
 
-(defn- lisaa-lisaystoimenpiteille-livitunniste [db toimenpiteet]
-  (mapv
-    (fn [toimenpide]
-      (let [tyyppi (first (keys toimenpide))]
-        (if (not= tyyppi :varusteen-lisays)
-          toimenpide
-          (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)]
-            (assoc-in toimenpide [:varusteen-lisays :varuste :tunniste] uusi-livitunniste)))))
-    toimenpiteet))
-
 (defn- lisaa-varustetoteumien-lisaystoimenpiteille-livitunniste [db varustetoteumat]
   (mapv
     (fn [varustetoteuma]
       (assoc-in
         varustetoteuma
         [:varustetoteuma :toimenpiteet]
-        (mapv lisaa-lisaystoimenpiteille-livitunniste (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))))
+        (mapv
+          (fn [toimenpide]
+            (let [tyyppi (first (keys toimenpide))]
+              (if (= tyyppi :varusteen-lisays)
+                (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)]
+                  (assoc-in toimenpide [:varusteen-lisays :varuste :tunniste] uusi-livitunniste))
+               toimenpide)))
+              (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))))
     varustetoteumat))
 
 (defn kirjaa-toteuma
