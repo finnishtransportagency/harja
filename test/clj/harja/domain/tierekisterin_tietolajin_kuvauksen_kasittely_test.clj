@@ -72,7 +72,7 @@
             "b" "1"}
            muunnos))))
 
-(deftest tarkista-kenttien-validoinnit
+(deftest tarkista-pakollisen-kentan-validointi
   (let [tietolajin-kuvaus {:tunniste "tl506",
                            :ominaisuudet
                            [{:kenttatunniste "tie"
@@ -88,11 +88,18 @@
                           (tierekisteri-tietue/tietolajin-arvot-map->string
                             {"tie" nil}
                             tietolajin-kuvaus))
-        "Puuttuva pakollinen arvo huomattiin")
+        "Puuttuva pakollinen arvo huomattiin")))
+
+(deftest tarkista-liian-pitkan-kentan-validointi
+  (let [tietolajin-kuvaus {:tunniste "tl506",
+                           :ominaisuudet
+                           [{:kenttatunniste "tunniste"
+                             :jarjestysnumero 2
+                             :tietotyyppi :merkkijono
+                             :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä: tunniste maksimipituus: 20"
                           (tierekisteri-tietue/tietolajin-arvot-map->string
-                            {"tie" "123"
-                             "tunniste" "1234567890112345678901"}
+                            {"tunniste" "1234567890112345678901"}
                             tietolajin-kuvaus))
         "Liian pitkä arvo huomattiin")))
 
