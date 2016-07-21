@@ -195,10 +195,9 @@
                 toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
                 tietolaji (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
                 tietolajin-arvot (get-in toimenpide [:varuste :tietue :tietolaji :arvot])
-                _ (print "Toimenpiteen tyyppi on " (pr-str toimenpide-tyyppi) " ja data: " (pr-str toimenpiteen-tiedot))
                 tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
                            (get-in toimenpiteen-tiedot [:varuste :tunniste])
-                           (:tunniste toimenpiteen-tiedot)) ;; FIXME Ei oikein toimi?
+                           (:tunniste toimenpiteen-tiedot))
                 tietolajin-arvot-string (when tietolajin-arvot
                                           (validoi-ja-muunna-arvot-merkkijonoksi
                                             tierekisteri
