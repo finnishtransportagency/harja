@@ -805,3 +805,7 @@ WHERE
 -- name: hae-varustetoteuman-lahetystiedot
 SELECT lahetetty_tierekisteriin FROM varustetoteuma
 WHERE id = :id;
+
+-- name: merkitse-varustetoteuma-lahetetyksi<!
+UPDATE varustetoteuma SET lahetetty_tierekisteriin = TRUE
+WHERE id = :id;
