@@ -75,7 +75,6 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"))
         validi-kutsu "/api/varusteet/varuste?tunniste=Livi956991&tietolajitunniste=tl506&tilannepvm=2014-11-08"
         tierekisteri-resurssi "/haetietue"]
-    ;; FIXME Korjaa
     (with-fake-http
       [(str +testi-tierekisteri-url+ tierekisteri-resurssi) vastaus-xml
        (str "http://localhost:" portti validi-kutsu) :allow]
