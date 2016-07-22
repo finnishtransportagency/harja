@@ -14,24 +14,25 @@
        (update-in [:tietue :sijainti :tie] dissoc :puoli :alkupvm :ajr)))
 
 (defn luo-varusteen-lisayssanoma [otsikko kirjaaja tunniste toimenpide arvot]
-  {:lisaaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
-                             (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
-                             "")
-             :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
+  {:lisaaja {:henkilo (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
+                        (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
+                        "")
+             :jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
              :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
-             :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
-   :tietue  {:tunniste    tunniste
-             :alkupvm     (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))
-             :sijainti    {:tie {:numero   (get-in toimenpide [:varuste :tietue :sijainti :tie :numero])
-                                 :aosa     (get-in toimenpide [:varuste :tietue :sijainti :tie :aosa])
-                                 :aet      (get-in toimenpide [:varuste :tietue :sijainti :tie :aet])
-                                 :let      (get-in toimenpide [:varuste :tietue :sijainti :tie :let])
-                                 :losa     (get-in toimenpide [:varuste :tietue :sijainti :tie :losa])
-                                 :ajr      (get-in toimenpide [:varuste :tietue :sijainti :tie :ajr])
-                                 :puoli    (get-in toimenpide [:varuste :tietue :sijainti :tie :puoli])
-                                 :tilannepvm (get-in toimenpide [:varuste :tilannepvm])}}
-             :tietolaji   {:tietolajitunniste (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
-                           :arvot             arvot}}
+             :yTunnus (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
+   :tietue {:tunniste tunniste
+            :alkupvm (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))
+            :sijainti {:tie {:numero (get-in toimenpide [:varuste :tietue :sijainti :tie :numero])
+                             :aosa (get-in toimenpide [:varuste :tietue :sijainti :tie :aosa])
+                             :aet (get-in toimenpide [:varuste :tietue :sijainti :tie :aet])
+                             :let (get-in toimenpide [:varuste :tietue :sijainti :tie :let])
+                             :losa (get-in toimenpide [:varuste :tietue :sijainti :tie :losa])
+                             :ajr (get-in toimenpide [:varuste :tietue :sijainti :tie :ajr])
+                             :puoli (get-in toimenpide [:varuste :tietue :sijainti :tie :puoli])
+                             :tilannepvm (xml/json-date-time->xml-xs-date
+                                           (get-in toimenpide [:varuste :tilannepvm]))}}
+            :tietolaji {:tietolajitunniste (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
+                        :arvot arvot}}
    :lisatty (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))})
 
 (defn luo-varusteen-paivityssanoma [otsikko kirjaaja toimenpide arvot]
@@ -43,8 +44,8 @@
                 :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
    :tietue     {:tunniste    (get-in toimenpide [:varuste :tunniste])
                 :alkupvm     (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))
-                :loppupvm    (get-in toimenpide [:varuste :tietue :loppupvm])
-                :karttapvm   (get-in toimenpide [:varuste :tietue :karttapvm])
+                :loppupvm    (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :loppupvm]))
+                :karttapvm   (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :karttapvm]))
                 :piiri       (get-in toimenpide [:varuste :tietue :piiri])
                 :kuntoluokka (get-in toimenpide [:varuste :tietue :kuntoluokka])
                 :urakka      (get-in toimenpide [:varuste :tietue :tierekisteriurakkakoodi])
@@ -55,7 +56,8 @@
                                     :losa     (get-in toimenpide [:varuste :tietue :sijainti :tie :losa])
                                     :ajr      (get-in toimenpide [:varuste :tietue :sijainti :tie :ajr])
                                     :puoli    (get-in toimenpide [:varuste :tietue :sijainti :tie :puoli])
-                                    :tilannepvm (get-in toimenpide [:varuste :tilannepvm])}}
+                                    :tilannepvm (xml/json-date-time->xml-xs-date
+                                                  (get-in toimenpide [:varuste :tilannepvm]))}}
                 :tietolaji   {:tietolajitunniste (get-in toimenpide [:varuste :tietue :tietolaji :tunniste])
                               :arvot             arvot}}
 
