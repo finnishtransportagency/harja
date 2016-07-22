@@ -13,11 +13,15 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def navigaation-min-korkeus 47)
+
 (defn navigaation-korkeus []
-  (some-> js/document
-          (.getElementsByTagName "nav")
-          (aget 0)
-          .-clientHeight))
+  (Math/max
+   navigaation-min-korkeus
+   (some-> js/document
+           (.getElementsByTagName "nav")
+           (aget 0)
+           .-clientHeight)))
 
 (defn murupolun-korkeus []
   (some-> js/document
