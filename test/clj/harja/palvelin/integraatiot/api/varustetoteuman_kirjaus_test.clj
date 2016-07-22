@@ -54,7 +54,7 @@
                                               "FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               varuste-arvot-kannassa (ffirst (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))
-              lahetystiedot-kannassa (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " 17))]
+              lahetystiedot-kannassa (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " toteuma-id ";"))]
           (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen))
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
           (is (= varuste-arvot-kannassa "9987        2           2         010           11   Testi liikennemerkki                              Omistaja                                                              4          400   "))
