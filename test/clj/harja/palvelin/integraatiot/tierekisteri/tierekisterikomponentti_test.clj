@@ -18,12 +18,12 @@
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
-(defn jarjestelma-fixture [testit]
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
+(def kayttaja "destia")
+
+(def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki]))
-  (testit)
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache))
+    kayttaja
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -50,6 +50,7 @@
           (is (= odotettu-ominaisuus ominaisuus)))))))
 
 (deftest tarkista-tietolajin-haku-cachesta
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
     ;; Cache on tyhjä, joten vastaus haetaan tierekisteristä HTTP-kutsulla
     (with-fake-http
@@ -65,6 +66,7 @@
         (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))))))
 
 (deftest tarkista-tietueiden-haku
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietueet-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietueet") vastaus-xml]
@@ -106,6 +108,7 @@
           (is (= odotettu-tietue tietue)))))))
 
 (deftest tarkista-tietueen-haku
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietue") vastaus-xml]
@@ -202,6 +205,7 @@
         (is (true? (:onnistunut vastausdata)))))))
 
 (deftest tarkista-virhevastauksen-kasittely
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]

@@ -15,16 +15,13 @@
 (def kayttaja "destia")
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
-(defn jarjestelma-fixture [testit]
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
+(def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])
     :api-varusteoteuma (component/using
                          (api-varustetoteuma/->Varustetoteuma)
-                         [:http-palvelin :db :integraatioloki :tierekisteri]))
-  (testit)
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache))
+                         [:http-palvelin :db :integraatioloki :tierekisteri])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -118,6 +115,7 @@
         (is (= varustetoteumat-ennen-pyyntoa varustetoteumat-pyynnon-jalkeen))))))
 
 (deftest testaa-varustetoteuman-tallennus-kun-tietolajien-haku-epaonnistuu
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [hae-tietolaji-xml-virhe (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         payload (-> "test/resurssit/api/varustetoteuma.json"
