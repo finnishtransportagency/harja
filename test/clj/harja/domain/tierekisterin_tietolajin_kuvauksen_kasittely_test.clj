@@ -282,6 +282,44 @@
     (tierekisteri-tietue/validoi-tietolajin-arvot "tl506" arvot kenttien-kuvaukset)
     (is true "Poikkeusta ei heitetty")))
 
+(deftest tarkista-tietolajin-arvojen-validointi-ei-hyvaksy-tyhjaa-tunnistetta
+  (let [arvot {"LMNUMERO" "9987"
+               "SIVUTIE" "2"}
+        kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (is (thrown? AssertionError
+                 (tierekisteri-tietue/validoi-tietolajin-arvot nil arvot kenttien-kuvaukset)))))
+
+(deftest tarkista-tietolajin-arvojen-validointi-ei-hyvaksy-tyhjia-arvoja
+  (let [kenttien-kuvaukset {:tunniste "tl506",
+                            :ominaisuudet
+                            [{:kenttatunniste "LMNUMERO"
+                              :jarjestysnumero 1
+                              :pakollinen true
+                              :tietotyyppi :merkkijono
+                              :pituus 20}
+                             {:kenttatunniste "SIVUTIE"
+                              :jarjestysnumero 2
+                              :tietotyyppi :merkkijono
+                              :pituus 10}]}]
+    (is (thrown? AssertionError
+                 (tierekisteri-tietue/validoi-tietolajin-arvot "tl506" nil kenttien-kuvaukset)))))
+
+(deftest tarkista-tietolajin-arvojen-validointi-ei-hyvaksy-tyhjia-kenttakuvauksia
+  (let [arvot {"LMNUMERO" "9987"
+               "SIVUTIE" "2"}]
+    (is (thrown? AssertionError
+                 (tierekisteri-tietue/validoi-tietolajin-arvot "tl506" arvot nil)))))
+
 (deftest tarkista-tietolajin-arvojen-validointi-heittaa-poikkeuksen-kun-avain-puuttuu
   (let [arvot {"SIVUTIE" "2"}
         kenttien-kuvaukset {"tunniste" "tl506",

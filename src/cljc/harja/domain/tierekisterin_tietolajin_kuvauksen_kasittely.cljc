@@ -44,6 +44,8 @@
   "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset.
    Jos vaatimuksia ei täytetä, heittää poikkeuksen, muuten palauttaa nil."
   [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi koodisto] :as kentan-kuvaus} tietolaji]
+  (assert tietolaji "Arvoa ei voi validoida ilman tietolajia")
+  (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (log/debug "Validoidaan arvo " (pr-str arvo) " kentän kuvauksella: " (pr-str kentan-kuvaus))
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
   (validoi-pituus arvo tietolaji kenttatunniste pituus)
@@ -53,6 +55,9 @@
   "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
    Jos arvoissa on ongelma, heittää poikkeuksen. Jos arvot ovat ok, palauttaa nil."
   [tietolaji arvot tietolajin-kuvaus]
+  (assert tietolaji "Arvoja ei voi validoida ilman tietolajia")
+  (assert arvot "Ei validoitavia arvoja")
+  (assert tietolajin-kuvaus "Arvoja ei voida validoida ilman tietolajin kuvausta")
   (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
         kuvatut-kenttatunnisteet (into #{} (map :kenttatunniste kenttien-kuvaukset))
         annetut-kenttatunnisteet (into #{} (keys arvot))
