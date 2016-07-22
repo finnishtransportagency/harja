@@ -35,10 +35,11 @@
 (defn- validoi-ja-muunna-arvot-merkkijonoksi
   "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
   [tierekisteri arvot tietolaji]
-  (let [tietolajin-kuvaus (tierekisteri/hae-tietolajit
+  (let [vastaus (tierekisteri/hae-tietolajit
                             tierekisteri
                             tietolaji
-                            nil)]
+                            nil)
+        tietolajin-kuvaus (:tietolaji vastaus)]
     (try
       (tr-tietolaji/validoi-tietolajin-arvot
        tietolaji
