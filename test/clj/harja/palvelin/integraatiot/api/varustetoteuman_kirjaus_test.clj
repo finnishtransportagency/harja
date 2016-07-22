@@ -45,7 +45,7 @@
        #"http?://localhost" :allow]
       (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
                                                     payload)]
-        (println (:body vastaus-lisays))
+
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
                                                         (str "SELECT count(*)
@@ -53,10 +53,12 @@
               toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi "
                                               "FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              varuste-arvot-kannassa (ffirst (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
+              varuste-arvot-kannassa (ffirst (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))
+              lahetystiedot-kannassa (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " 17))]
           (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen))
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
-          ;; FIXME Testaa että arvot oikein
+          (is (= varuste-arvot-kannassa "9987        2           2         010           11   Testi liikennemerkki                              Omistaja                                                              4          400   "))
+          (is (every? #(= [true] %) lahetystiedot-kannassa))
           (is (string? varuste-arvot-kannassa)))))
 
     ;; Lähetetään sama pyyntö uudelleen. Varustetoteumien määrä ei saa lisääntyä eikä niitä saa lähettää
@@ -66,13 +68,14 @@
       [#"http?://localhost" :allow]
       (let [varustetoteumat-ennen-uutta-pyyntoa (ffirst (q
                                                           (str "SELECT count(*)
-                                                       FROM varustetoteuma")))
+                                                                FROM varustetoteuma")))
             vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
                                                     payload)]
+        (println (:body vastaus-lisays))
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-uuden-pyynnon-jalkeen (ffirst (q
                                                               (str "SELECT count(*)
-                                                       FROM varustetoteuma")))]
+                                                                    FROM varustetoteuma")))]
           (is (= varustetoteumat-ennen-uutta-pyyntoa
                  varustetoteumat-uuden-pyynnon-jalkeen)))))))
 
