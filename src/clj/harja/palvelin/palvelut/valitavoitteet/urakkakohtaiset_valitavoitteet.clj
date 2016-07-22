@@ -18,7 +18,7 @@
 
 (defn merkitse-valmiiksi! [db user {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
   (log/info "merkitse valmiiksi: " tiedot)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (oikeudet/vaadi-oikeus "valmis" oikeudet/urakat-valitavoitteet user urakka-id)
   (jdbc/with-db-transaction [c db]
     (and (= 1 (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
                                      (:id user) urakka-id valitavoite-id))

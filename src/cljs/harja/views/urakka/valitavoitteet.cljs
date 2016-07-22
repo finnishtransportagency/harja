@@ -85,7 +85,7 @@
            [y/otsikolla "Urakoitsijan kommentti" kommentti])])]
 
      (when (and (nil? pvm)
-                (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id ur)))
+                (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id ur)))
        ;; Ei ole valmis, sallitaan urakoitsijan käyttäjän merkitä se valmiiksi
        [valitavoite-valmis-lomake opts ur vt])]))
 
