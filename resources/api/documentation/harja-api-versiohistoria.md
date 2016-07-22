@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.2.2</b>
-<b>Julkaistu: 13.7.2016</b>
+<b>Nykyinen versio: 0.2.4</b>
+<b>Julkaistu: 22.7.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.4. Julkaistu 22.7.2016:
+    - Varusterajapinnat päivitetty. Jatkossa varusteiden ja laitteiden teknisten arvojen parsinta tehdään Harjan puolella. Samalla mahdollistettu usean varustetoteuman sekä yksittäisen varustetoteuman sisällä usean toimenpiteen kirjaaminen kerralla.
 - Versionumero: 0.2.3. Julkaistu 15.7.2016:
     - Yhtenäistetty työkoneiden tehtävien enum-arvot kannan omien enumien kanssa, mistä johtuen tehtävien nimiin tehty pieniä muutoksia.
     - Ylläpito-urakoissa seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa: paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite
