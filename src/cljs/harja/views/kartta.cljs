@@ -36,12 +36,15 @@
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
-                            kork @dom/korkeus]
+                            kork @dom/korkeus
+                            murupolku? @nav/murupolku-nakyvissa?]
                         (case koko
                           :S +kartan-korkeus-s+
                           :M (int (* 0.25 kork))
                           :L (int (* 0.60 kork))
-                          :XL (int (* 0.80 kork))
+                          :XL (int (if murupolku?
+                                     (* 0.80 kork)
+                                     (- kork (yleiset/navigaation-korkeus) 5)))
                           (int (* 0.60 kork))))))
 
 ;; Kanava, jonne kartan uusi sijainti kirjoitetaan
