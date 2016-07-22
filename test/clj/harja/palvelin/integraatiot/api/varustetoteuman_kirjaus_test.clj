@@ -5,26 +5,30 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
             [org.httpkit.fake :refer [with-fake-http]]
+            [clojure.string :as str]
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
             [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
             [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]))
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+            [clojure.data.json :as json]))
 
 (def kayttaja "destia")
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
-(def jarjestelma-fixture
+(defn jarjestelma-fixture [testit]
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])
     :api-varusteoteuma (component/using
                          (api-varustetoteuma/->Varustetoteuma)
-                         [:http-palvelin :db :integraatioloki :tierekisteri])))
+                         [:http-palvelin :db :integraatioloki :tierekisteri]))
+  (testit)
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tallenna-varustetoteuma
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
         lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
         paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
@@ -79,8 +83,41 @@
           (is (= varustetoteumat-ennen-uutta-pyyntoa
                  varustetoteumat-uuden-pyynnon-jalkeen)))))))
 
+(deftest tarkista-virheellisen-varustetoteuman-kirjaaminen
+  (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
+        lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        varustetoteumat-ennen-pyyntoa (ffirst (q
+                                                (str "SELECT count(*)
+                                                       FROM varustetoteuma")))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        payload (-> "test/resurssit/api/varustetoteuma_virheelliset_arvot.json"
+                    slurp
+                    (.replace "__ID__" (str ulkoinen-id)))
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
+       (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
+       (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
+       (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
+       #"http?://localhost" :allow]
+      (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
+                                                    payload)
+            varustetoteumat-pyynnon-jalkeen (ffirst (q
+                                                      (str "SELECT count(*)
+                                                       FROM varustetoteuma")))]
+        (is (= 400 (:status vastaus-lisays)))
+        (is (str/includes? (-> (:body vastaus-lisays)
+                               (json/read-str)
+                               (get "virheet")
+                               first
+                               (get "virhe")
+                               (get "viesti"))
+                           "Tietolajin arvoissa on ylimääräisiä kenttiä"))
+        (is (= varustetoteumat-ennen-pyyntoa varustetoteumat-pyynnon-jalkeen))))))
+
 (deftest testaa-varustetoteuman-tallennus-kun-tietolajien-haku-epaonnistuu
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [hae-tietolaji-xml-virhe (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         payload (-> "test/resurssit/api/varustetoteuma.json"
@@ -105,7 +142,6 @@
           (is (= varustetoteumat-ennen-pyyntoa varustetoteumat-pyynnon-jalkeen)))))))
 
 (deftest testaa-varustetoteuman-tallennus-kun-tierekisteriin-lahetykset-epaonnistuvat
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
         lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-tietueen-lisays-epaonnistui-response.xml"))
         paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-tietueen-lisays-epaonnistui-response.xml"))
