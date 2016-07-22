@@ -669,9 +669,6 @@
      :hae-kokonaishintaisen-toteuman-tiedot
      (fn [user {:keys [urakka-id pvm toimenpidekoodi]}]
        (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi))
-     :urakan-kokonaishintaisten-toteumien-reitit
-     (fn [user tiedot]
-       (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot))
      :urakan-varustetoteumat
      (fn [user tiedot]
        (hae-urakan-varustetoteumat db user tiedot))
@@ -700,8 +697,6 @@
       :tallenna-toteuma-ja-toteumamateriaalit
       :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
       :hae-kokonaishintaisen-toteuman-tiedot
-      :urakan-kokonaishintaisten-toteumien-reitit
-      :urakan-yksikkohintaisten-toteumien-reitit
       :urakan-varustetoteumat
       :hae-toteuman-reitti-ja-tr-osoite)
     this))

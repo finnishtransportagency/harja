@@ -85,15 +85,6 @@
    :suorittajan-nimi (:nimi @u/urakan-organisaatio)
    :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio)})
 
-(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] toimenpide tehtava]
-  (k/post! :urakan-yksikkohintaisten-toteumien-reitit
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm
-            :toimenpide toimenpide
-            :tehtava tehtava}))
-
 (defn luo-yksikkohintaisten-toteumien-kuvataso
   [urakka-id sopimus-id taso-paalla? [alkupvm loppupvm] toimenpide toimenpidenimet]
   (when taso-paalla?
