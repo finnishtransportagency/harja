@@ -179,6 +179,7 @@ Seuraavat headerit tuettuna:
     * Järjestelmävastaava: Jarjestelmavastaava
     * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
     * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
+    * Urakan vastuuhenkilö: <urakan-sampoid>_vastuuhenkilo
 * OAM_ORGANIZATION: Organisaation nimi, esim. "Liikennevirasto" tai "YIT Rakennus Oy"
 * OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
 * OAM_USER_FIRST_NAME: Etunimi
