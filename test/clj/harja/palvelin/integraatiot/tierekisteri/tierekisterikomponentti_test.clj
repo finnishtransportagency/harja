@@ -202,6 +202,7 @@
         (is (true? (:onnistunut vastausdata)))))))
 
 (deftest tarkista-virhevastauksen-kasittely
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
