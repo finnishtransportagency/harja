@@ -42,7 +42,7 @@
     (try
       (tr-tietolaji/validoi-tietolajin-arvot
        tietolaji
-       (clojure.walk/stringify-keys arvot) ;; TODO Käytä muuntimessa oikeita keywordeja
+       (clojure.walk/stringify-keys arvot)
        tietolajin-kuvaus)
       (catch Exception e
         (throw+ {:type virheet/+viallinen-kutsu+
