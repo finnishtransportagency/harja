@@ -111,7 +111,7 @@
     (validoi-arvo arvo kentan-kuvaus tietolaji)
     (merkkijono/tayta-oikealle pituus arvo)))
 
-(defn tietolajin-arvot-map->string
+(defn tietolajin-arvot-map->merkkijono
   "Ottaa arvot-mapin ja purkaa sen stringiksi käyttäen apuna annettua tietolajin kuvausta.
   Tietolajin kuvaus on tierekisterin palauttama kuvaus tietolajista, muunnettuna Clojure-mapiksi."
   [arvot-map tietolajin-kuvaus]

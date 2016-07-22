@@ -28,7 +28,7 @@
      :uudet-idt (mapv :uusi-id vastaukset)}))
 
 (defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
-  (tr-tietolaji/tietolajin-arvot-map->string
+  (tr-tietolaji/tietolajin-arvot-map->merkkijono
     (clojure.walk/stringify-keys arvot-map)
     tietolajin-kuvaus))
 

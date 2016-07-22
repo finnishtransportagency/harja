@@ -37,7 +37,7 @@
 
 
 (deftest testaa-arvot-mapin-muuntaminen-merkkijonoksi
-  (let [muunnos (tierekisteri-tietue/tietolajin-arvot-map->string
+  (let [muunnos (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                   {"a" "testi"
                    "b" "1"}
                   {:tunniste "tl506",
@@ -81,7 +81,7 @@
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Pakollinen arvo puuttuu kentästä 'tie'."
-                          (tierekisteri-tietue/tietolajin-arvot-map->string
+                          (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tie" nil}
                             tietolajin-kuvaus))
         "Puuttuva pakollinen arvo huomattiin")))
@@ -94,7 +94,7 @@
                              :pakollinen true
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
-    (tierekisteri-tietue/tietolajin-arvot-map->string
+    (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tie" "123"}
                             tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
@@ -107,7 +107,7 @@
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä 'tunniste', maksimipituus: 20."
-                          (tierekisteri-tietue/tietolajin-arvot-map->string
+                          (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "1234567890112345678901"}
                             tietolajin-kuvaus))
         "Liian pitkä arvo huomattiin")))
@@ -119,7 +119,7 @@
                              :jarjestysnumero 1
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
-    (tierekisteri-tietue/tietolajin-arvot-map->string
+    (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
       {"tunniste" "12345678901234567890"}
       tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
@@ -132,7 +132,7 @@
                              :tietotyyppi :numeerinen
                              :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole numero."
-                          (tierekisteri-tietue/tietolajin-arvot-map->string
+                          (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "a"}
                             tietolajin-kuvaus))
         "Ei-numero tyyppinen arvo huomattiin")))
@@ -144,7 +144,7 @@
                              :jarjestysnumero 1
                              :tietotyyppi :numeerinen
                              :pituus 20}]}]
-    (tierekisteri-tietue/tietolajin-arvot-map->string
+    (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "42"}
                             tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
@@ -157,7 +157,7 @@
                              :tietotyyppi :paivamaara
                              :pituus 20}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole muotoa iso-8601."
-                          (tierekisteri-tietue/tietolajin-arvot-map->string
+                          (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "2010-12"}
                             tietolajin-kuvaus))
         "Ei-pvm tyyppinen kenttä huomatitin")))
@@ -169,7 +169,7 @@
                              :jarjestysnumero 2
                              :tietotyyppi :paivamaara
                              :pituus 20}]}]
-    (tierekisteri-tietue/tietolajin-arvot-map->string
+    (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "2010-12-12"}
                             tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
@@ -215,7 +215,7 @@
                              :pituus 1,
                              :ylaraja nil}]}]
     (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei sisälly koodistoon."
-                          (tierekisteri-tietue/tietolajin-arvot-map->string
+                          (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "8"}
                             tietolajin-kuvaus))
         "Koodistoon kuulumaton arvo huomattiin")))
@@ -260,7 +260,7 @@
                              :tietotyyppi :koodisto,
                              :pituus 1,
                              :ylaraja nil}]}]
-    (tierekisteri-tietue/tietolajin-arvot-map->string
+    (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "3"}
                             tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))

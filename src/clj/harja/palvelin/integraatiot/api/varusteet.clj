@@ -15,6 +15,7 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.tyokalut.merkkijono :as merkkijono]
+            [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
@@ -77,6 +78,38 @@
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
       muunnettu-vastausdata)))
 
+(defn- muodosta-tietueiden-hakuvastaus [vastausdata]
+  {:varusteet
+   (mapv
+     (fn [tietue]
+       (let [vastaus (tierekisteri/hae-tietolajit
+                       tierekisteri
+                       tietolaji
+                       nil)
+             tietolajin-kuvaus (:tietolaji vastaus)
+             arvot (first (get-in tietue [:tietue :tietolaji :arvot]))
+             arvot-mappina (tr-tietolaji/tietolajin-arvot-merkkijono->map arvot)]
+         {:varuste
+          {:tunniste (get-in tietue [:tietue :tunniste])
+           :tietue
+           {:sijainti {:tie {:numero (get-in tietue [:tietue :sijainti :tie :numero]),
+                             :aosa (get-in tietue [:tietue :sijainti :tie :aosa]),
+                             :aet (get-in tietue [:tietue :sijainti :tie :aet]),
+                             :losa (get-in tietue [:tietue :sijainti :tie :losa]),
+                             :let (get-in tietue [:tietue :sijainti :tie :let]),
+                             :ajr (get-in tietue [:tietue :sijainti :tie :ajr]),
+                             :puoli (get-in tietue [:tietue :sijainti :tie :puoli]),
+                             :kaista (get-in tietue [:tietue :sijainti :tie :kaista])}},
+            :alkupvm (get-in tietue [:tietue :alkupvm])
+            :loppupvm (get-in tietue [:tietue :loppupvm])
+            :karttapvm (get-in tietue [:tietue :karttapvm]),
+            :kuntoluokitus (get-in tietue [:tietue :kuntoluokka]),
+            :ely nil, ;; FIXME Mistähän tämä tulee?
+            :tietolaji {:tunniste (get-in tietue [:tietue :tietolaji :tietolajitunniste]),
+                        :arvot arvot-mappina}}}}))
+
+     (:tietueet vastausdata))})
+
 (defn hae-varusteet [tierekisteri parametrit kayttaja]
   (tarkista-tietueiden-haun-parametrit parametrit)
   (let [tierekisteriosoite (tierekisteri-sanomat/luo-tierekisteriosoite parametrit)
@@ -85,8 +118,8 @@
         tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite) " tilannepäivämäärällä: " tilannepvm)
-    (let [vastausdata (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm tilannepvm)
-          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
+    (let [vastaus (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm tilannepvm)
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {}))))
@@ -97,8 +130,8 @@
         tietolajitunniste (get parametrit "tietolajitunniste")
         tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
-    (let [vastausdata (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste tilannepvm)
-          muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietueiden-hakuvastaus vastausdata)]
+    (let [vastaus (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste tilannepvm)
+          muunnettu-vastausdata (muodosta-tietueen-hakuvastaus vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {}))))
