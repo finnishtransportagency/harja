@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+-- Varustetoteumalle tieto siitä onko lähetetty tierekisteriin
+ALTER TABLE varustetoteuma ADD COLUMN lahetetty_tierekisteriin BOOLEAN;
+=======
 -- Reaaliaikaseurannan uudet tehtävät
 
 ALTER TYPE suoritettavatehtava RENAME TO suoritettavatehtava_tmp;
@@ -90,3 +94,4 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
+>>>>>>> develop
