@@ -502,7 +502,7 @@
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user
                                                       {:keys [urakka-id sopimus-id toteuma-id
                                                               alkupvm loppupvm toimenpidekoodi]}]
-  (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+
   (let [reitit (into []
                      (comp
                        (harja.geo/muunna-pg-tulokset :reitti)
@@ -569,40 +569,37 @@
             (map konv/alaviiva->rakenne))
           (q/hae-toteuman-reitti-ja-tr-osoite db id))))
 
-(defn- hae-kokonaishintainen-toteuma-kartalle [db user {:keys [extent parametrit]}]
-  (let [p (some-> parametrit (get "kht") transit/lue-transit-string)]
-    (esitettavat-asiat/kartalla-esitettavaan-muotoon
-     (map #(assoc % :tyyppi-kartalla :toteuma)
-          (hae-urakan-kokonaishintaisten-toteumien-reitit db user p)))))
-
-(defn- hae-yksikkohintaiset-toteumat-kartalle [db user {:keys [extent parametrit]}]
-  (let [{urakka-id :urakka-id :as p} (some-> parametrit (get "yht") transit/lue-transit-string)
-        _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot
-                                     user urakka-id)
-        [x1 y1 x2 y2] extent
+(defn- hae-toteumareitit-kartalle [db user extent p kysely-fn]
+  (let [[x1 y1 x2 y2] extent
         alue {:xmin x1 :ymin y1
               :xmax x2 :ymax y2}
         toleranssi (geo/karkeistustoleranssi alue)
         kartalle-xf (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf nil :id)
 
         ch (async/chan 32 (comp
-                           ;;(map #(do (println "ASIA: " %) %))
                            (map konv/alaviiva->rakenne)
                            (map #(assoc % :tyyppi-kartalla :toteuma
                                         :tehtavat [(:tehtava %)]))
                            kartalle-xf))]
     (async/thread
-      (println "TIETOKANTAHAKU ALOITETTU")
-      (try (q/hae-yksikkohintaisten-toiden-reitit db ch
-                                                  (let [a (merge p
-                                                                 alue
-                                                                 {:toleranssi toleranssi})]
-                                                    (println (pr-str a))
-                                                    a))
-           (println "TIETOKANTAHAKU VALMIS")
+      (try (kysely-fn db ch
+                      (merge p
+                             alue
+                             {:toleranssi toleranssi}))
            (catch Throwable t
-             (log/debug t "Yksikköhintaisten reittien haku epäonnistui"))))
+             (log/warn t "Toteumareittien haku epäonnistui"))))
     ch))
+
+(defn- hae-kokonaishintainen-toteuma-kartalle [db user {:keys [extent parametrit]}]
+  (let [{urakka-id :urakka-id :as p} (some-> parametrit (get "kht") transit/lue-transit-string)
+        _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)]
+    (hae-toteumareitit-kartalle db user extent p q/hae-kokonaishintaisten-toiden-reitit)))
+
+(defn- hae-yksikkohintaiset-toteumat-kartalle [db user {:keys [extent parametrit]}]
+  (let [{urakka-id :urakka-id :as p} (some-> parametrit (get "yht") transit/lue-transit-string)
+        _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot
+                                     user urakka-id)]
+    (hae-toteumareitit-kartalle db user extent p q/hae-yksikkohintaisten-toiden-reitit)))
 
 (defrecord Toteumat []
   component/Lifecycle
