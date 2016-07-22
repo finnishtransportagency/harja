@@ -59,7 +59,10 @@
         ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)]
     ;; Tarkista, ettei ole ylimääräisiä kenttiä
     (when-not (empty? ylimaaraiset-kentat)
-      (heita-validointipoikkeus tietolaji (str "Tietolajin arvoissa on ylimääräisiä kenttiä, joita ei löydy tierekisterin tietolajin kuvauksesta: " (str/join ", " ylimaaraiset-kentat))))
+      (heita-validointipoikkeus
+        tietolaji
+        (str "Tietolajin arvoissa on ylimääräisiä kenttiä, joita ei löydy tierekisterin tietolajin kuvauksesta: "
+             (str/join ", " ylimaaraiset-kentat) ". Sallitut kentät: " (str/join ", " kuvatut-kenttatunnisteet))))
 
     ;; Eli ylimääräisiä kenttiä, validoi annetut kentät
     (doseq [kentan-kuvaus kenttien-kuvaukset]
