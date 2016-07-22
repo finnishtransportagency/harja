@@ -39,11 +39,14 @@
                             tierekisteri
                             tietolaji
                             nil)]
-    ;; TODO Varmista, että mahdollinen exception päätyy API-kutsujalle asti
-    (tr-tietolaji/validoi-tietolajin-arvot
-      tietolaji
-      (clojure.walk/stringify-keys arvot) ;; Käytä muuntimessa oikeita keywordeja
-      tietolajin-kuvaus)
+    (try
+      (tr-tietolaji/validoi-tietolajin-arvot
+       tietolaji
+       (clojure.walk/stringify-keys arvot) ;; TODO Käytä muuntimessa oikeita keywordeja
+       tietolajin-kuvaus)
+      (catch Exception e
+        (throw+ {:type virheet/+viallinen-kutsu+
+                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
     (muunna-tietolajin-arvot-stringiksi
       tietolajin-kuvaus
       arvot)))

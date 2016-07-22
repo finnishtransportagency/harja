@@ -14,7 +14,7 @@
 (defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
   (sort-by :jarjestysnumero (filter :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))))
 
-(defn- heita-poikkeus [tietolaji virhe]
+(defn- heita-validointipoikkeus [tietolaji virhe]
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
     (throw (Exception. viesti))))
 
@@ -24,21 +24,21 @@
     :numeerinen (try
                   (Integer. arvo)
                   (catch Exception e
-                    (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero."))))
+                    (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero."))))
     :paivamaara (try
                   (pvm/iso-8601->pvm arvo)
                   (catch Exception e
-                    (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601."))))
+                    (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601."))))
     :koodisto (when (empty? (filter #(= (str (:koodi %)) arvo) koodisto))
-                (heita-poikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei sisälly koodistoon.")))))
+                (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei sisälly koodistoon.")))))
 
 (defn- validoi-pituus [arvo tietolaji kenttatunniste pituus]
   (when (< pituus (count arvo))
-    (heita-poikkeus tietolaji (str "Liian pitkä arvo kentässä '" kenttatunniste "', maksimipituus: " pituus "."))))
+    (heita-validointipoikkeus tietolaji (str "Liian pitkä arvo kentässä '" kenttatunniste "', maksimipituus: " pituus "."))))
 
 (defn- validoi-pakollisuus [arvo tietolaji kenttatunniste pakollinen]
   (when (and pakollinen (not arvo))
-    (heita-poikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä '" kenttatunniste "'."))))
+    (heita-validointipoikkeus tietolaji (str "Pakollinen arvo puuttuu kentästä '" kenttatunniste "'."))))
 
 (defn validoi-arvo
   "Validoi, että annettu arvo täyttää kentän kuvauksen vaatimukset.
@@ -59,8 +59,7 @@
         ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)]
     ;; Tarkista, ettei ole ylimääräisiä kenttiä
     (when-not (empty? ylimaaraiset-kentat)
-      (throw (Exception. "Tietolajin arvoissa on ylimääräisiä kenttiä,
-       joita ei löydy tierekisterin tietolajin kuvauksesta: " (str/join ", " ylimaaraiset-kentat))))
+      (heita-validointipoikkeus tietolaji (str "Tietolajin arvoissa on ylimääräisiä kenttiä, joita ei löydy tierekisterin tietolajin kuvauksesta: " (str/join ", " ylimaaraiset-kentat))))
 
     ;; Eli ylimääräisiä kenttiä, validoi annetut kentät
     (doseq [kentan-kuvaus kenttien-kuvaukset]
