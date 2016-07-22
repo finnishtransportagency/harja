@@ -7,20 +7,21 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
             [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]))
 
 (def kayttaja "destia")
+(def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])
     :api-varusteoteuma (component/using
                          (api-varustetoteuma/->Varustetoteuma)
-                         [:http-palvelin :db :integraatioloki])))
+                         [:http-palvelin :db :integraatioloki :tierekisteri])))
 
 (use-fixtures :once jarjestelma-fixture)
-
-(def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
 (deftest tallenna-varustetoteuma
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
@@ -44,6 +45,7 @@
        #"http?://localhost" :allow]
       (let [vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
                                                     payload)]
+        (println (:body vastaus-lisays))
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
                                                         (str "SELECT count(*)
