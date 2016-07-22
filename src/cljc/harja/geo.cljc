@@ -2,7 +2,32 @@
   "Yleisiä geometria-apureita"
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
-           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection Geometry))))
+              (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection Geometry)))
+  (:require  [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]
+            [harja.palvelin.komponentit.http-palvelin
+             :refer [julkaise-palvelu poista-palvelut]]
+
+            [harja.domain.ilmoitukset :as ilmoitukset-domain]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.hallintayksikot :as hal-q]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.tilannekuva :as q]
+            [harja.palvelin.palvelut.urakat :as urakat]
+
+            [harja.domain.laadunseuranta :as laadunseuranta]
+            [harja.geo :as geo]
+            [harja.pvm :as pvm]
+            [harja.domain.tilannekuva :as tk]
+            [harja.ui.kartta.esitettavat-asiat
+             :as esitettavat-asiat
+             :refer [kartalla-esitettavaan-muotoon-xf]]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [clojure.set :refer [union]]
+            [harja.transit :as transit]
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.core.async :as async]))
 
 #?(:clj
    (defprotocol MuunnaGeometria
@@ -353,3 +378,16 @@ pisteen [px py]."
   (let [dx (- x2 x1)
         dy (- y2 y1)]
     (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn alueen-hypotenuusa
+  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [{:keys [xmin ymin xmax ymax]}]
+  (let [dx (- xmax xmin)
+        dy (- ymax ymin)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn karkeistustoleranssi
+  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
+  [alue]
+  (let [pit (alueen-hypotenuusa alue)]
+    (/ pit 200)))
