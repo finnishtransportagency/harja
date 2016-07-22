@@ -18,7 +18,8 @@
             [clj-time.core :as t]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.transit :as transit]))
+            [harja.transit :as transit]
+            [clojure.core.async :as async]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -529,25 +530,6 @@
                             :toteumaid)]
     kasitellyt-reitit))
 
-(defn hae-urakan-yksikkohintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
-  (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot user urakka-id)
-  (let [reitit (into []
-                     (comp
-                       (harja.geo/muunna-pg-tulokset :reitti)
-                       (map konv/alaviiva->rakenne))
-                     (q/hae-yksikkohintaisten-toiden-reitit db
-                                                                   urakka-id
-                                                                   sopimus-id
-                                                                   (konv/sql-date alkupvm)
-                                                                   (konv/sql-date loppupvm)
-                                                                   toimenpide
-                                                                   tehtava))
-        kasitellyt-reitit (konv/sarakkeet-vektoriin
-                            reitit
-                            {:tehtava :tehtavat}
-                            :toteumaid)]
-    kasitellyt-reitit))
-
 (defn hae-urakan-varustetoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero]}]
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-varusteet user urakka-id)
   (log/debug "Haetaan varustetoteumat: " urakka-id sopimus-id alkupvm loppupvm tienumero)
@@ -593,6 +575,35 @@
      (map #(assoc % :tyyppi-kartalla :toteuma)
           (hae-urakan-kokonaishintaisten-toteumien-reitit db user p)))))
 
+(defn- hae-yksikkohintaiset-toteumat-kartalle [db user {:keys [extent parametrit]}]
+  (let [{urakka-id :urakka-id :as p} (some-> parametrit (get "yht") transit/lue-transit-string)
+        _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot
+                                     user urakka-id)
+        [x1 y1 x2 y2] extent
+        alue {:xmin x1 :ymin y1
+              :xmax x2 :ymax y2}
+        toleranssi (geo/karkeistustoleranssi alue)
+        kartalle-xf (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf nil :id)
+
+        ch (async/chan 32 (comp
+                           ;;(map #(do (println "ASIA: " %) %))
+                           (map konv/alaviiva->rakenne)
+                           (map #(assoc % :tyyppi-kartalla :toteuma
+                                        :tehtavat [(:tehtava %)]))
+                           kartalle-xf))]
+    (async/thread
+      (println "TIETOKANTAHAKU ALOITETTU")
+      (try (q/hae-yksikkohintaisten-toiden-reitit db ch
+                                                  (let [a (merge p
+                                                                 alue
+                                                                 {:toleranssi toleranssi})]
+                                                    (println (pr-str a))
+                                                    a))
+           (println "TIETOKANTAHAKU VALMIS")
+           (catch Throwable t
+             (log/debug t "Yksikköhintaisten reittien haku epäonnistui"))))
+    ch))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -603,7 +614,10 @@
     (when karttakuvat
       (karttakuvat/rekisteroi-karttakuvan-lahde!
        karttakuvat :kokonaishintainen-toteuma
-       (partial #'hae-kokonaishintainen-toteuma-kartalle db)))
+       (partial #'hae-kokonaishintainen-toteuma-kartalle db))
+      (karttakuvat/rekisteroi-karttakuvan-lahde!
+       karttakuvat :yksikkohintaiset-toteumat
+       (partial #'hae-yksikkohintaiset-toteumat-kartalle db)))
 
     (julkaise-palvelut
      http
@@ -661,9 +675,6 @@
      :urakan-kokonaishintaisten-toteumien-reitit
      (fn [user tiedot]
        (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot))
-     :urakan-yksikkohintaisten-toteumien-reitit
-     (fn [user tiedot]
-       (hae-urakan-yksikkohintaisten-toteumien-reitit db user tiedot))
      :urakan-varustetoteumat
      (fn [user tiedot]
        (hae-urakan-varustetoteumat db user tiedot))
