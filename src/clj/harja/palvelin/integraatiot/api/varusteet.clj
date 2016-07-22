@@ -82,13 +82,16 @@
   {:varusteet
    (mapv
      (fn [tietue]
-       (let [vastaus (tierekisteri/hae-tietolajit
+       (let [tietolaji (get-in tietue [:tietue :tietolaji :tietolajitunniste])
+             vastaus (tierekisteri/hae-tietolajit
                        tierekisteri
                        tietolaji
                        nil)
              tietolajin-kuvaus (:tietolaji vastaus)
              arvot (first (get-in tietue [:tietue :tietolaji :arvot]))
-             arvot-mappina (tr-tietolaji/tietolajin-arvot-merkkijono->map arvot)]
+             arvot-mappina (tr-tietolaji/tietolajin-arvot-merkkijono->map
+                             arvot
+                             tietolajin-kuvaus)]
          {:varuste
           {:tunniste (get-in tietue [:tietue :tunniste])
            :tietue
@@ -105,7 +108,7 @@
             :karttapvm (get-in tietue [:tietue :karttapvm]),
             :kuntoluokitus (get-in tietue [:tietue :kuntoluokka]),
             :ely nil, ;; FIXME Mistähän tämä tulee?
-            :tietolaji {:tunniste (get-in tietue [:tietue :tietolaji :tietolajitunniste]),
+            :tietolaji {:tunniste tietolaji,
                         :arvot arvot-mappina}}}}))
      (:tietueet vastausdata))})
 
