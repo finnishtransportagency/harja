@@ -79,4 +79,59 @@
           (is (= varustetoteumat-ennen-uutta-pyyntoa
                  varustetoteumat-uuden-pyynnon-jalkeen)))))))
 
-;; TODO Testaa mitä tapahtuu kun missä tahansa vaiheessa tierekisteri antaa virheellisen vastauksen
+(deftest testaa-varustetoteuman-tallennus-kun-tietolajien-haku-epaonnistuu
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
+  (let [hae-tietolaji-xml-virhe (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        payload (-> "test/resurssit/api/varustetoteuma.json"
+                    slurp
+                    (.replace "__ID__" (str ulkoinen-id)))
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml-virhe
+       #"http?://localhost" :allow]
+      (let [varustetoteumat-ennen-pyyntoa (ffirst (q
+                                                    (str "SELECT count(*)
+                                                                FROM varustetoteuma")))
+            vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
+                                                    payload)]
+
+        ;; Oletus on, ettei yksikään toimenpide tallennu Harjaan eikä niitä lähetetä tierekisteriin, koska
+        ;; arvoja ei voitu käsitellä
+        (is (= 500 (:status vastaus-lisays)))
+        (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
+                                                        (str "SELECT count(*)
+                                                       FROM varustetoteuma")))]
+          (is (= varustetoteumat-ennen-pyyntoa varustetoteumat-pyynnon-jalkeen)))))))
+
+; TODO Tee tämä:
+#_(deftest testaa-varustetoteuman-tallennus-kun-tierekisteriin-lahetys-epaonnistuu
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
+  (let [hae-tietolaji-xml-virhe (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))
+        lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        payload (-> "test/resurssit/api/varustetoteuma.json"
+                    slurp
+                    (.replace "__ID__" (str ulkoinen-id)))
+        varustetoteuma-api-url ["/api/urakat/" urakka "/toteumat/varuste"]]
+    (with-fake-http
+      [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml-virhe
+       (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
+       (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
+       (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
+       #"http?://localhost" :allow]
+      (let [varustetoteumat-ennen-pyyntoa (ffirst (q
+                                                    (str "SELECT count(*)
+                                                                FROM varustetoteuma")))
+            vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
+                                                    payload)]
+
+        ;; Oletus on, ettei yksikään toimenpide tallennu Harjaan eikä niitä lähetetä tierekisteriin, koska
+        ;; arvoja ei voitu käsitellä
+        (is (= 500 (:status vastaus-lisays)))
+        (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
+                                                        (str "SELECT count(*)
+                                                       FROM varustetoteuma")))]
+          (is (= varustetoteumat-ennen-pyyntoa varustetoteumat-pyynnon-jalkeen)))))))
