@@ -51,7 +51,6 @@
         vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietueet-response.xml"))
         validi-kutsu "/api/varusteet/haku?numero=3002&aet=2295&aosa=5&ajr=0&let=1&puoli=1&voimassaolopvm=2014-11-08&tilannepvm=2014-11-08&tietolajitunniste=tl506&losa=1"
         tierekisteri-resurssi "/haetietueet"]
-    ;; FIXME Korjaa
     (with-fake-http
       [(str +testi-tierekisteri-url+ tierekisteri-resurssi) vastaus-xml
        (str "http://localhost:" portti validi-kutsu) :allow
