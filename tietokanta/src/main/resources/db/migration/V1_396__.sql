@@ -1,2 +1,2 @@
 -- Indeksoi toteuman reitti
-CREATE toteuma_reitti_idx ON toteuma USING GIST (reitti);
+CREATE INDEX toteuma_reitti_idx ON toteuma USING GIST (reitti);
