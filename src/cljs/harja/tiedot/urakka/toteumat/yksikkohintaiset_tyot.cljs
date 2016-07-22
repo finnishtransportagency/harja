@@ -8,7 +8,8 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon kartalla-xf]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.toteumat :as toteumat])
+            [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.ui.openlayers :as openlayers])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -92,25 +93,34 @@
             :toimenpide toimenpide
             :tehtava tehtava}))
 
-(def haetut-reitit
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)
-               sopimus-id (first @urakka/valittu-sopimusnumero)
-               hoitokausi @urakka/valittu-hoitokausi
-               toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
-               tehtava (:id @u/valittu-yksikkohintainen-tehtava)
-               nakymassa? @yksikkohintaiset-tyot-nakymassa?
-               kartta-nakyvissa? @nav/kartta-nakyvissa?]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and nakymassa? kartta-nakyvissa?)
-                (hae-toteumareitit urakka-id sopimus-id hoitokausi toimenpide tehtava))))
+(defn luo-yksikkohintaisten-toteumien-kuvataso
+  [urakka-id sopimus-id taso-paalla? [alkupvm loppupvm] toimenpide tehtava]
+  (when taso-paalla?
+    (openlayers/luo-kuvataso
+     :yksikkohintaiset-toteumat []
+     "yht" (k/url-parametri
+            {:urakka-id urakka-id
+             :sopimus-id sopimus-id
+             :alkupvm alkupvm
+             :loppupvm loppupvm
+             :toimenpide toimenpide
+             :tehtava tehtava}))))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
 (defonce yksikkohintainen-toteuma-kartalla
-         (reaction
-           (when @karttataso-yksikkohintainen-toteuma
-             (kartalla-esitettavaan-muotoon
-               @haetut-reitit
-               @valittu-yksikkohintainen-toteuma
-               [[:toteumaid] [:toteuma-id]]
-               (map #(assoc % :tyyppi-kartalla :toteuma))))))
+  (reaction
+   (let [urakka-id (:id @nav/valittu-urakka)
+         sopimus-id (first @urakka/valittu-sopimusnumero)
+         hoitokausi @urakka/valittu-hoitokausi
+         toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
+         tehtava (:id @u/valittu-yksikkohintainen-tehtava)
+         taso-paalla? @karttataso-yksikkohintainen-toteuma]
+     (luo-yksikkohintaisten-toteumien-kuvataso
+      urakka-id sopimus-id taso-paalla? hoitokausi toimenpide tehtava)))
+  #_(when @karttataso-yksikkohintainen-toteuma
+    (kartalla-esitettavaan-muotoon
+     @haetut-reitit
+     @valittu-yksikkohintainen-toteuma
+     [[:toteumaid] [:toteuma-id]]
+     (map #(assoc % :tyyppi-kartalla :toteuma)))))
