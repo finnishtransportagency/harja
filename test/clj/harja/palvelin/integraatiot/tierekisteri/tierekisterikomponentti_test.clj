@@ -21,7 +21,6 @@
 (defn jarjestelma-fixture [testit]
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (laajenna-integraatiojarjestelmafixturea
-    nil
     :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki]))
   (testit)
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache))
