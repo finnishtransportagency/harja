@@ -23,10 +23,8 @@
   [arvo tietolaji kenttatunniste tietotyyppi koodisto]
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
-    :numeerinen (try
-                  (Integer. arvo)
-                  (catch Exception e
-                    (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero."))))
+    :numeerinen (when-not (re-matches #"^[0-9]*$" arvo)
+                  (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero.")))
     :paivamaara (try
                   (pvm/iso-8601->pvm arvo)
                   (catch Exception e
