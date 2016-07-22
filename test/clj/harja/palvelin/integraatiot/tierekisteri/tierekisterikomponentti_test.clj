@@ -18,15 +18,17 @@
 
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
 
-(def jarjestelma-fixture
+(defn jarjestelma-fixture [testit]
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (laajenna-integraatiojarjestelmafixturea
     nil
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki])))
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+) [:db :integraatioloki]))
+  (testit)
+  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-tietolajin-haku
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
@@ -49,7 +51,6 @@
           (is (= odotettu-ominaisuus ominaisuus)))))))
 
 (deftest tarkista-tietolajin-haku-cachesta
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))]
     ;; Cache on tyhjä, joten vastaus haetaan tierekisteristä HTTP-kutsulla
     (with-fake-http
@@ -202,7 +203,6 @@
         (is (true? (:onnistunut vastausdata)))))))
 
 (deftest tarkista-virhevastauksen-kasittely
-  (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/virhe-vastaus-tietolajia-ei-loydy-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietolaji") vastaus-xml]
