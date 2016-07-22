@@ -2,32 +2,8 @@
   "Yleisiä geometria-apureita"
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
-              (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection Geometry)))
-  (:require  [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelu poista-palvelut]]
-
-            [harja.domain.ilmoitukset :as ilmoitukset-domain]
-            [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.hallintayksikot :as hal-q]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.tilannekuva :as q]
-            [harja.palvelin.palvelut.urakat :as urakat]
-
-            [harja.domain.laadunseuranta :as laadunseuranta]
-            [harja.geo :as geo]
-            [harja.pvm :as pvm]
-            [harja.domain.tilannekuva :as tk]
-            [harja.ui.kartta.esitettavat-asiat
-             :as esitettavat-asiat
-             :refer [kartalla-esitettavaan-muotoon-xf]]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [clojure.set :refer [union]]
-            [harja.transit :as transit]
-            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
-            [harja.domain.oikeudet :as oikeudet]
-            [clojure.core.async :as async]))
+              (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
+                           GeometryCollection Geometry))))
 
 #?(:clj
    (defprotocol MuunnaGeometria
