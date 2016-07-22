@@ -15,15 +15,6 @@
 (defn http-asetukset[url]
   {:metodi :POST :url url :otsikot +otsikot+})
 
-(defn aseta-tunniste-arvoihin [tiedot]
-  (assoc-in tiedot
-            [:tietue :tietolaji :arvot]
-            (.replaceAll
-              (get-in tiedot [:tietue :tietolaji :arvot])
-              "----livitunniste----"
-              (get-in tiedot [:tietue :tunniste]))))
-
-
 (defn kasittele-tietueen-hakuvastaus [url id tietolaji xml]
   (kasittele-vastaus
     xml
@@ -72,9 +63,7 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "tierekisteri" "lisaa-tietue"
       (fn [konteksti]
-        (let [;; TODO Tarvitseeko tätä enää tehdä? Ei voi ainakaan tehdä poisto-toimenpiteelle koska arvoja ei ole
-              ;;tiedot (aseta-tunniste-arvoihin tiedot)
-              kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
+        (let [kutsudata (lisays-kutsusanoma/muodosta-kutsu tiedot)
               http-asetukset (http-asetukset url)
               {xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
           (kasittele-tietueen-lisaysvastaus xml url))))))
