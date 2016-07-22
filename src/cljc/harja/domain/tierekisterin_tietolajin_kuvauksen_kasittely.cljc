@@ -18,7 +18,9 @@
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
     (throw (Exception. viesti))))
 
-(defn- validoi-tyyppi [arvo tietolaji kenttatunniste tietotyyppi koodisto]
+(defn- validoi-tyyppi
+  "Validoi, että annettu arvo on annettua tyyppiä. Jos ei ole, heittää poikkeuksen. Jos on, palauttaa nil."
+  [arvo tietolaji kenttatunniste tietotyyppi koodisto]
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
     :numeerinen (try
