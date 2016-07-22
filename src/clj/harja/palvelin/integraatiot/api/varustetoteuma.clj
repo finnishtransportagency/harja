@@ -36,15 +36,15 @@
   "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
   [tierekisteri arvot tietolaji]
   (let [vastaus (tierekisteri/hae-tietolajit
-                            tierekisteri
-                            tietolaji
-                            nil)
+                  tierekisteri
+                  tietolaji
+                  nil)
         tietolajin-kuvaus (:tietolaji vastaus)]
     (try
       (tr-tietolaji/validoi-tietolajin-arvot
-       tietolaji
-       (clojure.walk/stringify-keys arvot)
-       tietolajin-kuvaus)
+        tietolaji
+        (clojure.walk/stringify-keys arvot)
+        tietolajin-kuvaus)
       (catch Exception e
         (throw+ {:type virheet/+viallinen-kutsu+
                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
@@ -85,6 +85,12 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
+(defn- toimenpide-lahetetty-tierekisteriin? [db toimenpide]
+  (true? (:lahetetty_tierekisteriin
+           (first (toteumat-q/hae-varustetoteuman-lahetystiedot
+                    db
+                    {:id (:varustetoteuma-id toimenpide)})))))
+
 (defn- laheta-varustetoteuman-toimenpiteet-tierekisteriin
   "Päivittää varustetoteumassa tehdyt toimenpiteet Tierekisteriin.
   On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
@@ -103,34 +109,33 @@
         (log/debug "Valmistellaan toimenpiteen lähetys tierekisteriin, tyyppi: " (pr-str toimenpide-tyyppi))
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
         ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
-        (let [lahetetty? (true? (first (toteumat-q/hae-varustetoteuman-lahetystiedot
-                                         db
-                                         {:id (:varustetoteuma-id toimenpide)})))]
-          (if lahetetty?
-            (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
+        (if (toimenpide-lahetetty-tierekisteriin? db toimenpide)
+          (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
 
-            (do
-              (case toimenpide-tyyppi
-                :varusteen-lisays
-                (lisaa-varuste-tierekisteriin tierekisteri kirjaaja otsikko toimenpiteen-tiedot
-                                              tunniste
-                                              tietolajin-arvot-string)
+          (let [vastaus
+                (case toimenpide-tyyppi
+                  :varusteen-lisays
+                  (lisaa-varuste-tierekisteriin tierekisteri kirjaaja otsikko toimenpiteen-tiedot
+                                                tunniste
+                                                tietolajin-arvot-string)
 
-                :varusteen-poisto
-                (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
-                                                toimenpiteen-tiedot)
+                  :varusteen-poisto
+                  (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
+                                                  toimenpiteen-tiedot)
 
-                :varusteen-paivitys
-                (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                                toimenpiteen-tiedot tietolajin-arvot-string)
+                  :varusteen-paivitys
+                  (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                                  toimenpiteen-tiedot tietolajin-arvot-string)
 
-                :varusteen-tarkastus
-                (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                                toimenpiteen-tiedot tietolajin-arvot-string))
+                  :varusteen-tarkastus
+                  (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
+                                                  toimenpiteen-tiedot tietolajin-arvot-string))]
 
-              ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
-              ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
-              ;; sama payload lähetetään Harjaan uudelleen.
+            ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
+            ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
+            ;; sama payload lähetetään Harjaan uudelleen.
+            (when (:onnistunut vastaus)
+              (log/debug "Merkitään toimenpide id:llä " (:varustetoteuma-id toimenpide) " lähetetyksi.")
               (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))))))))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
