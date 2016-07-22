@@ -46,7 +46,6 @@
   [arvo {:keys [kenttatunniste pakollinen pituus tietotyyppi koodisto] :as kentan-kuvaus} tietolaji]
   (assert tietolaji "Arvoa ei voi validoida ilman tietolajia")
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
-  (log/debug "Validoidaan arvo " (pr-str arvo) " kentän kuvauksella: " (pr-str kentan-kuvaus))
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
   (validoi-pituus arvo tietolaji kenttatunniste pituus)
   (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto))
