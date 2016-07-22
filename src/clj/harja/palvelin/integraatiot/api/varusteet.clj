@@ -78,7 +78,7 @@
           muunnettu-vastausdata (tierekisteri-sanomat/muunna-tietolajin-hakuvastaus vastausdata ominaisuudet)]
       muunnettu-vastausdata)))
 
-(defn- muodosta-tietueiden-hakuvastaus [vastausdata]
+(defn- muodosta-tietueiden-hakuvastaus [tierekisteri vastausdata]
   {:varusteet
    (mapv
      (fn [tietue]
@@ -107,7 +107,6 @@
             :ely nil, ;; FIXME Mistähän tämä tulee?
             :tietolaji {:tunniste (get-in tietue [:tietue :tietolaji :tietolajitunniste]),
                         :arvot arvot-mappina}}}}))
-
      (:tietueet vastausdata))})
 
 (defn hae-varusteet [tierekisteri parametrit kayttaja]
@@ -119,7 +118,7 @@
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
                ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite) " tilannepäivämäärällä: " tilannepvm)
     (let [vastaus (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm tilannepvm)
-          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus vastaus)]
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {}))))
@@ -131,7 +130,7 @@
         tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietue tunnisteella " tunniste " tietolajista " tietolajitunniste " kayttajalle " kayttaja)
     (let [vastaus (tierekisteri/hae-tietue tierekisteri tunniste tietolajitunniste tilannepvm)
-          muunnettu-vastausdata (muodosta-tietueen-hakuvastaus vastaus)]
+          muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
         {}))))
