@@ -89,10 +89,7 @@
   On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
-  [tierekisteri db kirjaaja toteuma-id otsikko varustetoteuma]
-  ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
-  ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
-  ;; sama payload lähetetään Harjaan uudelleen.
+  [tierekisteri db kirjaaja otsikko varustetoteuma]
   (when tierekisteri
     (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
       (let [toimenpide-tyyppi (first (keys toimenpide))
@@ -129,6 +126,10 @@
                 :varusteen-tarkastus
                 (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
                                                 toimenpiteen-tiedot tietolajin-arvot-string))
+
+              ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
+              ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
+              ;; sama payload lähetetään Harjaan uudelleen.
               (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))))))))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
@@ -280,8 +281,8 @@
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
 (defn- tallenna-toteumat
-  "Tallentaa varustetoteumat kantaan. Palauttaa päivitetyt varustetoteumat, joiden metadataan on liitetty
-   toteuman kanta-id."
+  "Tallentaa varustetoteumat kantaan. Palauttaa päivitetyt varustetoteumat, joihin on liitetty
+   toteuman ja toimenpiteiden kanta-id."
   [db tierekisteri urakka-id kirjaaja varustetoteumat]
   (jdbc/with-db-transaction [db db]
     (mapv (fn [varustetoteuma]
@@ -307,7 +308,7 @@
                                               varustetoteuma)]
                 (-> varustetoteuma
                     (assoc-in [:varustetoteuma :toimenpiteet] paivitetyt-toimenpiteet)
-                    (with-meta {:toteuma-id toteuma-id})))))
+                    (assoc :toteuma-id toteuma-id)))))
           varustetoteumat)))
 
 (defn- laheta-kirjaus-tierekisteriin
@@ -319,7 +320,6 @@
                           tierekisteri
                           db
                           kirjaaja
-                          (:toteuma-id (meta varustetoteuma))
                           otsikko
                           varustetoteuma)]
             vastaus))
