@@ -9,7 +9,8 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.toteumat :as toteumat]
-            [harja.ui.openlayers :as openlayers])
+            [harja.ui.openlayers :as openlayers]
+            [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -94,17 +95,17 @@
             :tehtava tehtava}))
 
 (defn luo-yksikkohintaisten-toteumien-kuvataso
-  [urakka-id sopimus-id taso-paalla? [alkupvm loppupvm] toimenpide tehtava]
+  [urakka-id sopimus-id taso-paalla? [alkupvm loppupvm] toimenpide toimenpidenimet]
   (when taso-paalla?
     (openlayers/luo-kuvataso
-     :yksikkohintaiset-toteumat []
+     :yksikkohintaiset-toteumat (mapv esitettavat-asiat/toimenpiteen-selite toimenpidenimet)
      "yht" (k/url-parametri
             {:urakka-id urakka-id
              :sopimus-id sopimus-id
              :alkupvm alkupvm
              :loppupvm loppupvm
              :toimenpide toimenpide
-             :tehtava tehtava}))))
+             :tehtava nil}))))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
@@ -115,12 +116,8 @@
          hoitokausi @urakka/valittu-hoitokausi
          toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
          tehtava (:id @u/valittu-yksikkohintainen-tehtava)
-         taso-paalla? @karttataso-yksikkohintainen-toteuma]
+         taso-paalla? @karttataso-yksikkohintainen-toteuma
+         summat @yks-hint-tehtavien-summat]
      (luo-yksikkohintaisten-toteumien-kuvataso
-      urakka-id sopimus-id taso-paalla? hoitokausi toimenpide tehtava)))
-  #_(when @karttataso-yksikkohintainen-toteuma
-    (kartalla-esitettavaan-muotoon
-     @haetut-reitit
-     @valittu-yksikkohintainen-toteuma
-     [[:toteumaid] [:toteuma-id]]
-     (map #(assoc % :tyyppi-kartalla :toteuma)))))
+      urakka-id sopimus-id taso-paalla? hoitokausi toimenpide
+      (map :nimi summat)))))
