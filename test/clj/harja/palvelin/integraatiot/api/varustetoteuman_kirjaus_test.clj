@@ -75,3 +75,5 @@
                                                        FROM varustetoteuma")))]
           (is (= varustetoteumat-ennen-uutta-pyyntoa
                  varustetoteumat-uuden-pyynnon-jalkeen)))))))
+
+;; TODO Testaa mitä tapahtuu kun missä tahansa vaiheessa tierekisteri antaa virheellisen vastauksen
