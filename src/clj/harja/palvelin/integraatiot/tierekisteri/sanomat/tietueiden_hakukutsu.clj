@@ -3,7 +3,8 @@
             [clojure.zip :refer [xml-zip]]
             [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
-            [hiccup.core :refer [html]])
+            [hiccup.core :refer [html]]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +xsd-polku+ "xsd/tierekisteri/skeemat/")
@@ -12,10 +13,12 @@
   [:ns2:haeTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeTietueet"}
    [:tietolajitunniste tietolajitunniste]
-   (when voimassaolopvm [:voimassaolopvm voimassaolopvm])
+   (when voimassaolopvm [:voimassaolopvm (pvm/pvm->iso-8601
+                                           voimassaolopvm)])
    [:tie
     (map (fn [[avain arvo]] [avain arvo]) tierekisteriosoitevali)
-    (when tilannepvm [:tilannepvm tilannepvm])]])
+    (when tilannepvm [:tilannepvm (pvm/pvm->iso-8601
+                                    tilannepvm)])]])
 
 (defn muodosta-kutsu [tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm]
   (let [sisalto (muodosta-xml-sisalto tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm)
