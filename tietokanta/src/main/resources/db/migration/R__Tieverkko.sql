@@ -379,13 +379,13 @@ BEGIN
       koko_pituus := ST_Length(koko_osa);
       SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=los INTO alkuosan_pituus;
       SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=aos INTO loppuosan_pituus;
-      RETURN QUERY SELECT ST_Line_Substring(koko_osa, (alkuosan_pituus-let)/koko_pituus, (koko_pituus-loppuosan_pituus+aet)/koko_pituus);
+      RETURN QUERY SELECT ST_Line_Substring(koko_osa, let/koko_pituus, (koko_pituus-loppuosan_pituus+aet)/koko_pituus);
     ELSE
       SELECT yhdista_viivat_jarjestyksessa(ST_Collect(geom)) FROM tieverkko_paloina WHERE tie=tie_ and osa>=aos and osa<=los and (ajorata=0 or ajorata=1) INTO koko_osa;
       koko_pituus := ST_Length(koko_osa);
       SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=aos INTO alkuosan_pituus;
       SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=los INTO loppuosan_pituus;
-      RETURN QUERY SELECT ST_Line_Substring(koko_osa, (alkuosan_pituus-aet)/koko_pituus, (koko_pituus-loppuosan_pituus+let)/koko_pituus);
+      RETURN QUERY SELECT ST_Line_Substring(koko_osa, aet/koko_pituus, (koko_pituus-loppuosan_pituus+let)/koko_pituus);
     END IF;
   END IF;
 END;
