@@ -119,8 +119,13 @@
         voimassaolopvm (pvm/iso-8601->pvm (get parametrit "voimassaolopvm"))
         tilannepvm (pvm/iso-8601->pvm (get parametrit "tilannepvm"))]
     (log/debug "Haetaan tietueet tietolajista " tietolajitunniste " voimassaolopäivämäärällä " voimassaolopvm
-               ", käyttäjälle " kayttaja " tr osoitteesta: " (pr-str tierekisteriosoite) " tilannepäivämäärällä: " tilannepvm)
-    (let [vastaus (tierekisteri/hae-tietueet tierekisteri tierekisteriosoite tietolajitunniste voimassaolopvm tilannepvm)
+               ", käyttäjälle " kayttaja " tr osoitteesta: "
+               (pr-str tierekisteriosoite) " tilannepäivämäärällä: " tilannepvm)
+    (let [vastaus (tierekisteri/hae-tietueet tierekisteri
+                                             tierekisteriosoite
+                                             tietolajitunniste
+                                             voimassaolopvm
+                                             tilannepvm)
           muunnettu-vastausdata (muodosta-tietueiden-hakuvastaus tierekisteri vastaus)]
       (if (> (count (:varusteet muunnettu-vastausdata)) 0)
         muunnettu-vastausdata
