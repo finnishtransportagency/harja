@@ -161,7 +161,7 @@
                                               :puoli "1"
                                               :alkupvm nil}}
                              :tietolaji {:tietolajitunniste "tl505"
-                                         :arvot "----livitunniste----        2                             ----livitunniste----          01  "}}
+                                         :arvot "HARJ951547                  2                             HARJ951547                    01  "}}
                     :lisatty "2015-05-26+03:00"}
             vastausdata (tierekisteri/lisaa-tietue (:tierekisteri jarjestelma) tietue)]
         (is (true? (:onnistunut vastausdata)))))))
@@ -225,7 +225,6 @@
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
         lisaystoimenpide (:varusteen-lisays (first (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
         tr-sanoma (tr-sanomat/luo-tietueen-lisayssanoma (:otsikko pyyntosanoma)
-                                                        {:etunimi "Keijo" :sukunimi "Käsittelijä"}
                                                         "HAR123"
                                                         lisaystoimenpide
                                                         "HARJ951547          2                           HARJ951547            01  ")
@@ -240,7 +239,6 @@
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
         lisaystoimenpide (:varusteen-paivitys (get (get-in varustetoteuma [:varustetoteuma :toimenpiteet]) 2))
         tr-sanoma (tr-sanomat/luo-tietueen-paivityssanoma (:otsikko pyyntosanoma)
-                                                          {:etunimi "Keijo" :sukunimi "Käsittelijä"}
                                                           lisaystoimenpide
                                                           "HARJ951547Z        2                           HARJ951547Z          01  ")
         tr-sanoma-xml (tr-paivityssanoma/muodosta-xml-sisalto tr-sanoma)]
@@ -254,7 +252,6 @@
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
         lisaystoimenpide (:varusteen-poisto (second (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
         tr-sanoma (tr-sanomat/luo-tietueen-poistosanoma (:otsikko pyyntosanoma)
-                                                        {:etunimi "Keijo" :sukunimi "Käsittelijä"}
                                                         lisaystoimenpide)
         tr-sanoma-xml (tr-poistosanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "poistaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
