@@ -140,7 +140,6 @@
   (let [nelostason-tehtavat (map nelostason-tehtava @u/urakan-toimenpiteet-ja-tehtavat)
         toimenpideinstanssit @u/urakan-toimenpideinstanssit
         voi-muokata? (not jarjestelman-lisaama-toteuma?)]
-    (log "TEHTÄVÄT: " (pr-str @tehtavat))
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."
       :voi-muokata? voi-muokata?
