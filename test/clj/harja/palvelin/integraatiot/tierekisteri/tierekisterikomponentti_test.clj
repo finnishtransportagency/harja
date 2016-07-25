@@ -114,32 +114,32 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietue") vastaus-xml]
-      (let [vastausdata (tierekisteri/hae-tietue (:tierekisteri jarjestelma) "asdf" "tl506" "2015-05-25")
-            odotettu-tietue {:sijainti {:koordinaatit {:x 0.0,
-                                                       :y 0.0,
-                                                       :z 0.0},
-                                        :linkki {:id 1,
-                                                 :marvo 10},
-                                        :tie {:numero 1,
-                                              :aet 1,
-                                              :aosa 1,
-                                              :let 1,
-                                              :losa 1,
-                                              :ajr 1,
-                                              :puoli 1,
-                                              :alkupvm nil}},
-                             :loppupvm #inst "2015-03-02T22:00:00.000-00:00",
-                             :piiri "1",
-                             :karttapvm #inst "2015-03-02T22:00:00.000-00:00",
-                             :urakka 100,
-                             :tietolaji {:tietolajitunniste "tl506",
-                                         :arvot ["9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40"]},
-                             :kuntoluokka "1",
-                             :alkupvm #inst "2015-03-02T22:00:00.000-00:00",
-                             :tunniste "1245rgfsd"}
+      (let [vastausdata (tierekisteri/hae-tietue (:tierekisteri jarjestelma) "asdf" "tl506" (t/date-time 2015 5 25))
+            odotettu-tietue {:alkupvm #inst "2015-03-02T22:00:00.000-00:00"
+                             :karttapvm #inst "2015-03-02T22:00:00.000-00:00"
+                             :kuntoluokka "1"
+                             :loppupvm #inst "2015-03-02T22:00:00.000-00:00"
+                             :piiri "1"
+                             :sijainti {:koordinaatit {:x 0.0
+                                                       :y 0.0
+                                                       :z 0.0}
+                                        :linkki {:id 1
+                                                 :marvo 10}
+                                        :tie {:aet 1
+                                              :ajr 1
+                                              :alkupvm nil
+                                              :aosa 1
+                                              :let 1
+                                              :losa 1
+                                              :numero 1
+                                              :puoli 1}}
+                             :tietolaji {:arvot ["LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
+                                         :tietolajitunniste "tl506"}
+                             :tunniste "1245rgfsd"
+                             :urakka 100}
             tietue (:tietue (first (:tietueet vastausdata)))]
         (is (true? (:onnistunut vastausdata)))
-        (is (= odotettu-tietue tietue))))))
+        (is (= tietue odotettu-tietue))))))
 
 
 (deftest tarkista-tietueen-lisays
