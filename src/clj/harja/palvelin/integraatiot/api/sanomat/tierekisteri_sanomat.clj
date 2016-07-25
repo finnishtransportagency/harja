@@ -1,10 +1,10 @@
 (ns harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat
   (:require [harja.tyokalut.xml :as xml]))
 
-(defn luo-varusteen-lisayssanoma [otsikko kirjaaja tunniste toimenpide arvot]
-  {:lisaaja {:henkilo (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
-                        (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
-                        "")
+(defn luo-tietueen-lisayssanoma [otsikko tunniste toimenpide arvot]
+  {:lisaaja {:henkilo (str (get-in toimenpide [:lisaaja :henkilo :etunimi])
+                           " "
+                           (get-in toimenpide [:lisaaja :henkilo :sukunimi]))
              :jarjestelma (get-in otsikko [:lahettaja :jarjestelma])
              :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
              :yTunnus (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
@@ -23,10 +23,10 @@
                         :arvot arvot}}
    :lisatty (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))})
 
-(defn luo-varusteen-paivityssanoma [otsikko kirjaaja toimenpide arvot]
-  {:paivittaja {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
-                                (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
-                                "")
+(defn luo-tietueen-paivityssanoma [otsikko toimenpide arvot]
+  {:paivittaja {:henkilo      (str (get-in toimenpide [:paivittaja :henkilo :etunimi])
+                                   " "
+                                   (get-in toimenpide [:paivittaja :henkilo :sukunimi]))
                 :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                 :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                 :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
@@ -51,63 +51,16 @@
 
    :paivitetty (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))})
 
-(defn luo-varusteen-poistosanoma [otsikko kirjaaja toimenpide]
-  {:poistaja          {:henkilo      (if (and (:etunimi kirjaaja) (:sukunimi kirjaaja))
-                                       (str (:etunimi kirjaaja) " " (:sukunimi kirjaaja))
-                                       "")
+(defn luo-tietueen-poistosanoma [otsikko toimenpide]
+  {:poistaja          {:henkilo      (str (get-in toimenpide [:poistaja :henkilo :etunimi])
+                                          " "
+                                          (get-in toimenpide [:poistaja :henkilo :sukunimi]))
                        :jarjestelma  (get-in otsikko [:lahettaja :jarjestelma])
                        :organisaatio (get-in otsikko [:lahettaja :organisaatio :nimi])
                        :yTunnus      (get-in otsikko [:lahettaja :organisaatio :ytunnus])}
    :tunniste          (:tunniste toimenpide)
    :tietolajitunniste (:tietolajitunniste toimenpide)
    :poistettu         (xml/json-date-time->xml-xs-date (:poistettu toimenpide))})
-
-(defn luo-tietueen-lisayssanoma [data]
-  (-> data
-      (assoc :tietue (:varuste data))
-      (assoc-in [:lisaaja :henkilo] (str (get-in data [:lisaaja :henkilo :etunimi])
-                                         " "
-                                         (get-in data [:lisaaja :henkilo :sukunimi])))
-      (assoc-in [:lisaaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
-      (assoc-in [:lisaaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
-      (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :alkupvm])))
-      (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :loppupvm])))
-      (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :karttapvm])))
-      (assoc-in [:tietue :tilannepvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :tilannepvm])))
-      (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date
-                                                    (get-in data [:varuste :sijainti :tie :alkupvm])))
-      (assoc :lisatty (xml/json-date-time->xml-xs-date (:lisatty data)))
-      (dissoc :otsikko)
-      (dissoc :varuste)))
-
-(defn luo-tietueen-paivityssanoma [data]
-  (-> data
-      (assoc :tietue (:varuste data))
-      (assoc-in [:paivittaja :henkilo] (str (get-in data [:paivittaja :henkilo :etunimi])
-                                            " "
-                                            (get-in data [:paivittaja :henkilo :sukunimi])))
-      (assoc-in [:paivittaja :jarjestelma] (get-in data [:otsikko :lahettaja :jarjestelma]))
-      (assoc-in [:paivittaja :yTunnus] (get-in data [:otsikko :lahettaja :organisaatio :ytunnus]))
-      (assoc-in [:tietue :alkupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :alkupvm])))
-      (assoc-in [:tietue :loppupvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :loppupvm])))
-      (assoc-in [:tietue :karttapvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :karttapvm])))
-      (assoc-in [:tietue :tilannepvm] (xml/json-date-time->xml-xs-date (get-in data [:varuste :tilannepvm])))
-      (assoc-in [:tietue :sijainti :tie :alkupvm] (xml/json-date-time->xml-xs-date
-                                                    (get-in data [:varuste :sijainti :tie :alkupvm])))
-      (assoc :paivitetty (xml/json-date-time->xml-xs-date (:paivitetty data)))
-      (dissoc :otsikko)
-      (dissoc :varuste)))
-
-(defn luo-tietueen-poistosanoma [data]
-  {:poistaja          {:henkilo      (str (get-in data [:poistaja :henkilo :etunimi])
-                                          " "
-                                          (get-in data [:poistaja :henkilo :sukunimi]))
-                       :jarjestelma  (get-in data [:otsikko :lahettaja :jarjestelma])
-                       :organisaatio (get-in data [:otsikko :lahettaja :organisaatio :nimi])
-                       :yTunnus      (get-in data [:otsikko :lahettaja :organisaatio :ytunnus])}
-   :tunniste          (:tunniste data)
-   :tietolajitunniste (:tietolajitunniste data)
-   :poistettu         (xml/json-date-time->xml-xs-date (:poistettu data))})
 
 (defn luo-tierekisteriosoite [parametrit]
   (into {} (filter val (zipmap [:numero :aet :aosa :let :losa :ajr :puoli :alkupvm]

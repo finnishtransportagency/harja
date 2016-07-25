@@ -54,6 +54,12 @@
         (:db this) (:integraatioloki this)
         tierekisteri-api-url tietueen-tunniste tietolajitunniste tilannepvm)))
 
+  (lisaa-tietue [this tiedot]
+    (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
+    (when-not (empty? tierekisteri-api-url)
+      (tietue/lisaa-tietue
+        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
+
   (paivita-tietue [this tiedot]
     (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
     (when-not (empty? tierekisteri-api-url)
@@ -64,11 +70,5 @@
     (validoi-tietolajitunniste (:tietolajitunniste tiedot))
     (when-not (empty? tierekisteri-api-url)
       (tietue/poista-tietue
-        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
-
-  (lisaa-tietue [this tiedot]
-    (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
-    (when-not (empty? tierekisteri-api-url)
-      (tietue/lisaa-tietue
         (:db this) (:integraatioloki this) tierekisteri-api-url tiedot))))
 

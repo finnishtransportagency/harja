@@ -224,11 +224,11 @@
                          (clojure.walk/keywordize-keys))
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
         lisaystoimenpide (:varusteen-lisays (first (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
-        tr-sanoma (tr-sanomat/luo-varusteen-lisayssanoma (:otsikko pyyntosanoma)
-                                                         {:etunimi "Keijo" :sukunimi "Käsittelijä"}
-                                                         "HAR123"
-                                                         lisaystoimenpide
-                                                         "HARJ951547          2                           HARJ951547            01  ")
+        tr-sanoma (tr-sanomat/luo-tietueen-lisayssanoma (:otsikko pyyntosanoma)
+                                                        {:etunimi "Keijo" :sukunimi "Käsittelijä"}
+                                                        "HAR123"
+                                                        lisaystoimenpide
+                                                        "HARJ951547          2                           HARJ951547            01  ")
         tr-sanoma-xml (tr-lisayssanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "lisaaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
@@ -239,10 +239,10 @@
                          (clojure.walk/keywordize-keys))
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
         lisaystoimenpide (:varusteen-paivitys (get (get-in varustetoteuma [:varustetoteuma :toimenpiteet]) 2))
-        tr-sanoma (tr-sanomat/luo-varusteen-paivityssanoma (:otsikko pyyntosanoma)
-                                                           {:etunimi "Keijo" :sukunimi "Käsittelijä"}
-                                                           lisaystoimenpide
-                                                           "HARJ951547Z        2                           HARJ951547Z          01  ")
+        tr-sanoma (tr-sanomat/luo-tietueen-paivityssanoma (:otsikko pyyntosanoma)
+                                                          {:etunimi "Keijo" :sukunimi "Käsittelijä"}
+                                                          lisaystoimenpide
+                                                          "HARJ951547Z        2                           HARJ951547Z          01  ")
         tr-sanoma-xml (tr-paivityssanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "paivitaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
@@ -253,9 +253,9 @@
                          (clojure.walk/keywordize-keys))
         varustetoteuma (first (get-in pyyntosanoma [:varustetoteumat]))
         lisaystoimenpide (:varusteen-poisto (second (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
-        tr-sanoma (tr-sanomat/luo-varusteen-poistosanoma (:otsikko pyyntosanoma)
-                                                         {:etunimi "Keijo" :sukunimi "Käsittelijä"}
-                                                         lisaystoimenpide)
+        tr-sanoma (tr-sanomat/luo-tietueen-poistosanoma (:otsikko pyyntosanoma)
+                                                        {:etunimi "Keijo" :sukunimi "Käsittelijä"}
+                                                        lisaystoimenpide)
         tr-sanoma-xml (tr-poistosanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "poistaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 

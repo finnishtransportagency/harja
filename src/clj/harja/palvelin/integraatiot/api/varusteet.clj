@@ -143,25 +143,34 @@
         muunnettu-vastausdata
         {}))))
 
-(defn lisaa-varuste [tierekisteri db data kayttaja]
+(defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
   (log/debug "Lisätään varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
-        data (assoc-in data [:varuste :tunniste] livitunniste)
-        lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma data)]
+        lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma
+                           otsikko
+                           livitunniste
+                           (:varusteen-lisays data)
+                           arvot)]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
     (tee-kirjausvastauksen-body
       {:id livitunniste
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
-(defn paivita-varuste [tierekisteri data kayttaja]
+(defn paivita-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
   (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
-  (let [paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma data)]
+  (let [paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma
+                              otsikko
+                              (:varusteen-paivitys data)
+                              arvot)]
     (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
-(defn poista-varuste [tierekisteri data kayttaja]
+(defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
   (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
-  (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma data)]
+  (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma
+                             otsikko
+                             (:varusteen-poisto data)
+                             arvot)]
     (tierekisteri/poista-tietue tierekisteri poistettava-tietue))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
 

@@ -52,11 +52,12 @@
       tietolajin-kuvaus
       arvot)))
 
-(defn- lisaa-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide livitunniste arvot-string]
+;; TODO Ota kirjaaja payloadista, ei käyttäjästä
+
+(defn- lisaa-varuste-tierekisteriin [tierekisteri otsikko toimenpide livitunniste arvot-string]
   (log/debug "Lisätään varuste livitunnisteella " livitunniste " tierekisteriin")
-  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-lisayssanoma
+  (let [valitettava-data (tierekisteri-sanomat/luo-tietueen-lisayssanoma
                            otsikko
-                           kirjaaja
                            livitunniste
                            toimenpide
                            arvot-string)]
@@ -64,22 +65,20 @@
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       (assoc vastaus :uusi-id livitunniste))))
 
-(defn- paivita-varuste-tierekisteriin [tierekisteri kirjaaja otsikko toimenpide arvot-string]
+(defn- paivita-varuste-tierekisteriin [tierekisteri otsikko toimenpide arvot-string]
   (log/debug "Päivitetään varuste tierekisteriin")
-  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-paivityssanoma
+  (let [valitettava-data (tierekisteri-sanomat/luo-tietueen-paivityssanoma
                            otsikko
-                           kirjaaja
                            toimenpide
                            arvot-string)]
     (let [vastaus (tierekisteri/paivita-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
       vastaus)))
 
-(defn- poista-varuste-tierekisterista [tierekisteri kirjaaja otsikko toimenpide]
+(defn- poista-varuste-tierekisterista [tierekisteri otsikko toimenpide]
   (log/debug "Poistetaan varuste tierekisteristä")
-  (let [valitettava-data (tierekisteri-sanomat/luo-varusteen-poistosanoma
+  (let [valitettava-data (tierekisteri-sanomat/luo-tietueen-poistosanoma
                            otsikko
-                           kirjaaja
                            toimenpide)]
     (let [vastaus (tierekisteri/poista-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
@@ -96,7 +95,7 @@
   On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
   nähdään, että toteumaa on yritetty kirjata."
-  [tierekisteri db kirjaaja otsikko varustetoteuma]
+  [tierekisteri db otsikko varustetoteuma]
   (when tierekisteri
     (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
       (let [toimenpide-tyyppi (first (keys toimenpide))
@@ -115,21 +114,19 @@
           (let [vastaus
                 (case toimenpide-tyyppi
                   :varusteen-lisays
-                  (lisaa-varuste-tierekisteriin tierekisteri kirjaaja otsikko toimenpiteen-tiedot
-                                                tunniste
-                                                tietolajin-arvot-string)
+                  (lisaa-varuste-tierekisteriin tierekisteri otsikko toimenpiteen-tiedot
+                                                tunniste tietolajin-arvot-string)
 
                   :varusteen-poisto
-                  (poista-varuste-tierekisterista tierekisteri kirjaaja otsikko
-                                                  toimenpiteen-tiedot)
+                  (poista-varuste-tierekisterista tierekisteri otsikko toimenpiteen-tiedot)
 
                   :varusteen-paivitys
-                  (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                                  toimenpiteen-tiedot tietolajin-arvot-string)
+                  (paivita-varuste-tierekisteriin tierekisteri  otsikko toimenpiteen-tiedot
+                                                  tietolajin-arvot-string)
 
                   :varusteen-tarkastus
-                  (paivita-varuste-tierekisteriin tierekisteri kirjaaja otsikko
-                                                  toimenpiteen-tiedot tietolajin-arvot-string))]
+                  (paivita-varuste-tierekisteriin tierekisteri otsikko toimenpiteen-tiedot
+                                                  tietolajin-arvot-string))]
 
             ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
             ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
@@ -320,12 +317,11 @@
 (defn- laheta-kirjaus-tierekisteriin
   "Lähettää varustetoteumat tierekisteriin yksi kerrallaan.
    Palauttaa vectorissa tierekisterikomponentin antamat vastaukset."
-  [db tierekisteri kirjaaja otsikko varustetoteumat]
+  [db tierekisteri otsikko varustetoteumat]
   (mapv (fn [varustetoteuma]
           (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin
                           tierekisteri
                           db
-                          kirjaaja
                           otsikko
                           varustetoteuma)]
             vastaus))
@@ -346,7 +342,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
     (let [varustetoteumat (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
-          tierekisterin-vastaukset (laheta-kirjaus-tierekisteriin db tierekisteri kirjaaja otsikko varustetoteumat)]
+          tierekisterin-vastaukset (laheta-kirjaus-tierekisteriin db tierekisteri otsikko varustetoteumat)]
       (tee-onnistunut-vastaus tierekisterin-vastaukset))))
 
 (defrecord Varustetoteuma []
