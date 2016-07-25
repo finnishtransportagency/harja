@@ -20,6 +20,26 @@
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
 
+(defn validoi-ja-muunna-arvot-merkkijonoksi
+  "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
+  [tierekisteri arvot tietolaji]
+  (let [vastaus (tierekisteri/hae-tietolajit
+                  tierekisteri
+                  tietolaji
+                  nil)
+        tietolajin-kuvaus (:tietolaji vastaus)]
+    (try
+      (tr-tietolaji/validoi-tietolajin-arvot
+        tietolaji
+        (clojure.walk/stringify-keys arvot)
+        tietolajin-kuvaus)
+      (catch Exception e
+        (throw+ {:type virheet/+viallinen-kutsu+
+                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
+    (muunna-tietolajin-arvot-stringiksi
+      tietolajin-kuvaus
+      arvot)))
+
 (defn tarkista-parametrit [saadut vaaditut]
   (doseq [{:keys [parametri tyyppi]} vaaditut]
     (if-let [arvo (get saadut parametri)]
@@ -146,11 +166,19 @@
 (defn lisaa-varuste [tierekisteri db {:keys [otsikko] :as data} kayttaja]
   (log/debug "Lisätään varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
+        toimenpiteen-tiedot (:varusteen-lisays data)
+        tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+        tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
+        arvot-string (when tietolajin-arvot
+                       (validoi-ja-muunna-arvot-merkkijonoksi
+                         tierekisteri
+                         tietolajin-arvot
+                         tietolaji))
         lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma
                            otsikko
                            livitunniste
-                           (:varusteen-lisays data)
-                           arvot)]
+                           toimenpiteen-tiedot
+                           arvot-string)]
     (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
     (tee-kirjausvastauksen-body
       {:id livitunniste
@@ -158,10 +186,18 @@
 
 (defn paivita-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
   (log/debug "Päivitetään varuste käyttäjän " kayttaja " pyynnöstä.")
-  (let [paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma
+  (let [toimenpiteen-tiedot (:varusteen-paivitys data)
+        tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
+        tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
+        arvot-string (when tietolajin-arvot
+                       (validoi-ja-muunna-arvot-merkkijonoksi
+                         tierekisteri
+                         tietolajin-arvot
+                         tietolaji))
+        paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma
                               otsikko
-                              (:varusteen-paivitys data)
-                              arvot)]
+                              toimenpiteen-tiedot
+                              arvot-string)]
     (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
@@ -169,8 +205,7 @@
   (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma
                              otsikko
-                             (:varusteen-poisto data)
-                             arvot)]
+                             (:varusteen-poisto data))]
     (tierekisteri/poista-tietue tierekisteri poistettava-tietue))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
 

@@ -9,6 +9,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.palvelin.integraatiot.api.varusteet :as varusteet]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
@@ -31,28 +32,6 @@
   (tr-tietolaji/tietolajin-arvot-map->merkkijono
     (clojure.walk/stringify-keys arvot-map)
     tietolajin-kuvaus))
-
-(defn- validoi-ja-muunna-arvot-merkkijonoksi
-  "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
-  [tierekisteri arvot tietolaji]
-  (let [vastaus (tierekisteri/hae-tietolajit
-                  tierekisteri
-                  tietolaji
-                  nil)
-        tietolajin-kuvaus (:tietolaji vastaus)]
-    (try
-      (tr-tietolaji/validoi-tietolajin-arvot
-        tietolaji
-        (clojure.walk/stringify-keys arvot)
-        tietolajin-kuvaus)
-      (catch Exception e
-        (throw+ {:type virheet/+viallinen-kutsu+
-                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti (.getMessage e)}]})))
-    (muunna-tietolajin-arvot-stringiksi
-      tietolajin-kuvaus
-      arvot)))
-
-;; TODO Ota kirjaaja payloadista, ei käyttäjästä
 
 (defn- lisaa-varuste-tierekisteriin [tierekisteri otsikko toimenpide livitunniste arvot-string]
   (log/debug "Lisätään varuste livitunnisteella " livitunniste " tierekisteriin")
@@ -205,7 +184,7 @@
                        (:tunniste toimenpiteen-tiedot))
             tie (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
             tietolajin-arvot-string (when tietolajin-arvot
-                                      (validoi-ja-muunna-arvot-merkkijonoksi
+                                      (varusteet/validoi-ja-muunna-arvot-merkkijonoksi
                                         tierekisteri
                                         tietolajin-arvot
                                         tietolaji))]
