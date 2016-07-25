@@ -803,3 +803,10 @@ WHERE id = :id;
 -- name: merkitse-varustetoteuma-lahetetyksi<!
 UPDATE varustetoteuma SET lahetetty_tierekisteriin = TRUE
 WHERE id = :id;
+
+-- name: varustetoteuman-toimenpiteelle-sijainti
+SELECT sijainti FROM tierekisteriosoitteelle_viiva(:tie, :aosa, :aet, :losa, :let) as sijainti;
+
+-- name: paivita-toteuman-reitti<!
+UPDATE toteuma SET reitti = :reitti
+WHERE id = :id;

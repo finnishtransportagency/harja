@@ -20,8 +20,10 @@
             [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [clj-time.core :as t]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clojure.string :as str])
-  (:use [slingshot.slingshot :only [throw+]]))
+            [clojure.string :as str]
+            [harja.geo :as geo])
+  (:use [slingshot.slingshot :only [throw+]])
+  (:import (org.postgis GeometryCollection Geometry PGgeometry)))
 
 (def toimenpide-tyyppi->toimenpide
   {:varusteen-lisays "lisatty"
@@ -111,6 +113,7 @@
             ;; FIXME On mahdollista, joskin epätodennäköistä, että kirjaus lähtee tierekisteriin,
             ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
             ;; sama payload lähetetään Harjaan uudelleen.
+            ;; --> Pitää tutkia mitä tierekisteri palauttaa samalle kutsulle
             (when (:onnistunut vastaus)
               (log/debug "Merkitään toimenpide id:llä " (:varustetoteuma-id toimenpide) " lähetetyksi.")
               (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))))))))
@@ -166,7 +169,6 @@
   (mapv
     (fn [toimenpide]
       (let [toimenpide-tyyppi (first (keys toimenpide))
-            _ (log/debug "Käsitellään toimenpide tyyppiä: " (pr-str toimenpide-tyyppi))
             toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
             tietolaji (if (not= toimenpide-tyyppi :varusteen-poisto)
                         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
@@ -210,13 +212,48 @@
 
             :varusteen-poisto
             (let [varustetoteuma-id (tallenna-toimenpide tunniste "poistettu" nil nil)]
-                  (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
+              (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
 
             :varusteen-tarkastus
             (let [varustetoteuma-id (tallenna-toimenpide tunniste "tarkastus" tie tietolajin-arvot-string)]
               (-> (assoc toimenpide :varustetoteuma-id varustetoteuma-id)
                   (assoc :arvot-string tietolajin-arvot-string)))))))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
+
+(defn- hae-toimenpiteen-geometria [db toimenpide]
+  )
+
+(defn- tallenna-varustetoteuman-geometria
+  "Muuntaa varustetoteuman jokaisen toimenpiteen piste-geometriaksi.
+  Toteuman geometriaksi muodostuu point geometry collection."
+  [db varustetoteuma toteuma-id]
+  (log/debug "Tallennetaan toteuman geometria")
+  (let [geometriat
+        (keep (fn [toimenpide]
+               (let [toimenpide-tyyppi (first (keys toimenpide))
+                     toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
+                     ;; Huomaa, että poistotoimenpiteellä ei ole sijaintia
+                     tr-osoite (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+                     viiva? (and (:losa tr-osoite)
+                                 (:let tr-osoite))
+                     geometria (:sijainti (first (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
+                                         db {:tie (:numero tr-osoite)
+                                             :aosa (:aosa tr-osoite)
+                                             :aet (:aet tr-osoite)
+                                             :losa (if viiva?
+                                                     (:losa tr-osoite)
+                                                     (:aosa tr-osoite))
+                                             :let (if viiva?
+                                                    (:let tr-osoite)
+                                                    (:aet tr-osoite))})))]
+                 geometria))
+             (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))
+        geometry-collection (GeometryCollection.
+                             (into-array Geometry
+                                         (map #(.getGeometry %) geometriat)))
+        pg-geometry (PGgeometry. geometry-collection)]
+    (toteumat-q/paivita-toteuman-reitti<! db {:reitti pg-geometry
+                                              :id toteuma-id})))
 
 (defn- tallenna-toteumat
   "Tallentaa varustetoteumat kantaan. Palauttaa päivitetyt varustetoteumat, joihin on liitetty
@@ -230,15 +267,8 @@
                             :reitti nil)
                   toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
               (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
-
-              (log/debug "Tallennetaan toteuman tehtävät")
               (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
-
-              ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
-              ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
-              ;; --> Jokaiselle toimenpiteelle muodosta tierekisteriosoittesta geometria,
-              ;; Toteuma-tauluun tallennetaan reitti-sarakkeeseen geometry collection ja siinä monta pointtia
-
+              (tallenna-varustetoteuman-geometria db varustetoteuma toteuma-id)
               (let [paivitetyt-toimenpiteet (tallenna-varustetoteuman-toimenpiteet
                                               db
                                               tierekisteri
