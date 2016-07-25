@@ -244,31 +244,3 @@
                                          :loppupvm   loppupvm})]
     (is (>= (count varustetoteumat) 1))
     (is (contains? (first varustetoteumat) :reitti))))
-
-(deftest kok-hint-toteumien-reitit-haettu-oikein
-  (let [alkupvm (pvm/luo-pvm 2000 9 1)
-        loppupvm (pvm/luo-pvm 2010 10 30)
-        toteumat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :urakan-kokonaishintaisten-toteumien-reitit +kayttaja-jvh+
-                                 {:urakka-id  @oulun-alueurakan-2005-2010-id
-                                  :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-                                  :alkupvm    alkupvm
-                                  :loppupvm   loppupvm
-                                  :toimenpide nil
-                                  :tehtava    nil})]
-    (is (>= (count toteumat) 3))
-    (is (= :line (get-in toteumat [0 :reitti :type])))))
-
-(deftest yks-hint-toteumien-reitit-haettu-oikein
-  (let [alkupvm (pvm/luo-pvm 2000 9 1)
-        loppupvm (pvm/luo-pvm 2010 10 30)
-        toteumat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :urakan-yksikkohintaisten-toteumien-reitit +kayttaja-jvh+
-                                 {:urakka-id  @oulun-alueurakan-2005-2010-id
-                                  :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-                                  :alkupvm    alkupvm
-                                  :loppupvm   loppupvm
-                                  :toimenpide nil
-                                  :tehtava    nil})]
-    (is (>= (count toteumat) 2))
-    (is (= :line (get-in toteumat [0 :reitti :type])))))

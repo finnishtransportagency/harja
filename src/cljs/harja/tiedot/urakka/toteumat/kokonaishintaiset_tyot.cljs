@@ -47,14 +47,6 @@
     :toimenpide toimenpide
     :tehtava    tehtava}))
 
-(defn hae-toteumareitit [urakka-id sopimus-id [alkupvm loppupvm] tehtava]
-  (k/post! :urakan-kokonaishintaisten-toteumien-reitit
-           {:urakka-id  urakka-id
-            :sopimus-id sopimus-id
-            :alkupvm    alkupvm
-            :loppupvm   loppupvm
-            :tehtava    tehtava}))
-
 (def nakymassa? (atom false))
 (def valittu-paivakohtainen-tehtava (atom nil))
 

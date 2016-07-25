@@ -40,20 +40,6 @@
         (map (comp :nimi tk/suodattimet-idlla))
         s))
 
-(defn alueen-hypotenuusa
-  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
-  [{:keys [xmin ymin xmax ymax]}]
-  (let [dx (- xmax xmin)
-        dy (- ymax ymin)]
-    (Math/sqrt (+ (* dx dx) (* dy dy)))))
-
-(defn karkeistustoleranssi
-  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
-  [alue]
-  (let [pit (alueen-hypotenuusa alue)]
-    (log/debug "Alueen pit: " pit " => karkeistus toleranssi: " (/ pit 200))
-    (/ pit 200)))
-
 (defn- hae-ilmoitukset
   [db user {:keys [toleranssi] {:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
   (when-not (empty? urakat)
@@ -362,7 +348,7 @@
                                                oikeudet/tilannekuva-historia) % user)
                         (:urakat tiedot))]
      (log/debug "Haetaan tilannekuvaan asioita urakoista " (pr-str urakat))
-     (let [tiedot (assoc tiedot :toleranssi (karkeistustoleranssi (:alue tiedot)))]
+     (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
        (into {}
              (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
              osiot)))))
@@ -384,7 +370,7 @@
       (merge p
              {:alue {:xmin x1 :ymin y1
                      :xmax x2 :ymax y2}})
-      (assoc p :toleranssi (karkeistustoleranssi (:alue p))))))
+      (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit]
   (let [tiedot (karttakuvan-suodattimet parametrit)
