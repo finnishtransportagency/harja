@@ -57,28 +57,11 @@
                    (iterate inc 1)
                    (mapv
                      (fn [tehtava]
-                       (let [tehtava-urakassa
-                             (get
-                               (first
-                                 (filter
-                                   (fn [tehtavat]
-                                     (= (:id (get tehtavat 3))
-                                        (:tpk-id tehtava)))
-                                   @u/urakan-toimenpiteet-ja-tehtavat)) 3)
-                             emo
-                             (get (first
-                                    (filter
-                                      (fn [tehtavat]
-                                        (= (:id (get tehtavat 3))
-                                           (:tpk-id tehtava)))
-                                      @u/urakan-toimenpiteet-ja-tehtavat)) 2)
-                             tpi
-                             (first
-                               (filter
-                                 (fn [tpi]
-                                   (= (:t3_koodi tpi)
-                                      (:koodi emo)))
-                                 @u/urakan-toimenpideinstanssit))]
+                       (let [[_ _ emo tehtava-urakassa]
+                             (urakan-toimenpiteet/tehtava-urakassa
+                              (:tpk-id tehtava) @u/urakan-toimenpiteet-ja-tehtavat)
+                             tpi (some #(when (= (:t3_koodi %) (:koodi emo)) %)
+                                       @u/urakan-toimenpideinstanssit)]
                          (log "Tehtava urakassa: " (pr-str tehtava-urakassa))
                          (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
                          (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
