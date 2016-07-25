@@ -133,7 +133,7 @@
             :loppupvm (get-in tietue [:tietue :loppupvm])
             :karttapvm (get-in tietue [:tietue :karttapvm]),
             :kuntoluokitus (get-in tietue [:tietue :kuntoluokka]),
-            :ely nil, ;; FIXME Mistähän tämä tulee? --> Tierekisterin piiri tähän
+            :ely (Integer/parseInt (get-in tietue [:tietue :piiri]))
             :tietolaji {:tunniste tietolaji,
                         :arvot arvot-mappina}}}}))
      (:tietueet vastausdata))})

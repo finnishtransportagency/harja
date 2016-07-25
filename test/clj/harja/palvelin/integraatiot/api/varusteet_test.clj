@@ -7,7 +7,8 @@
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [clojure.java.io :as io]
             [cheshire.core :as cheshire]
-            [org.httpkit.fake :refer [with-fake-http]]))
+            [org.httpkit.fake :refer [with-fake-http]]
+            [clojure.data.json :as json]))
 
 (def kayttaja "jvh")
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
@@ -81,8 +82,8 @@
        (str "http://localhost:" portti validi-kutsu) :allow
        (str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-vastaus]
       (let [vastaus (api-tyokalut/get-kutsu [validi-kutsu] kayttaja portti)]
-        (println "Vastaus saatiin: " (pr-str vastaus))
-        (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla")))))
+        (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla")
+        (is (= (count (get (json/read-str (:body vastaus)) "varusteet")) 1))))))
 
 (deftest tarkista-tietueen-virheellinen-haku
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"))
