@@ -176,6 +176,34 @@
                                                         (str "SELECT count(*)
                                                        FROM varustetoteuma")))
               toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              lahetystiedot-kannassa (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " toteuma-id ";"))]
+              lahetystiedot-kannassa (flatten (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " toteuma-id ";")))]
           (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen))
-          (is (every? #(= [false] %) lahetystiedot-kannassa)))))))
+          (is (every? #(= false %) lahetystiedot-kannassa)))))
+
+    ;; Tierekisteri toimii nyt, lähetetään viesti uudelleen, jolloin aiemmin sisään otetut
+    ;; toteumat merkitään lähetetyiksi
+
+    (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))
+          lisaa-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+          paivita-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))
+          poista-tietue-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/ok-vastaus-response.xml"))]
+      (with-fake-http
+        [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml
+         (str +testi-tierekisteri-url+ "/lisaatietue") lisaa-tietue-xml
+         (str +testi-tierekisteri-url+ "/paivitatietue") paivita-tietue-xml
+         (str +testi-tierekisteri-url+ "/poistatietue") poista-tietue-xml
+         #"http?://localhost" :allow]
+        (let [varustetoteumat-ennen-pyyntoa (ffirst (q
+                                                      (str "SELECT count(*)
+                                                                FROM varustetoteuma")))
+              vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
+                                                      payload)]
+
+          (is (= 200 (:status vastaus-lisays)))
+          (let [varustetoteumat-pyynnon-jalkeen (ffirst (q
+                                                          (str "SELECT count(*)
+                                                       FROM varustetoteuma")))
+                toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+                lahetystiedot-kannassa (flatten (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " toteuma-id ";")))]
+            (is (= varustetoteumat-ennen-pyyntoa varustetoteumat-pyynnon-jalkeen))
+            (is (every? #(= true %) lahetystiedot-kannassa))))))))
