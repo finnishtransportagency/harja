@@ -86,7 +86,8 @@
    :suorittajan-ytunnus (:ytunnus @u/urakan-organisaatio)})
 
 (defn luo-yksikkohintaisten-toteumien-kuvataso
-  [urakka-id sopimus-id taso-paalla? [alkupvm loppupvm] toimenpide toimenpidenimet]
+  [urakka-id sopimus-id taso-paalla? [alkupvm loppupvm]
+   toimenpide toimenpidenimet tehtava toteuma-id]
   (when taso-paalla?
     (openlayers/luo-kuvataso
      :yksikkohintaiset-toteumat (mapv esitettavat-asiat/toimenpiteen-selite toimenpidenimet)
@@ -96,7 +97,8 @@
              :alkupvm alkupvm
              :loppupvm loppupvm
              :toimenpide toimenpide
-             :tehtava nil}))))
+             :tehtava tehtava
+             :toteuma-id toteuma-id}))))
 
 (def karttataso-yksikkohintainen-toteuma (atom false))
 
@@ -108,7 +110,15 @@
          toimenpide (:tpi_id @u/valittu-toimenpideinstanssi)
          tehtava (:id @u/valittu-yksikkohintainen-tehtava)
          taso-paalla? @karttataso-yksikkohintainen-toteuma
-         summat @yks-hint-tehtavien-summat]
+         summat @yks-hint-tehtavien-summat
+         toteuma @valittu-yksikkohintainen-toteuma]
      (luo-yksikkohintaisten-toteumien-kuvataso
       urakka-id sopimus-id taso-paalla? hoitokausi toimenpide
-      (map :nimi summat)))))
+      (if toteuma
+        (let [tehtavat (into #{}
+                             (map (comp :id :tehtava))
+                             (vals (:tehtavat toteuma)))]
+          (map :nimi (filter (comp tehtavat :tpk_id) summat)))
+        (map :nimi summat))
+      tehtava
+      (:toteuma-id toteuma)))))
