@@ -968,7 +968,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     nayta-virheet? valiotsikot] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
-               _ (log "VIRHEET: " (:virheet opts) " ja virheet-atom: " virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
                ohjaus (ohjaus-fn muokatut virheet)
