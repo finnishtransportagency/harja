@@ -416,8 +416,13 @@
       (viimeistele-asetukset valittu?)))
 
 
-
-
+(defn toimenpiteen-selite
+  "Antaa toimenpiteen nimelle sopivan selitteen"
+  [toimenpide]
+  (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
+                    [toimenpide] false)]
+    {:nimi toimenpide :teksti toimenpide
+     :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
 (defmethod asia-kartalle :toteuma [toteuma valittu-fn?]
   ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä

@@ -556,52 +556,46 @@ ORDER BY t.alkanut
 LIMIT 501;
 
 -- name: hae-yksikkohintaisten-toiden-reitit
+-- fetch-size: 64
+-- row-fn: muunna-reitti
 SELECT
-  t.reitti,
-  tk.nimi    AS tehtava_toimenpide,
-  tk.id      AS tehtava_id,
-  tt.toteuma AS toteumaid
+  ST_Simplify(t.reitti, :toleranssi) as reitti,
+  tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
+  tpk.nimi AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
-  JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
+  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
 WHERE
-  t.urakka = :urakkaid
-  AND t.sopimus = :sopimusid
+  t.urakka = :urakka-id
+  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
+  AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
+  AND ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
   AND t.tyyppi = 'yksikkohintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR
-       tk.emo = (SELECT toimenpide
-                 FROM toimenpideinstanssi
-                 WHERE id = :toimenpide))
-  AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
+       tpk.emo = (SELECT toimenpide
+                    FROM toimenpideinstanssi
+                  WHERE id = :toimenpide))
+  AND (:tehtava :: INTEGER IS NULL OR tpk.id = :tehtava)
   AND t.poistettu IS NOT TRUE;
 
 -- name: hae-kokonaishintaisten-toiden-reitit
+-- fetch-size: 64
+-- row-fn: muunna-reitti
 SELECT
-  mk.nimi            AS materiaali_nimi,
-  tm.maara           AS materiaali_maara,
-  tt.toteuma         AS toteumaid,
-  t.alkanut          AS alkanut,
-  t.paattynyt        AS paattynyt,
-  t.reitti,
-  t.suorittajan_nimi AS suorittaja_nimi,
-  t.lisatieto        AS lisatieto,
-  tk.nimi            AS tehtava_toimenpide,
-  tt.maara           AS tehtava_maara,
-  tk.id              AS tehtava_id
+  ST_Simplify(t.reitti, :toleranssi) as reitti,
+  tk.nimi             AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
-  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-  LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
 WHERE
-  t.urakka = :urakkaid
-  AND t.sopimus = :sopimusid
+  t.urakka = :urakka-id
+  AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
+  AND ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);

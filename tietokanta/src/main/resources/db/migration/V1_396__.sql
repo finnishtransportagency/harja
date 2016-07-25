@@ -1,2 +1,2 @@
--- Varustetoteumalle tieto siitä onko lähetetty tierekisteriin
-ALTER TABLE varustetoteuma ADD COLUMN lahetetty_tierekisteriin BOOLEAN NOT NULL DEFAULT FALSE;
+-- Indeksoi toteuman reitti
+CREATE INDEX toteuma_reitti_idx ON toteuma USING GIST (reitti);
