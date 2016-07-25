@@ -549,6 +549,7 @@ FROM toteuma_tehtava tt
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
 WHERE
   t.urakka = :urakka-id
+  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
   AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
