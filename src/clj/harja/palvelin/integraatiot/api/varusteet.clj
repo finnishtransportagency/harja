@@ -16,9 +16,15 @@
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tr-tietolaji]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
+
+(defn- muunna-tietolajin-arvot-stringiksi [tietolajin-kuvaus arvot-map]
+  (tr-tietolaji/tietolajin-arvot-map->merkkijono
+    (clojure.walk/stringify-keys arvot-map)
+    tietolajin-kuvaus))
 
 (defn validoi-ja-muunna-arvot-merkkijonoksi
   "Hakee tietolajin kuvauksen, validoi arvot sen pohjalta ja muuntaa arvot merkkijonoksi"
