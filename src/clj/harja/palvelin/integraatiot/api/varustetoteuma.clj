@@ -275,7 +275,8 @@
 
               ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
               ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
-              ;; Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on yksi piste
+              ;; --> Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on
+              ;; yksi piste, muutenkin olisi ehkä parempi jos jokaisella varustetoteumalla olisi oma geometria
 
               (let [paivitetyt-toimenpiteet (tallenna-varustetoteuman-toimenpiteet
                                               db
