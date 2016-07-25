@@ -50,15 +50,17 @@ SELECT
   t.tr_alkuetaisyys,
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
-  (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
-   FROM toteuma_tehtava tt
-     LEFT JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
-   WHERE tt.toteuma = t.id
-         AND tt.poistettu IS NOT TRUE)
-                AS tehtavat
+
+  tt.id    AS tehtava_id,
+  tpk.id   AS "tehtava_tpk-id",
+  tpk.nimi AS tehtava_nimi,
+  tt.maara AS tehtava_maara
+
 FROM toteuma t
   LEFT JOIN kayttaja k ON k.id = t.luoja
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
+  JOIN toteuma_tehtava tt ON (tt.toteuma = t.id AND tt.poistettu IS NOT TRUE)
+  JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
 WHERE
   t.urakka = :urakka
   AND t.id = :toteuma
