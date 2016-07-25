@@ -180,12 +180,12 @@
                          tierekisteri
                          tietolajin-arvot
                          tietolaji))
-        lisattava-tietue (tierekisteri-sanomat/luo-tietueen-lisayssanoma
+        lisayssanoma (tierekisteri-sanomat/luo-tietueen-lisayssanoma
                            otsikko
                            livitunniste
                            toimenpiteen-tiedot
                            arvot-string)]
-    (tierekisteri/lisaa-tietue tierekisteri lisattava-tietue)
+    (tierekisteri/lisaa-tietue tierekisteri lisayssanoma)
     (tee-kirjausvastauksen-body
       {:id livitunniste
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
@@ -200,19 +200,20 @@
                          tierekisteri
                          tietolajin-arvot
                          tietolaji))
-        paivitettava-tietue (tierekisteri-sanomat/luo-tietueen-paivityssanoma
+        paivityssanoma (tierekisteri-sanomat/luo-tietueen-paivityssanoma
                               otsikko
                               toimenpiteen-tiedot
                               arvot-string)]
-    (tierekisteri/paivita-tietue tierekisteri paivitettava-tietue))
+    (tierekisteri/paivita-tietue tierekisteri paivityssanoma))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
   (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
-  (let [poistettava-tietue (tierekisteri-sanomat/luo-tietueen-poistosanoma
+  (let [poistosanoma (tierekisteri-sanomat/luo-tietueen-poistosanoma
                              otsikko
                              (:varusteen-poisto data))]
-    (tierekisteri/poista-tietue tierekisteri poistettava-tietue))
+    (println "Sanoma tehtiin: " (pr-str poistosanoma))
+    (tierekisteri/poista-tietue tierekisteri poistosanoma))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
 
 (defrecord Varusteet []
