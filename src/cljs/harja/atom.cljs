@@ -3,7 +3,8 @@
   (:require
    [harja.loki :refer [log]]
    [harja.virhekasittely :refer [arsyttava-virhe]]
-   [cljs.core.async :refer [<! >! chan put! alts! timeout]])
+   [cljs.core.async :refer [<! >! chan put! alts! timeout]]
+   [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [harja.atom :refer [reaction<!]]
                    [harja.makrot :refer [nappaa-virhe]]))
@@ -95,3 +96,19 @@
           (haku-lippu haku-lippu-atom)
           (kuristin kurista-ms))
      #(reset! aktiivinen false)]))
+
+(defn wrap-osa
+  "Palauttaa wrap atomin annetun mäpin osasta avaimia."
+  [data avaimet muokkaa!]
+  (assert (coll? avaimet) "avaimet parametrin on oltava collection")
+  (r/wrap (select-keys data avaimet)
+          (fn [uusi-arvo]
+            (muokkaa! #(merge %
+                              (select-keys uusi-arvo avaimet))))))
+
+(defn wrap-arvo
+  "Palauttaa wrap atomin annetun mäpin tietystä arvosta."
+  [data avainpolku muokkaa!]
+  (r/wrap (get-in data avainpolku)
+          (fn [uusi-arvo]
+            (muokkaa! #(assoc-in % avainpolku uusi-arvo)))))
