@@ -611,7 +611,7 @@
      :urakan-toteuma
      (fn [user tiedot]
        (hae-urakan-toteuma db user tiedot))
-     :urokan-toteumien-tehtavien-summat
+     :urakan-toteumien-tehtavien-summat
      (fn [user tiedot]
        (hae-urakan-toteumien-tehtavien-summat db user tiedot))
      :poista-toteuma!
