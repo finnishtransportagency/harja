@@ -232,7 +232,7 @@
         tr-sanoma-xml (tr-lisayssanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "lisaaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
-(deftest tarkista-varustetoteuman-esimerkista-muodostuu-validi-paivityssanoma-tierekisteriim
+(deftest tarkista-varustetoteuman-esimerkista-muodostuu-validi-paivityssanoma-tierekisteriin
   (let [xsd-polku "xsd/tierekisteri/skeemat/"
         pyyntosanoma (-> (slurp (io/resource "api/examples/varustetoteuman-kirjaus-request.json"))
                          (json/read-str)
@@ -246,7 +246,7 @@
         tr-sanoma-xml (tr-paivityssanoma/muodosta-xml-sisalto tr-sanoma)]
     (is (xml/validi-xml? xsd-polku "paivitaTietue.xsd" (xml/tee-xml-sanoma tr-sanoma-xml)))))
 
-(deftest tarkista-varustetoteuman-esimerkista-muodostuu-validi-poistosanoma-tierekisteriim
+(deftest tarkista-varustetoteuman-esimerkista-muodostuu-validi-poistosanoma-tierekisteriin
   (let [xsd-polku "xsd/tierekisteri/skeemat/"
         pyyntosanoma (-> (slurp (io/resource "api/examples/varustetoteuman-kirjaus-request.json"))
                          (json/read-str)
