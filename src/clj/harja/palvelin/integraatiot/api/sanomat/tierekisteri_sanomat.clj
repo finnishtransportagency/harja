@@ -12,7 +12,7 @@
             :alkupvm (xml/json-date-time->xml-xs-date (get-in toimenpide [:varuste :tietue :alkupvm]))
             :sijainti {:tie {:numero (get-in toimenpide [:varuste :tietue :sijainti :tie :numero])
                              :aosa (get-in toimenpide [:varuste :tietue :sijainti :tie :aosa])
-                             :aet (get-in toimenpide [:varuste :tietue :sijainti :tie :aet])
+                             :aet (get-in toimenpide [:varuste :tietue :sijainti :tie :aet]) ;; TODO Vähennä toistoa
                              :let (get-in toimenpide [:varuste :tietue :sijainti :tie :let])
                              :losa (get-in toimenpide [:varuste :tietue :sijainti :tie :losa])
                              :ajr (get-in toimenpide [:varuste :tietue :sijainti :tie :ajr])

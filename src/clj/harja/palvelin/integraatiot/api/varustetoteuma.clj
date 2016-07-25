@@ -195,6 +195,7 @@
           (do (log/debug "Toimenpide on jo tallennettu, ohitetaan.")
               (assoc toimenpide :varustetoteuma-id varustetoteuma-id))
 
+          ;; TODO Pura funktioiksi ja kutsu partialilla
           (case toimenpide-tyyppi
             :varusteen-lisays
             (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
@@ -275,8 +276,8 @@
 
               ;; FIXME Sijainti oli ennen varustetoteumassa x/y koordinatti, tallennettin reittipisteenä.
               ;; Ota toimenpiteiden TR-osoitteet ja muodosta niistä geometriat
-              ;; --> Mietittävä miten hanskataan koska frontissa oletetaan tällä hetkellä että sijainti on
-              ;; yksi piste, muutenkin olisi ehkä parempi jos jokaisella varustetoteumalla olisi oma geometria
+              ;; --> Jokaiselle toimenpiteelle muodosta tierekisteriosoittesta geometria,
+              ;; Toteuma-tauluun tallennetaan reitti-sarakkeeseen geometry collection ja siinä monta pointtia
 
               (let [paivitetyt-toimenpiteet (tallenna-varustetoteuman-toimenpiteet
                                               db
