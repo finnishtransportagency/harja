@@ -947,15 +947,19 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       {:component-will-receive-props
        (fn [this [_ {:keys [validoi-aina? virheet]} skeema muokatut]]
          (when validoi-aina?
-           (let [muokatut @muokatut]
-             (reset! (or virheet virheet-atom)
-                     (into {}
-                           (keep (fn [[id rivi]]
-                                   (let [rivin-virheet (when-not (:poistettu rivi)
-                                                         (validointi/validoi-rivi muokatut rivi skeema))]
-                                     (when-not (empty? rivin-virheet)
-                                       [id rivin-virheet]))))
-                           muokatut)))))
+           (let [virheet (or virheet virheet-atom)
+                 virheet-nyt @virheet
+                 muokatut @muokatut
+                 uudet-virheet
+                 (into {}
+                       (keep (fn [[id rivi]]
+                               (let [rivin-virheet (when-not (:poistettu rivi)
+                                                     (validointi/validoi-rivi muokatut rivi skeema))]
+                                 (when-not (empty? rivin-virheet)
+                                   [id rivin-virheet]))))
+                       muokatut)]
+             (when-not (= virheet-nyt uudet-virheet)
+               (reset! virheet uudet-virheet)))))
 
        :reagent-render
        (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota?
@@ -964,6 +968,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     nayta-virheet? valiotsikot] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
+               _ (log "VIRHEET: " (:virheet opts) " ja virheet-atom: " virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
                ohjaus (ohjaus-fn muokatut virheet)
