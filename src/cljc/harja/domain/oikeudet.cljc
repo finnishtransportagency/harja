@@ -124,8 +124,11 @@
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
-  [tyyppi oikeus urakka-id kayttaja]
-  (on-oikeus? tyyppi oikeus urakka-id kayttaja))
+  #?(:cljs
+     ([tyyppi oikeus urakka-id]
+      (on-muu-oikeus? tyyppi oikeus urakka-id @istunto/kayttaja)))
+  ([tyyppi oikeus urakka-id kayttaja]
+   (on-oikeus? tyyppi oikeus urakka-id kayttaja)))
 
 (defn voi-lukea?
   #?(:cljs
