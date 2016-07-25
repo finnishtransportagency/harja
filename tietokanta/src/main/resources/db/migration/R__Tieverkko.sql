@@ -332,6 +332,10 @@ DECLARE
   los INTEGER;
   aet INTEGER;
   let INTEGER;
+  koko_osa geometry;
+  koko_pituus float8;
+  alkuosan_pituus float8;
+  loppuosan_pituus float8;
 BEGIN
   IF aosa_ = losa_ THEN
     IF aet_ < let_ THEN
@@ -344,17 +348,17 @@ BEGIN
       let := aet_;
     END IF;
     IF ajoratavalinta=2 THEN
-      RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, LEAST(1,aet/tr_pituus::FLOAT), LEAST(1,let/tr_pituus::FLOAT)))
+      RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, LEAST(1,aet/ST_Length(geom)::FLOAT), LEAST(1,let/ST_Length(geom)::FLOAT)))
                    FROM tieverkko_paloina
                    WHERE tie=tie_
                          AND osa=aosa_
-                         AND (ajorata=0 OR ajorata=ajoratavalinta);
+                         AND (ajorata=0 OR ajorata=2);
     ELSE
-      RETURN QUERY SELECT ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT)
+      RETURN QUERY SELECT ST_Line_Substring(geom, aet/ST_Length(geom)::FLOAT, let/ST_Length(geom)::FLOAT)
                    FROM tieverkko_paloina
                    WHERE tie=tie_
                          AND osa=aosa_
-                         AND (ajorata=0 OR ajorata=ajoratavalinta);
+                         AND (ajorata=0 OR ajorata=1);
     END IF;
   ELSE
     IF aosa_ < losa_ THEN
@@ -365,33 +369,23 @@ BEGIN
       let := let_;
     ELSE
       ajoratavalinta := 2;
-      aos := losa_;
-      los := aosa_;
-      aet := let_;
-      let := aet_;
+      aos := aosa_;
+      los := losa_;
+      aet := aet_;
+      let := let_;
     END IF;
     IF ajoratavalinta=2 THEN
-      RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aos THEN ST_Reverse(ST_Line_Substring(geom, LEAST(1, aet/tr_pituus::FLOAT), 1))
-                                                            WHEN osa=los THEN ST_Reverse(ST_Line_Substring(geom, 0, LEAST(1,let/tr_pituus::FLOAT)))
-                                                            ELSE ST_Reverse(geom) END) ORDER BY osa DESC)) AS geom
-                              FROM tieverkko_paloina
-                              WHERE tie = tie_
-                                    AND osa >= aos
-                                    AND osa <= los
-                                    AND (ajorata=0 OR ajorata=ajoratavalinta)
-      )
-      SELECT ST_Reverse(geom) FROM q;
+      SELECT ST_LineMerge(ST_Collect(geom)) FROM tieverkko_paloina WHERE tie=tie_ and osa>=los and osa<=aos and (ajorata=0 or ajorata=2) INTO koko_osa;
+      koko_pituus := ST_Length(koko_osa);
+      SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=los INTO alkuosan_pituus;
+      SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=aos INTO loppuosan_pituus;
+      RETURN QUERY SELECT ST_Line_Substring(koko_osa, (alkuosan_pituus-let)/koko_pituus, (koko_pituus-loppuosan_pituus+aet)/koko_pituus);
     ELSE
-      RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aos THEN ST_Line_Substring(geom, LEAST(1, aet/tr_pituus::FLOAT), 1)
-                                                            WHEN osa=los THEN ST_Line_Substring(geom, 0, LEAST(1,let/tr_pituus::FLOAT))
-                                                            ELSE geom END) ORDER BY osa)) AS geom
-                              FROM tieverkko_paloina
-                              WHERE tie = tie_
-                                    AND osa >= aos
-                                    AND osa <= los
-                                    AND (ajorata=0 OR ajorata=ajoratavalinta)
-      )
-      SELECT geom FROM q;
+      SELECT yhdista_viivat_jarjestyksessa(ST_Collect(geom)) FROM tieverkko_paloina WHERE tie=tie_ and osa>=aos and osa<=los and (ajorata=0 or ajorata=1) INTO koko_osa;
+      koko_pituus := ST_Length(koko_osa);
+      SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=aos INTO alkuosan_pituus;
+      SELECT ST_Length(yhdista_viivat_jarjestyksessa(ST_Collect(geom))) FROM tieverkko_paloina WHERE tie=tie_ and osa=los INTO loppuosan_pituus;
+      RETURN QUERY SELECT ST_Line_Substring(koko_osa, (alkuosan_pituus-aet)/koko_pituus, (koko_pituus-loppuosan_pituus+let)/koko_pituus);
     END IF;
   END IF;
 END;
