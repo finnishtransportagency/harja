@@ -163,7 +163,7 @@
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "poikkeama-rest.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "poikkeama-rest.xsd" xml)
       xml
       (let [virheviesti "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia."]
         (log/error virheviesti)

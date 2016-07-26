@@ -21,7 +21,7 @@
 (deftest tarkista-kutsu
   (let [kutsu-xml (muodosta-kutsu poistettava-testitietue)
         xsd "poistaTietue.xsd"]
-    (is (xml/validoi +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
+    (is (xml/validi-xml? +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
 
 ; REPL-testausta varten
 #_(defn poista-testitietue []

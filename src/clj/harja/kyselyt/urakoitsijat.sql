@@ -8,14 +8,14 @@ SELECT y.id, y.ytunnus, y.nimi,
 
 -- name: hae-urakkatyypin-urakoitsijat
 -- Palauttaa annetun urakkatyypin urakoitsijoiden id:t
-SELECT y.id 
-  FROM urakka u 
-  		LEFT JOIN organisaatio y ON u.urakoitsija = y.id 
+SELECT y.id
+  FROM urakka u
+  		LEFT JOIN organisaatio y ON u.urakoitsija = y.id
  WHERE u.tyyppi = :tyyppi::urakkatyyppi;
 
- -- name: hae-yllapidon-urakoitsijat
+-- name: hae-yllapidon-urakoitsijat
 -- Palauttaa kaikkien ylläpitourakkatyyppien urakoitsijoiden id:t
-SELECT y.id 
-  FROM urakka u 
-  		LEFT JOIN organisaatio y ON u.urakoitsija = y.id 
+SELECT y.id
+  FROM urakka u
+  		LEFT JOIN organisaatio y ON u.urakoitsija = y.id
  WHERE u.tyyppi != 'hoito'::urakkatyyppi;

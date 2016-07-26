@@ -16,7 +16,7 @@
 (defn muodosta-kutsu [tunniste muutospvm]
   (let [sisalto (muodosta-xml-sisalto tunniste muutospvm)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "haeTietolaji.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "haeTietolaji.xsd" xml)
       xml
       (do
         (log/error "Tietolajihakukutsua ei voida lähettää. Kutsu XML ei ole validi.")

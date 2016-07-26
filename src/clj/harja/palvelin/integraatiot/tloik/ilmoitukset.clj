@@ -28,7 +28,7 @@
 
 (defn lue-ilmoitus [sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti]
   (let [viesti (.getText viesti)]
-    (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" viesti)
+    (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" viesti)
       (ilmoitus-sanoma/lue-viesti viesti)
       (let [virhe "XML-sanoma ei ole harja-tloik.xsd skeeman mukainen."
             kuittaus (kuittaus-sanoma/muodosta "-" nil (.toString (time/now)) "virhe"

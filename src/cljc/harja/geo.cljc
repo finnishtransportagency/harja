@@ -2,7 +2,8 @@
   "Yleisiä geometria-apureita"
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
-           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection Geometry))))
+              (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
+                           GeometryCollection Geometry))))
 
 #?(:clj
    (defprotocol MuunnaGeometria
@@ -353,3 +354,16 @@ pisteen [px py]."
   (let [dx (- x2 x1)
         dy (- y2 y1)]
     (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn alueen-hypotenuusa
+  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [{:keys [xmin ymin xmax ymax]}]
+  (let [dx (- xmax xmin)
+        dy (- ymax ymin)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn karkeistustoleranssi
+  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
+  [alue]
+  (let [pit (alueen-hypotenuusa alue)]
+    (/ pit 200)))

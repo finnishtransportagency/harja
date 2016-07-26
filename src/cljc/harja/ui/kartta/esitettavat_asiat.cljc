@@ -416,8 +416,13 @@
       (viimeistele-asetukset valittu?)))
 
 
-
-
+(defn toimenpiteen-selite
+  "Antaa toimenpiteen nimelle sopivan selitteen"
+  [toimenpide]
+  (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
+                    [toimenpide] false)]
+    {:nimi toimenpide :teksti toimenpide
+     :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
 (defmethod asia-kartalle :toteuma [toteuma valittu-fn?]
   ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä
@@ -511,6 +516,17 @@
                     (partial valittu-fn? valittu tunniste)
                     (constantly false)))))
 
+(defn kartalla-esitettavaan-muotoon-xf
+  "Palauttaa transducerin, joka muuntaa läpi kulkevat asiat kartalla esitettävään
+  muotoon."
+  ([] (kartalla-esitettavaan-muotoon-xf nil [:id]))
+  ([asia-xf tunniste]
+   (comp (or asia-xf identity)
+         (mapcat pura-geometry-collection)
+         (map #(kartalla-xf % nil (or tunniste [:id])))
+         (filter some?)
+         (filter #(some? (:alue %))))))
+
 (defn kartalla-esitettavaan-muotoon
   "Valitun asian tunniste on defaulttina :id. Voi antaa :id, [:tehtava :id], tai jos
   esitettävän asian ja valitun asian id on eri, [[:id] [:toteuma-id]]"
@@ -523,11 +539,7 @@
          selitteet (volatile! #{})]
      (with-meta
        (into []
-             (comp (or asia-xf identity)
-                   (mapcat pura-geometry-collection)
-                   (map #(kartalla-xf % valittu (or tunniste [:id])))
-                   (filter some?)
-                   (filter #(some? (:alue %)))
+             (comp (kartalla-esitettavaan-muotoon-xf asia-xf tunniste)
                    (geo/laske-extent-xf extent)
                    (tallenna-selitteet-xf selitteet))
              asiat)
