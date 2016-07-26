@@ -39,21 +39,28 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(def urakkasopimuksen-mukainen-kokonaishinta (reaction (:kokonaishinta @paallystys/paallystysilmoitus-lomakedata)))
-(def muutokset-kokonaishintaan (atom 666)
-  #_(reaction (let [lomakedata @paallystys/paallystysilmoitus-lomakedata
-                  tulos (pot/laske-muutokset-kokonaishintaan (get-in lomakedata [:ilmoitustiedot :tyot]))]
-              (log "[PÄÄLLYSTYS] Muutokset kokonaishintaan laskettu: " tulos)
-              tulos)))
+(defn laske-hinta [lomakedata-nyt]
+  (let [urakkasopimuksen-mukainen-kokonaishinta (:kokonaishinta lomakedata-nyt)
+        muutokset-kokonaishintaan (pot/laske-muutokset-kokonaishintaan
+                                   (get-in lomakedata-nyt [:ilmoitustiedot :tyot]))
+        toteuman-kokonaishinta (+ urakkasopimuksen-mukainen-kokonaishinta muutokset-kokonaishintaan)]
+    {:urakkasopimuksen-mukainen-kokonaishinta urakkasopimuksen-mukainen-kokonaishinta
+     :muutokset-kokonaishintaan muutokset-kokonaishintaan
+     :toteuman-kokonaishinta toteuman-kokonaishinta}))
 
-(def toteuman-kokonaishinta (reaction (+ @urakkasopimuksen-mukainen-kokonaishinta @muutokset-kokonaishintaan)))
+(defn paivita-kokonaishinta [lomakedata-nyt]
+  (assoc lomakedata-nyt
+         :toteuman-kokonaishinta (:toteuman-kokonaishinta (laske-hinta lomakedata-nyt))))
 
-(defn yhteenveto []
-  (let []
+(defn yhteenveto [lomakedata-nyt]
+  (let [{:keys [urakkasopimuksen-mukainen-kokonaishinta
+                muutokset-kokonaishintaan
+                toteuman-kokonaishinta]}
+        (laske-hinta lomakedata-nyt)]
     [yleiset/taulukkotietonakyma {}
-     "Urakkasopimuksen mukainen kokonaishinta: " (fmt/euro-opt (or @urakkasopimuksen-mukainen-kokonaishinta 0))
-     "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or @muutokset-kokonaishintaan 0))
-     "Yhteensä: " (fmt/euro-opt @toteuman-kokonaishinta)]))
+     "Urakkasopimuksen mukainen kokonaishinta: " (fmt/euro-opt (or urakkasopimuksen-mukainen-kokonaishinta 0))
+     "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or muutokset-kokonaishintaan 0))
+     "Yhteensä: " (fmt/euro-opt toteuman-kokonaishinta)]))
 
 (defn asiatarkastus
   "Asiatarkastusosio konsultille."
@@ -248,8 +255,10 @@
                   "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
          :tyyppi :pvm
          :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
-        {:otsikko "Toteutunut hinta" :nimi :hinta :tyyppi :numero
-         :palstoja 2 :hae #(fmt/euro-opt @toteuman-kokonaishinta) :muokattava? (constantly false)}
+        {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
+         :hae #(-> % laske-hinta :toteuman-kokonaishinta)
+         :fmt fmt/euro-opt :tyyppi :numero
+         :palstoja 2 :muokattava? (constantly false)}
         (when (or (= :valmis (:tila lomakedata-nyt))
                   (= :lukittu (:tila lomakedata-nyt)))
           {:otsikko "Kommentit" :nimi :kommentit
@@ -291,7 +300,11 @@
            tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
-           toteutuneet-maarat (grid-wrap [:ilmoitustiedot :tyot])
+           toteutuneet-maarat (muokkaus-grid-wrap lomakedata-nyt
+                                                  (fn [muutos-fn]
+                                                    (muokkaa!
+                                                     (comp paivita-kokonaishinta muutos-fn)))
+                                                  [:ilmoitustiedot :tyot])
            tekninen-osa-voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                           (not= :hyvaksytty (:paatos-tekninen-osa lomakedata-nyt))
                                           (false? lukittu?)
@@ -320,7 +333,8 @@
          [yllapitokohteet/yllapitokohdeosat
           {:muokkaa! #(muokkaa! assoc-in [:ilmoitustiedot :osoitteet] %)
            :rivinumerot? true
-           :voi-muokata? tekninen-osa-voi-muokata?}
+           :voi-muokata? tekninen-osa-voi-muokata?
+           :virheet (wrap-virheet :alikohteet)}
           urakka tierekisteriosoitteet
           (select-keys lomakedata-nyt
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})]
@@ -534,7 +548,7 @@
                    (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
           toteutuneet-maarat]]
 
-        (yhteenveto)
+        [yhteenveto lomakedata-nyt]
         [tallennus lomakedata-nyt valmis-tallennettavaksi?]]))))
 
 (defn avaa-paallystysilmoitus [paallystyskohteen-id]
