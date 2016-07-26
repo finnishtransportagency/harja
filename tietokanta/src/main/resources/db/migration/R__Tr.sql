@@ -142,7 +142,7 @@ BEGIN
     INTO tie_;
 
   IF tie_.tie IS NULL THEN
-    RAISE EXCEPTION 'Pisteille ei löydy yhteistä tietä';
+     RETURN NULL;
   END IF;
 
   alkuet := projektion_etaisyys(apiste, tie_.geom);
@@ -185,5 +185,13 @@ CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
 AS $$
 BEGIN
   RETURN NEXT tr_osoitteelle_viiva2(tie_, aosa_, aet_, losa_, let_);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteelle(
+  piste geometry, treshold INTEGER)
+  RETURNS tr_osoite AS $$
+DECLARE
+BEGIN
 END;
 $$ LANGUAGE plpgsql;

@@ -1,3 +1,5 @@
+DROP MATERIALIZED VIEW tieverkko_paloina;
+
 CREATE TABLE tieverkko_geom (
   tie INTEGER NOT NULL,
   geom geometry NOT NULL,
