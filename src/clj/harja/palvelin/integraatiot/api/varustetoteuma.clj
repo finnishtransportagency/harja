@@ -213,7 +213,6 @@
                         (= toimenpide-tyyppi :varusteen-lisays)
                         (assoc-in [:varusteen-lisays :varuste :tunniste] tunniste-kannassa)))
             (do
-              (log/debug (str "Tallennetaan toimenpide " toimenpide-tyyppi "."))
               (case toimenpide-tyyppi
                 :varusteen-lisays
                 (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
