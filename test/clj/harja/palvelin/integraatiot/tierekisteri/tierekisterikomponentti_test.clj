@@ -64,7 +64,10 @@
       []
       (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
-        (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))))))
+        (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste]))))
+
+      ;; Haetaan eri parametreilla, joten vastaus ei saa tulla cachesta (tulee virhe, koska http-kutsut on estetty)
+      (is (thrown? Exception (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" (t/now)))))))
 
 (deftest tarkista-tietueiden-haku
   (tietolajit/tyhjenna-tietolajien-kuvaukset-cache)

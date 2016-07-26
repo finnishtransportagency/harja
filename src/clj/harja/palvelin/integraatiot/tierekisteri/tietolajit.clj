@@ -15,13 +15,12 @@
   "Ottaa tierekisteristä saadun vastauksen haetulle tietolajille ja cachettaa sen jos vastaus on onnistunut.
    Cacheen menee siis koko vastaus, jotta kutsuja saa aina saman vastauksen riippumatta
    siitä tehtiinkö haku oikeasti vai haettiinko se cachesta."
-  [vastaus]
+  [tunniste muutospvm vastaus]
   (when (:onnistunut vastaus)
-    (let [tietolaji (:tietolaji vastaus)]
-     (swap! tietolajien-kuvaukset-cache
-            assoc
-            (:tunniste tietolaji)
-            vastaus))))
+    (swap! tietolajien-kuvaukset-cache
+            assoc-in
+            [tunniste muutospvm]
+            vastaus)))
 
 (defn tyhjenna-tietolajien-kuvaukset-cache []
   (reset! tietolajien-kuvaukset-cache nil))
@@ -47,15 +46,15 @@
                           {vastaus-xml :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
                       (kasittele-tietolajin-hakuvastaus url tunniste muutospvm vastaus-xml)))]
     (let [vastaus (integraatiotapahtuma/suorita-integraatio db integraatioloki "tierekisteri" "hae-tietolaji" tyonkulku)]
-      (cacheta-onnistunut-vastaus vastaus)
+      (cacheta-onnistunut-vastaus tunniste muutospvm vastaus)
       vastaus)))
 
-(defn- hae-tietolajin-kuvaus-cachesta [tunniste]
-  (get @tietolajien-kuvaukset-cache tunniste))
+(defn- hae-tietolajin-kuvaus-cachesta [tunniste muutospvm]
+  (get-in @tietolajien-kuvaukset-cache [tunniste muutospvm]))
 
 (defn hae-tietolajit
   "Hakee annetun tietolajin kuvauksen.
   Vastaus palautetaan cachesta jos löytyy, muuten haetaan uusin kuvaus tierekisteristä"
   [db integraatioloki url tunniste muutospvm]
-  (or (hae-tietolajin-kuvaus-cachesta tunniste)
+  (or (hae-tietolajin-kuvaus-cachesta tunniste muutospvm)
       (hae-tietolajin-kuvaus-tierekisterista db integraatioloki url tunniste muutospvm)))
