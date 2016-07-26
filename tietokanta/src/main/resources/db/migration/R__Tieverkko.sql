@@ -34,7 +34,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION tr_osoitteen_suunta(aosa INTEGER, aet INTEGER, losa INTEGER, let INTEGER) RETURNS BIT AS $$
 BEGIN
    RETURN (CASE
-     WHEN (aosa=losa AND aet<let) THEN 0
+     WHEN (aosa=losa AND aet<=let) THEN 0
      WHEN (aosa=losa AND aet>let) THEN 1
      WHEN aosa<losa THEN 0
      WHEN aosa>losa THEN 1
