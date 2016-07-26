@@ -34,7 +34,9 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.yhatuonti :as yha]
             [harja.pvm :as pvm]
-            [harja.atom :as atom])
+            [harja.atom :as atom]
+
+            [harja.ui.debug :refer [debug]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -169,7 +171,7 @@
 
 (defn tallennus
   [urakka {:keys [valmispvm-kohde valmispvm-paallystys tekninen-osa taloudellinen-osa
-           tila :as lomake]} valmis-tallennettavaksi?]
+           tila] :as lomake} valmis-tallennettavaksi?]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         paatos-taloudellinen-osa (:paatos taloudellinen-osa)
         huomautusteksti
@@ -190,11 +192,13 @@
 
      [napit/palvelinkutsu-nappi
       "Tallenna"
-      #(let [lahetettava-data (-> (grid/poista-idt lomake [:ilmoitustiedot :osoitteet])
+      #(let [lahetettava-data (-> lomake
+                                  lomake/ilman-lomaketietoja
+                                  (grid/poista-idt [:ilmoitustiedot :osoitteet])
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet])
                                   (grid/poista-idt [:ilmoitustiedot :tyot]))]
-         #_(log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
-         #_(log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
+         (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
+         (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus! urakka-id sopimus-id lahetettava-data))
       {:luokka "nappi-ensisijainen"
        :disabled (false? valmis-tallennettavaksi?)
@@ -509,11 +513,7 @@
                                      (every? empty? (vals virheet))
                                      (false? lukittu?))
 
-
-
-
            grid-wrap (partial muokkaus-grid-wrap lomakedata-nyt muokkaa!)
-           ;; Sisältää alikohteen päällystystoimenpiteen tiedot
 
            tekninen-osa-voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                           (not= :hyvaksytty
@@ -554,7 +554,9 @@
         ;; Yhteenveto hinnoista
         [yhteenveto lomakedata-nyt]
 
-        [tallennus urakka lomakedata-nyt valmis-tallennettavaksi?]]))))
+        [tallennus urakka lomakedata-nyt valmis-tallennettavaksi?]
+
+        [debug lomakedata-nyt]]))))
 
 (defn avaa-paallystysilmoitus [paallystyskohteen-id]
   (go
