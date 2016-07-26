@@ -24,18 +24,21 @@
 (defn- kayttaja-omistaa-lukon? [lukko]
   (= (:kayttaja lukko) (:id @istunto/kayttaja)))
 
-(defn nykyinen-nakyma-lukittu? []
-  (if (nil? @nykyinen-lukko)
+(defn nakyma-lukittu? [lukko]
+  (if (nil? lukko)
     (do
       (log "[LUKKO] Nykyistä lukkoa ei ole. Näkymä ei ole lukittu.")
       false)
     (do
-      (let [kayttajan-oma-lukko (kayttaja-omistaa-lukon? @nykyinen-lukko)]
+      (let [kayttajan-oma-lukko (kayttaja-omistaa-lukon? lukko)]
         (log (str "[LUKKO] Nykyinen käyttäjä " (:id @istunto/kayttaja)))
-        (log (str "[LUKKO] Nykyinen lukko " (pr-str @nykyinen-lukko)))
-        (log (str "[LUKKO] Nykyisen lukon omistaja " (:kayttaja @nykyinen-lukko)))
+        (log (str "[LUKKO] Nykyinen lukko " (pr-str lukko)))
+        (log (str "[LUKKO] Nykyisen lukon omistaja " (:kayttaja lukko)))
         (log "[LUKKO] Käyttäjä omistaa lukon: " kayttajan-oma-lukko)
         (false? kayttajan-oma-lukko)))))
+
+(defn nykyinen-nakyma-lukittu? []
+  (nakyma-lukittu? @nykyinen-lukko))
 
 (defn muodosta-lukon-id
   "Ottaa näkymän ja item-id:n, joilla muodostetaan lukon id.
