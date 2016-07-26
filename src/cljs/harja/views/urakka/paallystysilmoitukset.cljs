@@ -107,7 +107,6 @@
         asiatarkastus]])))
 
 (defn kasittelytiedot [otsikko muokattava? valmistumispvm osa muokkaa!]
-  (log "KÄSITTELY " (pr-str osa))
   [lomake/lomake
    {:otsikko otsikko
     :muokkaa! muokkaa!
@@ -159,9 +158,11 @@
       #(muokkaa! assoc :taloudellinen-osa %)]]))
 
 (defn tallennus
-  [{:keys [valmispvm-kohde valmispvm-paallystys paatos-tekninen-osa paatos-taloudellinen-osa
+  [{:keys [valmispvm-kohde valmispvm-paallystys tekninen-osa taloudellinen-osa
            tila :as lomake]} valmis-tallennettavaksi?]
-  (let [huomautusteksti
+  (let [paatos-tekninen-osa (:paatos tekninen-osa)
+        paatos-taloudellinen-osa (:paatos taloudellinen-osa)
+        huomautusteksti
         (cond (not (and valmispvm-kohde valmispvm-paallystys))
               "Valmistusmispäivämäärää ei ole annettu, ilmoitus tallennetaan keskeneräisenä."
               (and (not= :lukittu tila)
@@ -264,18 +265,18 @@
                                                                         #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
                            (:kommentit lomakedata-nyt)])})]
        lomakedata-nyt]
-      #_[asiatarkastus lomakedata-nyt muokkaa! valmis-kasiteltavaksi?]]
+      [asiatarkastus lomakedata-nyt muokkaa! valmis-kasiteltavaksi?]]
 
      [:div.col-md-6
       (when valmis-kasiteltavaksi?
         [:div
          [kasittely lomakedata-nyt lukittu? muokkaa!]])]]))
 
-(defn paallystysilmoituslomake [{:keys [kohdenumero]} _ muokkaa!]
+(defn paallystysilmoituslomake [urakka {:keys [kohdenumero]} _ muokkaa!]
   (komp/luo
    (komp/ulos #(kartta/poista-popup!))
    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" kohdenumero))
-   (fn [{:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt} lukittu? muokkaa!]
+   (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt} lukittu? muokkaa!]
      (log "LOMAKEDATA-NYT: " (pr-str lomakedata-nyt))
      (let [valmis-tallennettavaksi? (and
                                      (not (= tila :lukittu))
@@ -287,6 +288,7 @@
 
            grid-wrap (partial muokkaus-grid-wrap lomakedata-nyt muokkaa!)
                                         ; Sisältää alikohteen päällystystoimenpiteen tiedot
+           tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
            toteutuneet-maarat (grid-wrap [:ilmoitustiedot :tyot])
@@ -315,7 +317,15 @@
         [:fieldset.lomake-osa
          [:h3 "Tekninen osa"]
 
-         [grid/muokkaus-grid
+         [yllapitokohteet/yllapitokohdeosat
+          {:muokkaa! #(muokkaa! assoc-in [:ilmoitustiedot :osoitteet] %)
+           :rivinumerot? true
+           :voi-muokata? tekninen-osa-voi-muokata?}
+          urakka tierekisteriosoitteet
+          (select-keys lomakedata-nyt
+                       #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})]
+
+         #_[grid/muokkaus-grid
           {:otsikko "Tierekisteriosoitteet"
            :tunniste hash
            :voi-muokata? tekninen-osa-voi-muokata?
@@ -650,6 +660,7 @@
        [kartta/kartan-paikka]
        (if-let [ilmoitus @paallystys/paallystysilmoitus-lomakedata]
          [paallystysilmoituslomake
+          @nav/valittu-urakka
           ilmoitus
           @paallystys/paallystysilmoituslomake-lukittu?
           (partial swap! paallystys/paallystysilmoitus-lomakedata)]
