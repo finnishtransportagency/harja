@@ -88,7 +88,6 @@
        nil nil
        (keep (fn [toteuma]
                (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
-                 (println "[VAR] Sijainti: " sijainti)
                  (assoc toteuma
                         :tyyppi-kartalla :varustetoteuma
                         :selitys-kartalla (selite toteuma)
