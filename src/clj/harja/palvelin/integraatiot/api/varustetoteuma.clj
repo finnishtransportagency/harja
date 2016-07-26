@@ -93,9 +93,7 @@
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
         ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
         (if (toimenpide-lahetetty-tierekisteriin? db toimenpide)
-          (do (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
-              (when (= toimenpide-tyyppi :varusteen-lisays)
-                {:uusi-tunniste tunniste}))
+          (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
 
           (let [vastaus
                 (case toimenpide-tyyppi
@@ -120,10 +118,10 @@
             ;; --> Pitää tutkia mitä tierekisteri palauttaa samalle kutsulle
             (when (:onnistunut vastaus)
               (log/debug "Merkitään toimenpide id:llä " (:varustetoteuma-id toimenpide) " lähetetyksi.")
-              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))
+              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))))
 
-            (when (= toimenpide-tyyppi :varusteen-lisays)
-              {:uusi-tunniste tunniste})))))
+        (when (= toimenpide-tyyppi :varusteen-lisays)
+          {:uusi-tunniste tunniste})))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
