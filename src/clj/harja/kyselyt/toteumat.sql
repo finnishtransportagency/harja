@@ -781,7 +781,9 @@ SET reitti = :reitti
 WHERE id = :id;
 
 -- name: hae-varustetoteuman-id
-SELECT id
+SELECT
+  id,
+  tunniste
 FROM varustetoteuma
 WHERE
   toteuma = :toteumaid
