@@ -261,7 +261,7 @@
            (when-not jarjestelman-lisaama-toteuma?
              {:tyyppi :tierekisteriosoite
               :nimi :tr
-              :pakollinen? true
+              :pakollinen? false
               :sijainti (r/wrap (:reitti @lomake-toteuma)
                                 #(swap! lomake-toteuma assoc :reitti %))})
 
