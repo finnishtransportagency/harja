@@ -122,8 +122,10 @@
                                 tunniste tehty-toimenpide tie toimenpiteen-arvot-tekstina]
   (assert toteuma-id "Tallennettavalla varustetoteumalla on oltava toteuma")
   (assert tunniste "Tallennettavalla varustetoteumalla on oltava tunniste")
-  (assert (and (not= tehty-toimenpide :varusteen-poisto)
-               toimenpiteen-arvot-tekstina)
+  (assert (or (and (= tehty-toimenpide "poistettu")
+                   (nil? toimenpiteen-arvot-tekstina))
+              (and (not= tehty-toimenpide "poistettu")
+                   toimenpiteen-arvot-tekstina))
           "Tallennettavalla varustetoteumalla on arvot")
   (log/debug "Luodaan uusi varustetoteuma tyyppiä " tehty-toimenpide " tuunnisteella " tunniste)
   (:id (toteumat-q/luo-varustetoteuma<!
