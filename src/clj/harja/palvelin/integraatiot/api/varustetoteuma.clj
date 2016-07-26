@@ -120,7 +120,12 @@
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
                                 tunniste tehty-toimenpide tie toimenpiteen-arvot-tekstina]
-  (log/debug "Luodaan uusi varustetoteuma tunnisteella tyyppiä " tehty-toimenpide " tuunnisteella " tunniste)
+  (assert toteuma-id "Tallennettavalla varustetoteumalla on oltava toteuma")
+  (assert tunniste "Tallennettavalla varustetoteumalla on oltava tunniste")
+  (assert (and (not= tehty-toimenpide :varusteen-poisto)
+               toimenpiteen-arvot-tekstina)
+          "Tallennettavalla varustetoteumalla on arvot")
+  (log/debug "Luodaan uusi varustetoteuma tyyppiä " tehty-toimenpide " tuunnisteella " tunniste)
   (:id (toteumat-q/luo-varustetoteuma<!
          db
          {:tunniste tunniste
@@ -146,7 +151,7 @@
 (defn- etsi-varustetoteuma
   "Etsii toimenpiteen varustetoteuman id:n kannasta annettujen tietojen perusteella"
   [db toteuma-id tunniste tietolaji toimenpiteen-tiedot tehty-toimenpide]
-  (let [varustetoteuma (first (toteumat-q/hae-varustetoteuma
+  (first (toteumat-q/hae-varustetoteuma
                                 db
                                 {:toteumaid toteuma-id
                                  :tunniste tunniste
@@ -158,9 +163,7 @@
                                  :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
                                  :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
                                  :tr_ajorata (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])
-                                 :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])}))]
-    (log/debug "Löytyi varustetoteuma: " (pr-str varustetoteuma))
-    varustetoteuma))
+                                 :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])})))
 
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman.
@@ -177,9 +180,9 @@
                         (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
                         (:tietolajitunniste toimenpiteen-tiedot))
             tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
-            tunniste (if (not= toimenpide-tyyppi :varusteen-poisto)
-                       (get-in toimenpiteen-tiedot [:varuste :tunniste])
-                       (:tunniste toimenpiteen-tiedot))
+            tunniste (if (= toimenpide-tyyppi :varusteen-poisto)
+                       (:tunniste toimenpiteen-tiedot)
+                       (get-in toimenpiteen-tiedot [:varuste :tunniste]))
             tie (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
             tietolajin-arvot-string (when tietolajin-arvot
                                       (varusteet/validoi-ja-muunna-arvot-merkkijonoksi
@@ -198,15 +201,15 @@
                                         tietolaji
                                         toimenpiteen-tiedot
                                         (toimenpide-tyyppi->toimenpide toimenpide-tyyppi))
-              varustetoteuma-id (:id varustetoteuma-kannassa)
-              tunniste (:tunniste varustetoteuma-kannassa)]
-          (if varustetoteuma-id
+              varustetoteuma-id-kannassa (:id varustetoteuma-kannassa)
+              tunniste-kannassa (:tunniste varustetoteuma-kannassa)]
+          (if varustetoteuma-id-kannassa
             (do (log/debug (str "Toimenpide " toimenpide-tyyppi " on jo tallennettu, ohitetaan."))
-                (cond-> (assoc toimenpide :varustetoteuma-id varustetoteuma-id)
+                (cond-> (assoc toimenpide :varustetoteuma-id varustetoteuma-id-kannassa)
                         (not= toimenpide-tyyppi :varusteen-poisto)
                         (assoc :arvot-string tietolajin-arvot-string)
                         (= toimenpide-tyyppi :varusteen-lisays)
-                        (assoc-in [:varusteen-lisays :varuste :tunniste] tunniste)))
+                        (assoc-in [:varusteen-lisays :varuste :tunniste] tunniste-kannassa)))
             (do
               (log/debug (str "Tallennetaan toimenpide " toimenpide-tyyppi "."))
               (case toimenpide-tyyppi
