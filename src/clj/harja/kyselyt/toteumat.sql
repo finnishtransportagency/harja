@@ -780,7 +780,7 @@ UPDATE toteuma
 SET reitti = :reitti
 WHERE id = :id;
 
--- name: hae-varustetoteuman-id
+-- name: hae-varustetoteuma
 SELECT
   id,
   tunniste
