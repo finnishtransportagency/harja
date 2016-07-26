@@ -14,8 +14,8 @@
     true
     (catch NumberFormatException e false)))
 
-(defn kokonaisluku?
-  (some? (re-matches #"^[0-9]*$" "242a")))
+(defn kokonaisluku? [arvo]
+  (some? (re-matches #"^[0-9]*$" arvo)))
 
 (defn iso-8601-paivamaara? [arvo]
   (try
