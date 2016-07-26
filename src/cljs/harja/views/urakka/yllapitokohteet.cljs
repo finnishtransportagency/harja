@@ -202,7 +202,9 @@
     {1 (select-keys kohde #{:tr-numero
                             :tr-alkuosa :tr-alkuetaisyys
                             :tr-loppuosa :tr-loppuetaisyys})}
-    (varmista-alku-ja-loppu (zipmap (iterate inc 1) kohdeosat)
+    (varmista-alku-ja-loppu (zipmap (iterate inc 1)
+                                    (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys)
+                                             kohdeosat))
                             (tr/nouseva-jarjestys kohde))))
 
 (defn yllapitokohdeosat
