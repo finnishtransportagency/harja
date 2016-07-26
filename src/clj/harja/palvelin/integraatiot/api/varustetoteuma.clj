@@ -124,6 +124,26 @@
           {:uusi-tunniste tunniste})))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
+(defn- hae-toimenpiteen-geometria [db toimenpiteen-tiedot]
+  "Muuntaa toimenpiteen tierekisteriosoitteen geometriaksi.
+   Jos geometriaa ei voida muodostaa, palauttaa nil (esim. poistotoimenpiteellä ei ole sijaintia"
+  (println "Tie: " (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie]))
+  (let [tr-osoite (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
+        viiva? (and (:losa tr-osoite)
+                    (:let tr-osoite))
+        geometria (when tr-osoite
+                    (:sijainti (first (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
+                                       db {:tie (:numero tr-osoite)
+                                           :aosa (:aosa tr-osoite)
+                                           :aet (:aet tr-osoite)
+                                           :losa (if viiva?
+                                                   (:losa tr-osoite)
+                                                   (:aosa tr-osoite))
+                                           :let (if viiva?
+                                                  (:let tr-osoite)
+                                                  (:aet tr-osoite))}))))]
+    geometria))
+
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
                                 tunniste tehty-toimenpide tie toimenpiteen-arvot-tekstina]
   (assert toteuma-id "Tallennettavalla varustetoteumalla on oltava toteuma")
@@ -154,7 +174,9 @@
           :tr_loppuosa (:losa tie)
           :tr_loppuetaisyys (:let tie)
           :tr_puoli (:puoli tie)
-          :tr_ajorata (:ajr tie)})))
+          :tr_ajorata (:ajr tie)
+          :sijainti (when-let [geometria (hae-toimenpiteen-geometria db toimenpiteen-tiedot)]
+                      (PGgeometry. geometria))})))
 
 (defn- etsi-varustetoteuma
   "Etsii toimenpiteen varustetoteuman id:n kannasta annettujen tietojen perusteella"
@@ -243,33 +265,16 @@
                       (assoc :arvot-string tietolajin-arvot-string)))))))))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
-(defn- hae-toimenpiteen-geometria [db toimenpide]
-  (let [toimenpide-tyyppi (first (keys toimenpide))
-        toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
-        ;; Huomaa, että poistotoimenpiteellä ei ole sijaintia
-        tr-osoite (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
-        viiva? (and (:losa tr-osoite)
-                    (:let tr-osoite))
-        geometria (:sijainti (first (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
-                                      db {:tie (:numero tr-osoite)
-                                          :aosa (:aosa tr-osoite)
-                                          :aet (:aet tr-osoite)
-                                          :losa (if viiva?
-                                                  (:losa tr-osoite)
-                                                  (:aosa tr-osoite))
-                                          :let (if viiva?
-                                                 (:let tr-osoite)
-                                                 (:aet tr-osoite))})))]
-    geometria))
-
 (defn- tallenna-varustetoteuman-geometria
-  "Muuntaa varustetoteuman jokaisen toimenpiteen piste-geometriaksi.
-  Toteuman geometriaksi muodostuu point geometry collection."
+  "Muuntaa varustetoteuman jokaisen toimenpiteen geometriaksi ja yhdistää ne
+   geometry collectioniksi. Tallentaa collectionin toteuman sijainniksi."
   [db varustetoteuma toteuma-id]
   (log/debug "Tallennetaan toteuman geometria")
   (let [geometriat
         (keep (fn [toimenpide]
-                (hae-toimenpiteen-geometria db toimenpide))
+                (let [toimenpide-tyyppi (first (keys toimenpide))
+                      toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)]
+                  (hae-toimenpiteen-geometria db toimenpiteen-tiedot)))
               (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))
         geometry-collection (GeometryCollection.
                               (into-array Geometry
