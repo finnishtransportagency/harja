@@ -8,11 +8,14 @@
 (defn tayta-oikealle [pituus merkkijono]
   (format (str "%1$-" pituus "s") merkkijono))
 
-(defn kokonaisluku? [arvo]
+(defn parsittavissa-intiksi? [arvo]
   (try
     (Integer/parseInt arvo)
     true
     (catch NumberFormatException e false)))
+
+(defn kokonaisluku?
+  (some? (re-matches #"^[0-9]*$" "242a")))
 
 (defn iso-8601-paivamaara? [arvo]
   (try

@@ -51,7 +51,7 @@
     (if-let [arvo (get saadut parametri)]
       (when tyyppi
         (case tyyppi
-          :int (when (not (merkkijono/kokonaisluku? arvo))
+          :int (when (not (merkkijono/parsittavissa-intiksi? arvo))
                  (validointi/heita-virheelliset-parametrit-poikkeus (format "Parametri: %s ei ole kokonaisluku. Annettu arvo: %s." parametri arvo)))
           :date (when (not (merkkijono/iso-8601-paivamaara? arvo))
                   (validointi/heita-virheelliset-parametrit-poikkeus (format "Parametri: %s ei ole päivämäärä. Anna arvo muodossa: yyyy-MM-dd. Annettu arvo: %s." parametri arvo)))

@@ -20,7 +20,7 @@
   [arvo tietolaji kenttatunniste tietotyyppi koodisto]
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
-    :numeerinen (when-not (re-matches #"^[0-9]*$" arvo)
+    :numeerinen (when-not (merkkijono/kokonaisluku? arvo)
                   (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero.")))
     :paivamaara (try
                   (pvm/iso-8601->pvm arvo)
@@ -74,7 +74,7 @@
 (defn- muunna-teksti-kentan-mukaiseen-tyyppiin [arvo-tekstina kentan-kuvaus]
   (case (:tietotyyppi kentan-kuvaus)
     :merkkijono arvo-tekstina
-    :numeerinen (do (merkkijono/kokonaisluku? arvo-tekstina)
+    :numeerinen (do (merkkijono/parsittavissa-intiksi? arvo-tekstina)
                     (Integer/parseInt arvo-tekstina))
     :paivamaara (do (merkkijono/iso-8601-paivamaara? arvo-tekstina)
                     (pvm/iso-8601->pvm arvo-tekstina))
