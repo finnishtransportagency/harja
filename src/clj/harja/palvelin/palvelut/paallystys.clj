@@ -45,9 +45,11 @@
                                  (comp (map konv/alaviiva->rakenne)
                                        (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                        (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                       (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
-                                                                               [:paatos-tekninen-osa]
-                                                                               [:tila]])))
+                                       (map #(konv/string-poluista->keyword
+                                              %
+                                              [[:taloudellinen-osa :paatos]
+                                               [:tekninen-osa :paatos]
+                                               [:tila]])))
                                  (q/hae-urakan-paallystysilmoitus-paallystyskohteella
                                    db
                                    {:paallystyskohde paallystyskohde-id}))
@@ -288,9 +290,15 @@
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ (:ilmoitustiedot paallystysilmoitus))
+    (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                    (:ilmoitustiedot paallystysilmoitus))
 
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
+          kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
+                     db user {:urakka-id urakka-id :sopimus-id sopimus-id
+                              :yllapitokohde-id paallystyskohde-id
+                              :osat (map #(assoc % :id (:kohdeosa-id %))
+                                         (:osoitteet (:ilmoitustiedot paallystysilmoitus)))})
           paallystysilmoitus-kannassa (first (into []
                                                    (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                                          (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
