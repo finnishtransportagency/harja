@@ -63,5 +63,4 @@ FROM tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER)
 -- Hakee osien pituudet annetulla välillä (inclusive)
 SELECT osa, pituus FROM tr_osien_pituudet
  WHERE tie = :tie AND
-       osa BETWEEN :aosa AND :losa
-GROUP BY osa;
+       osa BETWEEN :aosa AND :losa;
