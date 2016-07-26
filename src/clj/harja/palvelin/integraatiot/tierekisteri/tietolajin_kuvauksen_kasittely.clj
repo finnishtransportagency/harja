@@ -65,7 +65,7 @@
         (str "Tietolajin arvoissa on ylimääräisiä kenttiä, joita ei löydy tierekisterin tietolajin kuvauksesta: "
              (str/join ", " ylimaaraiset-kentat) ". Sallitut kentät: " (str/join ", " kuvatut-kenttatunnisteet))))
 
-    ;; Eli ylimääräisiä kenttiä, validoi annetut kentät
+    ;; Ei ylimääräisiä kenttiä, validoi annetut kentät
     (doseq [kentan-kuvaus kenttien-kuvaukset]
       (validoi-arvo (clojure.walk/stringify-keys (get arvot (:kenttatunniste kentan-kuvaus)))
                     kentan-kuvaus
