@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]))
+            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri])
+  (:import (org.postgis PGgeometry)))
 
 (def kayttaja "destia")
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
@@ -54,8 +55,9 @@
               toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi "
                                               "FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              geometria (ffirst (q (str "SELECT reitti FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              toteuma-geometria (ffirst (q (str "SELECT reitti FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               tunnisteet-kannassa (flatten (q (str "SELECT tunniste FROM varustetoteuma WHERE toteuma = " toteuma-id)))
+              varustetoteuma-geometriat-kannassa (flatten (q (str "SELECT toimenpide, sijainti FROM varustetoteuma WHERE toteuma = " toteuma-id)))
               varuste-arvot-kannassa (q (str "SELECT toimenpide, arvot FROM varustetoteuma WHERE toteuma = " toteuma-id))
               lahetystiedot-kannassa (flatten (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " toteuma-id ";")))
               toimenpidetyypit-kannassa (flatten (q (str "SELECT toimenpide FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
@@ -66,14 +68,18 @@
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
           (is (every? #(= true %) lahetystiedot-kannassa))
           (is (every? #(if (= (first %) "poistettu")
-                        (= (nil? (second %))) ;; Poistetuille toimenpiteille ei lisätty arvoja, muille lisättiin
+                        (= (nil? (second %))) ;; Poisto-toimenpiteille ei lisätty arvoja, muille lisättiin
                         (= (string? (second %))))
                       varuste-arvot-kannassa))
           (is (every? string? tunnisteet-kannassa))
           (is (= (count (filter #(= % "lisatty") toimenpidetyypit-kannassa)) 1))
           (is (= (count (filter #(= % "paivitetty") toimenpidetyypit-kannassa)) 1))
           (is (= (count (filter #(= % "poistettu") toimenpidetyypit-kannassa)) 1))
-          (is (= (instance? org.postgis.PGgeometry geometria)))
+          (is (not (.isEmpty (.getGeometry toteuma-geometria))))
+          (is (every? #(if (= (first %) "poistettu")
+                        (= (nil? (second %))) ;; Poisto-toimenpiteellä ei ole geometriaa, muilla on
+                        (instance? PGgeometry (second %)))
+                      varustetoteuma-geometriat-kannassa))
           (is (= (count (filter #(= % "tarkastus") toimenpidetyypit-kannassa)) 1))
 
           ;; Vastauksessa palautuu uusi id lisäystoimenpiteelle
