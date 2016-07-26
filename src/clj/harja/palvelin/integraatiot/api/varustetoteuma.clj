@@ -125,7 +125,7 @@
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
 (defn- hae-toimenpiteen-geometria [db toimenpiteen-tiedot]
-  "Muuntaa toimenpiteen tierekisteriosoitteen geometriaksi.
+  "Muuntaa toimenpiteen tierekisteriosoitteen geometriaksi (PGgeometry)
    Jos geometriaa ei voida muodostaa, palauttaa nil (esim. poistotoimenpiteellä ei ole sijaintia"
   (println "Tie: " (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie]))
   (let [tr-osoite (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
@@ -176,7 +176,7 @@
           :tr_puoli (:puoli tie)
           :tr_ajorata (:ajr tie)
           :sijainti (when-let [geometria (hae-toimenpiteen-geometria db toimenpiteen-tiedot)]
-                      (PGgeometry. geometria))})))
+                      geometria)})))
 
 (defn- etsi-varustetoteuma
   "Etsii toimenpiteen varustetoteuman id:n kannasta annettujen tietojen perusteella"
