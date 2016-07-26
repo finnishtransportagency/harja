@@ -506,7 +506,6 @@
    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" kohdenumero))
    (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt}
         lukko muokkaa!]
-     (log "LOMAKEDATA-NYT: " (pr-str lomakedata-nyt))
      (let [lukittu? (lukko/nakyma-lukittu? lukko)
            valmis-tallennettavaksi? (and
                                      (not (= tila :lukittu))
