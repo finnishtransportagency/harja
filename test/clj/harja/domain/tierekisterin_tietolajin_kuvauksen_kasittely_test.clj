@@ -1,7 +1,7 @@
-(ns harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely-test
+(ns harja.palvelin.integraatiot.api.tyokalut.tietolajin-kuvauksen-kasittely-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
-            [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tierekisteri-tietue]
+            [harja.palvelin.integraatiot.api.tierekisteri.tietolajin-kuvauksen-kasittely :as tierekisteri-tietue]
             [clj-time.core :as t]))
 
 (deftest tarkista-kentan-arvon-hakeminen-merkkijonosta

@@ -9,7 +9,7 @@
             [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
             [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
             [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+            [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tierekisteri]
             [clojure.data.json :as json]))
 
 (def kayttaja "destia")

@@ -17,7 +17,7 @@
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
-            [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tr-tietolaji]
+            [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [clj-time.core :as t]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.string :as str]

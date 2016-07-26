@@ -15,7 +15,7 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as validointi]
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.tyokalut.merkkijono :as merkkijono]
-            [harja.domain.tierekisterin-tietolajin-kuvauksen-kasittely :as tr-tietolaji]
+            [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tr-tietolaji]
             [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]])
