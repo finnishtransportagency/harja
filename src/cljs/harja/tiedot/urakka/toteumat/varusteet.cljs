@@ -14,10 +14,10 @@
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm] tienumero]
   (k/post! :urakan-varustetoteumat
-           {:urakka-id urakka-id
+           {:urakka-id  urakka-id
             :sopimus-id sopimus-id
-            :alkupvm alkupvm
-            :loppupvm loppupvm
+            :alkupvm    alkupvm
+            :loppupvm   loppupvm
             :tienumero tienumero}))
 
 (defonce tienumero (atom nil))
@@ -36,11 +36,11 @@
               (when nakymassa?
                 (hae-toteumat urakka-id sopimus-id (or kuukausi hoitokausi) tienumero))))
 
-(def varuste-toimenpide->string {nil "Kaikki"
-                                 :lisatty "Lisätty"
+(def varuste-toimenpide->string {nil         "Kaikki"
+                                 :lisatty    "Lisätty"
                                  :paivitetty "Päivitetty"
-                                 :poistettu "Poistettu"
-                                 :tarkastus "Tarkastus"})
+                                 :poistettu  "Poistettu"
+                                 :tarkastus  "Tarkastus"})
 
 (def varustetoteumatyypit
   (vec varuste-toimenpide->string))
@@ -75,20 +75,22 @@
 
 (defn- selite [{:keys [toimenpide tietolaji alkupvm]}]
   (str
-    (pvm/pvm alkupvm) " "
-    (varuste-toimenpide->string toimenpide)
-    " "
-    (tietolaji->selitys tietolaji)))
+   (pvm/pvm alkupvm) " "
+   (varuste-toimenpide->string toimenpide)
+   " "
+   (tietolaji->selitys tietolaji)))
 
 (def varusteet-kartalla
   (reaction
     (when karttataso-varustetoteuma
       (kartalla-esitettavaan-muotoon
-        @haetut-toteumat
-        nil nil
-        (keep (fn [toteuma]
-                (when-let [sijainti (:reitti toteuma)]
-                  (assoc toteuma
-                    :tyyppi-kartalla :varustetoteuma
-                    :selitys-kartalla (selite toteuma)
-                    :sijainti sijainti))))))))
+       @haetut-toteumat
+       nil nil
+       (keep (fn [toteuma]
+               (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
+                 (println "[VAR] Sijainti: " sijainti)
+                 (assoc toteuma
+                        :tyyppi-kartalla :varustetoteuma
+                        :selitys-kartalla (selite toteuma)
+                        :sijainti {:type :point
+                                   :coordinates sijainti}))))))))

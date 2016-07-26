@@ -722,8 +722,9 @@ SELECT
   t.tyyppi            AS toteumatyyppi,
   arvot,
   tierekisteriurakkakoodi,
+  vt.sijainti         AS sijainti,
   t.id                AS toteuma_id,
-  t.reitti            AS reitti,
+  t.reitti            AS toteumareitti,
   tt.id               AS toteumatehtava_id,
   tt.toimenpidekoodi  AS toteumatehtava_toimenpidekoodi,
   tt.maara            AS toteumatehtava_maara,
@@ -807,7 +808,11 @@ UPDATE varustetoteuma SET lahetetty_tierekisteriin = TRUE
 WHERE id = :id;
 
 -- name: varustetoteuman-toimenpiteelle-sijainti
-SELECT sijainti FROM tierekisteriosoitteelle_viiva(:tie, :aosa, :aet, :losa, :let) as sijainti;
+SELECT sijainti FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
+                                                   :aosa :: INTEGER,
+                                                   :aet :: INTEGER,
+                                                   :losa :: INTEGER,
+                                                   :let :: INTEGER) as sijainti;
 
 -- name: paivita-toteuman-reitti<!
 UPDATE toteuma SET reitti = :reitti
