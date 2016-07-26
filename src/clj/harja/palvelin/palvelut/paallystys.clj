@@ -135,7 +135,7 @@
   [db user urakka-id sopimus-id
    {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
            valmispvm-paallystys takuupvm
-           paatos-tekninen-osa paatos-taloudellinen-osa] :as paallystysilmoitus}]
+           tekninen-osa taloudellinen-osa] :as paallystysilmoitus}]
   (if (oikeudet/voi-kirjoittaa?
         oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
         urakka-id
@@ -148,8 +148,8 @@
                                                                                   paallystyskohde-id
                                                                                   ilmoitustiedot)
               muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-              tila (if (and (= paatos-tekninen-osa :hyvaksytty)
-                            (= paatos-taloudellinen-osa :hyvaksytty))
+              tila (if (and (= (:paatos tekninen-osa) :hyvaksytty)
+                            (= (:paatos taloudellinen-osa) :hyvaksytty))
                      "lukittu"
                      (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu"))
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
