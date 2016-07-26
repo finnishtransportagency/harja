@@ -496,27 +496,29 @@ INSERT INTO varustetoteuma (tunniste,
                             tr_loppuosa,
                             tr_loppuetaisyys,
                             tr_puoli,
-                            tr_ajorata)
+                            tr_ajorata,
+                            sijainti)
 VALUES (:tunniste,
-        :toteuma,
-        :toimenpide :: varustetoteuma_tyyppi,
-        :tietolaji,
-        :arvot,
-        :karttapvm,
-        :alkupvm,
-        :loppupvm,
-        :piiri,
-        :kuntoluokka,
-        :tierekisteriurakkakoodi,
-        :luoja,
-        NOW(),
-        :tr_numero,
-        :tr_alkuosa,
-        :tr_alkuetaisyys,
-        :tr_loppuosa,
-        :tr_loppuetaisyys,
-        :tr_puoli,
-        :tr_ajorata);
+  :toteuma,
+  :toimenpide :: varustetoteuma_tyyppi,
+  :tietolaji,
+  :arvot,
+  :karttapvm,
+  :alkupvm,
+  :loppupvm,
+  :piiri,
+  :kuntoluokka,
+  :tierekisteriurakkakoodi,
+  :luoja,
+  NOW(),
+  :tr_numero,
+  :tr_alkuosa,
+  :tr_alkuetaisyys,
+  :tr_loppuosa,
+  :tr_loppuetaisyys,
+  :tr_puoli,
+  :tr_ajorata,
+  :sijainti);
 
 -- name: poista-toteuman-varustetiedot!
 DELETE FROM varustetoteuma
@@ -559,16 +561,16 @@ LIMIT 501;
 -- fetch-size: 64
 -- row-fn: muunna-reitti
 SELECT
-  ST_Simplify(t.reitti, :toleranssi) as reitti,
-  tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
-  tpk.nimi AS tehtava_toimenpide
+  ST_Simplify(t.reitti, :toleranssi) AS reitti,
+  tt.toimenpidekoodi                 AS tehtava_toimenpidekoodi,
+  tpk.nimi                           AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
 WHERE
-  t.urakka = :urakka-id
-  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
-  AND t.sopimus = :sopimus-id
+  t.urakka = :urakka - id
+  AND (:toteuma - id :: INTEGER IS NULL OR t.id = :toteuma - id)
+  AND t.sopimus = :sopimus - id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
   AND ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
@@ -576,7 +578,7 @@ WHERE
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR
        tpk.emo = (SELECT toimenpide
-                    FROM toimenpideinstanssi
+                  FROM toimenpideinstanssi
                   WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tpk.id = :tehtava)
   AND t.poistettu IS NOT TRUE;
@@ -585,14 +587,14 @@ WHERE
 -- fetch-size: 64
 -- row-fn: muunna-reitti
 SELECT
-  ST_Simplify(t.reitti, :toleranssi) as reitti,
-  tk.nimi             AS tehtava_toimenpide
+  ST_Simplify(t.reitti, :toleranssi) AS reitti,
+  tk.nimi                            AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE
-  t.urakka = :urakka-id
-  AND t.sopimus = :sopimus-id
+  t.urakka = :urakka - id
+  AND t.sopimus = :sopimus - id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
   AND ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
@@ -800,20 +802,24 @@ WHERE
   AND (:tr_puoli :: INTEGER IS NULL OR tr_puoli = :tr_puoli);
 
 -- name: hae-varustetoteuman-lahetystiedot
-SELECT lahetetty_tierekisteriin FROM varustetoteuma
+SELECT lahetetty_tierekisteriin
+FROM varustetoteuma
 WHERE id = :id;
 
 -- name: merkitse-varustetoteuma-lahetetyksi<!
-UPDATE varustetoteuma SET lahetetty_tierekisteriin = TRUE
+UPDATE varustetoteuma
+SET lahetetty_tierekisteriin = TRUE
 WHERE id = :id;
 
 -- name: varustetoteuman-toimenpiteelle-sijainti
-SELECT sijainti FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
-                                                   :aosa :: INTEGER,
-                                                   :aet :: INTEGER,
-                                                   :losa :: INTEGER,
-                                                   :let :: INTEGER) as sijainti;
+SELECT sijainti
+FROM tierekisteriosoitteelle_viiva(:tie :: INTEGER,
+                                   :aosa :: INTEGER,
+                                   :aet :: INTEGER,
+                                   :losa :: INTEGER,
+                                   :let :: INTEGER) AS sijainti;
 
 -- name: paivita-toteuman-reitti<!
-UPDATE toteuma SET reitti = :reitti
+UPDATE toteuma
+SET reitti = :reitti
 WHERE id = :id;
