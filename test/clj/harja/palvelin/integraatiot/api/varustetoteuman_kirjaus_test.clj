@@ -59,7 +59,9 @@
               varuste-arvot-kannassa (q (str "SELECT toimenpide, arvot FROM varustetoteuma WHERE toteuma = " toteuma-id))
               lahetystiedot-kannassa (flatten (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " toteuma-id ";")))
               toimenpidetyypit-kannassa (flatten (q (str "SELECT toimenpide FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
-          (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen))
+
+          (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen) "Lisättiin 4 varustetoteumaa")
+
           ;; Tiedot tallennettu oikein
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
           (is (every? #(= true %) lahetystiedot-kannassa))
@@ -72,11 +74,16 @@
           (is (= (count (filter #(= % "paivitetty") toimenpidetyypit-kannassa)) 1))
           (is (= (count (filter #(= % "poistettu") toimenpidetyypit-kannassa)) 1))
           (is (= (instance? org.postgis.PGgeometry geometria)))
-          (is (= (count (filter #(= % "tarkastus") toimenpidetyypit-kannassa)) 1)))))
+          (is (= (count (filter #(= % "tarkastus") toimenpidetyypit-kannassa)) 1))
+
+          ;; Vastauksessa palautuu uusi id lisäystoimenpiteelle
+          (let [tunnisteet (-> (:body vastaus-lisays) (json/read-str) (get "tunnisteet"))]
+            (is (vector? tunnisteet))
+            (is (= (count tunnisteet) 1))
+            (is (str/starts-with? (first tunnisteet) "HAR"))))))
 
     ;; Lähetetään sama pyyntö uudelleen. Varustetoteumien määrä ei saa lisääntyä eikä niitä saa lähettää
     ;; uudelleen tierekisteriin. Käytännössä mitään ei saa tapahtua.
-
 
     (with-fake-http
       [#"http?://localhost" :allow]
@@ -90,7 +97,12 @@
                                                               (str "SELECT count(*)
                                                                     FROM varustetoteuma")))]
           (is (= varustetoteumat-ennen-uutta-pyyntoa
-                 varustetoteumat-uuden-pyynnon-jalkeen)))))))
+                 varustetoteumat-uuden-pyynnon-jalkeen))
+          ;; Edelleen järjestelmä palauttaa lisäystoimenpiteiden uudet tunnisteet
+          (let [tunnisteet (-> (:body vastaus-lisays) (json/read-str) (get "tunnisteet"))]
+            (is (vector? tunnisteet))
+            (is (= (count tunnisteet) 1))
+            (is (str/starts-with? (first tunnisteet) "HAR"))))))))
 
 (deftest tarkista-virheellisen-varustetoteuman-kirjaaminen
   (let [hae-tietolaji-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml"))

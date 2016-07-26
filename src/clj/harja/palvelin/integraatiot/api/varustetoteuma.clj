@@ -31,21 +31,21 @@
    :varusteen-poisto "poistettu"
    :varusteen-tarkastus "tarkastus"})
 
-(defn- tee-onnistunut-vastaus [vastaukset]
+(defn- tee-onnistunut-vastaus [lisaystoimenpiteiden-idt]
   (tee-kirjausvastauksen-body
     {:ilmoitukset "Varustetoteuma kirjattu onnistuneesti."
-     :uudet-idt (mapv :uusi-id vastaukset)}))
+     :muut-tiedot {:tunnisteet (mapv :uusi-tunniste lisaystoimenpiteiden-idt)}}))
 
-(defn- lisaa-varuste-tierekisteriin [tierekisteri otsikko toimenpide livitunniste arvot-string]
-  (log/debug "Lisätään varuste livitunnisteella " livitunniste " tierekisteriin")
+(defn- lisaa-varuste-tierekisteriin [tierekisteri otsikko tunniste toimenpide arvot-string]
+  (log/debug "Lisätään varuste livitunnisteella " tunniste " tierekisteriin")
   (let [valitettava-data (tierekisteri-sanomat/luo-tietueen-lisayssanoma
                            otsikko
-                           livitunniste
+                           tunniste
                            toimenpide
                            arvot-string)]
     (let [vastaus (tierekisteri/lisaa-tietue tierekisteri valitettava-data)]
       (log/debug "Tierekisterin vastaus: " (pr-str vastaus))
-      (assoc vastaus :uusi-id livitunniste))))
+      vastaus)))
 
 (defn- paivita-varuste-tierekisteriin [tierekisteri otsikko toimenpide arvot-string]
   (log/debug "Päivitetään varuste tierekisteriin")
@@ -76,10 +76,12 @@
   "Päivittää varustetoteumassa tehdyt toimenpiteet Tierekisteriin.
   On mahdollista, että muutoksen välittäminen Tierekisteriin epäonnistuu.
   Tässä tapauksessa halutaan, että muutos jää kuitenkin Harjaan ja Harjan integraatiolokeihin, jotta
-  nähdään, että toteumaa on yritetty kirjata."
+  nähdään, että toteumaa on yritetty kirjata.
+
+  Palauttaa lisäystoimenpiteiden tunnisteet."
   [tierekisteri db otsikko varustetoteuma]
-  (when tierekisteri
-    (doseq [toimenpide (get-in varustetoteuma [:varustetoteuma :toimenpiteet])]
+  (keep
+    (fn [toimenpide]
       (let [toimenpide-tyyppi (first (keys toimenpide))
             toimenpiteen-tiedot (toimenpide-tyyppi toimenpide)
             tunniste (if (= toimenpide-tyyppi :varusteen-poisto)
@@ -91,13 +93,15 @@
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
         ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
         (if (toimenpide-lahetetty-tierekisteriin? db toimenpide)
-          (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
+          (do (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
+              (when (= toimenpide-tyyppi :varusteen-lisays)
+                {:uusi-tunniste tunniste}))
 
           (let [vastaus
                 (case toimenpide-tyyppi
                   :varusteen-lisays
-                  (lisaa-varuste-tierekisteriin tierekisteri otsikko toimenpiteen-tiedot
-                                                tunniste tietolajin-arvot-string)
+                  (lisaa-varuste-tierekisteriin tierekisteri otsikko tunniste toimenpiteen-tiedot
+                                                tietolajin-arvot-string)
 
                   :varusteen-poisto
                   (poista-varuste-tierekisterista tierekisteri otsikko toimenpiteen-tiedot)
@@ -116,7 +120,11 @@
             ;; --> Pitää tutkia mitä tierekisteri palauttaa samalle kutsulle
             (when (:onnistunut vastaus)
               (log/debug "Merkitään toimenpide id:llä " (:varustetoteuma-id toimenpide) " lähetetyksi.")
-              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))))))))
+              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))
+
+            (when (= toimenpide-tyyppi :varusteen-lisays)
+              {:uusi-tunniste tunniste})))))
+    (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
                                 tunniste tehty-toimenpide tie toimenpiteen-arvot-tekstina]
@@ -154,18 +162,18 @@
   "Etsii toimenpiteen varustetoteuman id:n kannasta annettujen tietojen perusteella"
   [db toteuma-id tunniste tietolaji toimenpiteen-tiedot tehty-toimenpide]
   (first (toteumat-q/hae-varustetoteuma
-                                db
-                                {:toteumaid toteuma-id
-                                 :tunniste tunniste
-                                 :tietolaji tietolaji
-                                 :toimenpide tehty-toimenpide
-                                 :tr_numero (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-                                 :tr_aosa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-                                 :tr_aet (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-                                 :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-                                 :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-                                 :tr_ajorata (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])
-                                 :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])})))
+           db
+           {:toteumaid toteuma-id
+            :tunniste tunniste
+            :tietolaji tietolaji
+            :toimenpide tehty-toimenpide
+            :tr_numero (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
+            :tr_aosa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
+            :tr_aet (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
+            :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
+            :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
+            :tr_ajorata (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])
+            :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])})))
 
 (defn- tallenna-varustetoteuman-toimenpiteet
   "Luo jokaisesta varustetoteuman toimenpiteestä varustetoteuman.
@@ -298,16 +306,16 @@
 
 (defn- laheta-kirjaus-tierekisteriin
   "Lähettää varustetoteumat tierekisteriin yksi kerrallaan.
-   Palauttaa vectorissa tierekisterikomponentin antamat vastaukset."
+   Palauttaa lisäystoimenpiteiden idt:t."
   [db tierekisteri otsikko varustetoteumat]
-  (mapv (fn [varustetoteuma]
-          (let [vastaus (laheta-varustetoteuman-toimenpiteet-tierekisteriin
-                          tierekisteri
-                          db
-                          otsikko
-                          varustetoteuma)]
-            vastaus))
-        varustetoteumat))
+  (mapcat (fn [varustetoteuma]
+            (let [lisaystoimenpiteiden-idt (laheta-varustetoteuman-toimenpiteet-tierekisteriin
+                                             tierekisteri
+                                             db
+                                             otsikko
+                                             varustetoteuma)]
+              lisaystoimenpiteiden-idt))
+          varustetoteumat))
 
 (defn- validoi-tehtavat [db varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
@@ -324,8 +332,8 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
     (validoi-tehtavat db varustetoteumat)
     (let [varustetoteumat (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
-          tierekisterin-vastaukset (laheta-kirjaus-tierekisteriin db tierekisteri otsikko varustetoteumat)]
-      (tee-onnistunut-vastaus tierekisterin-vastaukset))))
+          lisaystoimenpiteiden-idt (laheta-kirjaus-tierekisteriin db tierekisteri otsikko varustetoteumat)]
+      (tee-onnistunut-vastaus lisaystoimenpiteiden-idt))))
 
 (defrecord Varustetoteuma []
   component/Lifecycle

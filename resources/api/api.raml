@@ -157,7 +157,7 @@ documentation:
       /varuste:
         post:
           is: [secured]
-          description: Varustetoteuman kirjaaminen urakalle. Rajapinnan kautta voidaan kirjata työsuoritteet sekä varusteen tekniset tiedot, jotka välitetään Tierekisteriin. Varusteen teknisten tietojen kuvaus, eli yksittäisen tietolajin kuvaus, kuten esim. 506 liikennemerkit, täytyy hakea käyttäen varuste rajapinnan tietolaji rajapintaa. Varustetoteuman kautta voidaan kirjata Harjaan & Tierekisteriin varusteiden lisäykset, muutokset, poistamiset sekä tarkastukset.
+          description: Varustetoteuman kirjaaminen urakalle. Rajapinnan kautta voidaan kirjata työsuoritteet sekä varusteen tekniset tiedot, jotka välitetään Tierekisteriin. Varusteen teknisten tietojen kuvaus, eli yksittäisen tietolajin kuvaus, kuten esim. 506 liikennemerkit, täytyy hakea käyttäen varuste rajapinnan tietolaji rajapintaa. Varustetoteuman kautta voidaan kirjata Harjaan & Tierekisteriin varusteiden lisäykset, muutokset, poistamiset sekä tarkastukset. Vastauksena palautuu Harjan luomat livitunnisteet lisäystoimenpiteille samassa järjestyksessä kuin ne ovat pyynnössä. Jos sama pyyntö lähetetään uudelleen, toimenpiteitä ei kirjata uudestaan ja Tierekisteriin lähetetään vain ne toimenpiteet, joiden lähetys mahdollisesti epäonnistui aiemmin. Myös tällöin kutsujalle palautuu lisäystoimenpiteiden tunnisteet.
           body:
             application/json:
               example: !include examples/varustetoteuman-kirjaus-request.json
