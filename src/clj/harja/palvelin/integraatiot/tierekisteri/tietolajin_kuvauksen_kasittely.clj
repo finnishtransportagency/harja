@@ -21,7 +21,7 @@
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
     :numeerinen (when-not (merkkijono/kokonaisluku? arvo)
-                  (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole numero.")))
+                  (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole kokonaisluku.")))
     :paivamaara (try
                   (pvm/iso-8601->pvm arvo)
                   (catch Exception e

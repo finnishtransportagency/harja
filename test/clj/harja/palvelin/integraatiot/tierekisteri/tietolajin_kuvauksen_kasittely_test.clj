@@ -131,7 +131,7 @@
                              :jarjestysnumero 1
                              :tietotyyppi :numeerinen
                              :pituus 20}]}]
-    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole numero."
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei ole kokonaisluku."
                           (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "a"}
                             tietolajin-kuvaus))
