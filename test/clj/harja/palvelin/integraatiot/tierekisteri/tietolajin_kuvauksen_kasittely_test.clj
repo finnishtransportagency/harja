@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.tierekisteri..tietolajin-kuvauksen-kasittely-test
+(ns harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tierekisteri.tietolajin-kuvauksen-kasittely :as tierekisteri-tietue]
