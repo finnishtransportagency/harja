@@ -223,11 +223,12 @@
             (do
               (case toimenpide-tyyppi
                 :varusteen-lisays
-                (let [uusi-livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
-                      varustetoteuma-id (tallenna-toimenpide uusi-livitunniste "lisatty" tie tietolajin-arvot-string)]
+                (let [tunniste (or tunniste
+                                   (livitunnisteet/hae-seuraava-livitunniste db))
+                      varustetoteuma-id (tallenna-toimenpide tunniste "lisatty" tie tietolajin-arvot-string)]
                   (-> (assoc toimenpide :varustetoteuma-id varustetoteuma-id)
                       (assoc :arvot-string tietolajin-arvot-string)
-                      (assoc-in [:varusteen-lisays :varuste :tunniste] uusi-livitunniste)))
+                      (assoc-in [:varusteen-lisays :varuste :tunniste] tunniste)))
 
                 :varusteen-paivitys
                 (let [varustetoteuma-id (tallenna-toimenpide tunniste "paivitetty" tie tietolajin-arvot-string)]
