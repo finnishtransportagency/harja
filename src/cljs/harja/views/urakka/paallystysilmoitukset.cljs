@@ -254,7 +254,8 @@
                        (= :aloitettu (:tila lomakedata-nyt)))
                   "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
          :tyyppi :pvm
-         :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paallystys "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
+         :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paallystys
+                    "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
         {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
          :fmt fmt/euro-opt :tyyppi :numero
@@ -300,11 +301,7 @@
            tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
-           toteutuneet-maarat (muokkaus-grid-wrap lomakedata-nyt
-                                                  (fn [muutos-fn]
-                                                    (muokkaa!
-                                                     (comp paivita-kokonaishinta muutos-fn)))
-                                                  [:ilmoitustiedot :tyot])
+           toteutuneet-maarat (grid-wrap [:ilmoitustiedot :tyot])
            tekninen-osa-voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
                                           (not= :hyvaksytty (:paatos-tekninen-osa lomakedata-nyt))
                                           (false? lukittu?)
