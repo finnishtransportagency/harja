@@ -55,16 +55,19 @@
                                               "FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
               geometria (ffirst (q (str "SELECT reitti FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              varuste-arvot-kannassa (first (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))
+              tunnisteet-kannassa (q (str "SELECT tunniste FROM varustetoteuma WHERE toteuma = " toteuma-id))
+              varuste-arvot-kannassa (q (str "SELECT toimenpide, arvot FROM varustetoteuma WHERE toteuma = " toteuma-id))
               lahetystiedot-kannassa (flatten (q (str "SELECT lahetetty_tierekisteriin FROM varustetoteuma WHERE toteuma = " toteuma-id ";")))
               toimenpidetyypit-kannassa (flatten (q (str "SELECT toimenpide FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
           (is (= (+ varustetoteumat-ennen-pyyntoa 4) varustetoteumat-pyynnon-jalkeen))
           ;; Tiedot tallennettu oikein
           (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
-          (is (= (first varuste-arvot-kannassa) "9987        2           2         010           11   Testi liikennemerkki                              Omistaja                                                              4          400   "))
           (is (every? #(= true %) lahetystiedot-kannassa))
-          (is (every? string? varuste-arvot-kannassa))
-          (is (every? #(> (count %) 50) varuste-arvot-kannassa))
+          (is (every? #(if (= (first %) "poistettu")
+                        (= (nil? (second %))) ;; Poistetuille toimenpiteille ei lisätty arvoja, muille lisättiin
+                        (= (string? (second %))))
+                      varuste-arvot-kannassa))
+          (is (every? string? tunnisteet-kannassa))
           (is (= (count (filter #(= % "lisatty") toimenpidetyypit-kannassa)) 1))
           (is (= (count (filter #(= % "paivitetty") toimenpidetyypit-kannassa)) 1))
           (is (= (count (filter #(= % "poistettu") toimenpidetyypit-kannassa)) 1))
@@ -73,6 +76,7 @@
 
     ;; Lähetetään sama pyyntö uudelleen. Varustetoteumien määrä ei saa lisääntyä eikä niitä saa lähettää
     ;; uudelleen tierekisteriin. Käytännössä mitään ei saa tapahtua.
+
 
     (with-fake-http
       [#"http?://localhost" :allow]
