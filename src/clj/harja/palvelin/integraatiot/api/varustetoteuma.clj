@@ -120,6 +120,7 @@
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
                                 tunniste tehty-toimenpide tie toimenpiteen-arvot-tekstina]
+  (log/debug "Luodaan uusi varustetoteuma tunnisteella tyyppiä " tehty-toimenpide " tuunnisteella " tunniste)
   (:id (toteumat-q/luo-varustetoteuma<!
          db
          {:tunniste tunniste
@@ -145,17 +146,6 @@
 (defn- etsi-varustetoteuma
   "Etsii toimenpiteen varustetoteuman id:n kannasta annettujen tietojen perusteella"
   [db toteuma-id tunniste tietolaji toimenpiteen-tiedot tehty-toimenpide]
-  (log/debug "Haetaan asiat: " (pr-str {:toteumaid toteuma-id
-                                        :tunniste tunniste
-                                        :tietolaji tietolaji
-                                        :toimenpide tehty-toimenpide
-                                        :tr_numero (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :numero])
-                                        :tr_aosa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aosa])
-                                        :tr_aet (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :aet])
-                                        :tr_losa (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :losa])
-                                        :tr_let (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :let])
-                                        :tr_ajorata (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :ajr])
-                                        :tr_puoli (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie :puoli])}))
   (let [varustetoteuma (first (toteumat-q/hae-varustetoteuma
                                 db
                                 {:toteumaid toteuma-id
