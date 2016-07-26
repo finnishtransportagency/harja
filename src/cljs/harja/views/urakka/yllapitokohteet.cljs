@@ -206,8 +206,7 @@
                             (tr/nouseva-jarjestys kohde))))
 
 (defn yllapitokohdeosat
-  [{:keys [kohdeosat-paivitetty-fn muokkaa!
-           sarakkeet]}
+  [{:keys [kohdeosat-paivitetty-fn muokkaa!]}
    urakka kohdeosat
    {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
     alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde}]
@@ -230,7 +229,8 @@
           grid-data (when-not ulkoinen-tila?
                       (atom
                        (yllapitokohdeosat-grid-data kohde kohdeosat)))
-          virheet (atom {})
+          virheet (when-not ulkoinen-tila?
+                    (atom {}))
           g (grid/grid-ohjaus)
           toiminnot-komponentti
           (fn [grid-data]
@@ -269,7 +269,7 @@
       (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
       (komp/luo
         (fn [{:keys [kohdeosat-paivitetty-fn muokkaa!
-                     sarakkeet rivinumerot? voi-muokata?]}
+                     rivinumerot? voi-muokata?] :as opts}
              urakka kohdeosat {yllapitokohde-id :id :as kohde}]
           (let [grid-data (if-not ulkoinen-tila?
                             grid-data
@@ -279,6 +279,9 @@
                                            seq
                                            (sort-by first)
                                            (map second)))))
+                virheet (if-not ulkoinen-tila?
+                          virheet
+                          (:virheet opts))
                 kohdeosia (count @grid-data)]
             [:div
              [grid/muokkaus-grid
@@ -349,8 +352,7 @@
                                                                    (< rivi (dec kohdeosia)))
                             :validoi [(osan-maksimipituus :tr-loppuosa)]}
                            {:hae (partial tr/laske-tien-pituus @osan-pituus)}])
-                        sarakkeet
-                        [
+                        [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
                          {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
                           :komponentti (toiminnot-komponentti grid-data)}])))
 
@@ -391,7 +393,7 @@
                                                             (fn [kohteet kohdeosat]
                                                               (aseta-uudet-kohdeosat kohteet (:id rivi)
                                                                                      kohdeosat)) %)
-                           :sarakkeet [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}]}
+                           }
                           urakka
                           (into [] (:kohdeosat rivi))
                           rivi])))
