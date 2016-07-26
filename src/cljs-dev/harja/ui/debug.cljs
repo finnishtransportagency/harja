@@ -1,7 +1,7 @@
 (ns harja.ui.debug
   "UI komponentti datan inspectointiin"
   (:require [harja.ui.yleiset :as yleiset]
-            [reagent.core :refer [atom]]))
+            [reagent.core :as r]))
 
 (defn voi-avata? [item]
   (some #(% item) [map? coll?]))
@@ -12,17 +12,22 @@
                          (coll? item) :coll
                          :default :pr-str)))
 
-
 (defn- show-value [value p open-paths toggle!]
-  (if (voi-avata? value)
-    [:span
-     (if (open-paths p)
-       (debug-show value p open-paths toggle!)
-       (let [printed (pr-str value)]
-         (if (> (count printed) 100)
-           (str (subs printed 0 100) " ...")
-           printed)))]
-    [:span (pr-str value)]))
+  (let [now #(js/Date.now)
+        flash (r/atom (now))]
+    (fn [value p open-paths toggle!]
+      (let [cls (when (> (- (now) @flash) 1000)
+                  (js/setTimeout #(reset! flash (now)) 600)
+                  "debug-animate")]
+        (if (voi-avata? value)
+          [:span {:class cls}
+           (if (open-paths p)
+             (debug-show value p open-paths toggle!)
+             (let [printed (pr-str value)]
+               (if (> (count printed) 100)
+                 (str (subs printed 0 100) " ...")
+                 printed)))]
+          [:span {:class cls} (pr-str value)])))))
 
 (defn- avaus-solu [value p open-paths toggle!]
   (if (voi-avata? value)
@@ -42,7 +47,7 @@
         [:tr
          [:td i " "]
          (avaus-solu value (conj path i) open-paths toggle!)
-         [:td (show-value value (conj path i) open-paths toggle!)]])
+         [:td [show-value value (conj path i) open-paths toggle!]]])
       data))]])
 
 (defmethod debug-show :map [data path open-paths toggle!]
@@ -57,13 +62,13 @@
        [:td (pr-str key)]
        (avaus-solu value p open-paths toggle!)
        [:td
-        (show-value value p open-paths toggle!)]])]])
+        [show-value value p open-paths toggle!]]])]])
 
-(defmethod debug-show :pr-str [data _ _ _]
+(defmethod debug-show :pr-str [data p _ _]
   [:span (pr-str data)])
 
 (defn debug [item]
-  (let [open-paths (atom #{})
+  (let [open-paths (r/atom #{})
         toggle! #(swap! open-paths
                         (fn [paths]
                           (if (paths %)
