@@ -58,20 +58,24 @@
                 toteuman-kokonaishinta]}
         (laske-hinta lomakedata-nyt)]
     [yleiset/taulukkotietonakyma {}
-     "Urakkasopimuksen mukainen kokonaishinta: " (fmt/euro-opt (or urakkasopimuksen-mukainen-kokonaishinta 0))
-     "Muutokset kokonaishintaan ilman kustannustasomuutoksia: " (fmt/euro-opt (or muutokset-kokonaishintaan 0))
-     "Yhteensä: " (fmt/euro-opt toteuman-kokonaishinta)]))
+     "Urakkasopimuksen mukainen kokonaishinta: "
+     (fmt/euro-opt (or urakkasopimuksen-mukainen-kokonaishinta 0))
+
+     "Muutokset kokonaishintaan ilman kustannustasomuutoksia: "
+     (fmt/euro-opt (or muutokset-kokonaishintaan 0))
+
+     "Yhteensä: "
+     (fmt/euro-opt toteuman-kokonaishinta)]))
 
 (defn asiatarkastus
   "Asiatarkastusosio konsultille."
-  [lomakedata-nyt muokkaa! valmis-asiatarkastukseen?]
+  [urakka lomakedata-nyt lukittu? muokkaa! valmis-asiatarkastukseen?]
   (let [muokattava? (and
                      (oikeudet/on-muu-oikeus? "asiatarkastus"
                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                              (:id @nav/valittu-urakka)
-                                              @istunto/kayttaja)
+                                              (:id urakka))
                      (not= (:tila lomakedata-nyt) :lukittu)
-                     (false? @paallystys/paallystysilmoituslomake-lukittu?))
+                     (false? lukittu?))
         asiatarkastus (atom/wrap-osa lomakedata-nyt #{:asiatarkastus-tarkastusaika
                                                       :asiatarkastus-tarkastaja
                                                       :asiatarkastus-tekninen-osa
@@ -145,13 +149,12 @@
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis. Tilaaja voi muokata, urakoitsija voi tarkastella."
-  [{:keys [tila tekninen-osa taloudellinen-osa] :as lomakedata-nyt}
+  [urakka {:keys [tila tekninen-osa taloudellinen-osa] :as lomakedata-nyt}
    lukittu? muokkaa!]
   (let [muokattava? (and
                       (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id @nav/valittu-urakka)
-                                               @istunto/kayttaja)
+                                               (:id urakka))
                       (not= tila :lukittu)
                       (false? lukittu?))
         valmistumispvm (:valmispvm-kohde lomakedata-nyt)]
@@ -165,7 +168,7 @@
       #(muokkaa! assoc :taloudellinen-osa %)]]))
 
 (defn tallennus
-  [{:keys [valmispvm-kohde valmispvm-paallystys tekninen-osa taloudellinen-osa
+  [urakka {:keys [valmispvm-kohde valmispvm-paallystys tekninen-osa taloudellinen-osa
            tila :as lomake]} valmis-tallennettavaksi?]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         paatos-taloudellinen-osa (:paatos taloudellinen-osa)
@@ -178,7 +181,7 @@
               "Ilmoituksen molemmat osat on hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
               :else
               nil)
-        urakka-id (:id @nav/valittu-urakka)
+        urakka-id (:id urakka)
         [sopimus-id _] @u/valittu-sopimusnumero]
 
     [:div.pot-tallennus
@@ -222,7 +225,7 @@
              #(assoc-in % polku
                         (grid/filteroi-uudet-poistetut uusi-arvo))))))
 
-(defn paallystysilmoitus-perustiedot [{:keys [tila valmispvm-kohde] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
+(defn paallystysilmoitus-perustiedot [urakka {:keys [tila valmispvm-kohde] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
   (let [valmis-kasiteltavaksi?
         (do
 
@@ -275,18 +278,19 @@
                                                                         #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
                            (:kommentit lomakedata-nyt)])})]
        lomakedata-nyt]
-      [asiatarkastus lomakedata-nyt muokkaa! valmis-kasiteltavaksi?]]
+      [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa! valmis-kasiteltavaksi?]]
 
      [:div.col-md-6
       (when valmis-kasiteltavaksi?
         [:div
-         [kasittely lomakedata-nyt lukittu? muokkaa!]])]]))
+         [kasittely urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
 (defn paallystysilmoituslomake [urakka {:keys [kohdenumero]} _ muokkaa!]
   (komp/luo
    (komp/ulos #(kartta/poista-popup!))
    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" kohdenumero))
-   (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt} lukittu? muokkaa!]
+   (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt}
+        lukittu? muokkaa!]
      (log "LOMAKEDATA-NYT: " (pr-str lomakedata-nyt))
      (let [valmis-tallennettavaksi? (and
                                      (not (= tila :lukittu))
@@ -297,17 +301,19 @@
 
 
            grid-wrap (partial muokkaus-grid-wrap lomakedata-nyt muokkaa!)
-                                        ; Sisältää alikohteen päällystystoimenpiteen tiedot
+           ;; Sisältää alikohteen päällystystoimenpiteen tiedot
            tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
            toteutuneet-maarat (grid-wrap [:ilmoitustiedot :tyot])
            tekninen-osa-voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
-                                          (not= :hyvaksytty (:paatos-tekninen-osa lomakedata-nyt))
+                                          (not= :hyvaksytty
+                                                (:paatos (:tekninen-osa lomakedata-nyt)))
                                           (false? lukittu?)
                                           kirjoitusoikeus?)
            taloudellinen-osa-voi-muokata? (and (not= :lukittu (:tila lomakedata-nyt))
-                                               (not= :hyvaksytty (:paatos-taloudellinen-osa lomakedata-nyt))
+                                               (not= :hyvaksytty
+                                                     (:paatos (:taloudellinen-osa lomakedata-nyt)))
                                                (false? lukittu?)
                                                kirjoitusoikeus?)
 
@@ -322,7 +328,7 @@
 
         [:h2 "Päällystysilmoitus"]
 
-        [paallystysilmoitus-perustiedot lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
+        [paallystysilmoitus-perustiedot urakka lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
 
         [:fieldset.lomake-osa
          [:h3 "Tekninen osa"]
@@ -336,30 +342,8 @@
           (select-keys lomakedata-nyt
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})]
 
-         #_[grid/muokkaus-grid
-          {:otsikko "Tierekisteriosoitteet"
-           :tunniste hash
-           :voi-muokata? tekninen-osa-voi-muokata?
-           :virheet (wrap-virheet :alikohteet)
-           :rivinumerot? true
-           :uusi-id (inc (count @paallystystoimenpiteet))}
-          ;; FIXME Tarkista TR-osoite (samalla tavalla kuin yllapitokohteet-namespacessa)
-          (yllapitokohteet/tierekisteriosoite-sarakkeet
-           10
-           [{:nimi :nimi}
-            {:nimi :tunnus}
-            {:nimi :tie}
-            {:nimi :ajorata}
-            {:nimi :kaista}
-            {:nimi :aosa}
-            {:nimi :aet}
-            {:nimi :losa}
-            {:nimi :let}])
-          paallystystoimenpiteet]
-
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
-           ;:validoi-aina? true
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
@@ -378,11 +362,14 @@
                                  "")))
             :valinnat paallystys-ja-paikkaus/+paallystetyypit+
             :leveys "30%"}
-           {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0 :leveys "10%" :tasaa :oikea
+           {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
+            :leveys "10%" :tasaa :oikea
             :validoi [[:rajattu-numero nil 0 99]]}
-           {:otsikko "Massamenekki (kg/m2)" :nimi :massamenekki :tyyppi :positiivinen-numero :desimaalien-maara 0
+           {:otsikko "Massamenekki (kg/m2)" :nimi :massamenekki
+            :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys "10%"}
-           {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0 :tasaa :oikea :pituus-max 100
+           {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0
+            :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero nil 0 100]]}
            {:otsikko "Pääll. työ\u00ADmenetelmä"
             :nimi :tyomenetelma
@@ -398,8 +385,8 @@
             :leveys "30%"}
            {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
             :tasaa :oikea}
-           {:otsikko "Kohteen kokonaismassamäärä (t)" :nimi :kokonaismassamaara :leveys "15%" :tyyppi :positiivinen-numero
-            :tasaa :oikea}
+           {:otsikko "Kohteen kokonaismassamäärä (t)" :nimi :kokonaismassamaara :leveys "15%"
+            :tyyppi :positiivinen-numero :tasaa :oikea}
            {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Edellinen päällyste"
@@ -422,14 +409,14 @@
                              (if rivi
                                (:nimi rivi)
                                "- Valitse kuulamylly -"))
-            :valinnat (conj pot/+kuulamyllyt+ {:nimi "Ei kuulamyllyä" :lyhenne "Ei kuulamyllyä" :koodi nil})
+            :valinnat (conj pot/+kuulamyllyt+
+                            {:nimi "Ei kuulamyllyä" :lyhenne "Ei kuulamyllyä" :koodi nil})
             :leveys "30%"}]
           paallystystoimenpiteet]
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
            :rivinumerot? true
-           ;:validoi-aina? true
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
@@ -447,7 +434,8 @@
                              (if rivi
                                (:nimi rivi)
                                "- Valitse sideainetyyppi -"))
-            :valinnat (conj pot/+sideainetyypit+ {:nimi "Ei sideainetyyppi" :lyhenne "Ei sideainetyyppiä" :koodi nil})}
+            :valinnat (conj pot/+sideainetyypit+
+                            {:nimi "Ei sideainetyyppi" :lyhenne "Ei sideainetyyppiä" :koodi nil})}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :tasaa :oikea}
            {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string
             :pituus-max 256}]
@@ -468,7 +456,8 @@
              {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
               :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
              {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
-              :muokattava? (constantly false) :hae (fn [rivi] (tierekisteri-domain/laske-tien-pituus rivi))}
+              :muokattava? (constantly false)
+              :hae tierekisteri-domain/laske-tien-pituus}
              {:otsikko "Käsittely\u00ADmenetelmä"
               :nimi :kasittelymenetelma
               :tyyppi :valinta
@@ -546,7 +535,7 @@
           toteutuneet-maarat]]
 
         [yhteenveto lomakedata-nyt]
-        [tallennus lomakedata-nyt valmis-tallennettavaksi?]]))))
+        [tallennus urakka lomakedata-nyt valmis-tallennettavaksi?]]))))
 
 (defn avaa-paallystysilmoitus [paallystyskohteen-id]
   (go
