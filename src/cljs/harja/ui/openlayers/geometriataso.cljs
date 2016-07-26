@@ -9,7 +9,7 @@
     (featuret/luo-feature geom)
     (catch js/Error e
       (log (pr-str e))
-      (log (pr-str "Problem in luo-feature, geom: " geom))
+      (log (pr-str "luo-feature palautti virheen, geom: " geom))
       nil)))
 
 (defn- create-geometry-layer
