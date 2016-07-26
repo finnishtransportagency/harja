@@ -160,7 +160,7 @@
                           (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "2010-12"}
                             tietolajin-kuvaus))
-        "Ei-pvm tyyppinen kenttä huomatitin")))
+        "Ei-pvm tyyppinen kenttä huomattiin")))
 
 (deftest tarkista-pvm-kentan-validointi-menee-lapi
   (let [tietolajin-kuvaus {:tunniste "tl506",
