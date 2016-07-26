@@ -81,7 +81,6 @@
                                                                 FROM varustetoteuma")))
             vastaus-lisays (api-tyokalut/post-kutsu varustetoteuma-api-url kayttaja portti
                                                     payload)]
-        (println (:body vastaus-lisays))
         (is (= 200 (:status vastaus-lisays)))
         (let [varustetoteumat-uuden-pyynnon-jalkeen (ffirst (q
                                                               (str "SELECT count(*)
