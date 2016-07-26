@@ -44,6 +44,7 @@
     (doall
      (map-indexed
       (fn [i value]
+        ^{:key i}
         [:tr
          [:td i " "]
          (avaus-solu value (conj path i) open-paths toggle!)
