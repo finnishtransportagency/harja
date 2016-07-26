@@ -74,9 +74,9 @@
 (defn- muunna-teksti-kentan-mukaiseen-tyyppiin [arvo-tekstina kentan-kuvaus]
   (case (:tietotyyppi kentan-kuvaus)
     :merkkijono arvo-tekstina
-    :numeerinen (do (merkkijono/vaadi-kokonaisluku arvo-tekstina)
+    :numeerinen (do (merkkijono/kokonaisluku? arvo-tekstina)
                     (Integer/parseInt arvo-tekstina))
-    :paivamaara (do (merkkijono/vaadi-iso-8601-paivamaara arvo-tekstina)
+    :paivamaara (do (merkkijono/iso-8601-paivamaara? arvo-tekstina)
                     (pvm/iso-8601->pvm arvo-tekstina))
     :koodisto arvo-tekstina))
 
