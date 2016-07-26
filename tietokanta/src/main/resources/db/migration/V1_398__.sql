@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+-- Varustetoteumalle tieto siitä onko lähetetty tierekisteriin
+ALTER TABLE varustetoteuma ADD COLUMN lahetetty_tierekisteriin BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE varustetoteuma ADD COLUMN sijainti geometry;
+=======
 DROP MATERIALIZED VIEW tieverkko_paloina;
 
 CREATE TABLE tieverkko_geom (
@@ -15,3 +20,4 @@ CREATE TABLE tr_osien_pituudet (
   pituus INTEGER NOT NULL,
   PRIMARY KEY (tie,osa)
 );
+>>>>>>> develop
