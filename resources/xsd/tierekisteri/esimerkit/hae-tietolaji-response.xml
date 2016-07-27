@@ -179,7 +179,29 @@
                     <voimassaolo>
                         <alkupvm>2015-05-26+03:00</alkupvm>
                     </voimassaolo>
-                    <koodisto/>
+                    <koodisto>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>1</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>alumiini</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>2</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>vaneri</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                        <koodi>
+                            <koodiryhma>test</koodiryhma>
+                            <koodi>9</koodi>
+                            <lyhenne></lyhenne>
+                            <selite>muu</selite>
+                            <muutospvm>2015-05-26+03:00</muutospvm>
+                        </koodi>
+                    </koodisto>
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMTEKSTI</kenttatunniste>

@@ -32,7 +32,6 @@
 
   (is (nil? (validoi json-skeemat/tietolajien-haku json-esimerkit/+tietolajien-haku+)))
 
-  (is (nil? (validoi json-skeemat/varusteen-haku-vastaus json-esimerkit/+varusteen-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/varusteiden-haku-vastaus
                      json-esimerkit/+varusteiden-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/varusteen-lisays json-esimerkit/+varusteen-lisays+)))

@@ -12,7 +12,7 @@
                                                   :jarjestelma  "FastMekka"
                                                   :organisaatio "Asfaltia Oy"
                                                   :yTunnus      "1234567-8"}
-                              :tunniste          "HARJ951547ZK"
+                              :tunniste          "HARJ951547"
                               :tietolajitunniste "tl505"
                               :poistettu         "2015-05-26+03:00"})
 

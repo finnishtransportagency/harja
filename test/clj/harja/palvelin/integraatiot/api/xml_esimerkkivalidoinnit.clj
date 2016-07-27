@@ -5,8 +5,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit :as xml-esimerkit]
             [clojure.java.io :as io]))
 
-
-
 (defn validoi [xsd-polku skeematiedosto esimerkkipolku]
   (xml/validi-xml? xsd-polku skeematiedosto (slurp (io/resource esimerkkipolku))))
 

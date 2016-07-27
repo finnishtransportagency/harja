@@ -17,7 +17,7 @@
       "varustetoteuma": {
         "toteuma": {
           "tunniste": {
-            "id": 3
+            "id": __ID__
           },
           "alkanut": "2016-01-01T00:00:00Z",
           "paattynyt": "2016-01-01T00:00:00Z",
@@ -66,6 +66,7 @@
                       "LMNUMERO": "9987",
                       "SIVUTIE": "2",
                       "LMALA": "2",
+                      "YLIMAARAINEN": "arvo",
                       "LMVANHA": "0",
                       "LMTYYPPI": "1",
                       "LMKAUSI": "0",
