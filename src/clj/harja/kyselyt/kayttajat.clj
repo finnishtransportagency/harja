@@ -15,7 +15,7 @@
 
 (defn onko-kayttaja-nimella-urakan-organisaatiossa? [db urakka-id ilmoitus]
   (:exists (first (onko-kayttaja-nimella-urakan-organisaatiossa
-             db
-             {:urakka urakka-id
-              :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
-              :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])}))))
+                    db
+                    {:urakka urakka-id
+                     :etunimi (get-in ilmoitus [:ilmoittaja :etunimi])
+                     :sukunimi (get-in ilmoitus [:ilmoittaja :sukunimi])}))))

@@ -52,4 +52,13 @@
   "Palauttaa toimenpideinstanssin id:tä vastaan"
   [tpi-id toimenpideinstanssit]
   (first (filter #(= (:tpi_id %) tpi-id)
-           toimenpideinstanssit)))
+                 toimenpideinstanssit)))
+
+(defn tehtava-urakassa
+  "Hakee tehtävärivin urakan toimenpidekoodeista. Tehtävän tpk-id on 4. tason tehtävän
+  toimenpidekoodin tunniste."
+  [tehtavan-tpk-id urakan-toimenpiteet-ja-tehtavat]
+  (some (fn [[_ _ _ tehtava :as rivi]]
+          (when (= (:id tehtava) tehtavan-tpk-id)
+            rivi))
+        urakan-toimenpiteet-ja-tehtavat))

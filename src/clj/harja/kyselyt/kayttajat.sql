@@ -349,6 +349,7 @@ SELECT exists(
                      AND etunimi = :etunimi
                      AND sukunimi = :sukunimi));
 
+
 -- name: hae-urakan-id-sampo-idlla
 -- single?: true
 -- Hae urakan id Sampo ID:llä, sähke oikeuksien hakua varten

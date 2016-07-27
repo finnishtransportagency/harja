@@ -1,6 +1,8 @@
-<vas:vastaus xmlns:vas="http://www.solita.fi/harja/tierekisteri/vastaus">
-  <vas:tietueotsikot>
-    <vas:tietueotsikko>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:vastaus xmlns:ns2="http://www.solita.fi/harja/tierekisteri/vastaus">
+  <ns2:status>OK</ns2:status>
+  <ns2:tietueotsikot>
+    <ns2:tietueotsikko>
       <tunniste>string</tunniste>
       <alkupvm>2006-11-29</alkupvm>
       <loppupvm>2009-11-03+02:00</loppupvm>
@@ -20,6 +22,6 @@
           <tilannepvm>2012-04-25+03:00</tilannepvm>
         </tie>
       </sijainti>
-    </vas:tietueotsikko>
-  </vas:tietueotsikot>
-</vas:vastaus>
+    </ns2:tietueotsikko>
+  </ns2:tietueotsikot>
+</ns2:vastaus>

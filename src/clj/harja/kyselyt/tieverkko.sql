@@ -45,8 +45,8 @@ SELECT *
 DELETE FROM tieverkko;
 
 -- name: paivita-paloiteltu-tieverkko
--- päivittää materialisoidun näkymän
-select paivita_tieverkko_paloina();
+-- päivittää tieverkkotaulut
+select paivita_tr_taulut();
 
 -- name: tierekisteriosoite-viivaksi
 -- hakee geometrian annetulle tierekisteriosoitteelle
@@ -61,7 +61,6 @@ FROM tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER)
 
 -- name: hae-osien-pituudet
 -- Hakee osien pituudet annetulla välillä (inclusive)
-SELECT osa, max(tr_pituus) as pituus FROM tieverkko_paloina
+SELECT osa, pituus FROM tr_osien_pituudet
  WHERE tie = :tie AND
-       osa BETWEEN :aosa AND :losa
-GROUP BY osa;
+       osa BETWEEN :aosa AND :losa;

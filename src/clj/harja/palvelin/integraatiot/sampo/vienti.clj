@@ -15,7 +15,7 @@
   (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
   (let [kuittaus-xml (.getText viesti)]
     ;todo: kytke päälle
-    ;(if (xml/validoi +xsd-polku+ "status.xsd" kuittaus-xml)
+    ;(if (xml/validi-xml? +xsd-polku+ "status.xsd" kuittaus-xml)
     (let [kuittaus (kuittaus-sampoon-sanoma/lue-kuittaus kuittaus-xml)
           onnistunut (not (contains? kuittaus :virhe))]
       (log/debug "Luettiin kuittaus: " kuittaus)

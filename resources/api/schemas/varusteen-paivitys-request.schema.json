@@ -11,24 +11,11 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "paivittaja": {
-      "id": "urn:harja/lisaaVaruste/lisaaja",
-      "type": "object",
-      "$ref": "file:resources/api/schemas/entities/suorittaja.schema.json",
-      "required": true
-    },
-    "varuste": {
-      "id": "urn:harja/tietue",
+    "varusteen-paivitys": {
+      "id": "urn:harja/varusteen-paivitys",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tietue.schema.json",
-      "required": true
-    },
-    "paivitetty": {
-      "id": "urn:harja/paivitetty",
-      "type": "string",
-      "format": "date-time",
-      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/varusteen-paivitys.schema.json",
       "required": true
     }
   }

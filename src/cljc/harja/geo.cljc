@@ -3,7 +3,7 @@
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
               (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
-                           GeometryCollection Geometry))))
+                           GeometryCollection Geometry MultiPoint))))
 
 #?(:clj
    (defprotocol MuunnaGeometria
@@ -50,6 +50,11 @@
      (pg->clj [^Point p]
        {:type :point
         :coordinates (piste-koordinaatit p)})
+
+     MultiPoint
+     (pg->clj [^MultiPoint mp]
+       {:type :multipoint
+        :coordinates (mapv pg->clj (.getPoints mp))})
 
      PGpoint
      (pg->clj [^PGpoint p]
@@ -210,6 +215,7 @@
     :polygon (:coordinates g)
     :multipolygon (mapcat :coordinates (:polygons g))
     :point [(:coordinates g)]
+    :multipoint (:coordinates g)
     :icon [(:coordinates g)]
     :circle [(:coordinates g)]
     :viiva (:points g)

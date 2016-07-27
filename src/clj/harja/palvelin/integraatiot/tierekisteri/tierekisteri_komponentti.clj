@@ -5,14 +5,17 @@
     [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
     [harja.palvelin.integraatiot.tierekisteri.tietueet :as tietueet]
     [harja.palvelin.integraatiot.tierekisteri.tietue :as tietue]
-    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+    [harja.kyselyt.urakat :as urakat-q])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn validoi-tietolajitunniste [tunniste]
   (log/debug "Validoidaan tunniste: " (pr-str tunniste))
   (when (not
-          (contains? #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506" "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
-                       "tl504" "tl198" "tl518" "tl514" "tl509" "tl515" "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"}
+          (contains? #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
+                       "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
+                       "tl504" "tl198" "tl518" "tl514" "tl509" "tl515"
+                       "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"}
                      tunniste))
     (throw+ {:type virheet/+viallinen-kutsu+ :virheet
              [{:koodi :tuntematon-tietolaji
@@ -21,6 +24,7 @@
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietueet [this tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm])
+  (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm])
   (paivita-tietue [this tiedot])
   (poista-tietue [this tiedot])
@@ -32,23 +36,40 @@
   (stop [this] this)
 
   TierekisteriPalvelut
-  (hae-tietolajit [this tietolajitunniste muutospvm]
+  (hae-tietolajit
+    [this tietolajitunniste muutospvm]
     (validoi-tietolajitunniste tietolajitunniste)
     (when (not (empty? tierekisteri-api-url))
       (tietolajit/hae-tietolajit
         (:db this) (:integraatioloki this) tierekisteri-api-url tietolajitunniste muutospvm)))
 
-  (hae-tietueet [this tr tietolajitunniste voimassaolopvm tilannepvm]
+  (hae-tietueet
+    [this tr tietolajitunniste voimassaolopvm tilannepvm]
     (validoi-tietolajitunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
       (tietueet/hae-tietueet
-        (:db this) (:integraatioloki this) tierekisteri-api-url tr tietolajitunniste voimassaolopvm tilannepvm)))
+        (:db this) (:integraatioloki this)
+        tierekisteri-api-url tr tietolajitunniste voimassaolopvm tilannepvm)))
+
+  (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm]
+    (validoi-tietolajitunniste tietolajitunniste)
+    (let [alueurakkanumero (:alueurakkanro (urakat-q/hae-urakan-alueurakkanumero (:db this) urakka))]
+      (when-not (empty? tierekisteri-api-url)
+        (tietueet/hae-urakan-tietueet
+          (:db this) (:integraatioloki this) tierekisteri-api-url alueurakkanumero tietolajitunniste tilannepvm))))
 
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm]
     (validoi-tietolajitunniste tietolajitunniste)
     (when-not (empty? tierekisteri-api-url)
       (tietue/hae-tietue
-        (:db this) (:integraatioloki this) tierekisteri-api-url tietueen-tunniste tietolajitunniste tilannepvm)))
+        (:db this) (:integraatioloki this)
+        tierekisteri-api-url tietueen-tunniste tietolajitunniste tilannepvm)))
+
+  (lisaa-tietue [this tiedot]
+    (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
+    (when-not (empty? tierekisteri-api-url)
+      (tietue/lisaa-tietue
+        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
 
   (paivita-tietue [this tiedot]
     (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
@@ -60,11 +81,5 @@
     (validoi-tietolajitunniste (:tietolajitunniste tiedot))
     (when-not (empty? tierekisteri-api-url)
       (tietue/poista-tietue
-        (:db this) (:integraatioloki this) tierekisteri-api-url tiedot)))
-
-  (lisaa-tietue [this tiedot]
-    (validoi-tietolajitunniste (get-in tiedot [:tietue :tietolaji :tietolajitunniste] tiedot))
-    (when-not (empty? tierekisteri-api-url)
-      (tietue/lisaa-tietue
         (:db this) (:integraatioloki this) tierekisteri-api-url tiedot))))
 

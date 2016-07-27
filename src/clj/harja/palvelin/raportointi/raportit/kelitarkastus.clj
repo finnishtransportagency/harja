@@ -95,7 +95,7 @@
        {:leveys 5 :otsikko "Ajo\u00ADsuun\u00ADta"}
        {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
        {:leveys 5 :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
-       {:leveys 5 :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
+       {:leveys 5 :otsikko "Ta\u00ADsai\u00ADsuus (cm)"}
        {:leveys 5 :otsikko "Kit\u00ADka"}
        {:leveys 5 :otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla"}
        {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}

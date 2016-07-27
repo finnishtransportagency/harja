@@ -57,28 +57,12 @@
                    (iterate inc 1)
                    (mapv
                      (fn [tehtava]
-                       (let [tehtava-urakassa
-                             (get
-                               (first
-                                 (filter
-                                   (fn [tehtavat]
-                                     (= (:id (get tehtavat 3))
-                                        (:tpk-id tehtava)))
-                                   @u/urakan-toimenpiteet-ja-tehtavat)) 3)
-                             emo
-                             (get (first
-                                    (filter
-                                      (fn [tehtavat]
-                                        (= (:id (get tehtavat 3))
-                                           (:tpk-id tehtava)))
-                                      @u/urakan-toimenpiteet-ja-tehtavat)) 2)
-                             tpi
-                             (first
-                               (filter
-                                 (fn [tpi]
-                                   (= (:t3_koodi tpi)
-                                      (:koodi emo)))
-                                 @u/urakan-toimenpideinstanssit))]
+                       (let [[_ _ emo tehtava-urakassa]
+                             (urakan-toimenpiteet/tehtava-urakassa
+                              (:tpk-id tehtava) @u/urakan-toimenpiteet-ja-tehtavat)
+                             tpi (some #(when (= (:t3_koodi %) (:koodi emo)) %)
+                                       @u/urakan-toimenpideinstanssit)]
+                         (log "Tehtava urakassa: " (pr-str tehtava-urakassa))
                          (log "Toteuman 4. tason tehtävän 3. tason emo selvitetty: " (pr-str emo))
                          (log "Toteuman 4. tason tehtävän toimenpideinstanssi selvitetty: " (pr-str tpi))
                          {:tehtava {:id (:tpk-id tehtava)}
@@ -120,21 +104,28 @@
 (defn- tyo-hoitokaudella? [tyo]
   (pvm/sama-pvm? (:alkupvm tyo) (first @u/valittu-hoitokausi)))
 
-(defn- valintakasittelija [t]
-  (let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat (:toimenpideinstanssi t) @u/urakan-toimenpideinstanssit @u/urakan-toimenpiteet-ja-tehtavat)
+(defn- valintakasittelija [vain-suunnitellut? t]
+  (let [urakan-tpi-tehtavat (urakan-toimenpiteet/toimenpideinstanssin-tehtavat
+                             (:toimenpideinstanssi t)
+                             @u/urakan-toimenpideinstanssit
+                             @u/urakan-toimenpiteet-ja-tehtavat)
         urakan-hoitokauden-yks-hint-tyot (filter tyo-hoitokaudella? @u/urakan-yks-hint-tyot)
         suunnitellut-tehtavat (filter
                                 (fn [tehtava]
                                   (> (:yksikkohinta (tehtavan-tiedot tehtava urakan-hoitokauden-yks-hint-tyot)) 0))
                                 urakan-tpi-tehtavat)]
-    (sort-by #(:nimi (get % 3)) suunnitellut-tehtavat)))
+    (sort-by #(:nimi (get % 3))
+             (if vain-suunnitellut?
+               suunnitellut-tehtavat
+               urakan-tpi-tehtavat))))
 
 (defn tehtavat-ja-maarat [tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet]
   (let [nelostason-tehtavat (map nelostason-tehtava @u/urakan-toimenpiteet-ja-tehtavat)
-        toimenpideinstanssit @u/urakan-toimenpideinstanssit]
+        toimenpideinstanssit @u/urakan-toimenpideinstanssit
+        voi-muokata? (not jarjestelman-lisaama-toteuma?)]
     [grid/muokkaus-grid
      {:tyhja "Ei töitä."
-      :voi-muokata? (not jarjestelman-lisaama-toteuma?)
+      :voi-muokata? voi-muokata?
       :muutos #(reset! tehtavat-virheet (grid/hae-virheet %))}
      [{:otsikko "Toimenpide"
        :nimi :toimenpideinstanssi
@@ -153,7 +144,7 @@
        :tyyppi :valinta
        :valinta-arvo #(:id (nth % 3))
        :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
-       :valinnat-fn valintakasittelija
+       :valinnat-fn (partial valintakasittelija voi-muokata?)
        :leveys 45
        :jos-tyhja "Toimenpiteelle ei ole suunniteltu yhtään tehtävää."
        :validoi [[:ei-tyhja "Valitse tehtävä"]]
@@ -270,7 +261,7 @@
            (when-not jarjestelman-lisaama-toteuma?
              {:tyyppi :tierekisteriosoite
               :nimi :tr
-              :pakollinen? true
+              :pakollinen? false
               :sijainti (r/wrap (:reitti @lomake-toteuma)
                                 #(swap! lomake-toteuma assoc :reitti %))})
 

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/tietueentunniste",
+  "required": true,
+  "enum": [
+    "tl523",
+    "tl501",
+    "tl517",
+    "tl507",
+    "tl508",
+    "tl506",
+    "tl522",
+    "tl513",
+    "tl196",
+    "tl519",
+    "tl505",
+    "tl195",
+    "tl504",
+    "tl198",
+    "tl518",
+    "tl514",
+    "tl509",
+    "tl515",
+    "tl503",
+    "tl510",
+    "tl512",
+    "tl165",
+    "tl516",
+    "tl511"
+  ]
+}
