@@ -10,9 +10,8 @@
 (def *test-container* (atom nil))
 
 (def komponentti-fixture
-  {:before #(do (println "KOMP") (reset! *test-container* (rt-utils/new-container!)))
-   :after #(do (println "JÄLKEEN KOMP")
-             (rt-utils/unmount! @*test-container*)
+  {:before #(reset! *test-container* (rt-utils/new-container!))
+   :after #(do (rt-utils/unmount! @*test-container*)
                (reset! *test-container* nil))})
 
 (def fake-palvelukutsut (atom nil))
@@ -31,11 +30,9 @@
     ch))
 
 (def fake-palvelut-fixture
-  {:before #(do (println "ENNEN FAKE PA")
-                (reset! k/testmode suorita-fake-palvelukutsu)
+  {:before #(do (reset! k/testmode suorita-fake-palvelukutsu)
                 (reset! fake-palvelukutsut {}))
-   :after #(do (println "JÄLKEEN FAKE PA")
-               (reset! k/testmode nil)
+   :after #(do (reset! k/testmode nil)
                (reset! fake-palvelukutsut {}))})
 
 (defn fake-palvelukutsu [palvelu vastaus-fn]
