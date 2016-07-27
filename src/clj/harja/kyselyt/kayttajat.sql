@@ -340,6 +340,16 @@ SELECT exists(
       AND o.ytunnus = :ytunnus
       AND k.id = :kayttaja_id);
 
+-- name: onko-kayttaja-nimella-urakan-organisaatiossa
+(SELECT EXISTS(SELECT id
+               FROM kayttaja
+               WHERE organisaatio = (SELECT urakoitsija
+                                     FROM urakka
+                                     WHERE id = :urakka)
+                     AND etunimi = :etunimi
+                     AND sukunimi = :sukunimi));
+
+
 -- name: hae-urakan-id-sampo-idlla
 -- single?: true
 -- Hae urakan id Sampo ID:llä, sähke oikeuksien hakua varten

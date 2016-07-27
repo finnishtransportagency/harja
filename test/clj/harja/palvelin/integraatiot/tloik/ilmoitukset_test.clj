@@ -7,9 +7,9 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.sonja :as sonja]
+            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
@@ -17,7 +17,6 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [cheshire.core :as cheshire]))
 
@@ -143,8 +142,8 @@
 
         (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
 
-        (is (= 1 (count (ilmoitukset-q/hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-        (is (= (ffirst (ilmoitukset-q/hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
+        (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
+        (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
 
         (poista-ilmoitus)))
     (catch IllegalArgumentException e
