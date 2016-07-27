@@ -512,7 +512,11 @@
           [napit/palvelinkutsu-nappi " Tee raportti"
            #(go
              (reset! raportit/suoritettu-raportti :ladataan)
-             (let [suorituksen-parametrit [konteksti (:nimi raporttityyppi) arvot-nyt]
+             (let [suorituksen-parametrit [konteksti
+                                           (:nimi raporttityyppi)
+                                           arvot-nyt
+                                           (:id v-ur)
+                                           (:id v-hal)]
                    _ (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
                    raportti
                    (<! (case konteksti
