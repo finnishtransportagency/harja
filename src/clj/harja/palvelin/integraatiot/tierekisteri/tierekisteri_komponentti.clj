@@ -12,8 +12,10 @@
 (defn validoi-tietolajitunniste [tunniste]
   (log/debug "Validoidaan tunniste: " (pr-str tunniste))
   (when (not
-          (contains? #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506" "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
-                       "tl504" "tl198" "tl518" "tl514" "tl509" "tl515" "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"}
+          (contains? #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
+                       "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
+                       "tl504" "tl198" "tl518" "tl514" "tl509" "tl515"
+                       "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"}
                      tunniste))
     (throw+ {:type virheet/+viallinen-kutsu+ :virheet
              [{:koodi :tuntematon-tietolaji
