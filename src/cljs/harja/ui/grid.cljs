@@ -830,6 +830,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   Tiedot tulee olla atomi tai wrapatty data, jota tietojen muokkaus itsessään manipuloi.
 
   Optiot on mappi optioita:
+  :id                 grid pääelementin DOM id
   :muokkaa-footer     optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muutos             jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                       Parametrina Grid ohjauskahva
@@ -981,7 +982,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
            [:div.panel.panel-default.livi-grid.livi-muokkaus-grid
             {:class (str (str/join " " luokat)
-                         (if voi-muokata? " nappeja"))}
+                         (if voi-muokata? " nappeja"))
+             :id (:id opts)}
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])
              (when (not= false voi-muokata?)
