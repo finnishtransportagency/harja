@@ -72,7 +72,8 @@
                  {:tehtava :tehtavat} :id :tehtava-id)]
     (first toteuma)))
 
-(defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id]}]
+(defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm
+                                                             tyyppi toimenpide-id tehtava-id]}]
   (log/debug "Haetaan urakan toteuman tehtävien summat: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id)
   (oikeudet/vaadi-lukuoikeus (case tyyppi 
                   :kokonaishintainen  oikeudet/urakat-toteumat-kokonaishintaisettyot  
