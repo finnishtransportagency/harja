@@ -16,6 +16,7 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
+            [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [cheshire.core :as cheshire]))
 
@@ -80,7 +81,7 @@
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                     #(swap! viestit conj (.getText %)))
-    
+
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
     (let [ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"]
                                                        kayttaja portti))]
