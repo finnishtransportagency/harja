@@ -52,6 +52,41 @@
   </seliteet>
   </harja:ilmoitus>
 ")
+(def +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+  <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+  <ilmoitusId>123456789</ilmoitusId>
+  <versionumero>1</versionumero>
+  <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+  <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
+  <urakkatyyppi>hoito</urakkatyyppi>
+  <otsikko>Korkeat vallit</otsikko>
+  <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
+  <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
+  <yhteydenottopyynto>false</yhteydenottopyynto>
+  <sijainti>
+  <tienumero>4</tienumero>
+  <x>452935</x>
+  <y>7186873</y>
+  </sijainti>
+  <ilmoittaja>
+  <etunimi>Uuno</etunimi>
+  <sukunimi>Urakoitsija</sukunimi>
+  <matkapuhelin>08023394852</matkapuhelin>
+  <sahkoposti>uuno.urakoitsija@example.com</sahkoposti>
+  <tyyppi>tienkayttaja</tyyppi>
+  </ilmoittaja>
+  <lahettaja>
+  <etunimi>Pekka</etunimi>
+  <sukunimi>Päivystäjä</sukunimi>
+  <matkapuhelin>929304449282</matkapuhelin>
+  <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+  </lahettaja>
+  <seliteet>
+  <selite>auraustarve</selite>
+  <selite>aurausvallitNakemaesteena</selite>
+  </seliteet>
+  </harja:ilmoitus>")
 
 (defn luo-tloik-komponentti []
   (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
