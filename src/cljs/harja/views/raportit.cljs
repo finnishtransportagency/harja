@@ -513,7 +513,7 @@
            #(go
              (reset! raportit/suoritettu-raportti :ladataan)
              (let [suorituksen-parametrit [konteksti arvot-nyt]
-                   _ (reset! raportit/suorituksessa-olevan-raportin-hakuparametrit suorituksen-parametrit)
+                   _ (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
                    raportti
                    (<! (case konteksti
                          "koko maa"
@@ -533,7 +533,7 @@
                  (do (log "[RAPORTTI] Poistuttu latausnäkymästä, hylätään suoritettu raportti.")
                      raportti)
 
-                 (not= @raportit/suorituksessa-olevan-raportin-hakuparametrit suorituksen-parametrit)
+                 (not= @raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
                  (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä pyysi, hylätään raportti")
                      raportti)
 
@@ -543,7 +543,7 @@
 
                  :default
                  (do (reset! raportit/suoritettu-raportti raportti)
-                     (reset! raportit/suorituksessa-olevan-raportin-hakuparametrit nil)))))
+                     (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))
            {:ikoni [ikonit/list]
             :disabled (not voi-suorittaa?)}])]]]]))
 
