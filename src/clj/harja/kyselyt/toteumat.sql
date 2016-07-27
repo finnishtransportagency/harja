@@ -51,7 +51,7 @@ SELECT
   t.tr_loppuosa,
   t.tr_loppuetaisyys,
 
-  tt.id    AS tehtava_id,
+  tt.id    AS "tehtava_tehtava-id",
   tpk.id   AS "tehtava_tpk-id",
   tpk.nimi AS tehtava_nimi,
   tt.maara AS tehtava_maara

@@ -69,7 +69,7 @@
                         toteuma-xf
                         (map konv/alaviiva->rakenne))
                        (q/hae-urakan-toteuma db urakka-id toteuma-id))
-                 {:tehtava :tehtavat})]
+                 {:tehtava :tehtavat} :id :tehtava-id)]
     (first toteuma)))
 
 (defn hae-urakan-toteumien-tehtavien-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpide-id tehtava-id]}]
@@ -165,7 +165,8 @@
       (q/merkitse-toteuman-maksuera-likaiseksi! c toteumatyyppi toimenpidekoodi))
     id))
 
-(defn hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
+(defn hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+  [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
   (log/debug "Aikaväli: " (pr-str alkupvm) (pr-str loppupvm))
   (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id)
   (let [toteumat (into []
@@ -220,12 +221,12 @@
                                   user (:urakka-id toteuma))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction [db db]
-                            (if (:toteuma-id toteuma)
-                              (paivita-toteuma db user toteuma)
-                              (luo-toteuma db user toteuma))
+    (if (:toteuma-id toteuma)
+      (paivita-toteuma db user toteuma)
+      (luo-toteuma db user toteuma))
 
-                            (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
-                              db user hakuparametrit)))
+    (hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+     db user hakuparametrit)))
 
 (defn paivita-yk-hint-toiden-tehtavat
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
