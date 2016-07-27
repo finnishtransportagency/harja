@@ -117,7 +117,10 @@
   (let [vastaus-xml (slurp (io/resource "xsd/tierekisteri/esimerkit/hae-tietue-response.xml"))]
     (with-fake-http
       [(str +testi-tierekisteri-url+ "/haetietue") vastaus-xml]
-      (let [vastausdata (tierekisteri/hae-tietue (:tierekisteri jarjestelma) "asdf" "tl506" (t/date-time 2015 5 25))
+      (let [vastausdata (tierekisteri/hae-tietue (:tierekisteri jarjestelma)
+                                                 "asdf"
+                                                 "tl506"
+                                                 (t/date-time 2015 5 25))
             odotettu-tietue {:alkupvm #inst "2015-03-02T22:00:00.000-00:00"
                              :karttapvm #inst "2015-03-02T22:00:00.000-00:00"
                              :kuntoluokka "1"
@@ -151,7 +154,7 @@
       (let [vastausdata (tierekisteri/hae-urakan-tietueet (:tierekisteri jarjestelma)
                                                           (hae-oulun-alueurakan-2014-2019-id)
                                                           "tl506"
-                                                          "2015-05-25")
+                                                          (t/date-time 2015 5 25))
             odotettu-vastaus [{:tietueotsikko {:alkupvm #inst "2006-11-28T22:00:00.000-00:00"
                                                :karttapvm #inst "2014-06-26T21:00:00.000-00:00"
                                                :kuntoluokka "1"

@@ -13,12 +13,13 @@
   [:ns2:haeUrakanTietueet
    {:xmlns:ns2 "http://www.solita.fi/harja/tierekisteri/haeUrakanTietueet"}
    [:urakka-id alueurakkanumero]
-   [:tilannepvm (pvm/iso-8601->pvm tilannepvm)]
+   [:tilannepvm (pvm/pvm->iso-8601 tilannepvm)]
    [:tietolaji tietolajitunniste]])
 
 (defn muodosta-kutsu [alueurakkanumero tietolajitunniste tilannepvm]
   (let [sisalto (muodosta-xml-sisalto alueurakkanumero tietolajitunniste tilannepvm)
         xml (xml/tee-xml-sanoma sisalto)]
+    (log/debug "kutsu XML: " xml)
     (if (xml/validi-xml? +xsd-polku+ "haeUrakanTietueet.xsd" xml)
       xml
       (do
