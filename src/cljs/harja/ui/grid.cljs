@@ -1077,7 +1077,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                        id (fn [rivi]
                                                                             (aseta rivi uusi)))
                                                              (muokkaa! muokatut-atom virheet id assoc nimi uusi))))]
-                                                      [nayta-arvo (vain-luku-atomina arvo)]))]
+                                                      [nayta-arvo (assoc s :index i :muokataan? false)
+                                                       (vain-luku-atomina arvo)]))]
 
                                                  ^{:key (str nimi)}
                                                  [:td {:class (str "ei-muokattava " tasaus-luokka)}
