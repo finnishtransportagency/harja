@@ -7,7 +7,7 @@
    [harja.domain.tierekisteri :as tierekisteri-domain]
    [harja.ui.tierekisteri :as tierekisteri]
    [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu
-                            render sel sel1 grid-solu]]
+                            render paivita sel sel1 grid-solu]]
    [harja.views.urakka.paallystysilmoitukset :as p]
    [harja.pvm :as pvm]
    [reagent.core :as r]
@@ -121,28 +121,28 @@
                       .-value)))
 
        (<! pituudet-haettu)
-       (r/after-render
-        #(do (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
-                    (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
 
-             ;; Tallennus nappi enabled
-             (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled not))
+       (<! (paivita))
 
-             ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
-             (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
-                           {:target {:value "888"}})
+       (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
+              (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
 
-             (r/flush)
+       ;; Tallennus nappi enabled
+       (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled not))
 
-             (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
+       ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
+       (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
+                   {:target {:value "888"}})
 
-             (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
-                    '("Anna arvo välillä 0 - 100")))
+       (<! (paivita))
+
+       (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
+
+       (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
+              '("Anna arvo välillä 0 - 100")))
 
 
-             (r/after-render
-              (fn []
-                ;; Tallennus nappi disabled
-                (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
+       ;; Tallennus nappi disabled
+       (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
 
-                (test-ok)))))))))
+       (test-ok)))))

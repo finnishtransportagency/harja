@@ -52,6 +52,15 @@
 (defn sel1 [path]
   (dommy/sel1 @*test-container* path))
 
+(defn paivita
+  "Kutsuu reagent flush ja odottaa että render on tapahtunut.
+  Palauttaa kanavan, joka suljetaan renderin jälkeen."
+  []
+  (let [ch (async/chan)]
+    (r/flush)
+    (r/after-render #(async/close! ch))
+    ch))
+
 (defn grid-solu
   ([grid-id rivi-nro sarake-nro]
    (grid-solu grid-id rivi-nro sarake-nro ":nth-child(1)"))
