@@ -84,8 +84,9 @@
       (if-let [testipalvelu @testmode]
         (do
           (log "Haetaan testivastaus palvelulle: " palvelu)
-          (let [testivastaus-ch (testipalvelu palvelu parametrit)]
-            (>! chan (<! testivastaus-ch))))
+          (if-let [testivastaus-ch (testipalvelu palvelu parametrit)]
+            (>! chan (<! testivastaus-ch))
+            (close! chan)))
         (ajax-request {:uri             (str (polku) (name palvelu))
                        :method          metodi
                        :params          parametrit
