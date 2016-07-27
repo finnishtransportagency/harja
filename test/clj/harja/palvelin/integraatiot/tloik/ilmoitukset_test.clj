@@ -9,6 +9,7 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
+            [harja.kyselyt.ilmoitukset :as ilmoitukset-q]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
@@ -142,8 +143,8 @@
 
                       (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
 
-                      (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-                      (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
+                      (is (= 1 (count (ilmoitukset-q/hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
+                      (is (= (ffirst (ilmoitukset-q/hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
 
                       (poista-ilmoitus)))
     (catch IllegalArgumentException e
