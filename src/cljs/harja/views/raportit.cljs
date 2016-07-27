@@ -534,7 +534,7 @@
                      raportti)
 
                  (not= @raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                 (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä pyysi, hylätään raportti")
+                 (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä viimeksi pyysi, hylätään raportti")
                      raportti)
 
                  (k/virhe? raportti)
