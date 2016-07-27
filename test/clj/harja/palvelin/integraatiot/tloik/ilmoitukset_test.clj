@@ -133,19 +133,19 @@
 (deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
   (try
     (with-fake-http []
-                    (let [kuittausviestit (atom [])]
-                      (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
-                                      #(swap! kuittausviestit conj (.getText %)))
+      (let [kuittausviestit (atom [])]
+        (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+                        #(swap! kuittausviestit conj (.getText %)))
 
-                      (sonja/laheta (:sonja jarjestelma)
-                                    +tloik-ilmoitusviestijono+
-                                    +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)
+        (sonja/laheta (:sonja jarjestelma)
+                      +tloik-ilmoitusviestijono+
+                      +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)
 
-                      (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
+        (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
 
-                      (is (= 1 (count (ilmoitukset-q/hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
-                      (is (= (ffirst (ilmoitukset-q/hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
+        (is (= 1 (count (ilmoitukset-q/hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
+        (is (= (ffirst (ilmoitukset-q/hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
 
-                      (poista-ilmoitus)))
+        (poista-ilmoitus)))
     (catch IllegalArgumentException e
       (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
