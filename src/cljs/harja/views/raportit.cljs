@@ -538,7 +538,9 @@
                      raportti)
 
                  (k/virhe? raportti)
-                 (do (reset! raportit/suoritettu-raportti nil)
+                 (do
+                   (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)
+                   (reset! raportit/suoritettu-raportti nil)
                      raportti)
 
                  :default
