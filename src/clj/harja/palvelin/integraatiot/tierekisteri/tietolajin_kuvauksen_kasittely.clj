@@ -132,5 +132,3 @@
                    (partial pura-kentta arvot-merkkijono tietolaji kenttien-kuvaukset)
                    kenttien-kuvaukset)]
     (reduce merge map-osat)))
-
-
