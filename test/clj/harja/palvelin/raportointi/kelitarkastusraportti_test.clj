@@ -75,7 +75,7 @@
                       {:leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
                       {:leveys 5
-                       :otsikko "Ta­sai­suus (cm)"}
+                       :otsikko "E­pä­ta­sai­suus (cm)"}
                       {:leveys 5
                        :otsikko "Kit­ka"}
                       {:leveys 5
@@ -302,7 +302,7 @@
                       {:leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
                       {:leveys 5
-                       :otsikko "Ta­sai­suus (cm)"}
+                       :otsikko "E­pä­ta­sai­suus (cm)"}
                       {:leveys 5
                        :otsikko "Kit­ka"}
                       {:leveys 5
@@ -529,7 +529,7 @@
                       {:leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
                       {:leveys 5
-                       :otsikko "Ta­sai­suus (cm)"}
+                       :otsikko "E­pä­ta­sai­suus (cm)"}
                       {:leveys 5
                        :otsikko "Kit­ka"}
                       {:leveys 5
