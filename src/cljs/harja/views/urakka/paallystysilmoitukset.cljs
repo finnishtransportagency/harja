@@ -201,6 +201,7 @@
          (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
         (paallystys/tallenna-paallystysilmoitus! urakka-id sopimus-id lahetettava-data))
       {:luokka "nappi-ensisijainen"
+       :id "tallenna-paallystysilmoitus"
        :disabled (false? valmis-tallennettavaksi?)
        :ikoni (ikonit/tallenna)
        :virheviesti "Tallentaminen epäonnistui"
@@ -227,7 +228,7 @@
           (fn [uusi-arvo]
             (muokkaa!
              #(assoc-in % polku
-                        (grid/filteroi-uudet-poistetut uusi-arvo))))))
+                        (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
 
 (defn paallystysilmoitus-perustiedot [urakka {:keys [tila valmispvm-kohde] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
   (let [valmis-kasiteltavaksi?
@@ -308,6 +309,7 @@
 
      [grid/muokkaus-grid
       {:otsikko "Päällystystoimenpiteen tiedot"
+       :id "paallystysilmoitus-paallystystoimenpiteet"
        :voi-lisata? false
        :voi-kumota? false
        :voi-poistaa? (constantly false)
