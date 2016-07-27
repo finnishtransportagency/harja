@@ -99,12 +99,8 @@
   (let [urakka {:id 1}
         lukko nil
         lomake (r/atom paallystysilmoituslomake-alkutila)
-        _ (tarkkaile! "LOMAKE" lomake)
         comp (fn []
-               (println "RENDER " (pr-str @lomake))
-               [p/paallystysilmoituslomake urakka @lomake lukko #(let [ennen @lomake]
-                                                                   (apply swap! lomake %&)
-                                                                   (println "LOMAKE \n" ennen "\n => " @lomake))])
+               [p/paallystysilmoituslomake urakka @lomake lukko (partial swap! lomake)])
         pituudet-haettu (fake-palvelukutsu :hae-tr-osien-pituudet (constantly {1 1000
                                                                                2 2000
                                                                                3 3000
