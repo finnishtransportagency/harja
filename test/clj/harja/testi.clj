@@ -25,7 +25,9 @@
      (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defn travis? []
-  (= "true" (System/getProperty "TRAVIS")))
+  (= "true" (System/getenv "TRAVIS")))
+
+
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
