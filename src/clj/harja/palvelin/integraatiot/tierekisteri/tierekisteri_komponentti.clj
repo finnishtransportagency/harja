@@ -5,7 +5,8 @@
     [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
     [harja.palvelin.integraatiot.tierekisteri.tietueet :as tietueet]
     [harja.palvelin.integraatiot.tierekisteri.tietue :as tietue]
-    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+    [harja.kyselyt.urakat :as urakat-q])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn validoi-tietolajitunniste [tunniste]
@@ -21,6 +22,7 @@
 (defprotocol TierekisteriPalvelut
   (hae-tietolajit [this tietolajitunniste muutospvm])
   (hae-tietueet [this tierekisteriosoitevali tietolajitunniste voimassaolopvm tilannepvm])
+  (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm])
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm])
   (paivita-tietue [this tiedot])
   (poista-tietue [this tiedot])
@@ -46,6 +48,13 @@
       (tietueet/hae-tietueet
         (:db this) (:integraatioloki this)
         tierekisteri-api-url tr tietolajitunniste voimassaolopvm tilannepvm)))
+
+  (hae-urakan-tietueet [this urakka tietolajitunniste tilannepvm]
+    (validoi-tietolajitunniste tietolajitunniste)
+    (let [alueurakkanumero (:alueurakkanro (urakat-q/hae-urakan-alueurakkanumero (:db this) urakka))]
+      (when-not (empty? tierekisteri-api-url)
+        (tietueet/hae-urakan-tietueet
+          (:db this) (:integraatioloki this) tierekisteri-api-url alueurakkanumero tietolajitunniste tilannepvm))))
 
   (hae-tietue [this tietueen-tunniste tietolajitunniste tilannepvm]
     (validoi-tietolajitunniste tietolajitunniste)
