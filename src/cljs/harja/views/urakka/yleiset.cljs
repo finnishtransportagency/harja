@@ -270,15 +270,16 @@
           "Sido YHA-urakkaan"]]
         (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) paallystys-tai-paikkausurakka-sidottu?)
         [:span "Sidottu YHA-urakkaan. Vain urakanvalvoja voi muuttaa sidontaa."]
-        (and paallystys-tai-paikkausurakka? yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
+        (and paallystys-tai-paikkausurakka yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
         [:span (when sidonta-lukittu? {:title sidonta-lukittu-vihje})
          [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
                                       :disabled sidonta-lukittu?}
           "Vaihda sidottu urakka"]]
         :default nil)
       "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
-      "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
-      "Takuu päättyy:" [takuuaika ur]
+      "Aikaväli:" [:span.aikavali (pvm/pvm(when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?) (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
+      "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
+                         [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       ;; valaistus, tiemerkintä --> palvelusopimus
