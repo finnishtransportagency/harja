@@ -12,7 +12,7 @@
             [harja.tiedot.toimenpidekoodit :as toimenpidekoodit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.atom :refer-macros [reaction<! reaction-writable]]
             [cljs-time.core :as t]
             [taoensso.truss :as truss :refer-macros [have]])
 
@@ -34,7 +34,7 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
-(defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
+(defonce valittu-toimenpideinstanssi (reaction-writable (first @urakan-toimenpideinstanssit)))
 
 (defn urakan-toimenpideinstanssi-toimenpidekoodille [tpk]
   (have integer? tpk)
@@ -128,9 +128,9 @@
 
 
 (defonce valittu-hoitokausi
-         (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
+  (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-(defonce valittu-aikavali (reaction @valittu-hoitokausi))
+(defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
 
 
 (defn valitse-hoitokausi! [hk]

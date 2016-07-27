@@ -124,10 +124,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Atomi, joka sisältää valitun urakan (tai nil)
 (defonce valittu-urakka
-  (reaction (let [id @valittu-urakka-id
-                  urakat @hallintayksikon-urakkalista]
-              (when (and id urakat)
-                (some #(when (= id (:id %)) %) urakat)))))
+  (reaction-writable
+   (let [id @valittu-urakka-id
+         urakat @hallintayksikon-urakkalista]
+     (when (and id urakat)
+       (some #(when (= id (:id %)) %) urakat)))))
 
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
