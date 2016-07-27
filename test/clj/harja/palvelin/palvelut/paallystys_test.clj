@@ -41,13 +41,13 @@
    :takuupvm (pvm/luo-pvm 2005 9 3)
    :muutoshinta 0
    :ilmoitustiedot {:osoitteet [{:nimi "Tie 666"
-                                 :tie 666
-                                 :aosa 2
-                                 :aet 3
-                                 :losa 4
-                                 :let 5
-                                 :ajorata 1
-                                 :kaista 1
+                                 :tr-numero 666
+                                 :tr-alkuosa 2
+                                 :tr-alkuetaisyys 3
+                                 :tr-loppuosa 4
+                                 :tr-loppuetaisyys 5
+                                 :tr-ajorata 1
+                                 :tr-kaista 1
                                  :paallystetyyppi 1
                                  :raekoko 1
                                  :kokonaismassamaara 2
@@ -64,13 +64,13 @@
                                  :pitoisuus 54
                                  :lisaaineet "asd"}
                                 {:nimi "Tie 555"
-                                 :tie 555
-                                 :aosa 2
-                                 :aet 3
-                                 :losa 4
-                                 :let 5
-                                 :ajorata 1
-                                 :kaista 1
+                                 :tr-numero 555
+                                 :tr-alkuosa 2
+                                 :tr-alkuetaisyys 3
+                                 :tr-loppuosa 4
+                                 :tr-loppuetaisyys 5
+                                 :tr-ajorata 1
+                                 :tr-kaista 1
                                  :paallystetyyppi 1
                                  :raekoko 1
                                  :kokonaismassamaara 2
@@ -88,10 +88,10 @@
                                  :lisaaineet "asd"
                                  :poistettu true}]
 
-                    :alustatoimet [{:aosa 2
-                                    :aet 3
-                                    :losa 4
-                                    :let 5
+                    :alustatoimet [{:tr-alkuosa 2
+                                    :tr-alkuetaisyys 3
+                                    :tr-loppuosa 4
+                                    :tr-loppuetaisyys 5
                                     :kasittelymenetelma 1
                                     :paksuus 1234
                                     :verkkotyyppi 1
