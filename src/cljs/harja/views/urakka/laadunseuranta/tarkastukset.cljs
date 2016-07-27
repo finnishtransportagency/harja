@@ -163,7 +163,7 @@
      :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
     {:otsikko "Kitka" :tyyppi :numero
      :nimi :kitka
-     :validoi [[:rajattu-numero nil 0.01 0.99 "Arvon tulee olla välillä 0-1"]]
+     :validoi [[:rajattu-numero nil 0.01 0.99 "Arvon tulee olla välillä 0.01-0.99"]]
      :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
     {:otsikko "Ilma" :tyyppi :numero :yksikko "\u2103"
      :validoi [#(when-not (<= -55 %1 55)
