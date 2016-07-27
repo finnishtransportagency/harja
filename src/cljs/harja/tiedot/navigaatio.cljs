@@ -18,7 +18,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
    [harja.tiedot.urakat :as ur]
    [harja.tiedot.raportit :as raportit]
    [harja.tiedot.navigaatio.reitit :as reitit]
-   [harja.atom :refer-macros [reaction<!]]
+   [harja.atom :refer-macros [reaction<! reaction-writable]]
    [harja.pvm :as pvm]
    [clojure.string :as str]
    [harja.geo :as geo])
@@ -51,7 +51,7 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 (defonce kartalla-nakyva-alue
   ;; Näkyvä alue reaktoi siihen mihin zoomataan, mutta kun käyttäjä
   ;; muuttaa zoom-tasoa tai raahaa karttaa, se asetetaan näkyvään alueeseen.
-  (reaction
+  (atom
    (let [[minx miny maxx maxy] @kartan-extent]
      {:xmin minx :ymin miny
       :xmax maxx :ymax maxy})))
@@ -124,10 +124,11 @@ ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa n
 
 ;; Atomi, joka sisältää valitun urakan (tai nil)
 (defonce valittu-urakka
-  (reaction (let [id @valittu-urakka-id
-                  urakat @hallintayksikon-urakkalista]
-              (when (and id urakat)
-                (some #(when (= id (:id %)) %) urakat)))))
+  (reaction-writable
+   (let [id @valittu-urakka-id
+         urakat @hallintayksikon-urakkalista]
+     (when (and id urakat)
+       (some #(when (= id (:id %)) %) urakat)))))
 
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
