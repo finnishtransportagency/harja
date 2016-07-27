@@ -11,6 +11,7 @@
 
 ;; Tähän asetetaan suoritetun raportin elementit, jotka renderöidään
 (defonce suoritettu-raportti (atom nil))
+(defonce suorituksessa-olevan-raportin-hakuparametrit (atom nil))
 
 (def raportit-nakymassa? (atom false))
 
