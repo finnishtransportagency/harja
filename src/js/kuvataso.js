@@ -2,7 +2,7 @@
 
 goog.provide('kuvataso.Lahde');
 
-goog.require('ol.source.Image');
+goog.require('ol.source.TileImage');
 
 kuvataso.Lahde = function(hae_fn, options) {
     goog.base(this, options);

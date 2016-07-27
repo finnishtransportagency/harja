@@ -22,7 +22,7 @@
 (defn muodosta-kutsu [tietue]
   (let [sisalto (muodosta-xml-sisalto tietue)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "poistaTietue.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "poistaTietue.xsd" xml)
       xml
       (do
         (log/error "Tietueenpoistopyyntöä ei voida lähettää. Pyynnön XML ei ole validi.")

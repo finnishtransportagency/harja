@@ -97,7 +97,7 @@
                                       :ei-valittu
                                       :osittain-valittu)))]
     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-      (let [ryhman-elementtien-avaimet (or (get-in tiedot/jarjestys ryhma-polku)
+      (let [ryhman-elementtien-avaimet (or (get-in tk/tehtavien-jarjestys ryhma-polku)
                                            (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
             auki? (fn [] (or @oma-auki-tila
                              (and kokoelma-atom
@@ -121,7 +121,8 @@
                (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
             [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
              [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
-              {:on-change (fn [uusi-tila]
+              {:width "230px" ;; 100% ei toimi tässä kontekstissa, joten määritetään leveydeksi paneelin leveys
+               :on-change (fn [uusi-tila]
                             ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
                             (when (not= :osittain-valittu uusi-tila)
                               (reset! suodattimet-atom

@@ -30,13 +30,13 @@
      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
      [yleiset/pudotusvalikko
       "Näytä laatupoikkeamat"
-      {:valinta    @laatupoikkeamat/listaus
+      {:valinta @laatupoikkeamat/listaus
        :valitse-fn #(reset! laatupoikkeamat/listaus %)
-       :format-fn  #(case %
-                     :kaikki "Kaikki"
-                     :kasitellyt "Käsitellyt (päätös tehty)"
-                     :selvitys "Odottaa urakoitsijan selvitystä"
-                     :omat "Minun kirjaamat / kommentoimat")}
+       :format-fn #(case %
+                    :kaikki "Kaikki"
+                    :kasitellyt "Käsitellyt (päätös tehty)"
+                    :selvitys "Odottaa urakoitsijan selvitystä"
+                    :omat "Minun kirjaamat / kommentoimat")}
       [:kaikki :selvitys :kasitellyt :omat]]
 
      [urakka-valinnat/aikavali]
@@ -85,10 +85,10 @@
                         (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn [optiot]
-     [:span.laatupoikkeamat
-      [kartta/kartan-paikka]
-      (if @laatupoikkeamat/valittu-laatupoikkeama
-        [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama
-         (merge optiot
-                {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
-        [laatupoikkeamalistaus optiot])])))
+      [:span.laatupoikkeamat
+       [kartta/kartan-paikka]
+       (if @laatupoikkeamat/valittu-laatupoikkeama
+         [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama
+          (merge optiot
+                 {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
+         [laatupoikkeamalistaus optiot])])))

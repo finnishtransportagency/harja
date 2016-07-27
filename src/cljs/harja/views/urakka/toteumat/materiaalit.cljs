@@ -211,10 +211,11 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                {:otsikko "Lähde" :nimi :luoja :tyyppi :string
                 :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")")) :muokattava? (constantly false)})
              {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
-              :komponentti [materiaalit-ja-maarat
-                            materiaalitoteumat-mapissa
-                            materiaalien-virheet
-                            (:jarjestelmanlisaama tiedot)] :tyyppi :komponentti}
+              :komponentti (fn [_]
+                             [materiaalit-ja-maarat
+                             materiaalitoteumat-mapissa
+                             materiaalien-virheet
+                             (:jarjestelmanlisaama tiedot)]) :tyyppi :komponentti}
              {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256 :muokattava? muokattava-pred :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
              {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 256 :nimi :ytunnus :muokattava? muokattava-pred :validoi [[:ei-tyhja "Anna y-tunnus"]]}
              {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]

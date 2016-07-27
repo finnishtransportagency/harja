@@ -12,7 +12,7 @@
                                                   :jarjestelma  "FastMekka"
                                                   :organisaatio "Asfaltia Oy"
                                                   :yTunnus      "1234567-8"}
-                              :tunniste          "HARJ951547ZK"
+                              :tunniste          "HARJ951547"
                               :tietolajitunniste "tl505"
                               :poistettu         "2015-05-26+03:00"})
 
@@ -21,7 +21,7 @@
 (deftest tarkista-kutsu
   (let [kutsu-xml (muodosta-kutsu poistettava-testitietue)
         xsd "poistaTietue.xsd"]
-    (is (xml/validoi +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
+    (is (xml/validi-xml? +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
 
 ; REPL-testausta varten
 #_(defn poista-testitietue []

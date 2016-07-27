@@ -1,48 +1,233 @@
-CREATE OR REPLACE FUNCTION multiline_project_point(amultils geometry, apoint geometry)
-  RETURNS float8 AS
-$$
-DECLARE
-  adist float8;
-  bdist float8;
-  totallen float8;
+
+-- paivittaa tr-rutiinien käyttämät taulut
+CREATE OR REPLACE FUNCTION paivita_tr_taulut() RETURNS VOID AS $$
 BEGIN
-  -- kokonaispituus
-  totallen := ST_Length(amultils);
+  DELETE FROM tieverkko_geom;
+  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria)), 0::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=1) GROUP BY tie;
+  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria)), 1::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=2) GROUP BY tie;
 
-  adist := ST_LineLocatePoint(ST_GeometryN(amultils, 1), apoint);
-  bdist := ST_LineLocatePoint(ST_GeometryN(amultils, 2), apoint);
+  DELETE FROM tr_osien_pituudet;
+  INSERT INTO tr_osien_pituudet SELECT tie, osa, SUM(tr_pituus) AS pituus
+                                  FROM tieverkko
+				 WHERE (ajorata=0 OR ajorata=1)
+				 GROUP BY tie, osa ORDER BY tie,osa;
 
-  IF adist>=1 THEN
-    RETURN (ST_Length(ST_GeometryN(amultils,1)) + ST_Length(ST_Line_Substring(ST_GeometryN(amultils,2),0,bdist)))/totallen;
+END;
+$$ LANGUAGE plpgsql;
+
+-- kaantää (multi)linestringin toisinpäin, myös multilinestringin viivajärjestyksen
+CREATE OR REPLACE FUNCTION kaanna_viiva(viiva geometry) RETURNS geometry AS $$
+DECLARE
+  tmp geometry;
+BEGIN
+  IF GeometryType(viiva)='MULTILINESTRING' THEN
+    SELECT ST_Collect(ST_Reverse(g.geom))
+      FROM (SELECT geom FROM ST_Dump(viiva) ORDER BY path[1] DESC) AS g INTO tmp;
+      RETURN tmp;
   ELSE
-    RETURN ST_Length(ST_Line_Substring(ST_GeometryN(amultils,1), 0, adist)) / totallen;
+    RETURN ST_Reverse(viiva);
   END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- palauttaa 0 jos tr-osoite on kasvava, 1 jos laskeva
+CREATE OR REPLACE FUNCTION tr_osoitteen_suunta(aosa INTEGER, aet INTEGER, losa INTEGER, let INTEGER) RETURNS BIT AS $$
+BEGIN
+   RETURN (CASE
+     WHEN (aosa=losa AND aet<=let) THEN 0
+     WHEN (aosa=losa AND aet>let) THEN 1
+     WHEN aosa<losa THEN 0
+     WHEN aosa>losa THEN 1
+   END);
+END;
+$$ LANGUAGE plpgsql;
+
+-- laskee matkan tien alusta kun osa ja etäisyys osan alusta on annettu
+CREATE OR REPLACE FUNCTION etaisyys_alusta(tie_ INTEGER, osa_ INTEGER, et INTEGER) RETURNS INTEGER AS $$
+DECLARE
+  tmp INTEGER;
+BEGIN
+  SELECT SUM(pituus) FROM tr_osien_pituudet WHERE tie=tie_ AND osa<osa_ INTO tmp;
+  IF tmp IS NULL THEN
+    RETURN et;
+  ELSE
+    RETURN et+tmp;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- laskee tien kokonaispituuden
+CREATE OR REPLACE FUNCTION tien_kokonaispituus(tie_ INTEGER) RETURNS INTEGER AS $$
+DECLARE
+  tmp INTEGER;
+BEGIN
+  SELECT SUM(pituus) FROM tr_osien_pituudet WHERE tie=tie_ INTO tmp;
+  RETURN tmp;
+END;
+$$ LANGUAGE plpgsql;
+
+-- palauttaa tierekisteriosoitteelle geometrian
+CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva2(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
+DECLARE
+  tmp geometry;
+  kok_pituus INTEGER;
+  apituus INTEGER;
+  bpituus INTEGER;
+  suunta_ BIT;
+BEGIN
+  suunta_ := tr_osoitteen_suunta(aosa_,aet_,losa_,let_);
+  SELECT geom FROM tieverkko_geom WHERE tie=tie_ AND suunta=suunta_ INTO tmp;
+  kok_pituus := tien_kokonaispituus(tie_);
+  apituus := etaisyys_alusta(tie_, aosa_, aet_);
+  bpituus := etaisyys_alusta(tie_, losa_, let_);
+  IF suunta_=1::bit THEN
+     RETURN kaanna_viiva(ST_Line_Substring(tmp, bpituus::FLOAT/kok_pituus::FLOAT, apituus::FLOAT/kok_pituus::FLOAT));
+  ELSE
+     RETURN ST_Line_Substring(tmp, apituus::FLOAT/kok_pituus::FLOAT, bpituus::FLOAT/kok_pituus::FLOAT);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- laskee geometrialle projisoidun pisteen etäisyyden geometrian alusta
+CREATE OR REPLACE FUNCTION projektion_etaisyys(apiste geometry, viiva geometry) RETURNS FLOAT AS $$
+DECLARE
+  tmp geometry;
+  etaisyys INTEGER;
+  pit FLOAT;
+BEGIN
+  etaisyys := 0;
+  IF GeometryType(viiva)='MULTILINESTRING' THEN
+     FOR i IN 1..ST_NumGeometries(viiva) LOOP
+        tmp := ST_GeometryN(viiva, i);
+        pit := ST_LineLocatePoint(tmp, apiste);
+        IF pit=1 THEN
+           etaisyys := etaisyys + ST_Length(tmp);
+        ELSE
+           etaisyys := etaisyys + ST_Length(ST_Line_Substring(tmp, 0, pit));
+           RETURN (etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
+        END IF;
+     END LOOP;
+  ELSE
+     RETURN ST_LineLocatePoint(viiva, apiste);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- laskee annetun etäisyyden osan (ja etäisyyden ko. osan alusta)
+CREATE OR REPLACE FUNCTION etaisyyden_osa(tie_ INTEGER, etaisyys INTEGER) RETURNS RECORD AS $$
+DECLARE
+  tmp RECORD;
+BEGIN
+    SELECT k.osa, CAST(k.p AS INTEGER) FROM (SELECT osa, sum(pituus) OVER (PARTITION BY tie ORDER BY osa) AS p 
+                              FROM tr_osien_pituudet 
+                             WHERE tie=tie_) AS k 
+     WHERE k.p<etaisyys
+     ORDER BY osa DESC 
+     LIMIT 1
+     INTO tmp;
+     
+     IF tmp.osa IS NULL THEN
+       SELECT MIN(osa) AS osa, 0::INTEGER AS p FROM tr_osien_pituudet WHERE tie=tie_ INTO tmp;
+       RETURN tmp;
+     ELSE
+       RETURN tmp;
+     END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP FUNCTION IF EXISTS yrita_tierekisteriosoite_pisteille(geometry,geometry,integer);
+
+CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille(apiste geometry, bpiste geometry, treshold INTEGER) RETURNS tr_osoite AS $$
+DECLARE
+  tie_ RECORD;
+  otie_ RECORD;
+  alkuet FLOAT;
+  loppuet FLOAT;
+  alkuet2 INTEGER;
+  loppuet2 INTEGER;
+  tmp RECORD;
+  tmp2 RECORD;
+BEGIN
+  SELECT a.tie, a.geom
+    FROM tieverkko_geom a, tieverkko_geom b
+    WHERE ST_DWithin(a.geom, apiste, treshold)
+      AND ST_DWithin(b.geom, bpiste, treshold)
+      AND a.tie=b.tie
+      AND a.suunta=0::bit AND b.suunta=0::bit
+    ORDER BY ST_Length(ST_ShortestLine(apiste, a.geom)) + ST_Length(ST_ShortestLine(bpiste, b.geom))
+    LIMIT 1
+    INTO tie_;
+
+  IF tie_.tie IS NULL THEN
+     RETURN NULL;
+  END IF;
+
+  alkuet := projektion_etaisyys(apiste, tie_.geom);
+  loppuet := projektion_etaisyys(bpiste, tie_.geom);
+
+  IF alkuet<loppuet THEN
+    SELECT geom FROM tieverkko_geom WHERE tie=tie_.tie AND suunta=0::bit INTO otie_;
+    
+    alkuet := projektion_etaisyys(apiste, otie_.geom);
+    loppuet := projektion_etaisyys(bpiste, otie_.geom);
+
+    alkuet2 := CAST(alkuet * ST_Length(otie_.geom) AS INTEGER);
+    loppuet2 := CAST(loppuet * ST_Length(otie_.geom) AS INTEGER);
+    
+    tmp := etaisyyden_osa(tie_.tie, alkuet2);
+    tmp2 := etaisyyden_osa(tie_.tie, loppuet2);
+    
+    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),ST_Line_Substring(otie_.geom, alkuet, loppuet));
+  ELSE
+    SELECT geom FROM tieverkko_geom WHERE tie=tie_.tie AND suunta=1::bit INTO otie_;
+    
+    alkuet := projektion_etaisyys(apiste, otie_.geom);
+    loppuet := projektion_etaisyys(bpiste, otie_.geom);
+
+    alkuet2 := CAST(alkuet * ST_Length(otie_.geom) AS INTEGER);
+    loppuet2 := CAST(loppuet * ST_Length(otie_.geom) AS INTEGER);
+    
+    tmp := etaisyyden_osa(tie_.tie, alkuet2);
+    tmp2 := etaisyyden_osa(tie_.tie, loppuet2);
+    
+    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),kaanna_viiva(ST_Line_Substring(otie_.geom, loppuet, alkuet)));
+  END IF;  
+END;
+$$ LANGUAGE plpgsql;
+
+-- wrapperi rajapinnan pitämiseksi samana
+CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
+  tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
+  RETURNS SETOF geometry
+AS $$
+BEGIN
+  RETURN NEXT tr_osoitteelle_viiva2(tie_, aosa_, aet_, losa_, let_);
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteelle(
   piste geometry, treshold INTEGER)
-  RETURNS tr_osoite
-AS $$
+  RETURNS tr_osoite AS $$
 DECLARE
-  alkuosa RECORD;
-  alkuet NUMERIC;
-  palojenpit NUMERIC;
+  tie_ RECORD;
+  tmp RECORD;
+  alkuet FLOAT;
+  alkuet2 INTEGER;
 BEGIN
-  SELECT osoite3, tie, ajorata, osa, tiepiiri, geom
-  FROM tieverkko_paloina
-  WHERE ST_DWithin(geom, piste, treshold)
-  ORDER BY ST_Length(ST_ShortestLine(geom, piste)) ASC
-  LIMIT 1
-  INTO alkuosa;
+  SELECT tie, geom FROM tieverkko_geom
+    WHERE ST_DWithin(geom, piste, treshold)
+    ORDER BY ST_Length(ST_ShortestLine(piste, geom))
+    LIMIT 1
+    INTO tie_;
 
-  IF alkuosa IS NULL THEN
-    RETURN NULL;
+  IF tie_.tie IS NULL THEN
+     RETURN NULL;
   END IF;
 
-  SELECT ST_Length(ST_Line_Substring(alkuosa.geom, 0, ST_LineLocatePoint(alkuosa.geom, piste))) INTO alkuet;
-
-  RETURN ROW(alkuosa.tie, alkuosa.osa, alkuet::INTEGER, 0, 0, ST_ClosestPoint(piste, alkuosa.geom)::geometry);
+  alkuet := projektion_etaisyys(piste, tie_.geom);
+  alkuet2 := CAST(alkuet * ST_Length(tie_.geom) AS INTEGER);
+  tmp := etaisyyden_osa(tie_.tie, alkuet2);
+  RETURN ROW(tie_.tie, tmp.osa, CAST(alkuet2-tmp.p AS INTEGER), 0, 0, ST_ClosestPoint(piste, tie_.geom)::geometry);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -59,126 +244,6 @@ BEGIN
   ELSE
     RETURN osoite;
   END IF;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille(
-  alkupiste geometry, loppupiste geometry, treshold INTEGER)
-  RETURNS tr_osoite
-AS $$
-DECLARE
-  reitti geometry;
-  apiste geometry;
-  bpiste geometry;
-  aosa INTEGER;
-  bosa INTEGER;
-  ajoratavalinta INTEGER;
-  tienosavali RECORD;
-  ap NUMERIC;
-  bp NUMERIC;
-  alkuet INTEGER;
-  loppuet INTEGER;
-  itmp INTEGER;
-  tmp geometry;
-  atmp float8;
-  btmp float8;
-BEGIN
-  -- valitaan se tie ja tienosaväli jota lähellä alku- ja loppupisteet ovat yhdessä lähimpänä
-  SELECT a.tie,
-    a.osa AS aosa,
-    b.osa AS bosa,
-    a.ajorata AS arata,
-    b.ajorata AS brata,
-    a.tr_pituus AS apituus,
-    b.tr_pituus AS bpituus
-  FROM tieverkko_paloina a,
-    tieverkko_paloina b
-  WHERE ST_DWithin(a.geom, alkupiste, treshold)
-        AND ST_DWithin(b.geom, loppupiste, treshold)
-        AND a.tie=b.tie
-  ORDER BY ST_Length(ST_ShortestLine(alkupiste, a.geom)) +
-           ST_Length(ST_ShortestLine(loppupiste, b.geom))
-  LIMIT 1
-  INTO tienosavali;
-
-  alkuet := tr_osan_etaisyys(alkupiste, tienosavali.tie, treshold);
-  loppuet := tr_osan_etaisyys(loppupiste, tienosavali.tie, treshold);
-
-  IF tienosavali.aosa > tienosavali.bosa THEN
-    aosa := tienosavali.bosa;
-    bosa := tienosavali.aosa;
-    apiste := loppupiste;
-    bpiste := alkupiste;
-    ajoratavalinta := 2;
-  ELSEIF tienosavali.aosa = tienosavali.bosa THEN
-    aosa := tienosavali.aosa;
-    bosa := tienosavali.bosa;
-    IF tienosavali.arata=tienosavali.brata AND alkuet>loppuet THEN
-      ajoratavalinta := 2;
-    ELSEIF tienosavali.arata=tienosavali.brata AND alkuet<=loppuet THEN
-      ajoratavalinta := 1;
-    ELSEIF tienosavali.arata!=tienosavali.brata AND alkuet>loppuet THEN
-      ajoratavalinta := 1;
-    ELSEIF tienosavali.arata!=tienosavali.brata AND alkuet<=loppuet THEN
-      ajoratavalinta := 2;
-    END IF;
-  ELSE
-    aosa := tienosavali.aosa;
-    bosa := tienosavali.bosa;
-    ajoratavalinta := 1;
-    apiste := alkupiste;
-    bpiste := loppupiste;
-  END IF;
-
-  IF aosa=bosa THEN
-    SELECT ST_LineMerge(ST_Union(geom))
-    FROM tieverkko_paloina tv
-    WHERE tv.tie = tienosavali.tie
-          AND tv.osa = aosa
-          AND (tv.ajorata = ajoratavalinta OR tv.ajorata=0)
-    INTO reitti;
-
-    -- jos multilinestring, interpoloidaan eri tavalla
-    IF ST_NumGeometries(reitti)>1 THEN
-      atmp := multiline_project_point(reitti, alkupiste);
-      btmp := multiline_project_point(reitti, loppupiste);
-      SELECT ST_Line_Substring(reitti, LEAST(atmp, btmp),
-                               GREATEST(atmp, btmp)) INTO reitti;
-    ELSE
-      SELECT ST_Line_Substring(reitti, LEAST(ST_LineLocatePoint(reitti, alkupiste), ST_LineLocatePoint(reitti, loppupiste)),
-                               GREATEST(ST_LineLocatePoint(reitti, alkupiste),ST_LineLocatePoint(reitti, loppupiste))) INTO reitti;
-    END IF;
-
-  ELSE
-    -- kootaan osien geometriat yhdeksi viivaksi
-    SELECT ST_LineMerge(ST_Union((CASE
-                                  WHEN tv.osa=aosa
-                                    THEN ST_Line_Substring(tv.geom, ST_LineLocatePoint(tv.geom, apiste), 1)
-                                  WHEN tv.osa=bosa
-                                    THEN ST_Line_Substring(tv.geom, 0, ST_LineLocatePoint(tv.geom, bpiste))
-                                  ELSE tv.geom
-                                  END)
-                                 ORDER BY tv.osa))
-    FROM tieverkko_paloina tv
-    WHERE tv.tie=tienosavali.tie
-          AND tv.osa>=aosa
-          AND tv.osa<=bosa
-          AND (tv.ajorata = ajoratavalinta OR tv.ajorata = 0)
-    INTO reitti;
-  END IF;
-
-  IF reitti IS NULL THEN
-    RETURN NULL;
-  END IF;
-
-  RETURN ROW(tienosavali.tie,
-         tienosavali.aosa,
-         alkuet,
-         tienosavali.bosa,
-         loppuet,
-         CASE WHEN ajoratavalinta=1 THEN reitti
-         ELSE ST_Reverse(reitti)
-         END);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -225,78 +290,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- kuvaus: tierekisteriosoittelle_viiva, kaistan päättely
-CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
-  tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
-  RETURNS SETOF geometry
-AS $$
-DECLARE
-  ajoratavalinta INTEGER;
-  aos INTEGER;
-  los INTEGER;
-  aet INTEGER;
-  let INTEGER;
-BEGIN
-  IF aosa_ = losa_ THEN
-    IF aet_ < let_ THEN
-      ajoratavalinta := 1;
-      aet := aet_;
-      let := let_;
-    ELSE
-      ajoratavalinta := 2;
-      aet := let_;
-      let := aet_;
-    END IF;
-    IF ajoratavalinta=2 THEN
-      RETURN QUERY SELECT ST_Reverse(ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT))
-                   FROM tieverkko_paloina
-                   WHERE tie=tie_
-                         AND osa=aosa_
-                         AND (ajorata=0 OR ajorata=ajoratavalinta);
-    ELSE
-      RETURN QUERY SELECT ST_Line_Substring(geom, aet/tr_pituus::FLOAT, let/tr_pituus::FLOAT)
-                   FROM tieverkko_paloina
-                   WHERE tie=tie_
-                         AND osa=aosa_
-                         AND (ajorata=0 OR ajorata=ajoratavalinta);
-    END IF;
-  ELSE
-    IF aosa_ < losa_ THEN
-      ajoratavalinta := 1;
-      aos := aosa_;
-      los := losa_;
-      aet := aet_;
-      let := let_;
-    ELSE
-      ajoratavalinta := 2;
-      aos := losa_;
-      los := aosa_;
-      aet := let_;
-      let := aet_;
-    END IF;
-    IF ajoratavalinta=2 THEN
-      RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aos THEN ST_Reverse(ST_Line_Substring(geom, LEAST(1, aet/tr_pituus::FLOAT), 1))
-                                                            WHEN osa=los THEN ST_Reverse(ST_Line_Substring(geom, 0, LEAST(1,let/tr_pituus::FLOAT)))
-                                                            ELSE ST_Reverse(geom) END) ORDER BY osa DESC)) AS geom
-                              FROM tieverkko_paloina
-                              WHERE tie = tie_
-                                    AND osa >= aos
-                                    AND osa <= los
-                                    AND (ajorata=0 OR ajorata=ajoratavalinta)
-      )
-      SELECT ST_Reverse(geom) FROM q;
-    ELSE
-      RETURN QUERY WITH q as (SELECT ST_LineMerge(ST_Union((CASE WHEN osa=aos THEN ST_Line_Substring(geom, LEAST(1, aet/tr_pituus::FLOAT), 1)
-                                                            WHEN osa=los THEN ST_Line_Substring(geom, 0, LEAST(1,let/tr_pituus::FLOAT))
-                                                            ELSE geom END) ORDER BY osa)) AS geom
-                              FROM tieverkko_paloina
-                              WHERE tie = tie_
-                                    AND osa >= aos
-                                    AND osa <= los
-                                    AND (ajorata=0 OR ajorata=ajoratavalinta)
-      )
-      SELECT geom FROM q;
-    END IF;
-  END IF;
-END;
-$$ LANGUAGE plpgsql;
+SELECT paivita_tr_taulut();

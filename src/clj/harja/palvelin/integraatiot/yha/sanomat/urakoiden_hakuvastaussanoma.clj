@@ -18,7 +18,7 @@
   (z/xml1-> data :virhe z/text))
 
 (defn lue-sanoma [viesti]
-  (when (not (xml/validoi +xsd-polku+ "yha.xsd" viesti))
+  (when (not (xml/validi-xml? +xsd-polku+ "yha.xsd" viesti))
     (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman yha.xsd mukaan validi.")))
   (let [data (xml/lue viesti)
         urakat (lue-urakat data)

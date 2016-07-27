@@ -18,7 +18,8 @@
             [clj-time.core :as t]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.transit :as transit]))
+            [harja.transit :as transit]
+            [clojure.core.async :as async]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -501,7 +502,7 @@
 (defn hae-urakan-kokonaishintaisten-toteumien-reitit [db user
                                                       {:keys [urakka-id sopimus-id toteuma-id
                                                               alkupvm loppupvm toimenpidekoodi]}]
-  (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+
   (let [reitit (into []
                      (comp
                        (harja.geo/muunna-pg-tulokset :reitti)
@@ -526,25 +527,6 @@
                             reitit
                             {:reittipiste :reittipisteet
                              :tehtava     :tehtavat}
-                            :toteumaid)]
-    kasitellyt-reitit))
-
-(defn hae-urakan-yksikkohintaisten-toteumien-reitit [db user {:keys [urakka-id sopimus-id alkupvm loppupvm toimenpide tehtava]}]
-  (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot user urakka-id)
-  (let [reitit (into []
-                     (comp
-                       (harja.geo/muunna-pg-tulokset :reitti)
-                       (map konv/alaviiva->rakenne))
-                     (q/hae-yksikkohintaisten-toiden-reitit db
-                                                                   urakka-id
-                                                                   sopimus-id
-                                                                   (konv/sql-date alkupvm)
-                                                                   (konv/sql-date loppupvm)
-                                                                   toimenpide
-                                                                   tehtava))
-        kasitellyt-reitit (konv/sarakkeet-vektoriin
-                            reitit
-                            {:tehtava :tehtavat}
                             :toteumaid)]
     kasitellyt-reitit))
 
@@ -587,11 +569,37 @@
             (map konv/alaviiva->rakenne))
           (q/hae-toteuman-reitti-ja-tr-osoite db id))))
 
+(defn- hae-toteumareitit-kartalle [db user extent p kysely-fn]
+  (let [[x1 y1 x2 y2] extent
+        alue {:xmin x1 :ymin y1
+              :xmax x2 :ymax y2}
+        toleranssi (geo/karkeistustoleranssi alue)
+        kartalle-xf (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf nil :id)
+
+        ch (async/chan 32 (comp
+                           (map konv/alaviiva->rakenne)
+                           (map #(assoc % :tyyppi-kartalla :toteuma
+                                        :tehtavat [(:tehtava %)]))
+                           kartalle-xf))]
+    (async/thread
+      (try (kysely-fn db ch
+                      (merge p
+                             alue
+                             {:toleranssi toleranssi}))
+           (catch Throwable t
+             (log/warn t "Toteumareittien haku epäonnistui"))))
+    ch))
+
 (defn- hae-kokonaishintainen-toteuma-kartalle [db user {:keys [extent parametrit]}]
-  (let [p (some-> parametrit (get "kht") transit/lue-transit-string)]
-    (esitettavat-asiat/kartalla-esitettavaan-muotoon
-     (map #(assoc % :tyyppi-kartalla :toteuma)
-          (hae-urakan-kokonaishintaisten-toteumien-reitit db user p)))))
+  (let [{urakka-id :urakka-id :as p} (some-> parametrit (get "kht") transit/lue-transit-string)
+        _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)]
+    (hae-toteumareitit-kartalle db user extent p q/hae-kokonaishintaisten-toiden-reitit)))
+
+(defn- hae-yksikkohintaiset-toteumat-kartalle [db user {:keys [extent parametrit]}]
+  (let [{urakka-id :urakka-id :as p} (some-> parametrit (get "yht") transit/lue-transit-string)
+        _ (oikeudet/vaadi-lukuoikeus  oikeudet/urakat-toteumat-yksikkohintaisettyot
+                                     user urakka-id)]
+    (hae-toteumareitit-kartalle db user extent p q/hae-yksikkohintaisten-toiden-reitit)))
 
 (defrecord Toteumat []
   component/Lifecycle
@@ -603,7 +611,10 @@
     (when karttakuvat
       (karttakuvat/rekisteroi-karttakuvan-lahde!
        karttakuvat :kokonaishintainen-toteuma
-       (partial #'hae-kokonaishintainen-toteuma-kartalle db)))
+       (partial #'hae-kokonaishintainen-toteuma-kartalle db))
+      (karttakuvat/rekisteroi-karttakuvan-lahde!
+       karttakuvat :yksikkohintaiset-toteumat
+       (partial #'hae-yksikkohintaiset-toteumat-kartalle db)))
 
     (julkaise-palvelut
      http
@@ -658,12 +669,6 @@
      :hae-kokonaishintaisen-toteuman-tiedot
      (fn [user {:keys [urakka-id pvm toimenpidekoodi]}]
        (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi))
-     :urakan-kokonaishintaisten-toteumien-reitit
-     (fn [user tiedot]
-       (hae-urakan-kokonaishintaisten-toteumien-reitit db user tiedot))
-     :urakan-yksikkohintaisten-toteumien-reitit
-     (fn [user tiedot]
-       (hae-urakan-yksikkohintaisten-toteumien-reitit db user tiedot))
      :urakan-varustetoteumat
      (fn [user tiedot]
        (hae-urakan-varustetoteumat db user tiedot))
@@ -692,8 +697,6 @@
       :tallenna-toteuma-ja-toteumamateriaalit
       :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
       :hae-kokonaishintaisen-toteuman-tiedot
-      :urakan-kokonaishintaisten-toteumien-reitit
-      :urakan-yksikkohintaisten-toteumien-reitit
       :urakan-varustetoteumat
       :hae-toteuman-reitti-ja-tr-osoite)
     this))

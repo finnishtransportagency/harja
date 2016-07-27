@@ -61,18 +61,13 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    nil nil
    (map (lisaa-karttatyyppi-fn taso))))
 
-(defn- toimenpiteen-selite [{:keys [toimenpide toimenpidekoodi]}]
-  (let [[viivat _] (esitettavat-asiat/tehtavan-viivat-ja-nuolitiedosto
-                    [toimenpide] false)]
-    {:nimi toimenpide :teksti toimenpide
-     :vari (esitettavat-asiat/viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
   (log "toteumat taso tehdään!" (pr-str toimenpiteet))
   (openlayers/luo-kuvataso
    :tilannekuva
    (into #{}
-         (map toimenpiteen-selite)
+         (map (comp esitettavat-asiat/toimenpiteen-selite :toimenpide))
          toimenpiteet)
    "tk" @url-hakuparametrit))
 

@@ -29,15 +29,15 @@
                        [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
-                       (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                  {:sahkoposti-sisaan-jono         "email-to-harja"
-                                                   :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                   :sahkoposti-ulos-jono           "harja-to-email"
-                                                   :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                        (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                   {:sahkoposti-sisaan-jono "email-to-harja"
+                                                    :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                    :sahkoposti-ulos-jono "harja-to-email"
+                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
-                    {:url            "http://localhost:28080/sendsms"
+                    {:url "http://localhost:28080/sendsms"
                      :kayttajatunnus "solita-2" :salasana "ne8aCrasesev"})
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
@@ -75,9 +75,13 @@
   (poista-ilmoitus))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
+  "Tarkistaa että ilmoituksen saapuessa data on käsitelty oikein, että ilmoituksia API:n kautta kuuntelevat tahot saavat
+   viestit ja että kuittaukset on välitetty oikein Tieliikennekeskukseen"
   (let [viestit (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
                     #(swap! viestit conj (.getText %)))
+    
+    ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
     (let [ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"]
                                                        kayttaja portti))]
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
@@ -86,7 +90,7 @@
 
       (let [xml (first @viestit)
             data (xml/lue xml)]
-        (is (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
+        (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
         (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
             "Kuittauksen on tehty oikeaan viestiin.")
         (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
@@ -97,6 +101,7 @@
 
       (let [{:keys [status body]} @ilmoitushaku]
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
+        ;; todo: tarkista miksi ei palaudu yhtään ilmoitusta API-kutsun responsessa
         (is (= (-> (cheshire/decode body)
                    (get "ilmoitukset")
                    count) 1) "Ilmoituksia on vastauksessa yksi")))
@@ -113,7 +118,7 @@
 
     (let [xml (first @viestit)
           data (xml/lue xml)]
-      (is (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
+      (is (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml) "Kuittaus on validia XML:ää.")
       (is (= "10a24e56-d7d4-4b23-9776-2a5a12f254af" (z/xml1-> data :viestiId z/text))
           "Kuittauksen on tehty oikeaan viestiin.")
       (is (= "virhe" (z/xml1-> data :kuittaustyyppi z/text)) "Kuittauksen tyyppi on oikea.")
@@ -122,3 +127,23 @@
 
     (is (= 0 (count (hae-ilmoitus))) "Tietokannasta ei löydy ilmoitusta T-LOIK:n id:llä")
     (poista-ilmoitus)))
+
+(deftest ilmoittaja-kuuluu-urakoitsijan-organisaatioon-merkitaan-vastaanotetuksi
+  (try
+    (with-fake-http []
+                    (let [kuittausviestit (atom [])]
+                      (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+                                      #(swap! kuittausviestit conj (.getText %)))
+
+                      (sonja/laheta (:sonja jarjestelma)
+                                    +tloik-ilmoitusviestijono+
+                                    +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)
+
+                      (odota-ehdon-tayttymista #(= 1 (count @kuittausviestit)) "Kuittaus ilmoitukseen vastaanotettu." 10000)
+
+                      (is (= 1 (count (hae-ilmoitustoimenpide))) "Viestille löytyy ilmoitustoimenpide")
+                      (is (= (ffirst (hae-ilmoitustoimenpide)) "vastaanotto")) "Viesti on käsitelty ja merkitty vastaanotetuksi"
+
+                      (poista-ilmoitus)))
+    (catch IllegalArgumentException e
+      (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))

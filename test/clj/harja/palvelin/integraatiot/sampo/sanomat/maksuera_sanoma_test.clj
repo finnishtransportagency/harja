@@ -34,7 +34,7 @@
 (deftest tarkista-maksueran-validius
   (let [maksuera (html (maksuera_sanoma/muodosta +maksuera+))
         xsd "nikuxog_product.xsd"]
-    (is (xml/validoi +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
+    (is (xml/validi-xml? +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
 (defn kuluvuosi []
   (str "kulu" (pvm/vuosi (pvm/nyt))))
