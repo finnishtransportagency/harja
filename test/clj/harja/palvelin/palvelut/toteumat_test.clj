@@ -243,4 +243,4 @@
                                          :alkupvm    alkupvm
                                          :loppupvm   loppupvm})]
     (is (>= (count varustetoteumat) 1))
-    (is (contains? (first varustetoteumat) :reitti))))
+    (is (contains? (first varustetoteumat) :sijainti))))

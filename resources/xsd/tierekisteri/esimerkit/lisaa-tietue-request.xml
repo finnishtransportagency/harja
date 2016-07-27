@@ -7,7 +7,7 @@
         <yTunnus>1234567-8</yTunnus>
     </lisaaja>
     <tietue>
-        <tunniste>HARJ951547ZK</tunniste>
+        <tunniste>HARJ951547</tunniste>
         <alkupvm>2015-05-22</alkupvm>
         <sijainti>
             <tie>
@@ -21,7 +21,7 @@
         </sijainti>
         <tietolaji>
             <tietolajitunniste>tl505</tietolajitunniste>
-            <arvot>HARJ951547ZK        2                           HARJ951547ZK          01  </arvot>
+            <arvot>HARJ951547          2                           HARJ951547            01  </arvot>
         </tietolaji>
     </tietue>
     <lisatty>2015-05-26+03:00</lisatty>
