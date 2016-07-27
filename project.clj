@@ -98,11 +98,6 @@
                  ;; JSON -validointikirjastot
                  [webjure/json-schema "0.6.1"]
 
-                 [org.clojure/test.check "0.9.0"]
-
-                 [prismatic/dommy "1.1.0"]
-
-
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]
 
@@ -128,16 +123,10 @@
                  [yleisradio/new-reliquary "1.0.0"]
                  ]
 
-  :dev-dependencies [
-                     [walmartlabs/system-viz "0.1.0"]
 
-                     ;; Testaus
-                     [prismatic/dommy "1.1.0"]
-                     [org.clojure/test.check "0.9.0"]
-                     ]
-
-
-  :profiles {:dev  {:dependencies []
+  :profiles {:dev  {:dependencies [[prismatic/dommy "1.1.0"]
+                                   [cljs-react-test "0.1.4-SNAPSHOT"]
+                                   [org.clojure/test.check "0.9.0"]]
                     :plugins      [[com.solita/lein-test-refresh-gui "0.10.3"]
                                    [test2junit "1.1.0"]]
                     :test2junit-run-ant ~(not jenkinsissa?)}
