@@ -19,7 +19,7 @@
 (defn muodosta-kutsu [alueurakkanumero tietolajitunniste tilannepvm]
   (let [sisalto (muodosta-xml-sisalto alueurakkanumero tietolajitunniste tilannepvm)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "haeUrakanTietueet.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "haeUrakanTietueet.xsd" xml)
       xml
       (do
         (log/error "Urakan tietueiden hakukutsua ei voida lähettää. Kutsu XML ei ole validi.")
