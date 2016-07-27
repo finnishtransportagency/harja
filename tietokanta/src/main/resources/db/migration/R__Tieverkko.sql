@@ -290,3 +290,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+SELECT paivita_tr_taulut();
