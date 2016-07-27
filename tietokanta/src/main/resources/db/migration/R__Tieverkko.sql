@@ -135,7 +135,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP FUNCTION yrita_tierekisteriosoite_pisteille(geometry,geometry,integer);
+DROP FUNCTION IF EXISTS yrita_tierekisteriosoite_pisteille(geometry,geometry,integer);
 
 CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille(apiste geometry, bpiste geometry, treshold INTEGER) RETURNS tr_osoite AS $$
 DECLARE
