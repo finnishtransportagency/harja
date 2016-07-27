@@ -25,7 +25,7 @@
   (= (:kayttaja lukko) (:id @istunto/kayttaja)))
 
 (defn nakyma-lukittu? [lukko]
-  (if (nil? lukko)
+  (if (or (nil? lukko) (= :ei-lukittu lukko))
     (do
       (log "[LUKKO] Nykyistä lukkoa ei ole. Näkymä ei ole lukittu.")
       false)
