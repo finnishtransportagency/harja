@@ -280,7 +280,7 @@
                                       (->> %
                                            seq
                                            (sort-by first)
-                                           (map second)))))
+                                           (mapv second)))))
                 virheet (if-not ulkoinen-tila?
                           virheet
                           (:virheet opts))
@@ -288,6 +288,7 @@
             [:div
              [grid/muokkaus-grid
               {:ohjaus g
+               :id "yllapitokohdeosat"
                :virheet virheet
                :rivinumerot? rivinumerot?
                :voi-muokata? voi-muokata?
@@ -328,7 +329,8 @@
                :voi-poistaa? (constantly false)
                :tunniste hash
                :muokkaa-footer (fn [g]
-                                 [:span "Tierekisterikohteiden pituus yhteensä: "
+                                 [:span#kohdeosien-pituus-yht
+                                  "Tierekisterikohteiden pituus yhteensä: "
                                   (fmt/pituus (reduce + 0 (keep pituus (vals @grid-data))))])}
               (into []
                     (remove
