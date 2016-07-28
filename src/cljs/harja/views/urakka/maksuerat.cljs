@@ -66,7 +66,7 @@
             maksuerat))))
 
 (def maksuerarivit (reaction-writable (ryhmittele-maksuerat @maksuerat/maksuerat)))
-(def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
+(def kuittausta-odottavat-maksuerat (reaction-writable (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
 
 (def pollataan-kantaa? (atom false))
 

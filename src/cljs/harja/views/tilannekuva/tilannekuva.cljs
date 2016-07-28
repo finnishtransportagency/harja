@@ -20,7 +20,8 @@
             [harja.domain.tilannekuva :as tk]
             [harja.ui.modal :as modal]
             [harja.tiedot.navigaatio :as nav])
-  (:require-macros [reagent.ratom :refer [reaction]]))
+  (:require-macros [reagent.ratom :refer [reaction]]
+                   [harja.atom :refer [reaction-writable]]))
 
 (def hallintapaneeli-max-korkeus (atom nil))
 
@@ -90,7 +91,7 @@
    itse omaa auki/kiinni-tilaansa."
   [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
   (let [oma-auki-tila (atom false)
-        ryhmanjohtaja-tila-atom (reaction
+        ryhmanjohtaja-tila-atom (reaction-writable
                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
                                     :valittu
                                     (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
@@ -152,13 +153,14 @@
         etela-pohjanmaa "Etelä-Pohjanmaa"
         pohjois-pohjanmaa "Pohjois-Pohjanmaa ja Kainuu"
         lappi "Lappi"
-        onko-alueita? (reaction
+        onko-alueita? (reaction-writable
                         (some
                          (fn [[_ suodattimet]]
                            (not (empty? suodattimet)))
                          (:alueet @tiedot/suodattimet)))
-        ensimmainen-haku-kaynnissa? (reaction (and (empty? (:alueet @tiedot/suodattimet))
-                                                   (nil? @tiedot/uudet-aluesuodattimet)))]
+        ensimmainen-haku-kaynnissa? (reaction-writable
+                                     (and (empty? (:alueet @tiedot/suodattimet))
+                                          (nil? @tiedot/uudet-aluesuodattimet)))]
     (komp/luo
       (fn []
         [:div#tk-aluevalikko

@@ -27,7 +27,7 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.tiedot.hallintayksikot :as hy]
             [cljs-time.core :as t])
-  (:require-macros [harja.atom :refer [reaction<!]]
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -104,9 +104,10 @@
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
 
-(defonce valittu-hoitokausi (reaction (if @hoitourakassa?
-                                        @u/valittu-hoitokausi
-                                        (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+(defonce valittu-hoitokausi (reaction-writable
+                             (if @hoitourakassa?
+                               @u/valittu-hoitokausi
+                               (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
 
 (def valittu-vuosi (atom nil))
 
@@ -128,7 +129,7 @@
                           :default
                           []))))))
 
-(defonce valittu-kuukausi (reaction @u/valittu-hoitokauden-kuukausi))
+(defonce valittu-kuukausi (reaction-writable @u/valittu-hoitokauden-kuukausi))
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
