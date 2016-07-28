@@ -87,6 +87,38 @@
                                   AND nimi = 'Päällystyksen yksikköhintaiset työt'"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
+(deftest tarkista-tiemerkintaurakan-toimenpideinstanssin-luonto
+  (let [viestit (atom [])]
+    (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
+    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-tiemerkintasurakka-sanoma+)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+
+    (tarkista-vastaus (first @viestit))
+
+    (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
+    (let [urakan-tpi (ffirst (q "SELECT id
+                                  FROM toimenpideinstanssi
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
+                                  AND nimi = 'Tiemerkinnän yksikköhintaiset työt'"))]
+      (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
+
+(deftest tarkista-valaistusurakan-toimenpideinstanssin-luonto
+  (let [viestit (atom [])]
+    (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
+    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-valaistusurakka-sanoma+)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+
+    (tarkista-vastaus (first @viestit))
+
+    (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
+    (let [urakan-tpi (ffirst (q "SELECT id
+                                  FROM toimenpideinstanssi
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
+                                  AND nimi = 'Valaistuksen yksikköhintaiset työt'"))]
+      (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
+
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
     [])
