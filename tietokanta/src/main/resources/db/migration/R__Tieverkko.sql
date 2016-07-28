@@ -227,7 +227,7 @@ BEGIN
   alkuet := projektion_etaisyys(piste, tie_.geom);
   alkuet2 := CAST(alkuet * ST_Length(tie_.geom) AS INTEGER);
   tmp := etaisyyden_osa(tie_.tie, alkuet2);
-  RETURN ROW(tie_.tie, tmp.osa, CAST(alkuet2-tmp.p AS INTEGER), 0, 0, ST_ClosestPoint(piste, tie_.geom)::geometry);
+  RETURN ROW(tie_.tie, tmp.osa, CAST(alkuet2-tmp.p AS INTEGER), 0, 0, ST_ClosestPoint(tie_.geom, piste)::geometry);
 END;
 $$ LANGUAGE plpgsql;
 
