@@ -76,3 +76,18 @@
     (is (= (count sillat) 5))
     (is (= (count sillat-paitsi-joutsensilta) 4))
     (is (every? #(some? (:tarkastusaika %)) sillat-paitsi-joutsensilta))))
+
+(deftest oulun-urakan-2005-2012-tarkastukset
+  (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
+                                     :silta-id (testi/hae-oulujoen-sillan-id)})]
+    (is (= (count tarkastukset) 2))
+    (is (every? #(map? (:kohteet %)) tarkastukset))))
+
+(deftest oulun-urakan-2005-2014-tarkastukset
+  ;; Tässä uudemmassa urakassa halutaan nähdä myös sillan aiemmat tarkastukset
+  (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
+                                          {:urakka-id (testi/hae-oulun-alueurakan-2014-2019-id)
+                                           :silta-id (testi/hae-oulujoen-sillan-id)})]
+    (is (= (count tarkastukset) 2))
+    (is (every? #(map? (:kohteet %)) tarkastukset))))

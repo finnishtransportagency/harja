@@ -221,6 +221,9 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
 
+(defn hae-oulujoen-sillan-id []
+  (ffirst (q (str "SELECT id FROM silta WHERE siltanimi = 'Oulujoen silta';"))))
+
 (defn hae-oulun-alueurakan-2005-2012-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
