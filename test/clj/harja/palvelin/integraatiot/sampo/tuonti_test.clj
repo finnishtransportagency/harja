@@ -30,7 +30,7 @@
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testiurakka-sanoma+)
+    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-hoitourakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (let [xml (first @viestit)
@@ -64,10 +64,9 @@
 
 (deftest tarkista-paallystysurakan-toimenpideinstanssin-luonto
   (let [viestit (atom [])]
-    ;; TODO Testiä varten asetetaan testihankkeelle uudet sampo-tyypit
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testiurakka-sanoma+)
+    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-paallystysurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
     (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" (first @viestit)) "Kuittaus on validia XML:ää.")
