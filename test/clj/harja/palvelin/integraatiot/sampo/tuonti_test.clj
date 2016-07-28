@@ -24,7 +24,27 @@
              (->Sampo +lahetysjono-sisaan+ +kuittausjono-sisaan+ +lahetysjono-ulos+ +kuittausjono-ulos+ nil)
              [:db :sonja :integraatioloki])))
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+
+(defn- tarkista-vastaus [viesti]
+  (let [xml viesti
+        data (xml/lue xml)]
+    (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
+
+    (is (= "UrakkaMessageId" (first (z/xml-> data
+                                             (fn [kuittaus]
+                                               (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
+        "Kuittaus on tehty oikeaan viestiin.")
+
+    (is (= "Project" (first (z/xml-> data
+                                     (fn [kuittaus]
+                                       (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
+        "Kuittauksen tyyppi on Project eli urakka.")
+
+    (is (= "NA" (first (z/xml-> data
+                                (fn [kuittaus]
+                                  (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
+        "Virheitä ei tapahtunut käsittelyssä.")))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
   (let [viestit (atom [])]
@@ -33,24 +53,7 @@
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-hoitourakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
-    (let [xml (first @viestit)
-          data (xml/lue xml)]
-      (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
-
-      (is (= "UrakkaMessageId" (first (z/xml-> data
-                                               (fn [kuittaus]
-                                                 (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
-          "Kuittaus on tehty oikeaan viestiin.")
-
-      (is (= "Project" (first (z/xml-> data
-                                       (fn [kuittaus]
-                                         (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
-          "Kuittauksen tyyppi on Project eli urakka.")
-
-      (is (= "NA" (first (z/xml-> data
-                                  (fn [kuittaus]
-                                    (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
-          "Virheitä ei tapahtunut käsittelyssä.")))
+    (tarkista-vastaus (first @viestit)))
 
   (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
 
@@ -69,7 +72,8 @@
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-paallystysurakka-sanoma+)
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
-    (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" (first @viestit)) "Kuittaus on validia XML:ää.")
+    (tarkista-vastaus (first @viestit))
+
     (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
