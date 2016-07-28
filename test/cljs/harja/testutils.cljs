@@ -4,7 +4,8 @@
             [dommy.core :as dommy]
             [reagent.core :as r]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<! >!] :as async])
+            [cljs.core.async :refer [<! >!] :as async]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def *test-container* (atom nil))
@@ -15,6 +16,22 @@
                (reset! *test-container* nil))})
 
 (def fake-palvelukutsut (atom nil))
+
+(def kayttaja-jvh {:organisaation-urakat #{} :sahkoposti nil :kayttajanimi "jvh" :puhelin nil
+                   :etunimi "Max" :sukunimi "Power"
+                   :roolit #{"Jarjestelmavastaava"}
+                   :organisaatioroolit {}
+                   :id 2
+                   :organisaatio {:id 1 :nimi "Liikennevirasto" :tyyppi "liikennevirasto"}
+                   :urakkaroolit {}})
+
+(defn luo-kayttaja-fixture [kayttaja]
+  (let [kayttaja-ennen (atom nil)]
+    {:before #(do (reset! kayttaja-ennen @istunto/kayttaja)
+                  (reset! istunto/kayttaja kayttaja))
+     :after #(reset! istunto/kayttaja @kayttaja-ennen)}))
+
+(def jvh-fixture (luo-kayttaja-fixture kayttaja-jvh))
 
 (defn- suorita-fake-palvelukutsu [palvelu parametrit]
   (let [[kanava vastaus-fn] (get @fake-palvelukutsut palvelu)
