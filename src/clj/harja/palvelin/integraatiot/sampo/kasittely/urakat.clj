@@ -57,12 +57,13 @@
 
 (defn- luo-yllapidon-toimenpiteet [db {:keys [urakka-id urakkatyyppi alkupvm loppupvm ] :as urakan-tiedot}]
   (when (yllapito-urakka? urakkatyyppi)
+    (log/debug "Luodaan " urakkatyyppi "-urakalle toimenpideinstanssi")
     (let [yllapidon-3-tason-toimenpidekoodit {"paallystys" "PAAL_YKSHINT"
                                               "tiemerkinta" "TIEM_YKSHINT"
                                               "valaistus" "VALA_YKSHINT"}
           toimenpidekoodi (yllapidon-3-tason-toimenpidekoodit urakkatyyppi)]
       (when toimenpidekoodi
-        (toimenpiteet/luo-toimenpideinstanssi<! db alkupvm loppupvm toimenpidekoodi urakka-id)))))
+        (toimenpiteet/luo-yllapidon-toimenpideinstanssi<! db alkupvm loppupvm toimenpidekoodi urakka-id)))))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id
                                    yhteyshenkilo-sampo-id ely-hash]}]
