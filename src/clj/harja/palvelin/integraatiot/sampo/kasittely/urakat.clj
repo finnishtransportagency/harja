@@ -11,8 +11,7 @@
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
             [harja.kyselyt.organisaatiot :as organisaatiot]
             [harja.tyokalut.merkkijono :as merkkijono]
-            [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet]
-            [clj-time.coerce :as c])
+            [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi hallintayksikko]
