@@ -59,20 +59,25 @@
                                     :id))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-        paallystysilmoitus (-> paallystysilmoitus
-                               (assoc-in
-                                 [:ilmoitustiedot :osoitteet]
-                                 (mapv
-                                   (fn [kohdeosa]
-                                     ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
-                                     (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                            (some
-                                              (fn [paallystystoimenpide]
-                                                (when (= (:id kohdeosa) (:kohdeosa-id paallystystoimenpide))
-                                                  paallystystoimenpide))
-                                              (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))
-                                   (sort-by tierekisteri-domain/tiekohteiden-jarjestys (:kohdeosat paallystysilmoitus))))
-                               (dissoc :kohdeosat))
+        paallystysilmoitus
+        (-> paallystysilmoitus
+            (assoc-in [:ilmoitustiedot :osoitteet]
+                      (->> paallystysilmoitus
+                           :kohdeosat
+                           (map (fn [kohdeosa]
+                                  ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
+                                  (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
+                                         (some
+                                          (fn [paallystystoimenpide]
+                                            (when (= (:id kohdeosa)
+                                                     (:kohdeosa-id paallystystoimenpide))
+                                              paallystystoimenpide))
+                                          (get-in paallystysilmoitus
+                                                  [:ilmoitustiedot :osoitteet])))))
+                           (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
+                           vec))
+            (dissoc :kohdeosat))
+
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
                                                           :bitumi-indeksi
