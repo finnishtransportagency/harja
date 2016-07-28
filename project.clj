@@ -73,8 +73,6 @@
                  [cljs-ajax "0.5.3"]
                  [figwheel "0.5.3"]
 
-                 [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
-                 [cljsjs/react-with-addons "0.13.3-0"]
                  [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "15.2.1-1"]
                  [cljsjs/react-dom "15.2.1-1" :exclusions [cljsjs/react]]
