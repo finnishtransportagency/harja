@@ -138,6 +138,19 @@
     (log/debug "Uudet ilmoitustiedot: " (pr-str uudet-ilmoitustiedot))
     uudet-ilmoitustiedot))
 
+(defn- paattele-ilmoituksen-tila
+  [{:keys [tekninen-osa taloudellinen-osa valmispvm-kohde valmispvm-paallystys]}]
+  (cond
+    (and (= (:paatos tekninen-osa) :hyvaksytty)
+         (= (:paatos taloudellinen-osa) :hyvaksytty))
+    "lukittu"
+
+    (and valmispvm-kohde valmispvm-paallystys)
+    "valmis"
+
+    :default
+    "aloitettu"))
+
 (defn- paivita-paallystysilmoituksen-perustiedot
   [db user urakka-id sopimus-id
    {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
@@ -148,17 +161,16 @@
         urakka-id
         user)
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
-        (let [ilmoitustiedot (kasittele-paallystysilmoituksen-tierekisterikohteet db
-                                                                                  user
-                                                                                  urakka-id
-                                                                                  sopimus-id
-                                                                                  paallystyskohde-id
-                                                                                  ilmoitustiedot)
-              muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
-              tila (if (and (= (:paatos tekninen-osa) :hyvaksytty)
-                            (= (:paatos taloudellinen-osa) :hyvaksytty))
-                     "lukittu"
-                     (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu"))
+        (let [ilmoitustiedot (kasittele-paallystysilmoituksen-tierekisterikohteet
+                              db
+                              user
+                              urakka-id
+                              sopimus-id
+                              paallystyskohde-id
+                              ilmoitustiedot)
+              muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                           (:tyot ilmoitustiedot))
+              tila (paattele-ilmoituksen-tila paallystysilmoitus)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
           (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
           (log/debug "Asetetaan ilmoituksen tilaksi " tila)
@@ -216,45 +228,41 @@
 
 (defn- paivita-kasittelytiedot [db user urakka-id
                                 {:keys [paallystyskohde-id
-                                        paatos-tekninen-osa paatos-taloudellinen-osa perustelu-tekninen-osa
-                                        perustelu-taloudellinen-osa kasittelyaika-tekninen-osa
-                                        kasittelyaika-taloudellinen-osa] :as uusi-paallystysilmoitus}]
+                                        tekninen-osa taloudellinen-osa]}]
   (if (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                urakka-id user)
     (do
       (log/debug "Päivitetään päällystysilmoituksen käsittelytiedot")
       (q/paivita-paallystysilmoituksen-kasittelytiedot<!
         db
-        {:paatos_tekninen_osa (if paatos-tekninen-osa (name paatos-tekninen-osa))
-         :paatos_taloudellinen_osa (if paatos-taloudellinen-osa (name paatos-taloudellinen-osa))
-         :perustelu_tekninen_osa perustelu-tekninen-osa
-         :perustelu_taloudellinen_osa perustelu-taloudellinen-osa
-         :kasittelyaika_tekninen_osa (konv/sql-date kasittelyaika-tekninen-osa)
-         :kasittelyaika_taloudellinen_osa (konv/sql-date kasittelyaika-taloudellinen-osa)
+        {:paatos_tekninen_osa (some-> tekninen-osa :paatos name)
+         :paatos_taloudellinen_osa (some-> taloudellinen-osa :paatos name)
+         :perustelu_tekninen_osa (:perustelu tekninen-osa)
+         :perustelu_taloudellinen_osa (:perustelu taloudellinen-osa)
+         :kasittelyaika_tekninen_osa (konv/sql-date (:kasittelyaika tekninen-osa))
+         :kasittelyaika_taloudellinen_osa (konv/sql-date (:kasittelyaika taloudellinen-osa))
          :muokkaaja (:id user)
          :id paallystyskohde-id
          :urakka urakka-id}))
     (log/debug "Ei oikeutta päivittää päätöstä.")))
 
 (defn- paivita-asiatarkastus [db user urakka-id
-                              {:keys [paallystyskohde-id
-                                      asiatarkastus-tarkastusaika asiatarkastus-tarkastaja
-                                      asiatarkastus-tekninen-osa asiatarkastus-taloudellinen-osa
-                                      asiatarkastus-lisatiedot] :as uusi-paallystysilmoitus}]
-  (if (oikeudet/on-muu-oikeus? "asiatarkastus" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                               urakka-id user)
-    (do (log/debug "Päivitetään päällystysilmoituksen asiatarkastus")
-        (q/paivita-paallystysilmoituksen-asiatarkastus<!
-          db
-          {:asiatarkastus_pvm (konv/sql-date asiatarkastus-tarkastusaika)
-           :asiatarkastus_tarkastaja asiatarkastus-tarkastaja
-           :asiatarkastus_tekninen_osa asiatarkastus-tekninen-osa
-           :asiatarkastus_taloudellinen_osa asiatarkastus-taloudellinen-osa
-           :asiatarkastus_lisatiedot asiatarkastus-lisatiedot
-           :muokkaaja (:id user)
-           :id paallystyskohde-id
-           :urakka urakka-id}))
-    (log/debug "Ei oikeutta päivittää asiatarkastusta.")))
+                              {:keys [paallystyskohde-id asiatarkastus]}]
+  (let [{:keys [tarkastusaika tarkastaja tekninen-osa taloudellinen-osa lisatiedot]} asiatarkastus]
+    (if (oikeudet/on-muu-oikeus? "asiatarkastus" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                 urakka-id user)
+      (do (log/debug "Päivitetään päällystysilmoituksen asiatarkastus: " asiatarkastus)
+          (q/paivita-paallystysilmoituksen-asiatarkastus<!
+           db
+           {:asiatarkastus_pvm (konv/sql-date tarkastusaika)
+            :asiatarkastus_tarkastaja tarkastaja
+            :asiatarkastus_tekninen_osa tekninen-osa
+            :asiatarkastus_taloudellinen_osa taloudellinen-osa
+            :asiatarkastus_lisatiedot lisatiedot
+            :muokkaaja (:id user)
+            :id paallystyskohde-id
+            :urakka urakka-id}))
+      (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
 
 (defn- paivita-paallystysilmoitus [db user urakka-id sopimus-id
                                    uusi-paallystysilmoitus paallystysilmoitus-kannassa]

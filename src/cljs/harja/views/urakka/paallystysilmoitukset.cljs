@@ -71,53 +71,49 @@
 
 (defn asiatarkastus
   "Asiatarkastusosio konsultille."
-  [urakka lomakedata-nyt lukittu? muokkaa! valmis-asiatarkastukseen?]
+  [urakka {:keys [tila asiatarkastus] :as lomakedata-nyt}
+   lukittu? muokkaa!]
   (let [muokattava? (and
                      (oikeudet/on-muu-oikeus? "asiatarkastus"
                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                               (:id urakka))
-                     (not= (:tila lomakedata-nyt) :lukittu)
-                     (false? lukittu?))
-        asiatarkastus (atom/wrap-osa lomakedata-nyt #{:asiatarkastus-tarkastusaika
-                                                      :asiatarkastus-tarkastaja
-                                                      :asiatarkastus-tekninen-osa
-                                                      :asiatarkastus-taloudellinen-osa
-                                                      :asiatarkastus-lisatiedot} muokkaa!)]
+                     (not= tila :lukittu)
+                     (false? lukittu?))]
 
-    (when valmis-asiatarkastukseen?
-      [:div.pot-asiatarkastus
-       [:h3 "Asiatarkastus"]
+    [:div.pot-asiatarkastus
+     [:h3 "Asiatarkastus"]
 
-       [lomake/lomake
-        {:otsikko ""
-         :muokkaa! (fn [uusi]
-                     (reset! asiatarkastus uusi))
-         :voi-muokata? muokattava?}
-        [{:otsikko "Tarkastettu"
-          :nimi :asiatarkastus-tarkastusaika
-          :tyyppi :pvm
-          :validoi [[:ei-tyhja "Anna tarkastuspäivämäärä"]
-                    [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde lomakedata-nyt) "Tarkastus ei voi olla ennen valmistumista"]]}
-         {:otsikko "Tarkastaja"
-          :nimi :asiatarkastus-tarkastaja
-          :tyyppi :string
-          :validoi [[:ei-tyhja "Anna tarkastaja"]]
-          :pituus-max 1024}
-         {:teksti "Tekninen osa tarkastettu"
-          :nimi :asiatarkastus-tekninen-osa
-          :tyyppi :checkbox
-          :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
-         {:teksti "Taloudellinen osa tarkastettu"
-          :nimi :asiatarkastus-taloudellinen-osa
-          :tyyppi :checkbox
-          :fmt #(if % "Taloudellinen osa tarkastettu" "Taloudellista osaa ei tarkastettu")}
-         {:otsikko "Lisätiedot"
-          :nimi :asiatarkastus-lisatiedot
-          :tyyppi :text
-          :koko [60 3]
-          :pituus-max 4096
-          :palstoja 2}]
-        asiatarkastus]])))
+     [lomake/lomake
+      {:otsikko ""
+       :muokkaa! (fn [uusi]
+                   (muokkaa! assoc :asiatarkastus uusi))
+       :voi-muokata? muokattava?}
+      [{:otsikko "Tarkastettu"
+        :nimi :tarkastusaika
+        :tyyppi :pvm
+        :validoi [[:ei-tyhja "Anna tarkastuspäivämäärä"]
+                  [:pvm-toisen-pvmn-jalkeen (:valmispvm-kohde lomakedata-nyt)
+                   "Tarkastus ei voi olla ennen valmistumista"]]}
+       {:otsikko "Tarkastaja"
+        :nimi :tarkastaja
+        :tyyppi :string
+        :validoi [[:ei-tyhja "Anna tarkastaja"]]
+        :pituus-max 1024}
+       {:teksti "Tekninen osa tarkastettu"
+        :nimi :tekninen-osa
+        :tyyppi :checkbox
+        :fmt #(if % "Tekninen osa tarkastettu" "Teknistä osaa ei tarkastettu")}
+       {:teksti "Taloudellinen osa tarkastettu"
+        :nimi :taloudellinen-osa
+        :tyyppi :checkbox
+        :fmt #(if % "Taloudellinen osa tarkastettu" "Taloudellista osaa ei tarkastettu")}
+       {:otsikko "Lisätiedot"
+        :nimi :lisatiedot
+        :tyyppi :text
+        :koko [60 3]
+        :pituus-max 4096
+        :palstoja 2}]
+      asiatarkastus]]))
 
 (defn kasittelytiedot [otsikko muokattava? valmistumispvm osa muokkaa!]
   [lomake/lomake
@@ -283,7 +279,8 @@
                                                                         #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
                            (:kommentit lomakedata-nyt)])})]
        lomakedata-nyt]
-      [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa! valmis-kasiteltavaksi?]]
+      (when valmis-kasiteltavaksi?
+        [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!])]
 
      [:div.col-md-6
       (when valmis-kasiteltavaksi?
