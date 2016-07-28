@@ -66,3 +66,12 @@
     (is (= (count sillat-paitsi-joutsensilta) 4))
     (is (every? #(some? (:tarkastusaika %)) sillat-paitsi-joutsensilta))))
 
+
+(deftest oulun-urakan-2014-2019-sillat
+  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2014-2019-id)
+                                     :listaus :kaikki})
+        sillat-paitsi-joutsensilta (filter #(not= "Joutsensilta" (:siltanimi %)) sillat)]
+    (is (= (count sillat) 5))
+    (is (= (count sillat-paitsi-joutsensilta) 4))
+    (is (every? #(some? (:tarkastusaika %)) sillat-paitsi-joutsensilta))))
