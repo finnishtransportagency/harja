@@ -7,12 +7,14 @@
    [harja.domain.tierekisteri :as tierekisteri-domain]
    [harja.ui.tierekisteri :as tierekisteri]
    [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu jvh-fixture
-                            render paivita sel sel1 grid-solu]]
+                            render paivita sel sel1 grid-solu click]]
    [harja.views.urakka.paallystysilmoitukset :as p]
    [harja.pvm :as pvm]
    [reagent.core :as r]
    [cljs.core.async :refer [<! >!]]
-   [cljs-react-test.simulate :as sim])
+   [cljs-react-test.simulate :as sim]
+   [schema.core :as s]
+   [harja.domain.paallystysilmoitus :as pot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -119,7 +121,8 @@
                                                                                3 3000
                                                                                4 3900
                                                                                5 400}))
-        _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))]
+        _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))
+        tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
     (async
      test-ok
      (go
@@ -140,20 +143,37 @@
        ;; Tallennus nappi enabled
        (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled not))
 
-       ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
-       (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
-                   {:target {:value "888"}})
+       (let [tila-ok @lomake]
+
+         ;; Muutetaan päällystystoimenpiteen RC% arvoksi ei-validi
+         (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
+                     {:target {:value "888"}})
+
+         (<! (paivita))
+
+         (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
+
+         (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
+                '("Anna arvo välillä 0 - 100")))
+
+         ;; Tallennus nappi disabled
+         (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
+
+         (<! (tarkista-asiatarkastus lomake))
+         (reset! lomake tila-ok))
 
        (<! (paivita))
 
-       (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
+       ;; Muutetaan takaisin validiksi ja yritetään tallentaa
+       (sim/change (grid-solu "paallystysilmoitus-paallystystoimenpiteet" 0 4)
+                   {:target {:value "8"}})
 
-       (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
-              '("Anna arvo välillä 0 - 100")))
+       (<! (paivita))
 
-       ;; Tallennus nappi disabled
-       (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
+       (click :#tallenna-paallystysilmoitus)
 
-       (<! (tarkista-asiatarkastus lomake))
+       ;; Tarkistetaan, että lähetettävät ilmoitustiedot ovat scheman mukaiset
+       (is (s/validate pot/+paallystysilmoitus+
+                       (:ilmoitustiedot (:paallystysilmoitus (<! tallennus)))))
 
        (test-ok)))))
