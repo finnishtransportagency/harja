@@ -21,14 +21,30 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(defn- nimella [sillat nimi]
+(defn- silta-nimella [sillat nimi]
   (first (filter #(= nimi (:siltanimi %)) sillat)))
+
+(deftest oulun-urakan-2005-2012-sillat
+  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
+                                     :listaus :kaikki})
+        sillat-paitsi-joutsensilta (filter #(not= "Joutsensilta" (:siltanimi %)) sillat)]
+    (is (= (count sillat) 5))
+    (is (= (count sillat-paitsi-joutsensilta) 4))
+    (is (every? #(some? (:tarkastusaika %)) sillat-paitsi-joutsensilta))))
+
+(deftest oulun-urakan-2014-2019-sillat
+  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
+                                    {:urakka-id (testi/hae-oulun-alueurakan-2014-2019-id)
+                                     :listaus :kaikki})]
+    (is (= (count sillat) 5))
+    (is (every? #(nil? (:tarkastusaika %)) sillat))))
 
 (deftest joutsensillalle-ei-ole-tarkastuksia
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
                                     {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :kaikki})
-        joutsensilta (nimella sillat "Joutsensilta")]
+        joutsensilta (silta-nimella sillat "Joutsensilta")]
     (is joutsensilta "Joutsensilta löytyi")
     (is (nil? (:tarkastusaika joutsensilta)) "Joutsensiltaa ei ole tarkastettu")))
 
@@ -36,7 +52,7 @@
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
                                     {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :kaikki})
-        kempele (nimella sillat "Kempeleen testisilta")]
+        kempele (silta-nimella sillat "Kempeleen testisilta")]
     (is kempele "Kempeleen testisilta löytyy")
     (is (= "Late Lujuuslaskija" (:tarkastaja kempele)))))
 
@@ -44,16 +60,15 @@
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
                                     {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :puutteet})]
-    (is (nimella sillat "Kempeleen testisilta"))
-    (is (nimella sillat "Oulujoen silta"))
-    (is (nil? (nimella sillat "Joutsensilta")) "Joutsensilta ei löydy puutelistalta")))
+    (is (silta-nimella sillat "Kempeleen testisilta"))
+    (is (silta-nimella sillat "Oulujoen silta"))
+    (is (nil? (silta-nimella sillat "Joutsensilta")) "Joutsensilta ei löydy puutelistalta")))
 
 (deftest korjattuja-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
                                     {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :korjatut})
-        kajaanintie (nimella sillat "Kajaanintien silta")]
+        kajaanintie (silta-nimella sillat "Kajaanintien silta")]
     (is kajaanintie)
     (is (= 24 (:rikki-ennen kajaanintie)) "Ennen oli kaikki rikki")
     (is (= 0 (:rikki-nyt kajaanintie)) "Nyt on kaikki korjattu")))
-    
