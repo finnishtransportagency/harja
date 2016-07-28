@@ -16,7 +16,7 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<! reaction-writable]]))
 
 (defn tyyppi-enum->string-monikko [tyyppi]
   (case tyyppi
@@ -65,7 +65,7 @@
                   (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
             maksuerat))))
 
-(def maksuerarivit (reaction (ryhmittele-maksuerat @maksuerat/maksuerat)))
+(def maksuerarivit (reaction-writable (ryhmittele-maksuerat @maksuerat/maksuerat)))
 (def kuittausta-odottavat-maksuerat (reaction (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
 
 (def pollataan-kantaa? (atom false))
