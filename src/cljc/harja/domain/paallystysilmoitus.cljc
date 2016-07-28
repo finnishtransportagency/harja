@@ -246,17 +246,17 @@
      (s/optional-key :poistettu) s/Bool}])
 
 (def paallystysilmoitus-alustatoimet
-   [{:tr-alkuosa s/Int
-     :tr-alkuetaisyys s/Int
-     :tr-loppuosa s/Int
-     :tr-loppuetaisyys s/Int
-     (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
-     (s/optional-key :paksuus) (s/maybe s/Num)              ;; cm
-     (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
-     (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
-     (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
-     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
-     (s/optional-key :poistettu) s/Bool}])
+  [{(s/optional-key :tr-alkuosa) s/Int
+    (s/optional-key :tr-alkuetaisyys) s/Int
+    (s/optional-key :tr-loppuosa) s/Int
+    (s/optional-key :tr-loppuetaisyys) s/Int
+    (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
+    (s/optional-key :paksuus) (s/maybe s/Num)              ;; cm
+    (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
+    (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
+    (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
+    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
+    (s/optional-key :poistettu) s/Bool}])
 
 (def paallystysilmoitus-tyot
   [{:tyyppi +paallystystyon-tyyppi+ ; +paallystystyon-tyyppi+ skeemasta
