@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
             [harja.kyselyt.organisaatiot :as organisaatiot]
             [harja.tyokalut.merkkijono :as merkkijono]
-            [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet])
+            [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet]
+            [clj-time.coerce :as c])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi hallintayksikko]
@@ -63,7 +64,11 @@
                                               "valaistus" "VALA_YKSHINT"}
           toimenpidekoodi (yllapidon-3-tason-toimenpidekoodit urakkatyyppi)]
       (when toimenpidekoodi
-        (toimenpiteet/luo-yllapidon-toimenpideinstanssi<! db alkupvm loppupvm toimenpidekoodi urakka-id)))))
+        (toimenpiteet/luo-yllapidon-toimenpideinstanssi<! db
+                                                          toimenpidekoodi
+                                                          alkupvm
+                                                          loppupvm
+                                                          urakka-id)))))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id
                                    yhteyshenkilo-sampo-id ely-hash]}]

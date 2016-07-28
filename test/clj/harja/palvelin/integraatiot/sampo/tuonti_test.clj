@@ -57,6 +57,12 @@
 
   (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
 
+  (let [urakan-tpi (ffirst (q "SELECT id
+                                  FROM toimenpideinstanssi
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
+                                  AND nimi = 'Päällystyksen yksikköhintaiset työt'"))]
+    (is (nil? urakan-tpi) "Urakalle ei luotu toimenpideinstanssia"))
+
   (let [urakan-valitavoitteet (map first (q "SELECT nimi
                                   FROM valitavoite
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))]
