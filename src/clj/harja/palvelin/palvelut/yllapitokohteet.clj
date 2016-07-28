@@ -344,7 +344,6 @@
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
       (doseq [osa osat]
-        (log/debug (str "Käsitellään saapunut ylläpitokohdeosa: " (pr-str osa)))
         (if (and (:id osa) (not (neg? (:id osa))))
           (paivita-yllapitokohdeosa c user urakka-id osa)
           (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))

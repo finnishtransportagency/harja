@@ -98,46 +98,6 @@
         :paallystyskohde-id paallystyskohde-id
         :kommentit kommentit))))
 
-(defn- kasittele-paallystysilmoituksen-tierekisterikohteet
-  "Ottaa päällystysilmoituksen ilmoitustiedot.
-   Päivittää päällystyskohteen kohdeosat niin, että niiden tiedot ovat samat kuin päällystysilmoituslomakkeessa.
-   Palauttaa ilmoitustiedot, jossa päällystystoimenpiteiltä on riisuttu tieosoitteet."
-  [db user urakka-id sopimus-id yllapitokohde-id ilmoitustiedot]
-  (log/debug "Käsitellään ilmoituksen kohdeosat")
-  (let [uudet-osoitteet (into []
-                              (keep
-                                (fn [osoite]
-                                  (log/debug "Käsitellään POT-lomakkeen TR-osoite: " (pr-str osoite))
-                                  (let [kohdeosa-kannassa
-                                        (yllapitokohteet/tallenna-yllapitokohdeosa
-                                          db
-                                          user
-                                          {:urakka-id urakka-id
-                                           :sopimus-id sopimus-id
-                                           :yllapitokohde-id yllapitokohde-id
-                                           :osa {:id (:kohdeosa-id osoite)
-                                                 :nimi (:nimi osoite)
-                                                 :tunnus (:tunnus osoite)
-                                                 :tr-numero (:tie osoite)
-                                                 :tr-alkuosa (:aosa osoite)
-                                                 :tr-alkuetaisyys (:aet osoite)
-                                                 :tr-loppuosa (:losa osoite)
-                                                 :tr-loppuetaisyys (:let osoite)
-                                                 :tr-ajorata (:ajorata osoite)
-                                                 :tr-kaista (:kaista osoite)
-                                                 :poistettu (:poistettu osoite)
-                                                 :sijainti (:sijainti osoite)}})
-                                        _ (log/debug "Kohdeosan tiedot päivitetty omaan tauluun. Uusi kohdeosa kannassa: " (pr-str kohdeosa-kannassa))]
-                                    (cond-> osoite
-                                            true
-                                            (dissoc :nimi :tunnus :tie :aosa :aet :losa :let :pituus :poistettu :ajorata :kaista)
-                                            (some? kohdeosa-kannassa)
-                                            (assoc :kohdeosa-id (:id kohdeosa-kannassa)))))
-                                (:osoitteet ilmoitustiedot)))
-        uudet-ilmoitustiedot (assoc ilmoitustiedot :osoitteet uudet-osoitteet)]
-    (log/debug "Uudet ilmoitustiedot: " (pr-str uudet-ilmoitustiedot))
-    uudet-ilmoitustiedot))
-
 (defn- paattele-ilmoituksen-tila
   [{:keys [tekninen-osa taloudellinen-osa valmispvm-kohde valmispvm-paallystys]}]
   (cond
@@ -161,14 +121,7 @@
         urakka-id
         user)
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
-        (let [ilmoitustiedot (kasittele-paallystysilmoituksen-tierekisterikohteet
-                              db
-                              user
-                              urakka-id
-                              sopimus-id
-                              paallystyskohde-id
-                              ilmoitustiedot)
-              muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+        (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
                            (:tyot ilmoitustiedot))
               tila (paattele-ilmoituksen-tila paallystysilmoitus)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
@@ -311,7 +264,10 @@
                      db user {:urakka-id urakka-id :sopimus-id sopimus-id
                               :yllapitokohde-id paallystyskohde-id
                               :osat (map #(assoc % :id (:kohdeosa-id %))
-                                         (:osoitteet (:ilmoitustiedot paallystysilmoitus)))})
+                                         (->> paallystysilmoitus
+                                              :ilmoitustiedot
+                                              :osoitteet
+                                              (filter (comp not :poistettu))))})
           paallystysilmoitus-kannassa (first (into []
                                                    (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                                          (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
