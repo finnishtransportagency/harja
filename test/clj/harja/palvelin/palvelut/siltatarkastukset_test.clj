@@ -19,7 +19,7 @@
   (testit)
   (alter-var-root #'testi/jarjestelma component/stop))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (defn- silta-nimella [sillat nimi]
   (first (filter #(= nimi (:siltanimi %)) sillat)))
@@ -79,8 +79,8 @@
 
 (deftest oulun-urakan-2005-2012-tarkastukset
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
-                                    {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
-                                     :silta-id (testi/hae-oulujoen-sillan-id)})]
+                                          {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
+                                           :silta-id (testi/hae-oulujoen-sillan-id)})]
     (is (= (count tarkastukset) 2))
     (is (every? #(map? (:kohteet %)) tarkastukset))))
 
@@ -91,3 +91,42 @@
                                            :silta-id (testi/hae-oulujoen-sillan-id)})]
     (is (= (count tarkastukset) 2))
     (is (every? #(map? (:kohteet %)) tarkastukset))))
+
+(def uusi-tarkastus {:uudet-liitteet nil, :urakka-id (testi/hae-oulun-alueurakan-2014-2019-id)
+                     :kohteet {7 ["A" ""], 20 ["B" ""], 1 ["A" ""], 24 ["C" ""], 4 ["A" ""], 15 ["B" ""],
+                               21 ["B" ""], 13 ["A" ""], 22 ["C" ""], 6 ["B" ""], 17 ["B" ""], 3 ["A" ""],
+                               12 ["A" ""], 2 ["A" ""], 23 ["C" ""], 19 ["C" ""], 11 ["A" ""], 9 ["B" ""],
+                               5 ["B" ""], 14 ["A" ""], 16 ["A" ""], 10 ["B" ""], 18 ["B" ""], 8 ["B" ""]},
+                     :silta-id (testi/hae-oulujoen-sillan-id),
+                     :liitteet [],
+                     :tarkastusaika #inst "2016-07-28T11:34:49.000-00:00",
+                     :poistettu false
+                     :tarkastaja "Järjestelmän Vastaava",})
+
+(deftest tarkastuksen-tallennus-oulujoen-sillalle
+  (let [urakka-id (testi/hae-oulun-alueurakan-2014-2019-id)
+        silta-id (testi/hae-oulujoen-sillan-id)
+        tarkastukset-ennen-uutta (count (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
+                                                             {:urakka-id urakka-id
+                                                              :silta-id silta-id}))
+        _ (kutsu-http-palvelua :tallenna-siltatarkastus testi/+kayttaja-jvh+
+                               uusi-tarkastus)
+        tarkastukset-kutsun-jalkeen (count (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
+                                                                {:urakka-id urakka-id
+                                                                 :silta-id silta-id}))]
+    (is (= (+ tarkastukset-ennen-uutta 1) tarkastukset-kutsun-jalkeen))))
+
+(deftest tarkastuksen-tallennus-ei-urakan-sillalle-epaonnistuu
+  (let [urakka-id (testi/hae-kajaanin-alueurakan-2014-2019-id)
+        silta-id (testi/hae-pyhajoen-sillan-id)
+        tarkastukset-ennen-uutta (count (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
+                                                             {:urakka-id urakka-id
+                                                              :silta-id silta-id}))
+        _ (is (thrown? SecurityException (kutsu-http-palvelua :tallenna-siltatarkastus testi/+kayttaja-jvh+
+                                                              (-> uusi-tarkastus
+                                                                  (assoc :silta-id silta-id)
+                                                                  (assoc :urakka-id urakka-id)))))
+        tarkastukset-kutsun-jalkeen (count (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
+                                                                {:urakka-id urakka-id
+                                                                 :silta-id silta-id}))]
+    (is (= tarkastukset-ennen-uutta tarkastukset-kutsun-jalkeen))))

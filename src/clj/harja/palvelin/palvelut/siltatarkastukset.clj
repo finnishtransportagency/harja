@@ -120,8 +120,9 @@
 (defn- vaadi-silta-kuuluu-urakkaan [db urakka-id silta-id]
   (when silta-id
     (let [sillan-urakat (map :urakka (q/hae-sillan-urakat db silta-id))]
-      (log/debug "Tarkistetaan, että silta kuuluu väitettyyn urakkaan " urakka-id)
-      (when (not (some #(= urakka-id %) sillan-urakat))
+      (log/debug "Tarkistetaan, että silta " silta-id " kuuluu väitettyyn urakkaan " urakka-id)
+      (when (or (empty? sillan-urakat)
+                (not (some #(= urakka-id %) sillan-urakat)))
         (throw (SecurityException. "Siltatarkastus ei kuulu väitettyyn urakkaan."))))))
 
 (defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
