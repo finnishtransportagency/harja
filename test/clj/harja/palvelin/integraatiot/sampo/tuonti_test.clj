@@ -84,7 +84,7 @@
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
-                                  AND koodi = 'PAAL_YKSHINT'"))]
+                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'PAAL_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
 (deftest tarkista-tiemerkintaurakan-toimenpideinstanssin-luonto
@@ -100,7 +100,7 @@
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
-                                  AND koodi = 'TIEM_YKSHINT'"))]
+                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'TIEM_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
 (deftest tarkista-valaistusurakan-toimenpideinstanssin-luonto
@@ -116,7 +116,7 @@
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
-                                  AND koodi = 'VALA_YKSHINT'"))]
+                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'VALA_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
 ;; REPL-testausta varten. Älä poista.
