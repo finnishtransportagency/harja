@@ -134,11 +134,10 @@
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet uudet-liitteet] :as siltatarkastus}]
-  (println "Siltatarkastus: " (pr-str siltatarkastus))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
-  (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
+    (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
                       (paivita-siltatarkastus! db user urakka-id siltatarkastus)
