@@ -43,8 +43,11 @@ SELECT
    WHERE k.siltatarkastus = s1.id
          AND k.tulos != 'A') AS kohteet
 FROM silta s
-  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = FALSE)
-  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
+                                  AND s1.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
+                                  AND s2.tarkastusaika > s1.tarkastusaika
+                                  AND s2.poistettu = FALSE)
 WHERE s.id IN (SELECT silta
                FROM sillat_alueurakoittain
                WHERE urakka = :urakka)
@@ -72,8 +75,11 @@ SELECT
          (k.tulos = 'C' OR k.tulos = 'B'))
     AS kohteet
 FROM silta s
-  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = FALSE)
-  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
+                                  AND s1.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
+                                  AND s2.tarkastusaika > s1.tarkastusaika
+                                  AND s2.poistettu = FALSE)
 WHERE s.id IN (SELECT silta
                FROM sillat_alueurakoittain
                WHERE urakka = :urakka)
@@ -98,15 +104,19 @@ SELECT
    WHERE k.siltatarkastus = s1.id
          AND k.tulos = 'D') AS kohteet
 FROM silta s
-  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = FALSE)
-  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
+                                  AND s1.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
+                                  AND s2.tarkastusaika > s1.tarkastusaika
+                                  AND s2.poistettu = FALSE)
 WHERE s.id IN (SELECT silta
                FROM sillat_alueurakoittain
                WHERE urakka = :urakka)
       AND s2.id IS NULL;
 
 -- name: hae-urakan-sillat-korjatut
--- Hakee sillat, joille on aiemmassa tarkastuksessa on ollut virheitä. Palauttaa aimmin rikki olleet kohteet sekä nyt rikki olevien lukumäärän.
+-- Hakee sillat, joille on aiemmassa tarkastuksessa on ollut virheitä.
+-- Palauttaa aimmin rikki olleet kohteet sekä nyt rikki olevien lukumäärän.
 SELECT
   (SELECT COUNT(k1.kohde)
    FROM siltatarkastuskohde k1
