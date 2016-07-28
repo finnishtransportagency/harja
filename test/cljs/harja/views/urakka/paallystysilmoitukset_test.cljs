@@ -6,7 +6,7 @@
    [harja.domain.paallystysilmoitus :as pot]
    [harja.domain.tierekisteri :as tierekisteri-domain]
    [harja.ui.tierekisteri :as tierekisteri]
-   [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu
+   [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu jvh-fixture
                             render paivita sel sel1 grid-solu]]
    [harja.views.urakka.paallystysilmoitukset :as p]
    [harja.pvm :as pvm]
@@ -16,7 +16,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(test/use-fixtures :each komponentti-fixture fake-palvelut-fixture)
+(test/use-fixtures :each komponentti-fixture fake-palvelut-fixture jvh-fixture)
 
 (deftest tien-pituus-laskettu-oikein
   (let [tie1 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 3 :tr-loppuetaisyys 5}
@@ -95,6 +95,19 @@
    :taloudellinen-osa {:kasittelyaika nil :perustelu nil :paatos nil :asiatarkastus nil}
    :kokonaishinta 0})
 
+(defn tarkista-asiatarkastus [lomake]
+  (go
+
+    (is (not (sel1 :.pot-asiatarkastus)) "Asiatarkastus ei näkyvissä vielä")
+
+    (swap! lomake assoc
+           :tila :valmis
+           :valmispvm-kohde (pvm/nyt))
+
+    (<! (paivita))
+
+    (is (some? (sel1 :.pot-asiatarkastus)) "Asiatarkastus näkyvissä")))
+
 (deftest paallystysilmoituslomake
   (let [urakka {:id 1}
         lukko nil
@@ -112,6 +125,7 @@
      (go
        (render [comp])
 
+       ;; Tarkista, että tieosoite näkyy oikein
        (is (= "piru 1"
               (some-> (grid-solu "yllapitokohdeosat" 0 1)
                       .-value)))
@@ -137,8 +151,9 @@
        (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
               '("Anna arvo välillä 0 - 100")))
 
-
        ;; Tallennus nappi disabled
        (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
+
+       (<! (tarkista-asiatarkastus lomake))
 
        (test-ok)))))
