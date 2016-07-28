@@ -130,3 +130,7 @@
                                                                 {:urakka-id urakka-id
                                                                  :silta-id silta-id}))]
     (is (= tarkastukset-ennen-uutta tarkastukset-kutsun-jalkeen))))
+
+(deftest tarkastuksen-tallennus-ilman-oikeuksia-epaonnistuu
+  (is (thrown? Exception (kutsu-http-palvelua :tallenna-siltatarkastus testi/+kayttaja-tero+
+                                              uusi-tarkastus))))
