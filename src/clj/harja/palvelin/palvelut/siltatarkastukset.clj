@@ -117,6 +117,13 @@
     (assoc luotu-tarkastus
       :kohteet kohteet)))
 
+(defn- vaadi-silta-kuuluu-urakkaan [db urakka-id silta-id]
+  (when silta-id
+    (let [sillan-urakat (map :urakka (q/hae-sillan-urakat db silta-id))]
+      (log/debug "Tarkistetaan, että silta kuuluu väitettyyn urakkaan " urakka-id)
+      (when (not (some #(= urakka-id %) sillan-urakat))
+        (throw (SecurityException. "Siltatarkastus ei kuulu väitettyyn urakkaan."))))))
+
 (defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
   (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str uudet-liitteet))
   (doseq [[kohdenumero uusi-liite] uudet-liitteet]
@@ -127,7 +134,9 @@
 (defn tallenna-siltatarkastus!
   "Tallentaa tai päivittäää siltatarkastuksen tiedot."
   [db user {:keys [id tarkastaja silta-id urakka-id tarkastusaika kohteet uudet-liitteet] :as siltatarkastus}]
+  (println "Siltatarkastus: " (pr-str siltatarkastus))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
+  (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
     (let [tarkastus (if id

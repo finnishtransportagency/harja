@@ -337,3 +337,6 @@ SELECT exists(SELECT id
 -- name: lisaa-liite-siltatarkastuskohteelle<!
 INSERT INTO siltatarkastus_kohde_liite (siltatarkastus, kohde, liite)
     VALUES (:siltatarkastus, :kohde, :liite);
+
+-- name: hae-sillan-urakat
+SELECT sillat_alueurakoittain WHERE silta = :siltaid;
