@@ -23,7 +23,7 @@
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<! reaction-writable]]))
 
 (defonce suolasakot-nakyvissa? (atom false))
 
@@ -35,30 +35,34 @@
                 (suola/hae-urakan-suolasakot-ja-lampotilat (:id ur)))))
 
 (defonce suolasakko-kaytossa?
-  (reaction (let [ss (:suolasakot @suolasakot-ja-lampotilat)]
-              (or (empty? ss)
-                  (some :kaytossa ss)))))
+  (reaction-writable
+   (let [ss (:suolasakot @suolasakot-ja-lampotilat)]
+     (or (empty? ss)
+         (some :kaytossa ss)))))
 
 ;; Suolasakko on urakkakohtainen ja samat tiedot jokaiselle hoitokaudelle.
 ;; Käytetään selkeyden vuoksi ensimmäistä hoitokautta tietojen näyttämiseen ja muokkaamiseen
 (def urakan-ensimmainen-hoitokausi
-  (reaction (first @u/valitun-urakan-hoitokaudet)))
+  (reaction-writable (first @u/valitun-urakan-hoitokaudet)))
 
 (defn yhden-hoitokauden-rivit [rivit]
   (when-let [eka-hk @urakan-ensimmainen-hoitokausi]
     (filter #(= (:hoitokauden_alkuvuosi %) (pvm/vuosi (first eka-hk))) rivit)))
 
 (defonce syotettavat-tiedot
-  (reaction (let [ss @suolasakot-ja-lampotilat]
-              {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss)))
-               :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss)))})))
+  (reaction-writable
+   (let [ss @suolasakot-ja-lampotilat]
+     {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss)))
+      :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss)))})))
 
 (defonce pohjavesialueet
-  (reaction (let [ss @suolasakot-ja-lampotilat]
-              (:pohjavesialueet ss))))
+  (reaction-writable
+   (let [ss @suolasakot-ja-lampotilat]
+     (:pohjavesialueet ss))))
 
 (defonce lampotilat
-  (reaction (:lampotilat @suolasakot-ja-lampotilat)))
+  (reaction-writable
+   (:lampotilat @suolasakot-ja-lampotilat)))
 
 (defn tallenna-suolasakko
   []

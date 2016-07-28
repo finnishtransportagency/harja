@@ -18,7 +18,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal])
-  (:require-macros [harja.atom :refer [reaction<!]]
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -197,7 +197,7 @@
          (lomake/voi-tallentaa? tp))))
 
 (defn turvallisuuspoikkeaman-tiedot []
-  (let [turvallisuuspoikkeama (reaction @tiedot/valittu-turvallisuuspoikkeama)
+  (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
         toimenpiteet-virheet (atom nil)]
     (fnc []
       (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))

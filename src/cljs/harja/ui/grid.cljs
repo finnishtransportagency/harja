@@ -830,6 +830,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   Tiedot tulee olla atomi tai wrapatty data, jota tietojen muokkaus itsessään manipuloi.
 
   Optiot on mappi optioita:
+  :id                 grid pääelementin DOM id
   :muokkaa-footer     optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
   :muutos             jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
                       Parametrina Grid ohjauskahva
@@ -947,15 +948,19 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       {:component-will-receive-props
        (fn [this [_ {:keys [validoi-aina? virheet]} skeema muokatut]]
          (when validoi-aina?
-           (let [muokatut @muokatut]
-             (reset! (or virheet virheet-atom)
-                     (into {}
-                           (keep (fn [[id rivi]]
-                                   (let [rivin-virheet (when-not (:poistettu rivi)
-                                                         (validointi/validoi-rivi muokatut rivi skeema))]
-                                     (when-not (empty? rivin-virheet)
-                                       [id rivin-virheet]))))
-                           muokatut)))))
+           (let [virheet (or virheet virheet-atom)
+                 virheet-nyt @virheet
+                 muokatut @muokatut
+                 uudet-virheet
+                 (into {}
+                       (keep (fn [[id rivi]]
+                               (let [rivin-virheet (when-not (:poistettu rivi)
+                                                     (validointi/validoi-rivi muokatut rivi skeema))]
+                                 (when-not (empty? rivin-virheet)
+                                   [id rivin-virheet]))))
+                       muokatut)]
+             (when-not (= virheet-nyt uudet-virheet)
+               (reset! virheet uudet-virheet)))))
 
        :reagent-render
        (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota?
@@ -977,7 +982,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
            [:div.panel.panel-default.livi-grid.livi-muokkaus-grid
             {:class (str (str/join " " luokat)
-                         (if voi-muokata? " nappeja"))}
+                         (if voi-muokata? " nappeja"))
+             :id (:id opts)}
             [:div.panel-heading
              (when otsikko [:h6.panel-title otsikko])
              (when (not= false voi-muokata?)
