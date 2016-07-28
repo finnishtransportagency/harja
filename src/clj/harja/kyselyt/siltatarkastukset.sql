@@ -13,8 +13,8 @@ SELECT
   s.tr_loppuetaisyys,
   s.tr_numero
 FROM silta s
-  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.poistettu = FALSE)
-  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id AND s1.urakka = :urakka AND s1.poistettu = FALSE)
+  LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id AND s1.urakka = :urakka AND s2.tarkastusaika > s1.tarkastusaika AND s2.poistettu = FALSE)
 WHERE s.id IN (SELECT silta
                FROM sillat_alueurakoittain
                WHERE urakka = :urakka)
