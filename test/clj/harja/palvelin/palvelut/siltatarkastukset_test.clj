@@ -68,6 +68,7 @@
 
 
 (deftest oulun-urakan-2014-2019-sillat
+  ;; Tässä uudemmassa urakassa halutaan nähdä vanhassa urakassa tehty viimeisin tarkastus
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
                                     {:urakka-id (testi/hae-oulun-alueurakan-2014-2019-id)
                                      :listaus :kaikki})
