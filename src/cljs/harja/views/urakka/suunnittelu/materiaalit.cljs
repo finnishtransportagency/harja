@@ -14,7 +14,8 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [run! reaction]]))
+                   [reagent.ratom :refer [run! reaction]]
+                   [harja.atom :refer [reaction-writable]]))
 
 (defn aseta-hoitokausi [rivi]
   (let [[alkupvm loppupvm] @u/valittu-hoitokausi]
@@ -67,43 +68,54 @@
 
         ;; ryhmitellään valitun sopimusnumeron materiaalit hoitokausittain
         sopimuksen-materiaalit-hoitokausittain
-        (reaction (let [[sopimus-id _] @u/valittu-sopimusnumero]
-                    (u/ryhmittele-hoitokausittain (filter #(= sopimus-id (:sopimus %))
-                                                          @urakan-materiaalit)
-                                                  (u/hoitokaudet ur))))
+        (reaction-writable
+         (let [[sopimus-id _] @u/valittu-sopimusnumero]
+           (u/ryhmittele-hoitokausittain (filter #(= sopimus-id (:sopimus %))
+                                                 @urakan-materiaalit)
+                                         (u/hoitokaudet ur))))
 
 
         ;; valitaan materiaaleista vain valitun hoitokauden
-        materiaalit (reaction (let [hk @u/valittu-hoitokausi]
-                                (get @sopimuksen-materiaalit-hoitokausittain hk)))
+        materiaalit
+        (reaction-writable
+         (let [hk @u/valittu-hoitokausi]
+           (get @sopimuksen-materiaalit-hoitokausittain hk)))
 
         ;; Haetaan kaikki materiaalikoodit ja valitaan tälle urakalle sopivat
-        materiaalikoodit (reaction (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit)))
+        materiaalikoodit
+        (reaction-writable
+         (filter #(= (:tyyppi ur) (:urakkatyyppi %)) @(t/hae-materiaalikoodit)))
 
         ;; Jaetaan materiaalikoodit yleisiin ja kohdistettaviin
-        yleiset-materiaalikoodit (reaction (filter #(not (:kohdistettava %)) @materiaalikoodit))
-        kohdistettavat-materiaalikoodit (reaction (filter :kohdistettava @materiaalikoodit))
+        yleiset-materiaalikoodit
+        (reaction-writable
+         (filter #(not (:kohdistettava %)) @materiaalikoodit))
+        kohdistettavat-materiaalikoodit
+        (reaction-writable
+         (filter :kohdistettava @materiaalikoodit))
 
 
         ;; luokitellaan yleiset materiaalit ja pohjavesialueiden materiaalit
-        yleiset-materiaalit (reaction (let [materiaalit (into {}
-                                                              (comp (filter #(not (contains? % :pohjavesialue)))
-                                                                    (map (juxt :id identity)))
-                                                              @materiaalit)
-                                            kaytetyt-materiaali-idt (into #{} (map (comp :id :materiaali) (vals materiaalit)))]
-                                        (loop [materiaalit materiaalit
-                                               [mk & materiaalikoodit] @yleiset-materiaalikoodit]
-                                          (if-not mk
-                                            materiaalit
-                                            (if (kaytetyt-materiaali-idt (:id mk))
-                                              (recur materiaalit materiaalikoodit)
-                                              (let [id (- (:id mk))
-                                                    [alku loppu] @u/valittu-hoitokausi]
-                                                (recur (assoc materiaalit id {:id id :materiaali mk :alkupvm alku :loppupvm loppu})
-                                                       materiaalikoodit)))))))
+        yleiset-materiaalit
+        (reaction-writable
+         (let [materiaalit (into {}
+                                 (comp (filter #(not (contains? % :pohjavesialue)))
+                                       (map (juxt :id identity)))
+                                 @materiaalit)
+               kaytetyt-materiaali-idt (into #{} (map (comp :id :materiaali) (vals materiaalit)))]
+           (loop [materiaalit materiaalit
+                  [mk & materiaalikoodit] @yleiset-materiaalikoodit]
+             (if-not mk
+               materiaalit
+               (if (kaytetyt-materiaali-idt (:id mk))
+                 (recur materiaalit materiaalikoodit)
+                 (let [id (- (:id mk))
+                       [alku loppu] @u/valittu-hoitokausi]
+                   (recur (assoc materiaalit id {:id id :materiaali mk :alkupvm alku :loppupvm loppu})
+                          materiaalikoodit)))))))
 
         yleiset-materiaalit-virheet (atom nil)
-        yleiset-materiaalit-muokattu (reaction @yleiset-materiaalit)
+        yleiset-materiaalit-muokattu (reaction-writable @yleiset-materiaalit)
 
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? (atom false)
