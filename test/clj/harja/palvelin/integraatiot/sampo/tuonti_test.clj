@@ -71,7 +71,7 @@
     (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 5))
     (is (= (count urakan-valitavoitteet) 7))))
 
-(deftest tarkista-paallystysurakan-toimenpideinstanssin-luonto
+(deftest tarkista-paallystysurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
@@ -87,7 +87,7 @@
                                   AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'PAAL_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
-(deftest tarkista-tiemerkintaurakan-toimenpideinstanssin-luonto
+(deftest tarkista-tiemerkintaurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
@@ -103,7 +103,7 @@
                                   AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'TIEM_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
-(deftest tarkista-valaistusurakan-toimenpideinstanssin-luonto
+(deftest tarkista-valaistusurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
