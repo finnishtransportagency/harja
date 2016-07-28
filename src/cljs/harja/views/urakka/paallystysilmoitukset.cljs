@@ -410,13 +410,13 @@
          :voi-muokata? voi-muokata?
          :uusi-id (inc (count @alustalle-tehdyt-toimet))
          :virheet (wrap-virheet :alustalle-tehdyt-toimet)}
-        [{:otsikko "Aosa" :nimi :aosa :tyyppi :positiivinen-numero :leveys "10%"
+        [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys "10%"
           :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
-         {:otsikko "Aet" :nimi :aet :tyyppi :positiivinen-numero :leveys "10%"
+         {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys "10%"
           :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
-         {:otsikko "Losa" :nimi :losa :tyyppi :positiivinen-numero :leveys "10%"
+         {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys "10%"
           :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
-         {:otsikko "Let" :nimi :let :leveys "10%" :tyyppi :positiivinen-numero
+         {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys "10%" :tyyppi :positiivinen-numero
           :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
          {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
           :muokattava? (constantly false)
