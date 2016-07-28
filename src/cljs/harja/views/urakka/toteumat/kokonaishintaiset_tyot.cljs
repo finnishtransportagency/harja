@@ -27,7 +27,8 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction-writable]]))
 
 (defn kokonaishintainen-reitti-klikattu [_ toteuma]
   (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
@@ -110,7 +111,7 @@
    [yleiset/vihje "Näet työn kartalla klikkaamalla riviä."]])
 
 (defn kokonaishintainen-toteuma-lomake []
-  (let [muokattu (reaction @tiedot/valittu-kokonaishintainen-toteuma)
+  (let [muokattu (reaction-writable @tiedot/valittu-kokonaishintainen-toteuma)
         jarjestelman-lisaama-toteuma? (true? (:jarjestelma @muokattu))
         nelostason-tehtavat (map #(nth % 3) @u/urakan-toimenpiteet-ja-tehtavat)
         toimenpideinstanssit u/urakan-toimenpideinstanssit

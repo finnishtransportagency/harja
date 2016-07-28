@@ -11,7 +11,8 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction-writable]]))
 
 
 (defn hae-sillan-tarkastukset [urakka-id silta-id]
@@ -38,7 +39,7 @@
               (when vs
                 (hae-sillan-tarkastukset urakka-id (:id vs)))))
 
-(defonce valittu-tarkastus (reaction (first @valitun-sillan-tarkastukset)))
+(defonce valittu-tarkastus (reaction-writable (first @valitun-sillan-tarkastukset)))
 
 (defn uusi-tarkastus [silta ur]
   (let [kayttaja @istunto/kayttaja

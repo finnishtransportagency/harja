@@ -343,8 +343,8 @@
                                                 false)
                                     :on-change #(let [valittu? (-> % .-target .-checked)]
                                                   (reset! data
-                                                          ((if valittu? conj disj) valitut v)))}
-                            (vaihtoehto-nayta v)]]]))]
+                                                          ((if valittu? conj disj) valitut v)))}]
+                           (vaihtoehto-nayta v)]]))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
@@ -363,8 +363,8 @@
                      [:label
                       [:input {:type      "checkbox" :checked arvo
                                :on-change #(let [valittu? (-> % .-target .-checked)]
-                                             (reset! data valittu?))}
-                       teksti]]]]
+                                             (reset! data valittu?))}]
+                      teksti]]]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
@@ -384,8 +384,8 @@
                                [:input {:type      "radio" :checked (= valittu vaihtoehto)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
                                                        (if valittu?
-                                                         (reset! data vaihtoehto)))}
-                                (vaihtoehto-nayta vaihtoehto)]]]))]
+                                                         (reset! data vaihtoehto)))}]
+                               (vaihtoehto-nayta vaihtoehto)]]))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
