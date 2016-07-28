@@ -149,13 +149,7 @@
                                        takuupvm] :as paallystysilmoitus}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (log/debug "Luodaan uusi päällystysilmoitus.")
-  (let [ilmoitustiedot (kasittele-paallystysilmoituksen-tierekisterikohteet db
-                                                                            user
-                                                                            urakka-id
-                                                                            sopimus-id
-                                                                            paallystyskohde-id
-                                                                            ilmoitustiedot)
-        muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
+  (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
