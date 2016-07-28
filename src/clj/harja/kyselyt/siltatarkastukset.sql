@@ -14,10 +14,8 @@ SELECT
   s.tr_numero
 FROM silta s
   LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
-                                  AND s1.urakka = :urakka
                                   AND s1.poistettu = FALSE)
   LEFT JOIN siltatarkastus s2 ON (s2.silta = s.id
-                                  AND s1.urakka = :urakka
                                   AND s2.tarkastusaika > s1.tarkastusaika
                                   AND s2.poistettu = FALSE)
 WHERE s.id IN (SELECT silta
@@ -166,7 +164,6 @@ FROM siltatarkastus st
   LEFT JOIN liite ON skl.liite = liite.id
 WHERE silta = :silta
       AND poistettu = FALSE
-      AND st.urakka = :urakka
 ORDER BY tarkastusaika DESC;
 
 -- name: hae-siltatarkastus
