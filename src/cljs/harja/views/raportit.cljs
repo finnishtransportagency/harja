@@ -27,7 +27,7 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.tiedot.hallintayksikot :as hy]
             [cljs-time.core :as t])
-  (:require-macros [harja.atom :refer [reaction<!]]
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -61,15 +61,15 @@
                                                (keep identity [(when v-ur "urakka")
                                                                (when v-hal "hallintayksikko")]))
                   urakkatyypin-raportit (filter
-                                         #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
+                                          #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
                                           (vals @raporttityypit))]
               (sort-by raportin-sort-avain
-                         (into []
-                               (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                                     (filter #(oikeudet/voi-lukea?
-                                               (oikeudet/raporttioikeudet (:kuvaus %))
-                                               (:id v-ur))))
-                               urakkatyypin-raportit)))))
+                       (into []
+                             (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                                   (filter #(oikeudet/voi-lukea?
+                                             (oikeudet/raporttioikeudet (:kuvaus %))
+                                             (:id v-ur))))
+                             urakkatyypin-raportit)))))
 
 (add-watch mahdolliset-raporttityypit :konteksti-muuttui
            (fn [_ _ old new]
@@ -87,13 +87,13 @@
 ;; defmethodit parametrin tyypin mukaan
 
 (defmulti raportin-parametri
-  "Muodosta UI-komponentti raportin parametristä. Komponentin tulee olla täysin
-  itsenäinen ja sisällettävä otsikon ja muun tarpeellisen.
-  Toinen parametri on atom, jonne parametrin arvo tulee päivittää.
-  Jos parametri on virheellisessä tilassa, asetetaan arvoksi :virhe.
-  Raporttia ei voi suorittaa, jos parametreissä on virheitä"
-  (fn [parametri arvo]
-    (:tyyppi parametri)))
+          "Muodosta UI-komponentti raportin parametristä. Komponentin tulee olla täysin
+          itsenäinen ja sisällettävä otsikon ja muun tarpeellisen.
+          Toinen parametri on atom, jonne parametrin arvo tulee päivittää.
+          Jos parametri on virheellisessä tilassa, asetetaan arvoksi :virhe.
+          Raporttia ei voi suorittaa, jos parametreissä on virheitä"
+          (fn [parametri arvo]
+            (:tyyppi parametri)))
 
 
 (defonce parametri-arvot (atom {}))
@@ -104,56 +104,57 @@
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
 
-(defonce valittu-hoitokausi (reaction (if @hoitourakassa?
-                                        @u/valittu-hoitokausi
-                                        (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
+(defonce valittu-hoitokausi (reaction-writable
+                             (if @hoitourakassa?
+                               @u/valittu-hoitokausi
+                               (pvm/paivamaaran-hoitokausi (pvm/nyt)))))
 
 (def valittu-vuosi (atom nil))
 
 (defonce kuukaudet (reaction
-                    (let [hk @valittu-hoitokausi
-                          vuosi @valittu-vuosi]
-                      (into
-                       []
-                       ;; koko hoitokausi tai vuosi
-                       (concat
-                        [nil]
-                        (cond
-                          hk
-                          (pvm/hoitokauden-kuukausivalit hk)
+                     (let [hk @valittu-hoitokausi
+                           vuosi @valittu-vuosi]
+                       (into
+                         []
+                         ;; koko hoitokausi tai vuosi
+                         (concat
+                           [nil]
+                           (cond
+                             hk
+                             (pvm/hoitokauden-kuukausivalit hk)
 
-                          vuosi
-                          (pvm/vuoden-kuukausivalit vuosi)
+                             vuosi
+                             (pvm/vuoden-kuukausivalit vuosi)
 
-                          :default
-                          []))))))
+                             :default
+                             []))))))
 
-(defonce valittu-kuukausi (reaction @u/valittu-hoitokauden-kuukausi))
+(defonce valittu-kuukausi (reaction-writable @u/valittu-hoitokauden-kuukausi))
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
 (def vain-hoitokausivalinta? #{:suolasakko})
 
 (defonce paivita-aikavalinta
-    (run! (let [hk @valittu-hoitokausi
-                vuosi @valittu-vuosi
-                kk @valittu-kuukausi
-                vapaa-aikavali? @vapaa-aikavali?
-                aikavali @vapaa-aikavali
-                vain-hoitokausivalinta? (vain-hoitokausivalinta?
-                                          (:nimi @valittu-raporttityyppi))
-                [alku loppu] (cond
-                               vain-hoitokausivalinta? hk
-                               vapaa-aikavali? aikavali
-                               kk kk
-                               hk hk
-                               vuosi (pvm/vuoden-aikavali vuosi)
-                               :default hk)]
-            (if (and alku loppu)
-              (swap! parametri-arvot
-                     assoc "Aikaväli" {:alkupvm alku :loppupvm loppu})
-              (swap! parametri-arvot
-                     assoc "Aikaväli" {:virhe "Aikaväli puuttuu"})))))
+  (run! (let [hk @valittu-hoitokausi
+              vuosi @valittu-vuosi
+              kk @valittu-kuukausi
+              vapaa-aikavali? @vapaa-aikavali?
+              aikavali @vapaa-aikavali
+              vain-hoitokausivalinta? (vain-hoitokausivalinta?
+                                        (:nimi @valittu-raporttityyppi))
+              [alku loppu] (cond
+                             vain-hoitokausivalinta? hk
+                             vapaa-aikavali? aikavali
+                             kk kk
+                             hk hk
+                             vuosi (pvm/vuoden-aikavali vuosi)
+                             :default hk)]
+          (if (and alku loppu)
+            (swap! parametri-arvot
+                   assoc "Aikaväli" {:alkupvm alku :loppupvm loppu})
+            (swap! parametri-arvot
+                   assoc "Aikaväli" {:virhe "Aikaväli puuttuu"})))))
 
 ;; Sovittu asiakaspalaverissa että tarjotaan 7 vuotta, ja jos jokin rapsa ei hyvin
 ;; toimi, ei se ole niin vaarallista. Voidaan tarvittaessa myöh. korjailla yksittäisiä
@@ -185,9 +186,9 @@
                                         vain-hoitokausivalinta?)}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
-          (reset! valittu-vuosi %)
-          (reset! valittu-hoitokausi nil)
-          (reset! valittu-kuukausi nil))]
+         (reset! valittu-vuosi %)
+         (reset! valittu-hoitokausi nil)
+         (reset! valittu-kuukausi nil))]
       (when (or hoitourakassa? (nil? ur))
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
@@ -196,11 +197,11 @@
            (u/edelliset-hoitokaudet 5 true))
          valittu-hoitokausi
          #(do
-            (reset! valittu-hoitokausi %)
-            (reset! valittu-vuosi nil)
-            (reset! valittu-kuukausi nil))])
-      [ui-valinnat/kuukausi {:disabled    (or @vapaa-aikavali?
-                                              vain-hoitokausivalinta?)
+           (reset! valittu-hoitokausi %)
+           (reset! valittu-vuosi nil)
+           (reset! valittu-kuukausi nil))])
+      [ui-valinnat/kuukausi {:disabled (or @vapaa-aikavali?
+                                           vain-hoitokausivalinta?)
                              :nil-valinta (if @valittu-vuosi
                                             "Koko vuosi"
                                             "Koko hoitokausi")}
@@ -208,8 +209,8 @@
 
      (when-not vain-hoitokausivalinta?
        [:div.raportin-valittu-aikavali
-        [yleiset/raksiboksi {:teksti      "Valittu aikaväli"
-                             :toiminto    #(swap! vapaa-aikavali? not)
+        [yleiset/raksiboksi {:teksti "Valittu aikaväli"
+                             :toiminto #(swap! vapaa-aikavali? not)
                              :komponentti (when @vapaa-aikavali?
                                             [:div
                                              [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]}]
@@ -258,12 +259,12 @@
   (fn []
     [yleiset/pudotusvalikko
      "Tekijä"
-     {:valinta    @laatupoikkeama-tekija
+     {:valinta @laatupoikkeama-tekija
       :valitse-fn #(do (reset! laatupoikkeama-tekija %)
                        (reset! arvo {:laatupoikkeamatekija %}))
-      :format-fn  #(case %
-                    :kaikki "Kaikki"
-                    (laatupoikkeamat/kuvaile-tekija %))}
+      :format-fn #(case %
+                   :kaikki "Kaikki"
+                   (laatupoikkeamat/kuvaile-tekija %))}
 
      [:kaikki :urakoitsija :tilaaja :konsultti]]))
 
@@ -290,7 +291,7 @@
                                                  (:id %))}))
       :format-fn #(case %
                    :kaikki "Kaikki"
-                   (str (:siltanimi %) " ("(:siltatunnus %) ")"))}
+                   (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
 
      (into [] (cons :kaikki (sort-by :siltatunnus @urakan-sillat)))]))
 
@@ -314,7 +315,7 @@
   (fn []
     [yleiset/pudotusvalikko
      "Vuosi"
-     {:valinta    @urakan-vuosi
+     {:valinta @urakan-vuosi
       :valitse-fn #(do (reset! urakan-vuosi %)
                        (reset! arvo {:vuosi %}))}
 
@@ -354,29 +355,29 @@
 
 (defmethod raportin-parametri "hoitoluokat" [p arvo]
   (komp/luo
-   (komp/sisaan #(reset! arvo {:hoitoluokat (or (get @muistetut-parametrit :hoitoluokat)
-                                                (into #{}
-                                                      (map :numero hoitoluokat/talvihoitoluokat)))}))
-   (fn [p arvo]
-     [:div.hoitoluokat
-      [yleiset/otsikolla "Hoitoluokat"
-       (let [arvo-nyt @arvo
-             valitut (:hoitoluokat arvo-nyt)
-             [vasen oikea] (partition 4 hoitoluokat/talvihoitoluokat)]
-         (vec (concat
-               [yleiset/rivi {:koko  "col-sm-2"}]
-               (for [sarake (partition 4 hoitoluokat/talvihoitoluokat)]
-                 ^{:key (:numero (first sarake))}
-                 [:div.inline
-                  (for [{:keys [nimi numero]} sarake
-                        :let [valittu? (valitut numero)]]
-                    ^{:key numero}
-                    [yleiset/raksiboksi {:teksti nimi
-                                         :toiminto #(let [uusi-arvo {:hoitoluokat
-                                                                     ((if valittu? disj conj) valitut numero)}]
-                                                     (reset! arvo uusi-arvo)
-                                                     (swap! muistetut-parametrit merge uusi-arvo))}
-                     valittu?])]))))]])))
+    (komp/sisaan #(reset! arvo {:hoitoluokat (or (get @muistetut-parametrit :hoitoluokat)
+                                                 (into #{}
+                                                       (map :numero hoitoluokat/talvihoitoluokat)))}))
+    (fn [p arvo]
+      [:div.hoitoluokat
+       [yleiset/otsikolla "Hoitoluokat"
+        (let [arvo-nyt @arvo
+              valitut (:hoitoluokat arvo-nyt)
+              [vasen oikea] (partition 4 hoitoluokat/talvihoitoluokat)]
+          (vec (concat
+                 [yleiset/rivi {:koko "col-sm-2"}]
+                 (for [sarake (partition 4 hoitoluokat/talvihoitoluokat)]
+                   ^{:key (:numero (first sarake))}
+                   [:div.inline
+                    (for [{:keys [nimi numero]} sarake
+                          :let [valittu? (valitut numero)]]
+                      ^{:key numero}
+                      [yleiset/raksiboksi {:teksti nimi
+                                           :toiminto #(let [uusi-arvo {:hoitoluokat
+                                                                       ((if valittu? disj conj) valitut numero)}]
+                                                       (reset! arvo uusi-arvo)
+                                                       (swap! muistetut-parametrit merge uusi-arvo))}
+                       valittu?])]))))]])))
 
 (defmethod raportin-parametri :default [p arvo]
   [:span (pr-str p)])
@@ -401,7 +402,7 @@
 (def parametri-omalle-riville? #{"aikavali" "urakoittain" "tienumero"})
 
 (def ^{:private true :doc "Mahdolliset raportin vientimuodot"}
-  +vientimuodot+
++vientimuodot+
   [[(ikonit/save) "Tallenna Excel" "raporttixls" (k/excel-url :raportointi)]
    [(ikonit/print) "Tallenna PDF" "raporttipdf" (k/pdf-url :raportointi)]])
 
@@ -413,13 +414,13 @@
                                   parametrit (case konteksti
                                                "koko maa"
                                                (raportit/koko-maa-raportin-parametrit
-                                                (:nimi raporttityyppi) arvot-nyt)
+                                                 (:nimi raporttityyppi) arvot-nyt)
                                                "hallintayksikko"
                                                (raportit/hallintayksikon-raportin-parametrit
-                                                (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
+                                                 (:id v-hal) (:nimi raporttityyppi) arvot-nyt)
                                                "urakka"
                                                (raportit/urakkaraportin-parametrit
-                                                (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
+                                                 (:id v-ur) (:nimi raporttityyppi) arvot-nyt))]
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
                               true))]
@@ -429,10 +430,10 @@
        [:form {:target "_blank" :method "POST" :id id
                :style {:display "inline"}
                :action url}
-        [:input {:type  "hidden" :name "parametrit"
+        [:input {:type "hidden" :name "parametrit"
                  :value ""}]
         [:button.nappi-ensisijainen.pull-right
-         {:type     "submit"
+         {:type "submit"
           :disabled (not voi-suorittaa?)
           :on-click #(aseta-parametrit! id)}
          ikoni " " teksti]])]))
@@ -462,44 +463,44 @@
     [:span
      (when-not raportissa?
        (map-indexed
-        (fn [i cols]
-          ^{:key i}
-          [:div.row (seq cols)])
-        (loop [rows []
-               row nil
-               [p & parametrit] (filter :tyyppi parametrit)] ;; Kaikilla rapsoilla ei parametreja, älä näytä tyhjiä
+         (fn [i cols]
+           ^{:key i}
+           [:div.row (seq cols)])
+         (loop [rows []
+                row nil
+                [p & parametrit] (filter :tyyppi parametrit)] ;; Kaikilla rapsoilla ei parametreja, älä näytä tyhjiä
 
-          (let [arvo (r/wrap (get @parametri-arvot (:nimi p))
-                             #(swap! parametri-arvot assoc (:nimi p) %))]
-            (if-not p
-              (conj rows row)
-              (let [par ^{:key (:nimi p)} [:div
-                                           {:class (if (parametri-omalle-riville? (:tyyppi p))
-                                                     "col-md-12"
-                                                     "col-md-4")}
-                                           [raportin-parametri p arvo]]]
-                (cond
-                  ;; checkboxit ja aikaväli aina omalle riville
-                  (parametri-omalle-riville? (:tyyppi p))
-                  (recur (conj (if row
-                                 (conj rows row)
-                                 rows)
-                               [par])
-                         nil
-                         parametrit)
+           (let [arvo (r/wrap (get @parametri-arvot (:nimi p))
+                              #(swap! parametri-arvot assoc (:nimi p) %))]
+             (if-not p
+               (conj rows row)
+               (let [par ^{:key (:nimi p)} [:div
+                                            {:class (if (parametri-omalle-riville? (:tyyppi p))
+                                                      "col-md-12"
+                                                      "col-md-4")}
+                                            [raportin-parametri p arvo]]]
+                 (cond
+                   ;; checkboxit ja aikaväli aina omalle riville
+                   (parametri-omalle-riville? (:tyyppi p))
+                   (recur (conj (if row
+                                  (conj rows row)
+                                  rows)
+                                [par])
+                          nil
+                          parametrit)
 
-                  ;; Jos rivi on täynnä aloitetaan uusi
-                  (= 3 (count row))
-                  (recur (conj rows row)
-                         [par]
-                         parametrit)
+                   ;; Jos rivi on täynnä aloitetaan uusi
+                   (= 3 (count row))
+                   (recur (conj rows row)
+                          [par]
+                          parametrit)
 
-                  ;; Muutoin lisätään aiempaan riviin
-                  :default
-                  (recur rows
-                         (if row (conj row par)
-                             [par])
-                         parametrit))))))))
+                   ;; Muutoin lisätään aiempaan riviin
+                   :default
+                   (recur rows
+                          (if row (conj row par)
+                                  [par])
+                          parametrit))))))))
 
      [:div.row
       [:div.col-md-12
@@ -510,26 +511,47 @@
         [vie-raportti v-hal v-ur konteksti raporttityyppi voi-suorittaa? arvot-nyt]
         (when-not raportissa?
           [napit/palvelinkutsu-nappi " Tee raportti"
-           #(go (reset! raportit/suoritettu-raportti :ladataan)
-                (let [raportti
-                      (<! (case konteksti
-                            "koko maa"
-                            (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                                arvot-nyt)
-                            "hallintayksikko"
-                            (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                       (:nimi raporttityyppi)
-                                                                       arvot-nyt)
-                            "urakka"
-                            (raportit/suorita-raportti-urakka (:id v-ur)
-                                                              (:nimi raporttityyppi)
-                                                              arvot-nyt)))]
-                  (if-not (k/virhe? raportti)
-                    (reset! raportit/suoritettu-raportti raportti)
-                    (do
-                      (reset! raportit/suoritettu-raportti nil)
-                      raportti))))
-           {:ikoni    [ikonit/list]
+           #(go
+             (reset! raportit/suoritettu-raportti :ladataan)
+             (let [suorituksen-parametrit [konteksti
+                                           (:nimi raporttityyppi)
+                                           arvot-nyt
+                                           (:id v-ur)
+                                           (:id v-hal)]
+                   _ (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+                   raportti
+                   (<! (case konteksti
+                         "koko maa"
+                         (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                             arvot-nyt)
+                         "hallintayksikko"
+                         (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                    (:nimi raporttityyppi)
+                                                                    arvot-nyt)
+                         "urakka"
+                         (raportit/suorita-raportti-urakka (:id v-ur)
+                                                           (:nimi raporttityyppi)
+                                                           arvot-nyt)))]
+               (log "[RAPORTTI] Raportin suoritus valmis")
+               (cond
+                 (not= @raportit/suoritettu-raportti :ladataan)
+                 (do (log "[RAPORTTI] Poistuttu latausnäkymästä, hylätään suoritettu raportti.")
+                     raportti)
+
+                 (not= @raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+                 (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä viimeksi pyysi, hylätään raportti")
+                     raportti)
+
+                 (k/virhe? raportti)
+                 (do
+                   (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)
+                   (reset! raportit/suoritettu-raportti nil)
+                     raportti)
+
+                 :default
+                 (do (reset! raportit/suoritettu-raportti raportti)
+                     (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))
+           {:ikoni [ikonit/list]
             :disabled (not voi-suorittaa?)}])]]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
@@ -551,8 +573,8 @@
 
 (defn raporttivalinnat []
   (komp/luo
-   ;; Ei tällä hetkellä raporteissa sallita urakoitsijavalintaa
-   (komp/sisaan #(nav/valitse-urakoitsija! nil))
+    ;; Ei tällä hetkellä raporteissa sallita urakoitsijavalintaa
+    (komp/sisaan #(nav/valitse-urakoitsija! nil))
     (fn []
       (let [v-ur @nav/valittu-urakka
             v-ur-tyyppi @nav/valittu-urakkatyyppi
@@ -573,11 +595,11 @@
                          {:valitse-fn nav/valitse-urakka
                           :valinta v-ur
                           :class "raportti-alasveto"
-                          :nayta-ryhmat   [:kaynnissa :paattyneet]
-                          :ryhmittely     (let [nyt (pvm/nyt)]
-                                            #(if (pvm/jalkeen? nyt (:loppupvm %))
-                                              :paattyneet
-                                              :kaynnissa))
+                          :nayta-ryhmat [:kaynnissa :paattyneet]
+                          :ryhmittely (let [nyt (pvm/nyt)]
+                                        #(if (pvm/jalkeen? nyt (:loppupvm %))
+                                          :paattyneet
+                                          :kaynnissa))
                           :ryhman-otsikko #(case %
                                             :kaynnissa "Käynnissä olevat urakat"
                                             :paattyneet "Päättyneet urakat")
@@ -592,11 +614,11 @@
                           (empty? @mahdolliset-raporttityypit)
                           [:span (str "Ei raportteja saatavilla urakkatyypissä " (str/lower-case (:nimi v-ur-tyyppi)))]
                           :default
-                          [livi-pudotusvalikko {:valinta    @valittu-raporttityyppi
+                          [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
-                                                :format-fn  #(if % (:kuvaus %) "Valitse")
+                                                :format-fn #(if % (:kuvaus %) "Valitse")
                                                 :valitse-fn #(valitse-raporttityyppi! (:nimi %))
-                                                :class      "raportti-alasveto"
+                                                :class "raportti-alasveto"
                                                 :li-luokka-fn #(if (= "Työmaakokousraportti" (:kuvaus %))
                                                                 "tyomaakokous"
                                                                 "")}
@@ -608,9 +630,9 @@
 
 (defn nayta-raportti [tyyppi r]
   (komp/luo
-   (fn [tyyppi r]
-     [:span
-      [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
+    (fn [tyyppi r]
+      [:span
+       [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
 
 (defn raporttivalinnat-ja-raportti []
   (let [r @raportit/suoritettu-raportti]

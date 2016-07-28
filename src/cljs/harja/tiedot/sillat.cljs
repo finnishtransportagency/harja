@@ -4,7 +4,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.atom :refer-macros [reaction<! reaction-writable]]
             [harja.geo :as geo])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -47,8 +47,9 @@
             sillat))))
 
 (def sillat-kartalla
-  (reaction (skaalaa-sillat-zoom-tason-mukaan
-             @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
+  (reaction-writable
+   (skaalaa-sillat-zoom-tason-mukaan
+    @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
 
 
 (defn paivita-silta! [id funktio & args]

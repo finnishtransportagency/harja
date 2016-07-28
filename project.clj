@@ -77,7 +77,6 @@
                  [cljsjs/react-with-addons "15.2.1-1"]
                  [cljsjs/react-dom "15.2.1-1" :exclusions [cljsjs/react]]
 
-
                  [alandipert/storage-atom "1.2.4"]
 
                  [clj-time "0.11.0"]

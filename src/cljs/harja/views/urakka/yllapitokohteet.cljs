@@ -25,8 +25,7 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn laske-sarakkeen-summa [sarake kohderivit]
   (reduce + (mapv
@@ -378,9 +377,10 @@
 (defn yllapitokohteet [urakka kohteet-atom optiot]
   (let [tr-sijainnit (atom {})                              ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {})                                ;; virheelliset TR sijainnit
-        tallenna (reaction (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
-                             :ei-mahdollinen
-                             (:tallenna optiot)))]
+        tallenna (reaction
+                  (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? (:yha-sidottu? optiot))
+                    :ei-mahdollinen
+                    (:tallenna optiot)))]
     (komp/luo
       (fn [urakka kohteet-atom optiot]
         [:div.yllapitokohteet
@@ -477,27 +477,28 @@
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
-  (let [yhteensa (reaction (let [kohteet @kohteet-atom
-                                 sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
-                                 toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
-                                 muutoshinta-yhteensa (laske-sarakkeen-summa :muutoshinta kohteet)
-                                 arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
-                                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
-                                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
-                                 kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
-                                                  toteutunut-hinta-yhteensa
-                                                  muutoshinta-yhteensa
-                                                  arvonvahennykset-yhteensa
-                                                  bitumi-indeksi-yhteensa
-                                                  kaasuindeksi-yhteensa)]
-                             [{:id 0
-                               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
-                               :muutoshinta muutoshinta-yhteensa
-                               :toteutunut-hinta toteutunut-hinta-yhteensa
-                               :arvonvahennykset arvonvahennykset-yhteensa
-                               :bitumi-indeksi bitumi-indeksi-yhteensa
-                               :kaasuindeksi kaasuindeksi-yhteensa
-                               :kokonaishinta kokonaishinta}]))]
+  (let [yhteensa (reaction
+                  (let [kohteet @kohteet-atom
+                        sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                        toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
+                        muutoshinta-yhteensa (laske-sarakkeen-summa :muutoshinta kohteet)
+                        arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
+                        bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
+                        kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
+                        kokonaishinta (+ sopimuksen-mukaiset-tyot-yhteensa
+                                         toteutunut-hinta-yhteensa
+                                         muutoshinta-yhteensa
+                                         arvonvahennykset-yhteensa
+                                         bitumi-indeksi-yhteensa
+                                         kaasuindeksi-yhteensa)]
+                    [{:id 0
+                      :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
+                      :muutoshinta muutoshinta-yhteensa
+                      :toteutunut-hinta toteutunut-hinta-yhteensa
+                      :arvonvahennykset arvonvahennykset-yhteensa
+                      :bitumi-indeksi bitumi-indeksi-yhteensa
+                      :kaasuindeksi kaasuindeksi-yhteensa
+                      :kokonaishinta kokonaishinta}]))]
     [grid/grid
      {:otsikko "Yhteensä"
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}

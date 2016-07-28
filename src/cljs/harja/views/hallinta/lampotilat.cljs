@@ -18,9 +18,9 @@
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<! reaction-writable]]))
 
-(defonce lampotilarivit (reaction @tiedot/hoitourakoiden-lampotilat))
+(defonce lampotilarivit (reaction-writable @tiedot/hoitourakoiden-lampotilat))
 
 (defonce taulukon-virheet (atom nil))
 

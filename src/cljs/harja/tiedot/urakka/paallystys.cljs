@@ -15,7 +15,7 @@
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<! reaction-writable]]))
 
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
@@ -57,7 +57,7 @@
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
 (def yhan-paallystyskohteet
-  (reaction
+  (reaction-writable
     (let [kohteet @yllapitokohteet
           yha-kohteet (when kohteet
                         (filter

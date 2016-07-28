@@ -141,7 +141,7 @@
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 
 (defonce valittu-hoitokauden-kuukausi
-         (reaction
+         (reaction-writable
            (let [hk @valittu-hoitokausi
                  ur @nav/valittu-urakka
                  kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
