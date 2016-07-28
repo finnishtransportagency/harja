@@ -31,6 +31,7 @@
     * Oletuksena viestit suljetaan aina, kun tätä nappia painetaan uudelleen
   - disabled (false)
     * jos true, nappi on disabloitu aina
+  - id. button elementin DOM id
 
   Napille voi callbackeja asetuksissa:
   - kun-valmis: kutsutaan AINA jos annettu. Kutsutaan ENSIMMÄISENÄ!
@@ -57,7 +58,8 @@
 
         [:span
          [:button
-          {:disabled (or @kysely-kaynnissa? (:disabled asetukset))
+          {:id (:id asetukset)
+           :disabled (or @kysely-kaynnissa? (:disabled asetukset))
            :class    (if (or @kysely-kaynnissa? (:disabled asetukset))
                        (str luokka " disabled")
                        luokka)
@@ -103,7 +105,7 @@
    [y/ikoni-ja-teksti (ikonit/livicon-chevron-left) teksti]])
 
 (defn uusi
-  "Nappi 'uuden asian' luonnille. 
+  "Nappi 'uuden asian' luonnille.
 Asetukset on optionaalinen mäppi ja voi sisältää:
   :disabled  jos true, nappi on disabloitu"
 
@@ -156,4 +158,3 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
     (if ikoni
       [:span ikoni (str " " teksti)]
       teksti)]))
-
