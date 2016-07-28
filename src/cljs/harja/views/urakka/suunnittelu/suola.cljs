@@ -50,9 +50,10 @@
     (filter #(= (:hoitokauden_alkuvuosi %) (pvm/vuosi (first eka-hk))) rivit)))
 
 (defonce syotettavat-tiedot
-  (reaction (let [ss @suolasakot-ja-lampotilat]
-              {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss)))
-               :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss)))})))
+  (reaction-writable
+   (let [ss @suolasakot-ja-lampotilat]
+     {:suolasakko (first (yhden-hoitokauden-rivit (:suolasakot ss)))
+      :pohjavesialue-talvisuola (vec (yhden-hoitokauden-rivit (:pohjavesialue-talvisuola ss)))})))
 
 (defonce pohjavesialueet
   (reaction-writable
