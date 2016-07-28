@@ -62,18 +62,35 @@
     (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 5))
     (is (= (count urakan-valitavoitteet) 7))))
 
+(deftest tarkista-paallystysurakan-toimenpideinstanssin-luonto
+  (let [viestit (atom [])]
+    ;; Testiä varten asetetaan testihankkeelle uudet sampo-tyypit
+    (u "UPDATE hanke SET sampo_tyypit = 'TYP' WHERE sampoid = 'TESTIHANKE'")
+    (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
+    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testiurakka-sanoma+)
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+
+    (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" (first @viestit)) "Kuittaus on validia XML:ää.")
+    (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
+    (let [urakan-tpi (ffirst (q "SELECT id
+                                  FROM toimenpideinstanssi
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
+                                  AND nimi = 'Päällystyksen yksikköhintaiset työt'"))]
+      (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
+
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
-  [])
+    [])
 
 #_(deftest aja-testipatteri
-  (let [SIIRTOJA (COUNT TESTIDATAPATTERI)
-        VIESTIT (ATOM [])]
-    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-    (doseq [testidata testidatapatteri]
-      (println "Lähetetään: " testidata)
-      (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ testidata))
-    (odota-ehdon-tayttymista #(= siirtoja (count @viestit)) "Kuittaukset on vastaanotettu." 1200000)
-    (let [epaonnistuneet (q "SELECT v.sisalto, t.lisatietoja FROM integraatioviesti  v  RIGHT JOIN integraatiotapahtuma t ON v.integraatiotapahtuma = t.id  RIGHT JOIN integraatio i ON t.integraatio = i.id WHERE NOT t.onnistunut AND v.suunta = 'sisään' AND i.jarjestelma = 'sampo' and nimi = 'sisaanluku'")]
-      (println "Epäonnistuneet:" epaonnistuneet)
-      (println "Ajettiin yhteensä:" siirtoja "siirtoa"))))
+    (let [SIIRTOJA (COUNT TESTIDATAPATTERI)
+          VIESTIT (ATOM [])]
+      (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+      (doseq [testidata testidatapatteri]
+        (println "Lähetetään: " testidata)
+        (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ testidata))
+      (odota-ehdon-tayttymista #(= siirtoja (count @viestit)) "Kuittaukset on vastaanotettu." 1200000)
+      (let [epaonnistuneet (q "SELECT v.sisalto, t.lisatietoja FROM integraatioviesti  v  RIGHT JOIN integraatiotapahtuma t ON v.integraatiotapahtuma = t.id  RIGHT JOIN integraatio i ON t.integraatio = i.id WHERE NOT t.onnistunut AND v.suunta = 'sisään' AND i.jarjestelma = 'sampo' and nimi = 'sisaanluku'")]
+        (println "Epäonnistuneet:" epaonnistuneet)
+        (println "Ajettiin yhteensä:" siirtoja "siirtoa"))))
