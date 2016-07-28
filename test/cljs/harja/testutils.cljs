@@ -1,11 +1,12 @@
 (ns harja.testutils
-  (:require [cljs.test :as t]
+  (:require [cljs.test :as t :refer-macros [is]]
             [cljs-react-test.utils :as rt-utils]
             [dommy.core :as dommy]
             [reagent.core :as r]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<! >!] :as async]
-            [harja.tiedot.istunto :as istunto])
+            [cljs.core.async :refer [<! >! timeout alts!] :as async]
+            [harja.tiedot.istunto :as istunto]
+            [cljs-react-test.simulate :as sim])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def *test-container* (atom nil))
@@ -52,10 +53,16 @@
    :after #(do (reset! k/testmode nil)
                (reset! fake-palvelukutsut {}))})
 
-(defn fake-palvelukutsu [palvelu vastaus-fn]
-  (let [ch (async/chan)]
-    (swap! fake-palvelukutsut assoc palvelu [ch vastaus-fn])
-    ch))
+(defn fake-palvelukutsu
+  ([palvelu vastaus-fn] (fake-palvelukutsu palvelu vastaus-fn 30000))
+  ([palvelu vastaus-fn timeout-ms]
+   (let [ch (async/chan)
+         timeout-ch (timeout timeout-ms)]
+     (swap! fake-palvelukutsut assoc palvelu [ch vastaus-fn])
+     (go (let [[val port] (alts! [ch timeout-ch])]
+           (is (not= port timeout-ch) (str "Palvelukutsua " palvelu " ei tehty "
+                                           timeout-ms " ajassa."))
+           val)))))
 
 (defn render
   "Renderöi annetun komponentin (hiccup vektori) testi containeriin"
@@ -86,3 +93,12 @@
               "tr:nth-child(" (inc rivi-nro) ") "
               "td:nth-child(" (inc sarake-nro) ") "
               solu-path))))
+
+(defn click [path]
+  (let [elt (sel1 path)]
+    (is (some? elt) (str "Elementti polulla " path " ei ole!"))
+    (when elt
+      (let [disabled? (.-disabled elt)]
+        (is (not disabled?) (str "Elementti " elt " on disabled tilassa!"))
+        (when-not disabled?
+          (sim/click elt nil))))))
