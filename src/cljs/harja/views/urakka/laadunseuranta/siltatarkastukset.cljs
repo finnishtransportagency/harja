@@ -459,7 +459,7 @@
 
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
          [:button.nappi-ensisijainen
-          {:class    (when @tallennus-kaynnissa "disabled")
+          {:class (when @tallennus-kaynnissa "disabled")
            :disabled (not voi-tallentaa?)
            :on-click
            #(do (.preventDefault %)
@@ -468,14 +468,15 @@
                                                       (assoc :uudet-liitteet @uudet-liitteet)
                                                       (assoc :urakka-id (:id @nav/valittu-urakka)))
                           res (<! (tallenna-siltatarkastus! tallennettava-tarkastus))]
-                      (if res
+                      (if (k/virhe? res)
+                        ;; Epäonnistui jostain syystä
+                        (do
+                          (viesti/nayta! "Tallentaminen epäonnistui" :danger viesti/viestin-nayttoaika-lyhyt)
+                          (reset! tallennus-kaynnissa false))
                         ;; Tallennus ok
                         (do (viesti/nayta! "Siltatarkastus tallennettu")
                             (reset! tallennus-kaynnissa false)
-                            (reset! muokattava-tarkastus nil))
-                        ;; Epäonnistui jostain syystä
-                        (viesti/nayta! "Tallentaminen epäonnistui" ::danger viesti/viestin-nayttoaika-lyhyt)
-                        (reset! tallennus-kaynnissa false)))))}
+                            (reset! muokattava-tarkastus nil))))))}
           (ikonit/tallenna) " Tallenna tarkastus"]
          (when (not voi-tallentaa?)
            [:span.napin-vinkki
