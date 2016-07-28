@@ -64,8 +64,7 @@
 
 (deftest tarkista-paallystysurakan-toimenpideinstanssin-luonto
   (let [viestit (atom [])]
-    ;; Testiä varten asetetaan testihankkeelle uudet sampo-tyypit
-    (u "UPDATE hanke SET sampo_tyypit = 'TYP' WHERE sampoid = 'TESTIHANKE'")
+    ;; TODO Testiä varten asetetaan testihankkeelle uudet sampo-tyypit
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
     (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testiurakka-sanoma+)
