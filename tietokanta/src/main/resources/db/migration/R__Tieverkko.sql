@@ -107,6 +107,7 @@ BEGIN
            RETURN (etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
         END IF;
      END LOOP;
+     RETURN etaisyys;
   ELSE
      etaisyys := ST_Length(ST_LineSubstring(viiva, 0, ST_LineLocatePoint(viiva, apiste)));
      RETURN etaisyys::FLOAT / ST_Length(viiva)::FLOAT;
