@@ -68,14 +68,6 @@
                             :tilattu-maara 10
                             :toteutunut-maara 110}]
                     :osoitteet [{:tr-numero 20
-                                 :tr-alkuosa 3 :tr-alkuetaisyys 123
-                                 :tr-loppuosa 5 :tr-loppuetaisyys 100
-                                 :kohdeosa-id 31 :tr-kaista 26 :tr-ajorata 2
-                                 :tunnus "k"  :massamenekki 42
-                                 :nimi "piru 2" :raekoko 66
-                                 :paallystetyyppi 1
-                                 :toimenpide "ja kolomas"}
-                                {:tr-numero 20
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
                                  :tr-loppuosa 3 :tr-loppuetaisyys 42
                                  :kohdeosa-id 30 :tr-kaista 1 :tr-ajorata 0
@@ -89,7 +81,15 @@
                                  :esiintyma "kovasti kovestä" :pitoisuus 44
                                  :tunnus "y" :nimi "piru 1.5"
                                    :toimenpide "toka!"
-                                 :km-arvo "9"}]
+                                 :km-arvo "9"}
+                                {:tr-numero 20
+                                 :tr-alkuosa 3 :tr-alkuetaisyys 123
+                                 :tr-loppuosa 5 :tr-loppuetaisyys 100
+                                 :kohdeosa-id 31 :tr-kaista 26 :tr-ajorata 2
+                                 :tunnus "k"  :massamenekki 42
+                                 :nimi "piru 2" :raekoko 66
+                                 :paallystetyyppi 1
+                                 :toimenpide "ja kolomas"}]
                     :alustatoimet []}
    :asiatarkastus {:lisatiedot nil :tarkastusaika nil :tarkastaja nil}
    :arvonvahennykset nil
