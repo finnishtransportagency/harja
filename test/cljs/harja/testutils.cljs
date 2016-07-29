@@ -102,3 +102,15 @@
         (is (not disabled?) (str "Elementti " elt " on disabled tilassa!"))
         (when-not disabled?
           (sim/click elt nil))))))
+
+(defn change [path value]
+  (let [elt (sel1 path)]
+    (is (some? elt) (str "Muokattava elementti polulla " path " ei ole!"))
+    (when elt
+      (sim/change elt {:target {:value value}}))))
+
+(defn disabled? [path]
+  (let [elt (sel1 path)]
+    (is (some? elt) (str "Testattavaa elementtiä polulla " path " ei ole!"))
+    (when elt
+      (.-disabled elt))))
