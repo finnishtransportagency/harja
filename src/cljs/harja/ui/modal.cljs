@@ -1,7 +1,8 @@
 (ns harja.ui.modal
   "Modaali näyttökomponentti. Näitä yksi kappale päätasolle."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.dom :as dom]))
+            [harja.ui.dom :as dom]
+            [harja.asiakas.tapahtumat :as t]))
 
 (def modal-sisalto (atom {:otsikko nil
                           :sisalto nil
@@ -17,6 +18,7 @@
 (defn modal-container
   "Tämä komponentti sisältää modaalin ja on tarkoitus laittaa päätason sivuun"
   []
+
   (let [{:keys [otsikko sisalto footer nakyvissa? luokka leveys]} @modal-sisalto]
     (if nakyvissa?
       ^{:key "modaali"}
@@ -50,3 +52,8 @@
                          :sulje sulje
                          :nakyvissa? true
                          :leveys leveys}))
+
+(defn aloita-urln-kuuntelu []
+  (t/kuuntele! :url-muuttui
+               (fn [_]
+                 (piilota!))))

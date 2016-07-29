@@ -13,7 +13,8 @@
 
             [cljsjs.react]
 
-            [harja.pvm])
+            [harja.pvm]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn render []
@@ -48,7 +49,7 @@
                    {:url    url
                     :viesti errorMsg
                     :rivi   lineNumber
-                    :sarake column
+                    :sarake columnaloita-urln-kuuntelu
                     :selain (.-userAgent (.-navigator js/window))
                     :stack (when errorObj (aget errorObj "stack"))})
           (v/arsyttava-virhe errorMsg url lineNumber column errorObj)))
@@ -58,6 +59,7 @@
   (go
     (istunto/lisaa-ajastin-tapahtumakuuntelijat)
     (istunto/kaynnista-ajastin!)
+    (modal/aloita-urln-kuuntelu)
     (k/kaynnista-palvelimen-pingaus)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))
