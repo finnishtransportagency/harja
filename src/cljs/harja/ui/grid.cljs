@@ -33,7 +33,6 @@
   (assert (not (nil? teksti)) "Anna otsikolle teksti.")
   (->Otsikko teksti))
 
-
 (defn otsikko? [x]
   (instance? Otsikko x))
 
