@@ -172,7 +172,7 @@
 
 (defn tallennus
   [urakka {:keys [valmispvm-kohde valmispvm-paallystys tekninen-osa taloudellinen-osa
-           tila] :as lomake} valmis-tallennettavaksi?]
+           tila] :as lomake} valmis-tallennettavaksi? tallennus-onnistui]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         paatos-taloudellinen-osa (:paatos taloudellinen-osa)
         huomautusteksti
@@ -206,11 +206,7 @@
        :disabled (false? valmis-tallennettavaksi?)
        :ikoni (ikonit/tallenna)
        :virheviesti "Tallentaminen epäonnistui"
-       :kun-onnistuu (fn [vastaus]
-                       (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
-                       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-                       (reset! paallystys/paallystysilmoitukset vastaus)
-                       (reset! paallystys/paallystysilmoitus-lomakedata nil))}]]))
+       :kun-onnistuu tallennus-onnistui}]]))
 
 (defn- tr-vali-paakohteen-sisalla? [lomakedata _ rivi]
   (when-not (and (<= (:tr-alkuosa lomakedata) (:aosa rivi) (:tr-loppuosa lomakedata))
@@ -672,11 +668,12 @@
       toteutuneet-maarat]]))
 
 (defn paallystysilmoituslomake [urakka {:keys [kohdenumero]} _ muokkaa! historia]
+(defn paallystysilmoituslomake [urakka {:keys [kohdenumero]} _ muokkaa! historia tallennus-onnistui]
   (komp/luo
    (komp/ulos #(kartta/poista-popup!))
    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" kohdenumero))
    (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt}
-        lukko muokkaa! historia]
+        lukko muokkaa! historia tallennus-onnistui]
      (let [lukittu? (lukko/nakyma-lukittu? lukko)
            valmis-tallennettavaksi? (and
                                      (not (= tila :lukittu))
@@ -725,6 +722,7 @@
         [yhteenveto lomakedata-nyt]
 
         [tallennus urakka lomakedata-nyt valmis-tallennettavaksi?]
+        [tallennus urakka lomakedata-nyt valmis-tallennettavaksi? tallennus-onnistui]
 
         [debug lomakedata-nyt]]))))
 
@@ -852,6 +850,13 @@
         @lukko/nykyinen-lukko
         (partial swap! ilmoituslomake)
         historia]))))
+        historia
+        #(fn [vastaus]
+           (log "[PÄÄLLYSTYS] Lomake tallennettu, vastaus: " (pr-str vastaus))
+           ;; FIXME: älä resetoi suoraan tieto ns:n atomeja
+           (urakka/lukitse-urakan-yha-sidonta! (:id @nav/valittu-urakka))
+           (reset! paallystys/paallystysilmoitukset vastaus)
+           (reset! ilmoituslomake nil))]))))
 
 (defn paallystysilmoitukset []
   (komp/luo
@@ -862,5 +867,5 @@
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        (if-let [ilmoitus @paallystys/paallystysilmoitus-lomakedata]
-         [paallystysilmoituslomake-historia @paallystys/paallystysilmoitus-lomakedata]
+         [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [ilmoitusluettelo])])))
