@@ -132,7 +132,10 @@
      :tyyppi :valinta
      :valinnat [:hyvaksytty :hylatty]
      :validoi [[:ei-tyhja "Anna päätös"]]
-     :valinta-nayta #(if % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %) (if muokattava? "- Valitse päätös -" "-"))
+     :valinta-nayta #(cond
+                       % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                       muokattava? "- Valitse päätös -"
+                       :default "-")
      :palstoja 1}
 
     (when (:paatos osa)
