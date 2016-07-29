@@ -14,9 +14,6 @@
   (when (:sulje @modal-sisalto) ((:sulje @modal-sisalto)))
   (swap! modal-sisalto assoc :nakyvissa? false))
 
-;;(def ctg (r/adapt-react-class (-> js/React  (aget "addons") (aget "CSSTransitionGroup"))))
-
-
 (defn modal-container
   "Tämä komponentti sisältää modaalin ja on tarkoitus laittaa päätason sivuun"
   []
@@ -44,23 +41,6 @@
 
       ^{:key "ei-modaalia"}
       [:span.modaali-ei-nakyvissa])))
-
-
-
-
-(defn modal [{:keys [sulje otsikko footer luokka]} sisalto]
-  (.log js/console "NÄYTETÄÄN: " sisalto)
-  (reset! modal-sisalto {:otsikko otsikko
-                         :footer footer
-                         :sisalto sisalto
-                         :luokka luokka
-                         :sulje sulje
-                         :nakyvissa? true})
-  (fn [sulje]
-    (if-not (:nakyvissa? @modal-sisalto)
-      (do (sulje)
-          [:span.modaali-ei-nakyvissa])
-      [:span.modaali-nakyvissa])))
 
 (defn nayta! [{:keys [sulje otsikko footer luokka leveys]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
