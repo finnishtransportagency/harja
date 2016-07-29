@@ -375,7 +375,7 @@
   (komp/luo
     (komp/sisaan (fn [_]
                    (nayta-yha-tuontidialogi-tarvittaessa ur)))
-    (fn []
+    (fn [ur]
       [:div
        [yleiset-tiedot ur]
        [urakkaan-liitetyt-kayttajat (:id ur)]
