@@ -100,10 +100,10 @@ BEGIN
      FOR i IN 1..ST_NumGeometries(viiva) LOOP
         tmp := ST_GeometryN(viiva, i);
         pit := ST_LineLocatePoint(tmp, apiste);
-        IF pit=1 THEN
+        IF pit=1 OR pit=0 THEN
            etaisyys := etaisyys + ST_Length(tmp);
         ELSE
-           etaisyys := etaisyys + ST_Length(ST_Line_Substring(tmp, 0, pit));
+           etaisyys := etaisyys + ST_Length(ST_LineSubstring(tmp, 0, pit));
            RETURN (etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
         END IF;
      END LOOP;
