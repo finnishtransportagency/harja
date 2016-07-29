@@ -9,6 +9,10 @@
     "Map f over the items in this container and return a container of the same type."))
 
 (extend-protocol Functor
+  nil
+  (fmap- [this f]
+    (identity '()))
+
   #?(:clj clojure.lang.ASeq :cljs cljs.core.List)
   (fmap- [this f]
     (reverse (into (list) (map f this))))
