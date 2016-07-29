@@ -274,13 +274,14 @@
            :palstoja 2
            :tyyppi :komponentti
            :komponentti (fn [_]
-                          [kommentit/kommentit {:voi-kommentoida?
-                                                (not= :lukittu (:tila lomakedata-nyt))
-                                                :voi-liittaa false
-                                                :palstoja 40
-                                                :placeholder "Kirjoita kommentti..."
-                                                :uusi-kommentti (r/wrap (:uusi-kommentti lomakedata-nyt)
-                                                                        #(swap! paallystys/paallystysilmoitus-lomakedata assoc :uusi-kommentti %))}
+                          [kommentit/kommentit
+                           {:voi-kommentoida?
+                            (not= :lukittu (:tila lomakedata-nyt))
+                            :voi-liittaa false
+                            :palstoja 40
+                            :placeholder "Kirjoita kommentti..."
+                            :uusi-kommentti (r/wrap (:uusi-kommentti lomakedata-nyt)
+                                                    #(muokkaa! assoc :uusi-kommentti %))}
                            (:kommentit lomakedata-nyt)])})]
        lomakedata-nyt]
       (when valmis-kasiteltavaksi?
