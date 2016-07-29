@@ -92,7 +92,7 @@
   (konv/sarakkeet-vektoriin
     (into []
           kohteet-xf
-          (q/hae-sillan-tarkastukset db silta-id urakka-id))
+          (q/hae-sillan-tarkastukset db silta-id))
     {:liite :liitteet}))
 
 (defn paivita-siltatarkastuksen-kohteet!
