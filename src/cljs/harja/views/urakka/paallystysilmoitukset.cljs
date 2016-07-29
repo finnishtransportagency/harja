@@ -11,6 +11,7 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.kommentit :as kommentit]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.historia :as historia]
 
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
@@ -502,12 +503,12 @@
                (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
       toteutuneet-maarat]]))
 
-(defn paallystysilmoituslomake [urakka {:keys [kohdenumero]} _ muokkaa!]
+(defn paallystysilmoituslomake [urakka {:keys [kohdenumero]} _ muokkaa! historia]
   (komp/luo
    (komp/ulos #(kartta/poista-popup!))
    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" kohdenumero))
    (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt}
-        lukko muokkaa!]
+        lukko muokkaa! historia]
      (let [lukittu? (lukko/nakyma-lukittu? lukko)
            valmis-tallennettavaksi? (and
                                      (not (= tila :lukittu))
