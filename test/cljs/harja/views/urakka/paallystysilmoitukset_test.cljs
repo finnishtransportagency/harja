@@ -3,6 +3,7 @@
    [cljs-time.core :as t]
    [cljs.test :as test :refer-macros [deftest is async]]
    [harja.loki :refer [log tarkkaile!]]
+   [harja.ui.historia :as historia]
    [harja.domain.paallystysilmoitus :as pot]
    [harja.domain.tierekisteri :as tierekisteri-domain]
    [harja.ui.tierekisteri :as tierekisteri]
@@ -114,8 +115,10 @@
   (let [urakka {:id 1}
         lukko nil
         lomake (r/atom paallystysilmoituslomake-alkutila)
+        historia (historia/historia lomake)
+        _ (historia/kuuntele! historia)
         comp (fn []
-               [p/paallystysilmoituslomake urakka @lomake lukko (partial swap! lomake)])
+               [p/paallystysilmoituslomake urakka @lomake lukko (partial swap! lomake) historia])
         pituudet-haettu (fake-palvelukutsu :hae-tr-osien-pituudet (constantly {1 1000
                                                                                2 2000
                                                                                3 3000
@@ -124,7 +127,7 @@
         _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))
         tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
     (async
-     test-ok
+     done
      (go
        (render [comp])
 
@@ -176,4 +179,4 @@
        (is (s/validate pot/+paallystysilmoitus+
                        (:ilmoitustiedot (:paallystysilmoitus (<! tallennus)))))
 
-       (test-ok)))))
+       (done)))))
