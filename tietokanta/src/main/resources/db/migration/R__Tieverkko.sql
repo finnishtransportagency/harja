@@ -132,7 +132,7 @@ BEGIN
        SELECT MIN(osa) AS osa, 0::INTEGER AS p FROM tr_osien_pituudet WHERE tie=tie_ INTO tmp;
        RETURN tmp;
      ELSE
-       SELECT osa AS osa, tmp.p AS p FROM tr_osien_pituudet WHERE osa>tmp.osa LIMIT 1 INTO tmp;
+       SELECT osa AS osa, tmp.p AS p FROM tr_osien_pituudet WHERE osa>tmp.osa ORDER BY osa LIMIT 1 INTO tmp;
        RETURN tmp;
      END IF;
 END;
