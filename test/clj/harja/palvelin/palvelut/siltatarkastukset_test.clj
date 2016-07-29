@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.siltatarkastukset-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
-            [harja.testi :refer [jarjestelma luo-testitietokanta testi-http-palvelin kutsu-http-palvelua] :as testi]
+            [harja.testi :refer :all]
 
             [harja.palvelin.palvelut.siltatarkastukset :as siltatarkastukset]))
 
@@ -23,6 +23,11 @@
 
 (defn- silta-nimella [sillat nimi]
   (first (filter #(= nimi (:siltanimi %)) sillat)))
+
+(defn- poista-testin-tarkastukset []
+  (let [id (ffirst (q "SELECT id FROM siltatarkastus WHERE tarkastaja = 'Järjestelmän Vastaava';"))]
+    (u "DELETE FROM siltatarkastuskohde WHERE siltatarkastus = " id ";")
+    (u "DELETE FROM siltatarkastus WHERE tarkastaja = 'Järjestelmän Vastaava'")))
 
 (deftest joutsensillalle-ei-ole-tarkastuksia
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
@@ -116,7 +121,8 @@
         tarkastukset-kutsun-jalkeen (count (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
                                                                 {:urakka-id urakka-id
                                                                  :silta-id silta-id}))]
-    (is (= (+ tarkastukset-ennen-uutta 1) tarkastukset-kutsun-jalkeen))))
+    (is (= (+ tarkastukset-ennen-uutta 1) tarkastukset-kutsun-jalkeen))
+    (poista-testin-tarkastukset)))
 
 (deftest tarkastuksen-tallennus-ei-urakan-sillalle-epaonnistuu
   (let [urakka-id (testi/hae-kajaanin-alueurakan-2014-2019-id)
