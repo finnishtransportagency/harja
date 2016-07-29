@@ -262,24 +262,30 @@
                                               :ilmoitustiedot
                                               :osoitteet
                                               (filter (comp not :poistettu))))})
-          paallystysilmoitus-kannassa (first (into []
-                                                   (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                                         (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
-                                                         (map #(konv/string-poluista->keyword % [[:paatos-taloudellinen-osa]
-                                                                                                 [:paatos-tekninen-osa]
-                                                                                                 [:tila]])))
-                                                   (q/hae-paallystysilmoitus-paallystyskohteella
-                                                     db
-                                                     {:paallystyskohde paallystyskohde-id})))]
+          paallystysilmoitus-kannassa
+          (first (into []
+                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                             (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
+                             (map #(konv/string-poluista->keyword %
+                                                                  [[:paatos :taloudellinen-osa]
+                                                                   [:paatos :tekninen-osa]
+                                                                   [:tila]])))
+                       (q/hae-paallystysilmoitus-paallystyskohteella
+                        db
+                        {:paallystyskohde paallystyskohde-id})))]
       (let [paallystysilmoitus-id
             (if paallystysilmoitus-kannassa
-              (paivita-paallystysilmoitus db user urakka-id sopimus-id paallystysilmoitus paallystysilmoitus-kannassa)
+              (paivita-paallystysilmoitus db user urakka-id sopimus-id paallystysilmoitus
+                                          paallystysilmoitus-kannassa)
               (luo-paallystysilmoitus db user urakka-id sopimus-id paallystysilmoitus))]
 
         (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
+
+        ;; FIXME: haun voisi irrottaa erilleen
         (let [uudet-ilmoitukset (hae-urakan-paallystysilmoitukset c user {:urakka-id urakka-id
                                                                           :sopimus-id sopimus-id})]
-          (log/debug "Tallennus tehty, palautetaan uudet päällystysilmoitukset: " (count uudet-ilmoitukset) " kpl")
+          (log/debug "Tallennus tehty, palautetaan uudet päällystysilmoitukset: "
+                     (count uudet-ilmoitukset) " kpl")
           uudet-ilmoitukset)))))
 
 (defrecord Paallystys []
