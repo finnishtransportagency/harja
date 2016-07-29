@@ -673,6 +673,18 @@
           sopimus-id
           @paallystys/paallystysilmoitukset]]))))
 
+(defn paallystysilmoituslomake-historia [ilmoituslomake]
+  (let [historia (historia/historia ilmoituslomake)]
+    (komp/luo
+     (komp/ulos (historia/kuuntele! historia))
+     (fn [ilmoituslomake]
+       [paallystysilmoituslomake
+        @nav/valittu-urakka
+        ilmoituslomake
+        @lukko/nykyinen-lukko
+        (partial swap! ilmoituslomake)
+        historia]))))
+
 (defn paallystysilmoitukset []
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
@@ -682,9 +694,5 @@
       [:div.paallystysilmoitukset
        [kartta/kartan-paikka]
        (if-let [ilmoitus @paallystys/paallystysilmoitus-lomakedata]
-         [paallystysilmoituslomake
-          @nav/valittu-urakka
-          ilmoitus
-          @lukko/nykyinen-lukko
-          (partial swap! paallystys/paallystysilmoitus-lomakedata)]
+         [paallystysilmoituslomake-historia @paallystys/paallystysilmoitus-lomakedata]
          [ilmoitusluettelo])])))
