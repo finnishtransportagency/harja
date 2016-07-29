@@ -292,8 +292,6 @@
                :rivinumerot? rivinumerot?
                :voi-muokata? voi-muokata?
                :voi-kumota? (not ulkoinen-tila?)
-               :muutos #(validoi-tr-osoite % tr-sijainnit tr-virheet)
-               :validoi-aina? true
                :nayta-virheet? :fokus
                :otsikko "Tierekisterikohteet"
                ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
