@@ -353,9 +353,11 @@
                                                                    (< rivi (dec kohdeosia)))
                             :validoi [(osan-maksimipituus :tr-loppuosa)]}
                            {:hae (partial tr/laske-tien-pituus @osan-pituus)}])
-                        [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string :leveys toimenpide-leveys}
-                         {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
-                          :komponentti (toiminnot-komponentti grid-data)}])))
+                        [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string
+                          :leveys toimenpide-leveys}]
+                        (when voi-muokata?
+                          [{:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
+                             :komponentti (toiminnot-komponentti grid-data)}]))))
 
               (r/wrap @grid-data
                       #(swap! grid-data tiedot/kasittele-paivittyneet-kohdeosat %))]]))))))
