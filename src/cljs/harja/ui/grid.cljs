@@ -531,15 +531,16 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                        (muutos ohjaus))))
         ;; Peruu yhden muokkauksen
         peru! (fn []
-                (let [[muok virh var huom jarj] (peek @historia)]
-                  (reset! muokatut muok)
-                  (reset! virheet virh)
-                  (reset! varoitukset var)
-                  (reset! huomautukset huom)
-                  (reset! jarjestys jarj))
-                (swap! historia pop)
-                (when muutos
-                  (muutos ohjaus)))
+                (when-not (empty? @historia)
+                  (let [[muok virh var huom jarj] (peek @historia)]
+                    (reset! muokatut muok)
+                    (reset! virheet virh)
+                    (reset! varoitukset var)
+                    (reset! huomautukset huom)
+                    (reset! jarjestys jarj))
+                  (swap! historia pop)
+                  (when muutos
+                    (muutos ohjaus))))
 
         nollaa-muokkaustiedot! (fn []
                                  (reset! gridia-muokataan? false)
