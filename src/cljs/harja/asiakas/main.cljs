@@ -49,7 +49,7 @@
                    {:url    url
                     :viesti errorMsg
                     :rivi   lineNumber
-                    :sarake columnaloita-urln-kuuntelu
+                    :sarake column
                     :selain (.-userAgent (.-navigator js/window))
                     :stack (when errorObj (aget errorObj "stack"))})
           (v/arsyttava-virhe errorMsg url lineNumber column errorObj)))
