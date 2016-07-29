@@ -866,7 +866,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
         fokus (atom nil)
-        ohjaus-fn (fn [muokatut virheet]
+        ohjaus-fn (fn [muokatut virheet skeema]
                     (reify Grid
                       (lisaa-rivi! [this rivin-tiedot]
                         (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
@@ -914,7 +914,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                         (swap! vetolaatikot-auki disj id))))
 
         ;; Tekee yhden muokkauksen säilyttäen undo historian
-        muokkaa! (fn [muokatut virheet id funktio & argumentit]
+        muokkaa! (fn [muokatut virheet skeema id funktio & argumentit]
                    (let [vanhat-tiedot @muokatut
                          vanhat-virheet @virheet
                          uudet-tiedot (swap! muokatut
@@ -933,16 +933,16 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                             (dissoc virheet id)
                                             (assoc virheet id rivin-virheet))))))
                      (when muutos
-                       (muutos (ohjaus-fn muokatut virheet)))))
+                       (muutos (ohjaus-fn muokatut virheet skeema)))))
 
         ;; Peruu yhden muokkauksen
-        peru! (fn [muokatut virheet]
+        peru! (fn [muokatut virheet skeema]
                 (let [[muok virh] (peek @historia)]
                   (reset! muokatut muok)
                   (reset! virheet virh))
                 (swap! historia pop)
                 (when muutos
-                  (muutos (ohjaus-fn muokatut virheet))))]
+                  (muutos (ohjaus-fn muokatut virheet skeema))))]
 
     (r/create-class
       {:component-will-receive-props
@@ -971,7 +971,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys skeema)
                colspan (inc (count skeema))
-               ohjaus (ohjaus-fn muokatut virheet)
+               ohjaus (ohjaus-fn muokatut virheet skeema)
                voi-muokata? (if (nil? voi-muokata?)
                               true
                               voi-muokata?)
@@ -993,7 +993,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                    {:disabled (empty? @historia)
                     :on-click #(do (.stopPropagation %)
                                    (.preventDefault %)
-                                   (peru! muokatut virheet))}
+                                   (peru! muokatut virheet skeema))}
                    (ikonit/peru) " Kumoa"])
                 (when (not= false voi-lisata?)
                   [:button.nappi-toissijainen.grid-lisaa
@@ -1080,10 +1080,11 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                          arvo
                                                          (fn [uusi]
                                                            (if aseta
-                                                             (muokkaa! muokatut-atom virheet
+                                                             (muokkaa! muokatut-atom virheet skeema
                                                                        id (fn [rivi]
                                                                             (aseta rivi uusi)))
-                                                             (muokkaa! muokatut-atom virheet id assoc nimi uusi))))]
+                                                             (muokkaa! muokatut-atom virheet skeema
+                                                                       id assoc nimi uusi))))]
                                                        [nayta-arvo (assoc s :index i :muokataan? false)
                                                         (vain-luku-atomina arvo)]))]
 
@@ -1096,8 +1097,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                            [:td.toiminnot
                                             (when (and (not= false voi-muokata?)
                                                        (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-                                              [:span.klikattava {:on-click #(do (.preventDefault %)
-                                                                                (muokkaa! muokatut-atom virheet id assoc :poistettu true))}
+                                              [:span.klikattava {:on-click
+                                                                 #(do (.preventDefault %)
+                                                                      (muokkaa! muokatut-atom
+                                                                                virheet skeema
+                                                                                id assoc
+                                                                                :poistettu true))}
                                                (ikonit/livicon-trash)])
                                             (when-not (empty? rivin-virheet)
                                               [:span.rivilla-virheita
