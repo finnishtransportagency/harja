@@ -273,7 +273,10 @@
     (fn [{:keys [kohdeosat-paivitetty-fn muokkaa!
                  rivinumerot? voi-muokata?] :as opts}
          urakka kohdeosat {yllapitokohde-id :id :as kohde} osan-pituus]
-      (let [grid-data (if-not ulkoinen-tila?
+      (let [voi-muokata? (if (nil? voi-muokata?)
+                           true
+                           voi-muokata?)
+            grid-data (if-not ulkoinen-tila?
                         grid-data
                         (r/wrap (yllapitokohdeosat-grid-data kohde kohdeosat)
                                 #(muokkaa!
