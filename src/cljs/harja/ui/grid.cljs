@@ -1047,35 +1047,36 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                       "parillinen"
                                                                       "pariton"))}
                                          (if rivinumerot? [:td.rivinumero (+ i 1)])
-                                         (for [{:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
-                                                       komponentti] :as s} skeema]
-                                           (if (= :vetolaatikon-tila tyyppi)
-                                             ^{:key (str "vetolaatikontila" id)}
-                                             [vetolaatikon-tila ohjaus vetolaatikot id]
-                                             (let [s (assoc s :rivi rivi)
-                                                   arvo (if hae
-                                                          (hae rivi)
-                                                          (get rivi nimi))
-                                                   tasaus-luokka (y/tasaus-luokka tasaa)
-                                                   kentan-virheet (get rivin-virheet nimi)]
-                                               (if (or (nil? muokattava?) (muokattava? rivi i))
-                                                 ^{:key (str nimi)}
-                                                 [:td {:class (str "muokattava "
-                                                                   tasaus-luokka
-                                                                   (when-not (empty? kentan-virheet)
-                                                                     " sisaltaa-virheen"))}
-                                                  (when (and (not (empty? kentan-virheet))
-                                                             (case nayta-virheet?
-                                                               :fokus (= nykyinen-fokus [i nimi])
-                                                               :aina true))
-                                                    (virheen-ohje kentan-virheet))
+                                         (doall
+                                          (for [{:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
+                                                        komponentti] :as s} skeema]
+                                            (if (= :vetolaatikon-tila tyyppi)
+                                              ^{:key (str "vetolaatikontila" id)}
+                                              [vetolaatikon-tila ohjaus vetolaatikot id]
+                                              (let [s (assoc s :rivi rivi)
+                                                    arvo (if hae
+                                                           (hae rivi)
+                                                           (get rivi nimi))
+                                                    tasaus-luokka (y/tasaus-luokka tasaa)
+                                                    kentan-virheet (get rivin-virheet nimi)]
+                                                (if (or (nil? muokattava?) (muokattava? rivi i))
+                                                  ^{:key (str nimi)}
+                                                  [:td {:class (str "muokattava "
+                                                                    tasaus-luokka
+                                                                    (when-not (empty? kentan-virheet)
+                                                                      " sisaltaa-virheen"))}
+                                                   (when (and (not (empty? kentan-virheet))
+                                                              (case nayta-virheet?
+                                                                :fokus (= nykyinen-fokus [i nimi])
+                                                                :aina true))
+                                                     (virheen-ohje kentan-virheet))
 
-                                                  (if (= tyyppi :komponentti)
-                                                    (komponentti rivi {:index i
-                                                                       :muokataan? true})
-                                                    (if voi-muokata?
-                                                      [tee-kentta (assoc s :on-focus #(reset! fokus [i nimi]))
-                                                       (r/wrap
+                                                   (if (= tyyppi :komponentti)
+                                                     (komponentti rivi {:index i
+                                                                        :muokataan? true})
+                                                     (if voi-muokata?
+                                                       [tee-kentta (assoc s :on-focus #(reset! fokus [i nimi]))
+                                                        (r/wrap
                                                          arvo
                                                          (fn [uusi]
                                                            (if aseta
@@ -1083,14 +1084,14 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                                        id (fn [rivi]
                                                                             (aseta rivi uusi)))
                                                              (muokkaa! muokatut-atom virheet id assoc nimi uusi))))]
-                                                      [nayta-arvo (assoc s :index i :muokataan? false)
-                                                       (vain-luku-atomina arvo)]))]
+                                                       [nayta-arvo (assoc s :index i :muokataan? false)
+                                                        (vain-luku-atomina arvo)]))]
 
-                                                 ^{:key (str nimi)}
-                                                 [:td {:class (str "ei-muokattava " tasaus-luokka)}
-                                                  ((or fmt str) (if hae
-                                                                  (hae rivi)
-                                                                  (get rivi nimi)))]))))
+                                                  ^{:key (str nimi)}
+                                                  [:td {:class (str "ei-muokattava " tasaus-luokka)}
+                                                   ((or fmt str) (if hae
+                                                                   (hae rivi)
+                                                                   (get rivi nimi)))])))))
                                          (when-not piilota-toiminnot?
                                            [:td.toiminnot
                                             (when (and (not= false voi-muokata?)
