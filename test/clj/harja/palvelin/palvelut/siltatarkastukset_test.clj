@@ -61,21 +61,23 @@
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
                                     {:urakka-id (testi/hae-oulun-alueurakan-2005-2012-id)
                                      :listaus :kaikki})
-        sillat-paitsi-joutsensilta (filter #(not= "Joutsensilta" (:siltanimi %)) sillat)]
-    (is (= (count sillat) 5))
-    (is (= (count sillat-paitsi-joutsensilta) 4))
-    (is (every? #(some? (:tarkastusaika %)) sillat-paitsi-joutsensilta))))
-
+        sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
+                                                (not= "Pyhäjoen silta" (:siltanimi %))) sillat)]
+    (is (= (count sillat) 6))
+    (is (= (count sillat-ilman-tarkastuksia) 3))
+    (is (every? #(some? (:tarkastusaika %)) sillat-ilman-tarkastuksia))))
+'
 
 (deftest oulun-urakan-2014-2019-sillat
   ;; Tässä uudemmassa urakassa halutaan nähdä vanhassa urakassa tehty viimeisin tarkastus
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat testi/+kayttaja-jvh+
                                     {:urakka-id (testi/hae-oulun-alueurakan-2014-2019-id)
                                      :listaus :kaikki})
-        sillat-paitsi-joutsensilta (filter #(not= "Joutsensilta" (:siltanimi %)) sillat)]
-    (is (= (count sillat) 5))
-    (is (= (count sillat-paitsi-joutsensilta) 4))
-    (is (every? #(some? (:tarkastusaika %)) sillat-paitsi-joutsensilta))))
+        sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
+                                                (not= "Pyhäjoen silta" (:siltanimi %))) sillat)]
+    (is (= (count sillat) 6))
+    (is (= (count sillat-ilman-tarkastuksia) 3))
+    (is (every? #(some? (:tarkastusaika %)) sillat-ilman-tarkastuksia))))
 
 (deftest oulun-urakan-2005-2012-tarkastukset
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset testi/+kayttaja-jvh+
