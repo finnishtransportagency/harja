@@ -575,7 +575,7 @@ WHERE
   AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
-  AND ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+  AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
   AND t.tyyppi = 'yksikkohintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpide :: INTEGER IS NULL OR
@@ -599,7 +599,7 @@ WHERE
   AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
-  AND ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+  AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
   AND t.tyyppi = 'kokonaishintainen' :: toteumatyyppi
   AND t.poistettu IS NOT TRUE
   AND (:toimenpidekoodi :: INTEGER IS NULL OR tk.id = :toimenpidekoodi);
