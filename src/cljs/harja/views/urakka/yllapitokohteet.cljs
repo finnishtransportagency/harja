@@ -253,19 +253,17 @@
                     (atom {}))
           g (grid/grid-ohjaus)
           toiminnot-komponentti
-          (fn [grid-data]
+          (fn [kohdeosat-nyt muokkaa-kohdeosat!]
             (fn [_ {:keys [index]}]
               [:span
                [:button.nappi-ensisijainen
                 {:on-click
-                 #(grid/aseta-muokkaustila! g
-                                            (tiedot/lisaa-uusi-kohdeosa @grid-data (inc index)))}
+                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
                 (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
                [:button.nappi-ensisijainen
-                {:disabled (= 1 (count @grid-data))
+                {:disabled (= 1 (count kohdeosat-nyt))
                  :on-click
-                 #(grid/aseta-muokkaustila! g
-                                            (tiedot/poista-kohdeosa @grid-data (inc index)))}
+                 #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))}
                 (yleiset/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
 
           pituus (fn [osan-pituus tieosa]
@@ -277,48 +275,74 @@
       (let [voi-muokata? (if (nil? voi-muokata?)
                            true
                            voi-muokata?)
+
+            kohdeosat-nyt (if-not ulkoinen-tila?
+                            @grid-data
+                            (yllapitokohdeosat-grid-data kohde kohdeosat))
+
+            kohdeosia (count kohdeosat-nyt)
+
+            skeema (into []
+                         (remove
+                          nil?
+                          (concat
+                           (tierekisteriosoite-sarakkeet
+                            tr-leveys
+                            [{:nimi :nimi}
+                             {:nimi :tunnus}
+                             {:nimi :tr-numero :muokattava? (constantly false)}
+                             {:nimi :tr-ajorata}
+                             {:nimi :tr-kaista}
+                             {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
+                                                               (pos? rivi))
+                              :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
+                             {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
+                                                                    (pos? rivi))
+                              :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)]}
+                             {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
+                                                                (< rivi (dec kohdeosia)))
+                              :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
+                             {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
+                                                                     (< rivi (dec kohdeosia)))
+                              :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)]}
+                             {:hae (partial tr/laske-tien-pituus osan-pituus)}])
+                           [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string
+                             :leveys toimenpide-leveys}])))
+
+            muokkaa-kohdeosat!
+            (if-not ulkoinen-tila?
+              (partial reset! grid-data)
+              (fn [kohdeosat-uudet]
+                (let [uudet-tiedot (tiedot/kasittele-paivittyneet-kohdeosat
+                                    kohdeosat-nyt kohdeosat-uudet)
+                      uudet-virheet (into {}
+                                          (keep (fn [[id rivi]]
+                                                  (let [rivin-virheet (validointi/validoi-rivi
+                                                                       uudet-tiedot rivi skeema)]
+                                                    (when-not (empty? rivin-virheet)
+                                                      [id rivin-virheet])))
+                                                uudet-tiedot))]
+                  (muokkaa! (->> uudet-tiedot
+                                 seq
+                                 (sort-by first)
+                                 (mapv second))
+                            uudet-virheet))))
+
+
+            skeema (if voi-muokata?
+                     (conj skeema
+                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
+                            :komponentti (toiminnot-komponentti kohdeosat-nyt
+                                                                muokkaa-kohdeosat!)})
+                     skeema)
+
             grid-data (if-not ulkoinen-tila?
                         grid-data
-                        (r/wrap (yllapitokohdeosat-grid-data kohde kohdeosat)
-                                #(muokkaa!
-                                  (->> %
-                                       seq
-                                       (sort-by first)
-                                       (mapv second)))))
+                        (r/wrap kohdeosat-nyt
+                                muokkaa-kohdeosat!))
             virheet (if-not ulkoinen-tila?
                       virheet
-                      (:virheet opts))
-            kohdeosia (count @grid-data)
-            skeema
-            (into []
-                  (remove
-                   nil?
-                   (concat
-                    (tierekisteriosoite-sarakkeet
-                     tr-leveys
-                     [{:nimi :nimi}
-                      {:nimi :tunnus}
-                      {:nimi :tr-numero :muokattava? (constantly false)}
-                      {:nimi :tr-ajorata}
-                      {:nimi :tr-kaista}
-                      {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
-                                                        (pos? rivi))
-                       :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
-                      {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
-                                                             (pos? rivi))
-                       :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)]}
-                      {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
-                                                         (< rivi (dec kohdeosia)))
-                       :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
-                      {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
-                                                              (< rivi (dec kohdeosia)))
-                       :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)]}
-                      {:hae (partial tr/laske-tien-pituus osan-pituus)}])
-                    [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string
-                      :leveys toimenpide-leveys}]
-                    (when voi-muokata?
-                      [{:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
-                        :komponentti (toiminnot-komponentti grid-data)}]))))]
+                      (:virheet opts))]
 
         [:div
          [grid/muokkaus-grid
@@ -372,17 +396,7 @@
           skeema
 
 
-          (r/wrap @grid-data
-                  #(let [uudet-tiedot (swap! grid-data tiedot/kasittele-paivittyneet-kohdeosat %)
-                         uudet-virheet (into {}
-                                             (keep (fn [[id rivi]]
-                                                     (let [rivin-virheet (validointi/validoi-rivi
-                                                                          uudet-tiedot rivi skeema)]
-                                                       (when-not (empty? rivin-virheet)
-                                                         [id rivin-virheet])))
-                                                   uudet-tiedot))]
-                     (log "UUDET-VIRHEET: " (pr-str uudet-virheet))
-                     (reset! virheet uudet-virheet)))]]))))
+          grid-data]]))))
 ;; FIXME: toimenpidettä ei voi muokata, jos vain yksi rivi -> tallennus enabloituu vasta rivin lisäyksen jälkeen
 
 

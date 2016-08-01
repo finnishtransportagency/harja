@@ -303,7 +303,11 @@
          [:h3 "Tekninen osa"]
 
          [yllapitokohteet/yllapitokohdeosat
-          {:muokkaa! #(muokkaa! assoc-in [:ilmoitustiedot :osoitteet] %)
+          {:muokkaa! (fn [kohteet virheet]
+                       (muokkaa! (fn [lomake]
+                                   (-> lomake
+                                       (assoc-in [:ilmoitustiedot :osoitteet] kohteet)
+                                       (assoc-in [:virheet :alikohteet] virheet)))))
            :rivinumerot? true
            :voi-muokata? voi-muokata?
            :virheet (wrap-virheet :alikohteet)}
