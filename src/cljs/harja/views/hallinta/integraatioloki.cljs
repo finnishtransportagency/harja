@@ -12,7 +12,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.modal :refer [modal] :as modal]
+            [harja.ui.modal :as modal]
             [harja.ui.dom :as dom])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
