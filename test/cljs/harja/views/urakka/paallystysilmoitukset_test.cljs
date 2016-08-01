@@ -8,7 +8,8 @@
    [harja.domain.tierekisteri :as tierekisteri-domain]
    [harja.ui.tierekisteri :as tierekisteri]
    [harja.testutils :refer [komponentti-fixture fake-palvelut-fixture fake-palvelukutsu jvh-fixture
-                            render paivita sel sel1 grid-solu click]]
+                            render paivita sel sel1 grid-solu click change
+                            disabled?]]
    [harja.views.urakka.paallystysilmoitukset :as p]
    [harja.pvm :as pvm]
    [reagent.core :as r]
@@ -111,6 +112,28 @@
 
     (is (some? (sel1 :.pot-asiatarkastus)) "Asiatarkastus näkyvissä")))
 
+(defn tarkista-kopioidun-rivin-virhe [lomake]
+  (go
+    (let [tila @lomake]
+
+      ;; Muokataan toiseksi viimeisen osoiterivin loppua siten, että se menee viimeisin
+      ;; rivin loppukohda yli. Tämän pitäisi tehdä virhe viimeiselle riville.
+      (change (grid-solu "yllapitokohdeosat" 1 8 "input") "5") ;; losa
+      (<! (paivita))
+
+      (change (grid-solu "yllapitokohdeosat" 1 9 "input") "123") ;; let
+      (<! (paivita))
+
+      (is (= (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys])
+             '("Alkuetäisyys ei voi olla loppuetäisyyden jälkeen")))
+
+      (is (disabled? :#tallenna-paallystysilmoitus))
+
+      (reset! lomake tila)
+      (<! (paivita))
+
+      (is (nil? (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys]))))))
+
 (deftest paallystysilmoituslomake
   (let [urakka {:id 1}
         lukko nil
@@ -172,6 +195,8 @@
                    {:target {:value "8"}})
 
        (<! (paivita))
+
+       (<! (tarkista-kopioidun-rivin-virhe lomake))
 
        (click :#tallenna-paallystysilmoitus)
 
