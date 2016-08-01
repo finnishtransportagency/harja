@@ -112,3 +112,11 @@
   (r/wrap (get-in data avainpolku)
           (fn [uusi-arvo]
             (muokkaa! #(assoc-in % avainpolku uusi-arvo)))))
+
+(defn wrap-vain-luku
+  "Palauttaa wrap atomin, joka heittää virheen kirjoittaessa"
+  [data]
+  (r/wrap data
+          (fn [uusi-arvo]
+            (throw (ex-info "Yritettiin kirjoittaa vain-luku wrap atomia"
+                            {:data uusi-arvo})))))
