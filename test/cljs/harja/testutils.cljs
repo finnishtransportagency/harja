@@ -122,3 +122,7 @@
   (let [elt (->elt path)]
     (when elt
       (.-disabled elt))))
+
+(defn text [path]
+  (when-let [e (->elt path)]
+    (.-innerText e)))
