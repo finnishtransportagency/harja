@@ -5,7 +5,7 @@
             [harja.atom :refer [paivita!] :refer-macros [reaction<!]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.modal :refer [modal] :as modal]
+            [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki
                                                   livi-pudotusvalikko +korostuksen-kesto+ kuvaus-ja-avainarvopareja]]
             [harja.ui.napit :as napit]
