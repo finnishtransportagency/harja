@@ -303,7 +303,8 @@
          [:h3 "Tekninen osa"]
 
          [yllapitokohteet/yllapitokohdeosat
-          {:muokkaa! (fn [kohteet virheet]
+          {:voi-kumota? false
+           :muokkaa! (fn [kohteet virheet]
                        (muokkaa! (fn [lomake]
                                    (-> lomake
                                        (assoc-in [:ilmoitustiedot :osoitteet] kohteet)
