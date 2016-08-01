@@ -92,7 +92,7 @@
   (konv/sarakkeet-vektoriin
     (into []
           kohteet-xf
-          (q/hae-sillan-tarkastukset db silta-id urakka-id))
+          (q/hae-sillan-tarkastukset db silta-id))
     {:liite :liitteet}))
 
 (defn paivita-siltatarkastuksen-kohteet!
@@ -117,6 +117,14 @@
     (assoc luotu-tarkastus
       :kohteet kohteet)))
 
+(defn- vaadi-silta-kuuluu-urakkaan [db urakka-id silta-id]
+  (when silta-id
+    (let [sillan-urakat (map :urakka (q/hae-sillan-urakat db silta-id))]
+      (log/debug "Tarkistetaan, että silta " silta-id " kuuluu väitettyyn urakkaan " urakka-id)
+      (when (or (empty? sillan-urakat)
+                (not (some #(= urakka-id %) sillan-urakat)))
+        (throw (SecurityException. "Siltatarkastus ei kuulu väitettyyn urakkaan."))))))
+
 (defn tallenna-siltatarkastuksen-liitteet [db tarkastus uudet-liitteet]
   (log/debug "Tallenna siltatarkastuksen liitteet: " (pr-str uudet-liitteet))
   (doseq [[kohdenumero uusi-liite] uudet-liitteet]
@@ -130,6 +138,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
+    (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
     (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
                       (paivita-siltatarkastus! db user urakka-id siltatarkastus)

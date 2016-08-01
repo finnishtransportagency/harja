@@ -54,8 +54,8 @@
         (cond
           (and urakka-id alkupvm loppupvm)
           [:urakka (muodosta-suolasakkoraportti-urakalle db user {:urakka-id urakka-id
-                                                                  :alkupvm   alkupvm
-                                                                  :loppupvm  loppupvm})]
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm})]
 
           (and hallintayksikko-id alkupvm loppupvm)
           [:hallintayksikko (muodosta-suolasakkoraportti-hallintayksikolle db user {:hallintayksikko-id hallintayksikko-id
@@ -75,7 +75,7 @@
         raportin-nimi "Suolasakkoraportti"
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
@@ -93,8 +93,8 @@
                                             (* (:ylitys rivi)
                                                (:sakko_maara_per_tonni rivi)))))]
     [:raportti {:orientaatio :landscape
-                :nimi        raportin-nimi}
-     [:taulukko {:otsikko                    otsikko
+                :nimi raportin-nimi}
+     [:taulukko {:otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
                  :oikealle-tasattavat-kentat (set (range 1 14))}
       [{:leveys 10 :otsikko "Urakka"}
@@ -122,8 +122,8 @@
                                  (let [sakko (laske-sakko rivi)
                                        indeksikorotettu-sakko (laske-indeksikorotettu-sakko rivi)]
                                    [(:urakka_nimi rivi)
-                                    (str (:keskilampotila rivi) " °C")
-                                    (str (:pitkakeskilampotila rivi) " °C")
+                                    (fmt/lampotila-opt (:keskilampotila rivi) 1)
+                                    (fmt/lampotila-opt (:pitkakeskilampotila rivi) 1)
                                     (:sakko_talvisuolaraja rivi)
                                     (when (:sakko_talvisuolaraja rivi)
                                       (format "%.2f" (* (:sakko_talvisuolaraja rivi) 1.05)))
@@ -132,9 +132,10 @@
                                       "Indeksi puuttuu!")
                                     (when (:kohtuullistarkistettu_sakkoraja rivi)
                                       (format "%.2f" (:kohtuullistarkistettu_sakkoraja rivi)))
-                                    (:suola_kaytetty rivi)
+                                    (fmt/desimaaliluku-opt (:suola_kaytetty rivi) 2)
                                     (when (and (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi))
-                                      (- (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi)))
+                                      (fmt/desimaaliluku-opt
+                                        (- (:suola_kaytetty rivi) (:kohtuullistarkistettu_sakkoraja rivi)) 2))
                                     (fmt/euro-opt false (:sakko_maara_per_tonni rivi))
                                     (fmt/euro-opt false (laske-sakko rivi))
                                     (when (and sakko indeksikorotettu-sakko)
@@ -145,17 +146,18 @@
                                (when (and (= :koko-maa konteksti) elynum)
                                  [{:lihavoi? true
                                    :rivi
-                                   [(str elynum " "  elynimi)
+                                   [(str elynum " " elynimi)
                                     nil
                                     nil
                                     (reduce + (keep :sakko_talvisuolaraja hyn-suolasakot))
                                     nil
                                     nil
                                     (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot))
-                                    (reduce + (keep :suola_kaytetty hyn-suolasakot))
-                                    (-
-                                      (reduce + (keep :suola_kaytetty hyn-suolasakot))
-                                      (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot)))
+                                    (fmt/desimaaliluku-opt (reduce + (keep :suola_kaytetty hyn-suolasakot)) 2)
+                                    (fmt/desimaaliluku-opt
+                                      (-
+                                        (reduce + (keep :suola_kaytetty hyn-suolasakot))
+                                        (reduce + (keep :kohtuullistarkistettu_sakkoraja hyn-suolasakot))) 2)
                                     nil
                                     (fmt/euro-opt false
                                                   (reduce + (keep
@@ -176,10 +178,11 @@
                  nil
                  nil
                  (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data))
-                 (reduce + (keep :suola_kaytetty raportin-data))
-                 (-
-                   (reduce + (keep :suola_kaytetty raportin-data))
-                   (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data)))
+                 (fmt/desimaaliluku-opt (reduce + (keep :suola_kaytetty raportin-data)) 2)
+                 (fmt/desimaaliluku-opt (-
+                                          (reduce + (keep :suola_kaytetty raportin-data))
+                                          (reduce + (keep :kohtuullistarkistettu_sakkoraja raportin-data)))
+                                        2)
                  nil
                  (fmt/euro-opt false
                                (reduce + (keep

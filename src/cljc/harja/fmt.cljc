@@ -256,6 +256,18 @@
   ([luku tarkkuus]
    (str (desimaaliluku luku tarkkuus) "%")))
 
+(defn lampotila
+  ([luku] (desimaaliluku luku 1))
+  ([luku tarkkuus]
+   (str (desimaaliluku luku tarkkuus) "°C")))
+
+(defn lampotila-opt
+  ([luku] (desimaaliluku-opt luku 1))
+  ([luku tarkkuus]
+   (if luku
+     (lampotila luku tarkkuus)
+     "")))
+
 (defn prosentti-opt
   ([luku] (prosentti-opt luku 1))
   ([luku tarkkuus]
