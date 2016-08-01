@@ -7,7 +7,7 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.modal :refer [modal] :as modal]
+            [harja.ui.modal :as modal]
             [harja.ui.tierekisteri :refer [tieosoite]]
 
             [harja.tiedot.navigaatio :as nav]
