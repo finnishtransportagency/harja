@@ -294,6 +294,9 @@
                           ") " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)))]
                  " tehdyn tarkastuksen?"]))
 
+(defn- tarkastus-kuuluu-nykyiseen-urakkaan? [tarkastus nykyinen-urakka-id]
+  (= (:urakka tarkastus) nykyinen-urakka-id))
+
 (defn sillan-tarkastukset []
   (komp/luo
     (fn []
@@ -309,7 +312,9 @@
                                             (when tarkastukset
                                               (if tark
                                                (siltatarkastusten-rivit tark muut)
-                                               []))))]
+                                               []))))
+            tarkastus-kuuluu-urakkaan? (tarkastus-kuuluu-nykyiseen-urakkaan? @st/valittu-tarkastus
+                                                                             (:id @nav/valittu-urakka))]
         [:div.siltatarkastukset
          [napit/takaisin "Takaisin siltaluetteloon" #(reset! st/valittu-silta nil)]
 
@@ -324,18 +329,24 @@
                                  :valitse-fn #(reset! st/valittu-tarkastus %)}
             @st/valitun-sillan-tarkastukset]]
 
-          [:button.nappi-ensisijainen {:on-click #(muokkaa-tarkastusta! @st/valittu-tarkastus)
-                                       :disabled (empty? @siltatarkastusrivit)}
-           (ikonit/livicon-pen) " Muokkaa tarkastusta"]
-          [:button.nappi-kielteinen {:on-click varmista-siltatarkastuksen-poisto
-                                     :disabled (empty? @siltatarkastusrivit)}
-           (ikonit/livicon-trash) " Poista tarkastus"]
+          [:span (when (not tarkastus-kuuluu-urakkaan?) {:title "Tarkastus ei kuulu tähän urakkaan."})
+           [:button.nappi-ensisijainen {:on-click #(muokkaa-tarkastusta! @st/valittu-tarkastus)
+                                       :disabled (or (empty? @siltatarkastusrivit)
+                                                     (not tarkastus-kuuluu-urakkaan?))}
+           (ikonit/livicon-pen) " Muokkaa tarkastusta"]]
+          [:span (when (not tarkastus-kuuluu-urakkaan?) {:title "Tarkastus ei kuulu tähän urakkaan."})
+           [:button.nappi-kielteinen {:on-click varmista-siltatarkastuksen-poisto
+                                     :disabled (or (empty? @siltatarkastusrivit)
+                                                   (not tarkastus-kuuluu-urakkaan?))}
+           (ikonit/livicon-trash) " Poista tarkastus"]]
           [napit/uusi "Uusi tarkastus" #(uusi-tarkastus! (conj @muut-tarkastukset
                                                                @st/valittu-tarkastus))]]
 
          [grid/grid
           {:otsikko (if @st/valittu-tarkastus
-                      (str "Sillan tarkastus " (pvm/pvm (:tarkastusaika @st/valittu-tarkastus)) " (" (:tarkastaja @st/valittu-tarkastus) ")")
+                      (str "Sillan tarkastus "
+                           (pvm/pvm (:tarkastusaika @st/valittu-tarkastus))
+                           " (" (:tarkastaja @st/valittu-tarkastus) ")")
                       "Sillan tarkastus")
            :tyhja (if (nil? @siltatarkastusrivit)
                     [ajax-loader "Ladataan..."]
@@ -448,7 +459,7 @@
 
          ;; tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
          [:button.nappi-ensisijainen
-          {:class    (when @tallennus-kaynnissa "disabled")
+          {:class (when @tallennus-kaynnissa "disabled")
            :disabled (not voi-tallentaa?)
            :on-click
            #(do (.preventDefault %)
@@ -457,14 +468,15 @@
                                                       (assoc :uudet-liitteet @uudet-liitteet)
                                                       (assoc :urakka-id (:id @nav/valittu-urakka)))
                           res (<! (tallenna-siltatarkastus! tallennettava-tarkastus))]
-                      (if res
+                      (if (k/virhe? res)
+                        ;; Epäonnistui jostain syystä
+                        (do
+                          (viesti/nayta! "Tallentaminen epäonnistui" :danger viesti/viestin-nayttoaika-lyhyt)
+                          (reset! tallennus-kaynnissa false))
                         ;; Tallennus ok
                         (do (viesti/nayta! "Siltatarkastus tallennettu")
                             (reset! tallennus-kaynnissa false)
-                            (reset! muokattava-tarkastus nil))
-                        ;; Epäonnistui jostain syystä
-                        (viesti/nayta! "Tallentaminen epäonnistui" ::danger viesti/viestin-nayttoaika-lyhyt)
-                        (reset! tallennus-kaynnissa false)))))}
+                            (reset! muokattava-tarkastus nil))))))}
           (ikonit/tallenna) " Tallenna tarkastus"]
          (when (not voi-tallentaa?)
            [:span.napin-vinkki
