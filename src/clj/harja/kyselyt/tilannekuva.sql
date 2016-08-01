@@ -281,7 +281,7 @@ WHERE tt.poistettu IS NOT TRUE AND
       (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
-      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
+      ST_Intersects(t.evelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
 -- name: hae-toteumien-selitteet
 SELECT
@@ -300,7 +300,7 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.alkanut BETWEEN :alku AND :loppu) AND
       (t.paattynyt BETWEEN :alku AND :loppu) AND
-      ST_Intersects(t.reitti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
 GROUP BY tt.toimenpidekoodi;
 
 
