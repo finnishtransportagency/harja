@@ -278,7 +278,8 @@
         :default nil)
       "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
-      "Takuu päättyy:" [takuuaika ur]
+      "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
+                         [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       ;; valaistus, tiemerkintä --> palvelusopimus
