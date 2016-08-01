@@ -103,14 +103,22 @@
         (when-not disabled?
           (sim/click elt nil))))))
 
+(defn elt? [o]
+  (instance? js/HTMLElement o))
+
+(defn ->elt [element-or-path]
+  (if (elt? element-or-path)
+    element-or-path
+    (let [e (sel1 element-or-path)]
+      (is (some? e) (str "Elementtiä polulla " element-or-path " ei löydy!"))
+      e)))
+
 (defn change [path value]
-  (let [elt (sel1 path)]
-    (is (some? elt) (str "Muokattava elementti polulla " path " ei ole!"))
+  (let [elt  (->elt path)]
     (when elt
       (sim/change elt {:target {:value value}}))))
 
 (defn disabled? [path]
-  (let [elt (sel1 path)]
-    (is (some? elt) (str "Testattavaa elementtiä polulla " path " ei ole!"))
+  (let [elt (->elt path)]
     (when elt
       (.-disabled elt))))
