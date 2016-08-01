@@ -472,8 +472,7 @@
                     :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
                     :valinnat pot/+tekniset-toimenpiteet+
                     :leveys "30%"}]
-                  alustalle-tehdyt-toimet]
-            [debug @alustalle-tehdyt-toimet]])]))))
+                  alustalle-tehdyt-toimet]])]))))
 
 (defn paallystysilmoitus-taloudellinen-osa [urakka lomakedata-nyt voi-muokata?
                                             grid-wrap wrap-virheet muokkaa!]
