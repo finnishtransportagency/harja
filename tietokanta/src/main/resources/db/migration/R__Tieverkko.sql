@@ -81,9 +81,9 @@ BEGIN
   apituus := etaisyys_alusta(tie_, aosa_, aet_);
   bpituus := etaisyys_alusta(tie_, losa_, let_);
   IF suunta_=1::bit THEN
-     RETURN kaanna_viiva(ST_Line_Substring(tmp, bpituus::FLOAT/kok_pituus::FLOAT, apituus::FLOAT/kok_pituus::FLOAT));
+     RETURN kaanna_viiva(ST_LineSubstring(tmp, bpituus::FLOAT/kok_pituus::FLOAT, apituus::FLOAT/kok_pituus::FLOAT));
   ELSE
-     RETURN ST_Line_Substring(tmp, apituus::FLOAT/kok_pituus::FLOAT, bpituus::FLOAT/kok_pituus::FLOAT);
+     RETURN ST_LineSubstring(tmp, apituus::FLOAT/kok_pituus::FLOAT, bpituus::FLOAT/kok_pituus::FLOAT);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -92,7 +92,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION projektion_etaisyys(apiste geometry, viiva geometry) RETURNS FLOAT AS $$
 DECLARE
   tmp geometry;
-  etaisyys INTEGER;
+  etaisyys FLOAT;
   pit FLOAT;
 BEGIN
   etaisyys := 0;
@@ -100,15 +100,17 @@ BEGIN
      FOR i IN 1..ST_NumGeometries(viiva) LOOP
         tmp := ST_GeometryN(viiva, i);
         pit := ST_LineLocatePoint(tmp, apiste);
-        IF pit=1 THEN
+        IF pit=1 OR pit=0 THEN
            etaisyys := etaisyys + ST_Length(tmp);
         ELSE
-           etaisyys := etaisyys + ST_Length(ST_Line_Substring(tmp, 0, pit));
+           etaisyys := etaisyys + ST_Length(ST_LineSubstring(tmp, 0, pit));
            RETURN (etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
         END IF;
      END LOOP;
+     RETURN etaisyys::FLOAT / ST_Length(viiva)::FLOAT;
   ELSE
-     RETURN ST_LineLocatePoint(viiva, apiste);
+     etaisyys := ST_Length(ST_LineSubstring(viiva, 0, ST_LineLocatePoint(viiva, apiste)));
+     RETURN etaisyys::FLOAT / ST_Length(viiva)::FLOAT;
   END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -130,6 +132,7 @@ BEGIN
        SELECT MIN(osa) AS osa, 0::INTEGER AS p FROM tr_osien_pituudet WHERE tie=tie_ INTO tmp;
        RETURN tmp;
      ELSE
+       SELECT osa AS osa, tmp.p AS p FROM tr_osien_pituudet WHERE osa>tmp.osa ORDER BY osa LIMIT 1 INTO tmp;
        RETURN tmp;
      END IF;
 END;
@@ -177,7 +180,7 @@ BEGIN
     tmp := etaisyyden_osa(tie_.tie, alkuet2);
     tmp2 := etaisyyden_osa(tie_.tie, loppuet2);
     
-    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),ST_Line_Substring(otie_.geom, alkuet, loppuet));
+    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),ST_LineSubstring(otie_.geom, alkuet, loppuet));
   ELSE
     SELECT geom FROM tieverkko_geom WHERE tie=tie_.tie AND suunta=1::bit INTO otie_;
     
@@ -190,7 +193,7 @@ BEGIN
     tmp := etaisyyden_osa(tie_.tie, alkuet2);
     tmp2 := etaisyyden_osa(tie_.tie, loppuet2);
     
-    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),kaanna_viiva(ST_Line_Substring(otie_.geom, loppuet, alkuet)));
+    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),kaanna_viiva(ST_LineSubstring(otie_.geom, loppuet, alkuet)));
   END IF;  
 END;
 $$ LANGUAGE plpgsql;
