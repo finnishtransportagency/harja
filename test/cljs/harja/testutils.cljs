@@ -94,14 +94,6 @@
               "td:nth-child(" (inc sarake-nro) ") "
               solu-path))))
 
-(defn click [path]
-  (let [elt (sel1 path)]
-    (is (some? elt) (str "Elementti polulla " path " ei ole!"))
-    (when elt
-      (let [disabled? (.-disabled elt)]
-        (is (not disabled?) (str "Elementti " elt " on disabled tilassa!"))
-        (when-not disabled?
-          (sim/click elt nil))))))
 
 (defn elt? [o]
   (instance? js/HTMLElement o))
@@ -112,6 +104,33 @@
     (let [e (sel1 element-or-path)]
       (is (some? e) (str "Elementtiä polulla " element-or-path " ei löydy!"))
       e)))
+
+(comment
+  ;; FIXME: tätä ei saatu dropdown listan kanssa toimimaan.
+  ;; Ei testattu muuten, jätetty tähän ettei toista kertaa
+  ;; tarvitse aikaa hukata tämän kanssa.
+  ;; getClientRects, offsetWidth, jne.. (mitä jquery tekee)
+  ;; näyttää olevan aina sama vaikka dropdown olisi kiinni
+
+  (defn- is-hidden? [node]
+    (and node
+         (let [style (.getComputedStyle js/window node)]
+           (or (= "none" (some-> style .-display))
+               (= "hidden" (some-> style .-visibility))
+               (is-hidden? (.-parentNode node))))))
+
+  (defn visible? [path]
+    (let [elt (->elt path)]
+      (and elt (not (is-hidden? elt))))))
+
+(defn click [path]
+  (let [elt (->elt path)]
+    (is (some? elt) (str "Elementti polulla " path " ei ole!"))
+    (when elt
+      (let [disabled? (.-disabled elt)]
+        (is (not disabled?) (str "Elementti " elt " on disabled tilassa!"))
+        (when-not disabled?
+          (sim/click elt nil))))))
 
 (defn change [path value]
   (let [elt  (->elt path)]
