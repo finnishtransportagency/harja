@@ -273,10 +273,11 @@
   (let [selitteet (reduce set/union
                           (keep #(when % (taso/selitteet %))
                                 (vals @tasot/geometriat-kartalle)))
+        lukumaara-str (fmt/left-pad 2 (count selitteet))
         varilaatikon-koko 20
         teksti (if @ikonien-selitykset-auki
-                 (str "Piilota (" (count selitteet) " kpl)")
-                 (str "Karttaselitteet (" (count selitteet) " kpl)"))]
+                 (str "Piilota | " lukumaara-str " kpl")
+                 (str "Karttaselitteet | " lukumaara-str " kpl"))]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
              @ikonien-selitykset-nakyvissa?)
