@@ -252,11 +252,11 @@
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
             [:span
-             [:button.nappi-ensisijainen
+             [:button.nappi-ensisijainen.btn-xs
               {:on-click
                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
               (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
-             [:button.nappi-ensisijainen
+             [:button.nappi-kielteinen.btn-xs
               {:disabled (= 1 (count kohdeosat-nyt))
                :on-click
                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))}
@@ -323,7 +323,8 @@
 
             skeema (if voi-muokata?
                      (conj skeema
-                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 10
+                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 15
+                            :tasaa :keskita
                             :komponentti (toiminnot-komponentti kohdeosat-nyt
                                                                 muokkaa-kohdeosat!)})
                      skeema)
@@ -410,7 +411,7 @@
                            :kohdeosat kohdeosat
                            :virheet virheet))
         :virheet (wrap-vain-luku (:virheet @tiedot))
-        :voi-kumota? true
+        :voi-kumota? false
         :kohdeosat-paivitetty-fn
         #(swap! kohteet-atom
                 (fn [kohteet kohdeosat]
