@@ -62,7 +62,10 @@
   (reset! muokattava-tarkastus tarkastus))
 
 (defn tarkastuksen-tekija-ja-aika [silta-tai-tarkastus]
-  (let [tarkastuksia? (> (count @st/valitun-sillan-tarkastukset) 0)
+  (let [tarkastuksia? (or (> (count @st/valitun-sillan-tarkastukset) 0)
+                          ;; popup tarvii tätä vaikkei silta olisi valittuna
+                          (and (:tarkastusaika silta-tai-tarkastus)
+                               (:tarkastaja silta-tai-tarkastus)))
         aika (if (:tarkastusaika silta-tai-tarkastus)
                (pvm/pvm (:tarkastusaika silta-tai-tarkastus))
                "Ei tietoa tarkastusajasta")
