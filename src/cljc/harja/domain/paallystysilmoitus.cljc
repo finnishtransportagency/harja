@@ -211,18 +211,17 @@
 (defn paallystystyontyyppi-avain-nimella [koodi]
   (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
 
-(def +paallystysilmoitus+
-  {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
-   :osoitteet
+(def paallystysilmoitus-osoitteet
    [{(s/optional-key :nimi) (s/maybe s/Str)
      (s/optional-key :tunnus) (s/maybe s/Str)
-     :tie s/Int
-     (s/optional-key :ajorata) (s/maybe +ajorata+)
-     (s/optional-key :kaista) (s/maybe +kaista+)
-     :aosa s/Int
-     :aet s/Int
-     :losa s/Int
-     :let s/Int
+     :tr-numero s/Int
+     (s/optional-key :tr-ajorata) (s/maybe +ajorata+)
+     (s/optional-key :tr-kaista) (s/maybe +kaista+)
+     :tr-alkuosa s/Int
+     :tr-alkuetaisyys s/Int
+     :tr-loppuosa s/Int
+     :tr-loppuetaisyys s/Int
+     (s/optional-key :toimenpide) (s/maybe s/Str)
      (s/optional-key :kohdeosa-id) (s/maybe s/Int)
 
      ; Osoitteelle tehdyt toimenpiteet
@@ -244,33 +243,41 @@
      (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
      (s/optional-key :pitoisuus) (s/maybe s/Num)
      (s/optional-key :lisaaineet) (s/maybe s/Str)
-     (s/optional-key :poistettu) s/Bool}]
+     (s/optional-key :poistettu) s/Bool}])
+
+(def paallystysilmoitus-alustatoimet
+  [{(s/optional-key :tr-alkuosa) s/Int
+    (s/optional-key :tr-alkuetaisyys) s/Int
+    (s/optional-key :tr-loppuosa) s/Int
+    (s/optional-key :tr-loppuetaisyys) s/Int
+    (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
+    (s/optional-key :paksuus) (s/maybe s/Num)              ;; cm
+    (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
+    (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
+    (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
+    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
+    (s/optional-key :poistettu) s/Bool}])
+
+(def paallystysilmoitus-tyot
+  [{:tyyppi +paallystystyon-tyyppi+ ; +paallystystyon-tyyppi+ skeemasta
+    :tyo s/Str
+    :tilattu-maara s/Num
+    :toteutunut-maara s/Num
+    :yksikko s/Str
+    :yksikkohinta s/Num
+    (s/optional-key :poistettu) s/Bool}])
+
+(def +paallystysilmoitus+
+  {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
+   :osoitteet paallystysilmoitus-osoitteet
 
    ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
    ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
    ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-   :alustatoimet
-   [{:aosa s/Int
-     :aet s/Int
-     :losa s/Int
-     :let s/Int
-     (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
-     (s/optional-key :paksuus) (s/maybe s/Num)              ;; cm
-     (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
-     (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
-     (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
-     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
-     (s/optional-key :poistettu) s/Bool}]
+   :alustatoimet paallystysilmoitus-alustatoimet
 
    ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
-   :tyot
-   [{:tyyppi +paallystystyon-tyyppi+                        ;; +paallystystyon-tyyppi+ skeemasta
-     :tyo s/Str
-     :tilattu-maara s/Num
-     :toteutunut-maara s/Num
-     :yksikko s/Str
-     :yksikkohinta s/Num
-     (s/optional-key :poistettu) s/Bool}]})
+   :tyot paallystysilmoitus-tyot})
 
 (defn laske-muutokset-kokonaishintaan
   "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."
@@ -279,4 +286,3 @@
               (fn [tyo]
                 (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
               (filter #(not= true (:poistettu %)) tyot))))
-  

@@ -241,6 +241,7 @@
                                    :urakka urakka-id}))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
+  ;; FIXME: pitäisikö tarkistaa vain jompi kumpi
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
   (jdbc/with-db-transaction [c db]
@@ -324,6 +325,7 @@
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
 
+    (println "SAIN OSAT: " osat)
     (let [hae-osat #(hae-urakan-yllapitokohdeosat c user
                                                   {:urakka-id urakka-id
                                                    :sopimus-id sopimus-id
@@ -342,7 +344,6 @@
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
       (doseq [osa osat]
-        (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
         (if (and (:id osa) (not (neg? (:id osa))))
           (paivita-yllapitokohdeosa c user urakka-id osa)
           (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa)))

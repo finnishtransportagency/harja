@@ -210,56 +210,38 @@
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
               (:fmt kentta) str)
-        teksti (atom (fmt @data))
+        teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
-    (r/create-class
-      {:component-will-receive-props
-       (fn [_ [_ _ data]]
-         (swap! teksti
-                (fn [olemassaoleva-teksti]
-                  ;; Jos vanha teksti on sama kuin uusi, mutta perässä on "." tai "," ja mahdollisesti n kappaletta nollia,
-                  ;; ei korvata.
-                  ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
-                  ;; numeron syöttö (esim. "4,") ennen desimaalin kirjoittamista ylikirjoittuu
-                  ;; Lisäksi esim. "4,0" parsitaan float-arvona kokonaisluvuksi 4, jolloin lukua "4,01" ei voi kirjoittaa.
-                  (if (nil? @data)
-                    ""
-                    (let [uusi-teksti (str @data)]
-                      (if (or (and (gstr/startsWith olemassaoleva-teksti uusi-teksti)
-                                   (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi-teksti))))
-                              (when-not (:vaadi-ei-negatiivinen? kentta)
-                                (= olemassaoleva-teksti (str "-" uusi-teksti))))
-                        olemassaoleva-teksti
-                        uusi-teksti))))))
+    (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
+      (let [nykyinen-data @data
+            nykyinen-teksti (or @teksti
+                                (fmt nykyinen-data)
+                                "")
+            vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
+            kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+            desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
+                                                      (or (:desimaalien-maara kentta) 2)
+                                                      "})?"))]
+        [:input {:class       (when lomake? "form-control")
+                 :type        "text"
+                 :placeholder (:placeholder kentta)
+                 :on-focus    (:on-focus kentta)
+                 :on-blur     #(reset! teksti nil)
+                 :value       nykyinen-teksti
+                 :on-change   #(let [v (-> % .-target .-value)]
+                                 (when (or (= v "")
+                                           (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                           (re-matches (if kokonaisluku?
+                                                         kokonaisluku-re-pattern
+                                                         desimaaliluku-re-pattern) v))
+                                   (reset! teksti v)
 
-       :reagent-render
-       (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
-         (let [nykyinen-teksti @teksti
-               vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
-               kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                         (or (:desimaalien-maara kentta) 2)
-                                                         "})?"))]
-           [:input {:class       (when lomake? "form-control")
-                    :type        "text"
-                    :placeholder (:placeholder kentta)
-                    :on-focus    (:on-focus kentta)
-                    :on-blur     #(reset! teksti (str @data))
-                    :value       nykyinen-teksti
-                    :on-change   #(let [v (-> % .-target .-value)]
-                                   (when (or (= v "")
-                                             (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                             (re-matches (if kokonaisluku?
-                                                           kokonaisluku-re-pattern
-                                                           desimaaliluku-re-pattern) v))
-                                     (reset! teksti v)
-
-                                     (let [numero (if kokonaisluku?
-                                                    (js/parseInt v)
-                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero)))))}]))})))
+                                   (let [numero (if kokonaisluku?
+                                                  (js/parseInt v)
+                                                  (js/parseFloat (str/replace v #"," ".")))]
+                                     (if (not (js/isNaN numero))
+                                       (reset! data numero)
+                                       (reset! data nil)))))}]))))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true

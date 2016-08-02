@@ -35,7 +35,6 @@
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
-  (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"
