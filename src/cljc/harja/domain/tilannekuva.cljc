@@ -74,7 +74,10 @@
   [l-ja-p-alueiden-puhdistus "l- ja p-alueiden puhdistus"
    "L- ja P-alueiden puhdistus"]
   [muu "muu" "Muu"]
-  [liuossuolaus "liuossuolaus" "Liuossuolaus"]
+  ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
+  ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
+  ;; kokee tietävänsä asian varmaksi.
+  ;; [liuossuolaus "liuossuolaus" "Liuossuolaus"]
   [aurausviitoitus-ja-kinostimet "aurausviitoitus ja kinostimet"
    "Aurausviitoitus ja kinostimet"]
   [lumensiirto "lumensiirto" "Lumensiirto"]
@@ -91,7 +94,10 @@
               tma-laite]
    :talvi [auraus-ja-sohjonpoisto
            suolaus
-           liuossuolaus
+           ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
+           ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
+           ;; kokee tietävänsä asian varmaksi.
+           ;;liuossuolaus
            pistehiekoitus
            linjahiekoitus
            pinnan-tasaus
