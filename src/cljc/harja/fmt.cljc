@@ -324,6 +324,10 @@
          (str tulos "...")
          tulos)))))
 
+(defn left-pad
+  [minimi-pituus merkkijono]
+  (str (apply str (repeat (- minimi-pituus (count merkkijono)) " ")) merkkijono))
+
 (defn kuvaile-paivien-maara
   "Ottaa päivien määrää kuvaavan numeron, ja kuvailee sen tekstinä.
   - Jos päiviä on alle 7, näytetään päivien määrä
