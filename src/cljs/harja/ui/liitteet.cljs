@@ -135,7 +135,7 @@
             (ikonit/livicon-upload)
             (if @tiedosto
               (if grid?
-                (str "Vaihda " (fmt/leikkaa-merkkijono (:nimi @tiedosto) 25 {:pisteet? true}))
+                (str "Vaihda " (fmt/leikkaa-merkkijono 25 (:nimi @tiedosto) {:pisteet? true}))
                 "Vaihda liite")
               (or nappi-teksti "Lisää liite"))]
            [:input.upload

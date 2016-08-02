@@ -39,7 +39,7 @@
   (let [sisalto (kartta-merkkijonoksi otsikko)
         max-pituus 30]
     (if (> (count sisalto) max-pituus)
-      [:div (str (fmt/leikkaa-merkkijono sisalto max-pituus {:pisteet? true}) " ")
+      [:div (str (fmt/leikkaa-merkkijono max-pituus sisalto {:pisteet? true}) " ")
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
@@ -53,7 +53,7 @@
         teksti lisatiedot]
     (if (> (count teksti) max-pituus)
       [:span
-       (str (fmt/leikkaa-merkkijono lisatiedot max-pituus {:pisteet? true}) " ")
+       (str (fmt/leikkaa-merkkijono max-pituus lisatiedot {:pisteet? true}) " ")
        [:button.nappi-toissijainen.grid-lisaa
         {:on-click
          (fn [e]
@@ -64,7 +64,7 @@
 (defn nayta-sisalto [sisalto]
   (let [max-pituus 30]
     (if (> (count sisalto) max-pituus)
-      [:div (str (fmt/leikkaa-merkkijono sisalto max-pituus {:pisteet? true}))
+      [:div (str (fmt/leikkaa-merkkijono max-pituus sisalto {:pisteet? true}))
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
@@ -89,7 +89,7 @@
                             [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
             {:otsikko "Osoite" :nimi :osoite :leveys "30%"}
             {:otsikko     "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
-             :komponentti #(fmt/leikkaa-merkkijono (kartta-merkkijonoksi (:parametrit %)) 50)}
+             :komponentti #(fmt/leikkaa-merkkijono 50 (kartta-merkkijonoksi (:parametrit %)))}
             {:otsikko     "Otsikko" :nimi :otsikko :leveys "30%" :tyyppi :komponentti
              :komponentti #(nayta-otsikko (:otsikko %))}
             {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys "20%"}
