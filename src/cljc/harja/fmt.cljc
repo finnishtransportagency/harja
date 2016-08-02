@@ -325,8 +325,9 @@
          tulos)))))
 
 (defn left-pad
-  [minimi-pituus merkkijono]
-  (str (apply str (repeat (- minimi-pituus (count merkkijono)) " ")) merkkijono))
+  [minimi-pituus sisalto]
+  (let [merkkijono (str sisalto)]
+    (str (apply str (repeat (- minimi-pituus (count merkkijono)) " ")) merkkijono)))
 
 (defn kuvaile-paivien-maara
   "Ottaa päivien määrää kuvaavan numeron, ja kuvailee sen tekstinä.
