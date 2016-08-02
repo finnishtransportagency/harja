@@ -11,6 +11,7 @@
              [harja.views.urakka.yllapitokohteet-test]
              [harja.ui.historia-test]
              [harja.ui.kentat-test]
+             [harja.ui.grid-test]
              ;; uusi testi tähän
              ))
 
@@ -25,5 +26,6 @@
            'harja.views.urakka.yllapitokohteet-test
            'harja.ui.historia-test
            'harja.ui.kentat-test
+           'harja.ui.grid-test
            ;; uusi testi tähän
            )
