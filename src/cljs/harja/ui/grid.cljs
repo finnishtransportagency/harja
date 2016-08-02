@@ -366,8 +366,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                         rivin alla
   :luokat                               Päätason div-elementille annettavat lisäluokat (vectori stringejä)
   :rivi-ennen                           table rivi ennen headeria, sekvenssi mäppejä, joissa avaimet
-                                        :teksti (näytettävä teksti) ja :sarakkeita (colspan)
-
+                                         :teksti (näytettävä teksti) ja :sarakkeita (colspan)
+  :id                                   mahdollinen DOM noden id, gridin pääelementille
 
   "
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata?
@@ -712,7 +712,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                         (when (and (not piilota-toiminnot?)
                                    tallenna)
                           [:th.toiminnot {:width "40px"} " "])]])]
-          [:div.panel.panel-default.livi-grid {:class (clojure.string/join " " luokat)}
+          [:div.panel.panel-default.livi-grid {:id (:id opts)
+                                               :class (clojure.string/join " " luokat)}
            (muokkauspaneeli true)
            [:div.panel-body
             (if (nil? tiedot)
