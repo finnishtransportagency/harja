@@ -70,9 +70,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva2(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER) RETURNS geometry AS $$
 DECLARE
   tmp geometry;
-  kok_pituus INTEGER;
-  apituus INTEGER;
-  bpituus INTEGER;
+  kok_pituus FLOAT;
+  apituus FLOAT;
+  bpituus FLOAT;
   suunta_ BIT;
 BEGIN
   suunta_ := tr_osoitteen_suunta(aosa_,aet_,losa_,let_);
@@ -81,9 +81,15 @@ BEGIN
   apituus := etaisyys_alusta(tie_, aosa_, aet_);
   bpituus := etaisyys_alusta(tie_, losa_, let_);
   IF suunta_=1::bit THEN
-     RETURN kaanna_viiva(ST_LineSubstring(tmp, bpituus::FLOAT/kok_pituus::FLOAT, apituus::FLOAT/kok_pituus::FLOAT));
+     tmp := kaanna_viiva(ST_LineSubstring(tmp, bpituus::FLOAT/kok_pituus::FLOAT, apituus::FLOAT/kok_pituus::FLOAT));
   ELSE
-     RETURN ST_LineSubstring(tmp, apituus::FLOAT/kok_pituus::FLOAT, bpituus::FLOAT/kok_pituus::FLOAT);
+     tmp := ST_LineSubstring(tmp, apituus::FLOAT/kok_pituus::FLOAT, bpituus::FLOAT/kok_pituus::FLOAT);
+  END IF;
+  IF aosa_=losa_ AND aet_=let_ THEN
+    -- tässä tapauksessa tulee geometrycollection, puretaan sen ainoa piste ulos
+    RETURN ST_GeometryN(tmp, 1);
+  ELSE
+    RETURN tmp;
   END IF;
 END;
 $$ LANGUAGE plpgsql;
