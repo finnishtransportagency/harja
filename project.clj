@@ -153,7 +153,7 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id           "dev"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
                 :compiler     {:optimizations :none
                                :source-map    true
                                ;;:preamble ["reagent/react.js"]
