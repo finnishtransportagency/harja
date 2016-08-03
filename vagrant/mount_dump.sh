@@ -3,12 +3,13 @@
 set -e
 
 if [ ! -f ../tietokanta/harja-stg-dump ]; then
-    echo "/tietokanta/harja-stg-dump tiedostoa ei löytynyt. aja download_dump.sh?"
+    echo "[$(date +"%T")] /tietokanta/harja-stg-dump tiedostoa ei löytynyt. aja download_dump.sh?"
     exit 1;
 fi
 
 # Varmistetaan, että dumppi on jo purettu.
 if [ ! -f ../tietokanta/restored-stg-dump.sql ]; then
+    echo "[$(date +"%T")] Löydettiin ladattu dump, mutta sitä ei ole purettu sql-komennoiksi? Puretaan tiedostoon /harja-tietokanta/restored-stg-dump.sql"
     # Jos muutat tätä, muuta sama rivi myös download_dump.sh
     vagrant ssh -c "pg_restore -Fc -C /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
 fi
