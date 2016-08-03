@@ -330,7 +330,10 @@
 (def tehtavien-nimet
   {"AURAUS JA SOHJONPOISTO"          "Auraus tai sohjonpoisto"
    "SUOLAUS"                         "Suolaus"
-   "LIUOSSUOLAUS"                    "Liuossuolaus"
+   ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
+   ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
+   ;; kokee tietävänsä asian varmaksi.
+   ;;"LIUOSSUOLAUS"                    "Liuossuolaus"
    "PISTEHIEKOITUS"                  "Pistehiekoitus"
    "LINJAHIEKOITUS"                  "Linjahiekoitus"
    "PINNAN TASAUS"                   "Pinnan tasaus"

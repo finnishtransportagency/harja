@@ -82,7 +82,10 @@ hakutiheys-historiakuva 1200000)
              tk/linjahiekoitus false
              tk/lumivallien-madaltaminen false
              tk/sulamisveden-haittojen-torjunta false
-             tk/liuossuolaus false
+             ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
+             ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
+             ;; kokee tietävänsä asian varmaksi.
+             ;;tk/liuossuolaus false
              tk/aurausviitoitus-ja-kinostimet false
              tk/lumensiirto false
              tk/paannejaan-poisto false
