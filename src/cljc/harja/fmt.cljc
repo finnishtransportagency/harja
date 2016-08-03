@@ -316,8 +316,8 @@
 
   Optiot mappi, jossa voi olla arvot:
   pisteet?      Näyttää kolme pistettä tekstin lopussa jos teksti katkeaa. Oletus false."
-  ([pituus merkkijono] (leikkaa-merkkijono pituus merkkijono {}))
-  ([pituus merkkijono {:keys [pisteet?] :as optiot}]
+  ([pituus merkkijono] (leikkaa-merkkijono pituus {} merkkijono))
+  ([pituus {:keys [pisteet?] :as optiot} merkkijono]
    (when merkkijono
      (let [tulos (subs merkkijono 0 (min (count merkkijono) pituus))]
        (if (and pisteet? (> (count merkkijono) pituus))

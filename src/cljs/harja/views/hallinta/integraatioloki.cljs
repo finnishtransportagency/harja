@@ -39,7 +39,7 @@
   (let [sisalto (kartta-merkkijonoksi otsikko)
         max-pituus 30]
     (if (> (count sisalto) max-pituus)
-      [:div (str (fmt/leikkaa-merkkijono max-pituus sisalto {:pisteet? true}) " ")
+      [:div (str (fmt/leikkaa-merkkijono max-pituus {:pisteet? true} sisalto) " ")
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
@@ -53,7 +53,7 @@
         teksti lisatiedot]
     (if (> (count teksti) max-pituus)
       [:span
-       (str (fmt/leikkaa-merkkijono max-pituus lisatiedot {:pisteet? true}) " ")
+       (str (fmt/leikkaa-merkkijono max-pituus {:pisteet? true} lisatiedot) " ")
        [:button.nappi-toissijainen.grid-lisaa
         {:on-click
          (fn [e]
@@ -64,7 +64,7 @@
 (defn nayta-sisalto [sisalto]
   (let [max-pituus 30]
     (if (> (count sisalto) max-pituus)
-      [:div (str (fmt/leikkaa-merkkijono max-pituus sisalto {:pisteet? true}))
+      [:div (str (fmt/leikkaa-merkkijono max-pituus {:pisteet? true} sisalto))
        [:span.pull-right
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
