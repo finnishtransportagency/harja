@@ -162,13 +162,41 @@ BEGIN
     WHERE ST_DWithin(a.geom, apiste, treshold)
       AND ST_DWithin(b.geom, bpiste, treshold)
       AND a.tie=b.tie
-      AND a.suunta=0::bit AND b.suunta=0::bit
+      AND a.suunta=b.suunta
     ORDER BY ST_Length(ST_ShortestLine(apiste, a.geom)) + ST_Length(ST_ShortestLine(bpiste, b.geom))
     LIMIT 1
     INTO tie_;
 
   IF tie_.tie IS NULL THEN
      RETURN NULL;
+  END IF;
+
+  -- rampit on aineistossa ryhmitelty osien mukaan joten käsitellään ne eri tavalla!
+  IF tie_.tie>=20000 AND tie_.tie<=29999 THEN
+    SELECT a.tie, a.osa, a.geometria AS geom
+      FROM tieverkko a, tieverkko b
+      WHERE ST_DWithin(a.geometria, apiste, treshold)
+        AND ST_DWithin(b.geometria, bpiste, treshold)
+        AND a.tie=b.tie
+      ORDER BY ST_Length(ST_ShortestLine(apiste, a.geometria)) + ST_Length(ST_ShortestLine(bpiste, b.geometria))
+      LIMIT 1
+      INTO tie_;
+      
+    IF tie_.tie IS NULL THEN
+      RETURN NULL;
+    END IF;
+    
+    alkuet := projektion_etaisyys(apiste, tie_.geom);
+    loppuet := projektion_etaisyys(bpiste, tie_.geom);
+
+    alkuet2 := CAST(alkuet * ST_Length(tie_.geom) AS INTEGER);
+    loppuet2 := CAST(loppuet * ST_Length(tie_.geom) AS INTEGER);
+
+    IF alkuet<loppuet THEN
+       RETURN ROW(tie_.tie, tie_.osa, alkuet2, tie_.osa, loppuet2, ST_LineSubstring(tie_.geom, alkuet, loppuet));
+    ELSE    
+       RETURN ROW(tie_.tie, tie_.osa, alkuet2, tie_.osa, loppuet2, kaanna_viiva(ST_LineSubstring(tie_.geom, loppuet, alkuet)));
+    END IF;
   END IF;
 
   alkuet := projektion_etaisyys(apiste, tie_.geom);
@@ -233,6 +261,20 @@ BEGIN
      RETURN NULL;
   END IF;
 
+  -- ramppi, käsitellää eri tavalla
+  IF tie_.tie>=20000 AND tie_.tie<=29999 THEN
+    SELECT tie, osa, geometria AS geom FROM tieverkko
+      WHERE ST_DWithin(geometria, piste, treshold)
+      ORDER BY ST_Length(ST_ShortestLine(piste, geometria))
+      LIMIT 1
+      INTO tie_;
+
+    alkuet := projektion_etaisyys(piste, tie_.geom);
+    alkuet2 := CAST(alkuet * ST_Length(tie_.geom) AS INTEGER);
+    RETURN ROW(tie_.tie, tie_.osa, alkuet2, 0, 0, ST_ClosestPoint(tie_.geom, piste)::geometry);
+
+  END IF;
+  
   alkuet := projektion_etaisyys(piste, tie_.geom);
   alkuet2 := CAST(alkuet * ST_Length(tie_.geom) AS INTEGER);
   tmp := etaisyyden_osa(tie_.tie, alkuet2);
