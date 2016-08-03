@@ -3,11 +3,11 @@
 set -e
 
 date="$(stat -f "%Sm" ../tietokanta/harja-stg-dump)"
-AIKARAJA=7200
+AIKARAJA=28800 # 20 päivää
 
 if [ ! "$1" = "force" ];
 then
-    # Jos alle 5 päivää vanha, varmistetaan että halutaanhan jatkaa
+    # Jos alle $AIKARAJA päivää vanha, varmistetaan että halutaanhan jatkaa
     if test `find "../tietokanta/harja-stg-dump" -mmin -$AIKARAJA`
     then
         if [ "$1" = "default" ];
