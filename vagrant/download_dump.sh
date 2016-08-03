@@ -2,34 +2,39 @@
 
 set -e
 
-date="$(stat -f "%Sm" ../tietokanta/harja-stg-dump)"
-AIKARAJA=28800 # 20 päivää
-
-if [ ! "$1" = "force" ];
+if [ ! -f ../tietokanta/harja-stg-dump ];
 then
-    # Jos alle $AIKARAJA päivää vanha, varmistetaan että halutaanhan jatkaa
-    if test `find "../tietokanta/harja-stg-dump" -mmin -$AIKARAJA`
+    echo "[$(date +"%T")] Vanhaa dumppia (/tietokanta/harja-stg-dump) ei löytynyt. Ladataan uusi."
+else
+    date="$(stat -f "%Sm" ../tietokanta/harja-stg-dump)"
+    AIKARAJA=28800 # 20 päivää
+
+    if [ ! "$1" = "force" ];
     then
-        if [ "$1" = "default" ];
+        # Jos alle $AIKARAJA päivää vanha, varmistetaan että halutaanhan jatkaa
+        if test `find "../tietokanta/harja-stg-dump" -mmin -$AIKARAJA`
         then
-            echo "[$(date +"%T")] Dumppi on ladattu $date, ei ladata turhaan tuoreempaa. (Aikaraja on $AIKARAJA minuuttia.)"
-            exit 0
-        else
-            read -p "[$(date +"%T")] Dumppi on ladattu $date, haluatko varmasti ladata uuden? [y N]" -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]
+            if [ "$1" = "default" ];
             then
-                echo "[$(date +"%T")] Selvä, ladataan uusin dump."
-            else
-                echo "[$(date +"%T")] Tyydytään vanhaan dumppiin."
+                echo "[$(date +"%T")] Dumppi on ladattu $date, ei ladata turhaan tuoreempaa. (Aikaraja on $AIKARAJA minuuttia.)"
                 exit 0
+            else
+                read -p "[$(date +"%T")] Dumppi on ladattu $date, haluatko varmasti ladata uuden? [y N]" -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]
+                then
+                    echo "[$(date +"%T")] Selvä, ladataan uusin dump."
+                else
+                    echo "[$(date +"%T")] Tyydytään vanhaan dumppiin."
+                    exit 0
+                fi
             fi
+        else
+            echo "[$(date +"%T")] Ladataan uusi staging dump."
         fi
     else
-        echo "[$(date +"%T")] Ladataan uusi staging dump."
+        echo "[$(date +"%T")] Pakotetaan uuden dumpin lataus. Vanha oli ladattu $date"
     fi
-else
-    echo "[$(date +"%T")] Pakotetaan uuden dumpin lataus. Vanha oli ladattu $date"
 fi
 
 echo "[$(date +"%T")] Aloitetaan staging dumpin lataus! Hae vaikka kahvia."
