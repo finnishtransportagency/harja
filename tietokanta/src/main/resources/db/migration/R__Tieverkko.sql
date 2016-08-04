@@ -3,8 +3,8 @@
 CREATE OR REPLACE FUNCTION paivita_tr_taulut() RETURNS VOID AS $$
 BEGIN
   DELETE FROM tieverkko_geom;
-  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria)), 0::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=1) GROUP BY tie;
-  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria)), 1::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=2) GROUP BY tie;
+  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria ORDER BY osa)), 0::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=1) GROUP BY tie;
+  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria ORDER BY osa)), 1::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=2) GROUP BY tie;
 
   DELETE FROM tr_osien_pituudet;
   INSERT INTO tr_osien_pituudet SELECT tie, osa, SUM(tr_pituus) AS pituus
