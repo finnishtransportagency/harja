@@ -40,6 +40,26 @@ WHERE t.urakka = :urakka
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
 LIMIT :maxrivimaara;
 
+-- name: hae-urakan-tarkastukset-kartalle
+-- fetch-size: 64
+-- row-fn: geo/muunna-reitti
+SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
+       t.tyyppi,
+       CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+        THEN 'urakoitsija' :: osapuoli
+        ELSE 'tilaaja' :: osapuoli
+       END AS tekija
+  FROM tarkastus t
+       LEFT JOIN kayttaja k ON t.luoja = k.id
+       LEFT JOIN organisaatio o ON k.organisaatio = o.id
+ WHERE t.urakka = :urakka
+   AND t.sijainti IS NOT NULL
+   AND ST_Intersects(t.sijainti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+   AND (t.aika >= :alku AND t.aika <= :loppu)
+   AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
+   AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
+   AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
+
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
 SELECT

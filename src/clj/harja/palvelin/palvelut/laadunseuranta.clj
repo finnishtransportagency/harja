@@ -21,7 +21,8 @@
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.core.async :as async]))
 
 (def laatupoikkeama-xf
   (comp
@@ -292,18 +293,33 @@
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [hakuparametrit (some-> parametrit (get "tr") transit/lue-transit-string)
-        valittu (:valittu hakuparametrit)
-        tarkastukset (hae-urakan-tarkastukset db user hakuparametrit true Long/MAX_VALUE)]
+  (let [{:keys [vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
+        (some-> parametrit (get "tr") transit/lue-transit-string)
+        [x1 y1 x2 y2] extent
+        alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
+        toleranssi (geo/karkeistustoleranssi alue)
+        ch (async/chan 32
+                       (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                             (map #(konv/string->keyword % :tyyppi :tekija))
+                             (map #(assoc %
+                                          :tyyppi-kartalla :tarkastus
+                                          :sijainti (:reitti %)))
+                             (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
+    (async/thread
+      (try
+        (tarkastukset/hae-urakan-tarkastukset-kartalle
+         db ch
+         (merge alue
+                {:urakka urakka-id
+                 :toleranssi toleranssi
+                 :alku alkupvm :loppu loppupvm
+                 :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
+                 :rajaa_tyypilla (some? tyyppi) :tyyppi tyyppi
+                 :vain_laadunalitukset vain-laadunalitukset?}))
+        (catch Throwable t
+          (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 
-    (try
-      (esitettavat-asiat/kartalla-esitettavaan-muotoon
-       tarkastukset
-       valittu :id
-       (comp (filter #(not (nil? (:sijainti %))))
-             (map #(assoc % :tyyppi-kartalla :tarkastus))))
-      (catch Exception e
-        (log/debug "TARKASTUSREITTI FIXME: " e)))))
+    ch))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
