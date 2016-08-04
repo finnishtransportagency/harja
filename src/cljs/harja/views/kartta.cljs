@@ -273,7 +273,11 @@
   (let [selitteet (reduce set/union
                           (keep #(when % (taso/selitteet %))
                                 (vals @tasot/geometriat-kartalle)))
-        varilaatikon-koko 20]
+        lukumaara-str (fmt/left-pad 2 (count selitteet))
+        varilaatikon-koko 20
+        teksti (if @ikonien-selitykset-auki
+                 (str "Piilota | " lukumaara-str " kpl")
+                 (str "Karttaselitteet | " lukumaara-str " kpl"))]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
              @ikonien-selitykset-nakyvissa?)
@@ -331,12 +335,12 @@
            {:on-click (fn [event]
                         (reset! ikonien-selitykset-auki false)
                         (.stopPropagation event)
-                        (.preventDefault event))} "Sulje"]]
+                        (.preventDefault event))} teksti]]
          [:span.kartan-ikonien-selitykset-avaa.klikattava {:on-click (fn [event]
                                                                        (reset! ikonien-selitykset-auki true)
                                                                        (.stopPropagation event)
                                                                        (.preventDefault event))}
-          "Karttaselitteet"])])))
+          teksti])])))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 

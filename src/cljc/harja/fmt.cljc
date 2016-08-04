@@ -316,13 +316,18 @@
 
   Optiot mappi, jossa voi olla arvot:
   pisteet?      Näyttää kolme pistettä tekstin lopussa jos teksti katkeaa. Oletus false."
-  ([merkkijono pituus] (leikkaa-merkkijono merkkijono pituus {}))
-  ([merkkijono pituus {:keys [pisteet?] :as optiot}]
+  ([pituus merkkijono] (leikkaa-merkkijono pituus {} merkkijono))
+  ([pituus {:keys [pisteet?] :as optiot} merkkijono]
    (when merkkijono
      (let [tulos (subs merkkijono 0 (min (count merkkijono) pituus))]
        (if (and pisteet? (> (count merkkijono) pituus))
          (str tulos "...")
          tulos)))))
+
+(defn left-pad
+  [minimi-pituus sisalto]
+  (let [merkkijono (str sisalto)]
+    (str (apply str (repeat (- minimi-pituus (count merkkijono)) " ")) merkkijono)))
 
 (defn kuvaile-paivien-maara
   "Ottaa päivien määrää kuvaavan numeron, ja kuvailee sen tekstinä.
