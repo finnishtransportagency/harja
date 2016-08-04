@@ -106,7 +106,7 @@
        {:otsikko "Kohtuul\u00ADlis\u00ADtarkis\u00ADtettu sakko\u00ADraja (t)" :leveys 5 :fmt :numero}
        {:otsikko "Käytetty suola\u00ADmäärä (t)" :leveys 5 :fmt :numero}
        {:otsikko "Suola\u00ADerotus (t)" :leveys 5 :fmt :numero}
-       {:otsikko "Sakko \u20AC / tonni" :leveys 4 :fmt :numero}
+       {:otsikko "Sakko \u20AC / tonni" :leveys 4 :fmt :raha}
        {:otsikko "Sakko €" :leveys 6 :fmt :raha}
        {:otsikko "Indeksi €" :leveys 5 :fmt :raha}
        {:otsikko "Indeksi\u00ADkorotettu sakko €" :leveys 6 :fmt :raha}]
