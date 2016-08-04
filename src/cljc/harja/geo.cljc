@@ -221,13 +221,13 @@
     :multiline (mapcat :points (:lines g))
     :polygon (:coordinates g)
     :multipolygon (mapcat :coordinates (:polygons g))
-    :point [(:coordinates g)]
+    :point (:coordinates g)
     :multipoint (:coordinates g)
-    :icon [(:coordinates g)]
-    :circle [(:coordinates g)]
+    :icon (:coordinates g)
+    :circle (:coordinates g)
     :viiva (:points g)
     :moniviiva (mapcat :points (:lines g))
-    :merkki [(:coordinates g)]))
+    :merkki (:coordinates g)))
 
 (defn laske-extent-xf
   "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja
