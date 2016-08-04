@@ -65,10 +65,10 @@
                     (group-by :nimi ilman-kokonaismaaria))]
     [:taulukko {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
      [{:leveys 6 :otsikko "Asiakaspalauteluokka"}
-      {:leveys 2 :otsikko "TPP (Toimenpidepyyntö)"}
-      {:leveys 2 :otsikko "TUR (Tiedoksi)"}
-      {:leveys 2 :otsikko "URK (Kysely)"}
-      {:leveys 2 :otsikko "Yhteensä"}]
+      {:leveys 2 :otsikko "TPP (Toimenpidepyyntö)" :fmt :numero}
+      {:leveys 2 :otsikko "TUR (Tiedoksi)" :fmt :numero}
+      {:leveys 2 :otsikko "URK (Kysely)" :fmt :numero}
+      {:leveys 2 :otsikko "Yhteensä" :fmt :numero}]
      (sort-by
        #(asiakaspalauteluokkien-jarjestys (str/lower-case (first %)))
        rivit)]))

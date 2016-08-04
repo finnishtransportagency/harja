@@ -115,7 +115,7 @@
             (concat
               [{:otsikko "Urakka"}]
               (map (fn [mat]
-                     {:otsikko mat})
+                     {:otsikko mat :fmt :numero})
                    materiaaliotsikot)))
       (keep identity
             (into
@@ -127,15 +127,13 @@
                         (concat [alue]
                                 (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                                   (for [m materiaaliotsikot]
-                                    (fmt/desimaaliluku-opt
-                                      (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m)))))))))
+                                    (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
 
                 ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
                 (when (not (empty? toteumat))
                   [(concat ["Yhteensä"]
                            (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                              (for [m materiaaliotsikot]
-                               (fmt/desimaaliluku-opt
-                                 (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m)))))))]))))]]))
+                               (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))))]]))
 
     

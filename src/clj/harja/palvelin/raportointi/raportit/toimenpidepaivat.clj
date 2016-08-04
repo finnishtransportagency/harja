@@ -6,8 +6,7 @@
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.hoitoluokat :as hoitoluokat]
-            [harja.fmt :as fmt]))
+            [harja.domain.hoitoluokat :as hoitoluokat]))
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpideajat.sql")
 
@@ -84,7 +83,7 @@
                          ;; Jokaiselle alueelle..
                          (count alueet)
                          ;; Tehdään sarakkeet hoitoluokille
-                         #(mapv (fn [{nimi :nimi}] {:otsikko nimi :tasaa :oikea})
+                         #(mapv (fn [{nimi :nimi}] {:otsikko nimi :tasaa :oikea :fmt :numero})
                                 talvihoitoluokat))))))
       (map (fn [[toimenpide aluemaarat]]
              (into [toimenpide]

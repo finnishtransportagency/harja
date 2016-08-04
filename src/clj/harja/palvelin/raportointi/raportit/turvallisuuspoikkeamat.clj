@@ -73,7 +73,7 @@
         (concat (when urakoittain?
                   [{:otsikko "Urakka"}])
                 [{:otsikko "Tyyppi"}
-                 {:otsikko "Määrä"}])))
+                 {:otsikko "Määrä" :fmt :numero}])))
 
 (defn- turvallisuuspoikkeamat-tyypeittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
   (let [turpo-maarat-per-tyyppi (fn [turpot tyyppi]
@@ -112,10 +112,10 @@
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
                   [{:otsikko "Hallintayksikkö"}])
-                [{:otsikko "Työtapaturmat"}
-                 {:otsikko "Vaaratilanteet"}
-                 {:otsikko "Turvallisuushavainnot"}
-                 {:otsikko "Muut"}])))
+                [{:otsikko "Työtapaturmat" :fmt :numero}
+                 {:otsikko "Vaaratilanteet" :fmt :numero}
+                 {:otsikko "Turvallisuushavainnot" :fmt :numero}
+                 {:otsikko "Muut" :fmt :numero}])))
 
 (defn- turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
   (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
@@ -149,8 +149,8 @@
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
                   [{:otsikko "Hallintayksikkö"}])
-                [{:otsikko "Lievät"}
-                 {:otsikko "Vakavat"}])))
+                [{:otsikko "Lievät" :fmt :numero}
+                 {:otsikko "Vakavat" :fmt :numero}])))
 
 (defn- turvallisuuspoikkeamat-listana-rivit [turpot urakoittain?]
   (keep identity
@@ -161,8 +161,8 @@
                            (str/join ", " (map turvallisuuspoikkeama-tyyppi (:tyyppi %)))
                            (or (turpodomain/turpo-vakavuusasteet (:vakavuusaste %)) "")
                            (or (turpodomain/kuvaile-tyontekijan-ammatti %) "")
-                           (or (:sairaalavuorokaudet %) "")
-                           (or (:sairauspoissaolopaivat %) ""))
+                           (or (:sairaalavuorokaudet %) [:info ""])
+                           (or (:sairauspoissaolopaivat %) [:info ""]))
 
                     (sort-by :tapahtunut #(t/after? (c/from-sql-time %1)
                                                     (c/from-sql-time %2)) turpot))
@@ -183,8 +183,8 @@
                  {:otsikko "Tyyppi" :leveys 24}
                  {:otsikko "Vakavuusaste" :leveys 15}
                  {:otsikko "Ammatti" :leveys 14}
-                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
-                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}])))
+                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9 :fmt :numero}
+                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9 :fmt :numero}])))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
                                alkupvm loppupvm urakkatyyppi] :as parametrit}]
