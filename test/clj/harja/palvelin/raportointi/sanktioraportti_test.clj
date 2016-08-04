@@ -41,50 +41,716 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :sanktioraportti
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2011 10 1))
+                                {:nimi       :sanktioraportti
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2011 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti {:nimi "Sanktioiden yhteenveto" :orientaatio :landscape} [:taulukko {:sheet-nimi "Sanktioiden yhteenveto" :otsikko "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016" :oikealle-tasattavat-kentat #{1}} [{:otsikko "", :leveys 12} {:otsikko "Oulun alueurakka 2014-2019", :leveys 15}] [{:otsikko "Talvihoito"} ["Muistutukset (kpl)" 1] ["Sakko A (€)" "1000,00"] ["- Päätiet (€)" "1000,00"] ["- Muut tiet (€)" "0,00"] ["Sakko B (€)" "666,67"] ["- Päätiet (€)" "666,67"] ["- Muut tiet (€)" "0,00"] ["Talvihoito, sakot yht. (€)" "1666,67"] ["Talvihoito, indeksit yht. (€)" "1674,11"] {:otsikko "Muut tuotteet"} ["Muistutukset (kpl)" 1] ["Sakko A (€)" "0,00"] ["- Liikenneymp. hoito (€)" "0,00"] ["- Sorateiden hoito (€)" "0,00"] ["Sakko B (€)" "111,00"] ["- Liikenneymp. hoito (€)" "110,00"] ["- Sorateiden hoito (€)" "0,00"] ["Muut tuotteet, sakot yht. (€)" "111,00"] ["Muut tuotteet, indeksit yht. (€)" "111,50"] {:otsikko "Ryhmä C"} ["Ryhmä C, sakot yht. (€)" "123,00"] ["Ryhmä C, indeksit yht. (€)" "123,55"] {:otsikko "Yhteensä"} ["Muistutukset yht. (kpl)" 2] ["Indeksit yht. (€)" "1909,16"] ["Kaikki sakot yht. (€)" "1900,67"] ["Kaikki yht. (€)" "3809,83"]]]]))))
+    (is (= vastaus [:raportti {:nimi        "Sanktioiden yhteenveto"
+                               :orientaatio :landscape}
+                    [:taulukko {:sheet-nimi                 "Sanktioiden yhteenveto"
+                                :otsikko                    "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
+                                :oikealle-tasattavat-kentat #{1}}
+                     [{:otsikko "", :leveys 12} {:fmt :numero :otsikko "Oulun alueurakka 2014-2019", :leveys 15}]
+                     [{:otsikko "Talvihoito"}
+                      ["Muistutukset (kpl)"
+                       1]
+                      ["Sakko A (€)"
+                       1000M]
+                      ["- Päätiet (€)"
+                       1000M]
+                      ["- Muut tiet (€)"
+                       0]
+                      ["Sakko B (€)"
+                       666.666M]
+                      ["- Päätiet (€)"
+                       666.666M]
+                      ["- Muut tiet (€)"
+                       0]
+                      ["Talvihoito, sakot yht. (€)"
+                       1666.666M]
+                      ["Talvihoito, indeksit yht. (€)"
+                       1674.11359782955633631133610M]
+                      {:otsikko "Muut tuotteet"}
+                      ["Muistutukset (kpl)"
+                       1]
+                      ["Sakko A (€)"
+                       0]
+                      ["- Liikenneymp. hoito (€)"
+                       0]
+                      ["- Sorateiden hoito (€)"
+                       0]
+                      ["Sakko B (€)"
+                       111M]
+                      ["- Liikenneymp. hoito (€)"
+                       110M]
+                      ["- Sorateiden hoito (€)"
+                       0]
+                      ["Muut tuotteet, sakot yht. (€)"
+                       111M]
+                      ["Muut tuotteet, indeksit yht. (€)"
+                       111.49601021385253753935M]
+                      {:otsikko "Ryhmä C"}
+                      ["Ryhmä C, sakot yht. (€)"
+                       123M]
+                      ["Ryhmä C, indeksit yht. (€)"
+                       123.54963293967443348955M]
+                      {:otsikko "Yhteensä"}
+                      ["Muistutukset yht. (kpl)"
+                       2]
+                      ["Indeksit yht. (€)"
+                       1909.15924098308330734023610M]
+                      ["Kaikki sakot yht. (€)"
+                       1900.666M]
+                      ["Kaikki yht. (€)"
+                       3809.82524098308330734023610M]]]]))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :sanktioraportti
-                                 :konteksti "hallintayksikko"
+                                {:nimi               :sanktioraportti
+                                 :konteksti          "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2011 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2016 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2011 10 1))
+                                                      :loppupvm     (c/to-date (t/local-date 2016 10 1))
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti {:nimi "Sanktioiden yhteenveto"  :orientaatio :landscape} [:taulukko {:sheet-nimi "Sanktioiden yhteenveto" :oikealle-tasattavat-kentat #{1 2 3 4 5} :otsikko "Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"} [{:leveys 12 :otsikko ""} {:leveys 15 :otsikko "Kajaanin alueurakka 2014-2019"} {:leveys 15 :otsikko "Oulun alueurakka 2005-2012"} {:leveys 15 :otsikko "Oulun alueurakka 2014-2019"} {:leveys 15 :otsikko "Pudasjärven alueurakka 2007-2012"} {:leveys 15 :otsikko "Yh­teen­sä"}] [{:otsikko "Talvihoito"} ["Muistutukset (kpl)" 0 0 1 1 2] ["Sakko A (€)" "0,00" "0,00" "1000,00" "10000,00" "11000,00"] ["- Päätiet (€)" "0,00" "0,00" "1000,00" "10000,00" "11000,00"] ["- Muut tiet (€)" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Sakko B (€)" "0,00" "0,00" "666,67" "6660,00" "7326,67"] ["- Päätiet (€)" "0,00" "0,00" "666,67" "6660,00" "7326,67"] ["- Muut tiet (€)" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Talvihoito, sakot yht. (€)" "0,00" "0,00" "1666,67" "16660,00" "18326,67"] ["Talvihoito, indeksit yht. (€)" "0,00" "0,00" "1674,11" "0,00" "1674,11"] {:otsikko "Muut tuotteet"} ["Muistutukset (kpl)" 0 0 1 1 2] ["Sakko A (€)" "0,00" "0,00" "0,00" "0,00" "0,00"] ["- Liikenneymp. hoito (€)" "0,00" "0,00" "0,00" "0,00" "0,00"] ["- Sorateiden hoito (€)" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Sakko B (€)" "0,00" "0,00" "111,00" "1110,00" "1221,00"] ["- Liikenneymp. hoito (€)" "0,00" "0,00" "110,00" "1100,00" "1210,00"] ["- Sorateiden hoito (€)" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Muut tuotteet, sakot yht. (€)" "0,00" "0,00" "111,00" "1110,00" "1221,00"] ["Muut tuotteet, indeksit yht. (€)" "0,00" "0,00" "111,50" "0,00" "111,50"] {:otsikko "Ryhmä C"} ["Ryhmä C, sakot yht. (€)" "0,00" "0,00" "123,00" "1230,00" "1353,00"] ["Ryhmä C, indeksit yht. (€)" "0,00" "0,00" "123,55" "0,00" "123,55"] {:otsikko "Yhteensä"} ["Muistutukset yht. (kpl)" 0 0 2 2 4] ["Indeksit yht. (€)" "0,00" "0,00" "1909,16" "0,00" "1909,16"] ["Kaikki sakot yht. (€)" "0,00" "0,00" "1900,67" "19000,00" "20900,67"] ["Kaikki yht. (€)" "0,00" "0,00" "3809,83" "19000,00" "22809,83"]]]]))))
+    (is (= vastaus [:raportti
+                    {:nimi        "Sanktioiden yhteenveto"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{1
+                                                    2
+                                                    3
+                                                    4
+                                                    5}
+                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
+                      :sheet-nimi                 "Sanktioiden yhteenveto"}
+                     [{:leveys  12
+                       :otsikko ""}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Kajaanin alueurakka 2014-2019"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Oulun alueurakka 2005-2012"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Oulun alueurakka 2014-2019"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Pudasjärven alueurakka 2007-2012"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Yh­teen­sä"}]
+                     [{:otsikko "Talvihoito"}
+                      ["Muistutukset (kpl)"
+                       0
+                       0
+                       1
+                       1
+                       2]
+                      ["Sakko A (€)"
+                       0
+                       0
+                       1000M
+                       10000M
+                       11000M]
+                      ["- Päätiet (€)"
+                       0
+                       0
+                       1000M
+                       10000M
+                       11000M]
+                      ["- Muut tiet (€)"
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Sakko B (€)"
+                       0
+                       0
+                       666.666M
+                       6660M
+                       7326.666M]
+                      ["- Päätiet (€)"
+                       0
+                       0
+                       666.666M
+                       6660M
+                       7326.666M]
+                      ["- Muut tiet (€)"
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Talvihoito, sakot yht. (€)"
+                       0
+                       0
+                       1666.666M
+                       16660M
+                       18326.666M]
+                      ["Talvihoito, indeksit yht. (€)"
+                       0
+                       0
+                       1674.11359782955633631133610M
+                       0
+                       1674.11359782955633631133610M]
+                      {:otsikko "Muut tuotteet"}
+                      ["Muistutukset (kpl)"
+                       0
+                       0
+                       1
+                       1
+                       2]
+                      ["Sakko A (€)"
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["- Liikenneymp. hoito (€)"
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["- Sorateiden hoito (€)"
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Sakko B (€)"
+                       0
+                       0
+                       111M
+                       1110M
+                       1221M]
+                      ["- Liikenneymp. hoito (€)"
+                       0
+                       0
+                       110M
+                       1100M
+                       1210M]
+                      ["- Sorateiden hoito (€)"
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Muut tuotteet, sakot yht. (€)"
+                       0
+                       0
+                       111M
+                       1110M
+                       1221M]
+                      ["Muut tuotteet, indeksit yht. (€)"
+                       0
+                       0
+                       111.49601021385253753935M
+                       0
+                       111.49601021385253753935M]
+                      {:otsikko "Ryhmä C"}
+                      ["Ryhmä C, sakot yht. (€)"
+                       0
+                       0
+                       123M
+                       1230M
+                       1353M]
+                      ["Ryhmä C, indeksit yht. (€)"
+                       0
+                       0
+                       123.54963293967443348955M
+                       0
+                       123.54963293967443348955M]
+                      {:otsikko "Yhteensä"}
+                      ["Muistutukset yht. (kpl)"
+                       0
+                       0
+                       2
+                       2
+                       4]
+                      ["Indeksit yht. (€)"
+                       0
+                       0
+                       1909.15924098308330734023610M
+                       0
+                       1909.15924098308330734023610M]
+                      ["Kaikki sakot yht. (€)"
+                       0
+                       0
+                       1900.666M
+                       19000M
+                       20900.666M]
+                      ["Kaikki yht. (€)"
+                       0
+                       0
+                       3809.82524098308330734023610M
+                       19000M
+                       22809.82524098308330734023610M]]]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-vuoden-aikavalilla
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :sanktioraportti
-                                 :konteksti "hallintayksikko"
+                                {:nimi               :sanktioraportti
+                                 :konteksti          "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2015 1 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 12 31))
-                                              :urakkatyyppi "hoito"}})]
+                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 1 1))
+                                                      :loppupvm     (c/to-date (t/local-date 2015 12 31))
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti {:nimi "Sanktioiden yhteenveto"  :orientaatio :landscape} [:taulukko {:sheet-nimi "Sanktioiden yhteenveto" :oikealle-tasattavat-kentat #{1 2 3} :otsikko "Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"} [{:leveys 12 :otsikko ""} {:leveys 15 :otsikko "Kajaanin alueurakka 2014-2019"} {:leveys 15 :otsikko "Oulun alueurakka 2014-2019"} {:leveys 15 :otsikko "Yh­teen­sä"}] [{:otsikko "Talvihoito"} ["Muistutukset (kpl)" 0 1 1] ["Sakko A (€)" "0,00" "1000,00" "1000,00"] ["- Päätiet (€)" "0,00" "1000,00" "1000,00"] ["- Muut tiet (€)" "0,00" "0,00" "0,00"] ["Sakko B (€)" "0,00" "666,67" "666,67"] ["- Päätiet (€)" "0,00" "666,67" "666,67"] ["- Muut tiet (€)" "0,00" "0,00" "0,00"] ["Talvihoito, sakot yht. (€)" "0,00" "1666,67" "1666,67"] ["Talvihoito, indeksit yht. (€)" "0,00" "1674,11" "1674,11"] {:otsikko "Muut tuotteet"} ["Muistutukset (kpl)" 0 1 1] ["Sakko A (€)" "0,00" "0,00" "0,00"] ["- Liikenneymp. hoito (€)" "0,00" "0,00" "0,00"] ["- Sorateiden hoito (€)" "0,00" "0,00" "0,00"] ["Sakko B (€)" "0,00" "111,00" "111,00"] ["- Liikenneymp. hoito (€)" "0,00" "110,00" "110,00"] ["- Sorateiden hoito (€)" "0,00" "0,00" "0,00"] ["Muut tuotteet, sakot yht. (€)" "0,00" "111,00" "111,00"] ["Muut tuotteet, indeksit yht. (€)" "0,00" "111,50" "111,50"] {:otsikko "Ryhmä C"} ["Ryhmä C, sakot yht. (€)" "0,00" "123,00" "123,00"] ["Ryhmä C, indeksit yht. (€)" "0,00" "123,55" "123,55"] {:otsikko "Yhteensä"} ["Muistutukset yht. (kpl)" 0 2 2] ["Indeksit yht. (€)" "0,00" "1909,16" "1909,16"] ["Kaikki sakot yht. (€)" "0,00" "1900,67" "1900,67"] ["Kaikki yht. (€)" "0,00" "3809,83" "3809,83"]]]]))))
+    (is (= vastaus [:raportti
+                    {:nimi        "Sanktioiden yhteenveto"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{1
+                                                    2
+                                                    3}
+                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
+                      :sheet-nimi                 "Sanktioiden yhteenveto"}
+                     [{:leveys  12
+                       :otsikko ""}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Kajaanin alueurakka 2014-2019"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Oulun alueurakka 2014-2019"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Yh­teen­sä"}]
+                     [{:otsikko "Talvihoito"}
+                      ["Muistutukset (kpl)"
+                       0
+                       1
+                       1]
+                      ["Sakko A (€)"
+                       0
+                       1000M
+                       1000M]
+                      ["- Päätiet (€)"
+                       0
+                       1000M
+                       1000M]
+                      ["- Muut tiet (€)"
+                       0
+                       0
+                       0]
+                      ["Sakko B (€)"
+                       0
+                       666.666M
+                       666.666M]
+                      ["- Päätiet (€)"
+                       0
+                       666.666M
+                       666.666M]
+                      ["- Muut tiet (€)"
+                       0
+                       0
+                       0]
+                      ["Talvihoito, sakot yht. (€)"
+                       0
+                       1666.666M
+                       1666.666M]
+                      ["Talvihoito, indeksit yht. (€)"
+                       0
+                       1674.11359782955633631133610M
+                       1674.11359782955633631133610M]
+                      {:otsikko "Muut tuotteet"}
+                      ["Muistutukset (kpl)"
+                       0
+                       1
+                       1]
+                      ["Sakko A (€)"
+                       0
+                       0
+                       0]
+                      ["- Liikenneymp. hoito (€)"
+                       0
+                       0
+                       0]
+                      ["- Sorateiden hoito (€)"
+                       0
+                       0
+                       0]
+                      ["Sakko B (€)"
+                       0
+                       111M
+                       111M]
+                      ["- Liikenneymp. hoito (€)"
+                       0
+                       110M
+                       110M]
+                      ["- Sorateiden hoito (€)"
+                       0
+                       0
+                       0]
+                      ["Muut tuotteet, sakot yht. (€)"
+                       0
+                       111M
+                       111M]
+                      ["Muut tuotteet, indeksit yht. (€)"
+                       0
+                       111.49601021385253753935M
+                       111.49601021385253753935M]
+                      {:otsikko "Ryhmä C"}
+                      ["Ryhmä C, sakot yht. (€)"
+                       0
+                       123M
+                       123M]
+                      ["Ryhmä C, indeksit yht. (€)"
+                       0
+                       123.54963293967443348955M
+                       123.54963293967443348955M]
+                      {:otsikko "Yhteensä"}
+                      ["Muistutukset yht. (kpl)"
+                       0
+                       2
+                       2]
+                      ["Indeksit yht. (€)"
+                       0
+                       1909.15924098308330734023610M
+                       1909.15924098308330734023610M]
+                      ["Kaikki sakot yht. (€)"
+                       0
+                       1900.666M
+                       1900.666M]
+                      ["Kaikki yht. (€)"
+                       0
+                       3809.82524098308330734023610M
+                       3809.82524098308330734023610M]]]]))))
 
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :sanktioraportti
-                                 :konteksti "koko maa"
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2015 1 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 12 31))
+                                {:nimi       :sanktioraportti
+                                 :konteksti  "koko maa"
+                                 :parametrit {:alkupvm      (c/to-date (t/local-date 2015 1 1))
+                                              :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti {:nimi "Sanktioiden yhteenveto" :orientaatio :landscape} [:taulukko {:sheet-nimi "Sanktioiden yhteenveto" :otsikko "KOKO MAA, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015", :oikealle-tasattavat-kentat #{7 1 4 6 3 2 9 5 10 8}} [{:otsikko "", :leveys 12} {:otsikko "01 Uusimaa", :leveys 15} {:otsikko "02 Varsinais-Suomi", :leveys 15} {:otsikko "03 Kaakkois-Suomi", :leveys 15} {:otsikko "04 Pirkanmaa", :leveys 15} {:otsikko "08 Pohjois-Savo", :leveys 15} {:otsikko "09 Keski-Suomi", :leveys 15} {:otsikko "10 Etelä-Pohjanmaa", :leveys 15} {:otsikko "12 Pohjois-Pohjanmaa ja Kainuu", :leveys 15} {:otsikko "14 Lappi", :leveys 15} {:otsikko "Yh­teen­sä", :leveys 15}] [{:otsikko "Talvihoito"} ["Muistutukset (kpl)" 0 0 0 0 0 0 0 1 0 1] ["Sakko A (€)" "3,50" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "1000,00" "0,00" "1003,50"] ["- Päätiet (€)" "3,50" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "1000,00" "0,00" "1003,50"] ["- Muut tiet (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Sakko B (€)" "3,50" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "666,67" "0,00" "670,17"] ["- Päätiet (€)" "3,50" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "666,67" "0,00" "670,17"] ["- Muut tiet (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Talvihoito, sakot yht. (€)" "7,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "1666,67" "0,00" "1673,67"] ["Talvihoito, indeksit yht. (€)" "7,03" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "1674,11" "0,00" "1681,14"] {:otsikko "Muut tuotteet"} ["Muistutukset (kpl)" 0 0 0 0 0 0 0 1 0 1] ["Sakko A (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00"] ["- Liikenneymp. hoito (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00"] ["- Sorateiden hoito (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Sakko B (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "111,00" "0,00" "111,00"] ["- Liikenneymp. hoito (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "110,00" "0,00" "110,00"] ["- Sorateiden hoito (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00"] ["Muut tuotteet, sakot yht. (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "111,00" "0,00" "111,00"] ["Muut tuotteet, indeksit yht. (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "111,50" "0,00" "111,50"] {:otsikko "Ryhmä C"} ["Ryhmä C, sakot yht. (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "123,00" "0,00" "123,00"] ["Ryhmä C, indeksit yht. (€)" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "123,55" "0,00" "123,55"] {:otsikko "Yhteensä"} ["Muistutukset yht. (kpl)" 0 0 0 0 0 0 0 2 0 2] ["Indeksit yht. (€)" "7,03" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "1909,16" "0,00" "1916,19"] ["Kaikki sakot yht. (€)" "7,00" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "1900,67" "0,00" "1907,67"] ["Kaikki yht. (€)" "14,03" "0,00" "0,00" "0,00" "0,00" "0,00" "0,00" "3809,83" "0,00" "3823,86"]]]]))))
+    (is (= vastaus [:raportti
+                    {:nimi        "Sanktioiden yhteenveto"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{1
+                                                    10
+                                                    2
+                                                    3
+                                                    4
+                                                    5
+                                                    6
+                                                    7
+                                                    8
+                                                    9}
+                      :otsikko                    "KOKO MAA, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
+                      :sheet-nimi                 "Sanktioiden yhteenveto"}
+                     [{:leveys  12
+                       :otsikko ""}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "01 Uusimaa"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "02 Varsinais-Suomi"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "03 Kaakkois-Suomi"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "04 Pirkanmaa"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "08 Pohjois-Savo"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "09 Keski-Suomi"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "10 Etelä-Pohjanmaa"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "12 Pohjois-Pohjanmaa ja Kainuu"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "14 Lappi"}
+                      {:fmt     :numero
+                       :leveys  15
+                       :otsikko "Yh­teen­sä"}]
+                     [{:otsikko "Talvihoito"}
+                      ["Muistutukset (kpl)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1
+                       0
+                       1]
+                      ["Sakko A (€)"
+                       3.5M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1000M
+                       0
+                       1003.5M]
+                      ["- Päätiet (€)"
+                       3.5M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1000M
+                       0
+                       1003.5M]
+                      ["- Muut tiet (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Sakko B (€)"
+                       3.5M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       666.666M
+                       0
+                       670.166M]
+                      ["- Päätiet (€)"
+                       3.5M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       666.666M
+                       0
+                       670.166M]
+                      ["- Muut tiet (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Talvihoito, sakot yht. (€)"
+                       7.0M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1666.666M
+                       0
+                       1673.666M]
+                      ["Talvihoito, indeksit yht. (€)"
+                       7.031279923396105970950M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1674.11359782955633631133610M
+                       0
+                       1681.14487775295244228228610M]
+                      {:otsikko "Muut tuotteet"}
+                      ["Muistutukset (kpl)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1
+                       0
+                       1]
+                      ["Sakko A (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["- Liikenneymp. hoito (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["- Sorateiden hoito (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Sakko B (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       111M
+                       0
+                       111M]
+                      ["- Liikenneymp. hoito (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       110M
+                       0
+                       110M]
+                      ["- Sorateiden hoito (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0]
+                      ["Muut tuotteet, sakot yht. (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       111M
+                       0
+                       111M]
+                      ["Muut tuotteet, indeksit yht. (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       111.49601021385253753935M
+                       0
+                       111.49601021385253753935M]
+                      {:otsikko "Ryhmä C"}
+                      ["Ryhmä C, sakot yht. (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       123M
+                       0
+                       123M]
+                      ["Ryhmä C, indeksit yht. (€)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       123.54963293967443348955M
+                       0
+                       123.54963293967443348955M]
+                      {:otsikko "Yhteensä"}
+                      ["Muistutukset yht. (kpl)"
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       2
+                       0
+                       2]
+                      ["Indeksit yht. (€)"
+                       7.031279923396105970950M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1909.15924098308330734023610M
+                       0
+                       1916.19052090647941331118610M]
+                      ["Kaikki sakot yht. (€)"
+                       7.0M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       1900.666M
+                       0
+                       1907.666M]
+                      ["Kaikki yht. (€)"
+                       14.031279923396105970950M
+                       0
+                       0
+                       0
+                       0
+                       0
+                       0
+                       3809.82524098308330734023610M
+                       0
+                       3823.85652090647941331118610M]]]]))))

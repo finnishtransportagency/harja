@@ -72,15 +72,20 @@
                        :otsikko "Ajo­suun­ta"}
                       {:leveys 5
                        :otsikko "Hoi­to­luok­ka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Ta­sai­suus (cm)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Kit­ka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Ilman läm­pö­ti­la"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Tien läm­pö­ti­la"}
                       {:leveys 5
                        :otsikko "Tar­kas­taja"}
@@ -100,11 +105,11 @@
                        nil
                        1
                        "A"
-                       "10,00"
-                       "6,00"
-                       "0,40"
-                       "-13,00"
-                       "-6,00"
+                       10.00M
+                       6.00M
+                       0.40M
+                       -13.00M
+                       -6.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 2"
                        "Ei"
@@ -119,11 +124,11 @@
                        nil
                        1
                        "A"
-                       "10,00"
-                       "5,00"
-                       "1,00"
-                       "-16,00"
-                       "-3,00"
+                       10.00M
+                       5.00M
+                       1.00M
+                       -16.00M
+                       -3.00M
                        "Matti"
                        "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
                        "Ei"
@@ -138,11 +143,11 @@
                        nil
                        1
                        "B"
-                       "11,00"
-                       "5,00"
-                       "0,10"
-                       "-14,00"
-                       "-6,00"
+                       11.00M
+                       5.00M
+                       0.10M
+                       -14.00M
+                       -6.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 1"
                        "Ei"
@@ -157,11 +162,11 @@
                        nil
                        2
                        "A"
-                       "9,00"
-                       "6,00"
-                       "0,30"
-                       "-13,00"
-                       "-3,00"
+                       9.00M
+                       6.00M
+                       0.30M
+                       -13.00M
+                       -3.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 3"
                        "Ei"
@@ -176,11 +181,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "ok"
                        "Ei"
@@ -195,11 +200,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        ""
                        "Ei"
@@ -214,11 +219,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "Ok"
                        "Ei"
@@ -233,11 +238,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 4"
                        "Ei"
@@ -252,11 +257,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "OK"
                        "Ei"
@@ -299,15 +304,20 @@
                        :otsikko "Ajo­suun­ta"}
                       {:leveys 5
                        :otsikko "Hoi­to­luok­ka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Ta­sai­suus (cm)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Kit­ka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Ilman läm­pö­ti­la"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Tien läm­pö­ti­la"}
                       {:leveys 5
                        :otsikko "Tar­kas­taja"}
@@ -328,11 +338,11 @@
                        nil
                        1
                        "A"
-                       "10,00"
-                       "6,00"
-                       "0,40"
-                       "-13,00"
-                       "-6,00"
+                       10.00M
+                       6.00M
+                       0.40M
+                       -13.00M
+                       -6.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 2"
                        "Ei"
@@ -347,11 +357,11 @@
                        nil
                        1
                        "A"
-                       "10,00"
-                       "5,00"
-                       "1,00"
-                       "-16,00"
-                       "-3,00"
+                       10.00M
+                       5.00M
+                       1.00M
+                       -16.00M
+                       -3.00M
                        "Matti"
                        "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
                        "Ei"
@@ -366,11 +376,11 @@
                        nil
                        1
                        "B"
-                       "11,00"
-                       "5,00"
-                       "0,10"
-                       "-14,00"
-                       "-6,00"
+                       11.00M
+                       5.00M
+                       0.10M
+                       -14.00M
+                       -6.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 1"
                        "Ei"
@@ -385,11 +395,11 @@
                        nil
                        2
                        "A"
-                       "9,00"
-                       "6,00"
-                       "0,30"
-                       "-13,00"
-                       "-3,00"
+                       9.00M
+                       6.00M
+                       0.30M
+                       -13.00M
+                       -3.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 3"
                        "Ei"
@@ -404,11 +414,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "ok"
                        "Ei"
@@ -423,11 +433,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        ""
                        "Ei"
@@ -442,11 +452,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "Ok"
                        "Ei"
@@ -461,11 +471,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 4"
                        "Ei"
@@ -480,11 +490,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "OK"
                        "Ei"
@@ -526,15 +536,20 @@
                        :otsikko "Ajo­suun­ta"}
                       {:leveys 5
                        :otsikko "Hoi­to­luok­ka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Ta­sai­suus (cm)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Kit­ka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Ilman läm­pö­ti­la"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys 5
                        :otsikko "Tien läm­pö­ti­la"}
                       {:leveys 5
                        :otsikko "Tar­kas­taja"}
@@ -555,11 +570,11 @@
                        nil
                        1
                        "A"
-                       "10,00"
-                       "6,00"
-                       "0,40"
-                       "-13,00"
-                       "-6,00"
+                       10.00M
+                       6.00M
+                       0.40M
+                       -13.00M
+                       -6.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 2"
                        "Ei"
@@ -574,11 +589,11 @@
                        nil
                        1
                        "A"
-                       "10,00"
-                       "5,00"
-                       "1,00"
-                       "-16,00"
-                       "-3,00"
+                       10.00M
+                       5.00M
+                       1.00M
+                       -16.00M
+                       -3.00M
                        "Matti"
                        "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
                        "Ei"
@@ -593,11 +608,11 @@
                        nil
                        1
                        "B"
-                       "11,00"
-                       "5,00"
-                       "0,10"
-                       "-14,00"
-                       "-6,00"
+                       11.00M
+                       5.00M
+                       0.10M
+                       -14.00M
+                       -6.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 1"
                        "Ei"
@@ -612,11 +627,11 @@
                        nil
                        2
                        "A"
-                       "9,00"
-                       "6,00"
-                       "0,30"
-                       "-13,00"
-                       "-3,00"
+                       9.00M
+                       6.00M
+                       0.30M
+                       -13.00M
+                       -3.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 3"
                        "Ei"
@@ -631,11 +646,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "ok"
                        "Ei"
@@ -650,11 +665,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        ""
                        "Ei"
@@ -669,11 +684,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "Ok"
                        "Ei"
@@ -688,11 +703,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "järjestelmän raportoima testitarkastus 4"
                        "Ei"
@@ -707,11 +722,11 @@
                        nil
                        1
                        "B"
-                       "6,00"
-                       "6,00"
-                       "0,50"
-                       "-15,00"
-                       "-5,00"
+                       6.00M
+                       6.00M
+                       0.50M
+                       -15.00M
+                       -5.00M
                        "Matti"
                        "OK"
                        "Ei"

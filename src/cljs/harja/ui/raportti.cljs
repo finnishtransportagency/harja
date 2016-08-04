@@ -5,6 +5,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
             [harja.visualisointi :as vis]
+            [harja.domain.raportointi :as raportti-domain]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
@@ -35,7 +36,14 @@
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
-  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})
+        formatter (fn [{fmt :fmt}]
+                    (let [format-fn (case fmt
+                                      :numero #(fmt/desimaaliluku-opt % 1 true)
+                                      :prosentti #(fmt/prosentti-opt % 1)
+                                      :raha #(fmt/desimaaliluku-opt % 2 true)
+                                      str)]
+                      #(if-not (raportti-domain/virhe? %) (format-fn %) (raportti-domain/virheen-viesti %))))]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"
                                                     (or (::rivin-indeksi rivi)
@@ -45,29 +53,25 @@
      (into []
            (map-indexed (fn [i sarake]
                           (merge
-                            {:hae #(get % i)
-                             :leveys (:leveys sarake)
-                             :otsikko (:otsikko sarake)
-                             :reunus (:reunus sarake)
-                             :pakota-rivitys? (:pakota-rivitys? sarake)
+                            {:hae                #(get % i)
+                             :leveys             (:leveys sarake)
+                             :otsikko            (:otsikko sarake)
+                             :reunus             (:reunus sarake)
+                             :pakota-rivitys?    (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
                                                       (case (:tasaa-otsikko sarake)
                                                         :keskita " grid-header-keskita"
                                                         :oikea " grid-header-oikea"
                                                         ""))
-                             :nimi (str "sarake" i)
-                             :fmt (case (:fmt sarake)
-                                    :numero #(fmt/desimaaliluku-opt % 1 true)
-                                    :prosentti #(fmt/prosentti-opt % 1)
-                                    :raha #(fmt/desimaaliluku-opt % 2 true)
-                                    str)
+                             :nimi               (str "sarake" i)
+                             :fmt                (formatter sarake)
                              ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                             :tyyppi (if (:tyyppi sarake)
-                                       :komponentti
-                                       :string)
-                             :tasaa (if (oikealle-tasattavat-kentat i)
-                                      :oikea
-                                      (:tasaa sarake))}
+                             :tyyppi             (if (:tyyppi sarake)
+                                                   :komponentti
+                                                   :string)
+                             :tasaa              (if (oikealle-tasattavat-kentat i)
+                                                   :oikea
+                                                   (:tasaa sarake))}
                             (when (:tyyppi sarake)
                               {:komponentti (fn [rivi]
                                               (let [elementti (get rivi i)]

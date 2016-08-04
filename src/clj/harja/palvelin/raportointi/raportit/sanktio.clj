@@ -66,11 +66,10 @@
    (luo-rivi-sakkojen-summa otsikko rivit alueet {}))
   ([otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivi (apply conj [(str otsikko " (€)")] (mapv (fn [alue]
-                                                         (fmt/desimaaliluku-opt (sakkojen-summa rivit (merge optiot alue))
-                                                                                2))
+                                                         (sakkojen-summa rivit (merge optiot alue)))
                                                        alueet))]
      (if yhteensa-sarake?
-       (conj rivi (fmt/desimaaliluku-opt (sakkojen-summa rivit optiot) 2))
+       (conj rivi (sakkojen-summa rivit optiot))
        rivi))))
 
 (defn- luo-rivi-muistutusten-maara
@@ -89,26 +88,22 @@
    (luo-rivi-indeksien-summa otsikko rivit alueet {}))
   ([otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivi (apply conj [(str otsikko " (€)")] (mapv (fn [alue]
-                                                         (fmt/desimaaliluku-opt (indeksien-summa rivit (merge optiot alue))
-                                                                                2))
+                                                         (indeksien-summa rivit (merge optiot alue)))
                                                        alueet))]
      (if yhteensa-sarake?
-       (conj rivi (fmt/desimaaliluku-opt (indeksien-summa rivit optiot)
-                                         2))
+       (conj rivi (indeksien-summa rivit optiot))
        rivi))))
 
 (defn- luo-rivi-kaikki-yht
   ([otsikko rivit alueet] (luo-rivi-kaikki-yht otsikko rivit alueet {}))
   ([otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
    (let [rivi (apply conj [(str otsikko " (€)")] (mapv (fn [alue]
-                                                         (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit alue)
-                                                                                   (indeksien-summa rivit alue))
-                                                                                2))
+                                                         (+ (sakkojen-summa rivit alue)
+                                                            (indeksien-summa rivit alue)))
                                                        alueet))]
      (if yhteensa-sarake?
-       (conj rivi (fmt/desimaaliluku-opt (+ (sakkojen-summa rivit)
-                                            (indeksien-summa rivit))
-                                         2))
+       (conj rivi (+ (sakkojen-summa rivit)
+                     (indeksien-summa rivit)))
        rivi))))
 
 (defn- raporttirivit-talvihoito [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
@@ -243,10 +238,11 @@
                                         {:otsikko (if (= konteksti :koko-maa)
                                                     (str (:elynumero alue) " " (:nimi alue))
                                                     (:nimi alue))
-                                         :leveys 15})
+                                         :leveys 15
+                                         :fmt :numero})
                                       naytettavat-alueet)
                                     (when yhteensa-sarake?
-                                      [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15}])))
+                                      [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :numero}])))
         raportin-rivit (when (> (count naytettavat-alueet) 0)
                          (raporttirivit sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?}))
         raportin-nimi "Sanktioiden yhteenveto"

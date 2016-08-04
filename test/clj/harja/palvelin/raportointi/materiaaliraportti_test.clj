@@ -54,11 +54,12 @@
                       :sheet-nimi "Materiaaliraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Urakka"}
-                      {:otsikko "Talvisuolaliuos NaCl (t)"}]
+                      {:fmt :numero
+                       :otsikko "Talvisuolaliuos NaCl (t)"}]
                      [["Oulun alueurakka 2014-2019"
-                       "1000,00"]
+                       1000M]
                        ["Yhteensä"
-                         "1000,00"]]]]))))
+                        1000M]]]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -78,13 +79,14 @@
                       :sheet-nimi "Materiaaliraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Urakka"}
-                      {:otsikko "Talvisuolaliuos NaCl (t)"}]
+                      {:fmt :numero
+                       :otsikko "Talvisuolaliuos NaCl (t)"}]
                      [["Oulun alueurakka 2014-2019"
-                       "1000,00"]
+                       1000M]
                        ["Kajaanin alueurakka 2014-2019"
-                        "1000,00"]
+                        1000M]
                        ["Yhteensä"
-                         "2000,00"]]]]))))
+                        2000M]]]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -103,10 +105,11 @@
                       :sheet-nimi "Materiaaliraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Urakka"}
-                      {:otsikko "Talvisuolaliuos NaCl (t)"}]
+                      {:fmt :numero
+                       :otsikko "Talvisuolaliuos NaCl (t)"}]
                      [["Uusimaa"
-                       "2000,00"]
+                       2000M]
                        ["Pohjois-Pohjanmaa ja Kainuu"
-                        "2000,00"]
+                        2000M]
                        ["Yhteensä"
-                         "4000,00"]]]]))))
+                        4000M]]]]))))

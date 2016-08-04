@@ -41,14 +41,14 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :suolasakko
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
+                                {:nimi       :suolasakko
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Suolasakkoraportti"
+                    {:nimi        "Suolasakkoraportti"
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{1
@@ -64,75 +64,87 @@
                                                     7
                                                     8
                                                     9}
-                      :otsikko "Oulun alueurakka 2014-2019, Suolasakkoraportti ajalta 01.10.2014 - 01.10.2015"
+                      :otsikko                    "Oulun alueurakka 2014-2019, Suolasakkoraportti ajalta 01.10.2014 - 01.10.2015"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 10
+                     [{:leveys  10
                        :otsikko "Urakka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Keski­lämpö­tila"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Pitkän aikavälin keski­lämpö­tila"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Talvi­suolan max-määrä (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Sakko­raja (t)"}
-                      {:leveys 4
+                      {:fmt     :numero
+                       :leveys  4
                        :otsikko "Kerroin"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Kohtuul­lis­tarkis­tettu sakko­raja (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Käytetty suola­määrä (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Suola­erotus (t)"}
-                      {:leveys 4
+                      {:fmt     :raha
+                       :leveys  4
                        :otsikko "Sakko € / tonni"}
-                      {:leveys 6
+                      {:fmt     :raha
+                       :leveys  6
                        :otsikko "Sakko €"}
-                      {:leveys 5
+                      {:fmt     :raha
+                       :leveys  5
                        :otsikko "Indeksi €"}
-                      {:leveys 6
+                      {:fmt     :raha
+                       :leveys  6
                        :otsikko "Indeksi­korotettu sakko €"}]
-                     [["Oulun alueurakka 2014-2019"
-                       "-6,2°C"
-                       "-9,0°C"
-                       800M
-                       "840,00"
-                       "1,0477"
-                       "924,00"
-                       "1000,00"
-                       "76,00"
-                       "30,00"
-                       "2 280,00"
-                       "108,68"
-                       "2 388,68"]
-                       ["Yhteensä"
-                        nil
-                        nil
+                     '(["Oulun alueurakka 2014-2019"
+                        -6.20M
+                        -9.00M
                         800M
-                        nil
-                        nil
+                        840.0
+                        1.04766666666666666667M
                         924.0000M
-                        "1000,00"
-                        "76,00"
-                        nil
-                        "2 280,00"
-                        nil
-                        "2 388,68"]]]]))))
+                        1000M
+                        76.0000M
+                        30.0M
+                        2280.00000M
+                        108.6800000000000000076000000M
+                        2388.6800000000000000076000000M]
+                        ["Yhteensä"
+                         nil
+                         nil
+                         800M
+                         nil
+                         nil
+                         924.0000M
+                         1000M
+                         76.0000M
+                         nil
+                         2280.00000M
+                         nil
+                         2388.6800000000000000076000000M])]]))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :suolasakko
-                                 :konteksti "hallintayksikko"
+                                {:nimi               :suolasakko
+                                 :konteksti          "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
+                                                      :loppupvm     (c/to-date (t/local-date 2015 10 1))
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Suolasakkoraportti"
+                    {:nimi        "Suolasakkoraportti"
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{1
@@ -148,86 +160,98 @@
                                                     7
                                                     8
                                                     9}
-                      :otsikko "Pohjois-Pohjanmaa ja Kainuu, Suolasakkoraportti ajalta 01.10.2014 - 01.10.2015"
+                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Suolasakkoraportti ajalta 01.10.2014 - 01.10.2015"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 10
+                     [{:leveys  10
                        :otsikko "Urakka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Keski­lämpö­tila"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Pitkän aikavälin keski­lämpö­tila"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Talvi­suolan max-määrä (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Sakko­raja (t)"}
-                      {:leveys 4
+                      {:fmt     :numero
+                       :leveys  4
                        :otsikko "Kerroin"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Kohtuul­lis­tarkis­tettu sakko­raja (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Käytetty suola­määrä (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Suola­erotus (t)"}
-                      {:leveys 4
+                      {:fmt     :raha
+                       :leveys  4
                        :otsikko "Sakko € / tonni"}
-                      {:leveys 6
+                      {:fmt     :raha
+                       :leveys  6
                        :otsikko "Sakko €"}
-                      {:leveys 5
+                      {:fmt     :raha
+                       :leveys  5
                        :otsikko "Indeksi €"}
-                      {:leveys 6
+                      {:fmt     :raha
+                       :leveys  6
                        :otsikko "Indeksi­korotettu sakko €"}]
-                     [["Oulun alueurakka 2014-2019"
-                       "-6,2°C"
-                       "-9,0°C"
-                       800M
-                       "840,00"
-                       "1,0477"
-                       "924,00"
-                       "1000,00"
-                       "76,00"
-                       "30,00"
-                       "2 280,00"
-                       "108,68"
-                       "2 388,68"]
-                       ["Kajaanin alueurakka 2014-2019"
-                        "-6,0°C"
-                        "-8,8°C"
+                     '(["Oulun alueurakka 2014-2019"
+                        -6.20M
+                        -9.00M
                         800M
-                        "840,00"
-                        "1,0477"
-                        "924,00"
-                        "1000,00"
-                        "76,00"
-                        "30,00"
-                        "2 280,00"
-                        "108,68"
-                        "2 388,68"]
-                       ["Yhteensä"
-                        nil
-                        nil
-                        1600M
-                        nil
-                        nil
-                        1848.0000M
-                        "2000,00"
-                        "152,00"
-                        nil
-                        "4 560,00"
-                        nil
-                        "4 777,36"]]]]))))
+                        840.0
+                        1.04766666666666666667M
+                        924.0000M
+                        1000M
+                        76.0000M
+                        30.0M
+                        2280.00000M
+                        108.6800000000000000076000000M
+                        2388.6800000000000000076000000M]
+                        ["Kajaanin alueurakka 2014-2019"
+                         -6.00M
+                         -8.80M
+                         800M
+                         840.0
+                         1.04766666666666666667M
+                         924.0000M
+                         1000M
+                         76.0000M
+                         30.0M
+                         2280.00000M
+                         108.6800000000000000076000000M
+                         2388.6800000000000000076000000M]
+                        ["Yhteensä"
+                         nil
+                         nil
+                         1600M
+                         nil
+                         nil
+                         1848.0000M
+                         2000M
+                         152.0000M
+                         nil
+                         4560.00000M
+                         nil
+                         4777.3600000000000000152000000M])]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :suolasakko
-                                 :konteksti "koko maa"
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2014 1 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 12 31))
+                                {:nimi       :suolasakko
+                                 :konteksti  "koko maa"
+                                 :parametrit {:alkupvm      (c/to-date (t/local-date 2014 1 1))
+                                              :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Suolasakkoraportti"
+                    {:nimi        "Suolasakkoraportti"
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{1
@@ -243,114 +267,126 @@
                                                     7
                                                     8
                                                     9}
-                      :otsikko "KOKO MAA, Suolasakkoraportti ajalta 01.01.2014 - 31.12.2015"
+                      :otsikko                    "KOKO MAA, Suolasakkoraportti ajalta 01.01.2014 - 31.12.2015"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 10
+                     [{:leveys  10
                        :otsikko "Urakka"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Keski­lämpö­tila"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Pitkän aikavälin keski­lämpö­tila"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Talvi­suolan max-määrä (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Sakko­raja (t)"}
-                      {:leveys 4
+                      {:fmt     :numero
+                       :leveys  4
                        :otsikko "Kerroin"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Kohtuul­lis­tarkis­tettu sakko­raja (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Käytetty suola­määrä (t)"}
-                      {:leveys 5
+                      {:fmt     :numero
+                       :leveys  5
                        :otsikko "Suola­erotus (t)"}
-                      {:leveys 4
+                      {:fmt     :raha
+                       :leveys  4
                        :otsikko "Sakko € / tonni"}
-                      {:leveys 6
+                      {:fmt     :raha
+                       :leveys  6
                        :otsikko "Sakko €"}
-                      {:leveys 5
+                      {:fmt     :raha
+                       :leveys  5
                        :otsikko "Indeksi €"}
-                      {:leveys 6
+                      {:fmt     :raha
+                       :leveys  6
                        :otsikko "Indeksi­korotettu sakko €"}]
-                     [["Vantaan alueurakka 2014-2019"
-                       "-6,0°C"
-                       "-8,8°C"
+                     '(["Vantaan alueurakka 2014-2019"
+                       -6.00M
+                       -8.80M
                        800M
-                       "840,00"
-                       "1,0477"
-                       "924,00"
-                       "4000,00"
-                       "3076,00"
-                       "30,00"
-                       "92 280,00"
-                       "4 398,68"
-                       "96 678,68"]
+                       840.0
+                       1.04766666666666666667M
+                       924.0000M
+                       4000M
+                       3076.0000M
+                       30.0M
+                       92280.00000M
+                       4398.6800000000000003076000000M
+                       96678.6800000000000003076000000M]
                        ["Espoon alueurakka 2014-2019"
-                        "-6,0°C"
-                        "-8,8°C"
+                        -6.00M
+                        -8.80M
                         800M
-                        "840,00"
-                        "1,0477"
-                        "924,00"
-                        "4000,00"
-                        "3076,00"
-                        "30,00"
-                        "92 280,00"
-                        "4 398,68"
-                        "96 678,68"]
+                        840.0
+                        1.04766666666666666667M
+                        924.0000M
+                        4000M
+                        3076.0000M
+                        30.0M
+                        92280.00000M
+                        4398.6800000000000003076000000M
+                        96678.6800000000000003076000000M]
                        {:lihavoi? true
-                        :rivi ["01 Uusimaa"
-                               nil
-                               nil
-                               1600M
-                               nil
-                               nil
-                               1848.0000M
-                               "8000,00"
-                               "6152,00"
-                               nil
-                               "184 560,00"
-                               nil
-                               "193 357,36"]}
+                        :rivi     ["01 Uusimaa"
+                                   nil
+                                   nil
+                                   1600M
+                                   nil
+                                   nil
+                                   1848.0000M
+                                   8000M
+                                   6152.0000M
+                                   nil
+                                   184560.00000M
+                                   nil
+                                   193357.3600000000000006152000000M]}
                        ["Oulun alueurakka 2014-2019"
-                        "-6,2°C"
-                        "-9,0°C"
+                        -6.20M
+                        -9.00M
                         800M
-                        "840,00"
-                        "1,0477"
-                        "924,00"
-                        "4000,00"
-                        "3076,00"
-                        "30,00"
-                        "92 280,00"
-                        "4 398,68"
-                        "96 678,68"]
+                        840.0
+                        1.04766666666666666667M
+                        924.0000M
+                        4000M
+                        3076.0000M
+                        30.0M
+                        92280.00000M
+                        4398.6800000000000003076000000M
+                        96678.6800000000000003076000000M]
                        ["Kajaanin alueurakka 2014-2019"
-                        "-6,0°C"
-                        "-8,8°C"
+                        -6.00M
+                        -8.80M
                         800M
-                        "840,00"
-                        "1,0477"
-                        "924,00"
-                        "4000,00"
-                        "3076,00"
-                        "30,00"
-                        "92 280,00"
-                        "4 398,68"
-                        "96 678,68"]
+                        840.0
+                        1.04766666666666666667M
+                        924.0000M
+                        4000M
+                        3076.0000M
+                        30.0M
+                        92280.00000M
+                        4398.6800000000000003076000000M
+                        96678.6800000000000003076000000M]
                        {:lihavoi? true
-                        :rivi ["12 Pohjois-Pohjanmaa ja Kainuu"
-                               nil
-                               nil
-                               1600M
-                               nil
-                               nil
-                               1848.0000M
-                               "8000,00"
-                               "6152,00"
-                               nil
-                               "184 560,00"
-                               nil
-                               "193 357,36"]}
+                        :rivi     ["12 Pohjois-Pohjanmaa ja Kainuu"
+                                   nil
+                                   nil
+                                   1600M
+                                   nil
+                                   nil
+                                   1848.0000M
+                                   8000M
+                                   6152.0000M
+                                   nil
+                                   184560.00000M
+                                   nil
+                                   193357.3600000000000006152000000M]}
                        ["Yhteensä"
                         nil
                         nil
@@ -358,9 +394,9 @@
                         nil
                         nil
                         3696.0000M
-                        "16000,00"
-                        "12304,00"
+                        16000M
+                        12304.0000M
                         nil
-                        "369 120,00"
+                        369120.00000M
                         nil
-                        "386 714,72"]]]]))))
+                        386714.7200000000000012304000000M])]]))))

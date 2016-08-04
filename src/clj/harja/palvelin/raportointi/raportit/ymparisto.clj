@@ -119,7 +119,7 @@
                materiaalirivit (filter #(not (:luokka %)) rivit)
                kk-rivit (group-by :kk materiaalirivit)
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
-                                     (assoc kk-arvot kk (reduce + 0 (map :maara rivit))))
+                                     (assoc kk-arvot kk (reduce + 0 (keep :maara rivit))))
                                    {} kk-rivit)
                yhteensa (reduce + 0 (vals kk-arvot))]
            ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)

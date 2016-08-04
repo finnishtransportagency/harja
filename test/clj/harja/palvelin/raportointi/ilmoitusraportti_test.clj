@@ -122,13 +122,17 @@
                      {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
                      [{:leveys 6
                        :otsikko "Asiakaspalauteluokka"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "TPP (Toimenpidepyyntö)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "TUR (Tiedoksi)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "URK (Kysely)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "Yhteensä"}]
                      [["Auraus ja sohjonpoisto"
                        10
@@ -231,13 +235,17 @@
                      {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
                      [{:leveys 6
                        :otsikko "Asiakaspalauteluokka"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "TPP (Toimenpidepyyntö)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "TUR (Tiedoksi)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "URK (Kysely)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "Yhteensä"}]
                      [["Auraus ja sohjonpoisto"
                        10
@@ -343,13 +351,17 @@
                      {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
                      [{:leveys 6
                        :otsikko "Asiakaspalauteluokka"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "TPP (Toimenpidepyyntö)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "TUR (Tiedoksi)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "URK (Kysely)"}
-                      {:leveys 2
+                      {:fmt     :numero
+                       :leveys 2
                        :otsikko "Yhteensä"}]
                      [["Auraus ja sohjonpoisto"
                        10

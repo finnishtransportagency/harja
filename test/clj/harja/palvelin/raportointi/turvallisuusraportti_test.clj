@@ -52,12 +52,13 @@
     (is (= vastaus [:raportti
                     {:nimi "Turvallisuusraportti"}
                     [:taulukko
-                     {:otsikko "Oulun alueurakka 2014-2019, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Turvallisuusraportti"
+                     {:otsikko                    "Oulun alueurakka 2014-2019, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
+                      :sheet-nimi                 "Turvallisuusraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Tyyppi"}
-                      {:otsikko "Määrä"}]
-                     [["Työtapaturma"
+                      {:fmt     :numero
+                       :otsikko "Määrä"}]
+                     '(["Työtapaturma"
                        1]
                        ["Vaaratilanne"
                         0]
@@ -66,14 +67,14 @@
                        ["Muu"
                         0]
                        ["Yksittäisiä ilmoituksia yhteensä"
-                        1]]]
+                        1])]
                     nil
                     [:pylvaat
-                     {:legend ["Työtapaturmat"
-                               "Vaaratilanteet"
-                               "Turvallisuushavainnot"
-                               "Muut"]
-                      :otsikko "Turvallisuuspoikkeamat kuukausittain 01.10.2014-01.10.2015"
+                     {:legend        ["Työtapaturmat"
+                                      "Vaaratilanteet"
+                                      "Turvallisuushavainnot"
+                                      "Muut"]
+                      :otsikko       "Turvallisuuspoikkeamat kuukausittain 01.10.2014-01.10.2015"
                       :piilota-arvo? #{0}}
                      [["2014/10"
                        []]
@@ -105,21 +106,23 @@
                         nil
                         nil]]]]
                     [:taulukko
-                     {:otsikko "Turvallisuuspoikkeamat listana: 1 kpl"
+                     {:otsikko                    "Turvallisuuspoikkeamat listana: 1 kpl"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 14
+                     [{:leveys  14
                        :otsikko "Pvm"}
-                      {:leveys 24
+                      {:leveys  24
                        :otsikko "Tyyppi"}
-                      {:leveys 15
+                      {:leveys  15
                        :otsikko "Vakavuusaste"}
-                      {:leveys 14
+                      {:leveys  14
                        :otsikko "Ammatti"}
-                      {:leveys 9
+                      {:fmt     :numero
+                       :leveys  9
                        :otsikko "Sairaala­vuoro­kaudet"}
-                      {:leveys 9
+                      {:fmt     :numero
+                       :leveys  9
                        :otsikko "Sairaus­poissa­olo­päivät"}]
-                     [["1.10.2015 0:20"
+                     '(["1.10.2015 0:20"
                        "Ty­ö­ta­pa­tur­ma"
                        "Vakava"
                        "Porari"
@@ -131,7 +134,7 @@
                         ""
                         ""
                         1
-                        7]]]]))))
+                        7])]]))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -149,12 +152,13 @@
     (is (= vastaus [:raportti
                     {:nimi "Turvallisuusraportti"}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Turvallisuusraportti"
+                     {:otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
+                      :sheet-nimi                 "Turvallisuusraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Tyyppi"}
-                      {:otsikko "Määrä"}]
-                     [["Työtapaturma"
+                      {:fmt     :numero
+                       :otsikko "Määrä"}]
+                     '(["Työtapaturma"
                        1]
                        ["Vaaratilanne"
                         0]
@@ -163,14 +167,14 @@
                        ["Muu"
                         0]
                        ["Yksittäisiä ilmoituksia yhteensä"
-                        1]]]
+                        1])]
                     nil
                     [:pylvaat
-                     {:legend ["Työtapaturmat"
-                               "Vaaratilanteet"
-                               "Turvallisuushavainnot"
-                               "Muut"]
-                      :otsikko "Turvallisuuspoikkeamat kuukausittain 01.10.2014-01.10.2015"
+                     {:legend        ["Työtapaturmat"
+                                      "Vaaratilanteet"
+                                      "Turvallisuushavainnot"
+                                      "Muut"]
+                      :otsikko       "Turvallisuuspoikkeamat kuukausittain 01.10.2014-01.10.2015"
                       :piilota-arvo? #{0}}
                      [["2014/10"
                        []]
@@ -202,21 +206,23 @@
                         nil
                         nil]]]]
                     [:taulukko
-                     {:otsikko "Turvallisuuspoikkeamat listana: 1 kpl"
+                     {:otsikko                    "Turvallisuuspoikkeamat listana: 1 kpl"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 14
+                     [{:leveys  14
                        :otsikko "Pvm"}
-                      {:leveys 24
+                      {:leveys  24
                        :otsikko "Tyyppi"}
-                      {:leveys 15
+                      {:leveys  15
                        :otsikko "Vakavuusaste"}
-                      {:leveys 14
+                      {:leveys  14
                        :otsikko "Ammatti"}
-                      {:leveys 9
+                      {:fmt     :numero
+                       :leveys  9
                        :otsikko "Sairaala­vuoro­kaudet"}
-                      {:leveys 9
+                      {:fmt     :numero
+                       :leveys  9
                        :otsikko "Sairaus­poissa­olo­päivät"}]
-                     [["1.10.2015 0:20"
+                     '(["1.10.2015 0:20"
                        "Ty­ö­ta­pa­tur­ma"
                        "Vakava"
                        "Porari"
@@ -228,7 +234,7 @@
                         ""
                         ""
                         1
-                        7]]]]))))
+                        7])]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -244,15 +250,19 @@
     (is (= vastaus [:raportti
                     {:nimi "Turvallisuusraportti"}
                     [:taulukko
-                     {:otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
-                      :sheet-nimi "Turvallisuusraportti"
+                     {:otsikko                    "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
+                      :sheet-nimi                 "Turvallisuusraportti"
                       :viimeinen-rivi-yhteenveto? false}
                      [{:otsikko "Hallintayksikkö"}
-                      {:otsikko "Työtapaturmat"}
-                      {:otsikko "Vaaratilanteet"}
-                      {:otsikko "Turvallisuushavainnot"}
-                      {:otsikko "Muut"}]
-                     [["Uusimaa"
+                      {:fmt     :numero
+                       :otsikko "Työtapaturmat"}
+                      {:fmt     :numero
+                       :otsikko "Vaaratilanteet"}
+                      {:fmt     :numero
+                       :otsikko "Turvallisuushavainnot"}
+                      {:fmt     :numero
+                       :otsikko "Muut"}]
+                     '(["Uusimaa"
                        0
                        0
                        0
@@ -296,13 +306,15 @@
                         0
                         0
                         0
-                        0]]]
+                        0])]
                     [:taulukko
                      {:otsikko "Turvallisuuspoikkeamat vakavuusasteittain"}
                      [{:otsikko "Hallintayksikkö"}
-                      {:otsikko "Lievät"}
-                      {:otsikko "Vakavat"}]
-                     [["Uusimaa"
+                      {:fmt     :numero
+                       :otsikko "Lievät"}
+                      {:fmt     :numero
+                       :otsikko "Vakavat"}]
+                     '(["Uusimaa"
                        0
                        0]
                        ["Varsinais-Suomi"
@@ -328,13 +340,13 @@
                         4]
                        ["Lappi"
                         0
-                        0]]]
+                        0])]
                     [:pylvaat
-                     {:legend ["Työtapaturmat"
-                               "Vaaratilanteet"
-                               "Turvallisuushavainnot"
-                               "Muut"]
-                      :otsikko "Turvallisuuspoikkeamat kuukausittain 01.01.2014-31.12.2015"
+                     {:legend        ["Työtapaturmat"
+                                      "Vaaratilanteet"
+                                      "Turvallisuushavainnot"
+                                      "Muut"]
+                      :otsikko       "Turvallisuuspoikkeamat kuukausittain 01.01.2014-31.12.2015"
                       :piilota-arvo? #{0}}
                      [["2014/01"
                        []]

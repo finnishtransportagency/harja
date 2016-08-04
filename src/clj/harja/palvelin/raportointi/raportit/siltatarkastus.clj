@@ -85,7 +85,7 @@
                     [(:siltanro tarkastus)
                      (:siltanimi tarkastus)
                      (if (:tarkastusaika tarkastus)
-                       (fmt/pvm-opt (:tarkastusaika tarkastus))
+                       (:tarkastusaika tarkastus)
                        "Tarkastamatta")
                      (or (:tarkastaja tarkastus)
                          "-")

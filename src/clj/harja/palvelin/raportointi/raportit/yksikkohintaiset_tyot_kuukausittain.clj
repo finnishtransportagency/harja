@@ -55,7 +55,7 @@
                                                           (fn [map tehtava]
                                                             (assoc map
                                                               (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date (t/local-date (:vuosi tehtava) (:kuukausi tehtava) 1)))
-                                                              (or (fmt/desimaaliluku-opt (:toteutunut_maara tehtava) 1) 0)))
+                                                              (or (:toteutunut_maara tehtava) 0)))
                                                           {}
                                                           tehtavat)]
                              (-> kuukausittaiset-summat
@@ -169,8 +169,9 @@
                                {:leveys 7 :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
                                (when (and (= konteksti :urakka)
                                           aikavali-kasittaa-hoitokauden?)
-                                 [{:leveys 5 :otsikko "Tot-%"}
-                                  {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"}])]))
+                                 [{:leveys 5 :otsikko "Tot-%" :fmt :prosentti}
+                                  {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"
+                                   :fmt :numero}])]))
       (mapv (fn [rivi]
               (flatten (keep identity [(when urakoittain?
                                          (or (:urakka_nimi rivi) "-"))
@@ -181,12 +182,12 @@
                                                  (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
                                                  0))
                                              listattavat-pvmt)
-                                       (or (fmt/desimaaliluku-opt (:toteutunut_maara rivi) 1) 0)
+                                       (or (:toteutunut_maara rivi) 0)
                                        (when (and (= konteksti :urakka)
                                                   aikavali-kasittaa-hoitokauden?)
-                                         [(let [formatoitu (fmt/desimaaliluku-opt (:toteumaprosentti rivi) 1)]
+                                         [(let [formatoitu (:toteumaprosentti rivi)]
                                             (if-not (str/blank? formatoitu) formatoitu "-"))
-                                          (let [formatoitu (fmt/desimaaliluku-opt (:suunniteltu_maara rivi) 1)]
+                                          (let [formatoitu (:suunniteltu_maara rivi)]
                                             (if-not (str/blank? formatoitu) formatoitu "Ei suunnitelmaa"))])])))
             naytettavat-rivit)]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))

@@ -81,8 +81,8 @@
                       {:leveys 7 :otsikko "Sop. nro"}
                       {:leveys 12 :otsikko "Toimenpide"}
                       {:leveys 7 :otsikko "Tyyppi"}
-                      {:leveys 6 :otsikko "Summa €"}
-                      {:leveys 6 :otsikko "Ind.korotus €"}])
+                      {:leveys 6 :otsikko "Summa €" :fmt :raha}
+                      {:leveys 6 :otsikko "Ind.korotus €" :fmt :raha}])
 
       (keep identity
             (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))
@@ -90,12 +90,12 @@
                                (get-in % [:sopimus :sampoid])
                                (:tpinimi %)
                                (erilliskustannuksen-nimi (:tyyppi %))
-                               (fmt/euro-opt false (:rahasumma %))
-                               (or (fmt/euro-opt false (:indeksikorotus %)) ""))
+                               (or (:rahasumma %) [:info "Ei rahasummaa"])
+                               (or (:indeksikorotus %) [:info "Ei indeksikorotusta"]))
                         erilliskustannukset)
                   (when (not (empty? erilliskustannukset))
                     (keep identity (flatten [(if (not= konteksti :urakka) ["Yhteensä" ""]
                                                                           ["Yhteensä"])
                                              "" "" ""
-                                             (fmt/euro-opt false (reduce + (keep :rahasumma erilliskustannukset)))
-                                             (fmt/euro-opt false (reduce + (keep :indeksikorotus erilliskustannukset)))])))))]]))
+                                             (reduce + (keep :rahasumma erilliskustannukset))
+                                             (reduce + (keep :indeksikorotus erilliskustannukset))])))))]]))

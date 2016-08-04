@@ -5,7 +5,8 @@
             [harja.visualisointi :as vis]
             [taoensso.timbre :as log]
             [harja.ui.skeema :as skeema]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.domain.raportointi :as raportti-domain]))
 
 (def taulukon-fonttikoko 8)
 (def taulukon-fonttikoko-yksikko "pt")
@@ -118,10 +119,16 @@
                              :prosentti #(fmt/prosentti-opt %)
                              :raha #(fmt/desimaaliluku-opt % 2 true)
                              str)
-                       naytettava-arvo (or (if (vector? arvo-datassa)
-                                             (muodosta-pdf arvo-datassa)
-                                             (fmt arvo-datassa))
-                                           "")]]
+                       naytettava-arvo (or
+                                         (cond
+                                           (raportti-domain/virhe? arvo-datassa)
+                                           (raportti-domain/virheen-viesti arvo-datassa)
+
+                                           (vector? arvo-datassa)
+                                           (muodosta-pdf arvo-datassa)
+
+                                           :else (fmt arvo-datassa))
+                                         "")]]
              [:fo:table-cell (merge
                                (border-tyyli sarake)
                                {:padding "1mm"
