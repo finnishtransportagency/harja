@@ -188,7 +188,7 @@
                       {:fmt     :numero
                        :leveys  5
                        :otsikko "Suola­erotus (t)"}
-                      {:fmt     :numero
+                      {:fmt     :raha
                        :leveys  4
                        :otsikko "Sakko € / tonni"}
                       {:fmt     :raha
@@ -295,7 +295,7 @@
                       {:fmt     :numero
                        :leveys  5
                        :otsikko "Suola­erotus (t)"}
-                      {:fmt     :numero
+                      {:fmt     :raha
                        :leveys  4
                        :otsikko "Sakko € / tonni"}
                       {:fmt     :raha
