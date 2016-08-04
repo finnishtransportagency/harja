@@ -56,60 +56,62 @@
                       :otsikko "Oulun alueurakka 2014-2019, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Erilliskustannusten raportti"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 7
+                     '({:leveys  7
                        :otsikko "Pvm"}
-                       {:leveys 7
+                       {:leveys  7
                         :otsikko "Sop. nro"}
-                       {:leveys 12
+                       {:leveys  12
                         :otsikko "Toimenpide"}
-                       {:leveys 7
+                       {:leveys  7
                         :otsikko "Tyyppi"}
-                       {:leveys 6
+                       {:fmt     :raha
+                        :leveys  6
                         :otsikko "Summa €"}
-                       {:leveys 6
-                        :otsikko "Ind.korotus €"}]
-                     [["15.09.2015"
+                       {:fmt     :raha
+                        :leveys  6
+                        :otsikko "Ind.korotus €"})
+                     '(["15.09.2015"
                        "2H16339/01"
                        "Oulu Talvihoito TP 2014-2019"
                        "Muu"
-                       "1 000,00"
-                       "16,92"]
+                       1000M
+                       16.9166932652410000M]
                        ["15.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
-                        "1 000,00"
-                        "4,07"]
+                        1000M
+                        4.06958187041174593000M]
                        ["01.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["15.07.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "0,00"]
+                        1000M
+                        0]
                        ["15.06.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "-2,23"]
+                        1000M
+                        -2.23428024257899745000M]
                        ["15.05.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "-1 000,00"
-                        "-7,34"]
-                       ["Yhteensä"
+                        -1000M
+                        -7.3412065113310000M]
+                       ("Yhteensä"
                          ""
                          ""
                          ""
-                         "4 000,00"
-                         "28,33"]]]]))))
+                         4000M
+                         28.32748164698374848000M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -131,111 +133,113 @@
                       :otsikko "Pohjois-Pohjanmaa ja Kainuu, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Erilliskustannusten raportti"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 10
-                       :otsikko "Urakka"}
-                       {:leveys 7
-                        :otsikko "Pvm"}
-                       {:leveys 7
-                        :otsikko "Sop. nro"}
-                       {:leveys 12
-                        :otsikko "Toimenpide"}
-                       {:leveys 7
-                        :otsikko "Tyyppi"}
-                       {:leveys 6
-                        :otsikko "Summa €"}
-                       {:leveys 6
-                        :otsikko "Ind.korotus €"}]
-                     [["Kajaanin alueurakka 2014-2019"
+                     '({:leveys  10
+                      :otsikko "Urakka"}
+                     {:leveys  7
+                      :otsikko "Pvm"}
+                     {:leveys  7
+                      :otsikko "Sop. nro"}
+                     {:leveys  12
+                      :otsikko "Toimenpide"}
+                     {:leveys  7
+                      :otsikko "Tyyppi"}
+                     {:fmt     :raha
+                      :leveys  6
+                      :otsikko "Summa €"}
+                     {:fmt     :raha
+                      :leveys  6
+                      :otsikko "Ind.korotus €"})
+                     '(["Kajaanin alueurakka 2014-2019"
                        "15.09.2015"
                        "7A26339/05"
                        "Kajaani Talvihoito TP 2014-2019"
                        "Muu"
-                       "1 000,00"
-                       "16,92"]
+                       1000M
+                       16.9166932652410000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.08.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
-                        "1 000,00"
-                        "4,07"]
+                        1000M
+                        4.06958187041174593000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "01.08.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.07.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "0,00"]
+                        1000M
+                        0]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.06.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "-2,23"]
+                        1000M
+                        -2.23428024257899745000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.05.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "-1 000,00"
-                        "-7,34"]
+                        -1000M
+                        -7.3412065113310000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.09.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
-                        "1 000,00"
-                        "4,07"]
+                        1000M
+                        4.06958187041174593000M]
                        ["Oulun alueurakka 2014-2019"
                         "01.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.07.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "0,00"]
+                        1000M
+                        0]
                        ["Oulun alueurakka 2014-2019"
                         "15.06.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "-2,23"]
+                        1000M
+                        -2.23428024257899745000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.05.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "-1 000,00"
-                        "-7,34"]
-                       ["Yhteensä"
+                        -1000M
+                        -7.3412065113310000M]
+                       ("Yhteensä"
                          ""
                          ""
                          ""
                          ""
-                         "8 000,00"
-                         "56,65"]]]]))))
+                         8000M
+                         56.65496329396749696000M))]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -256,192 +260,194 @@
                       :otsikko "KOKO MAA, Erilliskustannusten raportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Erilliskustannusten raportti"
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 10
+                     '({:leveys  10
                        :otsikko "Urakka"}
-                       {:leveys 7
+                       {:leveys  7
                         :otsikko "Pvm"}
-                       {:leveys 7
+                       {:leveys  7
                         :otsikko "Sop. nro"}
-                       {:leveys 12
+                       {:leveys  12
                         :otsikko "Toimenpide"}
-                       {:leveys 7
+                       {:leveys  7
                         :otsikko "Tyyppi"}
-                       {:leveys 6
+                       {:fmt     :raha
+                        :leveys  6
                         :otsikko "Summa €"}
-                       {:leveys 6
-                        :otsikko "Ind.korotus €"}]
-                     [["Espoon alueurakka 2014-2019"
+                       {:fmt     :raha
+                        :leveys  6
+                        :otsikko "Ind.korotus €"})
+                     '(["Espoon alueurakka 2014-2019"
                        "15.09.2015"
                        "7eS6339/05"
                        "Espoo Talvihoito TP 2014-2019"
                        "Muu"
-                       "1 000,00"
-                       "16,92"]
+                       1000M
+                       16.9166932652410000M]
                        ["Espoon alueurakka 2014-2019"
                         "15.08.2015"
                         "7eS6339/05"
                         "Espoo Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
-                        "1 000,00"
-                        "4,07"]
+                        1000M
+                        4.06958187041174593000M]
                        ["Espoon alueurakka 2014-2019"
                         "01.08.2015"
                         "7eS6339/05"
                         "Espoo Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Espoon alueurakka 2014-2019"
                         "15.07.2015"
                         "7eS6339/05"
                         "Espoo Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "0,00"]
+                        1000M
+                        0]
                        ["Espoon alueurakka 2014-2019"
                         "15.06.2015"
                         "7eS6339/05"
                         "Espoo Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "-2,23"]
+                        1000M
+                        -2.23428024257899745000M]
                        ["Espoon alueurakka 2014-2019"
                         "15.05.2015"
                         "7eS6339/05"
                         "Espoo Talvihoito TP 2014-2019"
                         "Muu"
-                        "-1 000,00"
-                        "-7,34"]
+                        -1000M
+                        -7.3412065113310000M]
                        ["Vantaan alueurakka 2014-2019"
                         "15.09.2015"
                         "7V26339/05"
                         "Vantaa Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Vantaan alueurakka 2014-2019"
                         "15.08.2015"
                         "7V26339/05"
                         "Vantaa Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
-                        "1 000,00"
-                        "4,07"]
+                        1000M
+                        4.06958187041174593000M]
                        ["Vantaan alueurakka 2014-2019"
                         "01.08.2015"
                         "7V26339/05"
                         "Vantaa Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Vantaan alueurakka 2014-2019"
                         "15.07.2015"
                         "7V26339/05"
                         "Vantaa Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "0,00"]
+                        1000M
+                        0]
                        ["Vantaan alueurakka 2014-2019"
                         "15.06.2015"
                         "7V26339/05"
                         "Vantaa Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "-2,23"]
+                        1000M
+                        -2.23428024257899745000M]
                        ["Vantaan alueurakka 2014-2019"
                         "15.05.2015"
                         "7V26339/05"
                         "Vantaa Talvihoito TP 2014-2019"
                         "Muu"
-                        "-1 000,00"
-                        "-7,34"]
+                        -1000M
+                        -7.3412065113310000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.09.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.08.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
-                        "1 000,00"
-                        "4,07"]
+                        1000M
+                        4.06958187041174593000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "01.08.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.07.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "0,00"]
+                        1000M
+                        0]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.06.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "-2,23"]
+                        1000M
+                        -2.23428024257899745000M]
                        ["Kajaanin alueurakka 2014-2019"
                         "15.05.2015"
                         "7A26339/05"
                         "Kajaani Talvihoito TP 2014-2019"
                         "Muu"
-                        "-1 000,00"
-                        "-7,34"]
+                        -1000M
+                        -7.3412065113310000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.09.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
-                        "1 000,00"
-                        "4,07"]
+                        1000M
+                        4.06958187041174593000M]
                        ["Oulun alueurakka 2014-2019"
                         "01.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "16,92"]
+                        1000M
+                        16.9166932652410000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.07.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "0,00"]
+                        1000M
+                        0]
                        ["Oulun alueurakka 2014-2019"
                         "15.06.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "1 000,00"
-                        "-2,23"]
+                        1000M
+                        -2.23428024257899745000M]
                        ["Oulun alueurakka 2014-2019"
                         "15.05.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
                         "Muu"
-                        "-1 000,00"
-                        "-7,34"]
-                       ["Yhteensä"
+                        -1000M
+                        -7.3412065113310000M]
+                       ("Yhteensä"
                          ""
                          ""
                          ""
                          ""
-                         "16 000,00"
-                         "113,31"]]]]))))
+                         16000M
+                         113.30992658793499392000M))]]))))

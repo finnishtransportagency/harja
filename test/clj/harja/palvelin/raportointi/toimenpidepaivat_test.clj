@@ -50,32 +50,40 @@
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Monenako päivänä toimenpidettä on tehty aikavälillä"
+                    {:nimi        "Monenako päivänä toimenpidettä on tehty aikavälillä"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Toimenpidepäivät aikavälillä 01.10.2005 - 01.10.2006 (365 päivää)"
+                     {:otsikko    "Toimenpidepäivät aikavälillä 01.10.2005 - 01.10.2006 (365 päivää)"
                       :rivi-ennen [{:sarakkeita 1
-                                    :teksti "Alueet"}
+                                    :teksti     "Alueet"}
                                    {:sarakkeita 8
-                                    :teksti "Oulun alueurakka 2005-2012"}]}
+                                    :teksti     "Oulun alueurakka 2005-2012"}]}
                      [{:otsikko "Teh­tä­vä"}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}]
-                     [["Uuden radan rakentaminen, päällysrakenne"
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}]
+                     '(["Uuden radan rakentaminen, päällysrakenne"
                        0
                        2
                        0
@@ -83,7 +91,7 @@
                        0
                        0
                        0
-                       0]]]]))))
+                       0])]]))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
@@ -99,32 +107,40 @@
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Monenako päivänä toimenpidettä on tehty aikavälillä"
+                    {:nimi        "Monenako päivänä toimenpidettä on tehty aikavälillä"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Toimenpidepäivät aikavälillä 01.10.2005 - 01.10.2006 (365 päivää)"
+                     {:otsikko    "Toimenpidepäivät aikavälillä 01.10.2005 - 01.10.2006 (365 päivää)"
                       :rivi-ennen [{:sarakkeita 1
-                                    :teksti "Alueet"}
+                                    :teksti     "Alueet"}
                                    {:sarakkeita 8
-                                    :teksti "Oulun alueurakka 2005-2012"}]}
+                                    :teksti     "Oulun alueurakka 2005-2012"}]}
                      [{:otsikko "Teh­tä­vä"}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}]
-                     [["Uuden radan rakentaminen, päällysrakenne"
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}]
+                     '(["Uuden radan rakentaminen, päällysrakenne"
                        0
                        2
                        0
@@ -132,7 +148,7 @@
                        0
                        0
                        0
-                       0]]]]))))
+                       0])]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -146,176 +162,248 @@
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Monenako päivänä toimenpidettä on tehty aikavälillä"
+                    {:nimi        "Monenako päivänä toimenpidettä on tehty aikavälillä"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Toimenpidepäivät aikavälillä 01.01.2005 - 31.12.2006 (729 päivää)"
+                     {:otsikko    "Toimenpidepäivät aikavälillä 01.01.2005 - 31.12.2006 (729 päivää)"
                       :rivi-ennen [{:sarakkeita 1
-                                    :teksti "Alueet"}
+                                    :teksti     "Alueet"}
                                    {:sarakkeita 8
-                                    :teksti "01 Uusimaa"}
+                                    :teksti     "01 Uusimaa"}
                                    {:sarakkeita 8
-                                    :teksti "02 Varsinais-Suomi"}
+                                    :teksti     "02 Varsinais-Suomi"}
                                    {:sarakkeita 8
-                                    :teksti "03 Kaakkois-Suomi"}
+                                    :teksti     "03 Kaakkois-Suomi"}
                                    {:sarakkeita 8
-                                    :teksti "04 Pirkanmaa"}
+                                    :teksti     "04 Pirkanmaa"}
                                    {:sarakkeita 8
-                                    :teksti "08 Pohjois-Savo"}
+                                    :teksti     "08 Pohjois-Savo"}
                                    {:sarakkeita 8
-                                    :teksti "09 Keski-Suomi"}
+                                    :teksti     "09 Keski-Suomi"}
                                    {:sarakkeita 8
-                                    :teksti "10 Etelä-Pohjanmaa"}
+                                    :teksti     "10 Etelä-Pohjanmaa"}
                                    {:sarakkeita 8
-                                    :teksti "12 Pohjois-Pohjanmaa ja Kainuu"}
+                                    :teksti     "12 Pohjois-Pohjanmaa ja Kainuu"}
                                    {:sarakkeita 8
-                                    :teksti "14 Lappi"}]}
+                                    :teksti     "14 Lappi"}]}
                      [{:otsikko "Teh­tä­vä"}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}
-                      {:otsikko "Is"
-                       :tasaa :oikea}
-                      {:otsikko "I"
-                       :tasaa :oikea}
-                      {:otsikko "Ib"
-                       :tasaa :oikea}
-                      {:otsikko "TIb"
-                       :tasaa :oikea}
-                      {:otsikko "II"
-                       :tasaa :oikea}
-                      {:otsikko "III"
-                       :tasaa :oikea}
-                      {:otsikko "K1"
-                       :tasaa :oikea}
-                      {:otsikko "K2"
-                       :tasaa :oikea}]
-                     [["Uuden radan rakentaminen, päällysrakenne"
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Is"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "I"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "Ib"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "TIb"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "II"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "III"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K1"
+                       :tasaa   :oikea}
+                      {:fmt     :numero
+                       :otsikko "K2"
+                       :tasaa   :oikea}]
+                     '(["Uuden radan rakentaminen, päällysrakenne"
                        0
                        0
                        0
@@ -387,4 +475,4 @@
                        0
                        0
                        0
-                       0]]]]))))
+                       0])]]))))

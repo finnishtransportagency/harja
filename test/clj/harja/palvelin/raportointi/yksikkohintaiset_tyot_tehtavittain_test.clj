@@ -44,58 +44,71 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :yks-hint-tehtavien-summat
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 10))
+                                {:nimi       :yks-hint-tehtavien-summat
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-oulun-alueurakan-2005-2012-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
                                               :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Yksikköhintaiset työt tehtävittäin"
+                    {:nimi        "Yksikköhintaiset työt tehtävittäin"
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{2
                                                     5
                                                     6}
-                      :otsikko "Oulun alueurakka 2005-2012, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
-                      :sheet-nimi "Yksikköhintaiset työt tehtävittäin"
-                      :tyhja nil
+                      :otsikko                    "Oulun alueurakka 2005-2012, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
+                      :tyhja                      nil
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 25
-                       :otsikko "Tehtävä"}
-                       {:leveys 5
-                        :otsikko "Yks."}
-                       {:leveys 10
-                        :otsikko "Yksikkö­hinta €"}
-                       {:leveys 10
-                        :otsikko "Suunniteltu määrä hoitokaudella"}
-                       {:leveys 10
-                        :otsikko "Toteutunut määrä"}
-                       {:leveys 15
-                        :otsikko "Suunnitellut kustannukset hoitokaudella €"}
-                       {:leveys 15
-                        :otsikko "Toteutuneet kustannukset €"}]
-                     [["Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
-                        "-"
-                        "-"
-                        "Ei suunnitelmaa"
-                        "667,0"
-                        "-"
-                        "-"]
-                       ["Pensaiden täydennysistutus"
-                         "-"
-                         "-"
-                         "Ei suunnitelmaa"
-                         "668,0"
-                         "-"
-                         "-"]
-                       ["Yhteensä"
-                        nil
-                        nil
-                        nil
-                        nil
-                        "0,00"
-                        "0,00"]]]
+                     '({:leveys  25
+                        :otsikko "Tehtävä"}
+                        {:leveys  5
+                         :otsikko "Yks."}
+                        {:fmt     :raha
+                         :leveys  10
+                         :otsikko "Yksikkö­hinta €"}
+                        {:fmt     :numero
+                         :leveys  10
+                         :otsikko "Suunniteltu määrä hoitokaudella"}
+                        {:fmt     :numero
+                         :leveys  10
+                         :otsikko "Toteutunut määrä"}
+                        {:leveys  15
+                         :otsikko "Suunnitellut kustannukset hoitokaudella €"}
+                        {:leveys  15
+                         :otsikko "Toteutuneet kustannukset €"})
+                     '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
+                         [:info
+                          ""]
+                         [:info
+                          ""]
+                         [:info
+                          "Ei suunnitelmaa"]
+                         667M
+                         [:info
+                          ""]
+                         [:info
+                          ""])
+                        ("Pensaiden täydennysistutus"
+                          [:info
+                           ""]
+                          [:info
+                           ""]
+                          [:info
+                           "Ei suunnitelmaa"]
+                          668M
+                          [:info
+                           ""]
+                          [:info
+                           ""])
+                        ["Yhteensä"
+                         nil
+                         nil
+                         nil
+                         nil
+                         0
+                         0])]
                     [:teksti
                      "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]]))))
 
@@ -103,71 +116,73 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :yks-hint-tehtavien-summat
-                                 :konteksti "hallintayksikko"
+                                {:nimi               :yks-hint-tehtavien-summat
+                                 :konteksti          "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm            (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))
-                                              :urakkatyyppi "hoito"}})]
+                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2005 10 10))
+                                                      :loppupvm     (c/to-date (t/local-date 2010 10 10))
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Yksikköhintaiset työt tehtävittäin"
+                    {:nimi        "Yksikköhintaiset työt tehtävittäin"
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{}
-                      :otsikko "Pohjois-Pohjanmaa ja Kainuu, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
-                      :sheet-nimi "Yksikköhintaiset työt tehtävittäin"
-                      :tyhja nil
+                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
+                      :tyhja                      nil
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 25
+                     '({:leveys  25
                        :otsikko "Tehtävä"}
-                       {:leveys 5
+                       {:leveys  5
                         :otsikko "Yks."}
-                       {:leveys 10
-                        :otsikko "Toteutunut määrä"}]
-                     [["Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
-                        "m2"
-                        "667,0"]
-                       ["Pensaiden täydennysistutus"
+                       {:fmt     :numero
+                        :leveys  10
+                        :otsikko "Toteutunut määrä"})
+                     '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
                          "m2"
-                         "668,0"]
-                       ["Yhteensä"
-                         nil
-                         "1335,0"]]]
+                         667M)
+                        ("Pensaiden täydennysistutus"
+                          "m2"
+                          668M)
+                        ("Yhteensä"
+                          nil
+                          1335M))]
                     nil]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :yks-hint-tehtavien-summat
-                                 :konteksti "koko maa"
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm (c/to-date (t/local-date 2010 10 10))
+                                {:nimi       :yks-hint-tehtavien-summat
+                                 :konteksti  "koko maa"
+                                 :parametrit {:alkupvm      (c/to-date (t/local-date 2005 10 10))
+                                              :loppupvm     (c/to-date (t/local-date 2010 10 10))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
-                    {:nimi "Yksikköhintaiset työt tehtävittäin"
+                    {:nimi        "Yksikköhintaiset työt tehtävittäin"
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{}
-                      :otsikko "KOKO MAA, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
-                      :sheet-nimi "Yksikköhintaiset työt tehtävittäin"
-                      :tyhja nil
+                      :otsikko                    "KOKO MAA, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
+                      :tyhja                      nil
                       :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 25
+                     '({:leveys  25
                        :otsikko "Tehtävä"}
-                       {:leveys 5
+                       {:leveys  5
                         :otsikko "Yks."}
-                       {:leveys 10
-                        :otsikko "Toteutunut määrä"}]
-                     [["Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
-                        "m2"
-                        "667,0"]
-                       ["Pensaiden täydennysistutus"
+                       {:fmt     :numero
+                        :leveys  10
+                        :otsikko "Toteutunut määrä"})
+                     '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
                          "m2"
-                         "668,0"]
-                       ["Yhteensä"
-                         nil
-                         "1335,0"]]]
+                         667M)
+                        ("Pensaiden täydennysistutus"
+                          "m2"
+                          668M)
+                        ("Yhteensä"
+                          nil
+                          1335M))]
                     nil]))))
