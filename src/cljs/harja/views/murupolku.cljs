@@ -86,7 +86,7 @@
 
             (for [urakka muut-kaynnissaolevat-urakat]
               ^{:key (str "urakka-" (:id urakka))}
-              [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka urakka)]])))]])))
+              [:li.harja-alasvetolistaitemi [linkki (:nimi urakka) #(nav/valitse-urakka! urakka)]])))]])))
 
 (defn urakoitsija []
   [:div.murupolku-urakoitsija

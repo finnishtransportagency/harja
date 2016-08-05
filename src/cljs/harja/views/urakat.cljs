@@ -54,12 +54,12 @@
                              :nayta-ryhmat   [:kaynnissa :paattyneet]
                              :ryhmittely     (let [nyt (pvm/nyt)]
                                                #(if (pvm/jalkeen? nyt (:loppupvm %))
-                                                  :paattyneet
-                                                  :kaynnissa))
+                                                 :paattyneet
+                                                 :kaynnissa))
                              :ryhman-otsikko #(case %
-                                                :kaynnissa "Käynnissä olevat urakat"
-                                                :paattyneet "Päättyneet urakat")
-                             :on-select      nav/valitse-urakka
+                                               :kaynnissa "Käynnissä olevat urakat"
+                                               :paattyneet "Päättyneet urakat")
+                             :on-select      nav/valitse-urakka!
                              :vinkki         #(when (empty? suodatettu-urakkalista)
                                                "Hakuehdoilla ei löytynyt urakoita")
                              :aputeksti      "Kirjoita urakan nimi tähän"}
