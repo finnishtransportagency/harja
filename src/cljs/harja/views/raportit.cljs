@@ -592,18 +592,18 @@
              "Hallintayksikkö" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (when v-hal
                         [yleiset/livi-pudotusvalikko
-                         {:valitse-fn nav/valitse-urakka
-                          :valinta v-ur
-                          :class "raportti-alasveto"
-                          :nayta-ryhmat [:kaynnissa :paattyneet]
-                          :ryhmittely (let [nyt (pvm/nyt)]
-                                        #(if (pvm/jalkeen? nyt (:loppupvm %))
-                                          :paattyneet
-                                          :kaynnissa))
+                         {:valitse-fn     nav/valitse-urakka!
+                          :valinta        v-ur
+                          :class          "raportti-alasveto"
+                          :nayta-ryhmat   [:kaynnissa :paattyneet]
+                          :ryhmittely     (let [nyt (pvm/nyt)]
+                                            #(if (pvm/jalkeen? nyt (:loppupvm %))
+                                              :paattyneet
+                                              :kaynnissa))
                           :ryhman-otsikko #(case %
                                             :kaynnissa "Käynnissä olevat urakat"
                                             :paattyneet "Päättyneet urakat")
-                          :format-fn (fnil :nimi {:nimi "Kaikki urakat"})}
+                          :format-fn      (fnil :nimi {:nimi "Kaikki urakat"})}
                          (concat [nil]
                                  (sort-by :nimi @nav/suodatettu-urakkalista))])
              "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
