@@ -23,7 +23,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kartta.varit.alpha :as varit]
             [harja.ui.openlayers.taso :as taso]
-            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
+            [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -353,7 +354,8 @@
       [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto])))
 
 (def paivitetaan-karttaa-tila (atom false))
-(def karttakuvan-lataus (atom nil))
+(def kuvatason-lataus (atom nil))
+(def geometriatason-lataus (atom nil))
 
 (defn paivitetaan-karttaa
   []
@@ -362,9 +364,13 @@
      [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
       [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
 
-(defonce kuuntele-kartan-paivitys
-  (t/kuuntele! :karttakuva
-               #(reset! karttakuvan-lataus %)))
+(defonce kuuntele-kuvatason-paivitys
+         (t/kuuntele! :edistymispalkki/kuvataso
+                      #(reset! kuvatason-lataus %)))
+
+(defonce kuuntele-geometriatason-paivitys
+         (t/kuuntele! :edistymispalkki/geometriataso
+                      #(reset! geometriatason-lataus %)))
 
 (defn aseta-paivitetaan-karttaa-tila! [uusi-tila]
   (reset! paivitetaan-karttaa-tila uusi-tila))
@@ -591,6 +597,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :on-drag            (fn [item event]
                                 (paivita-extent item event)
                                 (t/julkaise! {:aihe :karttaa-vedetty}))
+          :on-postrender      (fn [_] (edistymispalkki/geometriataso-pakota-valmistuminen!))
           :on-mount           (fn [initialextent]
                                 (paivita-extent nil initialextent))
           :on-click           (fn [at]
@@ -632,9 +639,17 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 :url   (str (k/wmts-polku) "maasto/wmts")
                                 :layer "taustakartta"}]}]))))
 
-(defn kartan-edistyminen [{:keys [ladattu ladataan] :as progress}]
-  (when (and progress (not= 0 ladattu ladataan))
-    [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}]))
+(defn kartan-edistyminen [{:keys [kuvataso-ladattu kuvataso-ladataan] :as kuvataso}
+                          {:keys [geometria-ladattu geometria-ladataan] :as geometria}]
+  (let [taso (or kuvataso geometria)
+        ladattu (or kuvataso-ladattu geometria-ladattu)
+        ladataan (or kuvataso-ladataan geometria-ladataan)
+        ;; Näytetään jo edistymispalkki vaikka lataustilanne olisi esim 0/1
+        #_[ladattu ladataan] #_(if (= ladattu 0)
+                             [(inc ladattu) (inc ladataan)]
+                             [ladattu ladataan])]
+    (when (and taso (not= 0 ladattu ladataan))
+     [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}])))
 
 (defn kartta []
   [:div.karttacontainer
@@ -644,7 +659,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
    [kartan-ohjelaatikko]
    [kartan-ikonien-selitykset]
    [kartta-openlayers]
-   [kartan-edistyminen @karttakuvan-lataus]])
+   [kartan-edistyminen @kuvatason-lataus @geometriatason-lataus]])
 
 
 ;; Käytä tätä jos haluat luoda rinnakkain sisällön ja kartan näkymääsi
