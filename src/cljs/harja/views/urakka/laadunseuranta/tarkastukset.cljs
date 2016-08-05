@@ -73,7 +73,7 @@
           tarkastukset (reverse (sort-by :aika @tarkastukset/urakan-tarkastukset))]
       [:div.tarkastukset
 
-       [valinnat/aikavali-nykypvm-taakse urakka]
+       [valinnat/aikavali-nykypvm-taakse urakka tarkastukset/valittu-aikavali]
 
 
        [:span.label-ja-kentta

@@ -53,11 +53,13 @@
      :tyyppi    tyyppi
      :vain-laadunalitukset? vain-laadunalitukset?}))
 
+(defonce valittu-aikavali (atom nil))
+
 (def urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                urakka-kaynnissa? @tiedot-urakka/valittu-urakka-kaynnissa?
                kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi
-               aikavali @tiedot-urakka/valittu-aikavali
+               aikavali @valittu-aikavali
                laadunseurannassa? @laadunseuranta/laadunseurannassa?
                valilehti (nav/valittu-valilehti :laadunseuranta)
                tienumero @tienumero

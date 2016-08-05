@@ -63,8 +63,18 @@
 (defn aikavali-nykypvm-taakse
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
-  [urakka]
-  (let [alkuvalinta (first aikavali-valinnat)
+  [urakka valittu-aikavali]
+  (let [[valittu-aikavali-alku valittu-aikavali-loppu] @valittu-aikavali
+
+        alkuvalinta (or (and valittu-aikavali-alku
+                             valittu-aikavali-loppu
+                             (some (fn [[nimi aikavali-fn :as valinta]]
+                                     (when aikavali-fn
+                                       (let [[alku loppu] (aikavali-fn)]
+                                         (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
+                                                    (pvm/sama-pvm? loppu valittu-aikavali-loppu))
+                                           valinta)))) aikavali-valinnat))
+                        (first aikavali-valinnat))
         [_ aikavali-fn] alkuvalinta
         valinta (r/atom alkuvalinta)
         vapaa-aikavali? (r/atom false)
@@ -75,16 +85,16 @@
                       ;; Esiasetettu laskettava aikaväli
                       (do
                         (reset! vapaa-aikavali? false)
-                        (reset! u/valittu-aikavali ((second v))))
+                        (reset! valittu-aikavali (aikavali-fn)))
                       ;; Käyttäjä haluaa asettaa itse aikavälin
                       (reset! vapaa-aikavali? true))))]
     (valitse urakka alkuvalinta)
     (komp/luo
-      {:component-will-receive-props
-       (fn [_ _ urakka]
-         (valitse urakka @valinta))}
+     (komp/kun-muuttuu
+      (fn [urakka _]
+        (valitse urakka @valinta)))
 
-      (fn [urakka]
+      (fn [urakka valittu-aikavali]
         (if-not (u/urakka-kaynnissa? urakka)
           [urakan-hoitokausi-ja-kuukausi urakka]
           [:span.aikavali-nykypvm-taakse
@@ -96,7 +106,7 @@
                                   :valitse-fn (partial valitse urakka)}
              aikavali-valinnat]]
            (when @vapaa-aikavali?
-             [aikavali])])))))
+             [valinnat/aikavali valittu-aikavali])])))))
 
 (defn urakan-toimenpide []
   (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
