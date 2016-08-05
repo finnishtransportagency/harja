@@ -256,7 +256,8 @@
            
            :default
            [:div.sidepanel-box
-            [toggle-painike "Soratie alkaa" alivalikot :soratie :on-click #(swap! havainnot assoc :soratie true)]
+            ;; soratietarkastus kytketty pois päältä
+            #_[toggle-painike "Soratie alkaa" alivalikot :soratie :on-click #(swap! havainnot assoc :soratie true)]
             [on-painike "Liikenneympäristö" alivalikot :liikenneymparisto]
             [on-painike "Viherhoito" alivalikot :viherhoito]
             [on-painike "Muut" alivalikot :muut]])]))

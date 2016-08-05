@@ -18,10 +18,7 @@
          [:p "Valitse tarkastusajon tyyppi"]
          [:div
           [:nav.pikavalintapainike {:on-click #(valittu :kelitarkastus)} "Talvitarkastus"]
-          [:nav.pikavalintapainike {:class (when (not (sovellus/kesatarkastus-beta?))
-                                             "disabled") :on-click #(when (sovellus/kesatarkastus-beta?)
-                                                                      (valittu :soratietarkastus))}
-           "Kesätarkastus"]]
+          [:nav.pikavalintapainike {:on-click #(valittu :soratietarkastus)} "Kesätarkastus"]]
          [:nav.pikavalintapainike.peruutuspainike {:on-click #(peruutettu-fn)}
           [:span.livicon-delete] "Peruuta"]]))))
 
