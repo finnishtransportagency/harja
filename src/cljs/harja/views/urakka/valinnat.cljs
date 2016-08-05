@@ -64,9 +64,12 @@
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   [urakka valittu-aikavali]
-  (let [[valittu-aikavali-alku valittu-aikavali-loppu] @valittu-aikavali
+  (let [[valittu-aikavali-alku valittu-aikavali-loppu
+         :as valittu-aikavali-nyt] @valittu-aikavali
 
-        alkuvalinta (or (and valittu-aikavali-alku
+        alkuvalinta (or
+                     (and (nil? valittu-aikavali-nyt) (first aikavali-valinnat))
+                     (and valittu-aikavali-alku
                              valittu-aikavali-loppu
                              (some (fn [[nimi aikavali-fn :as valinta]]
                                      (when aikavali-fn
@@ -74,7 +77,7 @@
                                          (when (and (pvm/sama-pvm? alku valittu-aikavali-alku)
                                                     (pvm/sama-pvm? loppu valittu-aikavali-loppu))
                                            valinta)))) aikavali-valinnat))
-                        (first aikavali-valinnat))
+                     (last aikavali-valinnat))
         [_ aikavali-fn] alkuvalinta
         valinta (r/atom alkuvalinta)
         vapaa-aikavali? (r/atom false)
