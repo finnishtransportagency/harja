@@ -6,6 +6,7 @@
             [ol.extent :as ol-extent]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :refer [karttakuva-url]]
+            [harja.ui.openlayers.edistymispalkki :as palkki]
             [harja.ui.openlayers.taso :refer [Taso]]
             [cljs-time.core :as t]
             [harja.asiakas.tapahtumat :as tapahtumat]))
@@ -20,28 +21,6 @@
                      "r" (.getResolution tile-grid (aget coord 0))
                      "pr" pixel-ratio]
                     parametrit))))
-
-(def kuvatason-lataus (atom {:ladataan 0 :ladattu 0}))
-(defonce julkaise-lataustapahtuma
-  (add-watch kuvatason-lataus ::paivitys
-             (fn [_ _ _ tila]
-               (tapahtumat/julkaise! (assoc tila :aihe :karttakuva)))))
-
-(defn nollaa-jos-valmis [{:keys [ladataan ladattu] :as lataus}]
-  (if (= ladataan ladattu)
-    {:ladataan 0 :ladattu 0}
-    lataus))
-
-(defn aloita-lataus []
-  (swap! kuvatason-lataus (comp nollaa-jos-valmis
-                                #(update % :ladataan inc))))
-
-(defn lataus-valmis []
-  (js/setTimeout
-   (fn []
-     (swap! kuvatason-lataus (comp nollaa-jos-valmis
-                                   #(update % :ladattu inc))))
-   100))
 
 (defrecord Kuvataso [projection extent z-index selitteet parametrit]
   Taso
@@ -58,9 +37,9 @@
           source (if (and sama? (not luo?))
                    (.getSource ol-layer)
                    (doto (ol.source.TileImage. #js {:projection projection})
-                     (.on "tileloadstart" aloita-lataus)
-                     (.on "tileloadend" lataus-valmis)
-                     (.on "tileloaderror" lataus-valmis)))
+                     (.on "tileloadstart" palkki/kuvataso-aloita-lataus!)
+                     (.on "tileloadend" palkki/kuvataso-lataus-valmis!)
+                     (.on "tileloaderror" palkki/kuvataso-lataus-valmis!)))
 
           ol-layer (or ol-layer
                        (ol.layer.Tile.
