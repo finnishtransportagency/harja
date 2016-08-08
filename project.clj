@@ -56,15 +56,12 @@
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
 
-                 ;; Sonja-väylän JMS riippuvuudet
-                 [progress/sonic-client "7.6.2"]
-                 [progress/sonic-crypto "7.6.2"]
-                 [progress/sonic-xmessage "7.6.2"]
-                 ;; ActiveMQ testejä varten
-                 [org.apache.activemq/activemq-client "5.11.1"]
-
                  ;; Sähköposti lähetys
                  [com.draines/postal "1.11.3"]
+
+                 [javax.jms/jms-api "1.1-rev-1"]
+                 [org.apache.activemq/activemq-client "5.11.1"]
+
 
                  ;; Asiakas
                  [spyscope "0.1.5"]
@@ -246,7 +243,8 @@
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
   ;; ne pitää kopioida
-  :manifest {"Specification-Title"    "Java Advanced Imaging Image I/O Tools"
+  :manifest {"Class-Path"             "sonic-client.jar sonic-crypto.jar sonic-xmessage.jar"
+             "Specification-Title"    "Java Advanced Imaging Image I/O Tools"
              "Specification-Version"  "1.1"
              "Specification-Vendor"   "Sun Microsystems, Inc."
              "Implementation-Title"   "com.sun.media.imageio"

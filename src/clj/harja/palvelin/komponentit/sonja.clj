@@ -7,9 +7,7 @@
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str])
-  (:import (progress.message.jclient QueueConnectionFactory)
-           (javax.jms Session)
-           (org.apache.activemq ActiveMQConnectionFactory))
+  (:import (javax.jms Session))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def agentin-alkutila
@@ -38,12 +36,20 @@
   (laheta [this jono viesti] [this jono viesti otsikot]
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n."))
 
+(def jms-driver-luokka {:activemq "org.apache.activemq.ActiveMQConnectionFactory"
+                        :sonic "progress.message.jclient.QueueConnectionFactory"})
+
 (defn- luo-connection-factory [url tyyppi]
-  (if (= tyyppi :activemq)
-    (ActiveMQConnectionFactory. url)
-    (doto (QueueConnectionFactory. url)
-      (.setFaultTolerant true)
-      (.setFaultTolerantReconnectTimeout (int 30)))))
+  (let [connection-factory (-> tyyppi
+                               jms-driver-luokka
+                               Class/forName
+                               (.getConstructor (into-array Class [String]))
+                               (.newInstance (into-array Object [url])))]
+    (if (= tyyppi :activemq)
+      connection-factory
+      (doto connection-factory
+        (.setFaultTolerant true)
+        (.setFaultTolerantReconnectTimeout (int 30))))))
 
 (defn- viestin-kasittelija [kasittelija]
   (let [ch (async/chan)]

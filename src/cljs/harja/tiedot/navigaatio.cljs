@@ -35,7 +35,7 @@
 
 (def valittu-sivu (reaction (get @reitit/url-navigaatio :sivu)))
 
-(declare kasittele-url! paivita-url valitse-urakka)
+(declare kasittele-url! paivita-url valitse-urakka!)
 
 (defonce murupolku-nakyvissa? (reaction (and (not @raportit/raportit-nakymassa?)
                                              (not= @valittu-sivu :tilannekuva)
@@ -123,8 +123,9 @@
                 (ur/hae-hallintayksikon-urakat yks))))
 
 ;; Atomi, joka sisältää valitun urakan (tai nil)
+;; Älä resetoi tätä suoraan, vaan urakan vaihtuessa resetoi valittu-urakka-id
 (defonce valittu-urakka
-  (reaction-writable
+  (reaction
     (let [id @valittu-urakka-id
           urakat @hallintayksikon-urakkalista]
       (when (and id urakat)
@@ -189,7 +190,7 @@
 
 (defn aseta-hallintayksikko-ja-urakka [hy-id ur]
   (reset! valittu-hallintayksikko-id hy-id)
-  (valitse-urakka ur))
+  (valitse-urakka! ur))
 
 (defn valitse-urakoitsija! [u]
   (reset! valittu-urakoitsija u))
@@ -215,7 +216,6 @@
 (defn valitse-hallintayksikko [yks]
   (reset! valittu-hallintayksikko-id (:id yks))
   (reset! valittu-urakka-id nil)
-  (reset! valittu-urakka nil)
   (paivita-url))
 
 (defonce ilmoita-hallintayksikkovalinnasta
@@ -224,8 +224,8 @@
             (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu))
             (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))))
 
-(defn valitse-urakka [ur]
-  (reset! valittu-urakka ur)
+(defn valitse-urakka! [ur]
+  (reset! valittu-urakka-id (:id ur))
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue)))
   (paivita-url))
 
@@ -247,7 +247,7 @@
 
                (fn [urakka]
                  ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
-                 (valitse-urakka urakka))))
+                 (valitse-urakka! urakka))))
 
 ;; Quick and dirty history configuration.
 (defonce historia (let [h (History. false)]
@@ -319,8 +319,7 @@
             (reset! valittu-urakka-id u))
         (do
           (reset! valittu-hallintayksikko-id hy)
-          (reset! valittu-urakka-id nil)
-          (reset! valittu-urakka nil))))
+          (reset! valittu-urakka-id nil))))
 
     (swap! reitit/url-navigaatio
            reitit/tulkitse-polku polku))

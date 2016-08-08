@@ -29,5 +29,6 @@
       @karttataso-tarkastukset
       (tarkastukset/kasaa-haun-parametrit
         @tiedot-urakka/valittu-urakka-kaynnissa?
-        @nav/valittu-urakka-id @tiedot-urakka/valittu-hoitokauden-kuukausi @tiedot-urakka/valittu-aikavali
+        @nav/valittu-urakka-id @tiedot-urakka/valittu-hoitokauden-kuukausi
+        @tarkastukset/valittu-aikavali
         @tarkastukset/tienumero @tarkastukset/tarkastustyyppi false))))

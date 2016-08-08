@@ -21,11 +21,7 @@
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
 
 (defn urakan-hoitokausi [ur]
-  (komp/luo
-    {:component-will-mount
-     (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
-    (fn [ur] (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))))
-
+  (valinnat/urakan-hoitokausi ur u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!))
 
 (defn hoitokauden-kuukausi []
   [valinnat/hoitokauden-kuukausi
@@ -34,19 +30,15 @@
    u/valitse-hoitokauden-kuukausi!])
 
 (defn urakan-hoitokausi-ja-kuukausi [urakka]
-  (komp/luo
-    {:component-will-mount
-     (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
-    (fn [urakka]
-      (let [kuukaudet (vec (concat [nil] (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)))]
-        [valinnat/urakan-hoitokausi-ja-kuukausi
-         urakka
-         u/valitun-urakan-hoitokaudet
-         u/valittu-hoitokausi
-         u/valitse-hoitokausi!
-         kuukaudet
-         u/valittu-hoitokauden-kuukausi
-         u/valitse-hoitokauden-kuukausi!]))))
+  (let [kuukaudet (vec (concat [nil] (pvm/hoitokauden-kuukausivalit @u/valittu-hoitokausi)))]
+    [valinnat/urakan-hoitokausi-ja-kuukausi
+     urakka
+     u/valitun-urakan-hoitokaudet
+     u/valittu-hoitokausi
+     u/valitse-hoitokausi!
+     kuukaudet
+     u/valittu-hoitokauden-kuukausi
+     u/valitse-hoitokauden-kuukausi!]))
 
 (defn aikavali []
   (valinnat/aikavali u/valittu-aikavali))
@@ -102,7 +94,7 @@
           [urakan-hoitokausi-ja-kuukausi urakka]
           [:span.aikavali-nykypvm-taakse
            [:div.label-ja-alasveto
-            [:span.alasvedon-otsikko "Näytettävä aikaväli"]
+            [:span.alasvedon-otsikko "Aikaväli"]
             [livi-pudotusvalikko {:valinta    @valinta
                                   :format-fn  first
                                   :class      "suunnittelu-alasveto"
@@ -166,58 +158,42 @@
     u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide [ur]
-  (komp/luo
-    {:component-will-mount
-     (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
-    (fn [ur]
-      (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
-        ur
-        u/valittu-sopimusnumero u/valitse-sopimusnumero!
-        u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-        u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))))
+  (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
+    ur
+    u/valittu-sopimusnumero u/valitse-sopimusnumero!
+    u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
+    u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut [ur]
-  (komp/luo
-    {:component-will-mount
-     (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
-    (fn [ur]
-      (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
-        ur
-        u/valittu-sopimusnumero u/valitse-sopimusnumero!
-        u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-        (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
-                             [{:tpi_nimi "Muut"}]))
-                identity)
-        u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))))
+  (fn [ur]
+    (valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide
+      ur
+      u/valittu-sopimusnumero u/valitse-sopimusnumero!
+      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
+      (r/wrap (vec (concat @u/urakan-toimenpideinstanssit
+                           [{:tpi_nimi "Muut"}]))
+              identity)
+      u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
 
 (defn urakan-hoitokausi-ja-toimenpide [ur]
-  (komp/luo
-    {:component-will-mount
-     (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
-    (fn [ur]
-      (valinnat/urakan-hoitokausi-ja-toimenpide
-        ur
-        u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-        u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))))
+  (fn [ur]
+    (valinnat/urakan-hoitokausi-ja-toimenpide
+      ur
+      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
+      u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
 
 (defn urakan-hoitokausi-ja-aikavali [ur]
-  (komp/luo
-    {:component-will-mount
-     (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
-    (fn [ur]
-      (valinnat/urakan-hoitokausi-ja-aikavali
-        ur
-        u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-        u/valittu-aikavali))))
+  (fn [ur]
+    (valinnat/urakan-hoitokausi-ja-aikavali
+      ur
+      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
+      u/valittu-aikavali)))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
-  (komp/luo
-    {:component-will-mount
-     (fn [& args] (u/valitse-hoitokausi! @u/valittu-hoitokausi))}
-    (fn [ur]
-      (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
-        ur
-        u/valittu-sopimusnumero u/valitse-sopimusnumero!
-        u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
-        u/valittu-aikavali
-        u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))))
+  (fn [ur]
+    (valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide
+      ur
+      u/valittu-sopimusnumero u/valitse-sopimusnumero!
+      u/valitun-urakan-hoitokaudet u/valittu-hoitokausi u/valitse-hoitokausi!
+      u/valittu-aikavali
+      u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!)))
