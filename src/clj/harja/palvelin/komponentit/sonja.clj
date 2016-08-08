@@ -7,9 +7,7 @@
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str])
-  (:import (progress.message.jclient QueueConnectionFactory)
-           (javax.jms Session)
-           (org.apache.activemq ActiveMQConnectionFactory))
+  (:import (javax.jms Session))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def agentin-alkutila

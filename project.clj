@@ -56,13 +56,6 @@
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
 
-                 ;; Sonja-väylän JMS riippuvuudet
-                 [progress/sonic-client "8.6.0"]
-                 [progress/sonic-crypto "8.6.0"]
-                 [progress/sonic-xmessage "8.6.0"]
-                 ;; ActiveMQ testejä varten
-                 [org.apache.activemq/activemq-client "5.11.1"]
-
                  ;; Sähköposti lähetys
                  [com.draines/postal "1.11.3"]
 
