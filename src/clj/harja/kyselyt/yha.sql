@@ -24,8 +24,8 @@ SELECT
   yhanimi,
   elyt,
   vuodet,
-  kohdeluettelo_paivitetty as "kohdeluettelo-paivitetty",
-  sidonta_lukittu as "sidonta-lukittu"
+  kohdeluettelo_paivitetty AS "kohdeluettelo-paivitetty",
+  sidonta_lukittu          AS "sidonta-lukittu"
 FROM yhatiedot
 WHERE urakka = :urakka;
 
@@ -43,14 +43,15 @@ WHERE yllapitokohde IN
 -- name: hae-yllapitokohteen-kohdeosat
 SELECT
   id,
-  tr_numero AS "tr-numero",
-  tr_alkuosa AS "tr-alkuosa",
-  tr_alkuetaisyys AS "tr-alkuetaisyys",
-  tr_loppuosa AS "tr-loppuosa",
+  tr_numero        AS "tr-numero",
+  tr_alkuosa       AS "tr-alkuosa",
+  tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  tr_loppuosa      AS "tr-loppuosa",
   tr_loppuetaisyys AS "tr-loppuetaisyys",
-  tr_ajorata AS "tr-ajorata",
-  tr_kaista AS "tr-kaista"
-from yllapitokohdeosa WHERE yllapitokohde = :id;
+  tr_ajorata       AS "tr-ajorata",
+  tr_kaista        AS "tr-kaista"
+FROM yllapitokohdeosa
+WHERE yllapitokohde = :id;
 
 -- name: hae-urakoiden-sidontatiedot
 SELECT
@@ -63,12 +64,14 @@ WHERE yt.yhaid IN (:yhaidt);
 -- name: luo-yllapitokohde<!
 INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
-  tr_ajorata, tr_kaista,
- yhatunnus, yhaid, tyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne, nykyinen_paallyste,
-sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+ tr_ajorata, tr_kaista,
+ yhatunnus, yhaid, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
+ nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi)
 VALUES (
   :urakka,
-  (SELECT id FROM sopimus WHERE paasopimus IS NULL AND urakka = :urakka),
+  (SELECT id
+   FROM sopimus
+   WHERE paasopimus IS NULL AND urakka = :urakka),
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
@@ -78,23 +81,26 @@ VALUES (
   :tr_kaista,
   :yhatunnus,
   :yhaid,
-  :tyyppi::yllapitokohdetyyppi,
+  :yllapitokohdetyyppi :: yllapitokohdetyyppi,
+  :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
   :yllapitoluokka,
   :keskimaarainen_vuorokausiliikenne,
   :nykyinen_paallyste,
   0,
   0,
   0,
-  0);
+  0,
+  :nimi);
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
-INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti,
                               yhaid)
 VALUES (
   :yllapitokohde,
   :nimi,
+  :tunnus,
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
@@ -113,29 +119,42 @@ WHERE yhatunnus = :yhatunnus;
 
 -- name: hae-urakan-yha-id
 -- single?: true
-SELECT yhaid FROM yhatiedot WHERE urakka = :urakkaid;
+SELECT yhaid
+FROM yhatiedot
+WHERE urakka = :urakkaid;
 
 -- name: hae-urakan-kohteiden-yha-idt
-SELECT yhaid FROM yllapitokohde WHERE urakka = :urakkaid;
+SELECT yhaid
+FROM yllapitokohde
+WHERE urakka = :urakkaid;
 
 -- name: merkitse-urakan-yllapitokohteet-paivitetyksi<!
-UPDATE yhatiedot SET
+UPDATE yhatiedot
+SET
   kohdeluettelo_paivitetty = NOW()
 WHERE urakka = :urakka;
 
 -- name: luo-paallystysilmoitus<!
 INSERT INTO paallystysilmoitus
 (paallystyskohde, ilmoitustiedot, luotu, luoja)
-    VALUES (:paallystyskohde, :ilmoitustiedot::JSONB, NOW(), :luoja);
+VALUES (:paallystyskohde, :ilmoitustiedot :: JSONB, NOW(), :luoja);
 
 -- name: lukitse-urakan-yha-sidonta<!
-UPDATE yhatiedot SET sidonta_lukittu = true WHERE urakka = :urakka;
+UPDATE yhatiedot
+SET sidonta_lukittu = TRUE
+WHERE urakka = :urakka;
 
 -- name: poista-urakan-paallystysilmoitukset!
-DELETE FROM paallystysilmoitus WHERE paallystyskohde IN (SELECT id FROM yllapitokohde WHERE urakka = :urakka);
+DELETE FROM paallystysilmoitus
+WHERE paallystyskohde IN (SELECT id
+                          FROM yllapitokohde
+                          WHERE urakka = :urakka);
 
 -- name: poista-urakan-paikkausilmoitukset!
-DELETE FROM paikkausilmoitus WHERE paikkauskohde IN (SELECT id FROM yllapitokohde WHERE urakka = :urakka);
+DELETE FROM paikkausilmoitus
+WHERE paikkauskohde IN (SELECT id
+                        FROM yllapitokohde
+                        WHERE urakka = :urakka);
 
 -- name: paivita-paallystys-tai-paikkausurakan-geometria
 SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);

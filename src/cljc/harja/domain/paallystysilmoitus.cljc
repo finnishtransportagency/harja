@@ -23,6 +23,9 @@
 (def +tyomenetelma+ "Työmenetelmän valinta koodilla"
   (apply s/enum (map :koodi +tyomenetelmat+)))
 
+(defn tyomenetelman-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +tyomenetelmat+))))
+
 (def +alustamenetelmat+
   "Kaikki alustan käsittelymenetelmät POT-lomake Excelistä"
   [{:nimi "Massanvaihto" :lyhenne "MV" :koodi 1}
@@ -44,6 +47,9 @@
 (def +alustamenetelma+ "Alustan käsittelymenetelmän valinta koodilla"
   (apply s/enum (map :koodi +alustamenetelmat+)))
 
+(defn alustamenetelma-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +alustamenetelmat+))))
+
 (def +kuulamyllyt+
   [{:nimi "AN5" :koodi 1}
    {:nimi "AN7" :koodi 2}
@@ -56,6 +62,9 @@
 (def +kuulamylly+ "Kuulamylly annetulla koodilla"
   (apply s/enum (map :koodi +kuulamyllyt+)))
 
+(defn kuulamylly-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +kuulamyllyt+))))
+
 (def +verkkotyypit+
   "Verkkotyypit POT-lomake Excelistä"
   [{:nimi "Teräsverkko" :koodi 1}
@@ -65,6 +74,9 @@
 (def +verkkotyyppi+ "Verkkotyypin valinta koodilla"
   (apply s/enum (map :koodi +verkkotyypit+)))
 
+(defn verkkotyyppi-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +verkkotyypit+))))
+
 (def +tekniset-toimenpiteet+
   "Tekniset toimenpidetyypit POT-lomake Excelistä"
   [{:nimi "Rakentaminen" :koodi 1}
@@ -73,6 +85,9 @@
 
 (def +tekninen-toimenpide+ "Teknisen toimenpiteen valinta koodilla"
   (apply s/enum (map :koodi +tekniset-toimenpiteet+)))
+
+(defn tekninentoimenpide-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +tekniset-toimenpiteet+))))
 
 (def +ajoradat+
   "Ajoratavalinnat"
@@ -120,6 +135,38 @@
   "Kaistavalinta koodilla"
   (apply s/enum (map :koodi +kaistat+)))
 
+(def +sideainetyypit+
+  "Sideainetyypit"
+  [{:nimi "1" :koodi 1}
+   {:nimi "2" :koodi 2}
+   {:nimi "3" :koodi 3}
+   {:nimi "4" :koodi 4}
+   {:nimi "5" :koodi 5}
+   {:nimi "6" :koodi 6}
+   {:nimi "7" :koodi 7}
+   {:nimi "8" :koodi 8}
+   {:nimi "9" :koodi 9}
+   {:nimi "10" :koodi 10}
+   {:nimi "11" :koodi 11}
+   {:nimi "12" :koodi 12}
+   {:nimi "13" :koodi 13}
+   {:nimi "14" :koodi 14}
+   {:nimi "15" :koodi 15}
+   {:nimi "16" :koodi 16}
+   {:nimi "17" :koodi 17}
+   {:nimi "18" :koodi 18}
+   {:nimi "19" :koodi 19}
+   {:nimi "20" :koodi 20}
+   {:nimi "21" :koodi 21}
+   {:nimi "22" :koodi 22}])
+
+(def +sideainetyyppi+
+  "Sideainetyypin valinta koodilla"
+  (apply s/enum (map :koodi +sideainetyypit+)))
+
+(defn sideainetyypin-koodi-nimella [nimi]
+  (:koodi (first (filter #(= nimi (:nimi %)) +sideainetyypit+))))
+
 (def +verkon-tarkoitukset+
   [{:nimi "Pituushalkeamien ehkäisy" :koodi 1}
    {:nimi "Muiden routavaurioiden ehkäisy" :koodi 2}
@@ -132,6 +179,9 @@
   "Verkon tarkoituksen valinta koodilla"
   (apply s/enum (map :koodi +verkon-tarkoitukset+)))
 
+(defn verkon-tarkoitus-koodi-nimella [koodi]
+  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-tarkoitukset+))))
+
 (def +verkon-sijainnit+
   [{:nimi "Päällysteessä" :koodi 1}
    {:nimi "Kantavan kerroksen yläpinnassa" :koodi 2}
@@ -142,6 +192,9 @@
 (def +verkon-sijainti+
   "Verkon sijainnin valinta koodilla"
   (apply s/enum (map :koodi +verkon-sijainnit+)))
+
+(defn verkon-sijainti-koodi-nimella [koodi]
+  (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit+))))
 
 (def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
@@ -155,28 +208,31 @@
   "Päällystystyön valinta avaimella"
   (apply s/enum (map :avain +paallystystyon-tyypit+)))
 
-(def +paallystysilmoitus+
-  {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
-   :osoitteet
-   [{(s/optional-key :nimi) s/Str
-     :tie s/Int
-     (s/optional-key :ajorata) (s/maybe +ajorata+)
-     (s/optional-key :kaista) (s/maybe +kaista+)
-     :aosa s/Int
-     :aet s/Int
-     :losa s/Int
-     :let s/Int
+(defn paallystystyontyyppi-avain-nimella [koodi]
+  (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
+
+(def paallystysilmoitus-osoitteet
+   [{(s/optional-key :nimi) (s/maybe s/Str)
+     (s/optional-key :tunnus) (s/maybe s/Str)
+     :tr-numero s/Int
+     (s/optional-key :tr-ajorata) (s/maybe +ajorata+)
+     (s/optional-key :tr-kaista) (s/maybe +kaista+)
+     :tr-alkuosa s/Int
+     :tr-alkuetaisyys s/Int
+     :tr-loppuosa s/Int
+     :tr-loppuetaisyys s/Int
+     (s/optional-key :toimenpide) (s/maybe s/Str)
      (s/optional-key :kohdeosa-id) (s/maybe s/Int)
 
      ; Osoitteelle tehdyt toimenpiteet
      (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
      (s/optional-key :raekoko) (s/maybe s/Int)
-     (s/optional-key :massa) (s/maybe s/Num) ;; kg/m2
+     (s/optional-key :massamenekki) (s/maybe s/Int)                ;; kg/m2
      (s/optional-key :rc%) (s/maybe s/Int)
      (s/optional-key :tyomenetelma) (s/maybe +tyomenetelma+) ;; koodisto "työmenetelmä"
-     (s/optional-key :leveys) (s/maybe s/Num) ;; metriä, esim. 4,2
-     (s/optional-key :massamaara) (s/maybe s/Num) ;; tonnia
-     (s/optional-key :pinta-ala) (s/maybe s/Num) ;; m2
+     (s/optional-key :leveys) (s/maybe s/Num)               ;; metriä, esim. 4,2
+     (s/optional-key :kokonaismassamaara) (s/maybe s/Num)           ;; tonnia
+     (s/optional-key :pinta-ala) (s/maybe s/Num)            ;; m2
      (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
      (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
 
@@ -184,36 +240,44 @@
      (s/optional-key :esiintyma) (s/maybe s/Str)
      (s/optional-key :km-arvo) (s/maybe s/Str)
      (s/optional-key :muotoarvo) (s/maybe s/Str)
-     (s/optional-key :sideainetyyppi) (s/maybe s/Str)
+     (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
      (s/optional-key :pitoisuus) (s/maybe s/Num)
      (s/optional-key :lisaaineet) (s/maybe s/Str)
-     (s/optional-key :poistettu) s/Bool}]
+     (s/optional-key :poistettu) s/Bool}])
 
-  ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
-  ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
-  ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
-  :alustatoimet
-  [{:aosa s/Int
-    :aet s/Int
-    :losa s/Int
-    :let s/Int
+(def paallystysilmoitus-alustatoimet
+  [{(s/optional-key :tr-alkuosa) s/Int
+    (s/optional-key :tr-alkuetaisyys) s/Int
+    (s/optional-key :tr-loppuosa) s/Int
+    (s/optional-key :tr-loppuetaisyys) s/Int
     (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
-    (s/optional-key :paksuus) (s/maybe s/Num) ;; cm
+    (s/optional-key :paksuus) (s/maybe s/Num)              ;; cm
     (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
     (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
     (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
     (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
-    (s/optional-key :poistettu) s/Bool}]
+    (s/optional-key :poistettu) s/Bool}])
 
-  ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
-  :tyot
-  [{:tyyppi +paallystystyon-tyyppi+ ;; +paallystystyon-tyyppi+ skeemasta
+(def paallystysilmoitus-tyot
+  [{:tyyppi +paallystystyon-tyyppi+ ; +paallystystyon-tyyppi+ skeemasta
     :tyo s/Str
     :tilattu-maara s/Num
     :toteutunut-maara s/Num
     :yksikko s/Str
     :yksikkohinta s/Num
-    (s/optional-key :poistettu) s/Bool}] } )
+    (s/optional-key :poistettu) s/Bool}])
+
+(def +paallystysilmoitus+
+  {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
+   :osoitteet paallystysilmoitus-osoitteet
+
+   ;; Tieosoitteille tehtyjä toimia, mutta ei esitäytetä osoitteita, voi olla monta samalle
+   ;; kohdallekin. Vaihtelee alustan laadun mukaan (esim. löytyy kiviä).
+   ;; Välien tulee olla kohdeluettelon osoitteiden sisällä.
+   :alustatoimet paallystysilmoitus-alustatoimet
+
+   ;; Työt ovat luokiteltu listaus tehdyistä töistä, valittavana on
+   :tyot paallystysilmoitus-tyot})
 
 (defn laske-muutokset-kokonaishintaan
   "Laskee jokaisesta työstä muutos tilattuun hintaan (POT-Excelistä 'Muutos hintaan') ja summataan yhteen."
@@ -222,4 +286,3 @@
               (fn [tyo]
                 (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
               (filter #(not= true (:poistettu %)) tyot))))
-  

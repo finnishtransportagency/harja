@@ -12,7 +12,7 @@ FROM yllapitokohde
                                    AND pi.poistettu IS NOT TRUE
 WHERE urakka = :urakka
       AND sopimus = :sopimus
-      AND tyyppi = 'paikkaus'::yllapitokohdetyyppi
+      AND yllapitokohdetyotyyppi = 'paikkaus'::yllapitokohdetyotyyppi
       AND yllapitokohde.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-paikkausilmoitus-paikkauskohteella
@@ -97,3 +97,16 @@ ORDER BY k.luotu ASC;
 -- name: liita-kommentti<!
 -- Liittää paikkausilmoitukseen uuden kommentin
 INSERT INTO paikkausilmoitus_kommentti (ilmoitus, kommentti) VALUES (:paikkausilmoitus, :kommentti);
+
+-- name: hae-urakan-yllapitokohde
+-- Hakee urakan yksittäisen ylläpitokohteen
+SELECT
+  id,
+  kohdenumero,
+  nimi,
+  sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  arvonvahennykset,
+  bitumi_indeksi           AS "bitumi-indeksi",
+  kaasuindeksi
+FROM yllapitokohde
+WHERE urakka = :urakka AND id = :id;

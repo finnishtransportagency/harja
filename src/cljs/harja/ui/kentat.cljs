@@ -210,56 +210,38 @@
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
               (:fmt kentta) str)
-        teksti (atom (fmt @data))
+        teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
-    (r/create-class
-      {:component-will-receive-props
-       (fn [_ [_ _ data]]
-         (swap! teksti
-                (fn [olemassaoleva-teksti]
-                  ;; Jos vanha teksti on sama kuin uusi, mutta perässä on "." tai "," ja mahdollisesti n kappaletta nollia,
-                  ;; ei korvata.
-                  ;; Tämä siksi että wraps käytössä props muuttuu joka renderillä ja keskeneräinen
-                  ;; numeron syöttö (esim. "4,") ennen desimaalin kirjoittamista ylikirjoittuu
-                  ;; Lisäksi esim. "4,0" parsitaan float-arvona kokonaisluvuksi 4, jolloin lukua "4,01" ei voi kirjoittaa.
-                  (if (nil? @data)
-                    ""
-                    (let [uusi-teksti (str @data)]
-                      (if (or (and (gstr/startsWith olemassaoleva-teksti uusi-teksti)
-                                   (re-matches #"(.|,)0*" (.substring olemassaoleva-teksti (count uusi-teksti))))
-                              (when-not (:vaadi-ei-negatiivinen? kentta)
-                                (= olemassaoleva-teksti (str "-" uusi-teksti))))
-                        olemassaoleva-teksti
-                        uusi-teksti))))))
+    (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
+      (let [nykyinen-data @data
+            nykyinen-teksti (or @teksti
+                                (fmt nykyinen-data)
+                                "")
+            vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
+            kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+            desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
+                                                      (or (:desimaalien-maara kentta) 2)
+                                                      "})?"))]
+        [:input {:class       (when lomake? "form-control")
+                 :type        "text"
+                 :placeholder (:placeholder kentta)
+                 :on-focus    (:on-focus kentta)
+                 :on-blur     #(reset! teksti nil)
+                 :value       nykyinen-teksti
+                 :on-change   #(let [v (-> % .-target .-value)]
+                                 (when (or (= v "")
+                                           (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                           (re-matches (if kokonaisluku?
+                                                         kokonaisluku-re-pattern
+                                                         desimaaliluku-re-pattern) v))
+                                   (reset! teksti v)
 
-       :reagent-render
-       (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
-         (let [nykyinen-teksti @teksti
-               vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
-               kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-               desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                         (or (:desimaalien-maara kentta) 2)
-                                                         "})?"))]
-           [:input {:class       (when lomake? "form-control")
-                    :type        "text"
-                    :placeholder (:placeholder kentta)
-                    :on-focus    (:on-focus kentta)
-                    :on-blur     #(reset! teksti (str @data))
-                    :value       nykyinen-teksti
-                    :on-change   #(let [v (-> % .-target .-value)]
-                                   (when (or (= v "")
-                                             (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                             (re-matches (if kokonaisluku?
-                                                           kokonaisluku-re-pattern
-                                                           desimaaliluku-re-pattern) v))
-                                     (reset! teksti v)
-
-                                     (let [numero (if kokonaisluku?
-                                                    (js/parseInt v)
-                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                       (reset! data
-                                               (when (not (js/isNaN numero))
-                                                 numero)))))}]))})))
+                                   (let [numero (if kokonaisluku?
+                                                  (js/parseInt v)
+                                                  (js/parseFloat (str/replace v #"," ".")))]
+                                     (if (not (js/isNaN numero))
+                                       (reset! data numero)
+                                       (reset! data nil)))))}]))))
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   (tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
@@ -289,25 +271,39 @@
   (let [arvo (or valinta-arvo identity)
         nayta (or valinta-nayta str)
         nykyinen-arvo @data]
-    [:span.radiovalinnat
-     (doall
-       (map-indexed (fn [i valinta]
-                      (let [otsikko (nayta valinta)
-                            arvo (arvo valinta)]
-                        ^{:key otsikko}
-                        [:span.radiovalinta
-                         [:input {:type      "radio"
-                                  :value i
-                                  :checked   (= nykyinen-arvo arvo)
-                                  :on-change #(reset! data arvo)}]
-                         [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
-                          otsikko]]))
-                    valinnat))]))
+    (if-let [valinta (and (= 1 (count valinnat))
+                          (first valinnat))]
+      (let [arvo (arvo valinta)
+            valitse #(reset! data arvo)
+            label (nayta valinta)]
+        [:span {:style {:width "100%" :height "100%" :display "inline-block"}
+                :on-click valitse}
+         [:input {:type      "radio"
+                  :value 1
+                  :checked   (= nykyinen-arvo arvo)
+                  :on-change valitse}]
+         (when-not (str/blank? label)
+           [:span.radiovalinta-label.klikattava {:on-click valitse} label])])
+      [:span.radiovalinnat
+       (doall
+        (map-indexed (fn [i valinta]
+                       (let [otsikko (nayta valinta)
+                             arvo (arvo valinta)]
+                         ^{:key otsikko}
+                         [:span.radiovalinta
+                          [:input {:type      "radio"
+                                   :value i
+                                   :checked   (= nykyinen-arvo arvo)
+                                   :on-change #(reset! data arvo)}]
+                          [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
+                           otsikko]]))
+                     valinnat))])))
 
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
-(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki? tyhjenna-kaikki? nayta-rivina? disabloi]} data]
+(defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
+                                               tyhjenna-kaikki? nayta-rivina? disabloi]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valitut (set (or @data #{}))]
@@ -329,8 +325,8 @@
                                                 false)
                                     :on-change #(let [valittu? (-> % .-target .-checked)]
                                                   (reset! data
-                                                          ((if valittu? conj disj) valitut v)))}
-                            (vaihtoehto-nayta v)]]]))]
+                                                          ((if valittu? conj disj) valitut v)))}]
+                           (vaihtoehto-nayta v)]]))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
@@ -349,8 +345,8 @@
                      [:label
                       [:input {:type      "checkbox" :checked arvo
                                :on-change #(let [valittu? (-> % .-target .-checked)]
-                                             (reset! data valittu?))}
-                       teksti]]]]
+                                             (reset! data valittu?))}]
+                      teksti]]]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
@@ -370,8 +366,8 @@
                                [:input {:type      "radio" :checked (= valittu vaihtoehto)
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
                                                        (if valittu?
-                                                         (reset! data vaihtoehto)))}
-                                (vaihtoehto-nayta vaihtoehto)]]]))]
+                                                         (reset! data vaihtoehto)))}]
+                               (vaihtoehto-nayta vaihtoehto)]]))]
        (if nayta-rivina?
          [:table.boolean-group
           [:tr
@@ -499,7 +495,6 @@
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (let [p @data]
-           (log "RECEIVED PROPS")
            (reset! teksti (if p
                             (pvm/pvm p)
                             ""))))
@@ -692,10 +687,10 @@
       muuttumaton? " Muokkaa reittiä"
       :else " Muuta valintaa")))
 
-(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti]} data]
+(defmethod tee-kentta :tierekisteriosoite [{:keys [lomake? sijainti pakollinen?]} data]
   (let [osoite-alussa @data
 
-        hae-sijainti (not (nil? sijainti))                  ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
+        hae-sijainti (not (nil? sijainti)) ;; sijainti (ilman deref!!) on nil tai atomi. Nil vain jos on unohtunut?
         tr-osoite-ch (chan)
 
         virheet (atom nil)
@@ -780,9 +775,15 @@
            [:table
             [:thead
              [:tr
-              [:th "Tie"]
-              [:th "aosa"]
-              [:th "aet"]
+              [:th
+               [:span "Tie"]
+               (when pakollinen? [:span.required-tahti " *"])]
+              [:th
+               [:span "aosa"]
+               (when pakollinen? [:span.required-tahti " *"])]
+              [:th
+               [:span "aet"]
+               (when pakollinen? [:span.required-tahti " *"])]
               [:th "losa"]
               [:th "let"]]]
             [:tbody
@@ -820,6 +821,3 @@
      [:span.alkuetaisyys alkuetaisyys]
      [:span.loppuosa loppuosa] " / "
      [:span.loppuetaisyys loppuetaisyys]]))
-
-(defmethod tee-kentta :komponentti [{:keys [komponentti rivi index muokataan?]}]
-  (komponentti rivi index muokataan?))

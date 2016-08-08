@@ -2,13 +2,17 @@
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.domain.tilannekuva :as domain]
             [harja.atom :refer-macros [reaction<!]
              :refer [paivita-periodisesti]]
             [harja.ui.kartta.esitettavat-asiat
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon]]
             [harja.ui.openlayers :as openlayers]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.geo :as geo]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -18,6 +22,7 @@
 
 (defonce url-hakuparametrit (atom nil))
 (defonce tilannekuvan-asiat-kartalla (atom {}))
+(defonce tilannekuvan-organisaatiot (atom []))
 
 
 (def lisaa-karttatyyppi-fn
@@ -32,7 +37,8 @@
    :tyokoneet              (fn [[_ tyokone]]
                              (assoc tyokone :tyyppi-kartalla :tyokone))
 
-   :toteumat               #(assoc % :tyyppi-kartalla :toteuma)})
+   :toteumat               #(assoc % :tyyppi-kartalla :toteuma)
+   :suljetut-tieosuudet    #(assoc % :tyyppi-kartalla :suljettu-tieosuus)})
 
 (def ^{:doc "Mäpätään tilannekuvan tasojen nimet :tilannekuva- etuliitteelle,
 etteivät ne mene päällekkäin muiden tasojen kanssa."}
@@ -44,7 +50,8 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    :paikkaus               :tilannekuva-paikkaus
    :paallystys             :tilannekuva-paallystys
    :tyokoneet              :tilannekuva-tyokoneet
-   :toteumat               :tilannekuva-toteumat})
+   :toteumat               :tilannekuva-toteumat
+   :suljetut-tieosuudet    :tilannekuva-suljetut-tieosuudet})
 
 (defmulti muodosta-karttataso (fn [taso uudet-asiat] taso))
 
@@ -54,18 +61,13 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    nil nil
    (map (lisaa-karttatyyppi-fn taso))))
 
-(defn- toimenpiteen-selite [{:keys [toimenpide toimenpidekoodi]}]
-  (let [[viivat _] (esitettavat-asiat/tehtavan-viivat-ja-nuolitiedosto
-                    [toimenpide] false)]
-    {:nimi toimenpide :teksti toimenpide
-     :vari (esitettavat-asiat/viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
   (log "toteumat taso tehdään!" (pr-str toimenpiteet))
   (openlayers/luo-kuvataso
    :tilannekuva
    (into #{}
-         (map toimenpiteen-selite)
+         (map (comp esitettavat-asiat/toimenpiteen-selite :toimenpide))
          toimenpiteet)
    "tk" @url-hakuparametrit))
 
@@ -107,3 +109,37 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
 
 (add-watch haetut-asiat :paivita-tilannekuvatasot
            (fn [_ _ vanha uusi] (paivita-tilannekuvatasot vanha uusi)))
+
+(defn- organisaation-geometria [piirrettava]
+  (let [alue (:alue piirrettava)]
+    (when (map? alue)
+      (assoc (update-in piirrettava
+                  [:alue]
+                  assoc
+                  :fill false
+                  :stroke {:width 2}
+                  :z-index 1)
+        :type :ur
+        :nimi nil))))
+
+(defn zoomaa-urakoihin! [urakat]
+  (reset! nav/kartan-extent
+          (if-not (empty? urakat)
+            (-> (geo/extent-monelle (map :alue urakat))
+                (geo/laajenna-extent geo/pisteen-extent-laajennus))
+
+            +koko-suomi-extent+)))
+
+(defn aseta-valitut-organisaatiot! [suodattimet]
+  (reset! tilannekuvan-organisaatiot (into []
+                                           (keep organisaation-geometria)
+                                           (domain/valitut-kentat suodattimet))))
+
+(defn seuraa-alueita! [suodattimet]
+  (add-watch suodattimet ::alueen-seuraus (fn [_ _ vanha-tila uusi-tila]
+                                             (when-not (= (domain/valitut-suodattimet (:alueet vanha-tila))
+                                                          (domain/valitut-suodattimet (:alueet uusi-tila)))
+                                               (zoomaa-urakoihin! (aseta-valitut-organisaatiot! (:alueet uusi-tila)))))))
+
+(defn lopeta-alueen-seuraus! [suodattimet]
+  (remove-watch suodattimet ::alueen-seuraus))

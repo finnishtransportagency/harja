@@ -115,7 +115,8 @@
                    %))
    (gen/bind
     (gen/such-that #(<= (first %) (second %))
-                   (gen/vector (gen/choose osa-min osa-max) 2))
+                   (gen/vector (gen/choose osa-min osa-max) 2)
+                   100)
     #(let [a-pit (get osien-pituus (first %))
            l-pit (get osien-pituus (second %))]
        (gen/such-that
@@ -125,7 +126,8 @@
         (gen/tuple (gen/return (first %))
                    (gen/choose 1 a-pit)
                    (gen/return (second %))
-                   (gen/choose 1 l-pit)))))))
+                   (gen/choose 1 l-pit))
+        100)))))
 
 
 (defn tien-kohta

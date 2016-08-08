@@ -44,13 +44,10 @@
       "id": "urn:harja/turvallisuuspoikkeamat/0/tyontekijaselite",
       "type": "string"
     },
-    "tyotehtava": {
-      "id": "urn:harja/turvallisuuspoikkeamat/0/tyotehtava",
-      "type": "string"
-    },
     "aiheutuneetVammat": {
       "id": "urn:harja/turvallisuuspoikkeamat/0/aiheutuneetVammat",
       "type": "array",
+      "maxItems": 100,
       "items": {
         "enum": [
           "haavat_ja_pinnalliset_vammat",
@@ -73,6 +70,7 @@
     "vahingoittuneetRuumiinosat": {
       "id": "urn:harja/turvallisuuspoikkeamat/0/vahingoittuneetRuumiinosat",
       "type": "array",
+      "maxItems": 100,
       "items": {
         "enum": [
           "paan_alue",

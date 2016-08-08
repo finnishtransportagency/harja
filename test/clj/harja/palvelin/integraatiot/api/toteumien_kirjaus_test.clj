@@ -5,21 +5,23 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
-            [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]))
+            [harja.palvelin.integraatiot.api.varustetoteuma :as api-varustetoteuma]
+            [taoensso.timbre :as log]))
 
-(def kayttaja "fastroi")
+(def kayttaja "destia")
 
 (def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-pistetoteuma (component/using
-                                                               (api-pistetoteuma/->Pistetoteuma)
-                                                               [:http-palvelin :db :integraatioloki])
-                                           :api-reittitoteuma (component/using
-                                                                (api-reittitoteuma/->Reittitoteuma)
-                                                                [:http-palvelin :db :integraatioloki])
-                                           :api-varusteoteuma (component/using
-                                                                (api-varustetoteuma/->Varustetoteuma)
-                                                                [:http-palvelin :db :integraatioloki])))
+  (laajenna-integraatiojarjestelmafixturea
+   kayttaja
+   :api-pistetoteuma (component/using
+                      (api-pistetoteuma/->Pistetoteuma)
+                      [:http-palvelin :db :integraatioloki])
+   :api-reittitoteuma (component/using
+                       (api-reittitoteuma/->Reittitoteuma)
+                       [:http-palvelin :db :db-replica :integraatioloki])
+   :api-varusteoteuma (component/using
+                       (api-varustetoteuma/->Varustetoteuma)
+                       [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -67,6 +69,7 @@
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+    (log/info "vastaus-lisays: " vastaus-lisays)
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
@@ -107,16 +110,3 @@
           (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
           (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))))))
-
-(deftest tallenna-varustetoteuma
-  (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/varuste"] kayttaja portti
-                                                (-> "test/resurssit/api/varustetoteuma.json"
-                                                    slurp
-                                                    (.replace "__ID__" (str ulkoinen-id))))]
-    (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          varuste-arvot-kannassa (first (q (str "SELECT arvot FROM varustetoteuma WHERE toteuma = " toteuma-id)))]
-      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tehotekijät Oy"]))
-      (is (= varuste-arvot-kannassa ["----livitunniste----        2                           ----livitunniste----          01  "])))))

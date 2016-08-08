@@ -1,6 +1,11 @@
 (ns harja.kyselyt.toteumat
   (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.geo :as geo]))
+
+(defn muunna-reitti [{reitti :reitti :as rivi}]
+  (assoc rivi
+         :reitti (geo/pg->clj reitti)))
 
 (defqueries "harja/kyselyt/toteumat.sql"
   {:positional? true})

@@ -5,16 +5,15 @@
             [harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit :as xml-esimerkit]
             [clojure.java.io :as io]))
 
-
-
 (defn validoi [xsd-polku skeematiedosto esimerkkipolku]
-  (xml/validoi xsd-polku skeematiedosto (slurp (io/resource esimerkkipolku))))
+  (xml/validi-xml? xsd-polku skeematiedosto (slurp (io/resource esimerkkipolku))))
 
 (deftest validoi-tierekisteri-xmlsanomat
   (let [xsd-polku "xsd/tierekisteri/skeemat/"]
     (is (true? (validoi xsd-polku "haeTietolaji.xsd" xml-esimerkit/+hae-tietolaji-request+)))
     (is (true? (validoi xsd-polku "haeTietue.xsd" xml-esimerkit/+hae-tietue-request+)))
     (is (true? (validoi xsd-polku "haeTietueet.xsd" xml-esimerkit/+hae-tietueet-request+)))
+    (is (true? (validoi xsd-polku "haeUrakanTietueet.xsd" xml-esimerkit/+hae-urakantietueet-request+)))
     (is (true? (validoi xsd-polku "paivitaTietue.xsd" xml-esimerkit/+paivita-tietue-request+)))
     (is (true? (validoi xsd-polku "poistaTietue.xsd" xml-esimerkit/+poista-tietue-request+)))
     (is (true? (validoi xsd-polku "vastaus.xsd" xml-esimerkit/+hae-tietue-response+)))

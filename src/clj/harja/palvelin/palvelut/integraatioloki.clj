@@ -38,14 +38,14 @@
 (defn hae-jarjestelmien-integraatiot
   "Palvelu, joka palauttaa kaikki eri järjestelmien integraatiot."
   [db kayttaja]
-  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
   (log/debug "Haetaan järjestelmien integraatiot.")
   (hae-integraatiot db))
 
 (defn hae-integraatiotapahtumat
   "Palvelu, joka palauttaa järjestelmän integraation tapahtumat tietyltä aikaväliltä."
   [db kayttaja jarjestelma integraatio alkaen paattyen]
-  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
   (let [tapahtumat
         (into []
               tapahtuma-xf
@@ -62,7 +62,7 @@
 
 (defn hae-integraatiotapahtumien-maarat
   [db kayttaja jarjestelma integraatio]
-  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
   (let [
         jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
         maarat (q/hae-integraatiotapahtumien-maarat
@@ -72,7 +72,7 @@
     maarat))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]
-  (oikeudet/lue oikeudet/hallinta-integraatioloki kayttaja)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-integraatioloki kayttaja)
   (into []
         viesti-xf
         (q/hae-integraatiotapahtuman-viestit db tapahtuma-id)))

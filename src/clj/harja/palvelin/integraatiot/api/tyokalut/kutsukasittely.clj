@@ -18,13 +18,14 @@
 (defn tee-kirjausvastauksen-body
   "Ottaa kirjausvastauksen tiedot (mappi, jossa id, ilmoitukset, varoitukset ja virheet) ja tekee vastauksen bodyn.
    Sisällyttää body-mappiin vain ne tiedot, jotka eivät ole nil"
-  [{:keys [id ilmoitukset varoitukset virheet] :as tiedot}]
+  [{:keys [id ilmoitukset varoitukset virheet muut-tiedot] :as tiedot}]
   (merge
     {}
     (when id {:id id})
     (when ilmoitukset {:ilmoitukset ilmoitukset})
     (when varoitukset {:varoitukset varoitukset})
-    (when virheet {:virheet virheet})))
+    (when virheet {:virheet virheet})
+    muut-tiedot))
 
 (defn tee-lokiviesti [suunta body viesti]
   {:suunta suunta
@@ -162,16 +163,23 @@
   (log/error (format "Resurssin: %s kutsussa tapahtui autentikaatiovirhe: %s" resurssi virheet))
   (tee-sisainen-autentikaatiovirhevastaus virheet))
 
+(defn tarkista-tyhja-kutsu [skeema body]
+  (when (and (fn? skeema) (nil? body))
+    (throw+ {:type virheet/+invalidi-json+
+             :virheet [{:koodi virheet/+invalidi-json-koodi+
+                        :viesti "JSON on tyhjä"}]})))
+
 (defn lue-kutsu
-  "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu. Muille kutsuille palauttaa arvon nil.
+  "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu.
+  Muille kutsuille palauttaa arvon nil.
   Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
   [skeema request body]
   (log/debug "Luetaan kutsua")
-  (when (and body
-             (or (= :post (:request-method request))
-                 (= :put (:request-method request))
-                 (= :delete (:request-method request))))
+  (when (or (= :post (:request-method request))
+            (= :put (:request-method request))
+            (= :delete (:request-method request)))
+    (tarkista-tyhja-kutsu skeema body)
     (if (fn? skeema)
       (skeema body)
       (json/validoi skeema body))
@@ -269,12 +277,11 @@
 
 (defn kasittele-kutsu-async
   "Käsittelee asynkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
-  lähetetty data  on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
+  lähetetty data on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
   tuleva data validoidaan käyttäen annettuja JSON-skeemoja.
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
-
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
 
   (with-channel request channel

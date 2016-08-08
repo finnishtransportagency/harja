@@ -1,43 +1,46 @@
 (ns harja.tiedot.urakka.valitavoitteet
   "Ylläpidon urakoiden välitavoitteiden tiedot."
-  (:require [harja.asiakas.kommunikaatio :as k]
+  (:require [reagent.core :refer [atom]]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
+            [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<! >! chan]]
-            [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav])
+  (:require-macros [harja.atom :refer [reaction<!]]
+                   [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
-
+(def nakymassa? (atom false))
 
 (defn hae-urakan-valitavoitteet [urakka-id]
-  (let [ch (chan)]
-    (go
-      (>! ch (<! (k/post! :hae-urakan-valitavoitteet urakka-id))))
-    (comment [{:id 1 :nimi "Suojatiet" :takaraja (pvm/luo-pvm 2015 2 17)
-               :valmis {:pvm (pvm/luo-pvm 2015 2 16) :kommentti "saatiin ne tehtyä vaikka tiukille meni aika"}
-               :sakko 1500}
-                        
-              {:id 2 :nimi "Keskustan keltaiset viivat" :valmis nil :takaraja (pvm/luo-pvm 2015 6 7)
-               :sakko 2000}])
-    
-    
-    ;;(>! ch (<! (k/post! :hae-urakan-valitavoitteet urakka-id))))
-    ch))
+  (k/post! :hae-urakan-valitavoitteet urakka-id))
 
 (defn merkitse-valmiiksi! [urakka-id valitavoite-id valmis-pvm kommentti]
-  (let [ch (chan)]
-    (go
-      (let [res (<! (k/post! :merkitse-valitavoite-valmiiksi
-                             {:urakka-id urakka-id
-                              :valitavoite-id valitavoite-id
-                              :valmis-pvm valmis-pvm
-                              :kommentti kommentti}))]
-        (>! ch res)))
-    ch))
+  (k/post! :merkitse-valitavoite-valmiiksi
+           {:urakka-id urakka-id
+            :valitavoite-id valitavoite-id
+            :valmis-pvm valmis-pvm
+            :kommentti kommentti}))
 
-(defn tallenna! [urakka-id valitavoitteet]
-  (let [ch (chan)]
-    (go (let [res (<! (k/post! :tallenna-valitavoitteet
-                               {:urakka-id urakka-id
-                                :valitavoitteet valitavoitteet}))]
-          (>! ch res)))
-    ch))
+(defn tallenna-valitavoitteet! [urakka-id valitavoitteet]
+  (k/post! :tallenna-urakan-valitavoitteet
+           {:urakka-id urakka-id
+            :valitavoitteet valitavoitteet}))
+
+(def valitavoitteet
+  "Urakan omat ja valtakunnalliset välitavoitteet"
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               nakymassa? @nakymassa?]
+              {:nil-kun-haku-kaynnissa? true}
+              (hae-urakan-valitavoitteet urakka-id)))
+
+(def urakan-valitavoitteet
+  (reaction (when @valitavoitteet
+              (filterv (comp not :valtakunnallinen-id)
+                       @valitavoitteet))))
+
+(def valtakunnalliset-valitavoitteet
+  (reaction (when @valitavoitteet
+              (filterv :valtakunnallinen-id
+                       @valitavoitteet))))

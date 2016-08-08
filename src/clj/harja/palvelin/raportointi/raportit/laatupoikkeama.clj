@@ -1,3 +1,4 @@
+
 (ns harja.palvelin.raportointi.raportit.laatupoikkeama
   (:require [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
@@ -95,6 +96,17 @@
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
                 :nimi        raportin-nimi}
+     (when nayta-pylvaat?
+       (if-not (empty? laatupoikkeamat-kuukausittain)
+         (yleinen/pylvaat-kuukausittain {:otsikko              "Laatupoikkeamat kuukausittain"
+                                         :alkupvm              alkupvm
+                                         :loppupvm             loppupvm
+                                         :kuukausittainen-data laatupoikkeamat-kuukausittain
+                                         :piilota-arvo?        #{0}
+                                         :legend               ["Urakoitsija" "Tilaaja" "Konsultti"]})
+         (yleinen/ei-osumia-aikavalilla-teksti "laatupoikkeamia"
+                                               alkupvm
+                                               loppupvm)))
      [:taulukko {:otsikko otsikko
                  :tyhja   (if (empty? laatupoikkeamarivit) "Ei raportoitavia laatupoikkeamia.")
                  :sheet-nimi raportin-nimi}
@@ -106,23 +118,11 @@
       (keep identity
             (into []
                   (yleinen/ryhmittele-tulokset-raportin-taulukolle
-                    (reverse (sort-by :aika laatupoikkeamarivit))
-                    :urakka
-                    (fn [rivi]
-                      [(pvm/pvm (:aika rivi))
-                       (:kohde rivi)
-                       (:tekija rivi)
-                       (:kuvaus rivi)
-                       [:liitteet (:liitteet rivi)]]))))]
-
-     (when nayta-pylvaat?
-       (if-not (empty? laatupoikkeamat-kuukausittain)
-         (yleinen/pylvaat-kuukausittain {:otsikko              "Laatupoikkeamat kuukausittain"
-                                         :alkupvm              alkupvm
-                                         :loppupvm             loppupvm
-                                         :kuukausittainen-data laatupoikkeamat-kuukausittain
-                                         :piilota-arvo?        #{0}
-                                         :legend               ["Urakoitsija" "Tilaaja" "Konsultti"]})
-         (yleinen/ei-osumia-aikavalilla-teksti "laatupoikkeamia"
-                                               alkupvm
-                                               loppupvm)))]))
+                   (reverse (sort-by :aika laatupoikkeamarivit))
+                   :urakka
+                   (fn [rivi]
+                     [(pvm/pvm (:aika rivi))
+                      (:kohde rivi)
+                      (:tekija rivi)
+                      (:kuvaus rivi)
+                      [:liitteet (:liitteet rivi)]]))))]]))

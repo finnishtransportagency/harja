@@ -5,8 +5,6 @@
    [harja.loki :refer [log]]
    ;; require kaikki testit
    [cljs.test :as test]
-   [cemerick.cljs.test :as ctest]
-   [harja.e2e.test-test]
    [harja.app-test]
    [harja.tiedot.muokkauslukko-test]
    [harja.tiedot.urakka.suunnittelu-test]
@@ -22,7 +20,7 @@
 (def +virheviestin-nayttoaika+ 5000)
 
 (defmethod test/report [:harja :begin-test-ns] [event]
-  (.log js/console "Testataan: " (:ns event))) 
+  (.log js/console "Testataan: " (:ns event)))
 
 (defmethod test/report [:harja :begin-test-var] [event]
   (.log js/console "TEST: " (test/testing-vars-str (:var event))))
@@ -76,13 +74,3 @@
     (when oldlink
       (.removeChild (.-head js/document) oldlink))
     (.appendChild (.-head js/document) link)))
-
-(defmethod ctest/report :summary [event]
-  (.log js/console "E2E-testejä ajettu: " (:test event) (:fail event) (:error event))
-  (if (not= (+ (:fail event) (:error event)) 0)
-    (change-favicon (str "http://localhost:8000/images/test_fail.ico?x=" (rand-int 1000)))
-    (change-favicon (str "http://localhost:8000/images/test_success.ico?x=" (rand-int 1000)))))
-
-(defn aja-e2e-testit []
-  (ctest/run-tests 'harja.e2e.test-test)) 
- 

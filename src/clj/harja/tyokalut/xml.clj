@@ -17,7 +17,7 @@
            (java.text SimpleDateFormat ParseException)
            (java.util Date)))
 
-(defn validoi
+(defn validi-xml?
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
   [xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto]
   (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd-skeema-tiedosto ". XML:n sisältö on:" xml-sisalto)
@@ -65,10 +65,13 @@
 (defn formatoi-paivamaara [paivamaara]
   (.format (SimpleDateFormat. "yyyy-MM-dd") paivamaara))
 
+(defn formatoi-kellonaika [paivamaara]
+  (.format (SimpleDateFormat. "HH:mm:ss") paivamaara))
+
 (defn parsi-kokonaisluku [data]
   (when (and data (not (empty? data))) (Integer/parseInt data)))
 
-(defn parsi-reaaliluku [data]
+(defn parsi-desimaaliluku [data]
   (when (and data (not (empty? data))) (Double/parseDouble data)))
 
 (defn parsi-totuusarvo [data]
@@ -111,9 +114,9 @@
     (f/parse formatter aika-teksti)))
 
 (defn joda-time->xml-xs-date
-  "Muuntaa joda-timen XML:n xs:date-muotoon (esim. 2015-03-03+00:00)."
+  "Muuntaa joda-timen XML:n xs:date-muotoon (esim. 2015-03-03)."
   [joda-time]
-  (let [formatter (f/formatter "yyyy-MM-dd+HH:mm")]
+  (let [formatter (f/formatter "yyyy-MM-dd")]
     (f/unparse formatter joda-time)))
 
 (defn json-date-time->xml-xs-date

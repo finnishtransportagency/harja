@@ -87,7 +87,7 @@
        @haetut-toteumat
        nil nil
        (keep (fn [toteuma]
-               (when-let [sijainti (some-> toteuma :reitti geo/pisteet first)]
+               (when-let [sijainti (some-> toteuma :sijainti geo/pisteet first)]
                  (assoc toteuma
                         :tyyppi-kartalla :varustetoteuma
                         :selitys-kartalla (selite toteuma)

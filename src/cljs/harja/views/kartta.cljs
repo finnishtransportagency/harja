@@ -22,7 +22,8 @@
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kartta.varit.alpha :as varit]
-            [harja.ui.openlayers.taso :as taso])
+            [harja.ui.openlayers.taso :as taso]
+            [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -35,12 +36,15 @@
 
 (def kartan-korkeus (reaction
                       (let [koko @nav/kartan-koko
-                            kork @dom/korkeus]
+                            kork @dom/korkeus
+                            murupolku? @nav/murupolku-nakyvissa?]
                         (case koko
                           :S +kartan-korkeus-s+
                           :M (int (* 0.25 kork))
                           :L (int (* 0.60 kork))
-                          :XL (int (* 0.80 kork))
+                          :XL (int (if murupolku?
+                                     (* 0.80 kork)
+                                     (- kork (yleiset/navigaation-korkeus) 5)))
                           (int (* 0.60 kork))))))
 
 ;; Kanava, jonne kartan uusi sijainti kirjoitetaan
@@ -204,11 +208,6 @@
         [kartan-paikkavaraus koko args])
       [:span.ei-karttaa])))
 
-
-
-;; Envelop [minx miny maxx maxy], jossa koko suomi näkyy
-(def +koko-suomi-extent+ [60000 6613000 736400 7780300])
-
 (reset! nav/kartan-extent +koko-suomi-extent+)
 
 (defonce urakka-kuuntelija
@@ -274,7 +273,11 @@
   (let [selitteet (reduce set/union
                           (keep #(when % (taso/selitteet %))
                                 (vals @tasot/geometriat-kartalle)))
-        varilaatikon-koko 20]
+        lukumaara-str (fmt/left-pad 2 (count selitteet))
+        varilaatikon-koko 20
+        teksti (if @ikonien-selitykset-auki
+                 (str "Piilota | " lukumaara-str " kpl")
+                 (str "Karttaselitteet | " lukumaara-str " kpl"))]
     (if (and (not= :S @nav/kartan-koko)
              (not (empty? selitteet))
              @ikonien-selitykset-nakyvissa?)
@@ -332,12 +335,12 @@
            {:on-click (fn [event]
                         (reset! ikonien-selitykset-auki false)
                         (.stopPropagation event)
-                        (.preventDefault event))} "Sulje"]]
+                        (.preventDefault event))} teksti]]
          [:span.kartan-ikonien-selitykset-avaa.klikattava {:on-click (fn [event]
                                                                        (reset! ikonien-selitykset-auki true)
                                                                        (.stopPropagation event)
                                                                        (.preventDefault event))}
-          "Karttaselitteet"])])))
+          teksti])])))
 
 (def kartan-yleiset-kontrollit-sisalto (atom nil))
 
@@ -350,6 +353,7 @@
       [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto])))
 
 (def paivitetaan-karttaa-tila (atom false))
+(def karttakuvan-lataus (atom nil))
 
 (defn paivitetaan-karttaa
   []
@@ -357,6 +361,10 @@
     [:div {:style {:position "absolute" :top "50%" :left "50%"}}
      [:div {:style {:position "relative" :left "-50px" :top "-30px"}}
       [:div.paivitetaan-karttaa (yleiset/ajax-loader "Päivitetään karttaa")]]]))
+
+(defonce kuuntele-kartan-paivitys
+  (t/kuuntele! :karttakuva
+               #(reset! karttakuvan-lataus %)))
 
 (defn aseta-paivitetaan-karttaa-tila! [uusi-tila]
   (reset! paivitetaan-karttaa-tila uusi-tila))
@@ -613,7 +621,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 ; Palauttaa funktion joka palauttaa tooltipin sisällön, tai nil jos hoverattu asia
                                 ; on valittu hallintayksikkö tai urakka.
                                 (if (or (tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka? geom)
-                                        (and (not (:nimi geom)) (not (:siltanimi geom))))
+                                        (and (empty? (:nimi geom)) (empty? (:siltanimi geom))))
                                   nil
                                   (fn []
                                     (and geom
@@ -624,14 +632,19 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 :url   (str (k/wmts-polku) "maasto/wmts")
                                 :layer "taustakartta"}]}]))))
 
+(defn kartan-edistyminen [{:keys [ladattu ladataan] :as progress}]
+  (when (and progress (not= 0 ladattu ladataan))
+    [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}]))
+
 (defn kartta []
-  [:div
+  [:div.karttacontainer
    [paivitetaan-karttaa]
    [kartan-koko-kontrollit]
    [kartan-yleiset-kontrollit]
    [kartan-ohjelaatikko]
    [kartan-ikonien-selitykset]
-   [kartta-openlayers]])
+   [kartta-openlayers]
+   [kartan-edistyminen @karttakuvan-lataus]])
 
 
 ;; Käytä tätä jos haluat luoda rinnakkain sisällön ja kartan näkymääsi

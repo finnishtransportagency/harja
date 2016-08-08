@@ -16,7 +16,8 @@
   (log/debug "Käynnistetään Sampon Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
   (sonja/kuuntele (:sonja this) lahetysjono-sisaan
                   (fn [viesti]
-                    (tuonti/kasittele-viesti (:sonja this) (:integraatioloki this) (:db this) kuittausjono-sisaan viesti))))
+                    (tuonti/kasittele-viesti (:sonja this) (:integraatioloki this)
+                                             (:db this) kuittausjono-sisaan viesti))))
 
 (defn tee-sonja-kuittauskuuntelija [this kuittausjono-ulos]
   (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
@@ -27,19 +28,26 @@
 (defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika lahetysjono-ulos]
   (if paivittainen-lahetysaika
     (do
-      (log/debug "Ajastetaan maksuerien ja kustannussuunnitelmien lähetys ajettavaksi joka päivä kello: " paivittainen-lahetysaika)
+      (log/debug "Ajastetaan maksuerien ja kustannussuunnitelmien lähetys ajettavaksi joka päivä kello: "
+                 paivittainen-lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-lahetysaika
-        (fn [_] (vienti/aja-paivittainen-lahetys (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos))))
+        (fn [_] (vienti/aja-paivittainen-lahetys (:sonja this) (:integraatioloki this)
+                                                 (:db this) lahetysjono-ulos))))
     (fn [] ())))
 
-(defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
+(defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan
+                  lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
   component/Lifecycle
   (start [this]
     (log/debug "Käynnistetään Sampo komponentti")
-    (assoc this :sonja-viestikuuntelija (tee-sonja-viestikuuntelija this lahetysjono-sisaan kuittausjono-sisaan)
+    (assoc this :sonja-viestikuuntelija (tee-sonja-viestikuuntelija this
+                                                                    lahetysjono-sisaan
+                                                                    kuittausjono-sisaan)
                 :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)
-                :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika lahetysjono-ulos)))
+                :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this
+                                                                                paivittainen-lahetysaika
+                                                                                lahetysjono-ulos)))
   (stop [this]
     (let [poista-viestikuuntelija (:sonja-viestikuuntelija this)
           poista-kuittauskuuntelija (:sonja-kuittauskuuntelija this)
@@ -51,7 +59,12 @@
 
   Maksueralahetys
   (laheta-maksuera-sampoon [this numero]
-    (let [maksueran-lahetys (maksuerat/laheta-maksuera (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)
-          kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-kustannussuunitelma (:sonja this) (:integraatioloki this) (:db this) lahetysjono-ulos numero)]
+    (let [maksueran-lahetys (maksuerat/laheta-maksuera (:sonja this) (:integraatioloki this)
+                                                       (:db this) lahetysjono-ulos numero)
+          kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-kustannussuunitelma (:sonja this)
+                                                                                          (:integraatioloki this)
+                                                                                          (:db this)
+                                                                                          lahetysjono-ulos
+                                                                                          numero)]
       {:maksuera             maksueran-lahetys
        :kustannussuunnitelma kustannussuunnitelman-lahetys})))

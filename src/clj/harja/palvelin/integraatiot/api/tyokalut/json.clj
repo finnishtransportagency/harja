@@ -11,6 +11,10 @@
   (when paivamaara
     (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))))
 
+(defn aika-string->java-sql-timestamp [paivamaara]
+  (when paivamaara
+    (konv/sql-timestamp (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))))
+
 (defn pvm-string->java-sql-date [paivamaara]
   (when paivamaara
     (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd") paivamaara))))

@@ -21,7 +21,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
-            [harja.domain.puhelinnumero :as puhelinnumero]))
+            [harja.domain.puhelinnumero :as puhelinnumero]
+            [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]))
 
 (defn parsi-paivamaara [paivamaara]
   (when paivamaara
@@ -102,7 +103,7 @@
 (defn paivita-tai-luo-uusi-paivystaja [db {:keys [id etunimi sukunimi email matkapuhelin tyopuhelin liviTunnus]} urakoitsija-id]
   (let [matkapuhelin (puhelinnumero/kanonisoi matkapuhelin)
         tyopuhelin (puhelinnumero/kanonisoi tyopuhelin)]
-    (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id) )
+    (if (yhteyshenkilot/onko-olemassa-yhteyshenkilo-ulkoisella-idlla? db (str id))
       (do
         (log/debug "Päivitetään päivystäjän tiedot ulkoisella id:llä " id)
         (:id (yhteyshenkilot/paivita-yhteyshenkilo-ulkoisella-idlla<! db etunimi sukunimi tyopuhelin matkapuhelin email
@@ -114,8 +115,8 @@
 
 (defn tallenna-paivystajatiedot [db urakka-id kirjaaja data]
   (log/debug "Aloitetaan päivystäjätietojen kirjaus")
-  (jdbc/with-db-transaction [transaktio db]
-    (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija transaktio urakka-id)))]
+  (jdbc/with-db-transaction [db db]
+    (let [urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija db urakka-id)))]
       (doseq [paivystys (:paivystykset data)]
         (let [paivystaja-id (paivita-tai-luo-uusi-paivystaja db (get-in paivystys [:paivystys :paivystaja]) urakoitsija)]
           (paivita-tai-luo-uusi-paivystys db urakka-id (:paivystys paivystys) paivystaja-id kirjaaja))))))
@@ -176,7 +177,7 @@
         (reduce (partial merge-with concat)
                 (map #(hae-paivystajatiedot-urakan-idlla db % kayttaja pvm-vali) urakka-idt))))))
 
-(def palvelutyypit
+(def palvelut
   [{:palvelu :hae-paivystajatiedot-urakka-idlla
     :polku "/api/urakat/:id/paivystajatiedot"
     :tyyppi :GET
@@ -215,25 +216,9 @@
 (defrecord Paivystajatiedot []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
-    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :GET)]
-      (julkaise-reitti
-        http palvelu
-        (GET polku request
-          (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
-
-    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :POST)]
-      (julkaise-reitti
-        http palvelu
-        (POST polku request
-          (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
-
-    (doseq [{:keys [palvelu polku tyyppi vastaus-skeema kutsu-skeema kasittely-fn]} palvelutyypit :when (= tyyppi :DELETE)]
-      (julkaise-reitti
-        http palvelu
-        (DELETE polku request
-          (kasittele-kutsu db integraatioloki palvelu request kutsu-skeema vastaus-skeema kasittely-fn))))
+    (palvelut/julkaise http db integraatioloki palvelut)
 
     this)
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :lisaa-paivystajatiedot)
+    (palvelut/poista http palvelut)
     this))

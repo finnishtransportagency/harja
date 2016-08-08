@@ -52,8 +52,9 @@
                                        :valitse-fn istunto/aseta-testikayttaja!}
           (concat [nil] @istunto/testikayttajat)]]))))
 
-(defn- onko-mobiiliselain? []
-  (re-matches #".*android.*" (clojure.string/lower-case js/window.navigator.userAgent)))
+(defn- mobiiliselain? []
+  (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
+        [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
   [bs/navbar {}
@@ -84,7 +85,7 @@
       [:li {:role "presentation" :class (when (= s :hallinta) "active")}
        [linkki "Hallinta" #(nav/vaihda-sivu! :hallinta)]])
 
-    (when (and (onko-mobiiliselain?)
+    (when (and (mobiiliselain?)
                (oikeudet/laadunseuranta))
       [:li {:role "presentation"}
        [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu" (str k/+polku+ "laadunseuranta/")]])]

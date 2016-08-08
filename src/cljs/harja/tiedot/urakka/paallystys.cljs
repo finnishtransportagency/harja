@@ -15,7 +15,7 @@
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+                   [harja.atom :refer [reaction<! reaction-writable]]))
 
 (def paallystyskohteet-nakymassa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
@@ -57,23 +57,25 @@
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id))))
 
 (def yhan-paallystyskohteet
-  (reaction
-    (let [yha-kohteet (filter
-                        yllapitokohteet/yha-kohde?
-                        @yllapitokohteet)]
+  (reaction-writable
+    (let [kohteet @yllapitokohteet
+          yha-kohteet (when kohteet
+                        (filter
+                         yllapitokohteet/yha-kohde?
+                         kohteet))]
       (tr-domain/jarjesta-kohteiden-kohdeosat yha-kohteet))))
 
 (def harjan-paikkauskohteet
   (reaction
-    (let [ei-yha-kohteet (filter
-                           (comp not yllapitokohteet/yha-kohde?)
-                           @yllapitokohteet)]
+    (let [kohteet @yllapitokohteet
+          ei-yha-kohteet (when kohteet
+                           (filter
+                            (comp not yllapitokohteet/yha-kohde?)
+                            kohteet))]
       (tr-domain/jarjesta-kohteiden-kohdeosat ei-yha-kohteet))))
 
 (def kohteet-yhteensa
   (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet)))
-
-(tarkkaile! "[YHA] Päällystyskohteet: " yhan-paallystyskohteet)
 
 (defonce paallystyskohteet-kartalla
          (reaction (let [taso @karttataso-paallystyskohteet
@@ -100,3 +102,6 @@
                                            (:kohdeosat kohde))))
                            (keep #(and (:sijainti %) %))
                            (map #(assoc % :tyyppi-kartalla :paallystys))))))))
+
+(defonce kohteet-yha-lahetyksessa
+         (atom nil))

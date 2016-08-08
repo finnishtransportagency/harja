@@ -78,7 +78,8 @@
     <kohteet>
       <kohde>
         <yha-id>3</yha-id>
-        <kohdetyyppi>paikkaus</kohdetyyppi>
+        <kohdetyyppi>1</kohdetyyppi>
+        <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
         <nimi>string</nimi>
         <yllapitoluokka>1</yllapitoluokka>
         <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
@@ -86,12 +87,12 @@
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
           <tienumero>3</tienumero>
-          <ajorata>0</ajorata>
-          <kaista>11</kaista>
           <aosa>3</aosa>
           <aet>3</aet>
           <losa>3</losa>
           <let>3</let>
+          <ajorata>0</ajorata>
+          <kaista>11</kaista>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
@@ -99,14 +100,14 @@
             <tierekisteriosoitevali>
               <karttapaivamaara>2016-01-01</karttapaivamaara>
               <tienumero>3</tienumero>
-              <ajorata>0</ajorata>
-              <kaista>11</kaista>
               <aosa>3</aosa>
               <aet>3</aet>
               <losa>3</losa>
               <let>3</let>
+              <ajorata>0</ajorata>
+              <kaista>11</kaista>
             </tierekisteriosoitevali>
-            <nimi>A</nimi>
+            <tunnus>A</tunnus>
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>
@@ -121,14 +122,14 @@
             <tierekisteriosoitevali>
               <karttapaivamaara>2016-01-01</karttapaivamaara>
               <tienumero>3</tienumero>
-              <ajorata>0</ajorata>
-              <kaista>11</kaista>
               <aosa>3</aosa>
               <aet>3</aet>
               <losa>3</losa>
               <let>3</let>
+              <ajorata>0</ajorata>
+              <kaista>11</kaista>
             </tierekisteriosoitevali>
-            <nimi>B</nimi>
+            <tunnus>B</tunnus>
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>

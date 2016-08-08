@@ -9,7 +9,8 @@
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.pvm :as pvm]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka :as u])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -41,7 +42,7 @@
   perusteella. Palauttaa kaiken tiedon mitä laatupoikkeaman muokkausnäkymään
   tarvitaan."
   [urakka-id laatupoikkeama-id]
-  (k/post! :hae-laatupoikkeaman-tiedot {:urakka-id   urakka-id
+  (k/post! :hae-laatupoikkeaman-tiedot {:urakka-id urakka-id
                                   :laatupoikkeama-id laatupoikkeama-id}))
 
 (defn tallenna-laatupoikkeama [laatupoikkeama]

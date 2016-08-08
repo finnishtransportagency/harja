@@ -97,6 +97,11 @@
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
+  (when (and (= data :suljettu)
+             (not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet lomake))))
+    viesti))
+
 (defmethod validoi-saanto :joku-naista [_ _ data rivi _ & avaimet-ja-viesti]
   (let [avaimet (if (string? (last avaimet-ja-viesti)) (butlast avaimet-ja-viesti) avaimet-ja-viesti)
         viesti (if (string? (last avaimet-ja-viesti))
@@ -110,7 +115,7 @@
 (defmethod validoi-saanto :uniikki [_ nimi data _ taulukko & [viesti]]
   (let [rivit-arvoittain (group-by nimi (vals taulukko))]
     ;; Data on uniikkia jos sama arvo esiintyy taulukossa vain kerran
-    (when (and (not (empty? data))
+    (when (and (not (nil? data))
                (> (count (get rivit-arvoittain data)) 1))
       viesti)))
 
@@ -135,7 +140,11 @@
 (defmethod validoi-saanto :lampotila [_ _ data rivi _ _ & [viesti]]
   (when-not (<= -55 data 55)
     (or viesti "Anna lämpotila välillä -55 \u2103 \u2014 +55 \u2103")))
-  
+
+(defmethod validoi-saanto :rajattu-numero [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
+  (when-not (<= min-arvo data max-arvo)
+    (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo ""))))
+
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
   [nimi data rivi taulukko saannot]

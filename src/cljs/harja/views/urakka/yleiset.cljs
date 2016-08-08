@@ -278,7 +278,8 @@
         :default nil)
       "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
-      "Takuu päättyy:" [takuuaika ur]
+      "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
+                         [takuuaika ur])
       "Tilaaja:" (:nimi (:hallintayksikko ur))
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       ;; valaistus, tiemerkintä --> palvelusopimus
@@ -356,8 +357,8 @@
           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
          @yhteyshenkilot]))))
 
-(defn- nayta-yha-tuontidialogi
-  "Näyttää modaalin YHA tuontidialogin, jos tarvii."
+(defn- nayta-yha-tuontidialogi-tarvittaessa
+  "Näyttää YHA-tuontidialogin, jos tarvii."
   [ur]
   (let [yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
         paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
@@ -371,9 +372,12 @@
       (yha/nayta-tuontidialogi ur))))
 
 (defn yleiset [ur]
-  (nayta-yha-tuontidialogi ur)
-  [:div
-   [yleiset-tiedot ur]
-   [urakkaan-liitetyt-kayttajat (:id ur)]
-   [yhteyshenkilot ur]
-   [paivystajat ur]])
+  (komp/luo
+    (komp/sisaan (fn [_]
+                   (nayta-yha-tuontidialogi-tarvittaessa ur)))
+    (fn [ur]
+      [:div
+       [yleiset-tiedot ur]
+       [urakkaan-liitetyt-kayttajat (:id ur)]
+       [yhteyshenkilot ur]
+       [paivystajat ur]])))

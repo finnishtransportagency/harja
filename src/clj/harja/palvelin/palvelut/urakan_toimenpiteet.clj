@@ -7,7 +7,7 @@
 (defn hae-urakan-toimenpiteet
   "Palvelu, joka palauttaa urakan toimenpiteet"
   [db user urakka-id]
-  (oikeudet/lue oikeudet/urakat user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat user urakka-id)
   (into []
         (q/hae-urakan-toimenpiteet db urakka-id)))
 
@@ -15,7 +15,7 @@
   "Palvelu, joka palauttaa urakan toimenpiteet ja tehtävät"
   ([db user urakka-id] (hae-urakan-toimenpiteet-ja-tehtavat db user urakka-id nil))
   ([db user urakka-id tyyppi]
-   (oikeudet/lue oikeudet/urakat user urakka-id)
+   (oikeudet/vaadi-lukuoikeus oikeudet/urakat user urakka-id)
    (into []
          (q/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id tyyppi))))
 

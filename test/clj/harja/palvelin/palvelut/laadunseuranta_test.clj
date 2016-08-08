@@ -42,7 +42,7 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tallenna-ja-paivita-soratietarkastus
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         kuvaus (str "kuvaus nyt " (System/currentTimeMillis))
         soratietarkastus (assoc-in soratietarkastus [:havainnot] kuvaus)
         hae-tarkastukset #(kutsu-http-palvelua :hae-urakan-tarkastukset +kayttaja-jvh+
@@ -100,7 +100,7 @@
 ; FIXME Siivoa tallennettu data
 
 (deftest hae-laatupoikkeaman-tiedot
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id   urakka-id
                                                                             :laatupoikkeama-id 1})]
@@ -109,7 +109,7 @@
     (is (>= (count (:kuvaus vastaus)) 10))))
 
 (deftest hae-urakan-laatupoikkeamat
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-laatupoikkeamat +kayttaja-jvh+
                                 {:listaus   :kaikki
@@ -135,7 +135,7 @@
     (is (>= (count vastaus) 9))))
 
 (deftest hae-urakan-tarkastukset
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-tarkastukset +kayttaja-jvh+
                                 {:urakka-id urakka-id
@@ -148,11 +148,11 @@
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
       (is (= #{:ok? :jarjestelma :havainnot :laadunalitus :vakiohavainnot :aika
-               :tr :tekija :id :tyyppi :tarkastaja}
+               :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde}
              (into #{} (keys tarkastus)))))))
 
 (deftest hae-tarkastus
-  (let [urakka-id (hae-oulun-alueurakan-2005-2010-id)
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tarkastus +kayttaja-jvh+ {:urakka-id    urakka-id
                                                                :tarkastus-id 1})]

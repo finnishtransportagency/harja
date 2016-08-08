@@ -41,8 +41,8 @@
 (defn hae-lukko-idlla
   "Hakee lukon id:llä.
   Jos lukko löytyy, palauttaa sen.
-  Jos lukko löytyy, mutta se on vanhentunut, poistaa sen ja palauttaa nil
-  Jos lukkoa ei löydy, palauttaa nil."
+  Jos lukko löytyy, mutta se on vanhentunut, poistaa sen ja palauttaa :ei-lukittu
+  Jos lukkoa ei löydy, palauttaa :ei-lukittu."
   [db {:keys [id]}]
   (jdbc/with-db-transaction [c db]
     (log/debug "Haetaan lukko id:llä " id)
@@ -52,29 +52,30 @@
         (if (lukko-vanhentunut? lukko)
           (do
             (vapauta-lukko db (:id lukko))
-            nil)
-          lukko)))))
+            :ei-lukittu)
+          lukko)
+        :ei-lukittu))))
 
 (defn lukitse
   "Yrittää luoda uuden lukon annetulla id:llä.
   Jos onnistuu, palauttaa lukon tiedot
   Jos epäonnistuu, palauttaa nil"
   [db user {:keys [id]}]
-  (jdbc/with-db-transaction [c db]
+  (jdbc/with-db-transaction [db db]
     (log/debug "Yritetään lukita " id)
     (let [lukko (first (q/hae-lukko-idlla db id))]
       (log/debug "Tarkistettiin vanha lukko. Tulos: " (pr-str lukko))
       (if (nil? lukko)
         (do
           (log/debug "Ei vanhaa lukkoa. Lukitaan " id)
-          (q/luo-lukko<! c id (:id user)))
+          (q/luo-lukko<! db id (:id user)))
         (do
           (log/debug "Vanha lukko löytyi. Tarkistetaan sen ikä.")
           (if (lukko-vanhentunut? lukko)
             (do
               (log/debug "Edellinen lukko on vanhentunut. Poistetaan se ja luodaan uusi..")
               (vapauta-lukko db (:id lukko))
-              (q/luo-lukko<! c id (:id user)))
+              (q/luo-lukko<! db id (:id user)))
             (do (log/debug "Ei voida lukita " id " koska on jo lukittu!")
                 nil)))))))
 

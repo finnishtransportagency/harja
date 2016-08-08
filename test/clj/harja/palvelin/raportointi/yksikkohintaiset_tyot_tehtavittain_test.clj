@@ -44,61 +44,145 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :yks-hint-kuukausiraportti
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                                 :parametrit {:alkupvm   (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm  (c/to-date (t/local-date 2010 10 10))}})]
+                                {:nimi       :yks-hint-tehtavien-summat
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-oulun-alueurakan-2005-2012-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
+                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
     (is (vector? vastaus))
-    (is (= :raportti (first vastaus)))))
+    (is (= vastaus [:raportti
+                    {:nimi        "Yksikköhintaiset työt tehtävittäin"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{2
+                                                    5
+                                                    6}
+                      :otsikko                    "Oulun alueurakka 2005-2012, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
+                      :tyhja                      nil
+                      :viimeinen-rivi-yhteenveto? true}
+                     '({:leveys  25
+                        :otsikko "Tehtävä"}
+                        {:leveys  5
+                         :otsikko "Yks."}
+                        {:fmt     :raha
+                         :leveys  10
+                         :otsikko "Yksikkö­hinta €"}
+                        {:fmt     :numero
+                         :leveys  10
+                         :otsikko "Suunniteltu määrä hoitokaudella"}
+                        {:fmt     :numero
+                         :leveys  10
+                         :otsikko "Toteutunut määrä"}
+                        {:leveys  15
+                         :otsikko "Suunnitellut kustannukset hoitokaudella €"}
+                        {:leveys  15
+                         :otsikko "Toteutuneet kustannukset €"})
+                     '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
+                         [:info
+                          ""]
+                         [:info
+                          ""]
+                         [:info
+                          "Ei suunnitelmaa"]
+                         667M
+                         [:info
+                          ""]
+                         [:info
+                          ""])
+                        ("Pensaiden täydennysistutus"
+                          [:info
+                           ""]
+                          [:info
+                           ""]
+                          [:info
+                           "Ei suunnitelmaa"]
+                          668M
+                          [:info
+                           ""]
+                          [:info
+                           ""])
+                        ["Yhteensä"
+                         nil
+                         nil
+                         nil
+                         nil
+                         0
+                         0])]
+                    [:teksti
+                     "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :yks-hint-kuukausiraportti
-                                 :konteksti "hallintayksikko"
+                                {:nimi               :yks-hint-tehtavien-summat
+                                 :konteksti          "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm            (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm           (c/to-date (t/local-date 2010 10 10))}})]
+                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2005 10 10))
+                                                      :loppupvm     (c/to-date (t/local-date 2010 10 10))
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= :raportti (first vastaus)))))
+    (is (= vastaus [:raportti
+                    {:nimi        "Yksikköhintaiset työt tehtävittäin"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{}
+                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
+                      :tyhja                      nil
+                      :viimeinen-rivi-yhteenveto? true}
+                     '({:leveys  25
+                       :otsikko "Tehtävä"}
+                       {:leveys  5
+                        :otsikko "Yks."}
+                       {:fmt     :numero
+                        :leveys  10
+                        :otsikko "Toteutunut määrä"})
+                     '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
+                         "m2"
+                         667M)
+                        ("Pensaiden täydennysistutus"
+                          "m2"
+                          668M)
+                        ("Yhteensä"
+                          nil
+                          1335M))]
+                    nil]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :yks-hint-kuukausiraportti
-                                 :konteksti "koko maa"
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
-                                              :loppupvm (c/to-date (t/local-date 2010 10 10))}})]
+                                {:nimi       :yks-hint-tehtavien-summat
+                                 :konteksti  "koko maa"
+                                 :parametrit {:alkupvm      (c/to-date (t/local-date 2005 10 10))
+                                              :loppupvm     (c/to-date (t/local-date 2010 10 10))
+                                              :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= :raportti (first vastaus)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest tehtavakohtaisten-summien-haku-koko-maalle-palauttaa-testidatan-arvot-oikein
-  (let [rivit (raportti/hae-summatut-tehtavat-koko-maalle
-                db
-                {:alkupvm  (c/to-date (t/local-date 2000 10 10))
-                 :loppupvm (c/to-date (t/local-date 2030 10 10))})]
-
-    (is (> (count rivit) 5))
-    (let [ajorat (first (filter
-                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
-                          rivit))]
-      (log/debug ajorat)
-      (is (= (:toteutunut_maara ajorat) 78M)))))
-
-; FIXME Miten kutsutaan DB:n kanssa?
-#_(deftest tehtavakohtaisten-summien-haku-urakalle-palauttaa-testidatan-arvot-oikein
-  (let [rivit (raportti/hae-summatut-tehtavat-urakalle
-                db
-                {:konteksti :urakka
-                 :urakka-id (hae-oulun-alueurakan-2005-2010-id)
-                 :alkupvm   (c/to-date (t/local-date 2000 10 10))
-                 :loppupvm  (c/to-date (t/local-date 2030 10 10))})]
-    (is (not (empty? rivit)))
-    (let [ajorat (first (filter
-                          #(= (:nimi %) "Is 1-ajorat. KVL >15000")
-                          rivit))]
-      (is (= (:toteutunut_maara ajorat) 30M)))))
+    (is (= vastaus [:raportti
+                    {:nimi        "Yksikköhintaiset työt tehtävittäin"
+                     :orientaatio :landscape}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{}
+                      :otsikko                    "KOKO MAA, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
+                      :tyhja                      nil
+                      :viimeinen-rivi-yhteenveto? true}
+                     '({:leveys  25
+                       :otsikko "Tehtävä"}
+                       {:leveys  5
+                        :otsikko "Yks."}
+                       {:fmt     :numero
+                        :leveys  10
+                        :otsikko "Toteutunut määrä"})
+                     '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
+                         "m2"
+                         667M)
+                        ("Pensaiden täydennysistutus"
+                          "m2"
+                          668M)
+                        ("Yhteensä"
+                          nil
+                          1335M))]
+                    nil]))))

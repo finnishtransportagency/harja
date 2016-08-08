@@ -110,7 +110,7 @@
         lkp-tilinnumero (valitse-lkp-tilinumero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
         maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)
         kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
-    (if (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
+    (if (xml/validi-xml? +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
       kustannussuunnitelma-xml
       (do
         (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
@@ -151,12 +151,11 @@
         {:virhe :poikkeus}))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
-  (jdbc/with-db-transaction [transaktio db]
-    (if-let [maksuera (hae-kustannussuunnitelman-maksuera transaktio viesti-id)]
+  (jdbc/with-db-transaction [db db]
+    (if-let [maksuera (hae-kustannussuunnitelman-maksuera db viesti-id)]
       (if (contains? kuittaus :virhe)
         (do
           (log/error "Vastaanotettiin virhe Sampon kustannussuunnitelmalähetyksestä: " kuittaus)
-          (merkitse-kustannussuunnitelmalle-lahetysvirhe transaktio maksuera))
-        (merkitse-kustannussuunnitelma-lahetetyksi transaktio maksuera))
+          (merkitse-kustannussuunnitelmalle-lahetysvirhe db maksuera))
+        (merkitse-kustannussuunnitelma-lahetetyksi db maksuera))
       (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
-

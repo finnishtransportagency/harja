@@ -2,7 +2,8 @@
   "Harja raporttielementtien vienti Excel muotoon"
   (:require [taoensso.timbre :as log]
             [dk.ative.docjure.spreadsheet :as excel]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.domain.raportointi :as raportti-domain])
   (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
            (org.apache.poi.ss.usermodel CellStyle)))
 
@@ -51,6 +52,19 @@
 (defmethod erikoiskentta :liitteet [liitteet]
   (count (second liitteet)))
 
+(defmethod erikoiskentta :info [solu] (raportti-domain/virheen-viesti solu))
+(defmethod erikoiskentta :varoitus [solu] (raportti-domain/virheen-viesti solu))
+(defmethod erikoiskentta :virhe [solu] (raportti-domain/virheen-viesti solu))
+
+(defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
+  (dorun
+    (map-indexed
+      (fn [sarake-nro {:keys [otsikko] :as sarake}]
+        (let [cell (.createCell otsikko-rivi sarake-nro)]
+          (excel/set-cell! cell (ilman-soft-hyphenia otsikko))
+          (excel/set-cell-style! cell sarake-tyyli)))
+      sarakkeet)))
+
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
     (let [nimi (:otsikko optiot)
@@ -88,13 +102,7 @@
                 0 rivi-ennen))
 
       ;; Luodaan otsikot saraketyylillä
-      (dorun
-       (map-indexed
-        (fn [sarake-nro {:keys [otsikko] :as sarake}]
-          (let [cell (.createCell otsikko-rivi sarake-nro)]
-            (excel/set-cell! cell (ilman-soft-hyphenia otsikko))
-            (excel/set-cell-style! cell sarake-tyyli)))
-        sarakkeet))
+      (taulukko-otsikkorivi otsikko-rivi sarakkeet sarake-tyyli)
 
       (dorun
        (map-indexed

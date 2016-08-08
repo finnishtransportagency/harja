@@ -1,9 +1,18 @@
 sudo: required
+cache:
+  directories:
+    - travis_phantomjs
+    - $HOME/.m2
 language: clojure
 jdk:
   - oraclejdk8
 before_install:
   - sh tietokanta/travis.sh
+  - "export PATH=$PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64/bin:$PATH"
+  - "if [ $(phantomjs --version) != '2.1.1' ]; then rm -rf $PWD/travis_phantomjs; mkdir -p $PWD/travis_phantomjs; fi"
+  - "if [ $(phantomjs --version) != '2.1.1' ]; then wget https://assets.membergetmember.co/software/phantomjs-2.1.1-linux-x86_64.tar.bz2 -O $PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64.tar.bz2; fi"
+  - "if [ $(phantomjs --version) != '2.1.1' ]; then tar -xvf $PWD/travis_phantomjs/phantomjs-2.1.1-linux-x86_64.tar.bz2 -C $PWD/travis_phantomjs; fi"
+  - "phantomjs --version"
 before_script:
   - echo 'Europe/Helsinki' | sudo tee /etc/timezone
   - sudo dpkg-reconfigure --frontend noninteractive tzdata

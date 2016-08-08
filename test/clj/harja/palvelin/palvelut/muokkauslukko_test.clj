@@ -50,7 +50,7 @@
                               :lukitse
                               +kayttaja-jvh+ {:id "tyhmanakyma_123"})]
     (log/debug "Lukko: " (pr-str lukko))
-    (is (not (nil? lukko)))
+    (is (not (= :ei-lukittu lukko)))
     (is (= (:id lukko) "tyhmanakyma_123"))
     (is (= (:kayttaja lukko) (:id +kayttaja-jvh+)))
     (is (= (t/day (coerce/from-sql-time (:aikaleima lukko))) (t/day aika-nyt)))
@@ -65,7 +65,7 @@
                               :hae-lukko-idlla
                               +kayttaja-jvh+ {:id "tyhmalukko_666"})]
     (log/debug "Lukko: " (pr-str lukko))
-    (is (not (nil? lukko)))
+    (is (not (= :ei-lukittu lukko)))
     (is (= (:id lukko) "tyhmalukko_666"))))
 
 (deftest lukon-vapauttaminen-toimii
@@ -81,9 +81,9 @@
         lukko-vapautui (kutsu-palvelua (:http-palvelin jarjestelma)
                                        :hae-lukko-idlla
                                        +kayttaja-jvh+ {:id "tyhmalukko_007"})]
-    (is (not (nil? lukko-oli-olemassa)))
+    (is (not (= :ei-lukittu lukko-oli-olemassa)))
     (is (= (:id lukko-oli-olemassa) "tyhmalukko_007"))
-    (is (nil? lukko-vapautui))))
+    (is (= :ei-lukittu lukko-vapautui))))
 
 (deftest lukon-virkistaminen-toimii
   (let [vanha-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -93,8 +93,8 @@
         virkistetty-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :virkista-lukko
                                           +kayttaja-jvh+ {:id "tyhmalukko_2015"})]
-    (is (not (nil? vanha-lukko)))
-    (is (not (nil? virkistetty-lukko)))
+    (is (not (= :ei-lukittu vanha-lukko)))
+    (is (not (= :ei-lukittu virkistetty-lukko)))
     (is (true? (t/after? (coerce/from-sql-time (:aikaleima virkistetty-lukko))
                          (coerce/from-sql-time (:aikaleima vanha-lukko)))))))
 
@@ -118,8 +118,8 @@
         jvh-lukko-uudestaan (kutsu-palvelua (:http-palvelin jarjestelma)
                                             :hae-lukko-idlla
                                             +kayttaja-jvh+ {:id "jvh_lukko_2015"})]
-    (is (not (nil? jvh-lukko)))
-    (is (not (nil? jvh-lukko-uudestaan)))
+    (is (not (= :ei-lukittu jvh-lukko)))
+    (is (not (= :ei-lukittu jvh-lukko-uudestaan)))
     (is (true? (t/equal? (coerce/from-sql-time (:aikaleima jvh-lukko))
                          (coerce/from-sql-time (:aikaleima jvh-lukko-uudestaan)))))))
 
@@ -134,7 +134,7 @@
                                             :hae-lukko-idlla
                                             +kayttaja-jvh+ {:id "jvhlukko_2015"})]
     (is (not (nil? jvh-lukko)))
-    (is (not (nil? jvh-lukko-uudestaan)))))
+    (is (not (= :ei-lukittu jvh-lukko-uudestaan)))))
 
 (deftest vanha-lukko-lasketaan-oikein
   (let [tuore-lukko {:aikaleima (coerce/to-sql-time (t/minus (t/now) (t/minutes 3)))
@@ -153,4 +153,4 @@
                                               :hae-lukko-idlla
                                               +kayttaja-jvh+ {:id "vanheneva_lukko"})]
     (is (not (nil? lukko)))
-    (is (nil? poistettu-vanha-lukko))))
+    (is (= :ei-lukittu poistettu-vanha-lukko))))

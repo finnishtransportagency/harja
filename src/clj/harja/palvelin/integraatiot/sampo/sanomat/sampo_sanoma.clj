@@ -80,7 +80,7 @@
    :sahkoposti (z/xml1-> (z/xml1-> resource) :contactInformation (z/attr :email))})
 
 (defn lue-viesti [viesti]
-  (when (not (xml/validoi +xsd-polku+ "Sampo2Harja.xsd" viesti))
+  (when (not (xml/validi-xml? +xsd-polku+ "Sampo2Harja.xsd" viesti))
     (throw (new RuntimeException "XML-sanoma ei ole XSD-skeeman Sampo2Harja.xsd mukaan validi.")))
 
   (let [data (xml/lue viesti)]

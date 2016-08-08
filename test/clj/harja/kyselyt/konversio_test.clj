@@ -1,8 +1,8 @@
 (ns harja.kyselyt.konversio-test
   (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
             [harja.testi :refer :all]
-            [clojure.data :refer [diff]]))
+            [clojure.data :refer [diff]]
+            [harja.kyselyt.konversio :as konversio]))
 
 (deftest sarakkeet-vektoriin-test
   (let [mankeloitava [{:id 1 :juttu {:id 1}}
@@ -24,9 +24,15 @@
                                         (harja.kyselyt.konversio/sarakkeet-vektoriin mankeloitava
                                                                                      {:juttu :jutut :homma :hommat})
                                         haluttu)]
-    (is (= (harja.kyselyt.konversio/sarakkeet-vektoriin mankeloitava
-                                                        {:juttu :jutut :homma :hommat})
+    (is (= (konversio/sarakkeet-vektoriin mankeloitava
+                                          {:juttu :jutut :homma :hommat})
            haluttu))
     (is (nil? only-in-a))
     (is (nil? only-in-b))
     (is (= (count in-both) (count haluttu)))))
+
+(deftest tarkista-sekvenssin-muuttaminen-jdbc-arrayksi
+  (is (= "{1,2,3}" (konversio/seq->array ["1" "2" "3"])) "Merkkijonosekvenssi muunnettin oikein")
+  (is (= "{1,2,3}" (konversio/seq->array [:1 :2 :3])) "Keyword-sekvenssi muunnettin oikein")
+  (is (= "{1,2,3}" (konversio/seq->array [1 2 3])) "Kokonaislukusekvenssi muunnettin oikein")
+  (is (= "{1.1,2.2,3.3}" (konversio/seq->array [1.1 2.2 3.3])) "Desimaalilukusekvenssi muunnettin oikein")  )

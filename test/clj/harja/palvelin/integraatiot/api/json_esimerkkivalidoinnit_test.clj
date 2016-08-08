@@ -32,7 +32,6 @@
 
   (is (nil? (validoi json-skeemat/tietolajien-haku json-esimerkit/+tietolajien-haku+)))
 
-  (is (nil? (validoi json-skeemat/varusteen-haku-vastaus json-esimerkit/+varusteen-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/varusteiden-haku-vastaus
                      json-esimerkit/+varusteiden-haku-vastaus+)))
   (is (nil? (validoi json-skeemat/varusteen-lisays json-esimerkit/+varusteen-lisays+)))
@@ -59,4 +58,15 @@
                      json-esimerkit/+tyokoneenseuranta-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/paivystyksen-poisto
-                     json-esimerkit/+paivystyksen-poisto-kirjaus+))))
+                     json-esimerkit/+paivystyksen-poisto-kirjaus+)))
+
+  (is (nil? (validoi json-skeemat/urakan-yllapitokohteiden-haku-vastaus
+                     json-esimerkit/+urakan-yllapitokohteiden-haku+)))
+
+  (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus
+                     json-esimerkit/+paallystysilmoituksen-kirjaus+)))
+
+  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-kirjaus
+                     json-esimerkit/+suljetun-tieosuuden-kirjaus+)))
+  (is (nil? (validoi json-skeemat/suljetun-tieosuuden-poisto
+                     json-esimerkit/+suljetun-tieosuuden-poisto+))))

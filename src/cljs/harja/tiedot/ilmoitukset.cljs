@@ -7,7 +7,7 @@
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
-            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
+            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<! reaction-writable]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot])
 
@@ -21,7 +21,8 @@
 
 (defonce kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
-(defonce valinnat (reaction {:hallintayksikko (:id @nav/valittu-hallintayksikko)
+(defonce valinnat (reaction-writable
+                   {:hallintayksikko (:id @nav/valittu-hallintayksikko)
                              :urakka          (:id @nav/valittu-urakka)
                              :urakoitsija     (:id @nav/valittu-urakoitsija)
                              :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)

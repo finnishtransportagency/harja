@@ -23,8 +23,8 @@
 
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
-  (validointi/tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
-  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma))
+  (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
+  (validointi/tarkista-tehtavat db (:tehtavat toteuma))
 
   (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
          db
@@ -42,8 +42,8 @@
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
-  (validointi/tarkasta-pvmvalin-validiteetti (:alkanut toteuma) (:paattynyt toteuma))
-  (validointi/tarkista-tehtavat db urakka-id (:tehtavat toteuma))
+  (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
+  (validointi/tarkista-tehtavat db (:tehtavat toteuma))
 
   (:id (toteumat/luo-toteuma<!
          db
@@ -65,6 +65,10 @@
   (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
     (paivita-toteuma db urakka-id kirjaaja toteuma)
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
+
+(defn paivita-toteuman-reitti [db toteuma-id reitti]
+  (toteumat/paivita-toteuman-reitti! db {:id toteuma-id
+                                         :reitti reitti}))
 
 (defn tallenna-sijainti [db sijainti aika toteuma-id]
   (log/debug "Tuhotaan toteuman " toteuma-id " vanha sijainti")

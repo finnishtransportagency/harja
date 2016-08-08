@@ -15,6 +15,7 @@ harja-stg-dump.sql
 harja-stg-dump
 harja-test-dump.sql
 harja-test-dump
+restored-stg-dump.sql
 tietokanta.tgz
 /resources/gitlog.edn
 .lein-failures
@@ -31,7 +32,8 @@ test2junit
 shp
 tl132
 Pohjavesialue
-tuotanto/harja.jar
+tuotanto/
 tuotanto_test.sh
 .labyrintti-salasana
+.turi-salasana
 .hipchat-token

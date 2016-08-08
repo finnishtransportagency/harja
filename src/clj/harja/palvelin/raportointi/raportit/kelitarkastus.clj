@@ -94,11 +94,11 @@
        {:leveys 5 :otsikko "Let"}
        {:leveys 5 :otsikko "Ajo\u00ADsuun\u00ADta"}
        {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}
-       {:leveys 5 :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)"}
-       {:leveys 5 :otsikko "E\u00ADpä\u00ADta\u00ADsai\u00ADsuus (cm)"}
-       {:leveys 5 :otsikko "Kit\u00ADka"}
-       {:leveys 5 :otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla"}
-       {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla"}
+       {:leveys 5 :otsikko "Lu\u00ADmi\u00ADmää\u00ADrä (cm)" :fmt :numero}
+       {:leveys 5 :otsikko "Ta\u00ADsai\u00ADsuus (cm)" :fmt :numero}
+       {:leveys 5 :otsikko "Kit\u00ADka" :fmt :numero}
+       {:leveys 5 :otsikko "Ilman läm\u00ADpö\u00ADti\u00ADla" :fmt :numero}
+       {:leveys 5 :otsikko "Tien läm\u00ADpö\u00ADti\u00ADla" :fmt :numero}
        {:leveys 5 :otsikko "Tar\u00ADkas\u00ADtaja"}
        {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}
        {:leveys 3 :otsikko "Laadun alitus"}

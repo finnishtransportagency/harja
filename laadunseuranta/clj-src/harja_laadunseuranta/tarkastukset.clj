@@ -48,7 +48,7 @@
     (or (nil? (:tr-osoite seuraava-reittimerkinta))
         (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) (get-in seuraava-reittimerkinta [:tr-osoite :tie])))
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
-    (not (tr-osoitteet-sisaltavat-ymparikaantymisen? [; Edellinen sijainti
+    #_(not (tr-osoitteet-sisaltavat-ymparikaantymisen? [; Edellinen sijainti
                                                       (:tr-osoite (get (:sijainnit nykyinen-reittimerkinta) (- (count (:sijainnit nykyinen-reittimerkinta)) 2)))
                                                       ;; Nykyinen sijainti
                                                       (:tr-osoite (last (:sijainnit nykyinen-reittimerkinta)))

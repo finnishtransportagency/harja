@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.tyokalut.xml :as xml]))
 
@@ -43,5 +43,5 @@
     (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Sekä kustannussuunnitelma, että maksuerä on lähetetty." 10000)
     (let [sampoon-lahetetty-maksuera (first (filter #(not (.contains % "<CostPlans>")) @viestit))
           sampoon-lahetetty-kustannussuunnitelma (first (filter #(.contains % "<CostPlans>") @viestit))]
-      (is (xml/validoi +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-maksuera))
-      (is (xml/validoi +xsd-polku+ "nikuxog_costPlan.xsd" sampoon-lahetetty-kustannussuunnitelma)))))
+      (is (xml/validi-xml? +xsd-polku+ "nikuxog_product.xsd" sampoon-lahetetty-maksuera))
+      (is (xml/validi-xml? +xsd-polku+ "nikuxog_costPlan.xsd" sampoon-lahetetty-kustannussuunnitelma)))))

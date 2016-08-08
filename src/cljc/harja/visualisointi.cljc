@@ -73,7 +73,7 @@
                         l])
                      (map first all-items)
                      (cycle +colors+))])
-             [:svg {:xmlns  "http://www.w3.org/2000/svg"
+             [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"])
                     :width  width
                     :height height}
               slices
@@ -191,7 +191,7 @@
                                (Math/ceil (/ number-of-items 12)))
         hide-value? (or hide-value? (constantly false))]
     (log "Value range " min-value " -- " max-value " == " value-range)
-    [:svg {:xmlns "http://www.w3.org/2000/svg" :width width :height height}
+    [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"]) :width width :height height}
      [:g
       (for [i (range (count data))]
         (when (and multiple-series? (odd? i))

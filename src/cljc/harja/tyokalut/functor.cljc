@@ -26,6 +26,12 @@
     (reduce-kv (fn [m k v]
                  (assoc m k (f v))) {} this))
 
+  #?@(:cljs
+      [cljs.core.PersistentHashMap
+       (fmap- [this f]
+              (reduce-kv (fn [m k v]
+                           (assoc m k (f v))) {} this))])
+
   #?(:clj clojure.lang.APersistentSet :cljs cljs.core.PersistentHashSet)
   (fmap- [this f]
     (into #{}

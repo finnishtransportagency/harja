@@ -13,11 +13,15 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def navigaation-min-korkeus 47)
+
 (defn navigaation-korkeus []
-  (some-> js/document
-          (.getElementsByTagName "nav")
-          (aget 0)
-          .-clientHeight))
+  (Math/max
+   navigaation-min-korkeus
+   (some-> js/document
+           (.getElementsByTagName "nav")
+           (aget 0)
+           .-clientHeight)))
 
 (defn murupolun-korkeus []
   (some-> js/document
@@ -163,14 +167,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             :top    "auto"})))
 
 (defn livi-pudotusvalikko [_ vaihtoehdot]
-  (let [auki (atom false)
+  (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
                                                   (maarita-pudotusvalikon-max-korkeus
                                                     this max-korkeus avautumissuunta))]
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! auki false))
+      (komp/klikattu-ulkopuolelle #(reset! auki? false))
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
                            EventType/RESIZE pudotusvalikon-korkeuden-kasittelija-fn)
@@ -188,9 +192,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               lista-item (fn [vaihtoehto]
                            [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
                             (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                (reset! auki false)
+                                                                (reset! auki? false)
                                                                 nil))])]
-          [:div.dropdown.livi-alasveto {:class (str class " " (when @auki "open"))}
+          [:div.dropdown.livi-alasveto {:class (str class " " (when @auki? "open"))}
            [:button.nappi-alasveto
             {:class       (when disabled "disabled")
              :type        "button"
@@ -198,7 +202,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :title       title
              :on-click    #(do
                             (when-not (empty? vaihtoehdot)
-                              (swap! auki not)
+                              (swap! auki? not)
                             nil))
              :on-focus    on-focus
              :on-key-down #(let [kc (.-keyCode %)]
@@ -232,7 +236,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                           (valitse-fn (nth vaihtoehdot (inc nykyinen-valittu-idx))))
 
                                         13                  ;; enter
-                                        (reset! auki false)))))
+                                        (reset! auki? false)))))
 
                                 (do
                                   (reset! term (char kc))
@@ -241,7 +245,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                                  (.toLowerCase @term)) 0))
                                                                   vaihtoehdot))]
                                     (valitse-fn itemi)
-                                    (reset! auki false)))) nil))}
+                                    (reset! auki? false)))) nil))}
 
             [:div.valittu (format-fn valinta)]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
@@ -264,6 +268,17 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:span
    ikoni
    [:span (str " " teksti)]])
+
+(defn ikoni-ja-elementti [ikoni elementti]
+  [:span
+   ikoni
+   [:span " "]
+   elementti])
+
+(defn teksti-ja-ikoni [teksti ikoni]
+  [:span
+   [:span (str teksti " ")]
+   ikoni])
 
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div.label-ja-alasveto
@@ -315,12 +330,13 @@ Optiot on mäppi, joka tukee seuraavia optioita:
   [optiot & otsikot-ja-arvot]
   [:div.taulukko-tietonakyma
    [:table
-    (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
-          :when arvo]
-      ^{:key otsikko}
-      [:tr
-       [:td.taulukko-tietonakyma-tietokentta [:span otsikko]]
-       [:td.taulukko-tietonakyma-tietoarvo [:span arvo]]])]])
+    [:tbody
+     (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
+           :when arvo]
+       ^{:key otsikko}
+       [:tr
+        [:td.taulukko-tietonakyma-tietokentta [:span otsikko]]
+        [:td.taulukko-tietonakyma-tietoarvo [:span arvo]]])]]])
 
 (defn kuvaus-ja-avainarvopareja
   [kuvaus & avaimet-ja-arvot]
@@ -358,6 +374,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    komp])
 
 ;; Lasipaneelin tyyli, huom: parentin on oltava position: relative
+;; FIXME CSS Expression on deprecated: https://robertnyman.com/2007/11/13/stop-using-poor-performance-css-expressions-use-javascript-instead/
+;; Muutenkin pitäisi miettiä tarvitaanko tätä, sillä on epäyhteneväinen muun Harjan kanssa.
 (def lasipaneeli-tyyli {:display          "block"
                         :position         "absolute"
                         :top              0
@@ -466,25 +484,21 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +ei-sidota-indeksiin+
   "Ei sidota indeksiin")
 
-(defn tierekisteriosoite
-  ([numero alkuosa alkuetaisyys] (tierekisteriosoite numero alkuosa alkuetaisyys nil nil))
-  ([numero alkuosa alkuetaisyys loppuosa loppuetaisyys]
-   [:span.tierekisteriosoite
-    [:span.tie "Tie " numero] " / "
-    [:span.alkuosa alkuosa] " / "
-    [:span.alkuetaisyys alkuetaisyys]
-    (when (and loppuosa loppuetaisyys)
-      [:span
-       " / " [:span.loppuosa loppuosa]
-       " / " [:span.loppuetaisyys loppuetaisyys]])]))
-
 (defn vihje
   ([teksti] (vihje teksti nil))
   ([teksti luokka]
    [:div {:class
-          (str "lomake-vihje " (or luokka ""))}
+          (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
      (ikoni-ja-teksti (harja.ui.ikonit/livicon-info-sign) teksti)]]))
+
+(defn vihje-elementti
+  ([elementti] (vihje-elementti elementti nil))
+  ([elementti luokka]
+   [:div {:class
+          (str "yleinen-pikkuvihje " (or luokka ""))}
+    [:div.vihjeen-sisalto
+     (ikoni-ja-elementti (harja.ui.ikonit/livicon-info-sign) elementti)]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 

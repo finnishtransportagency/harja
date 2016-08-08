@@ -21,13 +21,13 @@
         },
         "sijainti": {
           "koordinaatit": {
-            "x": 64912,
-            "y": 7255034
+            "x": 444308,
+            "y": 7184125
           }
         },
         "suunta": 90,
         "havaintoaika": "2016-01-30T12:00:00Z",
-        "urakkaid": 123456789,
+        "urakkaid": 4,
         "suoritettavatTehtavat": [
           "auraus ja sohjonpoisto",
           "suolaus"
