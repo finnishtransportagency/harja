@@ -54,7 +54,7 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
        LEFT JOIN organisaatio o ON k.organisaatio = o.id
  WHERE t.urakka = :urakka
    AND t.sijainti IS NOT NULL
-   AND ST_Intersects(t.sijainti, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+   AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
    AND (t.aika >= :alku AND t.aika <= :loppu)
    AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
    AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
