@@ -127,7 +127,10 @@
                                    [org.clojure/test.check "0.9.0"]]
                     :plugins      [[com.solita/lein-test-refresh-gui "0.10.3"]
                                    [test2junit "1.1.0"]]
-                    :test2junit-run-ant ~(not jenkinsissa?)}
+                    :test2junit-run-ant ~(not jenkinsissa?)
+                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
+                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
+                    }
              :test {:dependencies [[clj-webdriver "0.6.0"]
                                    [org.seleniumhq.selenium/selenium-java "2.44.0"]
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
