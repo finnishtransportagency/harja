@@ -49,19 +49,19 @@
    (swap! atomi #(update % :ladataan + n))
    (nollaa-ms-jalkeen! atomi)))
 
-(def kuvataso-aloita-lataus! (partial aloita-lataus! kuvatason-lataus))
+(defn kuvataso-aloita-lataus! [] (aloita-lataus! kuvatason-lataus))
 (def geometriataso-aloita-lataus! (partial aloita-lataus! geometriatason-lataus))
 
 (defn lataus-valmis!
   ([atomi] (lataus-valmis! atomi 1))
   ([atomi n]
-                     (js/setTimeout
-                       (fn []
-                         (swap! atomi (comp kasvata-ladataan-lukua #(update % :ladattu + n)))
-                         (nollaa-ms-jalkeen! atomi))
-                       100)))
+   (js/setTimeout
+     (fn []
+       (swap! atomi (comp kasvata-ladataan-lukua #(update % :ladattu + n)))
+       (nollaa-ms-jalkeen! atomi))
+     100)))
 
-(def kuvataso-lataus-valmis! (partial lataus-valmis! kuvatason-lataus))
+(defn kuvataso-lataus-valmis! [] (lataus-valmis! kuvatason-lataus))
 (def geometriataso-lataus-valmis! (partial lataus-valmis! geometriatason-lataus))
 
 (defn pakota-valmistuminen! [atomi]
