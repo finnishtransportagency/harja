@@ -7,84 +7,140 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
             [harja.tietoturva.liitteet :as t-liitteet]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.yleiset :as yleiset]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn naytettava-liite?
-  "Kertoo, voidaanko liite näyttää käyttäjälle esim. modaalissa vai onko tarkoitus tarjota puhdas latauslinkki"
+  "Kertoo, voidaanko liite näyttää käyttäjälle modaalissa (esim. kuvat)
+   vai onko tarkoitus tarjota puhdas latauslinkki"
   [liite]
-  (zero? (.indexOf (:tyyppi liite) "image/")))
+  (if liite
+    (zero? (.indexOf (:tyyppi liite) "image/"))
+    false))
 
 (defn liitekuva-modalissa [liite]
-  [:div.liite-ikkuna
-   [:img {:src (k/liite-url (:id liite))}]])
+  [:img.kuva-modalissa {:src (k/liite-url (:id liite))}])
+
+(defn- nayta-liite-modalissa [liite]
+  (modal/nayta!
+    {:otsikko (str "Liite: " (:nimi liite))
+     :leveys "80%"
+     :luokka "kuva-modal"}
+    (liitekuva-modalissa liite)))
 
 (defn liitetiedosto
-  "Näyttää liitteen pikkukuvan ja nimen. Näytettävä liite avataan modalissa, muuten tarjotaan normaali latauslinkki."
+  "Näyttää liitteen pikkukuvan ja nimen."
   [tiedosto]
   [:div.liite
    (if (naytettava-liite? tiedosto)
      [:span
       [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
-                                  :on-click #(modal/nayta!
-                                              {:otsikko (str "Liite: " (:nimi tiedosto))
-                                               :leveys "80%"}
-                                              (liitekuva-modalissa tiedosto))}]
+                                  :on-click #(nayta-liite-modalissa tiedosto)}]
       [:span.liite-nimi (:nimi tiedosto)]]
      [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} (:nimi tiedosto)])])
 
-(defn liitelistaus
-  "Listaa liitteet numeroina. Näytettävät liitteet avataan modalissa, muuten tarjotaan normaali latauslinkki."
+(defn liite-linkki
+  "Näyttää liitteen tekstilinkkinä (teksti voi olla myös ikoni).
+   Näytettävät liitteet avataan modaalissa, muutan tarjotaan normaali latauslinkki.
+
+   Optiot:
+   nayta-tooltip?     Näyttää liitteen nimen kun hiirtä pidetään linkin päällä (oletus true)"
+  ([liite teksti] (liite-linkki liite teksti {}))
+  ([liite teksti {:keys [nayta-tooltip?] :as optiot}]
+  (if (naytettava-liite? liite)
+    [:a.klikattava {:title (let [tooltip (:nimi liite)]
+                             (if (nil? nayta-tooltip?)
+                              tooltip
+                              (when nayta-tooltip? tooltip)))
+                    :on-click #(nayta-liite-modalissa liite)}
+     teksti]
+    [:a.klikattava {:title (:nimi liite)
+                    :href (k/liite-url (:id liite))
+                    :target "_blank"}
+     teksti])))
+
+(defn liitteet-numeroina
+  "Listaa liitteet numeroina."
   [liitteet]
-  [:div.liitelistaus
+  [:div.liitteet-numeroina
    (map-indexed
      (fn [index liite]
        ^{:key (:id liite)}
        [:span
-        (if (naytettava-liite? liite)
-          [:a.klikattava {:on-click #(modal/nayta!
-                                         {:otsikko (str "Liite: " (:nimi liite))
-                                          :leveys "80%"}
-                                         (liitekuva-modalissa liite))}
-           (inc index)]
-          [:a {:href (k/liite-url (:id liite))
-               :target "_blank"}
-           (inc index)])
+        [liite-linkki liite (inc index)]
         [:span " "]])
      liitteet)])
 
-(defn liite
+(defn liite-ikonina
+  "Näyttää liitteen ikonina."
+  ;; PENDING Olisipa kiva jos ikoni heijastelisi tiedoston tyyppiä :-)
+  [liite]
+  [:span
+   [liite-linkki liite (ikonit/file)]
+   [:span " "]])
+
+(defn liitteet-ikoneina
+  "Listaa liitteet ikoneita."
+  [liitteet]
+  [:span.liitteet-ikoneina
+   (map
+     (fn [liite]
+       ^{:key (:id liite)}
+       [liite-ikonina liite])
+     liitteet)])
+
+(defn liitteet-listalla
+  "Listaa liitteet leijuvalla listalla."
+  ;; PENDING Voisi ehkä generisöidä yleisluontoiseksi 'minilistaksi', mutta toistaiseksi ei käytetä muualla.
+  [liitteet]
+  [:ul.livi-alasvetolista.liitelistaus
+   (doall
+     (for [liite liitteet]
+       ^{:key (hash liite)}
+       [:li.harja-alasvetolistaitemi
+        [liite-linkki
+         liite
+         (:nimi liite)
+         {:nayta-tooltip? false}]]))])
+
+(defn lisaa-liite
   "Liitetiedosto (file input) komponentti yhden tiedoston lataamiselle.
-Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
-tiedoston lataamisesta.
+  Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
+  tiedoston lataamisesta.
 
-Optiot voi sisältää:
-  :urakka-id         urakan id, jolle liite lisätään
-  :liite-ladattu     Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
-                     Parametriksi annetaan mäppi, jossa liitteen tiedot: :id,
-                     :nimi, :tyyppi, :pikkukuva-url, :url. "
-
-  [opts]
+  Optiot voi sisältää:
+  grid?              Jos true, optimoidaan näytettäväksi gridissä
+  nappi-teksti       Teksti, joka napissa näytetään (vakiona 'Lisää liite')
+  liite-ladattu      Funktio, jota kutsutaan kun liite on ladattu onnistuneesti.
+                     Parametriksi annetaan mäppi, jossa liitteen tiedot:
+                     :id, :nimi, :tyyppi, :pikkukuva-url, :url"
+  [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil)
         ;; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         edistyminen (atom nil)
         virheviesti (atom nil)]
-
-    (fn [{:keys [liite-ladattu nappi-teksti] :as opts}]
+    (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid?] :as opts}]
       [:span
+       ;; Tiedosto ladattu palvelimelle, näytetään se
        (if-let [tiedosto @tiedosto]
-         [liitetiedosto tiedosto]) ;; Tiedosto ladattu palvelimelle, näytetään se
+         (if-not grid? [liitetiedosto tiedosto]))
        (if-let [edistyminen @edistyminen]
          [:progress {:value edistyminen :max 100}] ;; Siirto menossa, näytetään progress
          [:span.liitekomponentti
-          [:div.file-upload.nappi-toissijainen
-           [:span (ikonit/livicon-upload) (if @tiedosto
-                                    " Vaihda liite"
-                                    (str " " (or nappi-teksti "Valitse tiedosto")))]
+          [:div {:class (str "file-upload nappi-toissijainen " (when grid? "nappi-grid"))}
+           [yleiset/ikoni-ja-teksti
+            (ikonit/livicon-upload)
+            (if @tiedosto
+              (if grid?
+                (str "Vaihda " (fmt/leikkaa-merkkijono 25 {:pisteet? true} (:nimi @tiedosto)))
+                "Vaihda liite")
+              (or nappi-teksti "Lisää liite"))]
            [:input.upload
-            {:type      "file"
-             :on-change #(let [ch (k/laheta-liite! (.-target %) (:urakka-id opts))]
+            {:type "file"
+             :on-change #(let [ch (k/laheta-liite! (.-target %) urakka-id)]
                           (go
                             (loop [ed (<! ch)]
                               (if (number? ed)
@@ -94,7 +150,8 @@ Optiot voi sisältää:
                                   (do
                                     (reset! edistyminen nil)
                                     (reset! virheviesti nil)
-                                    (liite-ladattu (reset! tiedosto ed)))
+                                    (when liite-ladattu
+                                      (liite-ladattu (reset! tiedosto ed))))
                                   (do
                                     (log "Virhe: " (pr-str ed))
                                     (reset! edistyminen nil)
@@ -103,7 +160,14 @@ Optiot voi sisältää:
                                                                (str " (" (:viesti ed) ")"))))))))))}]]
           [:div.liite-virheviesti @virheviesti]])])))
 
-(defn liitteet [{:keys [uusi-liite-teksti uusi-liite-atom urakka-id]} liitteet]
+(defn liitteet
+  "Listaa liitteet ja näyttää Lisää liite -napin.
+
+  Optiot voi sisältää:
+  uusi-liite-teksti               Teksti uuden liitteen lisäämisen nappiin
+  uusi-liite-atom                 Atomi, johon uuden liitteen tiedot tallennetaan
+  grid?                           Jos true, optimoidaan näytettäväksi gridissä"
+  [urakka-id liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid?]}]
   [:span
    ;; Näytä olemassaolevat liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -113,6 +177,6 @@ Optiot voi sisältää:
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
-       [liite {:urakka-id     urakka-id
-               :liite-ladattu #(reset! uusi-liite-atom %)
-               :nappi-teksti  (or uusi-liite-teksti "Lisää liite")}]))])
+       [lisaa-liite urakka-id {:liite-ladattu #(reset! uusi-liite-atom %)
+                               :nappi-teksti uusi-liite-teksti
+                               :grid? grid?}]))])

@@ -13,7 +13,10 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.pvm :as pvm]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
@@ -56,16 +59,16 @@
   (k/post! :hae-yha-kohteet {:urakka-id harja-urakka-id}))
 
 (defn kohteen-alun-tunnus [kohde]
-  (str "kohde-" (:tunnus kohde) "-alku"))
+  (str "kohde-" (:yha-id kohde) "-alku"))
 
 (defn kohteen-lopun-tunnus [kohde]
-  (str "kohde-" (:tunnus kohde) "-loppu"))
+  (str "kohde-" (:yha-id kohde) "-loppu"))
 
 (defn alikohteen-alun-tunnus [kohde alikohde]
-  (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-alku"))
+  (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) "-alku"))
 
 (defn alikohteen-lopun-tunnus [kohde alikohde]
-  (str "alikohde-" (:tunnus kohde) "-" (:tunnus alikohde) "-loppu"))
+  (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) "-loppu"))
 
 (defn rakenna-tieosoitteet [kohteet]
   {:tieosoitteet
@@ -166,10 +169,9 @@
                  :koodi :kohteiden-paivittaminen-vmklla-epaonnistui}
                 (let [_ (log "[YHA] Yhdistetään VKM-kohteet")
                       kohteet (yhdista-yha-ja-vkm-kohteet uudet-yha-kohteet vkm-kohteet)
-                      onnistuneet-kohteet (vec (filter #(not (:virhe %)) kohteet))
                       epaonnistuneet-kohteet (vec (filter :virhe kohteet))
-                      _ (log "[YHA] Tallennetaan uudet kohteet")
-                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id onnistuneet-kohteet))]
+                      _ (log "[YHA] Tallennetaan uudet kohteet:" (pr-str kohteet))
+                      yhatiedot (<! (tallenna-uudet-yha-kohteet harja-urakka-id kohteet))]
                   (if (k/virhe? yhatiedot)
                     {:status :error :viesti "Päivitettyjen kohteiden tallentaminen epäonnistui."
                      :koodi :kohteiden-tallentaminen-epaonnistui}
@@ -182,8 +184,8 @@
 (defn- vkm-yhdistamistulos-dialogi [epaonnistuneet-kohteet]
   [:div
    [:p
-    "Seuraavien YHA-kohteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut."
-    "Tarkista kohteiden tiedot YHA:sta ja yritä päivittää kohteet uudestaan."]
+    "Seuraavien YHA-kohteiden tierekisteriosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut. "
+    "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein."]
    [:ul
     (for [kohde epaonnistuneet-kohteet]
       (let [tr (:tierekisteriosoitevali kohde)]
@@ -194,7 +196,7 @@
 
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
-  (when (= (:id @nav/valittu-urakka) harja-urakka-id)
+  (when (and (:yhatiedot vastaus) (= (:id @nav/valittu-urakka) harja-urakka-id))
     (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
 
   ;; Näytä ilmoitus tarvittaessa
@@ -260,3 +262,31 @@
                (if-let [kohdeluettelo-paivitetty (get-in urakka [:yhatiedot :kohdeluettelo-paivitetty])]
                  (pvm/pvm-aika kohdeluettelo-paivitetty)
                  "ei koskaan"))]))
+
+(defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id paallystysilmoitukset]
+  (let [kohde-idt (mapv :paallystyskohde-id (filter #(and (= :hyvaksytty (:paatos-tekninen-osa %))
+                                                          (or (= :valmis (:tila %))
+                                                              (= :lukittu (:tila %))))
+                                                    paallystysilmoitukset))]
+    (when-not @yha-kohteiden-paivittaminen-kaynnissa?
+      [harja.ui.napit/palvelinkutsu-nappi
+       (if (= 1 (count paallystysilmoitukset))
+         (yleiset/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
+         "Lähetä kaikki kohteet YHA:n")
+       #(do
+         (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
+         (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
+         (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id :sopimus-id sopimus-id :kohde-idt kohde-idt}))
+       {:luokka "nappi-grid nappi-ensisijainen"
+        :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
+                      (empty? kohde-idt)
+                      (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
+        :virheviesti "Kohteiden lähettäminen epäonnistui."
+        :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
+        :kun-onnistuu (fn [paivitetyt-ilmoitukset]
+                        (if (every? #(or (:lahetys-onnistunut %) (nil? (:lahetys-onnistunut %))) paivitetyt-ilmoitukset)
+                          (do (log "[YHA] Kohteet lähetetty YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
+                              (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success))
+                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHA:n. Päivitetyt ilmoitukset: " (pr-str paivitetyt-ilmoitukset))
+                              (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)))
+                        (reset! paallystys/paallystysilmoitukset paivitetyt-ilmoitukset))}])))

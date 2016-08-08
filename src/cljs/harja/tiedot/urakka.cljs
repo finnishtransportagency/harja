@@ -12,7 +12,7 @@
             [harja.tiedot.toimenpidekoodit :as toimenpidekoodit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.atom :refer-macros [reaction<! reaction-writable]]
             [cljs-time.core :as t]
             [taoensso.truss :as truss :refer-macros [have]])
 
@@ -34,7 +34,7 @@
                      (when ur
                        (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
 
-(defonce valittu-toimenpideinstanssi (reaction (first @urakan-toimenpideinstanssit)))
+(defonce valittu-toimenpideinstanssi (reaction-writable (first @urakan-toimenpideinstanssit)))
 
 (defn urakan-toimenpideinstanssi-toimenpidekoodille [tpk]
   (have integer? tpk)
@@ -128,9 +128,9 @@
 
 
 (defonce valittu-hoitokausi
-         (reaction (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
+  (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
-(defonce valittu-aikavali (reaction @valittu-hoitokausi))
+(defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
 
 
 (defn valitse-hoitokausi! [hk]
@@ -141,7 +141,7 @@
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 
 (defonce valittu-hoitokauden-kuukausi
-         (reaction
+         (reaction-writable
            (let [hk @valittu-hoitokausi
                  ur @nav/valittu-urakka
                  kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
@@ -264,10 +264,11 @@
          (reaction (let [tpi @valittu-toimenpideinstanssi
                          tehtavat @urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
                      (reset! valittu-kokonaishintainen-tehtava nil)
-                     (into [] (keep (fn [[_ _ t3 t4]]
-                                      (when (= (:koodi t3) (:t3_koodi tpi))
-                                        t4))
-                                    tehtavat)))))
+                     (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                       (when (= (:koodi t3) (:t3_koodi tpi))
+                                         t4))
+                                     tehtavat))]
+                       (sort-by :nimi tehtavat)))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)
@@ -286,10 +287,11 @@
          (reaction (let [tpi @valittu-toimenpideinstanssi
                          tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
                      (reset! valittu-yksikkohintainen-tehtava nil)
-                     (into [] (keep (fn [[_ _ t3 t4]]
-                                      (when (= (:koodi t3) (:t3_koodi tpi))
-                                        t4))
-                                    tehtavat)))))
+                     (let [tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                       (when (= (:koodi t3) (:t3_koodi tpi))
+                                         t4))
+                                     tehtavat))]
+                       (sort-by :nimi tehtavat)))))
 
 (defonce urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [ur (:id @nav/valittu-urakka)

@@ -11,30 +11,11 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "poistaja": {
-      "id": "urn:harja/lisaaVaruste/lisaaja",
+    "varusteen-poisto": {
+      "id": "urn:harja/varusteen-poisto",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/suorittaja.schema.json",
-      "required": true
-    },
-    "tunniste": {
-      "id": "urn:harja/tunniste",
-      "type": "string",
-      "additionalProperties": false,
-      "required": true
-    },
-    "tietolajitunniste": {
-      "id": "urn:harja/tietolajitunniste",
-      "type": "string",
-      "additionalProperties": false,
-      "required": true
-    },
-    "poistettu": {
-      "id": "urn:harja/poistettu",
-      "type": "string",
-      "format": "date-time",
-      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/varusteen-poisto.schema.json",
       "required": true
     }
   }

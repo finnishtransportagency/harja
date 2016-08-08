@@ -6,15 +6,14 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]))
 
-(def kayttaja "fastroi")
-
+(def kayttaja "destia")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :api-reittitoteuma (component/using
                          (api-reittitoteuma/->Reittitoteuma)
-                         [:http-palvelin :db :integraatioloki])))
+                         [:http-palvelin :db :db-replica :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 

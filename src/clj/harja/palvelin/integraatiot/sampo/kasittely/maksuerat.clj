@@ -60,7 +60,7 @@
                            (update-in maksueran-tiedot [:maksuera :summa] -)
                            maksueran-tiedot)
         maksuera-xml (tee-xml-sanoma (maksuera-sanoma/muodosta maksueran-tiedot))]
-    (if (xml/validoi +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
+    (if (xml/validi-xml? +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
       maksuera-xml
       (do
         (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")
@@ -124,11 +124,11 @@
         {:virhe :poikkeus}))))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
-  (jdbc/with-db-transaction [transaktio db]
-    (if-let [maksueranumero (hae-maksueranumero transaktio viesti-id)]
+  (jdbc/with-db-transaction [db db]
+    (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
       (if (contains? kuittaus :virhe)
         (do
           (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
-          (merkitse-maksueralle-lahetysvirhe transaktio maksueranumero))
-        (merkitse-maksuera-lahetetyksi transaktio maksueranumero))
+          (merkitse-maksueralle-lahetysvirhe db maksueranumero))
+        (merkitse-maksuera-lahetetyksi db maksueranumero))
       (log/error "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))

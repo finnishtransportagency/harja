@@ -7,7 +7,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-sonja]]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
 
@@ -17,7 +17,8 @@
 (def +tloik-ilmoituskuittausjono+ "tloik-ilmoituskuittausjono")
 (def +tloik-ilmoitustoimenpideviestijono+ "tloik-ilmoitustoimenpideviestijono")
 (def +tloik-ilmoitustoimenpidekuittausjono+ "tloik-ilmoitustoimenpidekuittausjono")
-(def +testi-ilmoitus-sanoma+ "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+(def +testi-ilmoitus-sanoma+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
   <ilmoitusId>123456789</ilmoitusId>
   <versionumero>1</versionumero>
@@ -50,8 +51,42 @@
   <selite>auraustarve</selite>
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
-  </harja:ilmoitus>
-")
+  </harja:ilmoitus>")
+(def +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+  <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+  <ilmoitusId>123456789</ilmoitusId>
+  <versionumero>1</versionumero>
+  <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+  <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
+  <urakkatyyppi>hoito</urakkatyyppi>
+  <otsikko>Korkeat vallit</otsikko>
+  <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
+  <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
+  <yhteydenottopyynto>false</yhteydenottopyynto>
+  <sijainti>
+  <tienumero>4</tienumero>
+  <x>452935</x>
+  <y>7186873</y>
+  </sijainti>
+  <ilmoittaja>
+  <etunimi>Uuno</etunimi>
+  <sukunimi>Urakoitsija</sukunimi>
+  <matkapuhelin>08023394852</matkapuhelin>
+  <sahkoposti>uuno.urakoitsija@example.com</sahkoposti>
+  <tyyppi>tienkayttaja</tyyppi>
+  </ilmoittaja>
+  <lahettaja>
+  <etunimi>Pekka</etunimi>
+  <sukunimi>Päivystäjä</sukunimi>
+  <matkapuhelin>929304449282</matkapuhelin>
+  <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+  </lahettaja>
+  <seliteet>
+  <selite>auraustarve</selite>
+  <selite>aurausvallitNakemaesteena</selite>
+  </seliteet>
+  </harja:ilmoitus>")
 
 (defn luo-tloik-komponentti []
   (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
@@ -61,15 +96,15 @@
 
 (def +ilmoitus-ruotsissa+
   (clojure.string/replace
-    (clojure.string/replace +testi-ilmoitus-sanoma+ "452935" "319130")
+    (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+ "452935" "319130")
     "7186873" "7345904"))
 
 (defn tuo-ilmoitus []
-  (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma+)]
+  (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn tuo-paallystysilmoitus []
-  (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma+
+  (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
                                        "<urakkatyyppi>hoito</urakkatyyppi>"
                                        "<urakkatyyppi>paallystys</urakkatyyppi>")
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
@@ -77,6 +112,11 @@
 
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
+
+(defn hae-ilmoitustoimenpide []
+  (q "SELECT kuittaustyyppi
+      FROM ilmoitustoimenpide
+      WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
 
 (defn hae-paivystaja []
   (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;")))

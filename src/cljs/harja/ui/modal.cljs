@@ -1,7 +1,8 @@
 (ns harja.ui.modal
   "Modaali näyttökomponentti. Näitä yksi kappale päätasolle."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.dom :as dom]))
+            [harja.ui.dom :as dom]
+            [harja.asiakas.tapahtumat :as t]))
 
 (def modal-sisalto (atom {:otsikko nil
                           :sisalto nil
@@ -14,12 +15,10 @@
   (when (:sulje @modal-sisalto) ((:sulje @modal-sisalto)))
   (swap! modal-sisalto assoc :nakyvissa? false))
 
-;;(def ctg (r/adapt-react-class (-> js/React  (aget "addons") (aget "CSSTransitionGroup"))))
-
-
 (defn modal-container
   "Tämä komponentti sisältää modaalin ja on tarkoitus laittaa päätason sivuun"
   []
+
   (let [{:keys [otsikko sisalto footer nakyvissa? luokka leveys]} @modal-sisalto]
     (if nakyvissa?
       ^{:key "modaali"}
@@ -45,23 +44,6 @@
       ^{:key "ei-modaalia"}
       [:span.modaali-ei-nakyvissa])))
 
-
-
-
-(defn modal [{:keys [sulje otsikko footer luokka]} sisalto]
-  (.log js/console "NÄYTETÄÄN: " sisalto)
-  (reset! modal-sisalto {:otsikko otsikko
-                         :footer footer
-                         :sisalto sisalto
-                         :luokka luokka
-                         :sulje sulje
-                         :nakyvissa? true})
-  (fn [sulje]
-    (if-not (:nakyvissa? @modal-sisalto)
-      (do (sulje)
-          [:span.modaali-ei-nakyvissa])
-      [:span.modaali-nakyvissa])))
-
 (defn nayta! [{:keys [sulje otsikko footer luokka leveys]} sisalto]
   (reset! modal-sisalto {:otsikko otsikko
                          :footer footer
@@ -70,3 +52,8 @@
                          :sulje sulje
                          :nakyvissa? true
                          :leveys leveys}))
+
+(defn aloita-urln-kuuntelu []
+  (t/kuuntele! :url-muuttui
+               (fn [_]
+                 (piilota!))))

@@ -9,6 +9,14 @@
       (and (have? map? optiot)
            (every? #{:odota :nil-kun-haku-kaynnissa?} (keys optiot)))))
 
+(defmacro reaction-writable
+  "Reaktio, johon voi kirjoittaa arvon. Oletuksena reaktiot ovat read-only.
+  Reaktioon kirjoittaminen on antipattern, tämä on taaksepäin yhteensopivuuden takia."
+  [& body]
+  `(reagent.ratom/make-reaction (fn [] ~@body)
+                                :on-set (fn [vanha# uusi#]
+                                          (harja.loki/log "Reaction reset!: "
+                                                          (pr-str vanha#) " => " (pr-str uusi#)))))
 (defmacro reaction<!
   "Asynkroninen reaktio (esim. serveriltä haku). Haun tulee palauttaa kanava (tai nil).
   Kun kanava palauttaa dataa, se asetetaan atomin tilaksi. Reaktio laukaistaan uudelleen
@@ -17,7 +25,7 @@
   Ottaa sisään let-bindings vektorin, [arvo1 @riippuvuusatomi1 ...] jossa kaikki atomit, joihin
   reaktion halutaan riippuvan, tulee määritellä. Arvoja voi käyttää bodyssa hyödyksi.
   Reaktiossa on oletuksena 20ms odotus, eli ennen kuin reaktio ajetaan, odotetaan 20ms jos riippuvuudet
-  muuttuvat uudelleen. Kun riippuvuudet eivät ole muuttuneet odotusaikana, ajetaan reaktio 
+  muuttuvat uudelleen. Kun riippuvuudet eivät ole muuttuneet odotusaikana, ajetaan reaktio
   viimeisimmillä arvoilla.
 
   Bodyn alkuun voi laittaa optionaalisen asetukset mäpin, jossa voi olla seuraavat avaimet:
@@ -65,7 +73,7 @@
                        ;; Serveri vastaus tuli läpi => asetetaan tila
                        (do (reset! arvo# vastaus#)
                            [nil parametrit#])
-                       
+
                        ;; Timeout, tehdään kutsu
                        (if (= kanava# timeout-ch#)
                          (let [[~@nimet] parametrit#
@@ -76,7 +84,7 @@
                              [chan# nil]))
                          (harja.loki/log "tuntematon kanava!!!")))]
                  (recur haku# parametrit#))))))
-       
+
 
        (reagent.ratom/run!
         (let [~@(interleave nimi-symbolit (map second bindings))]
@@ -87,5 +95,3 @@
 
        (swap! harja.atom/+reaktiot+ assoc arvo# {:paivita #(swap! paivita# inc)})
        arvo#)))
-           
-            

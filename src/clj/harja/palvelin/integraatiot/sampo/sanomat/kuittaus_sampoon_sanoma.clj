@@ -26,7 +26,7 @@
 (defn muodosta [viesti-id viestityyppi virhekoodi virheviesti]
   (let [sisalto (muodosta-viesti viesti-id viestityyppi virhekoodi virheviesti)
         xml (tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml)
       xml
       (do
         (log/error "Kuittausta ei voida lähettää. Kuittaus XML ei ole validi.")

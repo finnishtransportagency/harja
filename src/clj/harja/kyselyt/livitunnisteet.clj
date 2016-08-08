@@ -5,5 +5,5 @@
   {:positional? true})
 
 (defn hae-seuraava-livitunniste [db]
-  (let [numero (:nextval (first (harja.kyselyt.livitunnisteet/hae-seuraava-tunniste db)))]
+  (let [numero (:nextval (first (hae-seuraava-tunniste db)))]
     (str "HARJ" (format "%016d" numero))))

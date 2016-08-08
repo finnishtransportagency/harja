@@ -56,6 +56,8 @@
 
 (def oletus-zindex featuret/oletus-zindex)
 
+(def tooltipin-aika 3000)
+
 
 ;; Näihin atomeihin voi asettaa oman käsittelijän kartan
 ;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
@@ -446,7 +448,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                           (:style mapspec))}]
      (when-let [piirra-tooltip? (:tooltip-fn mapspec)]
        (when-let [hover (-> c reagent/state :hover)]
-         (go (<! (timeout 1000))
+         (go (<! (timeout tooltipin-aika))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
          (when-let [tooltipin-sisalto

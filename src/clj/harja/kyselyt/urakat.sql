@@ -1,13 +1,16 @@
 -- name: hae-kaikki-urakat-aikavalilla
 SELECT
-  u.id,
-  u.nimi,
-  u.tyyppi
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  u.tyyppi AS urakka_tyyppi,
+  o.id AS hallintayksikko_id,
+  o.nimi AS hallintayksikko_nimi
 FROM urakka u
+  JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu)) AND
       (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
       (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
-      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
+      (:hallintayksikko :: INTEGER IS NULL OR u.hallintayksikko IN (:hallintayksikko));
 
 -- name: hae-kaynnissa-olevat-urakat
 SELECT
@@ -17,6 +20,19 @@ SELECT
 FROM urakka u
 WHERE (u.alkupvm IS NULL OR u.alkupvm <= current_date) AND
       (u.loppupvm IS NULL OR u.loppupvm >= current_date);
+
+-- name: hae-kaynnissa-olevat-ja-tulevat-urakat
+SELECT
+  u.id,
+  u.nimi,
+  u.tyyppi,
+  u.alkupvm,
+  u.loppupvm
+FROM urakka u
+WHERE u.alkupvm >= current_date
+      OR
+      (u.alkupvm <= current_date AND
+       u.loppupvm >= current_date);
 
 -- name: hae-hallintayksikon-urakat
 SELECT
@@ -52,17 +68,6 @@ SELECT
   yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   u.takuu_loppupvm,
-  (SELECT EXISTS(SELECT id
-                     FROM paallystysilmoitus
-                     WHERE paallystyskohde IN (SELECT id
-                                               FROM yllapitokohde
-                                               WHERE urakka = u.id)))
-  OR
-  (SELECT EXISTS(SELECT id
-                     FROM paikkausilmoitus
-                     WHERE paikkauskohde IN (SELECT id
-                                             FROM yllapitokohde
-                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -74,10 +79,11 @@ FROM urakka u
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE hallintayksikko = :hallintayksikko
-      AND (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+  AND (u.id IN (:sallitut_urakat)
+       OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
             'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
            OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-               :kayttajan_org_id = urk.id));
+               :kayttajan_org_id = urk.id)));
 
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.
@@ -205,8 +211,20 @@ SELECT
   urk.ytunnus     AS urakoitsija_ytunnus
 FROM urakka u
   LEFT JOIN hanke h ON h.id = u.hanke
-  JOIN organisaatio urk ON u.urakoitsija = urk.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE u.id = :id;
+
+-- name: hae-urakoiden-organisaatiotiedot
+-- Hakee joukolle urakoita urakan ja hallintayksikön nimet ja id:t
+SELECT
+  u.id AS urakka_id,
+  u.nimi AS urakka_nimi,
+  u.tyyppi AS urakka_tyyppi,
+  hy.id AS hallintayksikko_id,
+  hy.nimi AS hallintayksikko_nimi
+FROM urakka u
+  JOIN organisaatio hy ON u.hallintayksikko = hy.id
+WHERE u.id IN (:id);
 
 -- name: hae-urakat-ytunnuksella
 SELECT
@@ -443,9 +461,28 @@ FROM urakka u
   JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id = :id;
 
+-- name: hae-urakoiden-geometriat
+SELECT
+  ST_Simplify(u.alue, :toleranssi) AS urakka_alue,
+  u.id AS urakka_id,
+  ST_Simplify(alueurakka.alue, :toleranssi) AS alueurakka_alue
+FROM urakka u
+  JOIN hanke ON u.hanke = hanke.id
+  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+WHERE u.id IN (:idt);
+
 -- name: hae-urakan-sampo-id
 -- single?: true
-SELECT sampoid FROM urakka where id = :urakka
+SELECT sampoid FROM urakka where id = :urakka;
+
+-- name: hae-urakan-perustiedot-sampo-idlla
+SELECT
+  id,
+  nimi,
+  alkupvm,
+  loppupvm,
+  tyyppi
+FROM urakka where sampoid = :sampoid;
 
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka

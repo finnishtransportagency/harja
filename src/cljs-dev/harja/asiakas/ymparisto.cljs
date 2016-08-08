@@ -1,9 +1,7 @@
 (ns harja.asiakas.ymparisto
   "Dev ympäristön spesifisiä asioita."
   (:require [figwheel.client :as fw]
-            [harja.ui.viesti :as viesti]
-            ;; require kaikki testit
-            [harja.asiakas.test-runner :as test-runner]))
+            [harja.ui.viesti :as viesti]))
 
 (defn alusta
   "Alusta tämän ympäristön vaatimat asiat, figwheel reload."
@@ -17,10 +15,7 @@
              ;:reload-dependents false
              :on-jsload (fn [] (.log js/console "Koodia ladattu uudelleen")
                           (when-let [on-reload (:on-reload options)]
-                            (on-reload)
-                            (if (.-harja_testmode js/window)
-                              (test-runner/aja-e2e-testit)
-                              (test-runner/aja-testit))))})
+                            (on-reload)))})
 
   (.log js/console "Alustetaan less.js uudelleenlataus")
   (let [less (aget js/window "less")

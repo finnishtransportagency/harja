@@ -9,7 +9,7 @@
             [harja.palvelin.komponentit.liitteet :as liitteet])
   (:import (java.util Date)))
 
-(def kayttaja "fastroi")
+(def kayttaja "destia")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea

@@ -4,7 +4,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
-            [harja.atom :refer-macros [reaction<!]]
+            [harja.atom :refer-macros [reaction<! reaction-writable]]
             [harja.geo :as geo])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -41,13 +41,15 @@
   ;; PENDING: Ei ole optimaalista, että sillat ovat "point", jotka
   ;; piirretään tietyllä radiuksella... ikoni olisi hyvä saada.
   (let [sillan-koko (* 0.003 koko)]
-    (into []
-          (map #(assoc-in % [:alue :radius] sillan-koko))
-          sillat)))
+    (when sillat
+      (into []
+            (map #(assoc-in % [:alue :radius] sillan-koko))
+            sillat))))
 
 (def sillat-kartalla
-  (reaction (skaalaa-sillat-zoom-tason-mukaan
-             @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
+  (reaction-writable
+   (skaalaa-sillat-zoom-tason-mukaan
+    @nav/kartan-nakyvan-alueen-koko @haetut-sillat)))
 
 
 (defn paivita-silta! [id funktio & args]

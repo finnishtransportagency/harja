@@ -11,6 +11,18 @@ VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_i
          FROM urakka
          WHERE sampoid = :urakka_sampoid));
 
+-- name: luo-yllapidon-toimenpideinstanssi<!
+-- Luo uuden ylläpidon toimenpideinstanssin.
+INSERT INTO toimenpideinstanssi (nimi, alkupvm, loppupvm, toimenpide, urakka)
+VALUES ((SELECT nimi
+         FROM toimenpidekoodi
+         WHERE koodi = :toimenpidekoodi),
+        :alkupvm, :loppupvm,
+        (SELECT id
+         FROM toimenpidekoodi
+         WHERE koodi = :toimenpidekoodi),
+        :urakkaid);
+
 -- name: onko-tuotu-samposta
 -- Tarkistaa onko Samposta tuodulla urakalla jo toimenpidekoodilla tuotu toimenpideinstanssi
 SELECT exists(
@@ -21,7 +33,6 @@ SELECT exists(
                         WHERE koodi = :sampo_toimenpidekoodi) AND
           sampoid != :sampo_toimenpide_id AND
           urakka_sampoid = :urakka_sampoid);
-
 
 -- name: paivita-toimenpideinstanssi!
 -- Paivittaa toimenpideinstanssin.
@@ -71,7 +82,9 @@ SELECT
   tpk.nimi AS toimenpide_nimi
 FROM toimenpideinstanssi tpi
   JOIN urakka ON tpi.urakka = urakka.id
-  JOIN toimenpidekoodi tpk ON tpk.id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)
+  JOIN toimenpidekoodi tpk ON tpk.id = (SELECT emo
+                                        FROM toimenpidekoodi
+                                        WHERE id = tpi.toimenpide)
 WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
                      FROM maksuera
                      WHERE toimenpideinstanssi IS NOT NULL)

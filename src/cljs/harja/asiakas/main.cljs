@@ -13,7 +13,8 @@
 
             [cljsjs.react]
 
-            [harja.pvm])
+            [harja.pvm]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn render []
@@ -58,6 +59,7 @@
   (go
     (istunto/lisaa-ajastin-tapahtumakuuntelijat)
     (istunto/kaynnista-ajastin!)
+    (modal/aloita-urln-kuuntelu)
     (k/kaynnista-palvelimen-pingaus)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
                                          (reset! istunto/istunto-alkoi (js/Date.)))))))

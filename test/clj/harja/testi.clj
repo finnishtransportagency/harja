@@ -18,11 +18,23 @@
 (def jarjestelma nil)
 
 (Locale/setDefault (Locale. "fi" "FI"))
-(log/set-config! [:appenders :standard-out :min-level] :info)
+
 
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
+
+(defn travis? []
+  (= "true" (System/getenv "TRAVIS")))
+
+
+
+;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
+;; eikä tehdä traviksen logeista turhan pitkiä
+(log/set-config! [:appenders :standard-out :min-level] (if (or (ollaanko-jenkinsissa?)
+                                                               (travis?))
+                                                         :info
+                                                         :debug))
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
@@ -65,6 +77,9 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 (defn luo-temppitietokanta []
   (tietokanta/luo-tietokanta temppitietokanta))
+
+(defn luo-liitteidenhallinta []
+  (liitteet/->Liitteet))
 
 (defonce db (:datasource (luo-testitietokanta)))
 (defonce temppidb (:datasource (luo-temppitietokanta)))
@@ -177,6 +192,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                      :etunimi "Jalmari" :urakka-roolit []
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                     :organisaation-urakat #{}
                      :urakkaroolit {}})
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
@@ -200,12 +216,18 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
 
-(defn hae-oulun-alueurakan-2005-2010-id []
+(defn hae-oulun-alueurakan-2005-2012-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
 
-(defn hae-oulun-alueurakan-2005-2010-urakoitsija []
+(defn hae-oulujoen-sillan-id []
+  (ffirst (q (str "SELECT id FROM silta WHERE siltanimi = 'Oulujoen silta';"))))
+
+(defn hae-pyhajoen-sillan-id []
+  (ffirst (q (str "SELECT id FROM silta WHERE siltanimi = 'Pyhäjoen silta';"))))
+
+(defn hae-oulun-alueurakan-2005-2012-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
@@ -229,7 +251,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa ja Kainuu'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -281,7 +303,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (pudota-ja-luo-testitietokanta-templatesta)
   (luo-kannat-uudelleen)
   (reset! testikayttajien-lkm (hae-testikayttajat))
-  (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2010-id))
+  (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
@@ -386,27 +408,28 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
-                         (component/system-map
-                           :db (tietokanta/luo-tietokanta testitietokanta)
-                           :klusterin-tapahtumat (component/using
-                                                   (tapahtumat/luo-tapahtumat)
-                                                   [:db])
+                        (component/system-map
+                         :db (tietokanta/luo-tietokanta testitietokanta)
+                         :db-replica (tietokanta/luo-tietokanta testitietokanta)
+                         :klusterin-tapahtumat (component/using
+                                                (tapahtumat/luo-tapahtumat)
+                                                [:db])
 
-                           :todennus (component/using
-                                       (todennus/http-todennus)
-                                       [:db :klusterin-tapahtumat])
-                           :http-palvelin (component/using
-                                            (http/luo-http-palvelin portti true)
-                                            [:todennus])
-                           :integraatioloki (component/using
-                                              (integraatioloki/->Integraatioloki nil)
-                                              [:db])
+                         :todennus (component/using
+                                    (todennus/http-todennus)
+                                    [:db :klusterin-tapahtumat])
+                         :http-palvelin (component/using
+                                         (http/luo-http-palvelin portti true)
+                                         [:todennus])
+                         :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
 
-                           :liitteiden-hallinta (component/using
-                                                  (liitteet/->Liitteet)
-                                                  [:db])
+                         :liitteiden-hallinta (component/using
+                                               (liitteet/->Liitteet)
+                                               [:db])
 
-                           ~@omat))))
+                         ~@omat))))
 
      (alter-var-root #'urakka
                      (fn [_#]

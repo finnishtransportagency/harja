@@ -7,8 +7,9 @@
 
 (defn- hanskaa-virhe [response c]
   (let [{:keys [failure status status-text]} response]
-    #_(when-not (= :timeout failure)
-      (virhekasittely/ilmoita-virhe (str "Palvelinvirhe: " status status-text)))
+    (when (and (= status 0)
+               (= "Request failed." status-text))
+      (set! (.-location js/window) (str (.-location js/window) "?relogin=true")))
     (close! c)))
 
 (defn post! [url data]

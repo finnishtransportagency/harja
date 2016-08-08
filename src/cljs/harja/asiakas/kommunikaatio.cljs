@@ -1,6 +1,6 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :as r]
             [ajax.core :refer [ajax-request transit-request-format transit-response-format]]
             [cljs.core.async :refer [put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
@@ -43,7 +43,8 @@
       (and (map? vastaus)
            (some (partial contains? vastaus) [:failure :virhe :error]))))
 
-(def testmode {})
+;; Testmoden voi asettaa funktioksi, jolle annetaan palvelu ja payload ja palauttaa kanavan
+(def testmode (atom nil))
 
 (declare kasittele-yhteyskatkos)
 
@@ -80,8 +81,12 @@
                  (put! chan (if transducer (into [] transducer vastaus) vastaus))))
              (close! chan))]
     (go
-      (if (testmode palvelu)
-        (>! chan (testmode palvelu))
+      (if-let [testipalvelu @testmode]
+        (do
+          (log "Haetaan testivastaus palvelulle: " palvelu)
+          (if-let [testivastaus-ch (testipalvelu palvelu parametrit)]
+            (>! chan (<! testivastaus-ch))
+            (close! chan)))
         (ajax-request {:uri             (str (polku) (name palvelu))
                        :method          metodi
                        :params          parametrit
@@ -180,13 +185,13 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn pingaa-palvelinta []
   (post! :ping {}))
 
-(def yhteys-palautui-hetki-sitten (atom false))
-(def yhteys-katkennut? (atom false))
-(def istunto-vanhentunut? (atom false))
-(def pingaus-kaynnissa? (atom false))
+(def yhteys-palautui-hetki-sitten (r/atom false))
+(def yhteys-katkennut? (r/atom false))
+(def istunto-vanhentunut? (r/atom false))
+(def pingaus-kaynnissa? (r/atom false))
 (def normaali-pingausvali-millisekunteina (* 1000 20))
 (def yhteys-katkennut-pingausvali-millisekunteina 2000)
-(def nykyinen-pingausvali-millisekunteina (atom normaali-pingausvali-millisekunteina))
+(def nykyinen-pingausvali-millisekunteina (r/atom normaali-pingausvali-millisekunteina))
 
 (defn- kasittele-onnistunut-pingaus []
   (reset! istunto-vanhentunut? false)

@@ -40,7 +40,8 @@
   (case (:type (or (:sijainti asia) asia))
     :point false
     :line true
-    :multiline true))
+    :multiline true
+    false))
 
 (defn asia-on-piste? [asia]
   (not (reitillinen-asia? asia)))
@@ -176,8 +177,8 @@
          (= :multiline tyyppi)
          (merge
            (maarittele-viiva valittu? merkit viivat)
-           {:type   :viiva
-            :points koordinaatit}))))))
+           {:type   :moniviiva
+            :lines (:lines geo)}))))))
 
 ;;;;;;
 
@@ -185,11 +186,14 @@
   ;; Täydennä väliaikaisesti tänne oletusarvot,
   ;; muuten leveysvertailu failaa, ja halutaanhan toki palauttaa
   ;; jokin väri myös jutuille, joille sellaista ei ole (vielä!) määritelty.
-  (->> viivat
-       (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
-                       :color (or (:color %) ulkoasu/+normaali-vari+)))
-       (sort-by :width >)
-       (mapv :color)))
+  (if (sequential? viivat)
+    (->> viivat
+        (mapv #(assoc % :width (or (:width %) ulkoasu/+normaali-leveys+)
+                        :color (or (:color %) ulkoasu/+normaali-vari+)))
+        (sort-by :width >)
+        (mapv :color))
+
+    (:color viivat)))
 
 (defmulti
   ^{:private true}
@@ -250,15 +254,18 @@
                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
                (:tekija tarkastus))
         viiva (ulkoasu/tarkastuksen-reitti (valittu-fn? tarkastus) (:ok? tarkastus)
-                                           (:tekija tarkastus))]
+                                           (:tekija tarkastus))
+        selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
+        selite (if ikoni
+                 (assoc selite-teksti :img ikoni)
+                 (assoc selite-teksti :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)))]
     (assoc tarkastus
       :type :tarkastus
       :nimi (or (:nimi tarkastus)
                 (otsikko-tekijalla
                   (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus))
                   tarkastus))
-      :selite {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)
-               :img    ikoni}
+      :selite selite
       :alue (maarittele-feature tarkastus (valittu-fn? tarkastus) ikoni viiva))))
 
 (defmethod asia-kartalle :varustetoteuma [varustetoteuma valittu-fn?]
@@ -323,7 +330,10 @@
 (def tehtavien-nimet
   {"AURAUS JA SOHJONPOISTO"          "Auraus tai sohjonpoisto"
    "SUOLAUS"                         "Suolaus"
-   "LIUOSSUOLAUS"                    "Liuossuolaus"
+   ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
+   ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
+   ;; kokee tietävänsä asian varmaksi.
+   ;;"LIUOSSUOLAUS"                    "Liuossuolaus"
    "PISTEHIEKOITUS"                  "Pistehiekoitus"
    "LINJAHIEKOITUS"                  "Linjahiekoitus"
    "PINNAN TASAUS"                   "Pinnan tasaus"
@@ -409,14 +419,22 @@
       (viimeistele-asetukset valittu?)))
 
 
-
-
+(defn toimenpiteen-selite
+  "Antaa toimenpiteen nimelle sopivan selitteen"
+  [toimenpide]
+  (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
+                    [toimenpide] false)]
+    {:nimi toimenpide :teksti toimenpide
+     :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
 (defmethod asia-kartalle :toteuma [toteuma valittu-fn?]
   ;; Piirretään toteuma sen tieverkolle projisoidusta reitistä
   ;; (ei yksittäisistä reittipisteistä)
   (when-let [reitti (:reitti toteuma)]
     (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))
+          toimenpiteet (if-not (empty? toimenpiteet)
+                         toimenpiteet
+                         [(get-in toteuma [:tehtava :nimi])])
           _ (when (empty? toimenpiteet)
               (warn "Toteuman tehtävät ovat tyhjät! TÄMÄ ON BUGI."))
           nimi (or
@@ -440,6 +458,17 @@
   (+ (- Math/PI)
      (* (/ Math/PI 180)
         kulma)))
+
+(defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
+  (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
+  (assoc aita
+         :type :suljettu-tieosuus
+         :nimi "Suljettu tieosuus"
+         :selite {:teksti "Kaista suljettu"}
+         :alue (maarittele-feature {:sijainti (:geometria aita)}
+                                   (valittu-fn? aita)
+                                   nil
+                                   [ulkoasu/suljettu-tieosuus])))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
@@ -490,6 +519,17 @@
                     (partial valittu-fn? valittu tunniste)
                     (constantly false)))))
 
+(defn kartalla-esitettavaan-muotoon-xf
+  "Palauttaa transducerin, joka muuntaa läpi kulkevat asiat kartalla esitettävään
+  muotoon."
+  ([] (kartalla-esitettavaan-muotoon-xf nil [:id]))
+  ([asia-xf tunniste]
+   (comp (or asia-xf identity)
+         (mapcat pura-geometry-collection)
+         (map #(kartalla-xf % nil (or tunniste [:id])))
+         (filter some?)
+         (filter #(some? (:alue %))))))
+
 (defn kartalla-esitettavaan-muotoon
   "Valitun asian tunniste on defaulttina :id. Voi antaa :id, [:tehtava :id], tai jos
   esitettävän asian ja valitun asian id on eri, [[:id] [:toteuma-id]]"
@@ -502,11 +542,7 @@
          selitteet (volatile! #{})]
      (with-meta
        (into []
-             (comp (or asia-xf identity)
-                   (mapcat pura-geometry-collection)
-                   (map #(kartalla-xf % valittu (or tunniste [:id])))
-                   (filter some?)
-                   (filter #(some? (:alue %)))
+             (comp (kartalla-esitettavaan-muotoon-xf asia-xf tunniste)
                    (geo/laske-extent-xf extent)
                    (tallenna-selitteet-xf selitteet))
              asiat)

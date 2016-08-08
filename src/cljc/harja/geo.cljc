@@ -2,7 +2,8 @@
   "Yleisiä geometria-apureita"
   #?(:clj
      (:import (org.postgresql.geometric PGpoint PGpolygon)
-           (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString GeometryCollection Geometry))))
+              (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
+                           GeometryCollection Geometry MultiPoint))))
 
 #?(:clj
    (defprotocol MuunnaGeometria
@@ -49,6 +50,11 @@
      (pg->clj [^Point p]
        {:type :point
         :coordinates (piste-koordinaatit p)})
+
+     MultiPoint
+     (pg->clj [^MultiPoint mp]
+       {:type :multipoint
+        :coordinates (mapv pg->clj (.getPoints mp))})
 
      PGpoint
      (pg->clj [^PGpoint p]
@@ -108,8 +114,13 @@
      (Point. (first c) (second c))))
 
 #?(:clj
+   (defn geometry-collection [geometriat]
+     (GeometryCollection. (into-array Geometry geometriat))))
+
+#?(:clj
    (defn geometry [g]
      (PGgeometry. g)))
+
 
 #?(:clj
    (defmacro muunna-pg-tulokset
@@ -121,6 +132,13 @@
                       ~@(mapcat (fn [sarake]
                                   [sarake `(pg->clj (get ~tulosrivi ~sarake))])
                                 sarakkeet)))))))
+
+#?(:clj
+   (defn muunna-reitti [{reitti :reitti :as rivi}]
+     (if reitti
+       (assoc rivi
+              :reitti (pg->clj reitti))
+       rivi)))
 
 #?(:clj
    (def wgs84-wkt "PROJCS[\"WGS 84 / Pseudo-Mercator\", \n  GEOGCS[\"WGS 84\", \n    DATUM[\"World Geodetic System 1984\", \n      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n      AUTHORITY[\"EPSG\",\"6326\"]], \n    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n    UNIT[\"degree\", 0.017453292519943295], \n    AXIS[\"Geodetic longitude\", EAST], \n    AXIS[\"Geodetic latitude\", NORTH], \n    AUTHORITY[\"EPSG\",\"4326\"]], \n  PROJECTION[\"Popular Visualisation Pseudo Mercator\"], \n  PARAMETER[\"semi_minor\", 6378137.0], \n  PARAMETER[\"latitude_of_origin\", 0.0], \n  PARAMETER[\"central_meridian\", 0.0], \n  PARAMETER[\"scale_factor\", 1.0], \n  PARAMETER[\"false_easting\", 0.0], \n  PARAMETER[\"false_northing\", 0.0], \n  UNIT[\"m\", 1.0], \n  AXIS[\"Easting\", EAST], \n  AXIS[\"Northing\", NORTH], \n  AUTHORITY[\"EPSG\",\"3857\"]]"))
@@ -203,11 +221,13 @@
     :multiline (mapcat :points (:lines g))
     :polygon (:coordinates g)
     :multipolygon (mapcat :coordinates (:polygons g))
-    :point [(:coordinates g)]
-    :icon [(:coordinates g)]
-    :circle [(:coordinates g)]
+    :point (:coordinates g)
+    :multipoint (:coordinates g)
+    :icon (:coordinates g)
+    :circle (:coordinates g)
     :viiva (:points g)
-    :merkki [(:coordinates g)]))
+    :moniviiva (mapcat :points (:lines g))
+    :merkki (:coordinates g)))
 
 (defn laske-extent-xf
   "Luo transducerin, joka laskee extentiä läpi menevistä geometrioista ja
@@ -266,11 +286,11 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmulti extent (fn [geometry] (:type geometry)))
 
-(defmethod extent :line [{points :points}]
-  (laske-pisteiden-extent points))
+(defmethod extent :line [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defmethod extent :multiline [{lines :lines}]
-  (laske-pisteiden-extent (mapcat :points lines)))
+(defmethod extent :multiline [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
 ;; Kuinka paljon yksittäisen pisteen extentiä laajennetaan joka suuntaan
 (def pisteen-extent-laajennus 2000)
@@ -280,26 +300,32 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
         [x y] c]
     [(- x d) (- y d) (+ x d) (+ y d)]))
 
-(defmethod extent :point [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :point [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :circle [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :circle [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :icon [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :icon [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :merkki [{c :coordinates}]
-  (extent-point-circle c))
+(defmethod extent :merkki [geo]
+  (extent-point-circle (pisteet geo)))
 
-(defmethod extent :viiva [{points :points}]
-  (laske-pisteiden-extent points))
+(defmethod extent :viiva [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defmethod extent :multipolygon [{polygons :polygons}]
-  (laske-pisteiden-extent (mapcat :coordinates polygons)))
+(defmethod extent :moniviiva [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
-(defmethod extent :polygon [{coordinates :coordinates}]
-  (laske-pisteiden-extent coordinates))
+(defmethod extent :multipolygon [geo]
+  (laske-pisteiden-extent (pisteet geo)))
+
+(defmethod extent :polygon [geo]
+  (laske-pisteiden-extent (pisteet geo)))
+
+(defmethod extent :default [geo]
+  (laske-pisteiden-extent (pisteet geo)))
 
 (defn extent-monelle [geometriat]
   (laske-pisteiden-extent (mapcat pisteet geometriat)))
@@ -336,3 +362,21 @@ pisteen [px py]."
   [[x1 y1 x2 y2] [px py]]
   (and (<= x1 px x2)
        (<= y1 py y2)))
+
+(defn etaisyys [[x1 y1] [x2 y2]]
+  (let [dx (- x2 x1)
+        dy (- y2 y1)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn alueen-hypotenuusa
+  "Laskee alueen hypotenuusan, jotta tiedetään minkä kokoista aluetta katsotaan."
+  [{:keys [xmin ymin xmax ymax]}]
+  (let [dx (- xmax xmin)
+        dy (- ymax ymin)]
+    (Math/sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn karkeistustoleranssi
+  "Määrittelee reittien karkeistustoleranssin alueen koon mukaan."
+  [alue]
+  (let [pit (alueen-hypotenuusa alue)]
+    (/ pit 200)))

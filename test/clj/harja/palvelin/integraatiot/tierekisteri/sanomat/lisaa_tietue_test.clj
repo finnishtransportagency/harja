@@ -12,7 +12,7 @@
              :jarjestelma  "FastMekka"
              :organisaatio "Asfaltia Oy"
              :yTunnus      "1234567-8"}
-   :tietue  {:tunniste    "HARJ951547ZK"
+   :tietue  {:tunniste    "HARJ951547"
              :alkupvm     "2015-05-22"
              :loppupvm    nil
              :karttapvm   nil
@@ -28,7 +28,7 @@
                                  :puoli   "1"
                                  :alkupvm nil}}
              :tietolaji   {:tietolajitunniste "tl505"
-                           :arvot             "HARJ951547ZK        2                           HARJ951547ZK          01  "}}
+                           :arvot             "HARJ951547          2                           HARJ951547            01  "}}
 
    :lisatty "2015-05-26+03:00"})
 
@@ -37,7 +37,7 @@
 (deftest tarkista-kutsu
   (let [kutsu-xml (tietue-sanoma/muodosta-kutsu lisattava-testitietue)
         xsd "lisaaTietue.xsd"]
-    (is (xml/validoi +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
+    (is (xml/validi-xml? +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
 
 ; REPL-testausta varten
 #_(defn lisaa-testitietue []

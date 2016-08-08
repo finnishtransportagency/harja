@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:vastaus xmlns:ns2="http://www.solita.fi/harja/tierekisteri/vastaus">
+  <ns2:status>OK</ns2:status>
+  <ns2:tietueotsikot>
+    <ns2:tietueotsikko>
+      <tunniste>string</tunniste>
+      <alkupvm>2006-11-29</alkupvm>
+      <loppupvm>2009-11-03+02:00</loppupvm>
+      <karttapvm>2014-06-27+03:00</karttapvm>
+      <piiri>3</piiri>
+      <kuntoluokka>1</kuntoluokka>
+      <urakka>3004</urakka>
+      <sijainti>
+        <tie>
+          <numero>3</numero>
+          <aet>3</aet>
+          <aosa>3</aosa>
+          <let>3</let>
+          <losa>3</losa>
+          <ajr>3</ajr>
+          <puoli>8</puoli>
+          <tilannepvm>2012-04-25+03:00</tilannepvm>
+        </tie>
+      </sijainti>
+    </ns2:tietueotsikko>
+  </ns2:tietueotsikot>
+</ns2:vastaus>

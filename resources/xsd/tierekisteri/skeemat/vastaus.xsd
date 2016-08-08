@@ -4,6 +4,7 @@
            xmlns:ns1="http://www.solita.fi/harja/tierekisteri/vastauksenStatus"
            xmlns:ns2="http://www.solita.fi/harja/tierekisteri/tietolajikuvaus"
            xmlns:ns3="http://www.solita.fi/harja/tierekisteri/tietue"
+           xmlns:ns4="http://www.solita.fi/harja/tierekisteri/tietueotsikko"
            targetNamespace="http://www.solita.fi/harja/tierekisteri/vastaus"
            xmlns="http://www.solita.fi/harja/tierekisteri/vastaus"
            version="1.0">
@@ -13,6 +14,7 @@
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietolajikuvaus"
                schemaLocation="tietolajikuvaus.xsd"/>
     <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietue" schemaLocation="tietue.xsd"/>
+    <xs:import namespace="http://www.solita.fi/harja/tierekisteri/tietueotsikko" schemaLocation="tietueotsikko.xsd"/>
 
     <xs:element name="vastaus">
         <xs:complexType>
@@ -23,6 +25,7 @@
                 <xs:element minOccurs="0" maxOccurs="1" name="virheet" type="virheet"/>
                 <xs:element minOccurs="0" maxOccurs="1" name="tietolajit" type="tietolajit"/>
                 <xs:element minOccurs="0" maxOccurs="1" name="tietueet" type="tietueet"/>
+                <xs:element minOccurs="0" maxOccurs="1" name="tietueotsikot" type="tietueotsikot"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -30,6 +33,12 @@
     <xs:complexType name="tietueet">
         <xs:sequence>
             <xs:element maxOccurs="unbounded" minOccurs="0" name="tietue" nillable="true" type="ns3:tietue"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="tietueotsikot">
+        <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="tietueotsikko" nillable="true" type="ns4:tietueotsikko"/>
         </xs:sequence>
     </xs:complexType>
 

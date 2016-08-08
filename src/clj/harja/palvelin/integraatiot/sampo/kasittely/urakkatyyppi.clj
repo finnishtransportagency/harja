@@ -12,6 +12,9 @@
     "hoito"))
 
 (defn paattele-urakkatyyppi [tyypit]
+  ;; Ensimmäinen kirjain kertoo yläkategorian (tie, rata, vesi)
+  ;; Toinen kirjain määrittää kuuluuko urakka hoitoon vai ylläpitoon
+  ;; Kolmas kirjain määrittää lopulta palautettavan urakkatyypin (hoito, päällystys, tiemerkintä...)
   (if (< 1 (count tyypit))
     (let [tunniste (subs tyypit 1 2)]
       (case tunniste

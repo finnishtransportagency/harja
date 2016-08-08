@@ -5,7 +5,7 @@
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.ui.modal :refer [modal] :as modal]
+            [harja.ui.modal :as modal]
             [harja.ui.yleiset :refer [tietoja kaksi-palstaa-otsikkoja-ja-arvoja]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]

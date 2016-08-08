@@ -36,12 +36,12 @@
                  [org.clojure/core.cache "0.6.5"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "9.4-1206-jdbc41"]
+                 [org.postgresql/postgresql "9.4.1209"]
                  ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
-                 [clojunauts/postgis-jdbc "2.1.0SVN"]
+                 [webjure/postgis-jdbc "2.1.7"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
-                 [webjure/jeesql "0.3.3"]
+                 [webjure/jeesql "0.4.2"]
 
 
                  ;; GeoTools
@@ -73,8 +73,9 @@
                  [cljs-ajax "0.5.3"]
                  [figwheel "0.5.3"]
 
-                 [reagent "0.5.1" :exclusions [[cljsjs/react :classifier "*"]]]
-                 [cljsjs/react-with-addons "0.13.3-0"]
+                 [reagent "0.6.0-rc" :exclusions [[cljsjs/react :classifier "*"]]]
+                 [cljsjs/react-with-addons "15.2.1-1"]
+                 [cljsjs/react-dom "15.2.1-1" :exclusions [cljsjs/react]]
 
                  [alandipert/storage-atom "1.2.4"]
 
@@ -96,13 +97,7 @@
                  [net.coobird/thumbnailator "0.4.8"]
 
                  ;; JSON -validointikirjastot
-                 [webjure/json-schema "0.6.1"]
-
-                 [org.clojure/test.check "0.9.0"]
-
-                 [prismatic/dommy "1.1.0"]
-
-                 [com.cemerick/clojurescript.test "0.3.3"]
+                 [webjure/json-schema "0.7.2"]
 
                  ;; Slingshot -kirjasto poikkeusten käsittelyyn
                  [slingshot "0.12.2"]
@@ -124,18 +119,15 @@
 
                  [com.cemerick/piggieback "0.2.1"]
                  [figwheel-sidecar "0.5.3"]
+
+                 ;; Performance metriikat
+                 [yleisradio/new-reliquary "1.0.0"]
                  ]
 
-  :dev-dependencies [
-                     [walmartlabs/system-viz "0.1.0"]
 
-                     ;; Testaus
-                     [prismatic/dommy "1.1.0"]
-                     [org.clojure/test.check "0.8.1"]
-                     ]
-
-
-  :profiles {:dev  {:dependencies []
+  :profiles {:dev  {:dependencies [[prismatic/dommy "1.1.0"]
+                                   [cljs-react-test "0.1.4-SNAPSHOT"]
+                                   [org.clojure/test.check "0.9.0"]]
                     :plugins      [[com.solita/lein-test-refresh-gui "0.10.3"]
                                    [test2junit "1.1.0"]]
                     :test2junit-run-ant ~(not jenkinsissa?)}
@@ -161,7 +153,7 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id           "dev"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "test/cljs"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev"]
                 :compiler     {:optimizations :none
                                :source-map    true
                                ;;:preamble ["reagent/react.js"]
@@ -234,7 +226,8 @@
 
 
   ;; Clientin reload ja REPL
-  :figwheel {:server-port 3449}
+  :figwheel {:server-port 3449
+             :reload-clj-files false}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]

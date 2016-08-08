@@ -19,8 +19,7 @@
                                            :let 2,
                                            :losa 4,
                                            :tienumero 4},
-                  :tunnus "A",
-                  :yha-id 3}],
+                  :yha-id 12}],
     :keskimaarainen-vuorokausiliikenne 1000,
     :kohdetyyppi :paikkaus,
     :nykyinen-paallyste 1,
@@ -32,8 +31,7 @@
                              :let 3,
                              :losa 3,
                              :tienumero 3},
-    :tunnus "1",
-    :yha-id 5,
+    :yha-id 1,
     :yllapitoluokka 1}
    {:keskimaarainen-vuorokausiliikenne 1000,
     :kohdetyyppi :paikkaus,
@@ -46,16 +44,14 @@
                              :let 3,
                              :losa 3,
                              :tienumero 3},
-    :tunnus "2",
-    :yha-id 5,
-    :yllapitoluokka 1}
-   ])
+    :yha-id 2,
+    :yllapitoluokka 1}])
 
 (def vkm-data
   {"tieosoitteet" [{"ajorata" 0, "palautusarvo" 1, "osa" 1, "etaisyys" 2, "tie" 20, "tunniste" "kohde-1-alku"}
                    {"ajorata" 0, "palautusarvo" 1, "osa" 3, "etaisyys" 4, "tie" 20, "tunniste" "kohde-1-loppu"}
-                   {"ajorata" 0, "palautusarvo" 1, "osa" 5, "etaisyys" 6, "tie" 20, "tunniste" "alikohde-1-A-alku"}
-                   {"ajorata" 0, "palautusarvo" 1, "osa" 7, "etaisyys" 8, "tie" 20, "tunniste" "alikohde-1-A-loppu"}
+                   {"ajorata" 0, "palautusarvo" 1, "osa" 5, "etaisyys" 6, "tie" 20, "tunniste" "alikohde-1-12-alku"}
+                   {"ajorata" 0, "palautusarvo" 1, "osa" 7, "etaisyys" 8, "tie" 20, "tunniste" "alikohde-1-12-loppu"}
                    {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-2-alku"}
                    {"palautusarvo" 0, "virheteksti" "Tieosoitteelle ei saatu historiatietoa.", "tunniste" "kohde-2-loppu"}]})
 
@@ -93,8 +89,8 @@
 (deftest tarkista-tieosoitteiden-rakentaminen
   (let [oletettu-tulos {:tieosoitteet [{:tunniste "kohde-1-alku", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
                                        {:tunniste "kohde-1-loppu", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
-                                       {:tunniste "alikohde-1-A-alku", :tie 4, :osa 3, :etaisyys 4, :ajorata 1}
-                                       {:tunniste "alikohde-1-A-loppu", :tie 4, :osa 4, :etaisyys 2, :ajorata 1}
+                                       {:tunniste "alikohde-1-12-alku", :tie 4, :osa 3, :etaisyys 4, :ajorata 1}
+                                       {:tunniste "alikohde-1-12-loppu", :tie 4, :osa 4, :etaisyys 2, :ajorata 1}
                                        {:tunniste "kohde-2-alku", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}
                                        {:tunniste "kohde-2-loppu", :tie 3, :osa 3, :etaisyys 3, :ajorata 0}]}
         tieosoitteet (yha/rakenna-tieosoitteet yha-data)]

@@ -33,7 +33,7 @@
             </sijainti>
             <tietolaji>
                 <tietolajitunniste>tl506</tietolajitunniste>
-                <arvot>9987 2 2 0 1 0 1 1 Testiliikennemerkki Omistaja O K 123456789 40</arvot>
+                <arvot>LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA</arvot>
             </tietolaji>
         </ns2:tietue>
     </ns2:tietueet>

@@ -23,10 +23,12 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka.toteumat :as toteumat])
+            [harja.tiedot.urakka.toteumat :as toteumat]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [defc fnc]]
-                   [reagent.ratom :refer [reaction run!]]))
+                   [reagent.ratom :refer [reaction run!]]
+                   [harja.atom :refer [reaction-writable]]))
 
 (defn kokonaishintainen-reitti-klikattu [_ toteuma]
   (popupit/nayta-popup (assoc toteuma :aihe :toteuma-klikattu)))
@@ -105,10 +107,11 @@
    [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
                                         (tiedot/uusi-kokonaishintainen-toteuma))
     {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka)))}]
-   (tee-taulukko)])
+   (tee-taulukko)
+   [yleiset/vihje "Näet työn kartalla klikkaamalla riviä."]])
 
 (defn kokonaishintainen-toteuma-lomake []
-  (let [muokattu (reaction @tiedot/valittu-kokonaishintainen-toteuma)
+  (let [muokattu (reaction-writable @tiedot/valittu-kokonaishintainen-toteuma)
         jarjestelman-lisaama-toteuma? (true? (:jarjestelma @muokattu))
         nelostason-tehtavat (map #(nth % 3) @u/urakan-toimenpiteet-ja-tehtavat)
         toimenpideinstanssit u/urakan-toimenpideinstanssit
@@ -116,11 +119,12 @@
         ;; myös tehtävät haetaan uudelleen..
         tehtavat (reaction (let [valittu-tpi-id (get-in @muokattu [:tehtava :toimenpideinstanssi :id])
                                  tpi-tiedot (some #(when (= valittu-tpi-id (:tpi_id %)) %) @u/urakan-toimenpideinstanssit)
-                                 kaikki-tehtavat @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat]
-                             (into [] (keep (fn [[_ _ t3 t4]]
-                                              (when (= (:koodi t3) (:t3_koodi tpi-tiedot))
-                                                t4))
-                                            kaikki-tehtavat))))]
+                                 kaikki-tehtavat @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
+                                 tpin-tehtavat (into [] (keep (fn [[_ _ t3 t4]]
+                                                                (when (= (:koodi t3) (:t3_koodi tpi-tiedot))
+                                                                  t4))
+                                                              kaikki-tehtavat))]
+                             (sort-by :nimi tpin-tehtavat)))]
     (fnc []
          [:div
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
@@ -130,7 +134,7 @@
                        "Muokkaa kokonaishintaista toteumaa"
                        "Luo uusi kokonaishintainen toteuma")
             :muokkaa! #(do (reset! muokattu %))
-            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka))
+            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))
             :footer [napit/palvelinkutsu-nappi
                      "Tallenna toteuma"
                      #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)

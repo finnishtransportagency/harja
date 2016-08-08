@@ -10,23 +10,25 @@
             [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
             [harja.kyselyt.paikkaus :as q]
             [harja.palvelin.palvelut.yha :as yha]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.kyselyt.paallystys :as paallystys-q]
             [cheshire.core :as cheshire]
             [harja.domain.skeema :as skeema]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
 (defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id]}]
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (let [vastaus (into []
                       (comp
                         (map #(konv/string-poluista->keyword % [[:tila] [:paatos]]))
                         (map #(assoc % :kohdeosat
                                        (into []
-                                             yllapitokohteet/kohdeosa-xf
+                                             paallystys-q/kohdeosa-xf
                                              (yllapitokohteet-q/hae-urakan-yllapitokohteen-yllapitokohdeosat
-                                               db urakka-id sopimus-id (:paikkauskohde-id %))))))
+                                               db {:urakka urakka-id
+                                                   :sopimus sopimus-id
+                                                   :yllapitokohde (:paikkauskohde-id %)})))))
                       (q/hae-urakan-paikkausilmoitukset db urakka-id sopimus-id))]
     (log/debug "Paikkaustoteumat saatu: " (pr-str (map :nimi vastaus)))
     vastaus))
@@ -34,8 +36,9 @@
 
 (defn hae-urakan-paikkausilmoitus-paikkauskohteella [db user {:keys [urakka-id sopimus-id paikkauskohde-id]}]
   (log/debug "Haetaan urakan paikkausilmoitus, jonka paikkauskohde-id " paikkauskohde-id ". Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
-  (oikeudet/lue oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
-  (let [kohdetiedot (first (yllapitokohteet-q/hae-urakan-yllapitokohde db urakka-id paikkauskohde-id))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
+  (let [;; FIXME Voisi refactoroida käyttämään pitkälti samaa mallia kuin mitä päällystyspuolella on tehty.
+        kohdetiedot (first (q/hae-urakan-yllapitokohde db urakka-id paikkauskohde-id))
         _ (log/debug (pr-str kohdetiedot))
         kokonaishinta (reduce + (keep kohdetiedot [:sopimuksen-mukaiset-tyot
                                                    :arvonvahennykset
@@ -148,7 +151,7 @@
              ". Urakka-id " urakka-id
              ", sopimus-id: " sopimus-id
              ", paikkauskohde-id:" (:paikkauskohde-id paikkausilmoitus))
-  (oikeudet/kirjoita oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
   (skeema/validoi paikkausilmoitus-domain/+paikkausilmoitus+ (:ilmoitustiedot paikkausilmoitus))
 
   (jdbc/with-db-transaction [c db]

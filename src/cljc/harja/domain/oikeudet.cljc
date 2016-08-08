@@ -45,6 +45,13 @@
       (oikeudet "W+") :organisaatio
       (oikeudet "W") :urakka)))
 
+(defn- on-nimetty-oikeus? [nimi kayttooikeus rooli]
+  (let [oikeudet (roolin-oikeudet kayttooikeus rooli)]
+    (cond
+      (oikeudet (str nimi "*")) :kaikki
+      (oikeudet (str nimi "+")) :organisaatio
+      (oikeudet nimi) :urakka)))
+
 (defn- on-oikeus-urakkaan? [oikeus-pred urakka-id organisaatio-id organisaation-urakka?
                             {rooli :rooli
                              roolin-urakka-id :urakka-id
@@ -74,12 +81,13 @@
       nil)))
 
 (defn- on-oikeus?
-  "Tarkistaa :luku tai :kirjoitus tyyppisen oikeuden"
+  "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
                                    urakkaroolit organisaatioroolit] :as kayttaja}]
   (let [oikeus-pred (partial (case tyyppi
                                :luku on-lukuoikeus?
-                               :kirjoitus on-kirjoitusoikeus?)
+                               :kirjoitus on-kirjoitusoikeus?
+                               (partial on-nimetty-oikeus? tyyppi))
                              oikeus)
         kaikki-urakkaroolit (apply concat (vals urakkaroolit))
         kaikki-organisaatioroolit (apply concat (vals organisaatioroolit))
@@ -116,13 +124,12 @@
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"
-  [tyyppi oikeus urakka-id kayttaja]
-  (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
-      (let [roolit-joilla-oikeus (get-in oikeus [:muu tyyppi])]
-        (and (not (empty? roolit-joilla-oikeus))
-             (or (roolit/roolissa? kayttaja roolit-joilla-oikeus)
-                 (and urakka-id
-                      (roolit/rooli-urakassa? kayttaja roolit-joilla-oikeus urakka-id)))))))
+  #?(:cljs
+     ([tyyppi oikeus urakka-id]
+      (on-muu-oikeus? tyyppi oikeus urakka-id @istunto/kayttaja)))
+  ([tyyppi oikeus urakka-id kayttaja]
+   (on-oikeus? tyyppi oikeus urakka-id kayttaja)))
+
 (defn voi-lukea?
   #?(:cljs
      ([oikeus]
@@ -146,9 +153,9 @@
        (on-oikeus? :kirjoitus oikeus urakka-id kayttaja))))
 
 #?(:clj
-   (defn lue
+   (defn vaadi-lukuoikeus
      ([oikeus kayttaja]
-      (lue oikeus kayttaja nil))
+      (vaadi-lukuoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
       (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
@@ -158,9 +165,9 @@
                         (str " urakassa " urakka-id)))))))))
 
 #?(:clj
-   (defn kirjoita
+   (defn vaadi-kirjoitusoikeus
      ([oikeus kayttaja]
-      (kirjoita oikeus kayttaja nil))
+      (vaadi-kirjoitusoikeus oikeus kayttaja nil))
      ([oikeus kayttaja urakka-id]
       (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
@@ -185,3 +192,6 @@
 
 (defn roolin-kuvaus [rooli]
   (:kuvaus (get roolit rooli)))
+
+(defn kayttajan-urakat [{urakkaroolit :urakkaroolit}]
+  (into #{} (keys urakkaroolit)))

@@ -16,7 +16,8 @@
 
             [harja.views.kartta :as kartta]
             [harja.views.urakka :as urakka]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.ui.komponentti :as komp])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
@@ -53,12 +54,12 @@
                              :nayta-ryhmat   [:kaynnissa :paattyneet]
                              :ryhmittely     (let [nyt (pvm/nyt)]
                                                #(if (pvm/jalkeen? nyt (:loppupvm %))
-                                                  :paattyneet
-                                                  :kaynnissa))
+                                                 :paattyneet
+                                                 :kaynnissa))
                              :ryhman-otsikko #(case %
-                                                :kaynnissa "Käynnissä olevat urakat"
-                                                :paattyneet "Päättyneet urakat")
-                             :on-select      nav/valitse-urakka
+                                               :kaynnissa "Käynnissä olevat urakat"
+                                               :paattyneet "Päättyneet urakat")
+                             :on-select      nav/valitse-urakka!
                              :vinkki         #(when (empty? suodatettu-urakkalista)
                                                "Hakuehdoilla ei löytynyt urakoita")
                              :aputeksti      "Kirjoita urakan nimi tähän"}
@@ -71,12 +72,15 @@
    Jos hallintayksikkö on valittu, mutta urakkaa ei, palauttaa urakanvalintakomponentin
    Jos molemmat on valittu, palauttaa nil"
   []
-  (let [v-hal @nav/valittu-hallintayksikko
-        v-ur @nav/valittu-urakka]
-    (if-not v-hal
-      [valitse-hallintayksikko]
-      (when-not v-ur
-        [valitse-urakka]))))
+  (komp/luo
+    {:component-did-mount (fn [& _] (kartta/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))}
+    (fn []
+      (let [v-hal @nav/valittu-hallintayksikko
+           v-ur @nav/valittu-urakka]
+       (if-not v-hal
+         [valitse-hallintayksikko]
+         (when-not v-ur
+           [valitse-urakka]))))))
 
 (defn urakat
   "Urakan koko sisältö."

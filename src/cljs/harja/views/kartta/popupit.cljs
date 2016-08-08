@@ -13,7 +13,8 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.ui.modal :as modal]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.tierekisteri :as tierekisteri]))
 
 (def klikattu-tyokone (atom nil))
 
@@ -122,6 +123,15 @@
                                           "Takaisin tilannekuvaan"]}
                                [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}}))))
 
+(defmethod nayta-popup :suljettu-tieosuus-klikattu [tapahtuma]
+  (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
+                       (tee-arvolistaus-popup "Suljettu tieosuus"
+                                              [["Ylläpitokohde" (str (:yllapitokohteen-nimi tapahtuma) " (" (:yllapitokohteen-numero tapahtuma) ")")]
+                                               ["Aika" (pvm/pvm-aika(:aika tapahtuma))]
+                                               ["Osoite" (tierekisteri/tierekisteriosoite-tekstina tapahtuma {:teksti-tie? false})]
+                                               ["Kaistat" (clojure.string/join ", " (map str (:kaistat tapahtuma)))]
+                                               ["Ajoradat" (clojure.string/join ", " (map str (:ajoradat tapahtuma)))]])))
+
 (defmethod nayta-popup :tyokone-klikattu [tapahtuma]
   (reset! klikattu-tyokone (:tyokoneid tapahtuma))
   (kartta/keskita-kartta-pisteeseen (:sijainti tapahtuma))
@@ -179,11 +189,11 @@
                              paattynyt (:paattynyt tapahtuma)
                              kasitelty (:kasitelty tapahtuma)]
                          (tee-arvolistaus-popup "Turvallisuuspoikkeama"
-                                                [(when (and tapahtunut paattynyt)
-                                                   ["Tapahtunut" (pvm/pvm-aika tapahtunut) " - " (pvm/pvm-aika paattynyt)])
+                                                [(when tapahtunut
+                                                   ["Tapahtunut" (pvm/pvm-aika tapahtunut)])
                                                  (when kasitelty
                                                    ["Käsitelty" (pvm/pvm-aika kasitelty)])
-                                                 ["Työ\u00ADtehtävä" (turpodomain/kuvaile-tyontekijan-ammatti tapahtuma) ", " (:tyotehtava tapahtuma)]
+                                                 ["Työn\u00ADtekijä" (turpodomain/kuvaile-tyontekijan-ammatti tapahtuma)]
                                                  ["Vammat" (str/join ", " (map turpodomain/vammat (:vammat tapahtuma)))]
                                                  ["Sairaala\u00ADvuorokaudet" (:sairaalavuorokaudet tapahtuma)]
                                                  ["Sairaus\u00ADpoissaolo\u00ADpäivät" (:sairauspoissaolopaivat tapahtuma)]
@@ -200,12 +210,12 @@
                          (tee-arvolistaus-popup "Päällystyskohde"
                                                 [["Nimi" (get-in tapahtuma [:kohde :nimi])]
                                                  ["Tie\u00ADrekisteri\u00ADkohde" (get-in tapahtuma [:kohdeosa :nimi])]
-                                                 ["Osoite" (yleiset/tierekisteriosoite
-                                                             (get-in tapahtuma [:tr :numero])
-                                                             (get-in tapahtuma [:tr :alkuosa])
-                                                             (get-in tapahtuma [:tr :alkuetaisyys])
-                                                             (get-in tapahtuma [:tr :loppuosa])
-                                                             (get-in tapahtuma [:tr :loppuetaisyys]))]
+                                                 ["Osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                                             {:tr-numero (get-in tapahtuma [:tr :numero])
+                                                              :tr-alkuosa (get-in tapahtuma [:tr :alkuosa])
+                                                              :tr-alkuetaisyys (get-in tapahtuma [:tr :alkuetaisyys])
+                                                              :tr-loppuosa (get-in tapahtuma [:tr :loppuosa])
+                                                              :tr-loppuetaisyys (get-in tapahtuma [:tr :loppuetaisyys])})]
                                                  ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paallystysilmoitus :tila]))]
@@ -228,12 +238,12 @@
                          (tee-arvolistaus-popup "Paikkauskohde"
                                                 [["Nimi" (get-in tapahtuma [:kohde :nimi])]
                                                  ["Tie\u00ADrekisteri\u00ADkohde" (get-in tapahtuma [:kohdeosa :nimi])]
-                                                 ["Osoite" (yleiset/tierekisteriosoite
-                                                             (get-in tapahtuma [:tr :numero])
-                                                             (get-in tapahtuma [:tr :alkuosa])
-                                                             (get-in tapahtuma [:tr :alkuetaisyys])
-                                                             (get-in tapahtuma [:tr :loppuosa])
-                                                             (get-in tapahtuma [:tr :loppuetaisyys]))]
+                                                 ["Osoite" (tierekisteri/tierekisteriosoite-tekstina
+                                                             {:tr-numero (get-in tapahtuma [:tr :numero])
+                                                              :tr-alkuosa (get-in tapahtuma [:tr :alkuosa])
+                                                              :tr-alkuetaisyys (get-in tapahtuma [:tr :alkuetaisyys])
+                                                              :tr-loppuosa (get-in tapahtuma [:tr :loppuosa])
+                                                              :tr-loppuetaisyys (get-in tapahtuma [:tr :loppuetaisyys])})]
                                                  ["Nykyinen päällyste: " (paallystys-ja-paikkaus/hae-paallyste-koodilla (:nykyinen-paallyste tapahtuma))]
                                                  ["Toimenpide" (:toimenpide tapahtuma)]
                                                  ["Tila" (yllapitokohteet/kuvaile-kohteen-tila (get-in tapahtuma [:paikkausilmoitus :tila]))]

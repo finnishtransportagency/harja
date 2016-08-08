@@ -44,19 +44,40 @@ button {
     border-left: 1px solid rgb(40,40,40);
     position: absolute;
     color: white;
+    font-size: 23px;
     font-weight: normal;
     padding-left: 10px;
-    left: 500px;
+    left: 480px;
 }
 
 .ylapalkki .hoitoluokka {
-    top: 0;
     position: absolute;
     border-left: 1px solid rgb(40,40,40);
-    left: 700px;
+    top: 0;
+    left: 680px;
     padding-left: 10px;
     color: white;
-    width: 50px;
+    width: 100px;
+    height: 70px;
+    line-height: 50px;
+}
+
+.ylapalkki .hoitoluokka .soratiehoitoluokka {
+    display: block;
+    padding-top: 0;
+    width: 190px;
+    top: 0;
+    font-size: 15px;
+    height: 19px;
+}
+
+.ylapalkki .hoitoluokka .talvihoitoluokka {
+    display: block;
+    padding-top: 0;
+    width: 190px;
+    top: 0;
+    font-size: 15px;
+    height: 15px;
 }
 
 .ylapalkki-button {
@@ -80,15 +101,19 @@ button {
 
 
 .ylapalkki .infonappi {
-    left: 410px;
+    left: 430px;
 }
 
 .ylapalkki .kiinteistorajat {
-    left: 350px;
+    left: 320px;
+}
+
+.ylapalkki .ortokuva {
+    left: 380px;
 }
 
 .keskityspainike {
-    left: 290px;
+    left: 270px;
 }
 
 /* ---------- kartta ----------*/
@@ -106,7 +131,7 @@ button {
     color: white;
     margin: 0;
     padding: 0;
-    width: 50px;
+    width: 45px;
     font-size: 2em;
     height: 70px;
     outline-width: 0;
@@ -284,7 +309,7 @@ button {
     background-color: rgb(208,0,5);
 }
 
-@keyframes nappula-flash {  
+@keyframes nappula-flash {
     0% { background-color: red; }
     100%   { background-color: #000; }
 }
@@ -364,6 +389,14 @@ button {
     text-align: center;
 }
 
+.tarkastusajon-luonti-dialog nav.disabled {
+    color: gray;
+}
+
+.tarkastusajon-luonti-dialog nav.disabled:after {
+    content: " (tulossa)";
+}
+
 /* ---------- havaintolomake ---------- */
 .havaintolomake-container {
     position: absolute;
@@ -441,7 +474,7 @@ button {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    
+
     font-size: 18px;
     width: 190px;
     height: 27px;

@@ -32,16 +32,20 @@
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+(def nykytilanne false)
+(def alku (c/to-date (t/local-date 2000 1 1)))
+(def loppu (c/to-date (t/local-date 2030 1 1)))
+(def urakoitsija nil)
+(def urakkatyyppi :hoito)
+
 (def parametrit-laaja-historia
-  {:hallintayksikko nil
-   :urakka-id       nil
-   :urakoitsija     nil
-   :urakkatyyppi    :hoito
-   :nykytilanne?    false
+  {:urakoitsija     urakoitsija
+   :urakkatyyppi    urakkatyyppi
+   :nykytilanne?    nykytilanne
    :alue            {:xmin -550093.049087613, :ymin 6372322.595126259,
                      :xmax 1527526.529326106, :ymax 7870243.751025201} ; Koko Suomi
-   :alku            (c/to-date (t/local-date 2000 1 1))
-   :loppu           (c/to-date (t/local-date 2030 1 1))
+   :alku            alku
+   :loppu           loppu
    :yllapito        {tk/paallystys true
                      tk/paikkaus   true}
    :ilmoitukset     {:tyypit {tk/tpp true
@@ -63,7 +67,6 @@
                      tk/lumivallien-madaltaminen        true
                      tk/sulamisveden-haittojen-torjunta true
                      tk/kelintarkastus                  true
-                     tk/liuossuolaus                    true
                      tk/aurausviitoitus-ja-kinostimet   true
                      tk/lumensiirto                     true
                      tk/paannejaan-poisto               true
@@ -92,9 +95,21 @@
                             (keys (ryhma parametrit)))))
 
 (defn hae-tk [parametrit]
-  (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :hae-tilannekuvaan +kayttaja-jvh+
-                  (tk/valitut-suodattimet parametrit)))
+  (let [urakat (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakat-tilannekuvaan +kayttaja-jvh+
+                               {:nykytilanne? (:nykytilanne? parametrit)
+                                :alku         (:alku parametrit)
+                                :loppu        (:loppu parametrit)
+                                :urakoitsija  (:urakoitsija parametrit)
+                                :urakkatyyppi (:urakkatyyppi parametrit)})
+        urakat (into #{} (mapcat
+                           (fn [aluekokonaisuus]
+                             (map :id (:urakat aluekokonaisuus)))
+                           urakat))]
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :hae-tilannekuvaan +kayttaja-jvh+
+                   (tk/valitut-suodattimet (assoc parametrit
+                                             :urakat urakat)))))
 
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk parametrit-laaja-historia)]

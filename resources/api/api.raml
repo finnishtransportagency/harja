@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 0.1.5
+version: 0.2.0
 baseUri: https://harja/api/{version}
 protocols: [HTTPS]
 mediaType: application/json
@@ -19,7 +19,6 @@ schemas:
  - siltatarkastuksen-kirjaus-request.schema: !include schemas/siltatarkastuksen-kirjaus-request.schema.json
  - laatupoikkeaman-kirjaus: !include schemas/laatupoikkeaman-kirjaus-request.schema.json
  - varusteiden-haku-response: !include schemas/varusteiden-haku-response.schema.json
- - varusteen-haku-response: !include schemas/varusteen-haku-response.schema.json
  - varusteen-lisays-request: !include schemas/varusteen-lisays-request.schema.json
  - varusteen-paivitys-request: !include schemas/varusteen-paivitys-request.schema.json
  - varusteen-poisto-request: !include schemas/varusteen-poisto-request.schema.json
@@ -34,6 +33,11 @@ schemas:
  - tielupien-haku-request: !include schemas/tielupien-haku-request.schema.json
  - tielupien-haku-response: !include schemas/tielupien-haku-response.schema.json
  - tietyoilmoituksen-kirjaus-request: !include schemas/tietyoilmoituksen-kirjaus-request.schema.json
+ - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
+ - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
+ - paallystysilmoituksen-kirjaus-request: !include schemas/paallystysilmoituksen-kirjaus-request.schema.json
+ - suljetun-tieosuuden-kirjaus-request: !include schemas/suljetun-tieosuuden-kirjaus-request.schema.json
+ - suljetun-tieosuuden-poisto-request: !include schemas/suljetun-tieosuuden-poisto-request.schema.json
 
 securitySchemes:
  - basic:
@@ -153,7 +157,7 @@ documentation:
       /varuste:
         post:
           is: [secured]
-          description: Varustetoteuman kirjaaminen urakalle. Huom. varusteen tiedot lähetetään Tierekisteriin. Tätä varten varusteen tietolajin kuvaus täytyy hakea käyttäen Harja API:n varusterajapintaa.
+          description: Varustetoteuman kirjaaminen urakalle. Rajapinnan kautta voidaan kirjata työsuoritteet sekä varusteen tekniset tiedot, jotka välitetään Tierekisteriin. Varusteen teknisten tietojen kuvaus, eli yksittäisen tietolajin kuvaus, kuten esim. 506 liikennemerkit, täytyy hakea käyttäen varuste rajapinnan tietolaji rajapintaa. Varustetoteuman kautta voidaan kirjata Harjaan & Tierekisteriin varusteiden lisäykset, muutokset, poistamiset sekä tarkastukset. Vastauksena palautuu Harjan luomat livitunnisteet lisäystoimenpiteille samassa järjestyksessä kuin ne ovat pyynnössä. Jos sama pyyntö lähetetään uudelleen, toimenpiteitä ei kirjata uudestaan ja Tierekisteriin lähetetään vain ne toimenpiteet, joiden lähetys mahdollisesti epäonnistui aiemmin. Myös tällöin kutsujalle palautuu lisäystoimenpiteiden tunnisteet.
           body:
             application/json:
               example: !include examples/varustetoteuman-kirjaus-request.json
@@ -451,13 +455,107 @@ documentation:
                 application/json:
                   example: !include examples/virhe-response.json
                   schema: virhe-response
+    /yllapitokohteet:
+        description: Ylläpitourakoiden kohteiden hallinta.
+        get:
+          is: [secured]
+          description: Palauttaa listan urakan ylläpitokohteista. Tiedot tarvitaan, jotta voidana kirjata esim. päällystysilmoitus päällystyskohteelle
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/urakan-yllapitokohteiden-haku-response.json
+                  schema: yllapitokohteiden-haku-response
+            400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+            500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+        /{kohdeid}:
+          description: Yksittäisen ylläpitokohteen hallinta
+          /paallystysilmoitus:
+            post:
+              is: [secured]
+              description: Päällystysilmoituksen kirjaus. Päällystysilmoituksen kautta on mahdollista päivittää varsinaisen kohteen sijaintia sekä alikohteita. Alikohteet päivitetään aina vanhojen päälle. Alustalle tehdyt toimepiteet sekä alikohteet täytyvät aina osua pääkohteen sisään. Sen lisäksi alikohteiden osoitteisiin ei saa jäädä välejä eivätkä ne saa mennä päällekkäin.
+              body:
+                application/json:
+                  example: !include examples/ilmoitustoimenpiteen-kirjaaminen-request.json
+                  schema: paallystysilmoituksen-kirjaus-request
+              responses:
+                200:
+                  body:
+                    application/json:
+                     example: !include examples/onnistunut-kirjaus-response.json
+                     schema: kirjaus-response
+                500:
+                  body:
+                    application/json:
+                      example: !include examples/virhe-response.json
+                      schema: virhe-response
+                400:
+                  body:
+                   application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+          /suljettu-tieosuus:
+            post:
+              is: [secured]
+              description: Suljetun tieosuuden kirjaaminen. Uusi kirjaus tehdään aina, kun tieosuus suljetaan tai kun sen sijainti muuttuu. Osuuden sijanti määräytyy kohteen alkuun ja loppuun asetettujen liikenneohjausaitojen sijaintien perusteella.
+              body:
+                application/json:
+                  example: !include examples/suljetun-tieosuuden-kirjaus-request.json
+                  schema: suljetun-tieosuuden-kirjaus-request
+              responses:
+                200:
+                  body:
+                    application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                500:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+                400:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+            delete:
+              is: [secured]
+              description: Suljetun tieosuuden poistaminen. Poisto tehdään, kun liikenteenohjausaidat on poistettu.
+              body:
+                application/json:
+                  example: !include examples/suljetun-tieosuuden-poisto-request.json
+                  schema: suljetun-tieosuuden-poisto-request
+              responses:
+                200:
+                  body:
+                    application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                500:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
+                400:
+                  body:
+                    application/json:
+                     example: !include examples/virhe-response.json
+                     schema: virhe-response
 /varusteet:
   is: [secured]
   /haku:
     description: Varusteiden massahaku.
     get:
       is: [secured]
-      description: Palauttaa kaikki varusteet annetulla tievälillä.
+      description: Hakee Tierekisteristä kaikki annetun tietolajin tietueet, jotka löytyvät annetulla tievälillä..
       queryParameters:
         tunniste:
           description: Haettavan tietolajin tunniste
@@ -520,7 +618,7 @@ documentation:
               example: !include examples/virhe-response.json
               schema: virhe-response
   /tietolaji:
-    description: Tietolajin haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään lisättäessä ja päivitettäessä varusteiden ja laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
+    description: Tietolajin haku. Voidaan käyttää hakemaan yksittäisen tietolajin uusimmat tiedot käyttäen tietolajin tunnusta (esim. "tl506" = liikennemerkki). Mikäli tietolajia ei anneta, palautetaan kaikki tietolajit. Tietolajeja käytetään kuvaamaan yksittäisen tietueen tekniset tiedot ja sitä tarvitaan lisättäessä, päivitettäessä sekä näyttäessä varusteiden sekä laitteiden ominaisuuksia. Tietolajin arvot esitetään tunniste arvo-pareina esim. yksittäiselle laitteelle.
     get:
       queryParameters:
         tunniste:
@@ -570,8 +668,8 @@ documentation:
         200:
           body:
             application/json:
-              example: !include examples/varusteen-haku-response.json
-              schema: varusteen-haku-response
+              example: !include examples/varusteiden-haku-response.json
+              schema: varusteiden-haku-response
         400:
           body:
             application/json:
@@ -657,7 +755,7 @@ documentation:
   /tyokone:
     post:
       is: [secured]
-      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mieluusti 5-15 sekunnin intervalilla ja otoskoolla.
+      description: Työkoneen seurantatiedon kirjaus. Työkoneelle voidaan kirjata sijainti sekä vaihtoehtoisesti suoritettava työtehtävä. Sijantitiedot lähetetään maksimissaan 5 sekunnin välein ja mahdollisuuksien mukaan mieluusti 5-15 sekunnin intervalilla ja otoskoolla. Ylläpito-urakoissa seuraavat kirjattavat työkone-tyypit näytetään Tilannekuvassa Ylläpito-osiossa paaasfalttilevitin, remix-laite, sekoitus-ja-stabilointijyrsin, tma-laite.
       body:
         application/json:
           example: !include examples/tyokoneenseurannan-kirjaus-request.json

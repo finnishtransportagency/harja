@@ -5,6 +5,17 @@
 .harja-checkbox-sisalto {
     cursor: pointer;
     display: inline-block;
+    margin-bottom: 5px;
+
+    > .harja-checkbox-column:nth-child(1) {
+        float: left;
+        width: 25px;
+    }
+
+    > .harja-checkbox-column:nth-child(2) {
+        width: calc(100% - 25px);
+        float: left;
+    }
 }
 
 .harja-checkbox-laatikko {
@@ -20,14 +31,6 @@
     background: -o-linear-gradient(-45deg, #cccccc 0%,#ffffff 100%); /* Opera 11.10+ */
     background: -ms-linear-gradient(-45deg, #cccccc 0%,#ffffff 100%); /* IE10+ */
     background: linear-gradient(135deg, #cccccc 0%,#ffffff 100%); /* W3C */
-}
-
-.harja-checkbox-teksti {
-    display: inline-block;
-    padding-left: 4px;
-    position: relative;
-    vertical-align: middle;
-    top: -5px;
 }
 
 /* Checkbox-tilat */

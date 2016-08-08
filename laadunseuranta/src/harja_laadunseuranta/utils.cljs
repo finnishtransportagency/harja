@@ -9,7 +9,7 @@
 
 (defn- tuettu-selain? []
   (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
-        [#".*android.*" #".*chrome.*" #".*ipad.*"]))
+        [#".*android.*" #".*chrome.*" #".*ipad.*" #".*iphone.*"]))
 
 (defn- flip [atomi]
   (swap! atomi not))

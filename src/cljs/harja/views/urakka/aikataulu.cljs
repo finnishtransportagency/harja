@@ -16,9 +16,12 @@
             [harja.ui.modal :as modal]
             [harja.ui.lomake :as lomake]
             [cljs-time.core :as t]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
+
+(def tiemerkinta-oltava-valmiina-raja (t/days 14))
 
 (defn valmis-tiemerkintaan [kohde-id urakka-id]
   (let [valmis-tiemerkintaan-lomake (atom nil)
@@ -125,12 +128,23 @@
               :muokattava? paallystysurakoitsijana?})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? paallystysurakoitsijana?
-            :komponentti (fn [rivi]
+            :komponentti (fn [rivi {:keys [muokataan?]}]
                            (if (:valmis-tiemerkintaan rivi)
-                             [:span (pvm/pvm-aika-opt (:valmis-tiemerkintaan rivi))]
+                             [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
                              (if (= (:nakyma optiot) :paallystys)
-                               [valmis-tiemerkintaan (:id rivi) urakka-id]
+                               ;; Voi merkitä valmiiksi tiemerkintään vain päällystysurakassa
+                               ;; Ei kuitenkaan jos gridi on muokkaustilassa, sillä päivämääränä asettaminen
+                               ;; dialogista resetoi muokkaustilan
+                               (if muokataan?
+                                 [:span]
+                                 [valmis-tiemerkintaan (:id rivi) urakka-id])
                                [:span "Ei"])))}
+           {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
+            :leveys 6 :nimi :aikataulu-tiemerkinta-valmis-viimeistaan :tyyppi :pvm
+            :muokattava? (constantly false)
+            :hae (fn [rivi] (let [valmis-tiemerkintaan (:valmis-tiemerkintaan rivi)]
+                              (when (some? valmis-tiemerkintaan)
+                                (fmt/pvm (t/plus valmis-tiemerkintaan tiemerkinta-oltava-valmiina-raja)))))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]

@@ -3,14 +3,11 @@
 
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
-
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
             [harja.kyselyt.tarkastukset :as tarkastukset]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
-            [harja.kyselyt.urakat :as urakat-q]
 
             [harja.kyselyt.konversio :as konv]
             [harja.domain.roolit :as roolit]
@@ -24,8 +21,8 @@
 
             [harja.ui.kartta.esitettavat-asiat :as esitettavat-asiat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.pvm :as pvm]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.core.async :as async]))
 
 (def laatupoikkeama-xf
   (comp
@@ -61,30 +58,29 @@
              tarkastus)))))
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
-  (oikeudet/lue oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [tietokannasta-nostetut
-                                  ((case listaus
-                                     :omat laatupoikkeamat/hae-omat-laatupoikkeamat
-                                     :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
-                                     :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
-                                     :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat)
-                                    db
-                                    {:urakka urakka-id
-                                     :alku (konv/sql-timestamp alku)
-                                     :loppu (konv/sql-timestamp loppu)
-                                     :kayttaja (:id user)})
-                                  uniikit (map (fn [[_ vektori]] (first vektori)) (group-by :id tietokannasta-nostetut))
-                                  tulos (into [] laatupoikkeama-xf uniikit)]
-                              tulos)))
-
+    (let [tietokannasta-nostetut
+          ((case listaus
+             :omat laatupoikkeamat/hae-omat-laatupoikkeamat
+             :kaikki laatupoikkeamat/hae-kaikki-laatupoikkeamat
+             :selvitys laatupoikkeamat/hae-selvitysta-odottavat-laatupoikkeamat
+             :kasitellyt laatupoikkeamat/hae-kasitellyt-laatupoikkeamat)
+           db
+           {:urakka urakka-id
+            :alku (konv/sql-timestamp alku)
+            :loppu (konv/sql-timestamp loppu)
+            :kayttaja (:id user)})
+          uniikit (map (fn [[_ vektori]] (first vektori)) (group-by :id tietokannasta-nostetut))
+          tulos (into [] laatupoikkeama-xf uniikit)]
+      tulos)))
 
 (defn hae-laatupoikkeaman-tiedot
   "Hakee yhden laatupoikkeaman kaiken tiedon muokkausnäkymää varten: laatupoikkeaman perustiedot, kommentit ja liitteet, päätös ja sanktiot.
    Ottaa urakka-id:n ja laatupoikkeama-id:n. Urakka id:tä käytetään oikeustarkistukseen, laatupoikkeaman tulee olla annetun urakan
    toimenpiteeseen kytketty."
   [db user urakka-id laatupoikkeama-id]
-  (oikeudet/lue oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (let [laatupoikkeama (first (into []
                               laatupoikkeama-xf
                               (laatupoikkeamat/hae-laatupoikkeaman-tiedot db urakka-id laatupoikkeama-id)))]
@@ -112,7 +108,7 @@
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu]}]
 
-  (oikeudet/lue oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   (log/debug "Hae sanktiot (" urakka-id alku loppu ")")
   (into []
         (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
@@ -148,7 +144,7 @@
 
 (defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
-  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
     (let [osapuoli (roolit/osapuoli user urakka)
           laatupoikkeama (assoc laatupoikkeama
@@ -215,7 +211,7 @@
    (hae-urakan-tarkastukset db user parametrit false 501))
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi vain-laadunalitukset?]}
     palauta-reitti? max-rivimaara]
-   (oikeudet/lue oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
+   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
    (into []
          (comp tarkastus-xf
                (if palauta-reitti?
@@ -231,13 +227,13 @@
           max-rivimaara))))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
-  (oikeudet/lue oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (let [tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id)))]
     (assoc tarkastus
            :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id)))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
-  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
       (let [uusi? (nil? (:id tarkastus))
@@ -272,7 +268,7 @@
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
   (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
-  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-sanktiot user urakka)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
 
   (jdbc/with-db-transaction [c db]
     (let [;; FIXME: Suorasanktiolle pyydetty/annettu flagit?
@@ -297,33 +293,55 @@
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
-  (let [hakuparametrit (some-> parametrit (get "tr") transit/lue-transit-string)
-        valittu (:valittu hakuparametrit)
-        tarkastukset (hae-urakan-tarkastukset db user hakuparametrit true Long/MAX_VALUE)]
+  (let [{:keys [vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
+        (some-> parametrit (get "tr") transit/lue-transit-string)
+        [x1 y1 x2 y2] extent
+        alue {:xmin x1 :ymin y1 :xmax x2 :ymax y2}
+        toleranssi (geo/karkeistustoleranssi alue)
+        ch (async/chan 32
+                       (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                             (map #(konv/string->keyword % :tyyppi :tekija))
+                             (map #(assoc %
+                                          :tyyppi-kartalla :tarkastus
+                                          :sijainti (:reitti %)))
+                             (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
+    (async/thread
+      (try
+        (tarkastukset/hae-urakan-tarkastukset-kartalle
+         db ch
+         (merge alue
+                {:urakka urakka-id
+                 :toleranssi toleranssi
+                 :alku alkupvm :loppu loppupvm
+                 :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
+                 :rajaa_tyypilla (some? tyyppi) :tyyppi tyyppi
+                 :vain_laadunalitukset vain-laadunalitukset?}))
+        (catch Throwable t
+          (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 
-    (try
-      (esitettavat-asiat/kartalla-esitettavaan-muotoon
-       tarkastukset
-       valittu :id
-       (comp (filter #(not (nil? (:sijainti %))))
-             (map #(assoc % :tyyppi-kartalla :tarkastus))))
-      (catch Exception e
-        (log/debug "TARKASTUSREITTI FIXME: " e)))))
+    ch))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
-  (oikeudet/kirjoita oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
     (jdbc/with-db-transaction [db db]
       (let [laatupoikkeama {:sijainti (:sijainti tarkastus)
                             :kuvaus (:havainnot tarkastus)
                             :aika (:aika tarkastus)
+                            :yllapitokohde (:yllapitokohde tarkastus)
                             :tr (:tr tarkastus)
                             :urakka urakka-id
                             :tekija (:tekija tarkastus)}
             laatupoikkeama-id (laatupoikkeamat/luo-tai-paivita-laatupoikkeama db user laatupoikkeama)]
-        (tarkastukset/liita-tarkastukselle-laatupoikkeama<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
-        (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<! db {:tarkastus tarkastus-id :laatupoikkeama laatupoikkeama-id})
+        (tarkastukset/liita-tarkastukselle-laatupoikkeama<!
+          db
+          {:tarkastus tarkastus-id
+           :laatupoikkeama laatupoikkeama-id})
+        (tarkastukset/liita-tarkastuksen-liitteet-laatupoikkeamalle<!
+          db
+          {:tarkastus tarkastus-id
+           :laatupoikkeama laatupoikkeama-id})
         laatupoikkeama-id))))
 
 (defrecord Laadunseuranta []

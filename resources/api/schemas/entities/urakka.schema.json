@@ -53,78 +53,6 @@
                   "paasopimusId": {
                     "id": "urn:harja/urakka/sopimukset/0/sopimus/paasopimusId",
                     "type": "integer"
-                  },
-                  "toteumakirjauskohteet": {
-                    "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet",
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "kokonaishintaiset": {
-                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset",
-                        "type": "array",
-                        "items": {
-                          "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0",
-                          "type": "object",
-                          "additionalProperties": false,
-                          "properties": {
-                            "tehtava": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava",
-                              "type": "object",
-                              "additionalProperties": false,
-                              "required": true,
-                              "properties": {
-                                "id": {
-                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/id",
-                                  "type": "integer",
-                                  "required": true
-                                },
-                                "selite": {
-                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/selite",
-                                  "type": "string"
-                                },
-                                "yksikko": {
-                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/yksikko",
-                                  "type": "string"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "yksikkohintaiset": {
-                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset",
-                        "type": "array",
-                        "items": {
-                          "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0",
-                          "type": "object",
-                          "additionalProperties": false,
-                          "properties": {
-                            "tehtava": {
-                              "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava",
-                              "type": "object",
-                              "additionalProperties": false,
-                              "required": true,
-                              "properties": {
-                                "id": {
-                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava/id",
-                                  "type": "integer",
-                                  "required": true
-                                },
-                                "selite": {
-                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava/selite",
-                                  "type": "string"
-                                },
-                                "yksikko": {
-                                  "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/yksikko",
-                                  "type": "string",
-                                  "required": true
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
                   }
                 }
               }
@@ -154,6 +82,78 @@
                     "id": "urn:harja/urakka/materiaalit/0/materiaali/yksikko",
                     "type": "string",
                     "required": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tehtavat": {
+          "id": "urn:harja/urakka/sopimukset/0/sopimus/tehtavat",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kokonaishintaiset": {
+              "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset",
+              "type": "array",
+              "items": {
+                "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "tehtava": {
+                    "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": true,
+                    "properties": {
+                      "id": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/id",
+                        "type": "integer",
+                        "required": true
+                      },
+                      "selite": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/selite",
+                        "type": "string"
+                      },
+                      "yksikko": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/yksikko",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "yksikkohintaiset": {
+              "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset",
+              "type": "array",
+              "items": {
+                "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "tehtava": {
+                    "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": true,
+                    "properties": {
+                      "id": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava/id",
+                        "type": "integer",
+                        "required": true
+                      },
+                      "selite": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/yksikkohintaiset/0/tehtava/selite",
+                        "type": "string"
+                      },
+                      "yksikko": {
+                        "id": "urn:harja/urakka/sopimukset/0/sopimus/toteumakirjauskohteet/kokonaishintaiset/0/tehtava/yksikko",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
                   }
                 }
               }

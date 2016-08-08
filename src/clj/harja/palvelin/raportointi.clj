@@ -23,14 +23,19 @@
             [harja.palvelin.raportointi.raportit.kelitarkastus]
             [harja.palvelin.raportointi.raportit.laaduntarkastus]
             [harja.palvelin.raportointi.raportit.laatupoikkeama]
+            [harja.palvelin.raportointi.raportit.siltatarkastus]
             [harja.palvelin.raportointi.raportit.sanktio]
             [harja.palvelin.raportointi.raportit.soratietarkastus]
+            [harja.palvelin.raportointi.raportit.valitavoiteraportti]
             [harja.palvelin.raportointi.raportit.ymparisto]
             [harja.palvelin.raportointi.raportit.tyomaakokous]
             [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
             [harja.palvelin.raportointi.raportit.toimenpideajat]
+            [harja.palvelin.raportointi.raportit.toimenpidepaivat]
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.palvelin.raportointi.raportit.indeksitarkistus]
+            [harja.domain.oikeudet :as oikeudet]
+            [new-reliquary.core :as nr]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -48,6 +53,8 @@
 (defn SQL [& haku-ja-parametrit]
   (jdbc/query (:db *raportin-suoritus*)
               haku-ja-parametrit))
+
+(def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus})
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id]
                                            :as parametrit} raportti]
@@ -100,13 +107,10 @@
            (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
            (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
                                  workbook)))))
-
-
     this)
 
   (stop [this]
     this)
-
 
   RaportointiMoottori
   (hae-raportit [this]
@@ -121,23 +125,33 @@
             {}))))
 
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
-  (suorita-raportti [{db :db :as this} kayttaja {:keys [nimi konteksti parametrit]
-                                                 :as suorituksen-tiedot}]
-    (when-let [suoritettava-raportti (hae-raportti this nimi)]
-      (oikeudet/lue (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
-                    kayttaja (when (= "urakka" konteksti)
-                               (:urakka-id suorituksen-tiedot)))
-      (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
-                 " parametreilla " parametrit)
-      (binding [*raportin-suoritus* this]
-        ((:suorita suoritettava-raportti) db kayttaja
-         (condp = konteksti
-           "urakka" (assoc parametrit
-                           :urakka-id (:urakka-id suorituksen-tiedot))
-           "hallintayksikko" (assoc parametrit
-                                    :hallintayksikko-id
-                                    (:hallintayksikko-id suorituksen-tiedot))
-           "koko maa" parametrit))))))
+  (suorita-raportti [{db :db
+                      db-replica :db-replica
+                      :as this} kayttaja {:keys [nimi konteksti parametrit]
+                                          :as suorituksen-tiedot}]
+    (nr/with-newrelic-transaction
+      "Raportin suoritus"
+      (str nimi)
+      #(when-let [suoritettava-raportti (hae-raportti this nimi)]
+         (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
+                                    kayttaja (when (= "urakka" konteksti)
+                                  (:urakka-id suorituksen-tiedot)))
+         (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
+                    " parametreilla " parametrit)
+         (binding [*raportin-suoritus* this]
+           ((:suorita suoritettava-raportti)
+            (if (or (nil? db-replica)
+                    (tarvitsee-write-tietokannan nimi))
+              db
+              db-replica)
+            kayttaja
+            (condp = konteksti
+              "urakka" (assoc parametrit
+                              :urakka-id (:urakka-id suorituksen-tiedot))
+              "hallintayksikko" (assoc parametrit
+                                       :hallintayksikko-id
+                                       (:hallintayksikko-id suorituksen-tiedot))
+              "koko maa" parametrit)))))))
 
 
 (defn luo-raportointi []

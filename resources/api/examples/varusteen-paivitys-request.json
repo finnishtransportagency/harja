@@ -10,33 +10,51 @@
     "viestintunniste": {
       "id": 123
     },
-    "lahetysaika": "2016-01-30T12:00:00Z"
+    "lahetysaika": "2016-04-12T23:20Z"
   },
-  "paivittaja": {
-    "organisaatio": "Asfaltia Oy",
-    "henkilo": {
-      "id": 74846,
-      "etunimi": "Keijo",
-      "sukunimi": "Käsittelijä"
-    }
-  },
-  "varuste": {
-    "tunniste": "HARJ951547ZK",
-    "alkupvm": "2016-05-22T12:00:00Z",
-    "tilannepvm": "2016-01-01T00:00:00Z",
-    "sijainti": {
-      "tie": {
-        "numero": 89,
-        "aet": 12,
-        "aosa": 1,
-        "ajr": 0,
-        "puoli": 1
+  "varusteen-paivitys": {
+    "paivittaja": {
+      "organisaatio": "Asfaltia Oy",
+      "henkilo": {
+        "id": 74846,
+        "etunimi": "Keijo",
+        "sukunimi": "Käsittelijä"
       }
     },
-    "tietolaji": {
-      "tietolajitunniste": "tl505",
-      "arvot": "HARJ951547ZK        2                           HARJ951547ZK          01  "
+    "paivitetty": "2016-04-12T23:20:50Z",
+    "varuste": {
+      "tunniste": "HARJ951547",
+      "tilannepvm": "2016-04-12T23:20:50Z",
+      "tietue": {
+        "alkupvm": "2016-04-12T23:20:50Z",
+        "sijainti": {
+          "tie": {
+            "numero": 89,
+            "aet": 12,
+            "aosa": 1,
+            "ajr": 0,
+            "puoli": 1
+          }
+        },
+        "tietolaji": {
+          "tunniste": "tl506",
+          "arvot": {
+            "LMNUMERO": "9987",
+            "SIVUTIE": "2",
+            "LMALA": "2",
+            "LMVANHA": "0",
+            "LMTYYPPI": "1",
+            "LMKAUSI": "0",
+            "LMKIINNIT": "1",
+            "LMMATER": "1",
+            "LMTEKSTI": "Testi liikennemerkki",
+            "LMOMIST": "Omistaja",
+            "OPASTETUNN": "",
+            "KUNTOLUOKK": "4",
+            "URAKKA": "400"
+          }
+        }
+      }
     }
-  },
-  "paivitetty": "2015-05-26T03:00:00Z"
+  }
 }

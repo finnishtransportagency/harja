@@ -102,6 +102,9 @@ INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoit
 -- Lämpötilat
 \i testidata/lampotilat.sql
 
+-- Välitavoitteet
+\i testidata/valitavoitteet.sql
+
 -- Refreshaa Viewit. Nämä kannattanee pitää viimeisenä just in case
 
 SELECT paivita_urakoiden_alueet();
@@ -112,4 +115,7 @@ SELECT paivita_pohjavesialueet();
 \i testidata/laskutusyhteenveto_kajaani.sql
 \i testidata/laskutusyhteenveto_vantaa.sql
 \i testidata/laskutusyhteenveto_espoo.sql
+
+-- Tieverkkoon tie 20
+\i testidata/tierekisteri.sql
 -- ****

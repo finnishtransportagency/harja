@@ -84,6 +84,21 @@
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
 
+#?(:clj
+   (defn joda-timeksi [dt]
+     (cond
+       (joda-time? dt)
+       dt
+
+       (instance? java.util.Date dt)
+       (tc/from-date dt)
+
+       (instance? java.sql.Date dt)
+       (tc/from-sql-date dt)
+
+       (instance? java.sql.Timestamp dt)
+       (tc/from-sql-time dt))))
+
 (defn nyt
   "Frontissa palauttaa goog.date.Datetimen
   Backendissä palauttaa java.util.Daten"
@@ -179,7 +194,6 @@
 (defn parsi [format teksti]
   #?(:cljs (df/parse-local format teksti)
      :clj (.parse format teksti)))
-
 
 (def fi-pvm
   "Päivämäärän formatointi suomalaisessa muodossa"
@@ -605,7 +619,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (str (kuukauden-nimi (kuukausi alkupvm)) "ssa "
           (vuosi alkupvm))))
 
-
 (defn urakan-vuodet [alkupvm loppupvm]
   (let [ensimmainen-vuosi (vuosi alkupvm)
         viimeinen-vuosi (vuosi loppupvm)]
@@ -620,6 +633,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 
 (def paivan-aikavali (juxt paivan-alussa paivan-lopussa))
+
+#?(:clj
+   (defn aikavali-paivina [alku loppu]
+     (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
 (defn paivia-valissa
   "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
@@ -638,7 +655,16 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                              (nth pvm-vector 2))))))
 #?(:clj
    (defn iso-8601->pvm
-     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi"
+     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
      [teksti]
-     (let [format (SimpleDateFormat. "yyyy-MM-dd")]
-       (.format format (.parse format teksti)))))
+     (df/parse (df/formatter "yyyy-MM-dd") teksti)))
+
+#?(:clj
+   (defn pvm->iso-8601
+     "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD) muotoon."
+     [pvm]
+     (df/unparse (df/formatter "yyyy-MM-dd") pvm)))
+
+(defn edelliset-n-vuosivalia [n]
+  (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
+    (mapv t/year pvmt)))

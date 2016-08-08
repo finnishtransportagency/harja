@@ -41,7 +41,7 @@
 (defn muodosta [data viesti-id]
   (let [sisalto (muodosta-viesti data viesti-id)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do
         (log/error "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia.")

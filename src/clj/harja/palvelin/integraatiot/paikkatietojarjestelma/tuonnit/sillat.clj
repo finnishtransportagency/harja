@@ -29,9 +29,9 @@
   (if shapefile
     (do
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [transaktio db]
+      (jdbc/with-db-transaction [db db]
         (doseq [silta (shapefile/tuo shapefile)]
-          (vie-silta-entry transaktio silta)))
+          (vie-silta-entry db silta)))
       (s/paivita-urakoiden-sillat db)
       (log/debug "Siltojen tuonti kantaan valmis."))
     (log/debug "Siltojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))

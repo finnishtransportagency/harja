@@ -174,16 +174,21 @@ FROM kayttaja_urakka_rooli
 WHERE kayttaja = :kayttaja AND poistettu = FALSE
 
 -- name: hae-kayttajan-urakat-aikavalilta
-SELECT urakka AS urakka_id
+SELECT
+  urakka AS urakka_id,
+  u.nimi AS urakka_nimi,
+  u.tyyppi AS urakka_tyyppi,
+  o.id AS hallintayksikko_id,
+  o.nimi AS hallintayksikko_nimi
 FROM kayttaja_urakka_rooli
   LEFT JOIN urakka u ON urakka = u.id
+  JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE kayttaja = :kayttaja AND
       poistettu IS NOT TRUE AND
-      (u.loppupvm > :alku AND u.alkupvm < :loppu) OR
-      (u.loppupvm IS NULL AND u.alkupvm < :loppu) AND
+      ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu)) AND
       (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
       (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
-      (:hallintayksikko :: INTEGER IS NULL OR :hallintayksikko = u.hallintayksikko);
+      (:hallintayksikko :: INTEGER IS NULL OR u.hallintayksikko IN (:hallintayksikko));
 
 
 -- name: lisaa-urakka-rooli<!
@@ -334,6 +339,16 @@ SELECT exists(
       JOIN kayttaja k ON k.organisaatio = o.id
       AND o.ytunnus = :ytunnus
       AND k.id = :kayttaja_id);
+
+-- name: onko-kayttaja-nimella-urakan-organisaatiossa
+(SELECT EXISTS(SELECT id
+               FROM kayttaja
+               WHERE organisaatio = (SELECT urakoitsija
+                                     FROM urakka
+                                     WHERE id = :urakka)
+                     AND etunimi = :etunimi
+                     AND sukunimi = :sukunimi));
+
 
 -- name: hae-urakan-id-sampo-idlla
 -- single?: true

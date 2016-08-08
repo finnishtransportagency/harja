@@ -8,7 +8,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.domain.materiaali :as materiaalidomain]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]))
 
 (defn muodosta-materiaaliraportti-urakalle [db user {:keys [urakka-id alkupvm loppupvm]}]
   (log/debug "Haetaan urakan toteutuneet materiaalit raporttia varten: " urakka-id alkupvm loppupvm)
@@ -23,7 +24,7 @@
         suunnitellut-materiaalit-ilman-toteumia (filter
                                                   (fn [materiaali]
                                                     (not-any?
-                                                      (fn [toteuma] (= (:materiaali_nimi toteuma) (:materiaali_nimi materiaali)))
+                                                      (fn [toteuma] (= (:materiaali-nimi toteuma) (:materiaalinimi materiaali)))
                                                       toteutuneet-materiaalit))
                                                   suunnitellut-materiaalit)
         lopullinen-tulos (mapv
@@ -54,7 +55,7 @@
     toteutuneet-materiaalit))
 
 (defn- materiaalin-otsikko [t]
-  (str (:materiaali_nimi t) " (" (:materiaali_yksikko t) ")"))
+  (str (:materiaali-nimi t) " (" (:materiaali-yksikko t) ")"))
 
 
 (defn suorita [db user {:keys [urakka-id
@@ -92,16 +93,19 @@
         ;; Aluksi pitää laittaa materiaalit järjestykseen nimen (string) perusteella, sitten liittää
         ;; jokaiseen mukaan yksikkö, pitäen yllä alkuperäinen järjestys.
         materiaaliotsikot (mapv
-                            (fn [materiaalin_nimi]
+                            (fn [materiaalin-nimi]
                               (some (fn [t]
-                                      (when (= (:materiaali_nimi t) materiaalin_nimi)
+                                      (when (= (:materiaali-nimi t) materiaalin-nimi)
                                         (materiaalin-otsikko t)))
                                     toteumat))
                             (sort-by materiaalidomain/materiaalien-jarjestys (distinct
                                                                                (map
-                                                                                 #(str (:materiaali_nimi %))
+                                                                                 #(str (:materiaali-nimi %))
                                                                                  toteumat))))
-        toteumat-urakan-mukaan (group-by :urakka_nimi toteumat)]
+        toteumat-urakan-mukaan (when (not= konteksti :koko-maa)
+                                 (group-by :urakka-nimi toteumat))
+        toteumat-elyn-mukaan (when (= konteksti :koko-maa)
+                               (group-by :hallintayksikko-nimi toteumat))]
 
     [:raportti {:nimi raportin-nimi}
      [:taulukko {:otsikko otsikko
@@ -111,25 +115,25 @@
             (concat
               [{:otsikko "Urakka"}]
               (map (fn [mat]
-                     {:otsikko mat})
+                     {:otsikko mat :fmt :numero})
                    materiaaliotsikot)))
       (keep identity
             (into
               []
               (concat
-                ;; Tehdään rivi jokaiselle urakalle, jossa sen yhteenlasketut toteumat
-                (for [[urakka toteumat] toteumat-urakan-mukaan]
+                ;; Tehdään rivi jokaiselle alueelle, jossa sen yhteenlasketut toteumat
+                (for [[alue toteumat] (or toteumat-urakan-mukaan toteumat-elyn-mukaan)]
                   (into []
-                        (concat [urakka]
+                        (concat [alue]
                                 (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                                   (for [m materiaaliotsikot]
-                                    (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
+                                    (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
 
                 ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
                 (when (not (empty? toteumat))
                   [(concat ["Yhteensä"]
                            (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
                              (for [m materiaaliotsikot]
-                               (reduce + (map :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))))]]))
+                               (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))))]]))
 
     

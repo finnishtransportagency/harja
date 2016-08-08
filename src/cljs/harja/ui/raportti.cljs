@@ -5,6 +5,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.liitteet :as liitteet]
             [harja.visualisointi :as vis]
+            [harja.domain.raportointi :as raportti-domain]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.modal :as modal]
@@ -21,7 +22,7 @@
     (first elementti)))
 
 (defmethod muodosta-html :liitteet [[_ liitteet]]
-  (liitteet/liitelistaus liitteet))
+  (liitteet/liitteet-numeroina liitteet))
 
 (defmethod muodosta-html :arvo-ja-osuus [[_ arvo-ja-osuus]]
   [:span.arvo-ja-osuus
@@ -31,11 +32,18 @@
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
+                                               tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat]}
                                      sarakkeet data]]
-  (log "GRID DATALLA: " (pr-str sarakkeet) " => " (pr-str data))
-  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
+  (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})
+        formatter (fn [{fmt :fmt}]
+                    (let [format-fn (case fmt
+                                      :numero #(fmt/desimaaliluku-opt % 1 true)
+                                      :prosentti #(fmt/prosentti-opt % 1)
+                                      :raha #(fmt/desimaaliluku-opt % 2 true)
+                                      str)]
+                      #(if-not (raportti-domain/virhe? %) (format-fn %) (raportti-domain/virheen-viesti %))))]
     [grid/grid {:otsikko            (or otsikko "")
                 :tunniste           (fn [rivi] (str "raportti_rivi_"
                                                     (or (::rivin-indeksi rivi)
@@ -45,35 +53,32 @@
      (into []
            (map-indexed (fn [i sarake]
                           (merge
-                            {:hae #(get % i)
-                             :leveys (:leveys sarake)
-                             :otsikko (:otsikko sarake)
-                             :reunus (:reunus sarake)
-                             :pakota-rivitys? (:pakota-rivitys? sarake)
+                            {:hae                #(get % i)
+                             :leveys             (:leveys sarake)
+                             :otsikko            (:otsikko sarake)
+                             :reunus             (:reunus sarake)
+                             :pakota-rivitys?    (:pakota-rivitys? sarake)
                              :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
                                                       (case (:tasaa-otsikko sarake)
                                                         :keskita " grid-header-keskita"
                                                         :oikea " grid-header-oikea"
                                                         ""))
-                             :nimi (str "sarake" i)
-                             :fmt (case (:fmt sarake)
-                                    :numero #(fmt/desimaaliluku-opt % 1 true)
-                                    :prosentti #(fmt/prosentti-opt % 1)
-                                    str)
+                             :nimi               (str "sarake" i)
+                             :fmt                (formatter sarake)
                              ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                             :tyyppi (if (:tyyppi sarake)
-                                       :komponentti
-                                       :string)
-                             :tasaa (if (oikealle-tasattavat-kentat i)
-                                      :oikea
-                                      (:tasaa sarake))}
+                             :tyyppi             (if (:tyyppi sarake)
+                                                   :komponentti
+                                                   :string)
+                             :tasaa              (if (oikealle-tasattavat-kentat i)
+                                                   :oikea
+                                                   (:tasaa sarake))}
                             (when (:tyyppi sarake)
                               {:komponentti (fn [rivi]
                                               (let [elementti (get rivi i)]
                                                 (muodosta-html elementti)))})))
                         sarakkeet))
      (if (empty? data)
-       [(grid/otsikko "Ei tietoja")]
+       [(grid/otsikko (or tyhja "Ei tietoja"))]
        (let [viimeinen-rivi (last data)]
          (into []
                (map-indexed (fn [index rivi]
@@ -125,6 +130,13 @@
                 :legend legend
                 }
       pylvaat]]))
+
+(defmethod muodosta-html :piirakka [[_ {:keys [otsikko]} data]]
+  [:div.pylvaat
+   [:h3 otsikko]
+   [vis/pie
+    {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
+    data]])
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
   (apply yleiset/taulukkotietonakyma {}

@@ -1,6 +1,7 @@
 (ns harja-laadunseuranta.tarkastusajon-luonti
   (:require [reagent.core :as reagent :refer [atom]]
-            [harja-laadunseuranta.kuvat :as kuvat])
+            [harja-laadunseuranta.kuvat :as kuvat]
+            [harja-laadunseuranta.sovellus :as sovellus])
   (:require-macros [reagent.ratom :refer [run!]]
                    [devcards.core :refer [defcard]]))
 

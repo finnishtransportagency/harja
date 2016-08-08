@@ -21,11 +21,11 @@
      [:nimi (:urakoitsija_nimi urakka)]
      [:ytunnus (:urakoitsija_ytunnus urakka)]]))
 
-(defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin sahkoposti]}]
+(defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin tyopuhelin sahkoposti]}]
   [:paivystaja
    [:etunimi etunimi]
    [:sukunimi sukunimi]
-   [:matkapuhelin matkapuhelin]
+   [:matkapuhelin (or matkapuhelin tyopuhelin)]
    [:sahkoposti sahkoposti]])
 
 (defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
@@ -46,7 +46,7 @@
 (defn muodosta [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
   (let [sisalto (muodosta-viesti viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe)
         xml (tee-xml-sanoma sisalto)]
-    (if (xml/validoi +xsd-polku+ "harja-tloik.xsd" xml)
+    (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do
         (log/error "Kuittausta ei voida lähettää. Kuittaus XML ei ole validi.")

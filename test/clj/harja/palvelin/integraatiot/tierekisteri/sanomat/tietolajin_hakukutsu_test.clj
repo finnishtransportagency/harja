@@ -15,7 +15,7 @@
 (deftest tarkista-kutsun-validius
   (let [kutsu-xml (tietolajin-hakukutsu/muodosta-kutsu "tl506" nil)
         xsd "haeTietolaji.xsd"]
-    (is (xml/validoi +xsd-polku+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")
+    (is (xml/validi-xml? +xsd-polku+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")
     (is (not (.contains kutsu-xml "muutospvm")))))
 
 (deftest tarkista-paivamaaran-kasittely
