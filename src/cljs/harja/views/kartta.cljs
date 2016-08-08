@@ -354,8 +354,8 @@
       [:div {:class (str "kartan-kontrollit " luokka-str)} sisalto])))
 
 (def paivitetaan-karttaa-tila (atom false))
-(def kuvatason-lataus (atom nil))
-(def geometriatason-lataus (atom nil))
+(defonce kuvatason-lataus (atom nil))
+(defonce geometriatason-lataus (atom nil))
 
 (defn paivitetaan-karttaa
   []
@@ -639,13 +639,12 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 :url   (str (k/wmts-polku) "maasto/wmts")
                                 :layer "taustakartta"}]}]))))
 
-(defn kartan-edistyminen [{:keys [kuvataso-ladattu kuvataso-ladataan] :as kuvataso}
-                          {:keys [geometria-ladattu geometria-ladataan] :as geometria}]
-  (let [taso (or kuvataso geometria)
-        ladattu (or kuvataso-ladattu geometria-ladattu)
-        ladataan (or kuvataso-ladataan geometria-ladataan)
+(defn kartan-edistyminen [kuvataso geometriataso]
+  (let [taso (if (and kuvataso (not= 0 (:ladataan kuvataso))) kuvataso geometriataso)
+        ladattu (:ladattu taso)
+        ladataan (:ladataan taso)
         ;; Näytetään jo edistymispalkki vaikka lataustilanne olisi esim 0/1
-        #_[ladattu ladataan] #_(if (= ladattu 0)
+        [ladattu ladataan] (if (and (= ladattu 0) (not= ladataan 0))
                              [(inc ladattu) (inc ladataan)]
                              [ladattu ladataan])]
     (when (and taso (not= 0 ladattu ladataan))
