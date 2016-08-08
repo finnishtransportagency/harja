@@ -8,18 +8,20 @@
 
 (defn vie-hoitoluokka-entry [db soratie]
   (if (:the_geom soratie)
-    (hoitoluokat/vie-hoitoluokkatauluun! db
-                                         (:ajorata soratie)
-                                         (:alkutieo soratie)
-                                         (:tienro soratie)
-                                         (:piirinro soratie)
-                                         (.intValue (:et_loppu soratie))
-                                         (:loppu_tieo soratie)
-                                         (.intValue (:et_alku soratie))
-                                         (:lopputieo soratie)
-                                         (:soratlk_ko soratie)
-                                         (.toString (:the_geom soratie))
-                                         "soratie")
+    (let [kokonaisluvuksi #(when % (.intValue %))]
+      (hoitoluokat/vie-hoitoluokkatauluun!
+        db
+        (kokonaisluvuksi (:ajorata soratie))
+        (kokonaisluvuksi (:aosa soratie))
+        (kokonaisluvuksi (:tie soratie))
+        (kokonaisluvuksi (:piirinro soratie))
+        (kokonaisluvuksi (:let soratie))
+        (kokonaisluvuksi (:losa soratie))
+        (kokonaisluvuksi (:aet soratie))
+        (kokonaisluvuksi (:osa soratie))
+        (kokonaisluvuksi (:soratielk soratie))
+        (.toString (:the_geom soratie))
+        "soratie"))
     (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error soratie))))
 
 (defn vie-hoitoluokat-kantaan [db shapefile]
