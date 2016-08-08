@@ -59,6 +59,8 @@
                  ;; Sähköposti lähetys
                  [com.draines/postal "1.11.3"]
 
+                 [javax.jms/jms-api "1.1-rev-1"]
+
                  ;; Asiakas
                  [spyscope "0.1.5"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
