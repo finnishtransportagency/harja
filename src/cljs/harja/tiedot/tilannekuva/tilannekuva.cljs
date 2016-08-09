@@ -365,6 +365,8 @@ hakutiheys-historiakuva 1200000)
                :suodattimet @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila! true))
 
+    ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
+    ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
     (reset! tilannekuva-kartalla/url-hakuparametrit
             (k/url-parametri (aikaparametrilla (dissoc hakuparametrit :alue))))
 
@@ -377,7 +379,14 @@ hakutiheys-historiakuva 1200000)
 
 (def asioiden-haku
   (reaction<! [hakuparametrit @hakuparametrit
-               nakymassa? @nakymassa?]
+               nakymassa? @nakymassa?
+               ;; Uusi haku myös kun aikasuodattimien arvot muuttuvat
+               _ @nykytilanteen-aikasuodattimen-arvo
+               _ @historiakuvan-aikavali
+               ;; Jos halutaan aloittaa uusi haku kun vaihdetaan nykytilanteen ja historian välillä,
+               ;; poista tästä kommentti. Haku lähtee kyllä nyt kun aikaväliä vaihdetaan, ja voi olla
+               ;; perusteltua välttää ylimääräisiä, melko varmasti turhia, hakuja.
+               #_@valittu-tila]
               {:odota bufferi}
               (when nakymassa?
                 (hae-asiat hakuparametrit))))
