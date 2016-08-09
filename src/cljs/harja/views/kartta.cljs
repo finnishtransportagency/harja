@@ -647,7 +647,7 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
         [ladattu ladataan] (if (and (= ladattu 0) (not= ladataan 0))
                              [(inc ladattu) (inc ladataan)]
                              [ladattu ladataan])]
-    (when (and taso (not= 0 ladattu ladataan))
+    (when (and taso (not= 0 ladattu ladataan) @nav/kartta-nakyvissa?)
      [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}])))
 
 (defn kartta []
