@@ -37,3 +37,6 @@ tuotanto_test.sh
 .labyrintti-salasana
 .turi-salasana
 .hipchat-token
+opt/sonic/7.6.2/sonic-client.jar
+opt/sonic/7.6.2/sonic-crypto.jar
+opt/sonic/7.6.2/sonic-xmessage.jar
