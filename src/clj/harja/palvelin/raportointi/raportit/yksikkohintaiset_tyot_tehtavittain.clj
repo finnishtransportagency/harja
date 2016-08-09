@@ -96,8 +96,8 @@
                                   {:leveys 10 :otsikko "Suunniteltu määrä hoitokaudella" :fmt :numero}])
                                {:leveys 10 :otsikko "Toteutunut määrä" :fmt :numero}
                                (when (= konteksti :urakka)
-                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella €"}
-                                  {:leveys 15 :otsikko "Toteutuneet kustannukset €"}])]))
+                                 [{:leveys 15 :otsikko "Suunnitellut kustannukset hoitokaudella €" :fmt :raha}
+                                  {:leveys 15 :otsikko "Toteutuneet kustannukset €" :fmt :raha}])]))
       (keep identity
             (conj (mapv (fn [rivi]
                           (keep identity [(when urakoittain?
