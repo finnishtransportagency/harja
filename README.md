@@ -194,3 +194,17 @@ jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja
 
 Fronttitestit pyörivät figwheelin kautta.
 Ne voi ajaa myös komentorivillä komennolla "lein doo phantom test"
+
+# Labyrintin SMS gatewayn testaus kehitysmpäristössä
+Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli 
+harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan 
+harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
+
+1. Avaa reverse SSH-tunneli harja-front1-stg palvelimelle: ssh -R 6666:localhost:8000 harja-front1
+2. Avaa NginX:n konfiguraatio: sudo vi /etc/nginx/conf.d/site.conf
+3. Vaihda SMS-käsittelijä upstreamiin localhost:6666
+upstream sms-kasittelija {
+   server localhost:6666;
+}
+4. Lähetä tekstiviesti numeroon +358 50 9023530
+-> Viesti pitäisi välittyä REPL:n
