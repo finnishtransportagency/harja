@@ -24,7 +24,7 @@
 
 
 (defn hae-sopimus-id [db urakka-id toteuma]
-  (let [sopimus-id (or (:sopimusId toteuma) (sopimukset/hae-urakan-paasopimus db urakka-id))]
+  (let [sopimus-id (or (:sopimusId toteuma) (:id (first (sopimukset/hae-urakan-paasopimus db urakka-id))))]
     (if sopimus-id
       sopimus-id
       (throw+ {:type virheet/+viallinen-kutsu+

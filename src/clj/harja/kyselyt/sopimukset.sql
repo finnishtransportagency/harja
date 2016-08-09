@@ -40,4 +40,4 @@ SELECT EXISTS(SELECT id
 -- name: hae-urakan-paasopimus
 SELECT id
 FROM sopimus
-WHERE urakka = 1 AND paasopimus = 1;
+WHERE urakka = :urakka AND paasopimus IS NULL;
