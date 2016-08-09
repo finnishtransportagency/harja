@@ -597,7 +597,11 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
           :on-drag            (fn [item event]
                                 (paivita-extent item event)
                                 (t/julkaise! {:aihe :karttaa-vedetty}))
-          :on-postrender      (fn [_] (edistymispalkki/geometriataso-pakota-valmistuminen!))
+          :on-postrender      (fn [_]
+                                ;; Geometriatason pakottaminen valmiiksi postrenderissä
+                                ;; tuntuu toimivan hyvin, mutta kuvatason pakottaminen ei.
+                                ;; Postrender triggeröityy monta kertaa, kun kuvatasoja piirretään.
+                                (edistymispalkki/geometriataso-pakota-valmistuminen!))
           :on-mount           (fn [initialextent]
                                 (paivita-extent nil initialextent))
           :on-click           (fn [at]
