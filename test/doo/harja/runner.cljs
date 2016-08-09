@@ -12,6 +12,7 @@
              [harja.ui.historia-test]
              [harja.ui.kentat-test]
              [harja.ui.grid-test]
+             [harja.ui.edistymispalkki-testi]
              ;; uusi testi tähän
              ))
 
@@ -27,5 +28,6 @@
            'harja.ui.historia-test
            'harja.ui.kentat-test
            'harja.ui.grid-test
+           'harja.ui.edistymispalkki-testi
            ;; uusi testi tähän
            )

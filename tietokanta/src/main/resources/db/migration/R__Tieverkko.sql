@@ -1,11 +1,65 @@
+CREATE OR REPLACE FUNCTION etsi_jatkopatka(viiva geometry, jatkopatkat geometry) RETURNS geometry AS $$
+DECLARE
+  tmp geometry;
+  jatkettu geometry;
+BEGIN
+  jatkettu := viiva;
+  FOR i IN 1..ST_NumGeometries(jatkopatkat) LOOP
+     tmp := ST_GeometryN(jatkopatkat, i);
+     IF ST_DWithin(ST_EndPoint(jatkettu), ST_StartPoint(tmp), 100) THEN
+        jatkettu := ST_MakeLine(jatkettu,tmp);
+     ELSEIF ST_DWithin(ST_EndPoint(tmp), ST_StartPoint(jatkettu), 100) THEN
+        RETURN ST_MakeLine(tmp,jatkettu);
+     END IF;
+  END LOOP;
+  RETURN jatkettu;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION yhdista_viivat_jarjestyksessa(viiva geometry) RETURNS geometry AS $$
+DECLARE
+  jarjestetty geometry;
+BEGIN
+    IF GeometryType(viiva)='LINESTRING' THEN
+       RETURN viiva;
+    END IF;
+    
+    jarjestetty := ST_GeometryN(viiva,1);
+    FOR i IN 1..ST_NumGeometries(viiva) LOOP
+        jarjestetty := etsi_jatkopatka(jarjestetty, viiva);
+    END LOOP;
+  RETURN jarjestetty;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION keraa_geometriat(tie_ INTEGER, osa_ INTEGER, ajorata_ INTEGER) RETURNS geometry AS $$
+DECLARE
+  g geometry;
+BEGIN
+  SELECT yhdista_viivat_jarjestyksessa(st_collect((g.f).geom))
+    FROM (SELECT st_dump(geometria) AS f
+            FROM tieverkko
+           WHERE tie=tie_ AND osa=osa_ AND ajorata=0
+          UNION ALL
+           SELECT st_dump(geometria) AS f
+	    FROM tieverkko
+	   WHERE tie=tie_ AND osa=osa_ AND ajorata=ajorata_) AS g
+	    INTO g;
+  RETURN g;                                                 
+END;
+$$ LANGUAGE plpgsql;
 
 -- paivittaa tr-rutiinien käyttämät taulut
 CREATE OR REPLACE FUNCTION paivita_tr_taulut() RETURNS VOID AS $$
+DECLARE
 BEGIN
   DELETE FROM tieverkko_geom;
-  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria ORDER BY osa)), 0::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=1) GROUP BY tie;
-  INSERT INTO tieverkko_geom SELECT tie, ST_LineMerge(ST_Union(geometria ORDER BY osa)), 1::BIT FROM tieverkko WHERE (ajorata=0 OR ajorata=2) GROUP BY tie;
 
+  INSERT INTO tieverkko_geom SELECT g.tie,st_linemerge(st_union(keraa_geometriat(tie, osa, 1) ORDER BY osa)),0::bit FROM 
+    (SELECT DISTINCT tie,osa FROM tieverkko ORDER BY tie,osa) AS g GROUP BY g.tie;
+  INSERT INTO tieverkko_geom SELECT g.tie,st_linemerge(st_union(keraa_geometriat(tie, osa, 2) ORDER BY osa)),1::bit FROM 
+    (SELECT DISTINCT tie,osa FROM tieverkko ORDER BY tie,osa) AS g GROUP BY g.tie;
+    
   DELETE FROM tr_osien_pituudet;
   INSERT INTO tr_osien_pituudet SELECT tie, osa, SUM(tr_pituus) AS pituus
                                   FROM tieverkko

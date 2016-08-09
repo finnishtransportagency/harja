@@ -26,7 +26,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
-            [harja.ui.kartta.varit.puhtaat :as varit])
+            [harja.ui.kartta.varit.puhtaat :as varit]
+            [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
 
 ;; Kaikki näytettävät karttatasot
@@ -250,6 +251,7 @@
 (defonce karttatasot-muuttuneet
   (ratom/run!
    (let [tasot @nykyiset-karttatasot]
+     (edistymispalkki/geometriataso-pakota-aloitus!)
      (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet
                             :karttatasot tasot}))))
 

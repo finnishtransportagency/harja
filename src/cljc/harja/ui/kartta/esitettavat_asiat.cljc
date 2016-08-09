@@ -1,8 +1,8 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
+    #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
     #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
-       :clj
-            [taoensso.timbre :as log])
+       :clj [taoensso.timbre :as log])
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.ilmoitukset :as ilmoitukset]
@@ -524,7 +524,8 @@
   muotoon."
   ([] (kartalla-esitettavaan-muotoon-xf nil [:id]))
   ([asia-xf tunniste]
-   (comp (or asia-xf identity)
+   (comp #?(:cljs (fn [asia] (edistymispalkki/geometriataso-lataus-valmis!) asia))
+         (or asia-xf identity)
          (mapcat pura-geometry-collection)
          (map #(kartalla-xf % nil (or tunniste [:id])))
          (filter some?)
@@ -538,6 +539,9 @@
   ([asiat valittu tunniste]
    (kartalla-esitettavaan-muotoon asiat valittu tunniste nil))
   ([asiat valittu tunniste asia-xf]
+    ;; Haluamme näyttää edistymispalkin, mutta 100% valmius ei ole vielä siinä
+    ;; vaiheessa, kun koko data on lapioitu.
+    #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
      (with-meta

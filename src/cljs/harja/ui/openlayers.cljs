@@ -225,6 +225,12 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
      :x        (aget (.-pixel e) 0)
      :y        (aget (.-pixel e) 1)}))
 
+(defn- aseta-postrender-kasittelija [this ol3 on-postrender]
+  (.on ol3 "postrender"
+       (fn [e]
+         (when on-postrender
+           (on-postrender e)))))
+
 (defn- aseta-zoom-kasittelija [this ol3 on-zoom]
   (.on (.getView ol3) "change:resolution"
        (fn [e]
@@ -418,6 +424,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     (aseta-hover-kasittelija this ol3)
     (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
     (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
+    (aseta-postrender-kasittelija this ol3 (:on-postrender mapspec))
 
     (update-ol3-geometries this (:geometries mapspec))
 

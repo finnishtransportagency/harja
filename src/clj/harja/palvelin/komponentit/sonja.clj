@@ -37,7 +37,7 @@
     "Lähettää viestin nimettyyn jonoon. Palauttaa message id:n."))
 
 (def jms-driver-luokka {:activemq "org.apache.activemq.ActiveMQConnectionFactory"
-                        :sonic "progress.message.jclient.QueueConnectionFactory"})
+                        :sonicmq "progress.message.jclient.QueueConnectionFactory"})
 
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
