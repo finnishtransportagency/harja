@@ -18,7 +18,9 @@
        "Kuittauskoodit:\n"
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
-       "L%s = lopetettu\n\n"
+       "L%s = lopetettu\n"
+       "M%s = muutettu\n"
+       "R%s = vastattu\n\n"
        "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
 
 (def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
@@ -34,6 +36,8 @@
     "V" "vastaanotto"
     "A" "aloitus"
     "L" "lopetus"
+    "M" "muutos"
+    "R" "vastaus"
     (throw+ {:type :tuntematon-ilmoitustoimenpide
              :virheet [{:koodi :tuntematon-ilmoitustoimenpide
                         :viesti (format "Tuntematon ilmoitustoimenpide: %s" toimenpide)}]})))
@@ -125,6 +129,7 @@
                              paikankuvaus
                              selitteet
                              lisatietoja
+                             viestinumero
                              viestinumero
                              viestinumero
                              viestinumero
