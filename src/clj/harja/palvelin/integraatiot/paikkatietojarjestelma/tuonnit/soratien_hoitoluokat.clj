@@ -8,7 +8,7 @@
 
 (defn vie-hoitoluokka-entry [db soratie]
   (if (:the_geom soratie)
-    (let [kokonaisluvuksi #(when % (.intValue %))]
+    (let [kokonaisluvuksi #(when % (int %))]
       (hoitoluokat/vie-hoitoluokkatauluun!
         db
         (kokonaisluvuksi (:ajorata soratie))
@@ -20,7 +20,7 @@
         (kokonaisluvuksi (:aet soratie))
         (kokonaisluvuksi (:osa soratie))
         (kokonaisluvuksi (:soratielk soratie))
-        (.toString (:the_geom soratie))
+        (str (:the_geom soratie))
         "soratie"))
     (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error soratie))))
 
