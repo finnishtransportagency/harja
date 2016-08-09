@@ -97,5 +97,5 @@
     (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           sopimus-id (ffirst (q (str "SELECT sopimus FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
           reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))]
-      (is (= 5 sopimus-id))
+      (is (= 5 sopimus-id) "Toteuma kirjattiin pääsopimukselle")
       (poista-reittitoteuma toteuma-id ulkoinen-id reittipiste-idt))))
