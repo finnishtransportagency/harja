@@ -106,6 +106,27 @@
    [:div.summa "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
     [:span (fmt/euro kaikkien-hoitokausien-taman-tpin-kustannukset)]]])
 
+(defn- tyorivit [urakka valittu-sopimusnumero valittu-hoitokausi valittu-toimenpideinstanssi
+                 valitun-toimenpiteen-ja-hoitokauden-tyot ]
+  (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
+                                    valitun-toimenpiteen-ja-hoitokauden-tyot))
+        tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
+        [hoitokauden-alku hoitokauden-loppu] valittu-hoitokausi
+        tyhjat-tyot (when hoitokauden-alku
+                      (keep #(luo-tyhja-tyo (:tyyppi urakka)
+                                            (:tpi_id valittu-toimenpideinstanssi)
+                                            valittu-hoitokausi
+                                            %
+                                            (first valittu-sopimusnumero))
+                            tyhjat-kkt))]
+
+    (vec (sort-by (juxt :vuosi :kuukausi)
+                  (concat valitun-toimenpiteen-ja-hoitokauden-tyot
+                          ;; filteröidään pois hoitokauden ulkopuoliset kk:t
+                          (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
+                                                 hoitokauden-alku hoitokauden-loppu)
+                                  tyhjat-tyot))))))
+
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
         toimenpiteet u/urakan-toimenpideinstanssit
@@ -131,24 +152,12 @@
                     (filter #(= valittu-tp-id (:toimenpide %))
                             @valitun-hoitokauden-tyot)))
         
-        tyorivit (reaction (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
-                                                             @valitun-toimenpiteen-ja-hoitokauden-tyot))
-                                 tyhjat-kkt (difference (into #{} (range 1 13)) kirjatut-kkt)
-                                 [hoitokauden-alku hoitokauden-loppu] @u/valittu-hoitokausi
-                                 tyhjat-tyot (when hoitokauden-alku
-                                               (keep #(luo-tyhja-tyo (:tyyppi @urakka)
-                                                                     (:tpi_id @u/valittu-toimenpideinstanssi)
-                                                                     @u/valittu-hoitokausi
-                                                                     %
-                                                                     (first @u/valittu-sopimusnumero))
-                                                     tyhjat-kkt))]
-                             (vec (sort-by (juxt :vuosi :kuukausi)
-                                           (concat @valitun-toimenpiteen-ja-hoitokauden-tyot
-                                                   ;; filteröidään pois hoitokauden ulkopuoliset kk:t
-                                                   (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
-                                                                          hoitokauden-alku hoitokauden-loppu)
-                                                                
-                                                           tyhjat-tyot))))))
+
+        tyorivit (reaction
+                  (tyorivit
+                   @urakka @u/valittu-sopimusnumero
+                   @u/valittu-hoitokausi @u/valittu-toimenpideinstanssi
+                   @valitun-toimenpiteen-ja-hoitokauden-tyot))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? (atom false)
 
