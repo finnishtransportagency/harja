@@ -2,6 +2,8 @@
 <b>Julkaistu: 27.7.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.5. Julkaistu 8.8.2016:
+    - Sopimusnumero on muutettu vaihtoehtoiseksi toteumille. Jos sopimusnumeroa ei ole annettu, tehdään kirjaus automaattisesti urakan pääsopimukselle. 
 - Versionumero: 0.2.4. Julkaistu 27.7.2016:
     - Varusterajapinnat päivitetty. Jatkossa varusteiden ja laitteiden teknisten arvojen parsinta tehdään Harjan puolella. Samalla mahdollistettu usean varustetoteuman sekä yksittäisen varustetoteuman sisällä usean toimenpiteen kirjaaminen kerralla.
 - Versionumero: 0.2.3. Julkaistu 15.7.2016:
