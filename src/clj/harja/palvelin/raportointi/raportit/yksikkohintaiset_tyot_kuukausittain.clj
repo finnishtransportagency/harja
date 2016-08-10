@@ -164,9 +164,12 @@
                                (mapv (fn [rivi]
                                        {:otsikko (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date rivi))
                                         :leveys 5
-                                        :otsikkorivi-luokka "grid-kk-sarake"})
+                                        :otsikkorivi-luokka "grid-kk-sarake"
+                                        :fmt :numero})
                                      listattavat-pvmt)
-                               {:leveys 7 :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"}
+                               {:leveys 7
+                                :otsikko "Mää\u00ADrä yh\u00ADteen\u00ADsä"
+                                :fmt :numero}
                                (when (and (= konteksti :urakka)
                                           aikavali-kasittaa-hoitokauden?)
                                  [{:leveys 5 :otsikko "Tot-%" :fmt :prosentti}
