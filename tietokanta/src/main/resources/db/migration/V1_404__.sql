@@ -19,4 +19,4 @@ CREATE TRIGGER tg_muodosta_suljetun_tieosuuden_envelope
   FOR EACH ROW
   EXECUTE PROCEDURE muodosta_suljetun_tieosuuden_envelope();
 
-UPDATE suljettu_tieosuus SET envelope = ST_Envelope(sijainti);
+UPDATE suljettu_tieosuus SET envelope = ST_Envelope(geometria);
