@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "toteuma": {
+      "id": "urn:harja/pistetoteuma/toteuma",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "$ref": "file:resources/api/schemas/entities/toteuma.schema.json"
+    },
+    "sijainti": {
+      "id": "urn:harja/pistetoteuma/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "$ref": "file:resources/api/schemas/entities/sijainti.schema.json"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "array",
+  "maxItems" : 100,
+  "items": {
+    "id": "urn:harja/0",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "liite": {
+        "id": "urn:harja/0/liite",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nimi": {
+            "id": "urn:harja/0/liite/nimi",
+            "type": "string",
+            "required": true
+          },
+          "tyyppi": {
+            "id": "urn:harja/0/liite/tyyppi",
+            "type": "string",
+            "required": true
+          },
+          "kuvaus": {
+            "id": "urn:harja/0/liite/kuvaus",
+            "type": "string"
+          },
+          "sisalto": {
+            "id": "urn:harja/0/liite/sisalto",
+            "type": "string",
+            "required": true
+          }
+        }
+      }
+    }
+  }
+}
