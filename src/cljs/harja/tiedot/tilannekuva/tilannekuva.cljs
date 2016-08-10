@@ -56,6 +56,7 @@ hakutiheys-historiakuva 1200000)
                 tk/paikkaus false
                 tk/suljetut-tiet false
                 tk/paaasfalttilevitin false
+                tk/tiemerkintakone false
                 tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
                 tk/tma-laite false}

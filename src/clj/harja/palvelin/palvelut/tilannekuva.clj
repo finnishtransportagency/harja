@@ -200,7 +200,8 @@
     (when nykytilanne?
      (let [haettavat-toimenpiteet (haettavat (union talvi kesa))
            haettavat-tyokonetyypit (filter #{:paaasfalttilevitin
-                                             :remix-laite
+                                             :tiemerkintakone
+                                             :kuumennuslaite
                                              :sekoitus-ja-stabilointijyrsin
                                              :tma-laite}
                                            (haettavat yllapito))]

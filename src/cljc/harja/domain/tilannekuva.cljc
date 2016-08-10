@@ -34,6 +34,7 @@
   [paikkaus :paikkaus "Paikkaustyöt"]
   [suljetut-tiet :suljetut-tieosuudet "Suljetut tieosuudet"]
   [paaasfalttilevitin :paaasfalttilevitin "Pääasfalttilevittimet"]
+  [tiemerkintakone :tiemerkintakone "Tiemerkintäkoneet"]
   [kuumennuslaite :kuumennuslaite "Kuumennuslaitteet"]
   [sekoitus-ja-stabilointijyrsin :sekoitus-ja-stabilointijyrsin "Sekoitus- ja stabilointijyrsimet"]
   [tma-laite :tma-laite "TMA-laitteet"]
@@ -89,6 +90,7 @@
               paikkaus
               suljetut-tiet
               paaasfalttilevitin
+              tiemerkintakone
               kuumennuslaite
               sekoitus-ja-stabilointijyrsin
               tma-laite]
