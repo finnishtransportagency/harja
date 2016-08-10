@@ -209,23 +209,22 @@
          [kertapainike "Ojat" #(alivalikkoon :ojat)]
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
-(defn- paallystys [alivalikot]
+(defn- paallystys [alivalikot havainnot]
   (let [valinnat (atom {})]
-    (fn [alivalikot]
+    (fn [_ _]
       [:div.painikelaatikko
-       [toggle-painike "Saumavirhe" valinnat :saumavirhe]
-       [:div "Saumavirhe"]
-       [:div "Lajittuma"]
-       [:div "Epätasaisuus"]
-       [:div "Halkeamat"]
-       [:div "Vesilammikot"]
-       [:div "Epätasaiset reunat"]
-       [:div "Jyrän jälkiä"]
-       [:div "Sideaineläikkiä"]
-       [:div "Väärä korkeusasema"]
-       [:div "Pinta harva"]
-       [:div "Pintakuivatus puutteellinen"]
-       [:div "Kaivojen korkeusasema"]
+       [toggle-painike "Saumavirhe" havainnot :saumavirhe]
+       [toggle-painike "Lajittuma" havainnot :lajittuma]
+       [toggle-painike "Epätasaisuus" havainnot :epatasaisuus]
+       [toggle-painike "Halkeamat" havainnot :halkeamat]
+       [toggle-painike "Vesilammikot" havainnot :vesilammikot]
+       [toggle-painike "Epätasaiset reunat" havainnot :epatasaisetreunat]
+       [toggle-painike "Jyrän jälkiä" havainnot :jyranjalkia]
+       [toggle-painike "Sideaineläikkiä" havainnot :sideainelaikkia]
+       [toggle-painike "Väärä korkeusasema" havainnot :vaarakorkeusasema]
+       [toggle-painike "Pinta harva" havainnot :pintaharva]
+       [toggle-painike "Pintakuivatus puutteellinen" :pintakuivatuspuute]
+       [toggle-painike "Kaivojen korkeusasema" :kaivojenkorkeusasema]
        [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]])))
 
 (defn- tiemerkinta [alivalikot]
@@ -291,7 +290,7 @@
     :yllapitotarkastus
     [:div.sidepanel
      (cond (:paallystys @alivalikot)
-           [paallystys alivalikot]
+           [paallystys alivalikot havainnot]
 
            (:tiemerkinta @alivalikot)
            [tiemerkinta alivalikot]

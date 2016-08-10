@@ -248,6 +248,8 @@ button {
 }
 
 .painike-aktiivinen {
+    background-color: yellow;
+    color: black;
 }
 
 /* ---------- virheilmoitukset ---------- */
