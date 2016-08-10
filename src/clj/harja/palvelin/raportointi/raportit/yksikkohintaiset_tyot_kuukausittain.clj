@@ -173,22 +173,30 @@
                                   {:leveys 10 :otsikko "Suun\u00ADni\u00ADtel\u00ADtu määrä hoi\u00ADto\u00ADkau\u00ADdella"
                                    :fmt :numero}])]))
       (mapv (fn [rivi]
-              (flatten (keep identity [(when urakoittain?
-                                         (or (:urakka_nimi rivi) "-"))
-                                       (or (:nimi rivi) "-")
-                                       (or (:yksikko rivi) "-")
-                                       (mapv (fn [pvm]
-                                               (or
-                                                 (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
-                                                 0))
-                                             listattavat-pvmt)
-                                       (or (:toteutunut_maara rivi) 0)
-                                       (when (and (= konteksti :urakka)
-                                                  aikavali-kasittaa-hoitokauden?)
-                                         [(let [formatoitu (:toteumaprosentti rivi)]
-                                            (if-not (str/blank? formatoitu) formatoitu "-"))
-                                          (let [formatoitu (:suunniteltu_maara rivi)]
-                                            (if-not (str/blank? formatoitu) formatoitu "Ei suunnitelmaa"))])])))
+              (keep identity (concat [(when urakoittain?
+                                        (or (:urakka_nimi rivi) "-"))
+                                      (or (:nimi rivi) "-")
+                                      (or (:yksikko rivi) "-")]
+                                     (mapv (fn [pvm]
+                                             (or
+                                               (get rivi (pvm/kuukausi-ja-vuosi-valilyonnilla (c/to-date pvm)))
+                                               0))
+                                           listattavat-pvmt)
+                                     [(or (:toteutunut_maara rivi) 0)]
+                                     (when (and (= konteksti :urakka)
+                                                aikavali-kasittaa-hoitokauden?)
+                                       [(let [formatoitu (:toteumaprosentti rivi)]
+                                          (if (not (or (nil? formatoitu)
+                                                       (and (or (string? formatoitu) (coll? formatoitu))
+                                                            (empty? formatoitu))))
+                                            formatoitu
+                                            [:info "-"]))
+                                        (let [formatoitu (:suunniteltu_maara rivi)]
+                                          (if (not (or (nil? formatoitu)
+                                                       (and (or (string? formatoitu) (coll? formatoitu))
+                                                            (empty? formatoitu))))
+                                            formatoitu
+                                            [:info "Ei suunnitelmaa"]))]))))
             naytettavat-rivit)]
      (yks-hint-tyot/suunnitelutietojen-nayttamisilmoitus konteksti alkupvm loppupvm suunnittelutiedot)]))
 
