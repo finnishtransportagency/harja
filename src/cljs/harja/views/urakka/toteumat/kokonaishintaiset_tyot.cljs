@@ -60,9 +60,8 @@
        (sort-by :alkanut @tiedot)])))
 
 (defn tee-taulukko []
-  (let [toteumat (into [] (map-indexed ; Summatuilla riveillä ei ole yksilöivää id:tä, generoidaan omat
-                            #(assoc %2 :id %1)
-                            @tiedot/haetut-toteumat))]
+  (let [toteumat @tiedot/haetut-toteumat
+        tunniste (juxt :pvm :toimenpidekoodi :jarjestelmanlisaama)]
     [:span
      [grid/grid
       {:otsikko                   "Kokonaishintaisten töiden toteumat"
@@ -74,10 +73,10 @@
        :mahdollista-rivin-valinta true
        :max-rivimaara 500
        :max-rivimaaran-ylitys-viesti "Toteumia löytyi yli 500. Tarkenna hakurajausta."
-       :tunniste (juxt :pvm :toimenpidekoodi)
+       :tunniste tunniste
        :vetolaatikot (into {}
                            (map (juxt
-                                 (juxt :pvm :toimenpidekoodi)
+                                 tunniste
                                  (fn [{:keys [pvm toimenpidekoodi]}]
                                    [tehtavan-paivakohtaiset-tiedot pvm toimenpidekoodi])))
                            toteumat)}
