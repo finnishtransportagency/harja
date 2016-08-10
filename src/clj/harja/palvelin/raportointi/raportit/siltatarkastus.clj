@@ -15,6 +15,7 @@
 (defqueries "harja/palvelin/raportointi/raportit/siltatarkastus.sql")
 
 (def ^{:private true} korosta-kun-arvoa-d-vahintaan 1)
+(def tarkastamatta-str "Tarkastamatta")
 
 (defn- muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
@@ -86,7 +87,7 @@
                      (:siltanimi tarkastus)
                      (if (:tarkastusaika tarkastus)
                        (:tarkastusaika tarkastus)
-                       "Tarkastamatta")
+                       tarkastamatta-str)
                      (or (:tarkastaja tarkastus)
                          "-")
                      [:arvo-ja-osuus {:arvo (:a tarkastus)
@@ -218,63 +219,68 @@
         yksittaisen-sillan-perustiedot (when (and (= konteksti :urakka)
                                                   (not= silta-id :kaikki))
                                          (first (hae-sillan-tarkastus db {:urakka urakka-id
-                                                                          :vuosi vuosi
-                                                                          :silta silta-id})))
+                                                                          :vuosi  vuosi
+                                                                          :silta  silta-id})))
         datarivit (muodosta-raportin-datarivit db urakka-id hallintayksikko-id konteksti silta-id vuosi)
         raportin-nimi "Siltatarkastusraportti"
-        arvon-d-sisaltavat-rivi-indeksit (fn [konteksti datarivit]
-                                           (cond (= konteksti :urakka)
-                                                 (into #{}
-                                                       (keep-indexed
-                                                         (fn [index rivi]
-                                                           (let [d-osuus (:osuus (second (get rivi 7)))]
-                                                             (when (and d-osuus
-                                                                        (>= d-osuus korosta-kun-arvoa-d-vahintaan))
-                                                               index)))
-                                                         (butlast datarivit)))
+        liita (fn [rivi kentta arvo] (assoc (if (map? rivi) rivi {:rivi rivi}) kentta arvo))
+        virhe? (fn [rivi]
+                 (if (cond
+                       (and (= konteksti :urakka) (= silta-id :kaikki))
+                       (let [d-osuus (:osuus (second (get rivi 7)))]
+                         (and d-osuus (>= d-osuus korosta-kun-arvoa-d-vahintaan)))
 
-                                                 (= konteksti :silta)
-                                                 (into #{}
-                                                       (keep-indexed
-                                                         (fn [index rivi]
-                                                           (let [d-rivi? (= (get rivi 2) "D")]
-                                                             (when d-rivi?
-                                                               index)))
-                                                         datarivit))
+                       (and (= konteksti :urakka) (not= silta-id :kaikki))
+                       (= (get rivi 2) "D")
 
-                                                 :default
-                                                 #{}))
+                       :else
+                       false)
+                   (liita rivi :virhe? true)
+                   rivi))
+        tarkastamaton? (fn [rivi]
+                         (if (cond
+                               (and (= konteksti :urakka) (= silta-id :kaikki))
+                               (let [tarkastettu (get rivi 2)]
+                                 (= tarkastettu tarkastamatta-str))
+
+                               :else
+                               false)
+                           (liita rivi :tarkastamaton? true)
+                           rivi))
+        lihavoi (fn [rivi]
+                  (if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) rivi))
+        korosta (fn [rivi]
+                  (if (:virhe? rivi) (liita rivi :korosta? true) rivi))
         otsikko (case konteksti
-                    :urakka
-                    (if (= silta-id :kaikki)
-                      (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) " vuodelta " vuosi)
-                      (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
-                           (str (:siltanimi yksittaisen-sillan-perustiedot)
-                                " (" (:siltatunnus yksittaisen-sillan-perustiedot)) "), " vuosi))
-                    :hallintayksikko
-                    (str raportin-nimi ", " (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))) " " vuosi)
-                    :koko-maa
-                    (str raportin-nimi ", KOKO MAA " vuosi))]
+                  :urakka
+                  (if (= silta-id :kaikki)
+                    (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) " vuodelta " vuosi)
+                    (str raportin-nimi ", " (:nimi (first (urakat-q/hae-urakka db urakka-id))) ", "
+                         (str (:siltanimi yksittaisen-sillan-perustiedot)
+                              " (" (:siltatunnus yksittaisen-sillan-perustiedot)) "), " vuosi))
+                  :hallintayksikko
+                  (str raportin-nimi ", " (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id))) " " vuosi)
+                  :koko-maa
+                  (str raportin-nimi ", KOKO MAA " vuosi))]
     [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko
-                 :tyhja (if silta-id
-                          "Sillalle ei ole tehty tarkastusta valittuna vuonna."
-                          "Ei raportoitavia siltatarkastuksia.")
+                :nimi        raportin-nimi}
+     [:taulukko {:otsikko                    otsikko
+                 :tyhja                      (if silta-id
+                                               "Sillalle ei ole tehty tarkastusta valittuna vuonna."
+                                               "Ei raportoitavia siltatarkastuksia.")
                  :viimeinen-rivi-yhteenveto? (or (and (= konteksti :urakka) (= silta-id :kaikki))
                                                  (= konteksti :hallintayksikko)
                                                  (= konteksti :koko-maa))
-                 :sheet-nimi raportin-nimi
-                 :korosta-rivit (cond (and (= konteksti :urakka) (= silta-id :kaikki))
-                                      (arvon-d-sisaltavat-rivi-indeksit :urakka datarivit)
-
-                                      (and (= konteksti :urakka) (not= silta-id :kaikki))
-                                      (arvon-d-sisaltavat-rivi-indeksit :silta datarivit)
-
-                                      :default
-                                      #{})}
+                 :sheet-nimi                 raportin-nimi}
       otsikkorivit
-      datarivit]
+      ;; Viimeinen rivi on yhteenlaskurivi
+      (conj (vec (->> datarivit
+                      butlast
+                      (map virhe?)
+                      (map tarkastamaton?)
+                      (map korosta)
+                      (map lihavoi)))
+            (last datarivit))]
      (when yksittaisen-sillan-perustiedot
        [:yhteenveto [["Tarkastaja" (:tarkastaja yksittaisen-sillan-perustiedot)]
                      ["Tarkastettu" (pvm/pvm-opt (:tarkastusaika yksittaisen-sillan-perustiedot))]]])]))
