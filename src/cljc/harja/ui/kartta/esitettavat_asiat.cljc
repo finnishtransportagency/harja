@@ -7,6 +7,7 @@
             [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.domain.ilmoitukset :as ilmoitukset]
             [harja.geo :as geo]
+            [harja.ui.kartta.varit.puhtaat :as puhtaat]
 
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
@@ -461,14 +462,16 @@
 
 (defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
   (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
-  (assoc aita
-         :type :suljettu-tieosuus
-         :nimi "Suljettu tieosuus"
-         :selite {:teksti "Kaista suljettu"}
-         :alue (maarittele-feature {:sijainti (:geometria aita)}
-                                   (valittu-fn? aita)
-                                   nil
-                                   [ulkoasu/suljettu-tieosuus])))
+  (let [viivat ulkoasu/suljettu-tieosuus]
+    (assoc aita
+     :type :suljettu-tieosuus
+     :nimi "Suljettu tieosuus"
+     :selite {:teksti "Kaista suljettu"
+              :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+     :alue (maarittele-feature {:sijainti (:geometria aita)}
+                               (valittu-fn? aita)
+                               nil
+                               viivat))))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
