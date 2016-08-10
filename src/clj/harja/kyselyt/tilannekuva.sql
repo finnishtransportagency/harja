@@ -365,4 +365,4 @@ WHERE st.poistettu IS NULL
                              INNER JOIN hanke h ON h.id=u.hanke
                              INNER JOIN alueurakka au ON au.alueurakkanro = h.alueurakkanro
 	                          WHERE u.id IN (:urakat)))
-      AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.geometria);
+      AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
