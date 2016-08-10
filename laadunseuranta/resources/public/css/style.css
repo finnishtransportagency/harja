@@ -209,7 +209,7 @@ button {
 }
 
 .sidepanel {
-    position: relative;
+    position: absolute;
     padding-top: 10px;
     box-sizing: border-box;
     height: 390px;
@@ -854,4 +854,31 @@ button:disabled {
     background-color: transparent;
     color: rgb(9,79,192);
     border: 1px solid rgb(9,79,192);
+}
+
+.painikelaatikko {
+    position: fixed;
+    top: 15%;
+    left: 12%;
+    width: 75%;
+    height: 75%;
+    overflow: auto;
+    z-index: 10000;
+    background-color: white;
+}
+
+.painikelaatikko div {
+    float: left;
+    width: 20%;
+    height: 30%;
+    background-color: rgb(9,79,192);
+    border: 1px solid black;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-left: 3%;
+    mergin-right: 3%;
+    color: white;
+    line-height: 500%;
+    font-size: 20px;
+    text-align: center;
 }

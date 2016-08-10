@@ -209,10 +209,28 @@
          [kertapainike "Ojat" #(alivalikkoon :ojat)]
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
+(defn- paallystys [alivalikot]
+  [:div.painikelaatikko
+   [:div "1"]
+   [:div "2"]
+   [:div "3"]
+   [:div "4"]
+   [:div "5"]
+   [:div "6"]
+   [:div "7"]
+   [:div "8"]
+   [:div {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]])
+
+(defn- tiemerkinta [alivalikot]
+  [:div.painikelaatikko
+   [:div "1"]
+   [:div {:on-click #(turn-off alivalikot :tiemerkinta)} "Peruuta"]])
+
 (defn pikavalintapaneeli [tr-osoite moodi havainnot alivalikot kitkamittaus-kirjattu kertakirjaus-kirjattu yleishavainto-kirjattu
                           lumisuus-kirjattu tasaisuus-kirjattu soratiehavainto-kirjattu keskiarvo-atom lumimaara-atom
                           tasaisuus-atom kiinteys-atom polyavyys-atom]
-  (if (= :kelitarkastus @moodi)
+  (condp = @moodi
+    :kelitarkastus
     [:div.sidepanel
      (cond (:liukasta @havainnot)
            [liukkaus-paalla havainnot kitkamittaus-kirjattu keskiarvo-atom]
@@ -240,7 +258,8 @@
             [on-painike "P- & L-alueet" alivalikot :pl-alueet]
             [on-painike "Pysäkit" alivalikot :pysakit]
             [on-painike "Liikennemerkit" alivalikot :liikennemerkit]])]
-    
+
+    :soratietarkastus
     [:div.sidepanel
      (cond (:soratie @alivalikot)
            [soratiet alivalikot soratiehavainto-kirjattu tasaisuus-atom kiinteys-atom polyavyys-atom]
@@ -260,7 +279,20 @@
             #_[toggle-painike "Soratie alkaa" alivalikot :soratie :on-click #(swap! havainnot assoc :soratie true)]
             [on-painike "Liikenneympäristö" alivalikot :liikenneymparisto]
             [on-painike "Viherhoito" alivalikot :viherhoito]
-            [on-painike "Muut" alivalikot :muut]])]))
+            [on-painike "Muut" alivalikot :muut]])]
+
+    :yllapitotarkastus
+    [:div.sidepanel
+     (cond (:paallystys @alivalikot)
+           [paallystys alivalikot]
+
+           (:tiemerkinta @alivalikot)
+           [tiemerkinta alivalikot]
+
+           :default
+           [:div.sidepanel-box
+            [on-painike "Päällystys" alivalikot :paallystys]
+            [on-painike "Tiemerkintä" alivalikot :tiemerkinta]])]))
 
 (defn lisaa-havainto [aktiivinen on-click on-press]
   [:div.sidepanel-box
