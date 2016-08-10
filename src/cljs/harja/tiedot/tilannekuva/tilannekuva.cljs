@@ -382,11 +382,11 @@ hakutiheys-historiakuva 1200000)
                nakymassa? @nakymassa?
                ;; Uusi haku myös kun aikasuodattimien arvot muuttuvat
                _ @nykytilanteen-aikasuodattimen-arvo
-               _ @historiakuvan-aikavali
+               _ @historiakuvan-aikavali]
                ;; Jos halutaan aloittaa uusi haku kun vaihdetaan nykytilanteen ja historian välillä,
-               ;; poista tästä kommentti. Haku lähtee kyllä nyt kun aikaväliä vaihdetaan, ja voi olla
+               ;; liitä riippuvuuksiin mukaan myös @valittu-tila. 
+               ;; Haku lähtee kyllä nyt kun aikaväliä vaihdetaan, ja voi olla
                ;; perusteltua välttää ylimääräisiä, melko varmasti turhia, hakuja.
-               #_@valittu-tila]
               {:odota bufferi}
               (when nakymassa?
                 (hae-asiat hakuparametrit))))
