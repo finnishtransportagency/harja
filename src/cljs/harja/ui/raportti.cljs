@@ -89,6 +89,7 @@
                                         [(:rivi rivi) rivi]
                                         [rivi {}])
                                       lihavoi? (:lihavoi? optiot)
+                                      korosta? (:korosta? optiot)
                                       mappina (assoc
                                                 (zipmap (range (count sarakkeet))
                                                         rivi)
@@ -98,7 +99,7 @@
                                                (= viimeinen-rivi rivi))
                                           (assoc :yhteenveto true)
 
-                                          (when korosta-rivit (korosta-rivit index))
+                                          (or korosta? (when korosta-rivit (korosta-rivit index)))
                                           (assoc :korosta true)
 
                                           lihavoi?
