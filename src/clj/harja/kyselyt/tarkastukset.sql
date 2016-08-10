@@ -45,6 +45,7 @@ LIMIT :maxrivimaara;
 -- row-fn: geo/muunna-reitti
 SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
        t.tyyppi,
+       t.laadunalitus,
        CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
         THEN 'urakoitsija' :: osapuoli
         ELSE 'tilaaja' :: osapuoli
