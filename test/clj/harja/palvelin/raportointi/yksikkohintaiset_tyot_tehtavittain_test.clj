@@ -75,9 +75,11 @@
                          :leveys  10
                          :otsikko "Toteutunut määrä"}
                         {:leveys  15
-                         :otsikko "Suunnitellut kustannukset hoitokaudella €"}
+                         :otsikko "Suunnitellut kustannukset hoitokaudella €"
+                         :fmt :raha}
                         {:leveys  15
-                         :otsikko "Toteutuneet kustannukset €"})
+                         :otsikko "Toteutuneet kustannukset €"
+                         :fmt :raha})
                      '(("Opastustaulujen ja opastusviittojen uusiminen -porttaalissa olevan viitan/opastetaulun uusiminen"
                          [:info
                           ""]
