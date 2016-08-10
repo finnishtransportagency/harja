@@ -221,6 +221,10 @@
       (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
       (not validi?))))
 
+(defn disabloi-lomake? [tarkastus lomakkeen-virheet]
+  ;; Palauttaa false (ei disabloida) kun virheet ovat tyhjät, ja (validoi-tarkastuslomake) palauttaa false
+  (not (and (empty? lomakkeen-virheet) (false? (validoi-tarkastuslomake tarkastus)))))
+
 (defn tarkastuslomake [tarkastus-atom optiot]
   (let [urakka-id (:id @nav/valittu-urakka)
         urakkatyyppi (:tyyppi @nav/valittu-urakka)
@@ -237,21 +241,21 @@
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
        [lomake/lomake
-        {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
-         :muokkaa! #(reset! tarkastus-atom %)
+        {:otsikko      (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
+         :muokkaa!     #(reset! tarkastus-atom %)
          :voi-muokata? voi-muokata?
-         :footer-fn (fn [virheet _ _]
-                      (when voi-kirjoittaa?
-                        [napit/palvelinkutsu-nappi
-                         "Tallenna tarkastus"
-                         (fn []
-                           (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus (:nakyma optiot)))
-                         {:disabled (not (empty? virheet))
-                          :kun-onnistuu (fn [tarkastus]
-                                          (reset! tarkastukset/valittu-tarkastus nil)
-                                          (tarkastukset/paivita-tarkastus-listaan! tarkastus))
-                          :virheviesti "Tarkastuksen tallennus epäonnistui."
-                          :ikoni (ikonit/tallenna)}]))}
+         :footer-fn    (fn [virheet _ _]
+                         (when voi-kirjoittaa?
+                           [napit/palvelinkutsu-nappi
+                            "Tallenna tarkastus"
+                            (fn []
+                              (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus (:nakyma optiot)))
+                            {:disabled     (disabloi-lomake? tarkastus virheet)
+                             :kun-onnistuu (fn [tarkastus]
+                                             (reset! tarkastukset/valittu-tarkastus nil)
+                                             (tarkastukset/paivita-tarkastus-listaan! tarkastus))
+                             :virheviesti  "Tarkastuksen tallennus epäonnistui."
+                             :ikoni        (ikonit/tallenna)}]))}
 
         [(when jarjestelmasta?
            {:otsikko "Lähde" :nimi :luoja :tyyppi :string
@@ -354,7 +358,7 @@
                                                                    tarkastus
                                                                    (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
                                  tarkastus-ja-laatupoikkeama)))
-                           {:disabled (validoi-tarkastuslomake tarkastus)
+                           {:disabled (disabloi-lomake? tarkastus nil)
                             :kun-onnistuu (fn [tarkastus]
                                             (reset! tarkastus-atom tarkastus)
                                             (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
