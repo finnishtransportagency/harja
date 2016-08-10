@@ -31,6 +31,7 @@
 (def +puutteelliset-parametrit+ "puutteelliset-parametrit")
 (def +virheellinen-sijainti+ "virheellinen-sijainti")
 (def +virheellinen-paivamaara+ "virheellinen-paivamaara")
+(def +sopimusta-ei-loydy+ "sopimusta ei löydy")
 
 (defn heita-poikkeus [tyyppi virheet]
   (throw+
