@@ -383,10 +383,10 @@ hakutiheys-historiakuva 1200000)
                ;; Uusi haku myös kun aikasuodattimien arvot muuttuvat
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
-               ;; Jos halutaan aloittaa uusi haku kun vaihdetaan nykytilanteen ja historian välillä,
-               ;; liitä riippuvuuksiin mukaan myös @valittu-tila. 
-               ;; Haku lähtee kyllä nyt kun aikaväliä vaihdetaan, ja voi olla
-               ;; perusteltua välttää ylimääräisiä, melko varmasti turhia, hakuja.
+               ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet, 
+               ;; aikasuodattimeen ja tilaan sopivat urakat. Kun tämä haku on valmis,
+               ;; lähdetään hakemaan kartalle piirrettävät jutut. Tämän takia emme halua tehdä
+               ;; asioiden hakua tilaan sidottuna!
               {:odota bufferi}
               (when nakymassa?
                 (hae-asiat hakuparametrit))))
