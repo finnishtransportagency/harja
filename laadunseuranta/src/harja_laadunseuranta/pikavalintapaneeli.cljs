@@ -210,21 +210,28 @@
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
 (defn- paallystys [alivalikot]
-  [:div.painikelaatikko
-   [:div "1"]
-   [:div "2"]
-   [:div "3"]
-   [:div "4"]
-   [:div "5"]
-   [:div "6"]
-   [:div "7"]
-   [:div "8"]
-   [:div {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]])
+  (let [valinnat (atom {})]
+    (fn [alivalikot]
+      [:div.painikelaatikko
+       [toggle-painike "Saumavirhe" valinnat :saumavirhe]
+       [:div "Saumavirhe"]
+       [:div "Lajittuma"]
+       [:div "Epätasaisuus"]
+       [:div "Halkeamat"]
+       [:div "Vesilammikot"]
+       [:div "Epätasaiset reunat"]
+       [:div "Jyrän jälkiä"]
+       [:div "Sideaineläikkiä"]
+       [:div "Väärä korkeusasema"]
+       [:div "Pinta harva"]
+       [:div "Pintakuivatus puutteellinen"]
+       [:div "Kaivojen korkeusasema"]
+       [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]])))
 
 (defn- tiemerkinta [alivalikot]
   [:div.painikelaatikko
    [:div "1"]
-   [:div {:on-click #(turn-off alivalikot :tiemerkinta)} "Peruuta"]])
+   [:div.peruuta {:on-click #(turn-off alivalikot :tiemerkinta)} "Peruuta"]])
 
 (defn pikavalintapaneeli [tr-osoite moodi havainnot alivalikot kitkamittaus-kirjattu kertakirjaus-kirjattu yleishavainto-kirjattu
                           lumisuus-kirjattu tasaisuus-kirjattu soratiehavainto-kirjattu keskiarvo-atom lumimaara-atom

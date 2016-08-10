@@ -93,6 +93,7 @@
   (condp = tyyppi
     :kelitarkastus 1
     :soratietarkastus 2
+    :yllapitotarkastus 3
     0))
 
 (defn- luo-uusi-tarkastusajo! [tiedot kayttaja]

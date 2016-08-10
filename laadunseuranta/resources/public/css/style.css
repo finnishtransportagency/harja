@@ -870,7 +870,7 @@ button:disabled {
 .painikelaatikko div {
     float: left;
     width: 20%;
-    height: 30%;
+    height: 19%;
     background-color: rgb(9,79,192);
     border: 1px solid black;
     margin-top: 1%;
@@ -878,7 +878,7 @@ button:disabled {
     margin-left: 3%;
     mergin-right: 3%;
     color: white;
-    line-height: 500%;
+    padding-top: 20px;
     font-size: 20px;
     text-align: center;
 }
