@@ -65,7 +65,9 @@
                        :pl-alue-puhdistettava :pl-alue-korjattavaa :viheralueet-hoitamatta
                        :rumpu-tukossa :rumpu-liettynyt :rumpu-rikki
                        :kaidevaurio :kiveysvaurio
-                       :yleishavainto)]
+                       :yleishavainto
+                       :saumavirhe :lajittuma :epatasaisuus :halkeamat :vesilammikot :epatasaisetreunat
+                       :jyranjalkia :sideainelaikkia :vaarakorkeusasema :pintaharva :pintakuivatuspuute :kaivojenkorkeusasema)]
 
    (s/optional-key :kuvaus) (s/maybe s/Str)
    (s/optional-key :laadunalitus) (s/maybe s/Bool)
