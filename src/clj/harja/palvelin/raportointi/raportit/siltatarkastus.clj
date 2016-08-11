@@ -247,10 +247,23 @@
                                false)
                            (liita rivi :tarkastamaton? true)
                            rivi))
+
         lihavoi (fn [rivi]
                   (if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) rivi))
         korosta (fn [rivi]
                   (if (:virhe? rivi) (liita rivi :korosta? true) rivi))
+        jarjesta (fn [rivit]
+                   (let [indeksi (fn [i] #(nth (:rivi %) i))]
+                     (vec (cond
+                            (and (= konteksti :urakka) (= silta-id :kaikki))
+                            (sort-by (indeksi 2) rivit)     ;; Tarkastettu
+
+                            (and (= konteksti :urakka) (not= silta-id :kaikki))
+                            (sort-by (indeksi 0) rivit)     ;; Siltanumero, onko ok?
+
+                            :else
+                            rivit))))
+        jarjesta-ryhmat (fn [tila-ja-rivit] (vec (apply concat (mapv (comp jarjesta val) tila-ja-rivit))))
         otsikko (case konteksti
                   :urakka
                   (if (= silta-id :kaikki)
@@ -279,7 +292,9 @@
                       (map virhe?)
                       (map tarkastamaton?)
                       (map korosta)
-                      (map lihavoi)))
+                      (map lihavoi)
+                      (group-by (juxt :tarkastamaton? :virhe?))
+                      jarjesta-ryhmat))
             (last datarivit))]
      (when yksittaisen-sillan-perustiedot
        [:yhteenveto [["Tarkastaja" (:tarkastaja yksittaisen-sillan-perustiedot)]
