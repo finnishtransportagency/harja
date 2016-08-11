@@ -175,12 +175,12 @@
                     [(concat ["Yhteensä"]
                              [tpp-yht tur-yht urk-yht])])))))]
 
+     (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
+
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
          (pylvaat-kuukausittain {:otsikko (str "Ilmoitukset kuukausittain" hoitokaudella-tahan-asti-opt)
                                  :alkupvm graafin-alkupvm :loppupvm graafin-loppupvm
                                  :kuukausittainen-data ilmoitukset-kuukausittain-tyyppiryhmiteltyna :piilota-arvo? #{0}
                                  :legend ["TPP" "TUR" "URK"]})
-         (ei-osumia-aikavalilla-teksti "ilmoituksia" graafin-alkupvm graafin-loppupvm)))
-
-     (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)]))
+         (ei-osumia-aikavalilla-teksti "ilmoituksia" graafin-alkupvm graafin-loppupvm)))]))
