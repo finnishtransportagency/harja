@@ -869,7 +869,7 @@ button:disabled {
     background-color: white;
 }
 
-.painikelaatikko div {
+.painikelaatikko .pikavalintapainike {
     float: left;
     width: 20%;
     height: 19%;
@@ -883,4 +883,17 @@ button:disabled {
     padding-top: 20px;
     font-size: 20px;
     text-align: center;
+}
+
+.painikelaatikko .painike-aktiivinen {
+    background-color: yellow;
+    color: black;
+}
+
+.painikelaatikko .peruuta {
+    background-color: gray;
+    color: white;
+    width: 200px;
+    height: 50px;
+    float: left;
 }
