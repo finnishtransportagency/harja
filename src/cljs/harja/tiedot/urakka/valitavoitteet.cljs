@@ -33,7 +33,8 @@
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
-              (hae-urakan-valitavoitteet urakka-id)))
+              (when (and urakka-id nakymassa?)
+                (hae-urakan-valitavoitteet urakka-id))))
 
 (def urakan-valitavoitteet
   (reaction (when @valitavoitteet
