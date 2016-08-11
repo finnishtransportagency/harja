@@ -359,7 +359,7 @@ SELECT st.geometria AS "geometria",
 FROM suljettu_tieosuus st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
-      AND ((:urakat) IS NULL OR (SELECT bool_or(ST_Intersects(au.alue,st.geometria))
+      AND ((NOT :urakatannettu) OR (SELECT bool_or(ST_Intersects(au.alue,st.geometria))
                                    FROM urakka u
                              INNER JOIN hanke h ON h.id=u.hanke
                              INNER JOIN alueurakka au ON au.alueurakkanro = h.alueurakkanro

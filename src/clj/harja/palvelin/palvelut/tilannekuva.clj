@@ -254,12 +254,12 @@
   (when (tk/valittu? yllapito tk/suljetut-tiet)
     (vec (map (comp #(konv/array->vec % :kaistat)
                     #(konv/array->vec % :ajoradat))
-              (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
+              (q/hae-suljetut-tieosuudet db {:urakat (when-not (every? nil? urakat) urakat)
+                                             :urakatannettu (not (every? nil? urakat))
+                                             :x1 (:xmin alue)
                                              :y1 (:ymin alue)
                                              :x2 (:xmax alue)
                                              :y2 (:ymax alue)
-                                             :urakat (when-not (every? nil? urakat)
-                                                       urakat)
                                              :treshold 100})))))
 
 (defn- hae-toteumien-selitteet
