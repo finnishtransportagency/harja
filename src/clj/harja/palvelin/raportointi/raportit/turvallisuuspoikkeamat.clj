@@ -73,7 +73,7 @@
         (concat (when urakoittain?
                   [{:otsikko "Urakka"}])
                 [{:otsikko "Tyyppi"}
-                 {:otsikko "Määrä" :fmt :kokonaisluku}])))
+                 {:otsikko "Määrä"}])))
 
 (defn- turvallisuuspoikkeamat-tyypeittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
   (let [turpo-maarat-per-tyyppi (fn [turpot tyyppi]
@@ -114,10 +114,10 @@
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
                   [{:otsikko "Hallintayksikkö"}])
-                [{:otsikko "Työtapaturmat" :fmt :kokonaisluku}
-                 {:otsikko "Vaaratilanteet" :fmt :kokonaisluku}
-                 {:otsikko "Turvallisuushavainnot" :fmt :kokonaisluku}
-                 {:otsikko "Muut" :fmt :kokonaisluku}])))
+                [{:otsikko "Työtapaturmat"}
+                 {:otsikko "Vaaratilanteet"}
+                 {:otsikko "Turvallisuushavainnot"}
+                 {:otsikko "Muut"}])))
 
 (defn- turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
   (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
@@ -153,8 +153,8 @@
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
                   [{:otsikko "Hallintayksikkö"}])
-                [{:otsikko "Lievät" :fmt :kokonaisluku}
-                 {:otsikko "Vakavat" :fmt :kokonaisluku}])))
+                [{:otsikko "Lievät"}
+                 {:otsikko "Vakavat"}])))
 
 (defn- turvallisuuspoikkeamat-listana-rivit [turpot urakoittain?]
   (keep identity
@@ -187,8 +187,8 @@
                  {:otsikko "Tyyppi" :leveys 24}
                  {:otsikko "Vakavuus\u00ADaste" :leveys 15}
                  {:otsikko "Ammatti" :leveys 14}
-                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9 :fmt :kokonaisluku}
-                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9 :fmt :kokonaisluku}])))
+                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9}
+                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9}])))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
                                alkupvm loppupvm urakkatyyppi] :as parametrit}]

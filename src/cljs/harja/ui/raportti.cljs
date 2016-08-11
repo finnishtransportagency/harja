@@ -39,7 +39,6 @@
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})
         formatter (fn [{fmt :fmt}]
                     (let [format-fn (case fmt
-                                      :kokonaisluku int
                                       :numero #(fmt/desimaaliluku-opt % 1 true)
                                       :prosentti #(fmt/prosentti-opt % 1)
                                       :raha #(fmt/desimaaliluku-opt % 2 true)
