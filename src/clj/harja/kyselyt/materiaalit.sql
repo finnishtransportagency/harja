@@ -306,7 +306,7 @@ FROM (SELECT
         mk.nimi                      AS materiaali_nimi,
         date_trunc('day', t.alkanut) AS alkanut,
         SUM(tm.maara)                AS maara,
-        ''                           AS lisatieto,
+        string_agg(t.lisatieto, ', ') AS lisatieto,
         TRUE                         AS koneellinen
       FROM toteuma_materiaali tm
         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id

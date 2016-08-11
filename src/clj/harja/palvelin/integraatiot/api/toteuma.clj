@@ -6,6 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as toteumat]
+            [harja.kyselyt.sopimukset :as sopimukset]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -21,45 +22,54 @@
             #(get-in % [toteumatyyppi-yksikko :toteuma :sopimusId])
             (toteumatyyppi-monikko data)))))
 
+
+(defn hae-sopimus-id [db urakka-id toteuma]
+  (let [sopimus-id (or (:sopimusId toteuma) (:id (first (sopimukset/hae-urakan-paasopimus db urakka-id))))]
+    (if sopimus-id
+      sopimus-id
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sopimusta-ei-loydy+
+                          :viesti (format "Urakalle (id: %s.) ei löydy sopimusta" urakka-id)}]}))))
+
 (defn paivita-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Päivitetään vanha toteuma, jonka ulkoinen id on " (get-in toteuma [:tunniste :id]))
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma))
-
-  (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
-         db
-         (aika-string->java-sql-date (:alkanut toteuma))
-         (aika-string->java-sql-date (:paattynyt toteuma))
-         (:id kirjaaja)
-         (get-in toteuma [:suorittaja :nimi])
-         (get-in toteuma [:suorittaja :ytunnus])
-         ""
-         (:toteumatyyppi toteuma)
-         (:reitti toteuma)
-         (:sopimusId toteuma)
-         (get-in toteuma [:tunniste :id])
-         urakka-id)))
+  (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
+    (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
+           db
+           (aika-string->java-sql-date (:alkanut toteuma))
+           (aika-string->java-sql-date (:paattynyt toteuma))
+           (:id kirjaaja)
+           (get-in toteuma [:suorittaja :nimi])
+           (get-in toteuma [:suorittaja :ytunnus])
+           ""
+           (:toteumatyyppi toteuma)
+           (:reitti toteuma)
+           sopimus-id
+           (get-in toteuma [:tunniste :id])
+           urakka-id))))
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
   (validointi/validoi-toteuman-pvm-vali (:alkanut toteuma) (:paattynyt toteuma))
   (validointi/tarkista-tehtavat db (:tehtavat toteuma))
-
-  (:id (toteumat/luo-toteuma<!
-         db
-         urakka-id
-         (:sopimusId toteuma)
-         (aika-string->java-sql-date (:alkanut toteuma))
-         (aika-string->java-sql-date (:paattynyt toteuma))
-         (:toteumatyyppi toteuma)
-         (:id kirjaaja)
-         (get-in toteuma [:suorittaja :nimi])
-         (get-in toteuma [:suorittaja :ytunnus])
-         ""
-         (get-in toteuma [:tunniste :id])
-         (:reitti toteuma)
-         nil nil nil nil nil
-         "harja-api")))
+  (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
+    (:id (toteumat/luo-toteuma<!
+           db
+           urakka-id
+           sopimus-id
+           (aika-string->java-sql-date (:alkanut toteuma))
+           (aika-string->java-sql-date (:paattynyt toteuma))
+           (:toteumatyyppi toteuma)
+           (:id kirjaaja)
+           (get-in toteuma [:suorittaja :nimi])
+           (get-in toteuma [:suorittaja :ytunnus])
+           ""
+           (get-in toteuma [:tunniste :id])
+           (:reitti toteuma)
+           nil nil nil nil nil
+           "harja-api"))))
 
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (if (toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
@@ -104,8 +114,8 @@
     (let [materiaali-nimi (:materiaali materiaali)
           materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
       (if (nil? materiaalikoodi-id)
-        (throw+ {:type    virheet/+sisainen-kasittelyvirhe+
-                 :virheet [{:koodi  virheet/+tuntematon-materiaali+
+        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+                 :virheet [{:koodi virheet/+tuntematon-materiaali+
                             :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
       (toteumat/luo-toteuma-materiaali<!
         db

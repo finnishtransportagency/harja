@@ -13,8 +13,7 @@
     },
     "sopimusId": {
       "id": "urn:harja/toteumat/0/toteuma/sopimusId",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     },
     "alkanut": {
       "id": "urn:harja/toteumat/0/toteuma/alkanut",

@@ -81,6 +81,8 @@
           {:otsikko "Käytetty määrä (t)" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
            :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
           {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
-           :hae #(if (muokattava? %) (:lisatieto %) "Koneellisesti raportoitu")}]
+           :hae #(if (muokattava? %)
+                   (:lisatieto %)
+                   (str (:lisatieto %) " (Koneellisesti raportoitu)"))}]
 
          listaus]]))))
