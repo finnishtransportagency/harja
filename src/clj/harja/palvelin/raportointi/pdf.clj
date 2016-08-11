@@ -119,6 +119,7 @@
                              :numero #(fmt/desimaaliluku-opt % 1 true)
                              :prosentti #(fmt/prosentti-opt %)
                              :raha #(fmt/desimaaliluku-opt % 2 true)
+                             :pvm #(fmt/pvm-opt %)
                              str)
                        naytettava-arvo (or
                                          (cond
