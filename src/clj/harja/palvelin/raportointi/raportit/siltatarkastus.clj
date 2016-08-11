@@ -226,13 +226,34 @@
         liita (fn [rivi kentta arvo] (assoc (if (map? rivi) rivi {:rivi rivi}) kentta arvo))
         kentta-indeksilla (fn [rivi indeksi] (nth (if (map? rivi) (:rivi rivi) rivi) indeksi))
         virhe? (fn [rivi]
-                 (if (let [d-osuus (:osuus (second (kentta-indeksilla rivi 7)))]
-                       (and d-osuus (>= d-osuus korosta-kun-arvoa-d-vahintaan)))
+                 (if (cond
+                       (and (= konteksti :urakka) (= silta-id :kaikki))
+                       (let [d-osuus (:osuus (second (kentta-indeksilla rivi 7)))]
+                         (and d-osuus (>= d-osuus korosta-kun-arvoa-d-vahintaan)))
+
+                       (and (= konteksti :urakka) (not= silta-id :kaikki))
+                       (= (kentta-indeksilla rivi 2) "D")
+
+                       (= konteksti :hallintayksikko)
+                       (let [d-osuus (:osuus (second (kentta-indeksilla rivi 4)))]
+                         (and d-osuus (>= d-osuus korosta-kun-arvoa-d-vahintaan)))
+
+                       (= konteksti :koko-maa)
+                       (let [d-osuus (:osuus (second (kentta-indeksilla rivi 4)))]
+                         (and d-osuus (>= d-osuus korosta-kun-arvoa-d-vahintaan)))
+
+                       :else
+                       false)
                    (liita rivi :virhe? true)
                    (liita rivi :virhe? false)))
         tarkastamaton? (fn [rivi]
-                         (if (let [tarkastettu (kentta-indeksilla rivi 2)]
-                               (= tarkastettu tarkastamatta-str))
+                         (if (cond
+                               (and (= konteksti :urakka) (= silta-id :kaikki))
+                               (let [tarkastettu (kentta-indeksilla rivi 2)]
+                                 (= tarkastettu tarkastamatta-str))
+
+                               :else
+                               false)
                            (liita rivi :tarkastamaton? true)
                            (liita rivi :tarkastamaton? false)))
 
@@ -273,20 +294,36 @@
                                                  (= konteksti :koko-maa))
                  :sheet-nimi                 raportin-nimi}
       otsikkorivit
-      (if (and (= konteksti :urakka) (= silta-id :kaikki))
+      (cond
+        (and (= konteksti :urakka) (= silta-id :kaikki))
         ;; Korostetaan, lihavoidaan, ja ja järjestetään datarivit
         ;; Viimeinen rivi on yhteenlaskurivi
         (conj (vec (->> datarivit
-                       butlast
-                       (map virhe?)
-                       (map tarkastamaton?)
-                       (map korosta)
-                       (map lihavoi)
-                       jarjesta-ryhmiin
-                       jarjesta-ryhmien-sisallot))
-             (last datarivit))
-
-        datarivit)]
+                        butlast
+                        (map virhe?)
+                        (map tarkastamaton?)
+                        (map korosta)
+                        (map lihavoi)
+                        jarjesta-ryhmiin
+                        jarjesta-ryhmien-sisallot))
+              (last datarivit))
+        (and (= konteksti :urakka) (not= silta-id :kaikki))
+        (vec (->> datarivit
+                  (map virhe?)
+                  (map korosta)))
+        (and (= konteksti :hallintayksikko))
+        (conj (vec (->> datarivit
+                        butlast
+                        (map virhe?)
+                        (map korosta)))
+              (last datarivit))
+        (and (= konteksti :koko-maa))
+        (conj (vec (->> datarivit
+                        butlast
+                        (map virhe?)
+                        (map korosta)))
+              (last datarivit))
+        :else datarivit)]
      (when yksittaisen-sillan-perustiedot
        [:yhteenveto [["Tarkastaja" (:tarkastaja yksittaisen-sillan-perustiedot)]
                      ["Tarkastettu" (pvm/pvm-opt (:tarkastusaika yksittaisen-sillan-perustiedot))]]])]))
