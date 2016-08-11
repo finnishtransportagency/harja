@@ -186,7 +186,13 @@
    #{"HARJAUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    #{"LIIKENNEMERKKIEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
    #{"L- JA P-ALUEIDEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
-   #{"SILTOJEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]})
+   #{"SILTOJEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   ;; tilannekuva/yllapito
+   #{"ASFALTOINTI"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"TIEMERKINTÄ"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"KUUMENNUS"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"SEKOITUS TAI STABILOINTI"} [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
+   #{"TURVALAITE"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]})
 
 ;;;;;;;;;;
 ;;; Värimäärittelyt loppuu

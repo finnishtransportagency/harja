@@ -363,7 +363,8 @@
    "SILTOJEN PUHDISTUS"              "Siltojen puhdistus"
 
    "L- JA P-ALUEIDEN PUHDISTUS"      "L- ja P-alueiden puhdistus"
-   "MUU"                             "Muu"})
+   "MUU"                             "Muu"
+   "ASFALTOINTI"                     "Asfaltointi" })
 
 (defn tehtavan-nimi [tehtavat]
   (str/join ", " (into []

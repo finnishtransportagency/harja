@@ -194,11 +194,11 @@
        tulos))))
 
 (defn- hae-tyokoneet
-  [db user {:keys [alue alku loppu talvi kesa urakka-id
-                   hallintayksikko nykytilanne? yllapito] :as optiot} urakat]
+  [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne? yllapito] :as optiot} urakat]
   (when-not (empty? urakat)
     (when nykytilanne?
-      (let [haettavat-toimenpiteet (haettavat (union talvi kesa))]
+      (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
+            haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
         (when (not (empty? haettavat-toimenpiteet))
           (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
                 valitun-alueen-geometria
