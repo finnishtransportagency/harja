@@ -263,7 +263,17 @@
                   (if (:virhe? rivi) (liita rivi :korosta? true) (liita rivi :korosta? false)))
         jarjesta (fn [rivit]
                    (let [indeksi (fn [i] #(nth (:rivi %) i))]
-                     (vec (sort-by (indeksi 2) rivit))))
+                     (vec (sort-by
+                            (cond
+                              (and (= konteksti :urakka) (= silta-id :kaikki))
+                              (indeksi 1)
+                              
+                              (and (= konteksti :hallintayksikko))
+                              (indeksi 0)
+
+                              (and (= konteksti :koko-maa))
+                              (indeksi 0))
+                            rivit))))
         jarjesta-ryhmien-sisallot (fn [tila-ja-rivit]
                                     (vec (apply concat (mapv (comp jarjesta val) tila-ja-rivit))))
         jarjesta-ryhmiin (fn [rivit]
@@ -315,13 +325,15 @@
         (conj (vec (->> datarivit
                         butlast
                         (map virhe?)
-                        (map korosta)))
+                        (map korosta)
+                        jarjesta))
               (last datarivit))
         (and (= konteksti :koko-maa))
         (conj (vec (->> datarivit
                         butlast
                         (map virhe?)
-                        (map korosta)))
+                        (map korosta)
+                        jarjesta))
               (last datarivit))
         :else datarivit)]
      (when yksittaisen-sillan-perustiedot
