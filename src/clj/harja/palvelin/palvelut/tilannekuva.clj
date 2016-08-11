@@ -259,7 +259,8 @@
                       :xmax             (:xmax alue)
                       :ymax             (:ymax alue)}))))
 
-(defn- hae-suljetut-tieosuudet [db user {:keys [toleranssi yllapito alue] :as tiedot} urakat]
+(defn- hae-suljetut-tieosuudet
+  [db user {:keys [yllapito alue]} urakat]
   (when (tk/valittu? yllapito tk/suljetut-tiet)
     (vec (map (comp #(konv/array->vec % :kaistat)
                     #(konv/array->vec % :ajoradat))
