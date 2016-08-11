@@ -81,7 +81,6 @@
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         ;; vielä ei ole implementoitu selitevalintaa, mutta jos se tulee, niin logiikka tähän
         selite nil
-        urakoittain? urakoittain?
         ilmoitukset (hae-ilmoitukset-raportille
                       db user hallintayksikko-id urakka-id
                       nil urakkatyyppi
