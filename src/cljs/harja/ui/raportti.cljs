@@ -42,6 +42,7 @@
                                       :numero #(fmt/desimaaliluku-opt % 1 true)
                                       :prosentti #(fmt/prosentti-opt % 1)
                                       :raha #(fmt/desimaaliluku-opt % 2 true)
+                                      :pvm #(fmt/pvm-opt %)
                                       str)]
                       #(if-not (raportti-domain/virhe? %) (format-fn %) (raportti-domain/virheen-viesti %))))]
     [grid/grid {:otsikko            (or otsikko "")
