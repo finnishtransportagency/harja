@@ -224,7 +224,7 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? (not= konteksti :koko-maa)
+     [:taulukko {:otsikko otsikko :viimeinen-rivi-yhteenveto? true
                  :sheet-nimi raportin-nimi}
       (if (= konteksti :koko-maa)
         (turvallisuuspoikkeamat-tyypeittain-koko-maan-sarakkeet urakoittain?)
@@ -234,7 +234,8 @@
         (turvallisuuspoikkeamat-tyypeittain-rivit turpot urakoittain?))]
 
      (when (= konteksti :koko-maa)
-       [:taulukko {:otsikko (str "Turvallisuuspoikkeamat vakavuusasteittain")}
+       [:taulukko {:otsikko (str "Turvallisuuspoikkeamat vakavuusasteittain")
+                   :viimeinen-rivi-yhteenveto? (= :koko-maa konteksti)}
         (turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-sarakkeet urakoittain?)
         (turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-rivit turpot urakoittain? naytettavat-alueet)])
 
