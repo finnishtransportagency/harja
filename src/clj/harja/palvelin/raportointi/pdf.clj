@@ -97,7 +97,8 @@
                 (if (map? rivi)
                   [(:rivi rivi) rivi]
                   [rivi {}])
-                lihavoi-rivi? (:lihavoi? optiot)]]
+                lihavoi-rivi? (:lihavoi? optiot)
+                korosta-rivi? (:korosta? optiot)]]
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
         (let [yhteenveto? (when (and viimeinen-rivi-yhteenveto?
@@ -105,7 +106,7 @@
                             {:background-color "#fafafa"
                              :border (str "solid 0.3mm " raportin-tehostevari)
                              :font-weight "bold"})
-              korosta? (when (some #(= i-rivi %) korosta-rivit)
+              korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
                          {:background-color "#ff9900"
                           :color "black"})
               lihavoi? (when lihavoi-rivi?
