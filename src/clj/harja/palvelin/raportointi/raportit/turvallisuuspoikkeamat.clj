@@ -168,10 +168,10 @@
                                                     (c/from-sql-time %2)) turpot))
               (when (not (empty? turpot))
                 (if urakoittain?
-                  (rivi "Yhteensä" "" "" "" "" ""
+                  (rivi "Yhteensä" "" "" ""  ""
                         (reduce + 0 (keep :sairaalavuorokaudet turpot))
                         (reduce + 0 (keep :sairauspoissaolopaivat turpot)))
-                  (rivi "Yhteensä" "" "" "" ""
+                  (rivi "Yhteensä" "" "" ""
                         (reduce + 0 (keep :sairaalavuorokaudet turpot))
                         (reduce + 0 (keep :sairauspoissaolopaivat turpot))))))))
 
