@@ -73,7 +73,7 @@
         (concat (when urakoittain?
                   [{:otsikko "Urakka"}])
                 [{:otsikko "Tyyppi"}
-                 {:otsikko "Määrä" :fmt :numero}])))
+                 {:otsikko "Määrä" :fmt :kokonaisluku}])))
 
 (defn- turvallisuuspoikkeamat-tyypeittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
   (let [turpo-maarat-per-tyyppi (fn [turpot tyyppi]
@@ -105,17 +105,19 @@
                 (fn [alue]
                   (let [alueen-turpot (hallintayksikon-turpot turpot alue)]
                     (turporivi alueen-turpot alue)))
-                naytettavat-alueet)))))
+                naytettavat-alueet))
+
+            [(turporivi turpot {:nimi "Koko maa"})])))
 
 (defn- turvallisuuspoikkeamat-tyypeittain-koko-maan-sarakkeet [urakoittain?]
   (into []
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
                   [{:otsikko "Hallintayksikkö"}])
-                [{:otsikko "Työtapaturmat" :fmt :numero}
-                 {:otsikko "Vaaratilanteet" :fmt :numero}
-                 {:otsikko "Turvallisuushavainnot" :fmt :numero}
-                 {:otsikko "Muut" :fmt :numero}])))
+                [{:otsikko "Työtapaturmat" :fmt :kokonaisluku}
+                 {:otsikko "Vaaratilanteet" :fmt :kokonaisluku}
+                 {:otsikko "Turvallisuushavainnot" :fmt :kokonaisluku}
+                 {:otsikko "Muut" :fmt :kokonaisluku}])))
 
 (defn- turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-rivit [turpot urakoittain? naytettavat-alueet]
   (let [turpo-maarat-per-vakavuusaste (fn [turpot vakavuusaste]
@@ -142,15 +144,17 @@
                 (fn [alue]
                   (let [alueen-turpot (hallintayksikon-turpot turpot alue)]
                     (turporivi alueen-turpot alue)))
-                naytettavat-alueet)))))
+                naytettavat-alueet))
+
+            [(turporivi turpot {:nimi "Koko maa"})])))
 
 (defn- turvallisuuspoikkeamat-vakavuusasteittain-koko-maan-sarakkeet [urakoittain?]
   (into []
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
                   [{:otsikko "Hallintayksikkö"}])
-                [{:otsikko "Lievät" :fmt :numero}
-                 {:otsikko "Vakavat" :fmt :numero}])))
+                [{:otsikko "Lievät" :fmt :kokonaisluku}
+                 {:otsikko "Vakavat" :fmt :kokonaisluku}])))
 
 (defn- turvallisuuspoikkeamat-listana-rivit [turpot urakoittain?]
   (keep identity
@@ -181,10 +185,10 @@
                   [{:otsikko "Urakka" :leveys 14}])
                 [{:otsikko "Pvm" :leveys 14}
                  {:otsikko "Tyyppi" :leveys 24}
-                 {:otsikko "Vakavuusaste" :leveys 15}
+                 {:otsikko "Vakavuus\u00ADaste" :leveys 15}
                  {:otsikko "Ammatti" :leveys 14}
-                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9 :fmt :numero}
-                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9 :fmt :numero}])))
+                 {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9 :fmt :kokonaisluku}
+                 {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9 :fmt :kokonaisluku}])))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
                                alkupvm loppupvm urakkatyyppi] :as parametrit}]
