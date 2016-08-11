@@ -60,7 +60,7 @@
       (apurit/tarkista-taulukko-otsikko taulukko otsikko)
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Tyyppi"}
-                                          {:otsikko "Määrä" :fmt :numero})
+                                          {:otsikko "Määrä"})
       (apurit/tarkista-taulukko-yhteensa taulukko 1))))
 
 
@@ -101,14 +101,10 @@
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Hallintayksikkö"}
-                                          {:fmt     :numero
-                                           :otsikko "Työtapaturmat"}
-                                          {:fmt     :numero
-                                           :otsikko "Vaaratilanteet"}
-                                          {:fmt     :numero
-                                           :otsikko "Turvallisuushavainnot"}
-                                          {:fmt     :numero
-                                           :otsikko "Muut"})
+                                          {:otsikko "Työtapaturmat"}
+                                          {:otsikko "Vaaratilanteet"}
+                                          {:otsikko "Turvallisuushavainnot"}
+                                          {:otsikko "Muut"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
                                              (fn [[alue tyo vaara havainnot muut :as rivi]]
                                                (and (= (count rivi) 5)
@@ -120,10 +116,8 @@
     (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
       (apurit/tarkista-taulukko-sarakkeet vakavuus
                                           {:otsikko "Hallintayksikkö"}
-                                          {:fmt     :numero
-                                           :otsikko "Lievät"}
-                                          {:fmt     :numero
-                                           :otsikko "Vakavat"})
+                                          {:otsikko "Lievät"}
+                                          {:otsikko "Vakavat"})
       (apurit/tarkista-taulukko-kaikki-rivit vakavuus
                                              (fn [[hal lievat vakavat :as rivi]]
                                                (and (= (count rivi) 3)
