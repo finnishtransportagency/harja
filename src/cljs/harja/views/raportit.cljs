@@ -293,7 +293,7 @@
                    :kaikki "Kaikki"
                    (str (:siltanimi %) " (" (:siltatunnus %) ")"))}
 
-     (into [] (cons :kaikki (sort-by :siltatunnus @urakan-sillat)))]))
+     (into [] (cons :kaikki (sort-by :siltanimi @urakan-sillat)))]))
 
 (def urakan-vuodet (reaction
                      (let [urakka @nav/valittu-urakka]
