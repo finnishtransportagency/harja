@@ -15,7 +15,7 @@
 (defqueries "harja/palvelin/raportointi/raportit/siltatarkastus.sql")
 
 (def ^{:private true} korosta-kun-arvoa-d-vahintaan 1)
-(def tarkastamatta-str "Tarkastamatta")
+(def tarkastamatta-info [:info "Tarkastamatta"])
 
 (defn- muodosta-sillan-datarivit [db urakka-id silta-id vuosi]
   (let [kohderivit (into []
@@ -87,7 +87,7 @@
                      (:siltanimi tarkastus)
                      (if (:tarkastusaika tarkastus)
                        (:tarkastusaika tarkastus)
-                       tarkastamatta-str)
+                       tarkastamatta-info)
                      (or (:tarkastaja tarkastus)
                          "-")
                      [:arvo-ja-osuus {:arvo (:a tarkastus)
@@ -182,7 +182,7 @@
     :urakka (if (= silta :kaikki)
               [{:leveys 5 :otsikko "Siltanumero"}
                {:leveys 10 :otsikko "Silta"}
-               {:leveys 5 :otsikko "Tarkastettu"}
+               {:leveys 5 :otsikko "Tarkastettu" :fmt :pvm}
                {:leveys 5 :otsikko "Tarkastaja"}
                {:leveys 5 :otsikko "A" :tyyppi :arvo-ja-osuus}
                {:leveys 5 :otsikko "B" :tyyppi :arvo-ja-osuus}
@@ -250,7 +250,7 @@
                          (if (cond
                                (and (= konteksti :urakka) (= silta-id :kaikki))
                                (let [tarkastettu (kentta-indeksilla rivi 2)]
-                                 (= tarkastettu tarkastamatta-str))
+                                 (= tarkastettu tarkastamatta-info))
 
                                :else
                                false)
