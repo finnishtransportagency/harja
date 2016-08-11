@@ -2,6 +2,9 @@
 <b>Julkaistu: 27.7.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.5. Julkaistu: 11.8.2016:
+    - Työkoneiden reaaliaikaseurantaan on lisätty uudet tehtävät ylläpidon ajoneuvoja varten: asfaltointi (pääasfaltointilaite), tiemerkintä, kuumennus (kuumennus-/remix-laitteet), sekoitus tai stabilointi (sekoitus- ja stabilointijyrsimet), turvalaite (TMA-laitteet)
+    
 - Versionumero: 0.2.4. Julkaistu 27.7.2016:
     - Varusterajapinnat päivitetty. Jatkossa varusteiden ja laitteiden teknisten arvojen parsinta tehdään Harjan puolella. Samalla mahdollistettu usean varustetoteuman sekä yksittäisen varustetoteuman sisällä usean toimenpiteen kirjaaminen kerralla.
 - Versionumero: 0.2.3. Julkaistu 15.7.2016:
