@@ -65,22 +65,23 @@
                     (group-by :nimi ilman-kokonaismaaria))]
     [:taulukko {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
      [{:leveys 6 :otsikko "Asiakaspalauteluokka"}
-      {:leveys 2 :otsikko "TPP (Toimenpidepyyntö)" :fmt :numero}
-      {:leveys 2 :otsikko "TUR (Tiedoksi)" :fmt :numero}
-      {:leveys 2 :otsikko "URK (Kysely)" :fmt :numero}
-      {:leveys 2 :otsikko "Yhteensä" :fmt :numero}]
+      {:leveys 2 :otsikko "TPP (Toimenpidepyyntö)" :fmt :kokonaisluku}
+      {:leveys 2 :otsikko "TUR (Tiedoksi)" :fmt :kokonaisluku}
+      {:leveys 2 :otsikko "URK (Kysely)" :fmt :kokonaisluku}
+      {:leveys 2 :otsikko "Yhteensä" :fmt :kokonaisluku}]
      (sort-by
        #(asiakaspalauteluokkien-jarjestys (str/lower-case (first %)))
        rivit)]))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id
+                               alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         ;; vielä ei ole implementoitu selitevalintaa, mutta jos se tulee, niin logiikka tähän
         selite nil
-
+        urakoittain? urakoittain?
         ilmoitukset (hae-ilmoitukset-raportille
                       db user hallintayksikko-id urakka-id
                       nil urakkatyyppi
@@ -119,11 +120,12 @@
                           loppupvm)
         hoitokaudella-tahan-asti-opt (if kyseessa-kk-vali? " hoitokaudella " "")
         raportin-nimi "Ilmoitusraportti"
+        alueen-nimi (case konteksti
+                      :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                      :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                      :koko-maa "KOKO MAA")
         otsikko (raportin-otsikko
-                  (case konteksti
-                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                    :koko-maa "KOKO MAA")
+                  alueen-nimi
                   raportin-nimi alkupvm loppupvm)
         ilmoitukset-hyn-mukaan (sort-by #(or (:id (first %)) 100000)
                                         (seq (group-by :hallintayksikko
@@ -138,7 +140,7 @@
                  :sheet-nimi raportin-nimi}
       (into []
             (concat
-              [{:otsikko "Urakka" :leveys 31}]
+              [{:otsikko "Alue" :leveys 31}]
               (map (fn [ilmoitustyyppi]
                      {:otsikko (ilmoitustyypin-lyhenne-ja-nimi ilmoitustyyppi)
                       :leveys 23})
@@ -151,28 +153,31 @@
                        ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
                        (for [[hy ilmoitukset] ilmoitukset-hyn-mukaan]
                          (concat
-                           [{:otsikko (or (:nimi hy) "Ilmoitukset ilman urakkaa")}]
-                           (for [[urakka hyn-ilmoitukset] (group-by :urakka ilmoitukset)
-                                 :let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")
-                                       tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) hyn-ilmoitukset))
-                                       tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) hyn-ilmoitukset))
-                                       urk (count (filter #(= :kysely (:ilmoitustyyppi %)) hyn-ilmoitukset))]]
-                             [urakan-nimi tpp tur urk])
+                           (when (or urakoittain? (= :urakka konteksti))
+                             [{:otsikko (or (:nimi hy) "Ilmoitukset ilman urakkaa")}])
+                           (when (or urakoittain? (= :urakka konteksti))
+                             (for [[urakka hyn-ilmoitukset] (group-by :urakka ilmoitukset)
+                                   :let [urakan-nimi (or (:nimi (first (urakat-q/hae-urakka db urakka))) "Ei urakkaa")
+                                         tpp (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) hyn-ilmoitukset))
+                                         tur (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) hyn-ilmoitukset))
+                                         urk (count (filter #(= :kysely (:ilmoitustyyppi %)) hyn-ilmoitukset))]]
+                               [urakan-nimi tpp tur urk]))
                            ;; lasketaan myös hallintayksiköiden summarivi
                            (when (= :koko-maa konteksti)
                              (let [hy-tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
                                    hy-tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
                                    hy-urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
                                (when (:nimi hy)
-                                 [(seq [(str (:nimi hy) " yhteensä") hy-tpp-yht hy-tur-yht hy-urk-yht])]))))))
+                                 [{:lihavoi? true
+                                   :rivi (seq [(str (:nimi hy) " yhteensä") hy-tpp-yht hy-tur-yht hy-urk-yht])}]))))))
 
-                ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen materiaalin perusteella
+                ;; Tehdään yhteensä rivi, jossa kaikki ilmoitukset lasketaan yhteen tyypeittäin
                 (when (and (not= :urakka konteksti)
                            (not (empty? ilmoitukset)))
                   (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
                         tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
                         urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
-                    [(concat ["Yhteensä"]
+                    [(concat [alueen-nimi]
                              [tpp-yht tur-yht urk-yht])])))))]
 
      (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
