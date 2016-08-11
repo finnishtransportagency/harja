@@ -55,9 +55,9 @@
         d-yhteensa (reduce + 0 (keep :d tarkastukset))
         kaikki-yhteensa (+ a-yhteensa b-yhteensa c-yhteensa d-yhteensa)]
     ["Yhteensä"
-     ""
-     ""
-     ""
+     nil
+     nil
+     nil
      [:arvo-ja-osuus {:arvo a-yhteensa
                       :osuus (Math/round (math/osuus-prosentteina
                                            a-yhteensa kaikki-yhteensa))}]
