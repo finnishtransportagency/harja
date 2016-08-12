@@ -36,6 +36,12 @@
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
 
+
+(def ^{:doc "IE11 React 15 kanssa ei aina triggeröi on-change eventtiä oikein.
+Jos kirjoittaa nopeasti peräkkäin kaksi kirjainta on-change käyttö voi syödä
+toisen eventin kokonaan (react eventtiä ei laukea)."}
+  on-change* (if dom/ie? :on-input :on-change))
+
 ;; r/wrap skeeman arvolle
 (defn atomina [{:keys [nimi hae aseta]} data vaihda!]
   (let [hae (or hae #(get % nimi))
@@ -94,7 +100,7 @@
                   :value       @teksti
                   :placeholder placeholder
                   :size        pituus
-                  :on-change   #(when (= (.-activeElement js/document) (.-target %))
+                  on-change*   #(when (= (.-activeElement js/document) (.-target %))
                                  ;; tehdään haku vain jos elementti on fokusoitu
                                  ;; IE triggeröi on-change myös ohjelmallisista muutoksista
                                  (let [v (-> % .-target .-value str/triml)]
@@ -154,7 +160,7 @@
 (defmethod tee-kentta :string [{:keys [nimi pituus-max pituus-min regex focus on-focus lomake? placeholder]} data]
   [:input {:class       (when lomake? "form-control")
            :placeholder placeholder
-           :on-change   #(reset! data (-> % .-target .-value))
+           on-change*   #(reset! data (-> % .-target .-value))
            :on-focus    on-focus
            :value       @data
            :max-length  pituus-max}])
@@ -195,7 +201,7 @@
       (fn [{:keys [nimi koko on-focus lomake?]} data]
         [:span.kentta-text
          [:textarea {:value       @data
-                     :on-change   #(muuta! data %)
+                     on-change*   #(muuta! data %)
                      :on-focus    on-focus
                      :cols        (or koko-sarakkeet 80)
                      :rows        @rivit
@@ -228,7 +234,7 @@
                  :on-focus    (:on-focus kentta)
                  :on-blur     #(reset! teksti nil)
                  :value       nykyinen-teksti
-                 :on-change   #(let [v (-> % .-target .-value)]
+                 on-change*   #(let [v (-> % .-target .-value)]
                                  (when (or (= v "")
                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
                                            (re-matches (if kokonaisluku?
@@ -252,7 +258,7 @@
            :type      "email"
            :value     @data
            :on-focus  on-focus
-           :on-change #(reset! data (-> % .-target .-value))}])
+           on-change* #(reset! data (-> % .-target .-value))}])
 
 
 
@@ -262,7 +268,7 @@
            :value      @data
            :max-length pituus
            :on-focus   on-focus
-           :on-change  #(let [uusi (-> % .-target .-value)]
+           on-change*  #(let [uusi (-> % .-target .-value)]
                          (when (re-matches #"\+?(\s|\d)*" uusi)
                            (reset! data uusi)))}])
 
@@ -281,7 +287,7 @@
          [:input {:type      "radio"
                   :value 1
                   :checked   (= nykyinen-arvo arvo)
-                  :on-change valitse}]
+                  on-change* valitse}]
          (when-not (str/blank? label)
            [:span.radiovalinta-label.klikattava {:on-click valitse} label])])
       [:span.radiovalinnat
@@ -294,7 +300,7 @@
                           [:input {:type      "radio"
                                    :value i
                                    :checked   (= nykyinen-arvo arvo)
-                                   :on-change #(reset! data arvo)}]
+                                   on-change* #(reset! data arvo)}]
                           [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
                            otsikko]]))
                      valinnat))])))
@@ -323,7 +329,7 @@
                                     :disabled (if disabloi
                                                 (disabloi valitut v)
                                                 false)
-                                    :on-change #(let [valittu? (-> % .-target .-checked)]
+                                    on-change* #(let [valittu? (-> % .-target .-checked)]
                                                   (reset! data
                                                           ((if valittu? conj disj) valitut v)))}]
                            (vaihtoehto-nayta v)]]))]
@@ -344,7 +350,7 @@
      (let [checkbox [:div.checkbox
                      [:label
                       [:input {:type      "checkbox" :checked arvo
-                               :on-change #(let [valittu? (-> % .-target .-checked)]
+                               on-change* #(let [valittu? (-> % .-target .-checked)]
                                              (reset! data valittu?))}]
                       teksti]]]
        (if nayta-rivina?
@@ -364,7 +370,7 @@
                              [:div.radio
                               [:label
                                [:input {:type      "radio" :checked (= valittu vaihtoehto)
-                                        :on-change #(let [valittu? (-> % .-target .-checked)]
+                                        on-change* #(let [valittu? (-> % .-target .-checked)]
                                                        (if valittu?
                                                          (reset! data vaihtoehto)))}]
                                (vaihtoehto-nayta vaihtoehto)]]))]
@@ -421,7 +427,7 @@
          [:input.kombo {:class     (when lomake? "form-control")
                         :type      "text" :value nykyinen-arvo
                         :on-focus  on-focus
-                        :on-change #(reset! data (-> % .-target .-value))}]
+                        on-change* #(reset! data (-> % .-target .-value))}]
          [:button {:on-click #(do (swap! auki not) nil)}
           [:span.caret ""]]
          [:ul.dropdown-menu {:role "menu"}
@@ -515,7 +521,7 @@
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value       nykyinen-teksti
                          :on-focus    #(do (when on-focus (on-focus)) (reset! auki true) %)
-                         :on-change   #(muuta! data (-> % .-target .-value))
+                         on-change*   #(muuta! data (-> % .-target .-value))
                          ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                          :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                          (teksti-paivamaaraksi! data nykyinen-teksti)
@@ -555,28 +561,10 @@
         pvm-aika-koskettu (atom [(not
                                    (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
                                  (not
-                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])
-        muuta-aika!  #(if (re-matches #"\d{3}" %)
-                        ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä, niin 3 merkin kohdalla lisätään se automaattisesti
-                        (let [alku (js/parseInt (.substring % 0 2))]
-                          (if (< alku 24)
-                            ;; 123 => 12:3
-                            (reset! aika-teksti
-                                    (str (.substring % 0 2) ":" (.substring % 2)))
-                            ;; 645 => 6:45
-                            (reset! aika-teksti
-                                    (str (.substring % 0 1) ":" (.substring % 1)))))
-                        (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
-        aika-event-ch (async/chan 4)]
-
-    (go-loop [v (<! aika-event-ch)]
-      (when v
-        (muuta-aika! v)
-        (recur (<! aika-event-ch))))
+                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])]
 
     (komp/luo
      (komp/klikattu-ulkopuolelle #(reset! auki false))
-     (komp/ulos #(async/close! aika-event-ch))
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
@@ -596,6 +584,18 @@
                              (reset! data nil)))))
 
               muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
+              muuta-aika!  #(if (re-matches #"\d{3}" %)
+                              ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä,
+                              ;; niin 3 merkin kohdalla lisätään se automaattisesti
+                              (let [alku (js/parseInt (.substring % 0 2))]
+                                (if (< alku 24)
+                                  ;; 123 => 12:3
+                                  (reset! aika-teksti
+                                          (str (.substring % 0 2) ":" (.substring % 2)))
+                                  ;; 645 => 6:45
+                                  (reset! aika-teksti
+                                          (str (.substring % 0 1) ":" (.substring % 1)))))
+                        (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
 
               koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
               koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
@@ -621,7 +621,7 @@
                                               %)
                             :value       nykyinen-pvm-teksti
                             :on-focus    #(do (on-focus) (reset! auki true) %)
-                            :on-change   #(muuta-pvm! (-> % .-target .-value))
+                            on-change*   #(muuta-pvm! (-> % .-target .-value))
                             ;; keycode 9 = Tab. Suljetaan datepicker kun painetaan tabia.
                             :on-key-down #(when (or (= 9 (-> % .-keyCode)) (= 9 (-> % .-which)))
                                            (reset! auki false)
@@ -641,8 +641,7 @@
                         :placeholder "tt:mm"
                         :size        5 :max-length 5
                         :value       nykyinen-aika-teksti
-                        :on-change   #(let [v (-> % .-target .-value)]
-                                        (go (>! aika-event-ch  v)))
+                        on-change*   #(muuta-aika! (-> % .-target .-value))
                         :on-blur     #(do (koske-aika!) (aseta!))}]]]]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
@@ -679,7 +678,7 @@
                          :placeholder placeholder
                          :value       value
                          :disabled disabled?
-                         :on-change   (muuta! key)
+                         on-change*   (muuta! key)
                          :on-blur     blur}]])
 
 (defn piste-tai-eka [arvo]
