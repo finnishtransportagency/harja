@@ -147,7 +147,7 @@
   (into []
         ;; munklaukset tässä
         (map #(if-let [org-id (:organisaatio %)]
-                (assoc % :organisaatio {:tyyppi (keyword (str (:organisaatio_tyyppi %)))
+                (assoc % :organisaatio {:tyyppi (keyword (str (:urakoitsija_tyyppi %)))
                                         :id org-id
                                         :nimi (:urakoitsija_nimi %)})
                 %))
