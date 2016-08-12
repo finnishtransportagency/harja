@@ -33,10 +33,11 @@
   [paallystys :paallystys "Päällystystyöt"]
   [paikkaus :paikkaus "Paikkaustyöt"]
   [suljetut-tiet :suljetut-tieosuudet "Suljetut tieosuudet"]
-  [paaasfalttilevitin :paaasfalttilevitin "Pääasfalttilevittimet"]
-  [remix-laite :remix-laite "Remix-laitteet"]
-  [sekoitus-ja-stabilointijyrsin :sekoitus-ja-stabilointijyrsin "Sekoitus- ja stabilointijyrsimet"]
-  [tma-laite :tma-laite "TMA-laitteet"]
+  [paaasfalttilevitin "asfaltointi" "Pääasfalttilevittimet"]
+  [tiemerkintakone "tiemerkinta" "Tiemerkintäkoneet"]
+  [kuumennuslaite "kuumennus" "Kuumennuslaitteet"]
+  [sekoitus-ja-stabilointijyrsin "sekoitus tai stabilointi" "Sekoitus- ja stabilointijyrsimet"]
+  [tma-laite "turvalaite" "TMA-laitteet"]
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
   [suolaus "suolaus" "Suolaus"]
@@ -89,9 +90,11 @@
               paikkaus
               suljetut-tiet
               paaasfalttilevitin
-              remix-laite
+              tiemerkintakone
+              kuumennuslaite
               sekoitus-ja-stabilointijyrsin
               tma-laite]
+   :yllapidon-reaaliaikaseuranta []
    :talvi [auraus-ja-sohjonpoisto
            suolaus
            ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
@@ -130,6 +133,12 @@
           ojitus
           muu]})
 
+(def yllapidon-reaaliaikaseurattavat
+  #{(:id paaasfalttilevitin)
+    (:id tiemerkintakone)
+    (:id kuumennuslaite)
+    (:id sekoitus-ja-stabilointijyrsin)
+    (:id tma-laite)})
 
 (defn valitut-suodattimet
   "Ottaa nested map rakenteen, jossa viimeisellä tasolla avaimet ovat
@@ -172,3 +181,6 @@ suodattimien id numeroilla."
         kentat (filter #(valitut-suodattimet (:id %))
                        (mapcat (fn [[_ suodatin-map]] (map key suodatin-map)) valinnat))]
     kentat))
+
+(defn yllapidon-reaaliaikaseurattava? [id]
+  (yllapidon-reaaliaikaseurattavat id))
