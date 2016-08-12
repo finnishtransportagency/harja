@@ -323,5 +323,15 @@ tr-viiva {:color puhtaat/tummanharmaa
 tr-ikoni {:img (pinni-ikoni "musta")
           :zindex 21})
 
-(def suljettu-tieosuus (map #(assoc % :zindex 20) (viiva-mustalla-rajalla puhtaat/oranssi)))
+(def suljettu-tieosuus
+  [{:color puhtaat/musta
+    :width 8}
+   {:color puhtaat/punainen
+    :width 6}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width 4}
+   {:color puhtaat/keltainen
+    :dash [3 9]
+    :width 3}])
 
