@@ -522,12 +522,13 @@
 (defn kartalla-esitettavaan-muotoon-xf
   "Palauttaa transducerin, joka muuntaa läpi kulkevat asiat kartalla esitettävään
   muotoon."
-  ([] (kartalla-esitettavaan-muotoon-xf nil [:id]))
-  ([asia-xf tunniste]
+  ([] (kartalla-esitettavaan-muotoon-xf nil nil [:id]))
+  ([asia-xf tunniste] (kartalla-esitettavaan-muotoon-xf nil asia-xf tunniste))
+  ([valittu asia-xf tunniste]
    (comp #?(:cljs (fn [asia] (edistymispalkki/geometriataso-lataus-valmis!) asia))
          (or asia-xf identity)
          (mapcat pura-geometry-collection)
-         (map #(kartalla-xf % nil (or tunniste [:id])))
+         (map #(kartalla-xf % valittu (or tunniste [:id])))
          (filter some?)
          (filter #(some? (:alue %))))))
 
@@ -546,7 +547,7 @@
          selitteet (volatile! #{})]
      (with-meta
        (into []
-             (comp (kartalla-esitettavaan-muotoon-xf asia-xf tunniste)
+             (comp (kartalla-esitettavaan-muotoon-xf valittu asia-xf tunniste)
                    (geo/laske-extent-xf extent)
                    (tallenna-selitteet-xf selitteet))
              asiat)
