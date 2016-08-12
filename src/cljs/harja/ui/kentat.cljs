@@ -555,9 +555,28 @@
         pvm-aika-koskettu (atom [(not
                                    (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
                                  (not
-                                   (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])]
+                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])
+        muuta-aika!  #(if (re-matches #"\d{3}" %)
+                        ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä, niin 3 merkin kohdalla lisätään se automaattisesti
+                        (let [alku (js/parseInt (.substring % 0 2))]
+                          (if (< alku 24)
+                            ;; 123 => 12:3
+                            (reset! aika-teksti
+                                    (str (.substring % 0 2) ":" (.substring % 2)))
+                            ;; 645 => 6:45
+                            (reset! aika-teksti
+                                    (str (.substring % 0 1) ":" (.substring % 1)))))
+                        (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
+        aika-event-ch (async/chan 4)]
+
+    (go-loop [v (<! aika-event-ch)]
+      (when v
+        (muuta-aika! v)
+        (recur (<! aika-event-ch))))
+
     (komp/luo
-      (komp/klikattu-ulkopuolelle #(reset! auki false))
+     (komp/klikattu-ulkopuolelle #(reset! auki false))
+     (komp/ulos #(async/close! aika-event-ch))
       {:component-will-receive-props
        (fn [this _ {:keys [focus] :as s} data]
          (when-not focus
@@ -577,18 +596,6 @@
                              (reset! data nil)))))
 
               muuta-pvm!   #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
-
-              muuta-aika!  #(if (re-matches #"\d{3}" %)
-                              ;; jos yritetään kirjoittaa aika käyttämättä : välimerkkiä, niin 3 merkin kohdalla lisätään se automaattisesti
-                              (let [alku (js/parseInt (.substring % 0 2))]
-                                (if (< alku 24)
-                                  ;; 123 => 12:3
-                                  (reset! aika-teksti
-                                          (str (.substring % 0 2) ":" (.substring % 2)))
-                                  ;; 645 => 6:45
-                                  (reset! aika-teksti
-                                          (str (.substring % 0 1) ":" (.substring % 1)))))
-                              (resetoi-jos-tyhja-tai-matchaa % +aika-regex+ aika-teksti))
 
               koske-aika! (fn [] (swap! pvm-aika-koskettu assoc 1 true))
               koske-pvm! (fn [] (swap! pvm-aika-koskettu assoc 0 true))
@@ -634,7 +641,8 @@
                         :placeholder "tt:mm"
                         :size        5 :max-length 5
                         :value       nykyinen-aika-teksti
-                        :on-change   #(muuta-aika! (-> % .-target .-value))
+                        :on-change   #(let [v (-> % .-target .-value)]
+                                        (go (>! aika-event-ch  v)))
                         :on-blur     #(do (koske-aika!) (aseta!))}]]]]]])))))
 
 (defmethod nayta-arvo :pvm-aika [_ data]
