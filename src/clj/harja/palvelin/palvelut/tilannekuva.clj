@@ -194,45 +194,36 @@
        tulos))))
 
 (defn- hae-tyokoneet
-  [db user {:keys [alue alku loppu talvi kesa urakka-id
-                   hallintayksikko nykytilanne? yllapito] :as optiot} urakat]
+  [db user {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne? yllapito] :as optiot} urakat]
   (when-not (empty? urakat)
     (when nykytilanne?
-     (let [haettavat-toimenpiteet (haettavat (union talvi kesa))
-           haettavat-tyokonetyypit (filter #{:paaasfalttilevitin
-                                             :remix-laite
-                                             :sekoitus-ja-stabilointijyrsin
-                                             :tma-laite}
-                                           (haettavat yllapito))]
-       (when (or (not (empty? haettavat-toimenpiteet))
-                  (not (empty? haettavat-tyokonetyypit)))
-         (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
-               tyokone-haku-str (konv/seq->array haettavat-tyokonetyypit)
-               valitun-alueen-geometria
-               (if urakka-id
-                 (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria
-                                                  db urakka-id))]
-                   (or (:urakka_alue urakan-aluetiedot)
-                       (:alueurakka_alue urakan-aluetiedot)))
-                 (when hallintayksikko
-                   (:alue (first (hal-q/hae-hallintayksikon-geometria
-                                   db hallintayksikko)))))]
-           (into {}
-                 (comp
-                   (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
-                   (map #(update-in % [:edellinensijainti]
-                                    (fn [pos] (when pos
-                                                (geo/piste-koordinaatit pos)))))
-                   (map #(assoc % :tyyppi :tyokone))
-                   (map #(konv/array->set % :tehtavat))
-                   (map (juxt :tyokoneid identity)))
-                 (q/hae-tyokoneet db
-                                  (:xmin alue) (:ymin alue)
-                                  (:xmax alue) (:ymax alue)
-                                  valitun-alueen-geometria
-                                  urakat
-                                  tpi-haku-str
-                                  tyokone-haku-str))))))))
+      (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
+            haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
+        (when (not (empty? haettavat-toimenpiteet))
+          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
+                valitun-alueen-geometria
+                (if urakka-id
+                  (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
+                    (or (:urakka_alue urakan-aluetiedot)
+                        (:alueurakka_alue urakan-aluetiedot)))
+                  (when hallintayksikko
+                    (:alue (first (hal-q/hae-hallintayksikon-geometria
+                                    db hallintayksikko)))))]
+            (into {}
+                  (comp
+                    (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
+                    (map #(update-in % [:edellinensijainti]
+                                     (fn [pos] (when pos
+                                                 (geo/piste-koordinaatit pos)))))
+                    (map #(assoc % :tyyppi :tyokone))
+                    (map #(konv/array->set % :tehtavat))
+                    (map (juxt :tyokoneid identity)))
+                  (q/hae-tyokoneet db
+                                   (:xmin alue) (:ymin alue)
+                                   (:xmax alue) (:ymax alue)
+                                   valitun-alueen-geometria
+                                   urakat
+                                   tpi-haku-str))))))))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
   (let [koodit (some->> (union talvi kesa)
@@ -247,38 +238,39 @@
   [db ch user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
   (when-not (empty? urakat)
     (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-     (q/hae-toteumat db ch
-                     {:toleranssi       toleranssi
-                      :alku             (konv/sql-date alku)
-                      :loppu            (konv/sql-date loppu)
-                      :toimenpidekoodit toimenpidekoodit
-                      :urakat           urakat
-                      :xmin             (:xmin alue)
-                      :ymin             (:ymin alue)
-                      :xmax             (:xmax alue)
-                      :ymax             (:ymax alue)}))))
+      (q/hae-toteumat db ch
+                      {:toleranssi toleranssi
+                       :alku (konv/sql-date alku)
+                       :loppu (konv/sql-date loppu)
+                       :toimenpidekoodit toimenpidekoodit
+                       :urakat urakat
+                       :xmin (:xmin alue)
+                       :ymin (:ymin alue)
+                       :xmax (:xmax alue)
+                       :ymax (:ymax alue)}))))
 
-(defn- hae-suljetut-tieosuudet [db user {:keys [toleranssi yllapito alue] :as tiedot} urakat]
+(defn- hae-suljetut-tieosuudet
+  [db user {:keys [yllapito alue]} urakat]
   (when (tk/valittu? yllapito tk/suljetut-tiet)
     (vec (map (comp #(konv/array->vec % :kaistat)
                     #(konv/array->vec % :ajoradat))
-              (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
+              (q/hae-suljetut-tieosuudet db {:urakat (when-not (every? nil? urakat) urakat)
+                                             :urakatannettu (not (every? nil? urakat))
+                                             :x1 (:xmin alue)
                                              :y1 (:ymin alue)
                                              :x2 (:xmax alue)
                                              :y2 (:ymax alue)
-                                             :urakat (when-not (every? nil? urakat)
-                                                       urakat)
                                              :treshold 100})))))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
   (when-not (empty? urakat)
     (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-     (q/hae-toteumien-selitteet db
-                                (konv/sql-date alku) (konv/sql-date loppu)
-                                toimenpidekoodit urakat
-                                (:xmin alue) (:ymin alue)
-                                (:xmax alue) (:ymax alue)))))
+      (q/hae-toteumien-selitteet db
+                                 (konv/sql-date alku) (konv/sql-date loppu)
+                                 toimenpidekoodit urakat
+                                 (:xmin alue) (:ymin alue)
+                                 (:xmax alue) (:ymax alue)))))
 
 (def tilannekuvan-osiot
   #{:toteumat :tyokoneet :turvallisuuspoikkeamat :tarkastukset
@@ -344,8 +336,8 @@
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
    (let [urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
-                                               oikeudet/tilannekuva-nykytilanne
-                                               oikeudet/tilannekuva-historia) % user)
+                                                oikeudet/tilannekuva-nykytilanne
+                                                oikeudet/tilannekuva-historia) % user)
                         (:urakat tiedot))]
      (log/debug "Haetaan tilannekuvaan asioita urakoista " (pr-str urakat))
      (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
@@ -367,22 +359,22 @@
         hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string)
         ]
     (as-> hakuparametrit p
-      (merge p
-             {:alue {:xmin x1 :ymin y1
-                     :xmax x2 :ymax y2}})
-      (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
+          (merge p
+                 {:alue {:xmin x1 :ymin y1
+                         :xmax x2 :ymax y2}})
+          (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit]
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
         ch (async/chan 32
                        (comp
-                        (map konv/alaviiva->rakenne)
-                        (map #(assoc %
-                                     :tyyppi :toteuma
-                                     :tyyppi-kartalla :toteuma
-                                     :tehtavat [(:tehtava %)]))
-                        kartalle-xf))
+                         (map konv/alaviiva->rakenne)
+                         (map #(assoc %
+                                :tyyppi :toteuma
+                                :tyyppi-kartalla :toteuma
+                                :tehtavat [(:tehtava %)]))
+                         kartalle-xf))
         urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                                oikeudet/tilannekuva-nykytilanne
                                                oikeudet/tilannekuva-historia) % user)

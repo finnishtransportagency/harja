@@ -124,9 +124,9 @@
           (or (< aosa losa)
               (> (- loppuet alkuet) 2)))
         (gen/tuple (gen/return (first %))
-                   (gen/choose 1 a-pit)
+                   (gen/choose 1 (dec a-pit))
                    (gen/return (second %))
-                   (gen/choose 1 l-pit))
+                   (gen/choose 1 (dec l-pit)))
         100)))))
 
 
