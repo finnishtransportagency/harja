@@ -1,18 +1,38 @@
+CREATE OR REPLACE FUNCTION eka_piste(g geometry) RETURNS geometry AS $$
+BEGIN
+  IF GeometryType(g)='MULTILINESTRING' THEN
+    RETURN ST_StartPoint(ST_GeometryN(g,1));
+  ELSE
+    RETURN ST_StartPoint(g);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION vika_piste(g geometry) RETURNS geometry AS $$
+BEGIN
+  IF GeometryType(g)='MULTILINESTRING' THEN
+    RETURN ST_EndPoint(ST_GeometryN(g,ST_NumGeometries(g)));
+  ELSE
+    RETURN ST_EndPoint(g);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION etsi_jatkopatka(viiva geometry, jatkopatkat geometry) RETURNS geometry AS $$
 DECLARE
   tmp geometry;
-  jatkettu geometry;
+  minimi geometry;
+  etaisyys FLOAT;
 BEGIN
-  jatkettu := viiva;
+  etaisyys := 'Infinity' :: FLOAT;
   FOR i IN 1..ST_NumGeometries(jatkopatkat) LOOP
      tmp := ST_GeometryN(jatkopatkat, i);
-     IF ST_DWithin(ST_EndPoint(jatkettu), ST_StartPoint(tmp), 100) THEN
-        jatkettu := ST_MakeLine(jatkettu,tmp);
-     ELSEIF ST_DWithin(ST_EndPoint(tmp), ST_StartPoint(jatkettu), 100) THEN
-        RETURN ST_MakeLine(tmp,jatkettu);
+     IF ST_Distance(vika_piste(viiva), eka_piste(tmp))<etaisyys THEN
+       etaisyys := ST_Distance(vika_piste(viiva), eka_piste(tmp));
+       minimi := tmp;
      END IF;
   END LOOP;
-  RETURN jatkettu;
+  RETURN ST_LineMerge(ST_Collect(viiva, minimi));
 END;
 $$ LANGUAGE plpgsql;
 
@@ -365,6 +385,12 @@ BEGIN
       RAISE EXCEPTION 'pisteillä ei yhteistä tietä';
     END IF;
     RETURN osoite;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_piste(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER) RETURNS geometry AS $$
+BEGIN
+  RETURN tierekisteriosoitteelle_viiva(tie_, aosa_, aet_, aosa_, aet_);
 END;
 $$ LANGUAGE plpgsql;
 

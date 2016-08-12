@@ -40,15 +40,15 @@
                      urakka-id
                      kohde-id
                      kayttaja))
-  (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-  (jdbc/with-db-transaction
-    [db db]
-    (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)
-          id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
-      (tee-kirjausvastauksen-body
-        {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-         :id id}))))
+  (let [urakka-id (Integer/parseInt urakka-id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (jdbc/with-db-transaction
+      [db db]
+      (let [kohde-id (Integer/parseInt kohde-id)
+            id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
+        (tee-kirjausvastauksen-body
+          {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+           :id id})))))
 
 (defn hae-tr-osoite [db alkukoordinaatit loppukoordinaatit]
   (try

@@ -100,36 +100,36 @@
    :kt-valmis                  "vihrea"
 
    ;; Pienemmät ikonit (pinnit)
-   :laatupoikkeama             "tummansininen"
-   :laatupoikkeama-tilaaja     "tummansininen"
-   :laatupoikkeama-konsultti   "tummansininen"
+   :laatupoikkeama "tummansininen"
+   :laatupoikkeama-tilaaja "tummansininen"
+   :laatupoikkeama-konsultti "tummansininen"
    :laatupoikkeama-urakoitsija "sininen"
-   :tarkastus                  "punainen"
-   :tarkastus-tilaaja          "punainen"
-   :tarkastus-konsultti        "punainen"
-   :tarkastus-urakoitsija      "punainen"
-   :varustetoteuma             "violetti"
-   :yllapito                   "pinkki"})
+   :tarkastus "punainen"
+   :tarkastus-tilaaja "punainen"
+   :tarkastus-konsultti "punainen"
+   :tarkastus-urakoitsija "punainen"
+   :varustetoteuma "violetti"
+   :yllapito "pinkki"})
 
 (def viivojen-varit
-  {:yllapito-aloitettu          puhtaat/keltainen
-   :yllapito-valmis             puhtaat/lime
-   :yllapito-muu                puhtaat/syaani
-   :yllapito-pohja              puhtaat/musta
-   :yllapito-katkoviiva         puhtaat/tummanharmaa
+  {:yllapito-aloitettu puhtaat/keltainen
+   :yllapito-valmis puhtaat/lime
+   :yllapito-muu puhtaat/syaani
+   :yllapito-pohja puhtaat/musta
+   :yllapito-katkoviiva puhtaat/tummanharmaa
 
-   :laatupoikkeama                puhtaat/tummansininen
-   :laatupoikkeama-tilaaja        puhtaat/tummansininen
-   :laatupoikkeama-konsultti      puhtaat/tummansininen
-   :laatupoikkeama-urakoitsija    puhtaat/sininen
+   :laatupoikkeama puhtaat/tummansininen
+   :laatupoikkeama-tilaaja puhtaat/tummansininen
+   :laatupoikkeama-konsultti puhtaat/tummansininen
+   :laatupoikkeama-urakoitsija puhtaat/sininen
 
-   :ok-tarkastus                puhtaat/musta
-   :ok-tarkastus-tilaaja        puhtaat/musta
-   :ok-tarkastus-konsultti      puhtaat/musta
-   :ok-tarkastus-urakoitsija    puhtaat/musta
-   :ei-ok-tarkastus             puhtaat/punainen
-   :ei-ok-tarkastus-tilaaja     puhtaat/punainen
-   :ei-ok-tarkastus-konsultti   puhtaat/punainen
+   :ok-tarkastus puhtaat/musta
+   :ok-tarkastus-tilaaja puhtaat/musta
+   :ok-tarkastus-konsultti puhtaat/musta
+   :ok-tarkastus-urakoitsija puhtaat/musta
+   :ei-ok-tarkastus puhtaat/punainen
+   :ei-ok-tarkastus-tilaaja puhtaat/punainen
+   :ei-ok-tarkastus-konsultti puhtaat/punainen
    :ei-ok-tarkastus-urakoitsija puhtaat/punainen})
 
 
@@ -187,7 +187,13 @@
    #{"HARJAUS"}                                                 [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    #{"LIIKENNEMERKKIEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
    #{"L- JA P-ALUEIDEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
-   #{"SILTOJEN PUHDISTUS"}                                      [(viiva-mustalla-rajalla puhtaat/lime) "lime"]})
+   #{"SILTOJEN PUHDISTUS"}                                      [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   ;; tilannekuva/yllapito
+   #{"ASFALTOINTI"}                                             [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"TIEMERKINTÄ"}                                             [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"KUUMENNUS"}                                               [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"SEKOITUS TAI STABILOINTI"}                                [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
+   #{"TURVALAITE"}                                              [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]})
 
 ;;;;;;;;;;
 ;;; Värimäärittelyt loppuu
@@ -324,6 +330,15 @@ tr-viiva {:color  puhtaat/tummanharmaa
 tr-ikoni {:img    (pinni-ikoni "musta")
           :zindex 21})
 
-(def suljettu-tieosuus {:color puhtaat/oranssi
-                        :zindex 22})
+(def suljettu-tieosuus
+  [{:color puhtaat/musta
+    :width 8}
+   {:color puhtaat/punainen
+    :width 6}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width 4}
+   {:color puhtaat/keltainen
+    :dash [3 9]
+    :width 3}])
 
