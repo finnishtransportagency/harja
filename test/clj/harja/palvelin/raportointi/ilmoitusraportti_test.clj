@@ -11,7 +11,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -47,103 +48,16 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Ilmoitusraportti"}
-                    [:taulukko
-                     {:otsikko "Oulun alueurakka 2014-2019, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Ilmoitusraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 31
-                       :otsikko "Urakka"}
-                      {:leveys 23
-                       :otsikko "TPP (Toimenpide­pyyntö)"}
-                      {:leveys 23
-                       :otsikko "TUR (Tiedoksi)"}
-                      {:leveys 23
-                       :otsikko "URK (Kysely)"}]
-                     [{:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
-                       ["Oulun alueurakka 2014-2019"
-                        10
-                        7
-                        3]]]
-                    [:pylvaat
-                     {:legend ["TPP"
-                               "TUR"
-                               "URK"]
-                      :otsikko "Ilmoitukset kuukausittain 01.10.2014-01.10.2015"
-                      :piilota-arvo? #{0}}
-                     [["2014/10"
-                       [2
-                        nil
-                        nil]]
-                      ["2014/11"
-                       [nil
-                        2
-                        nil]]
-                      ["2014/12"
-                       [1
-                        nil
-                        nil]]
-                      ["2015/01"
-                       [1
-                        1
-                        1]]
-                      ["2015/02"
-                       [1
-                        1
-                        nil]]
-                      ["2015/03"
-                       [3
-                        nil
-                        nil]]
-                      ["2015/04"
-                       [nil
-                        1
-                        nil]]
-                      ["2015/05"
-                       []]
-                      ["2015/06"
-                       [nil
-                        1
-                        2]]
-                      ["2015/07"
-                       []]
-                      ["2015/08"
-                       [1
-                        nil
-                        nil]]
-                      ["2015/09"
-                       [1
-                        1
-                        nil]]
-                      ["2015/10"
-                       []]]]
-                    [:taulukko
-                     {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
-                     [{:leveys 6
-                       :otsikko "Asiakaspalauteluokka"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "TPP (Toimenpidepyyntö)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "TUR (Tiedoksi)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "URK (Kysely)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "Yhteensä"}]
-                     [["Auraus ja sohjonpoisto"
-                       10
-                       0
-                       3
-                       13]
-                      ["Puhtaanapito ja kalusteiden hoito"
-                       0
-                       7
-                       0
-                       7]]]]))))
+    (let [otsikko "Oulun alueurakka 2014-2019, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Alue"}
+                                          {:otsikko "TPP (Toimenpide\u00ADpyyntö)"}
+                                          {:otsikko "TUR (Tiedoksi)"}
+                                          {:otsikko "URK (Kysely)"})
+      (apurit/tarkista-taulukko-rivit taulukko
+                                      {:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
+                                      ["Oulun alueurakka 2014-2019" 10 7 3]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -156,107 +70,20 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Ilmoitusraportti"}
-                    [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Ilmoitusraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 31
-                       :otsikko "Urakka"}
-                      {:leveys 23
-                       :otsikko "TPP (Toimenpide­pyyntö)"}
-                      {:leveys 23
-                       :otsikko "TUR (Tiedoksi)"}
-                      {:leveys 23
-                       :otsikko "URK (Kysely)"}]
-                     [{:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
-                      ["Oulun alueurakka 2014-2019"
-                       10
-                       7
-                       3]
-                      ["Yhteensä"
-                        10
-                        7
-                        3]]]
-                    [:pylvaat
-                     {:legend ["TPP"
-                               "TUR"
-                               "URK"]
-                      :otsikko "Ilmoitukset kuukausittain 01.10.2014-01.10.2015"
-                      :piilota-arvo? #{0}}
-                     [["2014/10"
-                       [2
-                        nil
-                        nil]]
-                      ["2014/11"
-                       [nil
-                        2
-                        nil]]
-                      ["2014/12"
-                       [1
-                        nil
-                        nil]]
-                      ["2015/01"
-                       [1
-                        1
-                        1]]
-                      ["2015/02"
-                       [1
-                        1
-                        nil]]
-                      ["2015/03"
-                       [3
-                        nil
-                        nil]]
-                      ["2015/04"
-                       [nil
-                        1
-                        nil]]
-                      ["2015/05"
-                       []]
-                      ["2015/06"
-                       [nil
-                        1
-                        2]]
-                      ["2015/07"
-                       []]
-                      ["2015/08"
-                       [1
-                        nil
-                        nil]]
-                      ["2015/09"
-                       [1
-                        1
-                        nil]]
-                      ["2015/10"
-                       []]]]
-                    [:taulukko
-                     {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
-                     [{:leveys 6
-                       :otsikko "Asiakaspalauteluokka"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "TPP (Toimenpidepyyntö)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "TUR (Tiedoksi)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "URK (Kysely)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "Yhteensä"}]
-                     [["Auraus ja sohjonpoisto"
-                       10
-                       0
-                       3
-                       13]
-                      ["Puhtaanapito ja kalusteiden hoito"
-                       0
-                       7
-                       0
-                       7]]]]))))
+    (let [otsikko "Pohjois-Pohjanmaa ja Kainuu, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Alue"}
+                                          {:otsikko "TPP (Toimenpide\u00ADpyyntö)"}
+                                          {:otsikko "TUR (Tiedoksi)"}
+                                          {:otsikko "URK (Kysely)"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko
+                                             (fn [[alue tpp tur urk :as rivi]]
+                                               (and (= (count rivi) 4)
+                                                    (string? alue)
+                                                    (integer? tpp)
+                                                    (integer? tur)
+                                                    (integer? urk)))))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -268,108 +95,21 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Ilmoitusraportti"}
-                    [:taulukko
-                     {:otsikko "KOKO MAA, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi "Ilmoitusraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys 31
-                       :otsikko "Urakka"}
-                      {:leveys 23
-                       :otsikko "TPP (Toimenpide­pyyntö)"}
-                      {:leveys 23
-                       :otsikko "TUR (Tiedoksi)"}
-                      {:leveys 23
-                       :otsikko "URK (Kysely)"}]
-                     [{:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
-                      ["Oulun alueurakka 2014-2019"
-                       10
-                       7
-                       3]
-                      ["Pohjois-Pohjanmaa ja Kainuu yhteensä"
-                        10
-                        7
-                        3]
-                      ["Yhteensä"
-                        10
-                        7
-                        3]]]
-                    [:pylvaat
-                     {:legend ["TPP"
-                               "TUR"
-                               "URK"]
-                      :otsikko "Ilmoitukset kuukausittain 01.10.2014-01.10.2015"
-                      :piilota-arvo? #{0}}
-                     [["2014/10"
-                       [2
-                        nil
-                        nil]]
-                      ["2014/11"
-                       [nil
-                        2
-                        nil]]
-                      ["2014/12"
-                       [1
-                        nil
-                        nil]]
-                      ["2015/01"
-                       [1
-                        1
-                        1]]
-                      ["2015/02"
-                       [1
-                        1
-                        nil]]
-                      ["2015/03"
-                       [3
-                        nil
-                        nil]]
-                      ["2015/04"
-                       [nil
-                        1
-                        nil]]
-                      ["2015/05"
-                       []]
-                      ["2015/06"
-                       [nil
-                        1
-                        2]]
-                      ["2015/07"
-                       []]
-                      ["2015/08"
-                       [1
-                        nil
-                        nil]]
-                      ["2015/09"
-                       [1
-                        1
-                        nil]]
-                      ["2015/10"
-                       []]]]
-                    [:taulukko
-                     {:otsikko "Ilmoitukset asiakaspalauteluokittain"}
-                     [{:leveys 6
-                       :otsikko "Asiakaspalauteluokka"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "TPP (Toimenpidepyyntö)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "TUR (Tiedoksi)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "URK (Kysely)"}
-                      {:fmt     :numero
-                       :leveys 2
-                       :otsikko "Yhteensä"}]
-                     [["Auraus ja sohjonpoisto"
-                       10
-                       0
-                       3
-                       13]
-                      ["Puhtaanapito ja kalusteiden hoito"
-                       0
-                       7
-                       0
-                       7]]]]))))
+    (let [otsikko "KOKO MAA, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Alue"}
+                                          {:otsikko "TPP (Toimenpide\u00ADpyyntö)"}
+                                          {:otsikko "TUR (Tiedoksi)"}
+                                          {:otsikko "URK (Kysely)"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko
+                                             (fn [rivi]
+                                               (let [[alue tpp tur urk :as r]
+                                                     (if (map? rivi)
+                                                       (:rivi rivi)
+                                                       rivi)]
+                                                 (and (= (count r) 4)
+                                                      (string? alue)
+                                                      (integer? tpp)
+                                                      (integer? tur)
+                                                      (integer? urk))))))))
