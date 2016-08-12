@@ -42,6 +42,7 @@
                                       :numero #(fmt/desimaaliluku-opt % 1 true)
                                       :prosentti #(fmt/prosentti-opt % 1)
                                       :raha #(fmt/desimaaliluku-opt % 2 true)
+                                      :pvm #(fmt/pvm-opt %)
                                       str)]
                       #(if-not (raportti-domain/virhe? %) (format-fn %) (raportti-domain/virheen-viesti %))))]
     [grid/grid {:otsikko            (or otsikko "")
@@ -89,6 +90,7 @@
                                         [(:rivi rivi) rivi]
                                         [rivi {}])
                                       lihavoi? (:lihavoi? optiot)
+                                      korosta? (:korosta? optiot)
                                       mappina (assoc
                                                 (zipmap (range (count sarakkeet))
                                                         rivi)
@@ -98,7 +100,7 @@
                                                (= viimeinen-rivi rivi))
                                           (assoc :yhteenveto true)
 
-                                          (when korosta-rivit (korosta-rivit index))
+                                          (or korosta? (when korosta-rivit (korosta-rivit index)))
                                           (assoc :korosta true)
 
                                           lihavoi?
