@@ -303,23 +303,21 @@
                            (reverse (pvm/urakan-vuodet (:alkupvm urakka) (:loppupvm urakka))))
                          (pvm/edelliset-n-vuosivalia 10)))))
 
-(def urakan-vuosi (atom urakan-vuodet))
-;; urakan-vuosi ei voi olla reaktio, koska sitä lukeva komponentti
-;; ei aina ole näkyvissä, joten arvo saattaa resetoitua siirryttäessä raportille ja takaisin.
-;; Edellinen arvo halutaan kuitenkin säilyttää aina muistissa ja
-;; vaihtaa automaattisesti jos urakan-vuodet muuttuu. Siksi run!
-(run! (reset! urakan-vuosi (first @urakan-vuodet)))
+(defonce valitse-vuosi-kun-urakka-muuttuu
+  (run! (swap! parametri-arvot assoc-in ["Vuosi" :vuosi]
+               (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+                     urakan-vuodet @urakan-vuodet]
+                 (if (some #(= % nykyinen-vuosi) urakan-vuodet)
+                   nykyinen-vuosi
+                   (first urakan-vuodet))))))
 
 (defmethod raportin-parametri "urakan-vuosi" [p arvo]
-  (reset! arvo {:vuosi @urakan-vuosi})
-  (fn []
-    [yleiset/pudotusvalikko
-     "Vuosi"
-     {:valinta @urakan-vuosi
-      :valitse-fn #(do (reset! urakan-vuosi %)
-                       (reset! arvo {:vuosi %}))}
+  [yleiset/pudotusvalikko
+   "Vuosi"
+   {:valinta    (:vuosi @arvo)
+    :valitse-fn #(reset! arvo {:vuosi %})}
 
-     @urakan-vuodet]))
+   @urakan-vuodet])
 
 (def tyomaakokousraportit
   {"Erilliskustannukset" :erilliskustannukset
