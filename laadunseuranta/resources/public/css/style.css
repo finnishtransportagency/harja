@@ -248,8 +248,6 @@ button {
 }
 
 .painike-aktiivinen {
-    background-color: yellow;
-    color: black;
 }
 
 /* ---------- virheilmoitukset ---------- */
@@ -864,20 +862,23 @@ button:disabled {
     left: 12%;
     width: 75%;
     height: 75%;
-    overflow: auto;
     z-index: 10000;
     background-color: white;
 }
 
-.painikelaatikko .pikavalintapainike {
+.painikelaatikko .painikerivi {
+    height: 25%;
+}
+
+.painikerivi .pikavalintapainike {
     float: left;
-    width: 20%;
-    height: 19%;
+    width: 22%;
+    height: 100%;
     background-color: rgb(9,79,192);
     border: 1px solid black;
     margin-top: 1%;
     margin-bottom: 1%;
-    margin-left: 3%;
+    margin-left: 2%;
     mergin-right: 3%;
     color: white;
     padding-top: 20px;
@@ -893,7 +894,11 @@ button:disabled {
 .painikelaatikko .peruuta {
     background-color: gray;
     color: white;
-    width: 200px;
-    height: 50px;
+    width: 50%;
+    height: 80px;
     float: left;
+    text-align: center;
+    margin-top: 20px;
+    margin-left: 25%;
+    line-height: 80px;
 }

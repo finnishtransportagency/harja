@@ -211,18 +211,21 @@
 
 (defn- paallystys [alivalikot havainnot]
   [:div.painikelaatikko
-   [toggle-painike "Saumavirhe" havainnot :saumavirhe]
-   [toggle-painike "Lajittuma" havainnot :lajittuma]
-   [toggle-painike "Epätasaisuus" havainnot :epatasaisuus]
-   [toggle-painike "Halkeamat" havainnot :halkeamat]
-   [toggle-painike "Vesilammikot" havainnot :vesilammikot]
-   [toggle-painike "Epätasaiset reunat" havainnot :epatasaisetreunat]
-   [toggle-painike "Jyrän jälkiä" havainnot :jyranjalkia]
-   [toggle-painike "Sideaineläikkiä" havainnot :sideainelaikkia]
-   [toggle-painike "Väärä korkeusasema" havainnot :vaarakorkeusasema]
-   [toggle-painike "Pinta harva" havainnot :pintaharva]
-   [toggle-painike "Pintakuivatus puutteellinen" havainnot :pintakuivatuspuute]
-   [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema]
+   [:div.painikerivi
+    [toggle-painike "Saumavirhe" havainnot :saumavirhe]
+    [toggle-painike "Lajittuma" havainnot :lajittuma]
+    [toggle-painike "Epätasaisuus" havainnot :epatasaisuus]
+    [toggle-painike "Halkeamat" havainnot :halkeamat]]
+   [:div.painikerivi
+    [toggle-painike "Vesilammikot" havainnot :vesilammikot]
+    [toggle-painike "Epätasaiset reunat" havainnot :epatasaisetreunat]
+    [toggle-painike "Jyrän jälkiä" havainnot :jyranjalkia]
+    [toggle-painike "Sideaineläikkiä" havainnot :sideainelaikkia]]
+   [:div.painikerivi
+    [toggle-painike "Väärä korkeusasema" havainnot :vaarakorkeusasema]
+    [toggle-painike "Pinta harva" havainnot :pintaharva]
+    [toggle-painike "Pintakuivatus puutteellinen" havainnot :pintakuivatuspuute]
+    [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema]]
    [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]])
 
 
