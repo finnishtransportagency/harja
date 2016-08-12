@@ -9,7 +9,7 @@
 ;; Viralliset värit löytyy täältä: https://issues.solita.fi/browse/HAR-921
 ;; Testin vuoksi voit muuttaa pelkkää värin arvoa, mutta pyritään noudattamaan
 ;; virallista listaa.
-;; Jos lisäät uuden värin, lisää se myös puhtaat.cljc ja alpha.cljc
+;; Jos lisäät uuden värin, lisää se myös puhtaat.cljc ja alpha.cljc, ikonit.cljc
 (def varit {"punainen"      "rgb(255,0,0)"
             "oranssi"       "rgb(255,128,0)"
             "keltainen"     "rgb(255,255,0)"
