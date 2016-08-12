@@ -94,6 +94,7 @@
    :ilmoitus-kaynnissa         "musta"
    :ilmoitus-lopetettu         "harmaa"
 
+   ;; Turpon ikonin tila tulee korjaavien toimenpiteiden mukaan
    :kt-tyhja                   "oranssi"
    :kt-avoimia                 "punainen"
    :kt-valmis                  "vihrea"
