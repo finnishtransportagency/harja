@@ -83,18 +83,18 @@
 
 ;; Merkkijono, koska tämä on osa tiedoston nimeä
 (def ikonien-varit
-  {;; Tilallisten sijainti-ikonien sisempi väri
+  {;; Tilallisten sijainti-ikonien ulompi väri
    :tiedoitus                  "oranssi"
    :kysely                     "syaani"
    :toimenpidepyynto           "punainen"
    :turvallisuuspoikkeama      "magenta"
 
-   ;; tilaa osoittavat värit (sijaint-ikonin ulompi väri)
+   ;; tilaa osoittavat värit (sijaint-ikonin sisempi väri)
    :ilmoitus-auki              "punainen"
-   :ilmoitus-kaynnissa         "musta"
-   :ilmoitus-lopetettu         "harmaa"
+   :ilmoitus-kaynnissa         "sininen"
+   :ilmoitus-lopetettu         "vihrea"
 
-   ;; Turpon ikonin tila tulee korjaavien toimenpiteiden mukaan
+   ;; Turpon ikonin tila tulee korjaavien toimenpiteiden mukaan (sisempi väri)
    :kt-tyhja                   "oranssi"
    :kt-avoimia                 "punainen"
    :kt-valmis                  "vihrea"
@@ -235,11 +235,11 @@
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
-  (sijainti-ikoni (:turvallisuuspoikkeama ikonien-varit)
-                  (case kt-tila
+  (sijainti-ikoni (case kt-tila
                     :tyhja (:kt-tyhja ikonien-varit)
                     :avoimia (:kt-avoimia ikonien-varit)
-                    :valmis (:kt-valmis ikonien-varit))))
+                    :valmis (:kt-valmis ikonien-varit))
+                  (:turvallisuuspoikkeama ikonien-varit)))
 
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
@@ -282,26 +282,32 @@
             (:laatupoikkeama viivojen-varit))})
 
 (defn kyselyn-ikoni [tila]
-  (case tila
-    :kuittaamaton (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :vastaanotto (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :aloitus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :lopetus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+  (sijainti-ikoni
+    (case tila
+     :kuittaamaton (:ilmoitus-kaynnissa ikonien-varit)
+     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+    (:kysely ikonien-varit)))
 
 (defn toimenpidepyynnon-ikoni [tila]
-  (case tila
-    :kuittaamaton (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-auki ikonien-varit))
-    :vastaanotto (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :aloitus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :lopetus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+  (sijainti-ikoni
+    (case tila
+     :kuittaamaton (:ilmoitus-auki ikonien-varit)
+     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+    (:toimenpidepyynto ikonien-varit)))
 
 
 (defn tiedotuksen-ikoni [tila]
-  (case tila
-    :kuittaamaton (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-auki ikonien-varit))
-    :vastaanotto (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :aloitus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :lopetus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+  (sijainti-ikoni
+    (case tila
+     :kuittaamaton (:ilmoitus-auki ikonien-varit)
+     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+    (:tiedoitus ikonien-varit)))
 
 (defn ilmoituksen-ikoni [{:keys [ilmoitustyyppi tila] :as ilmoitus}]
   (case ilmoitustyyppi
