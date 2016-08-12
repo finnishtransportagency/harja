@@ -3,13 +3,13 @@
     #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
     #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
        :clj [taoensso.timbre :as log])
-            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.ilmoitukset :as ilmoitukset]
-            [harja.geo :as geo]
-            [harja.ui.kartta.varit.puhtaat :as puhtaat]
+      [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+      [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+      [harja.domain.ilmoitukset :as ilmoitukset]
+      [harja.geo :as geo]
+      [harja.ui.kartta.varit.puhtaat :as puhtaat]
 
-            [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
+      [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
 #?(:clj (defn log [& things]
           (log/info things)))
@@ -544,7 +544,7 @@
   ([asiat valittu tunniste asia-xf]
     ;; Haluamme näyttää edistymispalkin, mutta 100% valmius ei ole vielä siinä
     ;; vaiheessa, kun koko data on lapioitu.
-    #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
+   #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
      (with-meta
