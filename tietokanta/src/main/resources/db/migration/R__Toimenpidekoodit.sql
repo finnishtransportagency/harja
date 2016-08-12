@@ -2791,3 +2791,19 @@ SELECT lisaa_toimenpidekoodi(
     'Projektinhallinta','39186',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='39180') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='39180') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='39180') );
 SELECT lisaa_toimenpidekoodi(
     'Laadun varmistus','39187',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='39180') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='39180') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='39180') );
+SELECT lisaa_toimenpidekoodi(
+    'Asfaltointi', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT taso FROM toimenpidekoodi WHERE koodi='20106'));
+SELECT lisaa_toimenpidekoodi(
+    'Kuumennus', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT taso FROM toimenpidekoodi WHERE koodi='20106'));
+SELECT lisaa_toimenpidekoodi(
+    'Sekoitus tai stabilointi', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT taso FROM toimenpidekoodi WHERE koodi='20106'));
+SELECT lisaa_toimenpidekoodi(
+    'Turvalaite', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='20106'), (SELECT taso FROM toimenpidekoodi WHERE koodi='20106'));
+SELECT lisaa_toimenpidekoodi(
+    'Tiemerkintä', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='20123'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='20123'), (SELECT taso FROM toimenpidekoodi WHERE koodi='20123'));
+
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'asfaltointi' :: suoritettavatehtava WHERE nimi = 'Asfaltointi';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'tiemerkinta' :: suoritettavatehtava WHERE nimi = 'Tiemerkintä';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'kuumennus' :: suoritettavatehtava WHERE nimi = 'Kuumennus';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'sekoitus tai stabilointi' :: suoritettavatehtava WHERE nimi = 'Sekoitus tai stabilointi';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'turvalaite' :: suoritettavatehtava WHERE nimi = 'Turvalaite';
