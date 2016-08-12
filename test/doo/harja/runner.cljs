@@ -9,6 +9,7 @@
              [harja.views.urakka.paallystysilmoitukset-test]
              [harja.views.urakka.paikkausilmoitukset-test]
              [harja.views.urakka.yllapitokohteet-test]
+             [harja.views.urakka.yleiset-test]
              [harja.ui.historia-test]
              [harja.ui.kentat-test]
              [harja.ui.grid-test]
@@ -25,6 +26,7 @@
            'harja.views.urakka.paallystysilmoitukset-test
            'harja.views.urakka.paikkausilmoitukset-test
            'harja.views.urakka.yllapitokohteet-test
+           'harja.views.urakka.yleiset-test
            'harja.ui.historia-test
            'harja.ui.kentat-test
            'harja.ui.grid-test
