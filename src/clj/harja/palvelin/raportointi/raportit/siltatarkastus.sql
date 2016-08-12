@@ -191,7 +191,7 @@ ORDER BY u.nimi
 -- name: hae-koko-maan-siltatarkastukset
 -- Hakee koko maan siltatarkastukset ELYittäin valitulta vuodelta
 SELECT
-  h.nimi,
+  concat(lpad(cast(elynumero as varchar), 2, '0'), ' ', h.nimi) as nimi,
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
    WHERE tulos = 'A'
