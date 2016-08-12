@@ -77,7 +77,7 @@
             vastaus (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
         (if (k/virhe? vastaus)
           (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
-          (do (reset! paivystajat (sort-by :loppu vastaus))
+          (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
               true)))))
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
@@ -157,10 +157,13 @@
       (komp/kun-muuttuu (comp hae! :id))
       (fn [ur]
         [grid/grid
-         {:otsikko "Päivystystiedot"
-          :tyhja "Ei päivystystietoja."
-          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-                      #(tallenna-paivystajat ur paivystajat %))}
+         {:otsikko      "Päivystystiedot"
+          :tyhja        "Ei päivystystietoja."
+          :tallenna     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                          #(tallenna-paivystajat ur paivystajat %))
+          :rivin-luokka #(when (and (< (:alku %) (pvm/nyt))
+                                    (< (pvm/nyt) (:loppu %)))
+                          " bold")}
          [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                   nimi
                                   (str (:etunimi %)
