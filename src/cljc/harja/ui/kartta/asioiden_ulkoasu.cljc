@@ -97,6 +97,10 @@
    :kt-tyhja "oranssi"
    :kt-avoimia "punainen"
    :kt-valmis "vihrea"
+   ;; Turpon ikonin tila tulee korjaavien toimenpiteiden mukaan
+   :kt-tyhja                   "oranssi"
+   :kt-avoimia                 "punainen"
+   :kt-valmis                  "vihrea"
 
    ;; Pienemmät ikonit (pinnit)
    :laatupoikkeama "tummansininen"
@@ -146,53 +150,53 @@
   {;; yhdistelmätoimenpiteet
    #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "PISTEHIEKOITUS"} auraus-tasaus-ja-kolmas
    #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "LINJAHIEKOITUS"} auraus-tasaus-ja-kolmas
-   #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "SUOLAUS"} auraus-tasaus-ja-kolmas
+   #{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "SUOLAUS"}        auraus-tasaus-ja-kolmas
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;#{"AURAUS JA SOHJONPOISTO" "PINNAN TASAUS" "LIUOSSUOLAUS"}   auraus-tasaus-ja-kolmas
-   #{"AURAUS JA SOHJONPOISTO" "PISTEHIEKOITUS"} auraus-ja-hiekoitus
-   #{"AURAUS JA SOHJONPOISTO" "LINJAHIEKOITUS"} auraus-ja-hiekoitus
-   #{"AURAUS JA SOHJONPOISTO" "SUOLAUS"} auraus-ja-suolaus
+   #{"AURAUS JA SOHJONPOISTO" "PISTEHIEKOITUS"}                 auraus-ja-hiekoitus
+   #{"AURAUS JA SOHJONPOISTO" "LINJAHIEKOITUS"}                 auraus-ja-hiekoitus
+   #{"AURAUS JA SOHJONPOISTO" "SUOLAUS"}                        auraus-ja-suolaus
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;#{"AURAUS JA SOHJONPOISTO" "LIUOSSUOLAUS"}                   auraus-ja-suolaus
    ;; tilannekuva/talvihoito
-   #{"AURAUS JA SOHJONPOISTO"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
-   #{"SUOLAUS"} [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
+   #{"AURAUS JA SOHJONPOISTO"}                                  [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
+   #{"SUOLAUS"}                                                 [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;#{"LIUOSSUOLAUS"}                                            [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
-   #{"PISTEHIEKOITUS"} [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
-   #{"LINJAHIEKOITUS"} [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
-   #{"PINNAN TASAUS"} [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
-   #{"LUMIVALLIEN MADALTAMINEN"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
-   #{"SULAMISVEDEN HAITTOJEN TORJUNTA"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
-   #{"AURAUSVIITOITUS JA KINOSTIMET"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
-   #{"LUMENSIIRTO"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
-   #{"PAANNEJAAN POISTO"} [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
-   #{"MUU"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"PISTEHIEKOITUS"}                                          [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
+   #{"LINJAHIEKOITUS"}                                          [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
+   #{"PINNAN TASAUS"}                                           [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
+   #{"LUMIVALLIEN MADALTAMINEN"}                                [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"SULAMISVEDEN HAITTOJEN TORJUNTA"}                         [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"AURAUSVIITOITUS JA KINOSTIMET"}                           [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"LUMENSIIRTO"}                                             [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"PAANNEJAAN POISTO"}                                       [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
+   #{"MUU"}                                                     [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    ;; tilannekuva/kesähoito
-   #{"SORATEIDEN PÖLYNSIDONTA"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
-   #{"SORASTUS"} [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
-   #{"SORATEIDEN TASAUS"} [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
-   #{"SORATEIDEN MUOKKAUSHÖYLÄYS"} [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
-   #{"PÄÄLLYSTEIDEN PAIKKAUS"} [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
-   #{"PÄÄLLYSTEIDEN JUOTOSTYÖT"} [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
-   #{"KONEELLINEN NIITTO"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
-   #{"KONEELLINEN VESAKONRAIVAUS"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
-   #{"HARJAUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
-   #{"LIIKENNEMERKKIEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
-   #{"L- JA P-ALUEIDEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
-   #{"SILTOJEN PUHDISTUS"} [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"SORATEIDEN PÖLYNSIDONTA"}                                 [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
+   #{"SORASTUS"}                                                [(viiva-mustalla-rajalla puhtaat/syaani) "syaani"]
+   #{"SORATEIDEN TASAUS"}                                       [(viiva-mustalla-rajalla puhtaat/tummansininen) "tummansininen"]
+   #{"SORATEIDEN MUOKKAUSHÖYLÄYS"}                              [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]
+   #{"PÄÄLLYSTEIDEN PAIKKAUS"}                                  [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
+   #{"PÄÄLLYSTEIDEN JUOTOSTYÖT"}                                [(viiva-mustalla-rajalla puhtaat/violetti) "violetti"]
+   #{"KONEELLINEN NIITTO"}                                      [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"KONEELLINEN VESAKONRAIVAUS"}                              [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"HARJAUS"}                                                 [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   #{"LIIKENNEMERKKIEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"L- JA P-ALUEIDEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
+   #{"SILTOJEN PUHDISTUS"}                                      [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    ;; tilannekuva/yllapito
-   #{"ASFALTOINTI"} [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
-   #{"TIEMERKINTÄ"} [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
-   #{"KUUMENNUS"} [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
-   #{"SEKOITUS TAI STABILOINTI"} [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
-   #{"TURVALAITE"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]})
+   #{"ASFALTOINTI"}                                             [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"TIEMERKINTÄ"}                                             [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"KUUMENNUS"}                                               [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"SEKOITUS TAI STABILOINTI"}                                [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
+   #{"TURVALAITE"}                                              [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]})
 
 ;;;;;;;;;;
 ;;; Värimäärittelyt loppuu
@@ -205,18 +209,18 @@
 (defn toteuman-nuoli [nuolen-vari]
   {:paikka [:taitokset :loppu]
    :tyyppi :nuoli
-   :img (nuoli-ikoni nuolen-vari)})
+   :img    (nuoli-ikoni nuolen-vari)})
 
 (defn tyokoneen-ikoni [nuolen-vari rotaatio]
-  {:paikka [:loppu]
-   :tyyppi :nuoli
-   :img (nuoli-ikoni nuolen-vari)
+  {:paikka   [:loppu]
+   :tyyppi   :nuoli
+   :img      (nuoli-ikoni nuolen-vari)
    :rotation rotaatio})
 
 (defn yllapidon-ikoni []
   {:paikka [:loppu]
    :tyyppi :merkki
-   :img (:yllapito ikonien-varit)})
+   :img    (:yllapito ikonien-varit)})
 
 (defn yllapidon-viiva [valittu? avoin? tila tyyppi]
   (let [;; Pohjimmaisen viivan leveys on X, ja seuraavien viivojen leveys on aina 2 kapeampi.
@@ -236,7 +240,7 @@
                (:yllapito-muu viivojen-varit))
       :width (nth leveydet 1)}
      {:color (:yllapito-katkoviiva viivojen-varit)
-      :dash (if (= tyyppi :paikkaus) [3 9] [10 5])
+      :dash  (if (= tyyppi :paikkaus) [3 9] [10 5])
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
@@ -315,12 +319,12 @@
     :tiedoitus (tiedotuksen-ikoni tila)))
 
 (def ^{:doc "TR-valinnan viivatyyli"}
-tr-viiva {:color puhtaat/tummanharmaa
-          :dash [15 15]
+tr-viiva {:color  puhtaat/tummanharmaa
+          :dash   [15 15]
           :zindex 20})
 
 (def ^{:doc "TR-valinnan ikoni"}
-tr-ikoni {:img (pinni-ikoni "musta")
+tr-ikoni {:img    (pinni-ikoni "musta")
           :zindex 21})
 
 (def suljettu-tieosuus
