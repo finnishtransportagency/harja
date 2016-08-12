@@ -184,7 +184,7 @@ SELECT
                                       AND urakka = u.id
                                       AND st.poistettu = FALSE)) AS "d"
 FROM urakka u
-  WHERE u.hallintayksikko = :hallintayksikko
+  WHERE u.hallintayksikko = :hallintayksikko AND u.tyyppi = 'hoito'
   AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR FROM loppupvm)
 ORDER BY u.nimi
 
@@ -201,9 +201,9 @@ SELECT
                                      AND urakka IN (SELECT id
                                                     FROM urakka
                                                     WHERE hallintayksikko = h.id
-                                                          AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
-                                                                                                                    FROM
-                                                                                                                    loppupvm))
+                                                          AND tyyppi = 'hoito'
+                                                          AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
+                                                          AND EXTRACT(YEAR FROM loppupvm))
                                      AND st.poistettu = FALSE))     AS "a",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
@@ -214,9 +214,9 @@ SELECT
                                       AND urakka IN (SELECT id
                                                      FROM urakka
                                                      WHERE hallintayksikko = h.id
-                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
-                                                                                                                     FROM
-                                                                                                                     loppupvm))
+                                                           AND tyyppi = 'hoito'
+                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
+                                                           AND EXTRACT(YEAR FROM loppupvm))
                                       AND st.poistettu = FALSE)) AS "b",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
@@ -227,9 +227,9 @@ SELECT
                                       AND urakka IN (SELECT id
                                                      FROM urakka
                                                      WHERE hallintayksikko = h.id
-                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
-                                                                                                                     FROM
-                                                                                                                     loppupvm))
+                                                           AND tyyppi = 'hoito'
+                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
+                                                           AND EXTRACT(YEAR FROM loppupvm))
                                       AND st.poistettu = FALSE)) AS "c",
   (SELECT COUNT(*)
    FROM siltatarkastuskohde
@@ -240,9 +240,9 @@ SELECT
                                       AND urakka IN (SELECT id
                                                      FROM urakka
                                                      WHERE hallintayksikko = h.id
-                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm) AND EXTRACT(YEAR
-                                                                                                                     FROM
-                                                                                                                     loppupvm))
+                                                           AND tyyppi = 'hoito'
+                                                           AND :vuosi BETWEEN EXTRACT(YEAR FROM alkupvm)
+                                                           AND EXTRACT(YEAR FROM loppupvm))
                                       AND st.poistettu = FALSE)) AS "d"
 FROM organisaatio h
   WHERE tyyppi = 'hallintayksikko'
