@@ -77,7 +77,7 @@
             vastaus (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
         (if (k/virhe? vastaus)
           (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
-          (do (reset! paivystajat (sort-by :loppu vastaus))
+          (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
               true)))))
 
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
@@ -145,6 +145,57 @@
              []
              kayttajat)])))))
 
+(defn paivystajalista
+  [ur paivystajat tallenna!]
+  [grid/grid
+   {:otsikko      "Päivystystiedot"
+    :tyhja        "Ei päivystystietoja."
+    :tallenna     tallenna!
+    :rivin-luokka #(when (and (< (:alku %) (pvm/nyt))
+                              (< (pvm/nyt) (:loppu %)))
+                    " bold")}
+   [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+                            nimi
+                            (str (:etunimi %)
+                                 (when-let [suku (:sukunimi %)]
+                                   (str " " suku))))
+     :aseta (fn [yht arvo]
+              (assoc yht :nimi arvo))
+
+
+     :tyyppi :string :leveys 15
+     :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
+    {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
+     :tyyppi :valinta
+     :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
+     :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+
+    {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
+     :pituus 16}
+    {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
+     :pituus 16}
+    {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
+     :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
+    {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
+     :validoi [[:ei-tyhja "Aseta alkupvm"]
+               (fn [alku rivi]
+                 (let [loppu (:loppu rivi)]
+                   (when (and alku loppu
+                              (t/before? loppu alku))
+                     "Alkupvm ei voi olla lopun jälkeen.")))
+               ]}
+    {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
+     :validoi [[:ei-tyhja "Aseta loppupvm"]
+               (fn [loppu rivi]
+                 (let [alku (:alku rivi)]
+                   (when (and alku loppu
+                              (t/before? loppu alku))
+                     "Loppupvm ei voi olla alkua ennen.")))]}
+    {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
+     :leveys 10
+     :fmt fmt/totuus :tasaa :keskita}]
+   paivystajat])
+
 (defn paivystajat [ur]
   (let [paivystajat (atom nil)
         hae! (fn [urakka-id]
@@ -156,52 +207,9 @@
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id))
       (fn [ur]
-        [grid/grid
-         {:otsikko "Päivystystiedot"
-          :tyhja "Ei päivystystietoja."
-          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-                      #(tallenna-paivystajat ur paivystajat %))}
-         [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                                  nimi
-                                  (str (:etunimi %)
-                                       (when-let [suku (:sukunimi %)]
-                                         (str " " suku))))
-           :aseta (fn [yht arvo]
-                    (assoc yht :nimi arvo))
-
-
-           :tyyppi :string :leveys 15
-           :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
-          {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
-           :tyyppi :valinta
-           :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
-
-          {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
-           :pituus 16}
-          {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
-           :pituus 16}
-          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
-           :validoi [[:ei-tyhja "Anna päivystäjän sähköposti"]]}
-          {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-           :validoi [[:ei-tyhja "Aseta alkupvm"]
-                     (fn [alku rivi]
-                       (let [loppu (:loppu rivi)]
-                         (when (and alku loppu
-                                    (t/before? loppu alku))
-                           "Alkupvm ei voi olla lopun jälkeen.")))
-                     ]}
-          {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-           :validoi [[:ei-tyhja "Aseta loppupvm"]
-                     (fn [loppu rivi]
-                       (let [alku (:alku rivi)]
-                         (when (and alku loppu
-                                    (t/before? loppu alku))
-                           "Loppupvm ei voi olla alkua ennen.")))]}
-          {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
-           :leveys 10
-           :fmt fmt/totuus :tasaa :keskita}]
-         (sort-by :alku @paivystajat)]))))
+        [paivystajalista ur @paivystajat
+         (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+           #(tallenna-paivystajat ur paivystajat %))]))))
 
 (defn takuuaika [ur]
   (let [tallennus-kaynnissa (atom false)]

@@ -11,7 +11,8 @@
             [cljs.core.async :refer [>! <! alts! chan] :as async]
             [harja.geo :as geo]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.ikonit :as ikonit])
 
   (:require-macros
     [reagent.ratom :refer [reaction run!]]
@@ -184,7 +185,7 @@
                         valinta-hyvaksytty)
        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
          [:div.tr-valitsin-teksti.form-control
-          [:div (case @tila
-                  :ei-valittu "Valitse alkupiste"
-                  :alku-valittu "Valitse loppupiste"
-                  "")]])))))
+          [:div (ikonit/livicon-info-sign) (case @tila
+                                             :ei-valittu " Valitse alkupiste kartalta"
+                                             :alku-valittu " Valitse loppupiste kartalta"
+                                             "")]])))))
