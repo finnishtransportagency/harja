@@ -36,3 +36,8 @@ WHERE urakka_sampoid = :urakka_sampo_id;
 SELECT EXISTS(SELECT id
               FROM sopimus
               WHERE urakka = :urakka_id AND id = :sopimus_id);
+
+-- name: hae-urakan-paasopimus
+SELECT id
+FROM sopimus
+WHERE urakka = :urakka AND paasopimus IS NULL;

@@ -56,7 +56,8 @@ hakutiheys-historiakuva 1200000)
                 tk/paikkaus false
                 tk/suljetut-tiet false
                 tk/paaasfalttilevitin false
-                tk/remix-laite false
+                tk/tiemerkintakone false
+                tk/kuumennuslaite false
                 tk/sekoitus-ja-stabilointijyrsin false
                 tk/tma-laite false}
      :ilmoitukset {:tyypit {tk/tpp false
@@ -365,6 +366,8 @@ hakutiheys-historiakuva 1200000)
                :suodattimet @suodattimet})
       (kartta/aseta-paivitetaan-karttaa-tila! true))
 
+    ;; Aikaparametri (nykytilanteessa) pitää tietenkin laskea joka haulle uudestaan, jotta
+    ;; oikeasti haetaan nykyhetkestä esim. pari tuntia menneisyyteen.
     (reset! tilannekuva-kartalla/url-hakuparametrit
             (k/url-parametri (aikaparametrilla (dissoc hakuparametrit :alue))))
 
@@ -377,7 +380,14 @@ hakutiheys-historiakuva 1200000)
 
 (def asioiden-haku
   (reaction<! [hakuparametrit @hakuparametrit
-               nakymassa? @nakymassa?]
+               nakymassa? @nakymassa?
+               ;; Uusi haku myös kun aikasuodattimien arvot muuttuvat
+               _ @nykytilanteen-aikasuodattimen-arvo
+               _ @historiakuvan-aikavali]
+               ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet, 
+               ;; aikasuodattimeen ja tilaan sopivat urakat. Kun tämä haku on valmis,
+               ;; lähdetään hakemaan kartalle piirrettävät jutut. Tämän takia emme halua tehdä
+               ;; asioiden hakua tilaan sidottuna!
               {:odota bufferi}
               (when nakymassa?
                 (hae-asiat hakuparametrit))))

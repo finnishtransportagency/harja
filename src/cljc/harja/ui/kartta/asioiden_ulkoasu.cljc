@@ -83,52 +83,53 @@
 
 ;; Merkkijono, koska tämä on osa tiedoston nimeä
 (def ikonien-varit
-  {;; Tilallisten sijainti-ikonien sisempi väri
+  {;; Tilallisten sijainti-ikonien ulompi väri
    :tiedoitus                  "oranssi"
    :kysely                     "syaani"
    :toimenpidepyynto           "punainen"
    :turvallisuuspoikkeama      "magenta"
 
-   ;; tilaa osoittavat värit (sijaint-ikonin ulompi väri)
+   ;; tilaa osoittavat värit (sijaint-ikonin sisempi väri)
    :ilmoitus-auki              "punainen"
-   :ilmoitus-kaynnissa         "musta"
-   :ilmoitus-lopetettu         "harmaa"
+   :ilmoitus-kaynnissa         "sininen"
+   :ilmoitus-lopetettu         "vihrea"
 
+   ;; Turpon ikonin tila tulee korjaavien toimenpiteiden mukaan (sisempi väri)
    :kt-tyhja                   "oranssi"
    :kt-avoimia                 "punainen"
    :kt-valmis                  "vihrea"
 
    ;; Pienemmät ikonit (pinnit)
-   :laatupoikkeama             "tummansininen"
-   :laatupoikkeama-tilaaja     "tummansininen"
-   :laatupoikkeama-konsultti   "tummansininen"
+   :laatupoikkeama "tummansininen"
+   :laatupoikkeama-tilaaja "tummansininen"
+   :laatupoikkeama-konsultti "tummansininen"
    :laatupoikkeama-urakoitsija "sininen"
-   :tarkastus                  "punainen"
-   :tarkastus-tilaaja          "punainen"
-   :tarkastus-konsultti        "punainen"
-   :tarkastus-urakoitsija      "punainen"
-   :varustetoteuma             "violetti"
-   :yllapito                   "pinkki"})
+   :tarkastus "punainen"
+   :tarkastus-tilaaja "punainen"
+   :tarkastus-konsultti "punainen"
+   :tarkastus-urakoitsija "punainen"
+   :varustetoteuma "violetti"
+   :yllapito "pinkki"})
 
 (def viivojen-varit
-  {:yllapito-aloitettu          puhtaat/keltainen
-   :yllapito-valmis             puhtaat/lime
-   :yllapito-muu                puhtaat/syaani
-   :yllapito-pohja              puhtaat/musta
-   :yllapito-katkoviiva         puhtaat/tummanharmaa
+  {:yllapito-aloitettu puhtaat/keltainen
+   :yllapito-valmis puhtaat/lime
+   :yllapito-muu puhtaat/syaani
+   :yllapito-pohja puhtaat/musta
+   :yllapito-katkoviiva puhtaat/tummanharmaa
 
-   :laatupoikkeama                puhtaat/tummansininen
-   :laatupoikkeama-tilaaja        puhtaat/tummansininen
-   :laatupoikkeama-konsultti      puhtaat/tummansininen
-   :laatupoikkeama-urakoitsija    puhtaat/sininen
+   :laatupoikkeama puhtaat/tummansininen
+   :laatupoikkeama-tilaaja puhtaat/tummansininen
+   :laatupoikkeama-konsultti puhtaat/tummansininen
+   :laatupoikkeama-urakoitsija puhtaat/sininen
 
-   :ok-tarkastus                puhtaat/musta
-   :ok-tarkastus-tilaaja        puhtaat/musta
-   :ok-tarkastus-konsultti      puhtaat/musta
-   :ok-tarkastus-urakoitsija    puhtaat/musta
-   :ei-ok-tarkastus             puhtaat/punainen
-   :ei-ok-tarkastus-tilaaja     puhtaat/punainen
-   :ei-ok-tarkastus-konsultti   puhtaat/punainen
+   :ok-tarkastus puhtaat/musta
+   :ok-tarkastus-tilaaja puhtaat/musta
+   :ok-tarkastus-konsultti puhtaat/musta
+   :ok-tarkastus-urakoitsija puhtaat/musta
+   :ei-ok-tarkastus puhtaat/punainen
+   :ei-ok-tarkastus-tilaaja puhtaat/punainen
+   :ei-ok-tarkastus-konsultti puhtaat/punainen
    :ei-ok-tarkastus-urakoitsija puhtaat/punainen})
 
 
@@ -186,7 +187,13 @@
    #{"HARJAUS"}                                                 [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
    #{"LIIKENNEMERKKIEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
    #{"L- JA P-ALUEIDEN PUHDISTUS"}                              [(viiva-mustalla-rajalla puhtaat/turkoosi) "turkoosi"]
-   #{"SILTOJEN PUHDISTUS"}                                      [(viiva-mustalla-rajalla puhtaat/lime) "lime"]})
+   #{"SILTOJEN PUHDISTUS"}                                      [(viiva-mustalla-rajalla puhtaat/lime) "lime"]
+   ;; tilannekuva/yllapito
+   #{"ASFALTOINTI"}                                             [(viiva-mustalla-rajalla puhtaat/sininen) "sininen"]
+   #{"TIEMERKINTÄ"}                                             [(viiva-mustalla-rajalla puhtaat/keltainen) "keltainen"]
+   #{"KUUMENNUS"}                                               [(viiva-mustalla-rajalla puhtaat/punainen) "punainen"]
+   #{"SEKOITUS TAI STABILOINTI"}                                [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
+   #{"TURVALAITE"}                                              [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]})
 
 ;;;;;;;;;;
 ;;; Värimäärittelyt loppuu
@@ -234,11 +241,11 @@
       :width (nth leveydet 2)}]))
 
 (defn turvallisuuspoikkeaman-ikoni [kt-tila]
-  (sijainti-ikoni (:turvallisuuspoikkeama ikonien-varit)
-                  (case kt-tila
+  (sijainti-ikoni (case kt-tila
                     :tyhja (:kt-tyhja ikonien-varit)
                     :avoimia (:kt-avoimia ikonien-varit)
-                    :valmis (:kt-valmis ikonien-varit))))
+                    :valmis (:kt-valmis ikonien-varit))
+                  (:turvallisuuspoikkeama ikonien-varit)))
 
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma ikonien-varit)))
@@ -281,26 +288,32 @@
             (:laatupoikkeama viivojen-varit))})
 
 (defn kyselyn-ikoni [tila]
-  (case tila
-    :kuittaamaton (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :vastaanotto (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :aloitus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :lopetus (sijainti-ikoni (:kysely ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+  (sijainti-ikoni
+    (case tila
+     :kuittaamaton (:ilmoitus-kaynnissa ikonien-varit)
+     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+    (:kysely ikonien-varit)))
 
 (defn toimenpidepyynnon-ikoni [tila]
-  (case tila
-    :kuittaamaton (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-auki ikonien-varit))
-    :vastaanotto (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :aloitus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :lopetus (sijainti-ikoni (:toimenpidepyynto ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+  (sijainti-ikoni
+    (case tila
+     :kuittaamaton (:ilmoitus-auki ikonien-varit)
+     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+    (:toimenpidepyynto ikonien-varit)))
 
 
 (defn tiedotuksen-ikoni [tila]
-  (case tila
-    :kuittaamaton (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-auki ikonien-varit))
-    :vastaanotto (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :aloitus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-kaynnissa ikonien-varit))
-    :lopetus (sijainti-ikoni (:tiedoitus ikonien-varit) (:ilmoitus-lopetettu ikonien-varit))))
+  (sijainti-ikoni
+    (case tila
+     :kuittaamaton (:ilmoitus-auki ikonien-varit)
+     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+    (:tiedoitus ikonien-varit)))
 
 (defn ilmoituksen-ikoni [{:keys [ilmoitustyyppi tila] :as ilmoitus}]
   (case ilmoitustyyppi
@@ -317,6 +330,15 @@ tr-viiva {:color  puhtaat/tummanharmaa
 tr-ikoni {:img    (pinni-ikoni "musta")
           :zindex 21})
 
-(def suljettu-tieosuus {:color puhtaat/oranssi
-                        :zindex 22})
+(def suljettu-tieosuus
+  [{:color puhtaat/musta
+    :width 8}
+   {:color puhtaat/punainen
+    :width 6}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width 4}
+   {:color puhtaat/keltainen
+    :dash [3 9]
+    :width 3}])
 

@@ -79,42 +79,55 @@
                         :otsikko "Yk­sik­kö"}
                        {:leveys             5
                         :otsikko            "10 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "11 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "12 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "01 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "02 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "03 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "04 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "05 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "06 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "07 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "08 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "09 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys  7
-                        :otsikko "Mää­rä yh­teen­sä"})
+                        :otsikko "Mää­rä yh­teen­sä"
+                        :fmt :numero})
                      ['("Pensaiden täydennysistutus"
                         "m2"
                         0
@@ -187,42 +200,55 @@
                         :otsikko "Yk­sik­kö"}
                        {:leveys             5
                         :otsikko            "10 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "11 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "12 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "01 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "02 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "03 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "04 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "05 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "06 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "07 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "08 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "09 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys  7
-                        :otsikko "Mää­rä yh­teen­sä"})
+                        :otsikko "Mää­rä yh­teen­sä"
+                        :fmt :numero})
                      ['("Pensaiden täydennysistutus"
                         "m2"
                         0
@@ -293,42 +319,55 @@
                         :otsikko "Yk­sik­kö"}
                        {:leveys             5
                         :otsikko            "10 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "11 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "12 / 15"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "01 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "02 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "03 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "04 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "05 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "06 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "07 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "08 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys             5
                         :otsikko            "09 / 16"
-                        :otsikkorivi-luokka "grid-kk-sarake"}
+                        :otsikkorivi-luokka "grid-kk-sarake"
+                        :fmt :numero}
                        {:leveys  7
-                        :otsikko "Mää­rä yh­teen­sä"})
+                        :otsikko "Mää­rä yh­teen­sä"
+                        :fmt :numero})
                      ['("Pensaiden täydennysistutus"
                         "m2"
                         0

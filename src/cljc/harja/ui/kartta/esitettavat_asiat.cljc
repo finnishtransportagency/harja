@@ -3,12 +3,13 @@
     #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
     #?(:cljs [harja.loki :refer [log warn] :refer-macros [mittaa-aika]]
        :clj [taoensso.timbre :as log])
-            [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
-            [harja.domain.ilmoitukset :as ilmoitukset]
-            [harja.geo :as geo]
+      [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+      [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
+      [harja.domain.ilmoitukset :as ilmoitukset]
+      [harja.geo :as geo]
+      [harja.ui.kartta.varit.puhtaat :as puhtaat]
 
-            [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
+      [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
 #?(:clj (defn log [& things]
           (log/info things)))
@@ -461,14 +462,16 @@
 
 (defmethod asia-kartalle :suljettu-tieosuus [aita valittu-fn?]
   (log "Asia kartalle: suljettu tieosuus: " (pr-str aita))
-  (assoc aita
-         :type :suljettu-tieosuus
-         :nimi "Suljettu tieosuus"
-         :selite {:teksti "Kaista suljettu"}
-         :alue (maarittele-feature {:sijainti (:geometria aita)}
-                                   (valittu-fn? aita)
-                                   nil
-                                   [ulkoasu/suljettu-tieosuus])))
+  (let [viivat ulkoasu/suljettu-tieosuus]
+    (assoc aita
+     :type :suljettu-tieosuus
+     :nimi "Suljettu tieosuus"
+     :selite {:teksti "Suljettu tieosuus"
+              :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+     :alue (maarittele-feature {:sijainti (:geometria aita)}
+                               (valittu-fn? aita)
+                               nil
+                               viivat))))
 
 (defmethod asia-kartalle :tyokone [tyokone valittu-fn?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
@@ -522,12 +525,13 @@
 (defn kartalla-esitettavaan-muotoon-xf
   "Palauttaa transducerin, joka muuntaa läpi kulkevat asiat kartalla esitettävään
   muotoon."
-  ([] (kartalla-esitettavaan-muotoon-xf nil [:id]))
-  ([asia-xf tunniste]
+  ([] (kartalla-esitettavaan-muotoon-xf nil nil [:id]))
+  ([asia-xf tunniste] (kartalla-esitettavaan-muotoon-xf nil asia-xf tunniste))
+  ([valittu asia-xf tunniste]
    (comp #?(:cljs (fn [asia] (edistymispalkki/geometriataso-lataus-valmis!) asia))
          (or asia-xf identity)
          (mapcat pura-geometry-collection)
-         (map #(kartalla-xf % nil (or tunniste [:id])))
+         (map #(kartalla-xf % valittu (or tunniste [:id])))
          (filter some?)
          (filter #(some? (:alue %))))))
 
@@ -541,12 +545,12 @@
   ([asiat valittu tunniste asia-xf]
     ;; Haluamme näyttää edistymispalkin, mutta 100% valmius ei ole vielä siinä
     ;; vaiheessa, kun koko data on lapioitu.
-    #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
+   #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
      (with-meta
        (into []
-             (comp (kartalla-esitettavaan-muotoon-xf asia-xf tunniste)
+             (comp (kartalla-esitettavaan-muotoon-xf valittu asia-xf tunniste)
                    (geo/laske-extent-xf extent)
                    (tallenna-selitteet-xf selitteet))
              asiat)

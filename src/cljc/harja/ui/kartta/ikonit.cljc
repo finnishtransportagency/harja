@@ -14,16 +14,30 @@
      (str perusnimi ".png")))
 
 (defn assertoi-ikonin-vari [vari]
-  (assert #{"keltainen" "lime" "magenta" "musta" "oranssi" "pinkki"
-            "punainen" "sininen" "syaani" "tummansininen" "turkoosi"
-            "vihrea" "violetti"} vari))
+  (assert #{"punainen"
+            "oranssi"
+            "keltainen"
+            "lime"
+            "vihrea"
+            "turkoosi"
+            "syaani"
+            "sininen"
+            "tummansininen"
+            "violetti"
+            "magenta"
+            "pinkki"
+
+            "musta"
+            "vaaleanharmaa"
+            "harmaa"
+            "tummanharmaa"} vari))
 
 (defn sijainti-ikoni
   "Palauttaa sijaintia kuvaavan ikonin, jonka ulko- ja sisäreunan väri voidaan itse asettaa.
    Jos annetaan vain sisäreuna, palautetaan tällä sisäreunalla varustettu ikoni, jolla on musta ulkoreuna."
   ([vari-sisareuna] (sijainti-ikoni vari-sisareuna "musta"))
   ([vari-sisareuna vari-ulkoreuna]
-   (assert (#{"vihrea" "punainen" "oranssi" "musta" "harmaa"} vari-ulkoreuna))
+   (assertoi-ikonin-vari vari-ulkoreuna)
    (assertoi-ikonin-vari vari-sisareuna)
    (karttakuva (str ikonikansio"sijainnit/sijainti-"vari-ulkoreuna"-"vari-sisareuna))))
 

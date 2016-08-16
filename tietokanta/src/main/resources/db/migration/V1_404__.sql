@@ -1,13 +1,8 @@
-INSERT INTO vakiohavainto (nimi, jatkuva, avain)
-   VALUES ('Saumavirhe', 'true', 'saumavirhe'),
-          ('Lajittuma', 'true', 'lajittuma'),
-	  ('Epätasaisuus', 'true', 'epatasaisuus'),
-	  ('Halkeamat', 'true', 'halkeamat'),
-	  ('Vesilammikot', 'true', 'vesilammikot'),
-	  ('Epätasaiset reunat', 'true', 'epatasaisetreunat'),
-	  ('Jyrän jälkiä', 'true', 'jyranjalkia'),
-	  ('Sideaineläikkiä', 'true', 'sideainelaikkia'),
-	  ('Väärä korkeusasema', 'true', 'vaarakorkeusasema'),
-	  ('Pinta harva', 'true', 'pintaharva'),
-	  ('Pintakuivatus puutteellinen', 'true', 'pintakuivatuspuute'),
-	  ('Kaivojen korkeusasema', 'true', 'kaivojenkorkeusasema');
+-- Lisää urakka-alueiden erittely ilmoitusraporttiin
+UPDATE raportti
+   SET parametrit =
+   ARRAY[('Aikaväli', 'aikavali', true, NULL)::raporttiparametri,
+   ('Näytä urakka-alueet eriteltynä', 'urakoittain', true, 'koko maa'::raporttikonteksti)::raporttiparametri,
+   ('Näytä urakka-alueet eriteltynä', 'urakoittain', true, 'hankinta-alue'::raporttikonteksti)::raporttiparametri,
+   ('Näytä urakka-alueet eriteltynä', 'urakoittain', true, 'hallintayksikko'::raporttikonteksti)::raporttiparametri]
+WHERE nimi = 'ilmoitusraportti';

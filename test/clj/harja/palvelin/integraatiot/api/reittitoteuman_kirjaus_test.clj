@@ -17,6 +17,15 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
+(defn poista-reittitoteuma [toteuma-id ulkoinen-id reittipiste-idt]
+  (doseq [reittipiste-id reittipiste-idt]
+    (u (str "DELETE FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))
+    (u (str "DELETE FROM reitti_tehtava WHERE reittipiste = " reittipiste-id)))
+  (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
+  (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
+  (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
+  (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+
 (deftest tallenna-yksittainen-reittitoteuma
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
@@ -57,13 +66,7 @@
               (is (= (count reitti-materiaali-idt) 1))
               (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
 
-          (doseq [reittipiste-id reittipiste-idt]
-            (u (str "DELETE FROM reitti_materiaali WHERE reittipiste = " reittipiste-id))
-            (u (str "DELETE FROM reitti_tehtava WHERE reittipiste = " reittipiste-id)))
-          (u (str "DELETE FROM reittipiste WHERE toteuma = " toteuma-id))
-          (u (str "DELETE FROM toteuma_materiaali WHERE toteuma = " toteuma-id))
-          (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
-          (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))))))
+          (poista-reittitoteuma toteuma-id ulkoinen-id reittipiste-idt))))))
 
 
 (deftest tallenna-usea-reittitoteuma
@@ -82,3 +85,17 @@
       (is (= toteuma1-kannassa [ulkoinen-id-1 "8765432-1" "Tienpesijät Oy"])))
     (let [toteuma2-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id-2)))]
       (is (= toteuma2-kannassa [ulkoinen-id-2 "8765432-1" "Tienraivaajat Oy"])))))
+
+(deftest tarkista-toteuman-tallentaminen-paasopimukselle
+  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+    (is (= 200 (:status vastaus-lisays)))
+    (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          sopimus-id (ffirst (q (str "SELECT sopimus FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))]
+      (is (= 5 sopimus-id) "Toteuma kirjattiin pääsopimukselle")
+      (poista-reittitoteuma toteuma-id ulkoinen-id reittipiste-idt))))

@@ -11,7 +11,10 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [clojure.core.match :refer [match]]
+            [clojure.string :as str]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -37,6 +40,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+
 (deftest raportin-suoritus-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
@@ -49,92 +53,15 @@
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Turvallisuusraportti"}
-                    [:taulukko
-                     {:otsikko                    "Oulun alueurakka 2014-2019, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi                 "Turvallisuusraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:otsikko "Tyyppi"}
-                      {:fmt     :numero
-                       :otsikko "Määrä"}]
-                     '(["Työtapaturma"
-                       1]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       ["Yksittäisiä ilmoituksia yhteensä"
-                        1])]
-                    nil
-                    [:pylvaat
-                     {:legend        ["Työtapaturmat"
-                                      "Vaaratilanteet"
-                                      "Turvallisuushavainnot"
-                                      "Muut"]
-                      :otsikko       "Turvallisuuspoikkeamat kuukausittain 01.10.2014-01.10.2015"
-                      :piilota-arvo? #{0}}
-                     [["2014/10"
-                       []]
-                      ["2014/11"
-                       []]
-                      ["2014/12"
-                       []]
-                      ["2015/01"
-                       []]
-                      ["2015/02"
-                       []]
-                      ["2015/03"
-                       []]
-                      ["2015/04"
-                       []]
-                      ["2015/05"
-                       []]
-                      ["2015/06"
-                       []]
-                      ["2015/07"
-                       []]
-                      ["2015/08"
-                       []]
-                      ["2015/09"
-                       []]
-                      ["2015/10"
-                       [1
-                        nil
-                        nil
-                        nil]]]]
-                    [:taulukko
-                     {:otsikko                    "Turvallisuuspoikkeamat listana: 1 kpl"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys  14
-                       :otsikko "Pvm"}
-                      {:leveys  24
-                       :otsikko "Tyyppi"}
-                      {:leveys  15
-                       :otsikko "Vakavuusaste"}
-                      {:leveys  14
-                       :otsikko "Ammatti"}
-                      {:fmt     :numero
-                       :leveys  9
-                       :otsikko "Sairaala­vuoro­kaudet"}
-                      {:fmt     :numero
-                       :leveys  9
-                       :otsikko "Sairaus­poissa­olo­päivät"}]
-                     '(["1.10.2015 0:20"
-                       "Ty­ö­ta­pa­tur­ma"
-                       "Vakava"
-                       "Porari"
-                       1
-                       7]
-                       ["Yhteensä"
-                        ""
-                        ""
-                        ""
-                        ""
-                        1
-                        7])]]))))
+    (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
+    (let [otsikko (str "Oulun alueurakka 2014-2019, "
+                       "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
+          taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])]
+      (apurit/tarkista-taulukko-otsikko taulukko otsikko)
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Tyyppi"}
+                                          {:otsikko "Määrä"})
+      (apurit/tarkista-taulukko-yhteensa taulukko 1))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -149,92 +76,14 @@
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Turvallisuusraportti"}
-                    [:taulukko
-                     {:otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015"
-                      :sheet-nimi                 "Turvallisuusraportti"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:otsikko "Tyyppi"}
-                      {:fmt     :numero
-                       :otsikko "Määrä"}]
-                     '(["Työtapaturma"
-                       1]
-                       ["Vaaratilanne"
-                        0]
-                       ["Turvallisuushavainto"
-                        0]
-                       ["Muu"
-                        0]
-                       ["Yksittäisiä ilmoituksia yhteensä"
-                        1])]
-                    nil
-                    [:pylvaat
-                     {:legend        ["Työtapaturmat"
-                                      "Vaaratilanteet"
-                                      "Turvallisuushavainnot"
-                                      "Muut"]
-                      :otsikko       "Turvallisuuspoikkeamat kuukausittain 01.10.2014-01.10.2015"
-                      :piilota-arvo? #{0}}
-                     [["2014/10"
-                       []]
-                      ["2014/11"
-                       []]
-                      ["2014/12"
-                       []]
-                      ["2015/01"
-                       []]
-                      ["2015/02"
-                       []]
-                      ["2015/03"
-                       []]
-                      ["2015/04"
-                       []]
-                      ["2015/05"
-                       []]
-                      ["2015/06"
-                       []]
-                      ["2015/07"
-                       []]
-                      ["2015/08"
-                       []]
-                      ["2015/09"
-                       []]
-                      ["2015/10"
-                       [1
-                        nil
-                        nil
-                        nil]]]]
-                    [:taulukko
-                     {:otsikko                    "Turvallisuuspoikkeamat listana: 1 kpl"
-                      :viimeinen-rivi-yhteenveto? true}
-                     [{:leveys  14
-                       :otsikko "Pvm"}
-                      {:leveys  24
-                       :otsikko "Tyyppi"}
-                      {:leveys  15
-                       :otsikko "Vakavuusaste"}
-                      {:leveys  14
-                       :otsikko "Ammatti"}
-                      {:fmt     :numero
-                       :leveys  9
-                       :otsikko "Sairaala­vuoro­kaudet"}
-                      {:fmt     :numero
-                       :leveys  9
-                       :otsikko "Sairaus­poissa­olo­päivät"}]
-                     '(["1.10.2015 0:20"
-                       "Ty­ö­ta­pa­tur­ma"
-                       "Vakava"
-                       "Porari"
-                       1
-                       7]
-                       ["Yhteensä"
-                        ""
-                        ""
-                        ""
-                        ""
-                        1
-                        7])]]))))
+    (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
+    (let [otsikko (str "Pohjois-Pohjanmaa ja Kainuu, "
+                       "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-otsikko taulukko otsikko)
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Tyyppi"} {:otsikko "Määrä"})
+      (apurit/tarkista-taulukko-yhteensa taulukko 1))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -247,159 +96,31 @@
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Turvallisuusraportti"}
-                    [:taulukko
-                     {:otsikko                    "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
-                      :sheet-nimi                 "Turvallisuusraportti"
-                      :viimeinen-rivi-yhteenveto? false}
-                     [{:otsikko "Hallintayksikkö"}
-                      {:fmt     :numero
-                       :otsikko "Työtapaturmat"}
-                      {:fmt     :numero
-                       :otsikko "Vaaratilanteet"}
-                      {:fmt     :numero
-                       :otsikko "Turvallisuushavainnot"}
-                      {:fmt     :numero
-                       :otsikko "Muut"}]
-                     '(["Uusimaa"
-                       0
-                       0
-                       0
-                       0]
-                       ["Varsinais-Suomi"
-                        0
-                        0
-                        0
-                        0]
-                       ["Kaakkois-Suomi"
-                        0
-                        0
-                        0
-                        0]
-                       ["Pirkanmaa"
-                        0
-                        0
-                        0
-                        0]
-                       ["Pohjois-Savo"
-                        0
-                        0
-                        0
-                        0]
-                       ["Keski-Suomi"
-                        0
-                        0
-                        0
-                        0]
-                       ["Etelä-Pohjanmaa"
-                        0
-                        0
-                        0
-                        0]
-                       ["Pohjois-Pohjanmaa ja Kainuu"
-                        2
-                        1
-                        3
-                        1]
-                       ["Lappi"
-                        0
-                        0
-                        0
-                        0])]
-                    [:taulukko
-                     {:otsikko "Turvallisuuspoikkeamat vakavuusasteittain"}
-                     [{:otsikko "Hallintayksikkö"}
-                      {:fmt     :numero
-                       :otsikko "Lievät"}
-                      {:fmt     :numero
-                       :otsikko "Vakavat"}]
-                     '(["Uusimaa"
-                       0
-                       0]
-                       ["Varsinais-Suomi"
-                        0
-                        0]
-                       ["Kaakkois-Suomi"
-                        0
-                        0]
-                       ["Pirkanmaa"
-                        0
-                        0]
-                       ["Pohjois-Savo"
-                        0
-                        0]
-                       ["Keski-Suomi"
-                        0
-                        0]
-                       ["Etelä-Pohjanmaa"
-                        0
-                        0]
-                       ["Pohjois-Pohjanmaa ja Kainuu"
-                        1
-                        4]
-                       ["Lappi"
-                        0
-                        0])]
-                    [:pylvaat
-                     {:legend        ["Työtapaturmat"
-                                      "Vaaratilanteet"
-                                      "Turvallisuushavainnot"
-                                      "Muut"]
-                      :otsikko       "Turvallisuuspoikkeamat kuukausittain 01.01.2014-31.12.2015"
-                      :piilota-arvo? #{0}}
-                     [["2014/01"
-                       []]
-                      ["2014/02"
-                       []]
-                      ["2014/03"
-                       []]
-                      ["2014/04"
-                       []]
-                      ["2014/05"
-                       []]
-                      ["2014/06"
-                       []]
-                      ["2014/07"
-                       []]
-                      ["2014/08"
-                       []]
-                      ["2014/09"
-                       []]
-                      ["2014/10"
-                       []]
-                      ["2014/11"
-                       []]
-                      ["2014/12"
-                       []]
-                      ["2015/01"
-                       []]
-                      ["2015/02"
-                       []]
-                      ["2015/03"
-                       []]
-                      ["2015/04"
-                       []]
-                      ["2015/05"
-                       []]
-                      ["2015/06"
-                       []]
-                      ["2015/07"
-                       []]
-                      ["2015/08"
-                       []]
-                      ["2015/09"
-                       []]
-                      ["2015/10"
-                       [2
-                        1
-                        1
-                        1]]
-                      ["2015/11"
-                       [nil
-                        nil
-                        2
-                        nil]]
-                      ["2015/12"
-                       []]]]
-                    nil]))))
+    (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
+    (let [otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Hallintayksikkö"}
+                                          {:otsikko "Työtapaturmat"}
+                                          {:otsikko "Vaaratilanteet"}
+                                          {:otsikko "Turvallisuushavainnot"}
+                                          {:otsikko "Muut"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko
+                                             (fn [[alue tyo vaara havainnot muut :as rivi]]
+                                               (and (= (count rivi) 5)
+                                                    (string? alue)
+                                                    (number? tyo)
+                                                    (number? vaara)
+                                                    (number? havainnot)
+                                                    (number? muut)))))
+    (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
+      (apurit/tarkista-taulukko-sarakkeet vakavuus
+                                          {:otsikko "Hallintayksikkö"}
+                                          {:otsikko "Lievät"}
+                                          {:otsikko "Vakavat"})
+      (apurit/tarkista-taulukko-kaikki-rivit vakavuus
+                                             (fn [[hal lievat vakavat :as rivi]]
+                                               (and (= (count rivi) 3)
+                                                    (string? hal)
+                                                    (number? lievat)
+                                                    (number? vakavat)))))))
