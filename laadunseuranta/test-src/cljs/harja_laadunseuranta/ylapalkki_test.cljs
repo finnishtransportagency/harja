@@ -19,7 +19,7 @@
       (with-component [ylapalkki/ylapalkkikomponentti {:tiedot-nakyvissa (atom false)
                                                        :hoitoluokka (atom "Ia")
                                                        :soratiehoitoluokka (atom "5")
-                                                       :tr-osoite ""
+                                                       :tr-osoite tr-osoite
                                                        :kiinteistorajat (atom false)
                                                        :ortokuva (atom false)
                                                        :tallennus-kaynnissa (atom false)
@@ -32,4 +32,3 @@
           (is (= "20 / 4 / 3000" (dommy/text palkki-div)))
           (is (= "SHL: 5" (dommy/text hoitoluokka-div)))
           (is (= "THL: Ia" (dommy/text talvihoitoluokka-div))))))))
-

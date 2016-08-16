@@ -171,11 +171,15 @@
                                         :keskita-ajoneuvoon s/keskita-ajoneuvoon
                                         :disabloi-kaynnistys? s/palautettava-tarkastusajo}]
        
-       [kartta/karttakomponentti asetukset/+wmts-url+ asetukset/+wmts-url-kiinteistojaotus+ asetukset/+wmts-url-ortokuva+
-        s/kartan-keskipiste s/ajoneuvon-sijainti
-        s/reittipisteet
-        s/kirjauspisteet
-        s/karttaoptiot]
+       [kartta/karttakomponentti
+        {:wmts-url asetukset/+wmts-url+
+         :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
+         :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
+         :sijainti-atomi s/kartan-keskipiste
+         :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
+         :reittipisteet-atomi s/reittipisteet
+         :kirjauspisteet-atomi s/kirjauspisteet
+         :optiot s/karttaoptiot}]
        
        [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
        

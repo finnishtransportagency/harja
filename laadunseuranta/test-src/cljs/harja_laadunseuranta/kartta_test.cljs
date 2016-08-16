@@ -37,10 +37,14 @@
                                 :vari "black"}])
           kirjauspisteet (atom [{:lat 1 :lon 1}])]
       
-      (with-component [kartta/karttakomponentti asetukset/+wmts-url+
-                                                asetukset/+wmts-url-kiinteistojaotus+
-                                                asetukset/+wmts-url-ortokuva+
-                                                sijainti ajoneuvon-sijainti reittipisteet kirjauspisteet (atom {:seuraa-sijaintia true})]
+      (with-component [kartta/karttakomponentti {:wmts-url asetukset/+wmts-url+
+                                                 :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
+                                                 :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
+                                                 :sijainti-atomi sijainti
+                                                 :ajoneuvon-sijainti-atomi ajoneuvon-sijainti
+                                                 :reittipisteet-atomi reittipisteet
+                                                 :kirjauspisteet-atomi kirjauspisteet
+                                                 :optiot (atom {:seuraa-sijaintia true})}]
         (let [kartta-div (sel1 [:div.map])]
           (is (not (nil? kartta-div)))
           
