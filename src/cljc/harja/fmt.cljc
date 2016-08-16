@@ -76,8 +76,8 @@
   aluksi tiettyjä sanoja (esim urakka -> ur.), ja jos nämä eivät
   auta, leikkaamalla keskeltä kirjaimia pois ja korvaamalla leikatut
   kirjaimet kahdella pisteellä .."
-  ([nimi] (lyhennetty-urakan-nimi nimi urakan-nimen-oletuspituus))
-  ([nimi pituus]
+  ([nimi] (lyhennetty-urakan-nimi urakan-nimen-oletuspituus nimi))
+  ([pituus nimi]
     (loop [nimi nimi]
       (if (>= pituus (count nimi))
         nimi
@@ -143,9 +143,9 @@
             :else (lyhenna-keskelta pituus nimi)))))))
 
 (defn lyhennetty-urakan-nimi-opt
-  ([nimi] (lyhennetty-urakan-nimi-opt nimi urakan-nimen-oletuspituus))
+  ([nimi] (lyhennetty-urakan-nimi-opt urakan-nimen-oletuspituus nimi))
   ([nimi pituus]
-    (when nimi (lyhennetty-urakan-nimi nimi pituus))))
+    (when nimi (lyhennetty-urakan-nimi pituus nimi))))
 
 (def roomalaisena-numerona {1 "I"
                             2 "II"
