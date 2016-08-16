@@ -50,7 +50,7 @@
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
   (when arvo
-    #_ (validoi-pituus arvo tietolaji kenttatunniste pituus)
+    (validoi-pituus arvo tietolaji kenttatunniste pituus)
     (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)))
 
 (defn validoi-tietolajin-arvot
