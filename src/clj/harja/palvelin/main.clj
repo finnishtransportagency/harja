@@ -61,6 +61,7 @@
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
+    [harja.palvelin.palvelut.status :as status]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -370,7 +371,11 @@
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :integraatioloki]))))
+                             [:http-palvelin :db :integraatioloki])
+
+      :status (component/using
+               (status/luo-status)
+               [:http-palvelin]))))
 
 (defonce harja-jarjestelma nil)
 
