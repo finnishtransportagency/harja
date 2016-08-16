@@ -6,7 +6,8 @@
             [harja.tyokalut.merkkijono :as merkkijono]
             [clojure.string :as str]
             [clojure.set :as set]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.format :as df]))
 
 (defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
   (sort-by :jarjestysnumero (filter :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))))
@@ -24,7 +25,7 @@
                   (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole kokonaisluku.")))
     :paivamaara (when (or pakollinen arvo)
                   (try
-                    (pvm/iso-8601->pvm arvo)
+                    (df/parse (df/formatter "yyyyMMdd") arvo)
                     (catch Exception e
                       (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601.")))))
     :koodisto (when (and (or
@@ -49,7 +50,7 @@
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
   (when arvo
-    (validoi-pituus arvo tietolaji kenttatunniste pituus)
+    #_ (validoi-pituus arvo tietolaji kenttatunniste pituus)
     (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)))
 
 (defn validoi-tietolajin-arvot
