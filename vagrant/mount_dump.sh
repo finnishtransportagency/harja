@@ -13,7 +13,7 @@ PURETTU=$2
 DEFAULT_YES=$3
 
 if [ ! -f ../tietokanta/$RAAKA ]; then
-    echo "[$(date +"%T")] /tietokanta/$RAAKA tiedostoa ei löytynyt. aja download_dump.sh?"
+    echo "[$(date +"%T")] /tietokanta/$RAAKA tiedostoa ei löytynyt. aja download_stg_dump.sh tai download_prod_dump.sh?"
     exit 1;
 fi
 
