@@ -180,7 +180,7 @@ BEGIN
                   kht.summa                                        AS kht_summa
                 FROM kokonaishintainen_tyo kht
                 WHERE toimenpideinstanssi = t.tpi
-                      AND summa IS NOT NULL
+                      AND kht.summa IS NOT NULL
                       AND maksupvm >= hk_alkupvm
                       AND maksupvm <= hk_loppupvm
                       AND maksupvm < aikavali_alkupvm LOOP
