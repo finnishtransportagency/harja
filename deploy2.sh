@@ -30,11 +30,6 @@ if [ -z "$BRANCH" ]; then
     BRANCH=$CURRENT_BRANCH
 fi
 
-echo "Alustetaan testikanta"
-pushd vagrant
-sh migrate_test.sh > /dev/null
-popd
-
 echo ""
 echo "Deployaan branchin $BRANCH ympäristöön $HARJA_ENV"
 
