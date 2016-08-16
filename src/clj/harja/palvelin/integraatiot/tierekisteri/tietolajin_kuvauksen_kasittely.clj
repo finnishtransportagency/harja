@@ -22,10 +22,11 @@
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
     :numeerinen (when-not (merkkijono/kokonaisluku? arvo)
                   (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole kokonaisluku.")))
-    :paivamaara (try
-                  (pvm/iso-8601->pvm arvo)
-                  (catch Exception e
-                    (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601."))))
+    :paivamaara (when (or pakollinen arvo)
+                  (try
+                    (pvm/iso-8601->pvm arvo)
+                    (catch Exception e
+                      (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601.")))))
     :koodisto (when (and (or
                            (and pakollinen (not (nil? koodisto)))
                            (not (empty? arvo)))
@@ -60,13 +61,22 @@
   (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
         kuvatut-kenttatunnisteet (into #{} (map :kenttatunniste kenttien-kuvaukset))
         annetut-kenttatunnisteet (into #{} (keys arvot))
-        ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)]
+        ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)
+        ei-merkkijono-kentat (map first (filter #(not (string? (second %))) (into [] arvot)))]
+
     ;; Tarkista, ettei ole ylimääräisiä kenttiä
     (when-not (empty? ylimaaraiset-kentat)
       (heita-validointipoikkeus
         tietolaji
         (str "Tietolajin arvoissa on ylimääräisiä kenttiä, joita ei löydy tierekisterin tietolajin kuvauksesta: "
              (str/join ", " ylimaaraiset-kentat) ". Sallitut kentät: " (str/join ", " kuvatut-kenttatunnisteet))))
+
+    ;; Tarkista että kaikki kentät on annettu merkkijonoina
+    (when-not (empty? ei-merkkijono-kentat)
+      (heita-validointipoikkeus
+        tietolaji
+        (str "Tietolajin arvoissa on kenttiä, joita ei ole annettu merkkijonona. Kaikki arvot pitää antaa merkkijonoina"
+             "Kenttien tunnukset: " (str/join ", " ei-merkkijono-kentat) ".")))
 
     ;; Ei ylimääräisiä kenttiä, validoi annetut kentät
     (doseq [kentan-kuvaus kenttien-kuvaukset]
