@@ -49,12 +49,15 @@ on nil."
         (map (comp :nimi first))
         roolit))
 
+(defn poista-nil-id []
+  (filter #(some? (first %))))
+
 (defn- urakkaroolit [urakan-id roolit-ja-linkit]
   (into {}
         (comp
          ;; Muuta key Sampo id:stä Harjan urakka id:ksi
          (map #(update-in % [0] urakan-id))
-
+         (poista-nil-id)
          ;; Muuta [[rooli id] ...] -> #{nimi ...}
          (map #(update-in % [1] roolien-nimet)))
         ;; Valitaan vain "urakka" linkitetyt roolit ja
@@ -69,6 +72,10 @@ on nil."
   (into {}
         (comp
          (map #(update-in % [0] urakoitsijan-id))
+         ;; Poistetaan roolit, joille ei löydy organisaatiota.
+         ;; Muuten muiden järjestelmien roolit (esim. Extranet_Liito_Kayttaja) rooli voi sekoittua
+         ;; Harjan rooleihin.
+         (poista-nil-id)
          (map #(update-in % [1] roolien-nimet)))
         (group-by second
                   (filter (comp #(= "urakoitsija" %) :linkki first)
