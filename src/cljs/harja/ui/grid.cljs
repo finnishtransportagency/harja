@@ -579,9 +579,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           rivit)))))
                            nil)
         kiinnita-otsikkorivi? (atom false)
-        kiinnitetyn-otsikkorivin-keveys (atom 0)
+        kiinnitetyn-otsikkorivin-leveys (atom 0)
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
-                                                  (reset! kiinnitetyn-otsikkorivin-keveys (dom/elementin-leveys (r/dom-node this))))
+                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
                                             (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
@@ -718,15 +718,16 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                :class (clojure.string/join " " luokat)}
            (muokkauspaneeli true)
            [:div.panel-body
+            (when @kiinnita-otsikkorivi?
+              [:table.grid
+               {:style {:position "fixed"
+                        :top      0
+                        :width    @kiinnitetyn-otsikkorivin-leveys}}
+               [thead]])
             (if (nil? tiedot)
               (ajax-loader)
               [:table.grid
                [thead]
-               (when @kiinnita-otsikkorivi?
-                 [:table.grid {:style {:position "fixed"
-                                       :top 0
-                                       :width @kiinnitetyn-otsikkorivin-keveys}}
-                  [thead]])
                [:tbody
                 (if muokataan
                   ;; Muokkauskäyttöliittymä
