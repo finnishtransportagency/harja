@@ -27,7 +27,7 @@
   [:div.ylapalkki-button.keskityspainike.livicon-crosshairs {:on-click #(do (swap! keskita-ajoneuvoon not)
                                                                             (swap! keskita-ajoneuvoon not))}])
 
-(defn ylapalkkikomponentti [tiedot-nakyvissa hoitoluokka soratiehoitoluokka tr-osoite kiinteistorajat ortokuva tallennus-kaynnissa tallennustilaa-muutetaan keskita-ajoneuvoon disabloi-kaynnistys?]
+(defn ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka tr-osoite kiinteistorajat ortokuva tallennus-kaynnissa tallennustilaa-muutetaan keskita-ajoneuvoon disabloi-kaynnistys?]}]
   [:div.ylapalkki
    [logo]
    (when-not @tallennus-kaynnissa

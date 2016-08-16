@@ -1,7 +1,6 @@
 (ns harja-laadunseuranta.comms
   (:require [ajax.core :refer [POST GET raw-response-format]]
             [cljs.core.async :as async :refer [put! <! chan close!]]
-            [harja-laadunseuranta.virhekasittely :as virhekasittely]
             [harja-laadunseuranta.asetukset :as asetukset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 

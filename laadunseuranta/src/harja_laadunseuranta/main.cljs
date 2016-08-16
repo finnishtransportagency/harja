@@ -6,7 +6,6 @@
             [harja-laadunseuranta.kuvat :as kuvat]
             [harja-laadunseuranta.sovellus :as s]
             [harja-laadunseuranta.ilmoitukset :as ilmoitukset]
-            [harja-laadunseuranta.virhekasittely :as virhekasittely]
             [harja-laadunseuranta.alustus :as alustus]
             [harja-laadunseuranta.ylapalkki :as ylapalkki]
             [harja-laadunseuranta.asetukset :as asetukset]
@@ -161,9 +160,16 @@
   (let [alivalikot (atom {})]
     (fn []
       [:div.toplevel
-       [virhekasittely/virhekomponentti]
-       [ylapalkki/ylapalkkikomponentti s/tr-tiedot-nakyvissa s/hoitoluokka s/soratiehoitoluokka s/tr-osoite s/nayta-kiinteistorajat s/nayta-ortokuva s/tallennus-kaynnissa s/tallennustilaa-muutetaan s/keskita-ajoneuvoon
-        s/palautettava-tarkastusajo]
+       [ylapalkki/ylapalkkikomponentti {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
+                                        :hoitoluokka s/hoitoluokka
+                                        :soratiehoitoluokka s/soratiehoitoluokka
+                                        :tr-osoite s/tr-osoite
+                                        :kiinteistorajat s/nayta-kiinteistorajat
+                                        :ortokuva s/nayta-ortokuva
+                                        :tallennus-kaynnissa s/tallennus-kaynnissa
+                                        :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
+                                        :keskita-ajoneuvoon s/keskita-ajoneuvoon
+                                        :disabloi-kaynnistys? s/palautettava-tarkastusajo}]
        
        [kartta/karttakomponentti asetukset/+wmts-url+ asetukset/+wmts-url-kiinteistojaotus+ asetukset/+wmts-url-ortokuva+
         s/kartan-keskipiste s/ajoneuvon-sijainti
