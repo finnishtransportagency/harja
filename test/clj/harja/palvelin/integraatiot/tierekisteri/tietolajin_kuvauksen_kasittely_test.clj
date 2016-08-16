@@ -95,8 +95,8 @@
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
     (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
-                            {"tie" "123"}
-                            tietolajin-kuvaus)
+      {"tie" "123"}
+      tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
 
 (deftest tarkista-liian-pitkan-kentan-validointi
@@ -145,8 +145,8 @@
                              :tietotyyppi :numeerinen
                              :pituus 20}]}]
     (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
-                            {"tunniste" "42"}
-                            tietolajin-kuvaus)
+      {"tunniste" "42"}
+      tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
 
 (deftest tarkista-pvm-kentan-validointi
@@ -170,8 +170,8 @@
                              :tietotyyppi :paivamaara
                              :pituus 20}]}]
     (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
-                            {"tunniste" "2010-12-12"}
-                            tietolajin-kuvaus)
+      {"tunniste" "2010-12-12"}
+      tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
 
 (deftest tarkista-koodisto-kentan-validointi
@@ -218,7 +218,20 @@
                           (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "8"}
                             tietolajin-kuvaus))
-        "Koodistoon kuulumaton arvo huomattiin")))
+        "Koodistoon kuulumaton arvo huomattiin")
+
+    (try (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
+           {"tunniste" ""}
+           tietolajin-kuvaus)
+         (is true "Valinnaiselle kentälle hyväksyttiin tyhjä arvo")
+         (catch Exception e
+           (is false "Valinnaiselle kentälle täytyy hyväksyä tyhjä arvo")))
+
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei sisälly koodistoon."
+                          (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
+                            {"tunniste" "8"}
+                            (assoc tietolajin-kuvaus :ominaisuudet [(assoc (first (:ominaisuudet tietolajin-kuvaus)) :pakollinen true)]))
+                          "Pakolliselle kentälle ei hyväksytä tyhjää arvoa"))))
 
 (deftest tarkista-koodisto-kentan-validointi-menee-lapi
   (let [tietolajin-kuvaus {:tunniste "tl506",
@@ -261,13 +274,13 @@
                              :pituus 1,
                              :ylaraja nil}]}]
     (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
-                            {"tunniste" "3"}
-                            tietolajin-kuvaus)
+      {"tunniste" "3"}
+      tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
 
 (deftest tarkista-tietolajin-arvojen-validointi-menee-lapi
   (let [arvot {"LMNUMERO" "9987"
-                            "SIVUTIE" "2"}
+               "SIVUTIE" "2"}
         kenttien-kuvaukset {:tunniste "tl506",
                             :ominaisuudet
                             [{:kenttatunniste "LMNUMERO"
@@ -338,8 +351,8 @@
 
 (deftest tarkista-tietolajin-arvojen-validointi-heittaa-poikkeuksen-kun-ylimaarainen-kentta
   (let [arvot {"LMNUMERO" "9987"
-                            "SIVUTIE" "12345678900"
-                            "YLIMAARAINEN" "kentta"}
+               "SIVUTIE" "12345678900"
+               "YLIMAARAINEN" "kentta"}
         kenttien-kuvaukset {:tunniste "tl506",
                             :ominaisuudet
                             [{:kenttatunniste "LMNUMERO"
