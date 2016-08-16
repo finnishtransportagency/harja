@@ -169,7 +169,7 @@
   (let [livitunniste (livitunnisteet/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (:varusteen-lisays data)
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
-        tietolajin-arvot (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot])
+        tietolajin-arvot (assoc (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :arvot]) :tunniste livitunniste)
         arvot-string (when tietolajin-arvot
                        (validoi-ja-muunna-arvot-merkkijonoksi
                          tierekisteri

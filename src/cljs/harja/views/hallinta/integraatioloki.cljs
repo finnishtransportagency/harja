@@ -69,7 +69,13 @@
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
           (fn [e]
-            (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
+            (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:span.viesti
+                                                                    [:pre sisalto]
+                                                                    [:button.nappi-toissijainen {:type "button"
+                                                                                                 :on-click #(do (.preventDefault %)
+
+                                                                                                                (modal/piilota!))}
+                                                                     "Kopioi"]]))}
          (ikonit/eye-open)]]]
       sisalto)))
 
