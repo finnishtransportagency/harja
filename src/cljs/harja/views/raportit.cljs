@@ -26,7 +26,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.tiedot.hallintayksikot :as hy]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.fmt :as fmt])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -577,6 +578,7 @@
       (let [v-ur @nav/valittu-urakka
             v-ur-tyyppi @nav/valittu-urakkatyyppi
             v-hal @nav/valittu-hallintayksikko
+            urakan-nimen-pituus 36
             konteksti (cond
                         v-ur "urakka"
                         v-hal "hallintayksikko"
@@ -601,9 +603,15 @@
                           :ryhman-otsikko #(case %
                                             :kaynnissa "Käynnissä olevat urakat"
                                             :paattyneet "Päättyneet urakat")
-                          :format-fn      (fnil :nimi {:nimi "Kaikki urakat"})}
+                          :format-fn      (fnil (comp
+                                                  (partial fmt/lyhennetty-urakan-nimi urakan-nimen-pituus)
+                                                  :nimi)
+                                                {:nimi "Kaikki urakat"})}
                          (concat [nil]
-                                 (sort-by :nimi @nav/suodatettu-urakkalista))])
+                                 (map
+                                   #(assoc % :nimi
+                                             (fmt/lyhennetty-urakan-nimi urakan-nimen-pituus (:nimi %)))
+                                   (sort-by :nimi @nav/suodatettu-urakkalista)))])
              "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
                                  (:nimi v-hal))
              "Raportti" (cond
