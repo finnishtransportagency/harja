@@ -26,7 +26,7 @@ fi
 
 date="$(stat -f "%Sm" ../tietokanta/$PURETTU)"
 
-echo "\n[$(date +"%T")] Otetaan käyttöön staging dump. Dump on luotu: ${date}\n"
+echo "\n[$(date +"%T")] Otetaan käyttöön $RAAKA. Dump on luotu: ${date}\n"
 
 vagrant ssh -c "sudo -u postgres psql -f /harja-tietokanta/drop_before_restore.sql && sudo -u postgres psql -q -f /harja-tietokanta/$PURETTU > /dev/null"
 
