@@ -109,15 +109,10 @@
    (mapv
      (fn [tietue]
        (let [tietolaji (get-in tietue [:tietue :tietolaji :tietolajitunniste])
-             vastaus (tierekisteri/hae-tietolajit
-                       tierekisteri
-                       tietolaji
-                       nil)
+             vastaus (tierekisteri/hae-tietolajit tierekisteri tietolaji nil)
              tietolajin-kuvaus (:tietolaji vastaus)
              arvot (first (get-in tietue [:tietue :tietolaji :arvot]))
-             arvot-mappina (tr-tietolaji/tietolajin-arvot-merkkijono->map
-                             arvot
-                             tietolajin-kuvaus)]
+             arvot-mappina (tr-tietolaji/tietolajin-arvot-merkkijono->map arvot tietolajin-kuvaus)]
          {:varuste
           {:tunniste (get-in tietue [:tietue :tunniste])
            :tietue
@@ -181,10 +176,10 @@
                          tietolajin-arvot
                          tietolaji))
         lisayssanoma (tierekisteri-sanomat/luo-tietueen-lisayssanoma
-                           otsikko
-                           livitunniste
-                           toimenpiteen-tiedot
-                           arvot-string)]
+                       otsikko
+                       livitunniste
+                       toimenpiteen-tiedot
+                       arvot-string)]
     (tierekisteri/lisaa-tietue tierekisteri lisayssanoma)
     (tee-kirjausvastauksen-body
       {:id livitunniste
@@ -201,18 +196,17 @@
                          tietolajin-arvot
                          tietolaji))
         paivityssanoma (tierekisteri-sanomat/luo-tietueen-paivityssanoma
-                              otsikko
-                              toimenpiteen-tiedot
-                              arvot-string)]
+                         otsikko
+                         toimenpiteen-tiedot
+                         arvot-string)]
     (tierekisteri/paivita-tietue tierekisteri paivityssanoma))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
   (log/debug "Poistetaan varuste käyttäjän " kayttaja " pyynnöstä.")
   (let [poistosanoma (tierekisteri-sanomat/luo-tietueen-poistosanoma
-                             otsikko
-                             (:varusteen-poisto data))]
-    (println "Sanoma tehtiin: " (pr-str poistosanoma))
+                       otsikko
+                       (:varusteen-poisto data))]
     (tierekisteri/poista-tietue tierekisteri poistosanoma))
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste poistettu onnistuneesti"}))
 

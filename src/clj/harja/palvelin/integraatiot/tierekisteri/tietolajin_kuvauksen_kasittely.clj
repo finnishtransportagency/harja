@@ -17,7 +17,7 @@
 
 (defn- validoi-tyyppi
   "Validoi, että annettu arvo on annettua tyyppiä. Jos ei ole, heittää poikkeuksen. Jos on, palauttaa nil."
-  [arvo tietolaji kenttatunniste tietotyyppi koodisto]
+  [arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen]
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
     :numeerinen (when-not (merkkijono/kokonaisluku? arvo)
@@ -26,7 +26,10 @@
                   (pvm/iso-8601->pvm arvo)
                   (catch Exception e
                     (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601."))))
-    :koodisto (when (empty? (filter #(= (str (:koodi %)) arvo) koodisto))
+    :koodisto (when (and (or
+                           (and pakollinen (not (nil? koodisto)))
+                           (not (empty? arvo)))
+                         (empty? (filter #(= (str (:koodi %)) arvo) koodisto)))
                 (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei sisälly koodistoon.")))))
 
 (defn- validoi-pituus [arvo tietolaji kenttatunniste pituus]
@@ -45,7 +48,7 @@
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
   (validoi-pituus arvo tietolaji kenttatunniste pituus)
-  (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto))
+  (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen))
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
