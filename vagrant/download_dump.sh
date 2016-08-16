@@ -36,7 +36,7 @@ else
     fi
 fi
 
-echo "[$(date +"%T")] Aloitetaan staging dumpin lataus! Hae vaikka kahvia."
+echo "[$(date +"%T")] Aloitetaan $LAHDE dumpin lataus! Hae vaikka kahvia."
 echo "[$(date +"%T")] (Älä välitä 'Could not change directory to /home/tunnus: Permission denied' -virheestä)\n"
 
 ssh $LAHDE "sudo -u postgres pg_dump -Fc --exclude-table-data=integraatioviesti --exclude-table-data=liite harja" > "../tietokanta/$RAAKA"
