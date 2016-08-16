@@ -48,8 +48,9 @@
   (assert tietolaji "Arvoa ei voi validoida ilman tietolajia")
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
-  (validoi-pituus arvo tietolaji kenttatunniste pituus)
-  (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen))
+  (when arvo
+    (validoi-pituus arvo tietolaji kenttatunniste pituus)
+    (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)))
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
