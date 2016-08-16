@@ -2,27 +2,37 @@
 
 set -e
 
-if [ ! -f ../tietokanta/harja-stg-dump ]; then
-    echo "[$(date +"%T")] /tietokanta/harja-stg-dump tiedostoa ei löytynyt. aja download_dump.sh?"
+if [ -z "$2" ]; then
+    echo "PROTIP: Käytä mount_prod_dump.sh tai mount_stg_dump.sh"
+    echo "Käyttö: $0 <raaka dumppi> <purettu dumppi> [yes]"
+    exit 1
+fi
+
+RAAKA=$1
+PURETTU=$2
+DEFAULT_YES=$3
+
+if [ ! -f ../tietokanta/$RAAKA ]; then
+    echo "[$(date +"%T")] /tietokanta/$RAAKA tiedostoa ei löytynyt. aja download_dump.sh?"
     exit 1;
 fi
 
 # Varmistetaan, että dumppi on jo purettu.
-if [ ! -f ../tietokanta/restored-stg-dump.sql ]; then
-    echo "[$(date +"%T")] Löydettiin ladattu dump, mutta sitä ei ole purettu sql-komennoiksi? Puretaan tiedostoon /harja-tietokanta/restored-stg-dump.sql"
+if [ ! -f ../tietokanta/$PURETTU ]; then
+    echo "[$(date +"%T")] Löydettiin ladattu dump, mutta sitä ei ole purettu sql-komennoiksi? Puretaan tiedostoon /harja-tietokanta/$PURETTU"
     # Jos muutat tätä, muuta sama rivi myös download_dump.sh
-    vagrant ssh -c "pg_restore -Fc -C /harja-tietokanta/harja-stg-dump > /harja-tietokanta/restored-stg-dump.sql"
+    vagrant ssh -c "pg_restore -Fc -C /harja-tietokanta/$RAAKA > /harja-tietokanta/$PURETTU"
 fi
 
-date="$(stat -f "%Sm" ../tietokanta/restored-stg-dump.sql)"
+date="$(stat -f "%Sm" ../tietokanta/$PURETTU)"
 
 echo "\n[$(date +"%T")] Otetaan käyttöön staging dump. Dump on luotu: ${date}\n"
 
-vagrant ssh -c "sudo -u postgres psql -f /harja-tietokanta/drop_before_restore.sql && sudo -u postgres psql -q -f /harja-tietokanta/restored-stg-dump.sql > /dev/null"
+vagrant ssh -c "sudo -u postgres psql -f /harja-tietokanta/drop_before_restore.sql && sudo -u postgres psql -q -f /harja-tietokanta/$PURETTU > /dev/null"
 
 echo "\n[$(date +"%T")] Dumppi ajettu sisään."
 
-if [ -n "$1" ];
+if [ -n "$DEFAULT_YES" ];
 then
     echo "[$(date +"%T")] Annoit skriptille parametrin. Ajetaan migrate.sh\n"
     sh migrate.sh > /dev/null
