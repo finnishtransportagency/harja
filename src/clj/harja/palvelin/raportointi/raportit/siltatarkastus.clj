@@ -331,8 +331,6 @@
         (and (= konteksti :koko-maa))
         (conj (vec (->> datarivit
                         butlast
-                        (map virhe?)
-                        (map korosta)
                         jarjesta))
               (last datarivit))
         :else datarivit)]
