@@ -13,7 +13,8 @@
             [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
-           (java.io StringWriter PrintWriter)))
+           (java.io StringWriter PrintWriter)
+           (java.util.zip GZIPInputStream)))
 
 (defn tee-kirjausvastauksen-body
   "Ottaa kirjausvastauksen tiedot (mappi, jossa id, ilmoitukset, varoitukset ja virheet) ja tekee vastauksen bodyn.
@@ -245,7 +246,7 @@
 (defn- lue-body [request]
   (if (:body request)
     (if (= (get-in request [:headers "content-encoding"]) "gzip")
-      (with-open [gzip (java.util.zip.GZIPInputStream. (:body request))]
+      (with-open [gzip (GZIPInputStream. (:body request))]
         (slurp gzip))
       (slurp (:body request)))
     nil))

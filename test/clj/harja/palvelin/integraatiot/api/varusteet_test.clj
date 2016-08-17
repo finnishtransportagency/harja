@@ -57,7 +57,6 @@
        (str "http://localhost:" portti validi-kutsu) :allow
        (str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-vastaus]
       (let [vastaus (api-tyokalut/get-kutsu [validi-kutsu] kayttaja portti)]
-        (println "Vastaus saatiin: " (pr-str vastaus))
         (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla")))))
 
 (deftest tarkista-tietueiden-virheellinen-haku
