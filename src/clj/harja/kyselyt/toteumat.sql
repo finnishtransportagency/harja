@@ -242,6 +242,7 @@ FROM toteuma_tehtava tt
                           AND tt.poistettu IS NOT TRUE
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja
+  ORDER BY t.alkanut DESC
 LIMIT 301;
 
 -- name: paivita-toteuma!
