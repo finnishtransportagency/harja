@@ -301,12 +301,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Tekee geneeriset kaksi palstaa. Optiossa voi olla :class, joka asetaan containerin lisäluokaksi."
   [{:keys [class]} & otsikot-ja-arvot]
   [:div.tietoja.container {:class class}
-   (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
-         :when arvo]
-     ^{:key otsikko}
-     [:div.tietorivi.row
-      [:div.col-md-4.tietokentta otsikko]
-      [:div.col-md-8.tietoarvo arvo]])])
+   (keep-indexed
+     (fn [i [otsikko arvo]]
+       (when arvo
+         ^{:key (str i otsikko)}
+         [:div.tietorivi.row
+          [:div.col-md-4.tietokentta otsikko]
+          [:div.col-md-8.tietoarvo arvo]]))
+     (partition 2 otsikot-ja-arvot))])
 
 (defn tietoja
   "Tekee geneerisen tietonäkymän.
@@ -318,12 +320,14 @@ Optiot on mäppi, joka tukee seuraavia optioita:
                 {:style {:display "block"}}
                 {})]
     [:div.tietoja {:class class}
-     (for [[otsikko arvo] (partition 2 otsikot-ja-arvot)
-           :when arvo]
-       ^{:key otsikko}
-       [:div.tietorivi
-        [:span.tietokentta attrs otsikko]
-        [:span.tietoarvo arvo]])]))
+     (keep-indexed
+       (fn [i [otsikko arvo]]
+         (when arvo
+           ^{:key (str i otsikko)}
+           [:div.tietorivi
+            [:span.tietokentta attrs otsikko]
+            [:span.tietoarvo arvo]]))
+       (partition 2 otsikot-ja-arvot))]))
 
 (defn taulukkotietonakyma
   "Tekee geneerisen taulukko-tietonäkymän. Optiot on tyhjä mäppi vielä, ehkä jotain classia sinne."
