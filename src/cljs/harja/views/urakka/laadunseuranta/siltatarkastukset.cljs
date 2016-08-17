@@ -12,7 +12,6 @@
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.siltatarkastukset :as st]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.sillat :as sillat]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.kartta :as kartta]
@@ -20,10 +19,8 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [cljs.core.async :refer [<! >! chan]]
-            [clojure.string :as str]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.ui.napit :as napit]
-            [harja.domain.oikeudet :as oikeudet]
             [harja.domain.siltatarkastus :as siltadomain]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.functor :refer [fmap]]
