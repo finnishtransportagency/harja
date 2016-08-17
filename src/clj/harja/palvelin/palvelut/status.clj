@@ -11,11 +11,15 @@
 (defn replikoinnin-tila [db-replica]
   {:replikoinnin-viive-sekunteina (q/hae-replikoinnin-viive db-replica)})
 
+q(defn sonja-yhteyden-tila [{:keys [yhteys-ok?]}]
+  {:sonja-yhteys-ok? @yhteys-ok?})
+
 (defrecord Status [status]
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
            db-replica :db-replica
+           sonja :sonja
            :as this}]
     (http-palvelin/julkaise-reitti
      http :status
@@ -28,7 +32,8 @@
                            (when (= 200 status)
                              (merge
                               (tietokannan-tila db)
-                              (replikoinnin-tila db)))))})))
+                              (replikoinnin-tila db-replica)
+                              (sonja-yhteyden-tila sonja)))))})))
     this)
 
   (stop [{http :http-palvelin :as this}]

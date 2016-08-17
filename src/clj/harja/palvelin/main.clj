@@ -375,7 +375,7 @@
 
       :status (component/using
                (status/luo-status)
-               [:http-palvelin :db :db-replica]))))
+               [:http-palvelin :db :db-replica :sonja]))))
 
 (defonce harja-jarjestelma nil)
 
