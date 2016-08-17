@@ -63,8 +63,7 @@
   (let [kenttien-kuvaukset (sort-by :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))
         kuvatut-kenttatunnisteet (into #{} (map :kenttatunniste kenttien-kuvaukset))
         annetut-kenttatunnisteet (into #{} (keys arvot))
-        ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)
-        ei-merkkijono-kentat (map first (filter #(not (string? (second %))) (into [] arvot)))]
+        ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)]
 
     ;; Tarkista, ettei ole ylimääräisiä kenttiä
     (when-not (empty? ylimaaraiset-kentat)
@@ -72,13 +71,6 @@
         tietolaji
         (str "Tietolajin arvoissa on ylimääräisiä kenttiä, joita ei löydy tierekisterin tietolajin kuvauksesta: "
              (str/join ", " ylimaaraiset-kentat) ". Sallitut kentät: " (str/join ", " kuvatut-kenttatunnisteet))))
-
-    ;; Tarkista että kaikki kentät on annettu merkkijonoina
-    (when-not (empty? ei-merkkijono-kentat)
-      (heita-validointipoikkeus
-        tietolaji
-        (str "Tietolajin arvoissa on kenttiä, joita ei ole annettu merkkijonona. Kaikki arvot pitää antaa merkkijonoina"
-             "Kenttien tunnukset: " (str/join ", " ei-merkkijono-kentat) ".")))
 
     ;; Ei ylimääräisiä kenttiä, validoi annetut kentät
     (doseq [kentan-kuvaus kenttien-kuvaukset]
