@@ -11,7 +11,7 @@
 (defn replikoinnin-tila [db-replica]
   {:replikoinnin-viive-sekunteina (q/hae-replikoinnin-viive db-replica)})
 
-q(defn sonja-yhteyden-tila [{:keys [yhteys-ok?]}]
+(defn sonja-yhteyden-tila [{:keys [yhteys-ok?]}]
   {:sonja-yhteys-ok? @yhteys-ok?})
 
 (defrecord Status [status]
