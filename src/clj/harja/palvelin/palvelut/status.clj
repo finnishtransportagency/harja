@@ -22,7 +22,7 @@
      (GET "/status" _
           (let [{:keys [status viesti] :as body} @status]
             {:status status
-             :headers {"Content-Type" "application/json"}
+             :headers {"Content-Type" "application/json; charset=UTF-8"}
              :body (encode
                     (merge {:viesti viesti}
                            (when (= 200 status)
