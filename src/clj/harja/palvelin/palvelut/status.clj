@@ -2,18 +2,33 @@
   (:require [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [GET]]
-            [cheshire.core :refer [encode]]))
+            [cheshire.core :refer [encode]]
+            [harja.kyselyt.status :as q]))
+
+(defn tietokannan-tila [db]
+  {:viimeisin-toteuman-luontiaika (q/hae-viimeisin-toteuman-luontiaika db)})
+
+(defn replikoinnin-tila [db-replica]
+  {:replikoinnin-viive-sekunteina (q/hae-replikoinnin-viive db-replica)})
 
 (defrecord Status [status]
   component/Lifecycle
-  (start [{http :http-palvelin :as this}]
+  (start [{http :http-palvelin
+           db :db
+           db-replica :db-replica
+           :as this}]
     (http-palvelin/julkaise-reitti
      http :status
      (GET "/status" _
-          (let [{:keys [status] :as body} @status]
+          (let [{:keys [status viesti] :as body} @status]
             {:status status
              :headers {"Content-Type" "application/json"}
-             :body (encode (dissoc body :status))})))
+             :body (encode
+                    (merge {:viesti viesti}
+                           (when (= 200 status)
+                             (merge
+                              (tietokannan-tila db)
+                              (replikoinnin-tila db)))))})))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -24,4 +39,4 @@
   (->Status (atom {:status 503 :viesti "Harja käynnistyy"})))
 
 (defn aseta-status! [status koodi viesti]
-  (swap! (:status status) assoc :status koodi :vietsi viesti))
+  (swap! (:status status) assoc :status koodi :viesti viesti))
