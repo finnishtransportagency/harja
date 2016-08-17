@@ -861,18 +861,19 @@ button:disabled {
     top: 15%;
     left: 12%;
     width: 75%;
-    height: 75%;
+    height: 470px;
     z-index: 10000;
+    overflow: hidden;
     background-color: white;
 }
 
 .painikelaatikko .painikerivi {
-    height: 25%;
+    height: 100px;
 }
 
 .painikerivi .pikavalintapainike {
     float: left;
-    width: 22%;
+    width: 22.5%;
     height: 100%;
     background-color: rgb(9,79,192);
     border: 1px solid black;
@@ -884,6 +885,7 @@ button:disabled {
     padding-top: 20px;
     font-size: 20px;
     text-align: center;
+    line-height: 20px;
 }
 
 .painikelaatikko .painike-aktiivinen {
