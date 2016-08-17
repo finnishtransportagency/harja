@@ -557,7 +557,7 @@ WHERE
                  FROM toimenpideinstanssi
                  WHERE id = :toimenpide))
   AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava)
-ORDER BY t.alkanut
+ORDER BY t.alkanut DESC
 LIMIT 501;
 
 -- name: hae-yksikkohintaisten-toiden-reitit
