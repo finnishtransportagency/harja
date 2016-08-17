@@ -479,10 +479,14 @@
                             (reset! tallennus-kaynnissa false)
                             (reset! muokattava-tarkastus nil))))))}
           (ikonit/tallenna) " Tallenna tarkastus"]
-         (when (not voi-tallentaa?)
+         (let [vinkki (if (= 24 riveja-taytetty)
+                        (str "Kaikki " riveja-taytetty "/" riveja " kohdetta arvioitu.")
+                        (if (and ainakin-yksi-tulos? (< riveja-taytetty 24))
+                          (str "Vasta " riveja-taytetty "/" riveja " kohdetta arvioitu. Voit tallentaa lomakkeen myös keskeneräisenä.")
+                          (when (= 0 riveja-taytetty)
+                            "Arvioi vähintään yksi kohde ennen tallentamista.")))]
            [:span.napin-vinkki
-            (str riveja-taytetty " / " riveja) " kohdetta täytetty. "
-            "Täytä kaikki tiedot ennen tallennusta"])]))))
+            vinkki])]))))
 
 (defn siltatarkastukset []
 
