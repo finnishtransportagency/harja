@@ -32,7 +32,7 @@
                            (and pakollinen (not (nil? koodisto)))
                            (not (empty? arvo)))
                          (empty? (filter #(= (str (:koodi %)) arvo) koodisto)))
-                (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei sisälly koodistoon.")))))
+                (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ('" arvo ")' ei sisälly koodistoon.")))))
 
 (defn- validoi-pituus [arvo tietolaji kenttatunniste pituus]
   (when (< pituus (count arvo))
