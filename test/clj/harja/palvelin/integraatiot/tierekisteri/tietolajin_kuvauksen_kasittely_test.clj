@@ -170,7 +170,7 @@
                              :tietotyyppi :paivamaara
                              :pituus 20}]}]
     (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
-      {"tunniste" "2010-12-12"}
+      {"tunniste" "20101212"}
       tietolajin-kuvaus)
     (is true "Poikkeusta ei heitetty")))
 
