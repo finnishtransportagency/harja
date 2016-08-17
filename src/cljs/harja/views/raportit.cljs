@@ -612,8 +612,6 @@
                                    #(assoc % :nimi
                                              (fmt/lyhennetty-urakan-nimi urakan-nimen-pituus (:nimi %)))
                                    (sort-by :nimi @nav/suodatettu-urakkalista)))])
-             "Hallintayksikkö" (when (= "hallintayksikko" konteksti)
-                                 (:nimi v-hal))
              "Raportti" (cond
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
