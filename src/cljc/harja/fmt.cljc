@@ -121,13 +121,13 @@
             (str/replace nimi #"URAKKA" "ur.")
 
             (re-find #"kunnossapidon" nimi)
-            (str/replace nimi #"kunnossapidon" "kun.pid.")
+            (str/replace nimi #"kunnossapidon" "kunn.pid.")
 
             (re-find #"Kunnossapidon" nimi)
-            (str/replace nimi #"Kunnossapidon" "kun.pid.")
+            (str/replace nimi #"Kunnossapidon" "kunn.pid.")
 
             (re-find #"KUNNOSSAPIDON" nimi)
-            (str/replace nimi #"KUNNOSSAPIDON" "kun.pid.")
+            (str/replace nimi #"KUNNOSSAPIDON" "kunn.pid.")
 
             ;; ", " -> " "
             (re-find #"\s*,\s*" nimi)
