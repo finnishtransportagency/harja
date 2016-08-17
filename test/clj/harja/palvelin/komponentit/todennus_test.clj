@@ -15,7 +15,10 @@
                                  :linkki "urakoitsija"}
                   "paivystaja" {:nimi "paivystaja"
                                 :kuvaus "Urakan päivystäjä"
-                                :linkki "urakka"}})
+                                :linkki "urakka"}
+                  "Kayttaja" {:nimi "Kayttaja"
+                              :kuvaus "Urakoitsijan käyttäjä"
+                              :linkki "urakoitsija"}})
 
 (def urakat {"u123" 666})
 (def urakoitsijat {"Y123456-7" 42})
@@ -34,6 +37,11 @@
           :organisaatioroolit {42 #{"urakoitsija"}}}
          (oikeudet "Y123456-7_urakoitsija,u123_paivystaja"))))
 
+(deftest liito-rooli-ei-sekoitu-harja-rooliin
+  (is (= {:roolit #{} :urakkaroolit {666 #{"paivystaja"}}
+          :organisaatioroolit {42 #{"urakoitsija"}}}
+         (oikeudet "Y123456-7_urakoitsija,u123_paivystaja,Extranet_Liito_Kayttaja,Aina_öisin_valvoja"))))
+
 (deftest tilaajan-kayttaja
   (is (= {:roolit             #{"Tilaajan_Kayttaja"}
           :organisaatioroolit {}
@@ -45,4 +53,3 @@
           :organisaatioroolit {}
           :urakkaroolit       {}}
          (todennus/kayttajan-roolit urakat urakoitsijat oikeudet/roolit "ELY_Peruskayttaja"))))
-

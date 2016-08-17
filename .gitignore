@@ -40,3 +40,7 @@ tuotanto_test.sh
 opt/sonic/7.6.2/sonic-client.jar
 opt/sonic/7.6.2/sonic-crypto.jar
 opt/sonic/7.6.2/sonic-xmessage.jar
+tietokanta/harja_prod_dump
+tietokanta/restored_prod_dump.sql
+tietokanta/harja_stg_dump
+tietokanta/restored_stg_dump.sql
