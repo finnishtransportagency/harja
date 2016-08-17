@@ -106,7 +106,7 @@
                              :jarjestysnumero 1
                              :tietotyyppi :merkkijono
                              :pituus 20}]}]
-    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo kentässä 'tunniste', maksimipituus: 20."
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Liian pitkä arvo '1234567890112345678901' kentässä 'tunniste', maksimipituus: 20."
                           (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "1234567890112345678901"}
                             tietolajin-kuvaus))
@@ -214,7 +214,7 @@
                              :tietotyyppi :koodisto,
                              :pituus 1,
                              :ylaraja nil}]}]
-    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei sisälly koodistoon."
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo '8' ei sisälly koodistoon."
                           (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "8"}
                             tietolajin-kuvaus))
@@ -227,7 +227,7 @@
          (catch Exception e
            (is false "Valinnaiselle kentälle täytyy hyväksyä tyhjä arvo")))
 
-    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo ei sisälly koodistoon."
+    (is (thrown-with-msg? Exception #"Virhe tietolajin tl506 arvojen käsittelyssä: Kentän 'tunniste' arvo '8' ei sisälly koodistoon."
                           (tierekisteri-tietue/tietolajin-arvot-map->merkkijono
                             {"tunniste" "8"}
                             (assoc tietolajin-kuvaus :ominaisuudet [(assoc (first (:ominaisuudet tietolajin-kuvaus)) :pakollinen true)]))

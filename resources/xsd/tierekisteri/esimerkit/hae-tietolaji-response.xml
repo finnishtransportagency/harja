@@ -18,7 +18,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMNUMERO</kenttatunniste>
-                    <jarjestysnumero>1</jarjestysnumero>
+                    <jarjestysnumero>2</jarjestysnumero>
                     <pituus>12</pituus>
                     <pakollinen>true</pakollinen>
                     <selite>Liikennemerkin tieliikenneasetuksen mukainen numero on pakollinen tieto.</selite>
@@ -29,7 +29,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>SIVUTIE</kenttatunniste>
-                    <jarjestysnumero>2</jarjestysnumero>
+                    <jarjestysnumero>3</jarjestysnumero>
                     <pituus>12</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Sivutiellä olevat, väistämisvelvollisuutta osoittavat liikennemerkit kirjataan maantien
@@ -65,7 +65,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMALA</kenttatunniste>
-                    <jarjestysnumero>3</jarjestysnumero>
+                    <jarjestysnumero>4</jarjestysnumero>
                     <pituus>10</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Muiden kuin vakioliikennemerkkien pinta-ala ilmoitetaan 1 neliömetrin tarkkuuteen
@@ -78,7 +78,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMVANHA</kenttatunniste>
-                    <jarjestysnumero>4</jarjestysnumero>
+                    <jarjestysnumero>5</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Liikennemerkki vanhaa tyyppiä, 1 = on</selite>
@@ -89,7 +89,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMTYYPPI</kenttatunniste>
-                    <jarjestysnumero>5</jarjestysnumero>
+                    <jarjestysnumero>6</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Liikennemerkin tyyppi</selite>
@@ -130,7 +130,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMKAUSI</kenttatunniste>
-                    <jarjestysnumero>6</jarjestysnumero>
+                    <jarjestysnumero>7</jarjestysnumero>
                     <pituus>12</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Kausiluontoinen liikennemerkki = 1 (määritellään toimistolla).</selite>
@@ -141,7 +141,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMKIINNIT</kenttatunniste>
-                    <jarjestysnumero>7</jarjestysnumero>
+                    <jarjestysnumero>8</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Liikennemerkin kiinnitystapa</selite>
@@ -182,7 +182,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMMATER</kenttatunniste>
-                    <jarjestysnumero>8</jarjestysnumero>
+                    <jarjestysnumero>9</jarjestysnumero>
                     <pituus>4</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Liikennemerkin materiaali</selite>
@@ -216,7 +216,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMTEKSTI</kenttatunniste>
-                    <jarjestysnumero>9</jarjestysnumero>
+                    <jarjestysnumero>10</jarjestysnumero>
                     <pituus>50</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Viittojen, opastusmerkkien, rajoitusten ja lisäkilpien tietosisältö (50 merkkiä) ja
@@ -229,7 +229,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>LMOMIST</kenttatunniste>
-                    <jarjestysnumero>10</jarjestysnumero>
+                    <jarjestysnumero>11</jarjestysnumero>
                     <pituus>50</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Opasteen omistaja voidaan kirjoittaa tähän ellei se ole Tieviranomainen.</selite>
@@ -240,7 +240,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>OPASTETUNN</kenttatunniste>
-                    <jarjestysnumero>11</jarjestysnumero>
+                    <jarjestysnumero>12</jarjestysnumero>
                     <pituus>20</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Liikennemerkkitolpan tunnus, jos samassa tolpassa on useampi merkki.</selite>
@@ -251,7 +251,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>KUNTOLUOKK</kenttatunniste>
-                    <jarjestysnumero>12</jarjestysnumero>
+                    <jarjestysnumero>13</jarjestysnumero>
                     <pituus>1</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Liikennemerkin kunto ilmoitetaan virallisen kuntoluokituksen 1-5 mukaan liikennemerkkien
@@ -301,7 +301,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>OPASTETUNN</kenttatunniste>
-                    <jarjestysnumero>13</jarjestysnumero>
+                    <jarjestysnumero>14</jarjestysnumero>
                     <pituus>10</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Liikennemerkkitolpan tunnus, jos samassa tolpassa on useampi merkki.</selite>
@@ -312,7 +312,7 @@
                 </ominaisuus>
                 <ominaisuus>
                     <kenttatunniste>URAKKA</kenttatunniste>
-                    <jarjestysnumero>14</jarjestysnumero>
+                    <jarjestysnumero>15</jarjestysnumero>
                     <pituus>6</pituus>
                     <pakollinen>false</pakollinen>
                     <selite>Tässä kentässä ilmoitetaan urakan tunnus, mikäli opaste ei kuulu hoidon alueurakan vaan
