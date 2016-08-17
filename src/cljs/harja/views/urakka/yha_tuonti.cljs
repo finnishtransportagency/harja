@@ -85,7 +85,8 @@
                                       (reset! yha/sidonta-kaynnissa? false))
                         :virheviesti "Urakan sidonta epäonnistui."
                         :kun-onnistuu (fn [vastaus]
-                                        (swap! nav/valittu-urakka assoc :yhatiedot vastaus)
+                                        (log "[YHA] Liiteteään yhatiedot.")
+                                        (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc :yhatiedot vastaus)
                                         (modal/piilota!)
                                         (log "[YHA] Aloitetaan kohteiden haku ja käsittely.")
                                         (yha/paivita-yha-kohteet (:id urakka) {:nayta-ilmoitus-ei-uusia-kohteita? false}))}]))}]

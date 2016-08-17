@@ -334,3 +334,12 @@
              (fn [_ _ vanha uusi]
                (when (not= vanha uusi)
                  (paivita-url)))))
+
+(defn paivita-urakan-tiedot! [urakka-id funktio & args]
+  (swap! hallintayksikon-urakkalista
+         (fn [urakat]
+           (mapv (fn [urakka]
+                   (if (= (:id urakka) urakka-id)
+                     (apply funktio urakka args)
+                     urakka))
+                 urakat))))
