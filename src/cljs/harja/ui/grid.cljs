@@ -287,29 +287,30 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                             (when rivi-valinta-peruttu
                               (rivi-valinta-peruttu rivi)))
                         (reset! valittu-rivi rivi))))}
-   (for [{:keys [nimi hae fmt tasaa tyyppi komponentti
-                 pakota-rivitys? reunus]} skeema]
-     (if (= :vetolaatikon-tila tyyppi)
-       ^{:key (str "vetolaatikontila" id)}
-       [vetolaatikon-tila ohjaus vetolaatikot id]
-       ^{:key (str nimi)}
-       [:td {:class (y/luokat
-                      (y/tasaus-luokka tasaa)
-                      (when pakota-rivitys? "grid-pakota-rivitys")
-                      (case reunus
-                        :ei "grid-reunus-ei"
-                        :vasen "grid-reunus-vasen"
-                        :oikea "grid-reunus-oikea"
-                        nil))}
-        (if (= tyyppi :komponentti)
-          (komponentti rivi {:index index
-                             :muokataan? false})
-          (let [haettu-arvo (if hae
-                              (hae rivi)
-                              (get rivi nimi))]
-            (if fmt
-              (fmt haettu-arvo)
-              [nayta-arvo skeema (vain-luku-atomina haettu-arvo)])))]))
+   (map-indexed
+     (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
+                    pakota-rivitys? reunus]}]
+       (if (= :vetolaatikon-tila tyyppi)
+         ^{:key (str "vetolaatikontila" id)}
+         [vetolaatikon-tila ohjaus vetolaatikot id]
+         ^{:key (str i nimi)}
+         [:td {:class (y/luokat
+                        (y/tasaus-luokka tasaa)
+                        (when pakota-rivitys? "grid-pakota-rivitys")
+                        (case reunus
+                          :ei "grid-reunus-ei"
+                          :vasen "grid-reunus-vasen"
+                          :oikea "grid-reunus-oikea"
+                          nil))}
+          (if (= tyyppi :komponentti)
+            (komponentti rivi {:index      index
+                               :muokataan? false})
+            (let [haettu-arvo (if hae
+                                (hae rivi)
+                                (get rivi nimi))]
+              (if fmt
+                (fmt haettu-arvo)
+                [nayta-arvo skeema (vain-luku-atomina haettu-arvo)])))])) skeema)
    (when (and (not piilota-toiminnot?)
               tallenna) [:td.toiminnot])])
 
@@ -578,9 +579,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                           rivit)))))
                            nil)
         kiinnita-otsikkorivi? (atom false)
-        kiinnitetyn-otsikkorivin-keveys (atom 0)
+        kiinnitetyn-otsikkorivin-leveys (atom 0)
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
-                                                  (reset! kiinnitetyn-otsikkorivin-keveys (dom/elementin-leveys (r/dom-node this))))
+                                                  (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
                                             (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
@@ -703,12 +704,13 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                   :class (y/tasaus-luokka tasaa)}
                              teksti])])
                        [:tr
-                        (for [{:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]} skeema]
-                          ^{:key (str nimi)}
-                          [:th {:class (y/luokat otsikkorivi-luokka
-                                                 (y/tasaus-luokka tasaa))
-                                :width (or leveys "5%")}
-                           otsikko])
+                        (map-indexed
+                          (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa]}]
+                            ^{:key (str i nimi)}
+                            [:th {:class (y/luokat otsikkorivi-luokka
+                                                   (y/tasaus-luokka tasaa))
+                                  :width (or leveys "5%")}
+                             otsikko]) skeema)
                         (when (and (not piilota-toiminnot?)
                                    tallenna)
                           [:th.toiminnot {:width "40px"} " "])]])]
@@ -716,15 +718,17 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                :class (clojure.string/join " " luokat)}
            (muokkauspaneeli true)
            [:div.panel-body
+            (when @kiinnita-otsikkorivi?
+              [:table.grid
+               {:style {:position "fixed"
+                        :top      0
+                        :width    @kiinnitetyn-otsikkorivin-leveys
+                        :z-index 200}}
+               [thead]])
             (if (nil? tiedot)
               (ajax-loader)
               [:table.grid
                [thead]
-               (when @kiinnita-otsikkorivi?
-                 [:table.grid {:style {:position "fixed"
-                                       :top 0
-                                       :width @kiinnitetyn-otsikkorivin-keveys}}
-                  [thead]])
                [:tbody
                 (if muokataan
                   ;; Muokkauskäyttöliittymä
@@ -868,7 +872,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
         virheet-atom (or (:virheet opts) (atom {})) ;; validointivirheet: (:id rivi) => [virheet]
-        viime-assoc (atom nil) ;; edellisen muokkauksen, jos se oli assoc-in, polku
         vetolaatikot-auki (atom (into #{}
                                       (:vetolaatikot-auki opts)))
         fokus (atom nil)
