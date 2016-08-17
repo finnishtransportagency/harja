@@ -722,7 +722,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               [:table.grid
                {:style {:position "fixed"
                         :top      0
-                        :width    @kiinnitetyn-otsikkorivin-leveys}}
+                        :width    @kiinnitetyn-otsikkorivin-leveys
+                        :z-index 200}}
                [thead]])
             (if (nil? tiedot)
               (ajax-loader)
