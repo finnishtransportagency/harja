@@ -32,6 +32,7 @@
 
 (defonce muokattava-tarkastus (atom nil))
 (def +valitse-tulos+ "- Valitse tulos -")
+(def +ei-kirjattu+ "Ei kirjattu")
 
 (def siltatarkastuksen-valiotsikot
   {1 (grid/otsikko "Alusrakenne")
@@ -186,7 +187,7 @@
     "C" "C - urakan kunnostettava"
     "D" "D - korjaus ohjelmoitava"
     "-" "Ei päde tähän siltaan"
-    +valitse-tulos+))
+    +ei-kirjattu+))
 
 (defn tarkastustulos-ja-liitteet
   "Komponentti vanhan tarkastuksen tuloksen ja liitteiden näyttämiselle. Liite on ikoni, jota klikkaamalla
@@ -391,9 +392,9 @@
             riveja (count (vals tarkastusrivit))
             riveja-taytetty (count (filter #(not (nil? (:tulos %)))
                                            (vals tarkastusrivit)))
-            taulukon-riveilla-tulos (= riveja riveja-taytetty)
+            ainakin-yksi-tulos? (> riveja-taytetty 0)
             voi-tallentaa? (and (lomake/voi-tallentaa? tarkastus)
-                                taulukon-riveilla-tulos)]
+                                ainakin-yksi-tulos?)]
         [:div.uusi-siltatarkastus
          [napit/takaisin "Palaa tallentamatta" #(reset! muokattava-tarkastus nil)]
 
