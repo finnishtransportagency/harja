@@ -55,20 +55,8 @@ SELECT
   it.kasittelija_henkilo_tyopuhelin                                  AS kuittaus_kasittelija_tyopuhelin,
   it.kasittelija_henkilo_sahkoposti                                  AS kuittaus_kasittelija_sahkoposti,
   it.kasittelija_organisaatio_nimi                                   AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus                                AS kuittaus_kasittelija_ytunnus,
+  it.kasittelija_organisaatio_ytunnus                                AS kuittaus_kasittelija_ytunnus
 
-  EXISTS(SELECT *
-         FROM ilmoitustoimenpide
-         WHERE ilmoitus = i.id
-               AND kuittaustyyppi = 'vastaanotto' :: kuittaustyyppi) AS vastaanotettu,
-  EXISTS(SELECT *
-         FROM ilmoitustoimenpide
-         WHERE ilmoitus = i.id
-               AND kuittaustyyppi = 'aloitus' :: kuittaustyyppi)     AS aloitettu,
-  EXISTS(SELECT *
-         FROM ilmoitustoimenpide
-         WHERE ilmoitus = i.id
-               AND kuittaustyyppi = 'lopetus' :: kuittaustyyppi)     AS lopetettu
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
