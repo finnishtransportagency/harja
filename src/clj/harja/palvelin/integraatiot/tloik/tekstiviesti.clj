@@ -7,11 +7,13 @@
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.tyokalut.merkkijono :as merkkijono]
-            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot])
+            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.fmt :as fmt])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
   (str "Uusi toimenpidepyyntö: %s (id: %s, viestinumero: %s).\n\n"
+       "Yhteydenottopyyntö: %s\n\n"
        "Paikka: %s\n\n"
        "Selitteet: %s.\n\n"
        "Lisätietoja: %s.\n\n"
@@ -126,6 +128,7 @@
                              otsikko
                              ilmoitus-id
                              viestinumero
+                             (fmt/totuus (:yhteydenottopyynto ilmoitus))
                              paikankuvaus
                              selitteet
                              lisatietoja
@@ -138,4 +141,3 @@
       (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
     (catch Exception e
       (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))
-
