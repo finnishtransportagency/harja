@@ -90,28 +90,34 @@
 
 (defn aikavali
   ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
-  ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus aloitusaika-pakota-suunta paattymisaika-pakota-suunta]}]
-  [:span.label-ja-aikavali
-   (when (or (nil? nayta-otsikko?)
-             (true? nayta-otsikko?)) [:span.alasvedon-otsikko "Aikaväli"])
-   [:div.aikavali-valinnat
-    [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
-     (r/wrap (first @valittu-aikavali-atom)
-             (fn [uusi-arvo]
-               (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)]
-                 (if-not aikavalin-rajoitus
-                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] :alku))
-                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
-               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
-    [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
-    [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
-     (r/wrap (second @valittu-aikavali-atom)
-             (fn [uusi-arvo]
-               (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)]
-                 (if-not aikavalin-rajoitus
-                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] :loppu))
-                   (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
-               (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
+  ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
+                                  aloitusaika-pakota-suunta paattymisaika-pakota-suunta
+                                  lomake?]}]
+   [:span {:class (if lomake?
+                    "label-ja-aikavali-lomake"
+                    "label-ja-aikavali")}
+    (when (and (not lomake?)
+               (or (nil? nayta-otsikko?)
+                   (true? nayta-otsikko?)))
+      [:span.alasvedon-otsikko "Aikaväli"])
+    [:div.aikavali-valinnat
+     [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
+      (r/wrap (first @valittu-aikavali-atom)
+              (fn [uusi-arvo]
+                (let [uusi-arvo (pvm/paivan-alussa-opt uusi-arvo)]
+                  (if-not aikavalin-rajoitus
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] :alku))
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [uusi-arvo (second %)] aikavalin-rajoitus :alku))))
+                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]
+     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
+     [tee-kentta {:tyyppi :pvm :pakota-suunta paattymisaika-pakota-suunta}
+      (r/wrap (second @valittu-aikavali-atom)
+              (fn [uusi-arvo]
+                (let [uusi-arvo (pvm/paivan-lopussa-opt uusi-arvo)]
+                  (if-not aikavalin-rajoitus
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] :loppu))
+                    (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
+                (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
 (defn- toimenpideinstanssi-fmt
   [tpi]
