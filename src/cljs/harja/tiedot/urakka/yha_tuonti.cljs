@@ -197,7 +197,7 @@
 (defn- kasittele-onnistunut-kohteiden-paivitys [vastaus harja-urakka-id optiot]
   ;; Tallenna uudet YHA-tiedot urakalle
   (when (and (:yhatiedot vastaus) (= (:id @nav/valittu-urakka) harja-urakka-id))
-    (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
+    (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc :yhatiedot (:yhatiedot vastaus)))
 
   ;; Näytä ilmoitus tarvittaessa
   (when (and (= (:status vastaus) :ok)
@@ -209,7 +209,7 @@
   (when (and
           (some? (:yhatiedot vastaus))
           (= (:id @nav/valittu-urakka) harja-urakka-id))
-    (swap! nav/valittu-urakka assoc :yhatiedot (:yhatiedot vastaus)))
+    (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc :yhatiedot vastaus))
 
   ;; Kohteiden osittain epäonnistunut päivittäminen näytetään modal-dialogissa
   (when (and (= (:status vastaus) :error)
@@ -252,8 +252,8 @@
       :virheviesti "Kohdeluettelon päivittäminen epäonnistui."
       :kun-onnistuu (fn [_]
                       (log "[YHA] Kohdeluettelo päivitetty")
-                      (swap! nav/valittu-urakka assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
-                             (cljs-time.core/to-default-time-zone (t/now))))}]))
+                      (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
+                                                  (cljs-time.core/to-default-time-zone (t/now))))}]))
 
 (defn kohdeluettelo-paivitetty [urakka]
   (if @yha-kohteiden-paivittaminen-kaynnissa?
