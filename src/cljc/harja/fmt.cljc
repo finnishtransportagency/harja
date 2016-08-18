@@ -103,13 +103,13 @@
             ;; clj puolella käyttäen reader conditionaleja, mutta
             ;; samapa se on toistaa kaikki näin.
             (re-find #"alueurakka" nimi)
-            (str/replace nimi #"alueurakka" "ur.")
+            (str/replace nimi #"alueurakka" "au")
 
             (re-find #"Alueurakka" nimi)
-            (str/replace nimi #"Alueurakka" "ur.")
+            (str/replace nimi #"Alueurakka" "au")
 
             (re-find #"ALUEURAKKA" nimi)
-            (str/replace nimi #"ALUEURAKKA" "ur.")
+            (str/replace nimi #"ALUEURAKKA" "au")
 
             (re-find #"urakka" nimi)
             (str/replace nimi #"urakka" "ur.")
