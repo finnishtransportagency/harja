@@ -7,7 +7,7 @@
             [harja.domain.ilmoitukset :refer [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
                                               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
                                               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-                                              kuittaustyypin-selite]]
+                                              kuittaustyypin-selite kuittaustyypin-lyhenne]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -53,6 +53,20 @@
       [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus!)]
       (pollauksen-merkki)
       [it/ilmoitus ilmoitus]]]))
+
+(defn kuittauslista [{kuittaukset :kuittaukset}]
+  [:div.kuittauslista
+   (map-indexed
+    (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
+      ^{:key i}
+      [yleiset/tooltip {}
+       [:div.kuittaus {:class (name kuittaustyyppi)
+                                        ;:title
+                       }
+        (kuittaustyypin-lyhenne kuittaustyyppi)]
+       [:div (kuittaustyypin-selite kuittaustyyppi) " " (pvm/pvm kuitattu)
+        [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
+    kuittaukset)])
 
 (defn ilmoitusten-paanakyma
   []
@@ -169,8 +183,10 @@
             :leveys 2}
            {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %))
             :leveys 2}
-           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
-            :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-")
+           {:otsikko "Kuittaukset" :nimi :kuittaukset
+            :tyyppi :komponentti
+            :komponentti kuittauslista
+            ;:hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-")
             :leveys 2}
            {:otsikko "Tila" :nimi :tila :leveys 1 :hae #(kuittaustyypin-selite (:tila %))}]
           @tiedot/haetut-ilmoitukset]]]))))
