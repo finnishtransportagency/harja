@@ -47,13 +47,12 @@
   (tiedot/hae-ilmoitukset)
   (komp/luo
    (fn []
-     (let [{:keys [saapunut-alkaen saapunut-paattyen] :as valinnat-nyt} @tiedot/valinnat]
+     (let [{:keys [aikavali] :as valinnat-nyt} @tiedot/valinnat]
        [:span.ilmoitukset
         [lomake/lomake
          {:luokka   :horizontal
           :muokkaa! (fn [uusi]
                       (log "UUDET ILMOITUSVALINNAT: " (pr-str uusi))
-                      (tiedot/hae-ilmoitukset)
                       (swap! tiedot/valinnat
                              (fn [vanha]
                                (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
@@ -74,11 +73,9 @@
            :tyyppi :komponentti
            :komponentti (fn [{muokkaa! :muokkaa-lomaketta}]
                           [valinnat/aikavali
-                           (r/wrap [saapunut-alkaen saapunut-paattyen]
+                           (r/wrap aikavali
                                    #(swap! tiedot/valinnat
-                                           assoc
-                                           :saapunut-alkaen (first %)
-                                           :saapunut-paattyen (second %)))
+                                           assoc :aikavali %))
                            {:lomake? true}])}
 
 
