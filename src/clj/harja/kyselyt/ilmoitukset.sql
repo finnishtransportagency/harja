@@ -94,7 +94,16 @@ WHERE
   (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite])) AND
 
   -- Rajaa tienumerolla
-  (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero)
+  (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
+
+  -- Rajaa ilmoittajan nimellä
+  (:ilmoittaja-nimi::TEXT IS NULL OR
+   CONCAT(i.ilmoittaja_etunimi,' ',i.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
+
+  -- Rajaa ilmoittajan puhelinnumerolla
+  (:ilmoittaja-puhelin::TEXT IS NULL OR
+   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
+
 ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
