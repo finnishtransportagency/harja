@@ -262,12 +262,13 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 
 
-(defmethod tee-kentta :puhelin [{:keys [on-focus pituus lomake?] :as kentta} data]
+(defmethod tee-kentta :puhelin [{:keys [on-focus pituus lomake? placeholder] :as kentta} data]
   [:input {:class      (when lomake? "form-control")
            :type       "tel"
            :value      @data
            :max-length pituus
            :on-focus   on-focus
+           :placeholder placeholder
            on-change*  #(let [uusi (-> % .-target .-value)]
                          (when (re-matches #"\+?(\s|\d)*" uusi)
                            (reset! data uusi)))}])

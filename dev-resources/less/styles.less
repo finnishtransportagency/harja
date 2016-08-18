@@ -187,9 +187,9 @@ tr.uusitehtavakoodi td {
   width: 100%;
 }
 
-.label-ja-aikavali-tpl (@leveys: @valintakontrollin-leveys) {
+.label-ja-aikavali-tpl (@leveys: @valintakontrollin-leveys, @margin: 5px) {
   display: inline-block;
-  margin: 5px;
+  margin: @margin;
   max-width: 100%;
   width: @leveys;
   .aikavali-valinnat {
@@ -218,6 +218,11 @@ tr.uusitehtavakoodi td {
 }
 .label-ja-aikavali-lyhyt {
   .label-ja-aikavali-tpl(85px);
+}
+
+.label-ja-aikavali-lomake {
+ .label-ja-aikavali-tpl(100%, 0px);
+ .pvm { width: 100%; }
 }
 
 .flash-viesti {
