@@ -3013,3 +3013,10 @@ SELECT lisaa_toimenpidekoodi('Ei yksilöity', NULL, 4, 'NULL', NULL, (SELECT nim
 SELECT lisaa_toimenpidekoodi('Ei yksilöity', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='10283'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='10283'), (SELECT taso FROM toimenpidekoodi WHERE koodi='10283'));
 SELECT lisaa_toimenpidekoodi('Ei yksilöity', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='141217'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='141217'), (SELECT taso FROM toimenpidekoodi WHERE koodi='141217'));
 SELECT lisaa_toimenpidekoodi('Ei yksilöity', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='AURA3_260'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='AURA3_260'), (SELECT taso FROM toimenpidekoodi WHERE koodi='AURA3_260'));
+
+UPDATE toimenpidekoodi
+   SET hinnoittelu = ARRAY['kokonaishintainen'::hinnoittelutyyppi],
+       api_seuranta = TRUE
+ WHERE taso = 4 AND
+       emo in (SELECT id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide')
+       AND nimi = 'Ei yksilöity';
