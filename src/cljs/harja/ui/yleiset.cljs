@@ -546,3 +546,36 @@ jatkon."
   (let [luokat (remove nil? luokat)]
     (when-not (empty? luokat)
       (str/join " " luokat))))
+
+(defn- tooltip-sisalto [auki? sisalto]
+  (let [x (atom nil)]
+    (komp/luo
+     (komp/piirretty
+      #(let [n (r/dom-node %)
+             rect (aget (.getClientRects n) 0)
+             parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
+         (reset! x
+                 (+ (.-left rect)
+                    (/ (.-width rect) -2)
+                    (/ (.-width parent-rect) 2)))))
+     (fn [auki? sisalto]
+       [:div.tooltip.bottom {:class (when auki? "in")
+                             :style {:position "absolute"
+                                     :left (when-let [x @x]
+                                             x)}}
+        [:div.tooltip-arrow]
+        [:div.tooltip-inner
+         sisalto]]))))
+
+(defn tooltip [opts komponentti tooltipin-sisalto]
+  (let [tooltip-nakyy? (atom false)
+        leveys (atom 0)]
+    (komp/luo
+     (fn [opts komponentti tooltipin-sisalto]
+       [:span
+        [:div.inline-block
+         {:on-mouse-enter #(reset! tooltip-nakyy? true)
+          :on-mouse-leave #(reset! tooltip-nakyy? false)}
+         komponentti
+
+         [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]]))))
