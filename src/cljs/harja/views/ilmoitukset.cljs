@@ -9,7 +9,7 @@
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite]]
+              kuittaustyypin-selite kuittaustyypin-lyhenne]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -188,12 +188,12 @@
            {:otsikko "Sijainti" :nimi :tierekisteri
             :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
             :leveys 3}
+
            {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %))
             :leveys 2}
            {:otsikko "Kuittaukset" :nimi :kuittaukset
             :tyyppi :komponentti
             :komponentti kuittauslista
-            ;:hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-")
             :leveys 2}
 
            {:otsikko "Tila" :nimi :tila :leveys 3 :hae #(kuittaustyypin-selite (:tila %))}]
