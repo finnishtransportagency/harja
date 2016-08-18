@@ -4,10 +4,12 @@
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitukset :refer [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
-                                              +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
-                                              +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-                                              kuittaustyypin-selite]]
+            [harja.domain.ilmoitukset :refer
+             [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi
+              ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
+              +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
+              +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
+              kuittaustyypin-selite]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -45,6 +47,9 @@
 
 (defn pollauksen-merkki []
   [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
+
+(defn yhdeydenottopyynnot-lihavoitu []
+  [yleiset/vihje "Yhdeydenottopyynnöt lihavoitu" "inline-block bold"])
 
 (defn ilmoituksen-tiedot []
   (let [ilmoitus @tiedot/valittu-ilmoitus]
@@ -151,7 +156,8 @@
                                  arvo))})]
          valinnat-nyt]
         [:div
-         (pollauksen-merkki)
+         [pollauksen-merkki]
+         [yhdeydenottopyynnot-lihavoitu]
          [grid
           {:tyhja             (if @tiedot/haetut-ilmoitukset
                                 "Ei löytyneitä tietoja"
@@ -159,21 +165,26 @@
            :rivi-klikattu     #(tiedot/avaa-ilmoitus! %)
            :piilota-toiminnot true}
 
-          [{:otsikko "Urakka" :nimi :urakkanimi :leveys 2
+          [{:otsikko "Urakka" :nimi :urakkanimi :leveys 3
             :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-           {:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 1}
-           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %))
-            :leveys 2}
+           {:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 2}
+           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
+            :hae #(ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
+            :leveys 1}
            {:otsikko "Sijainti" :nimi :tierekisteri
             :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
-            :leveys 2}
+            :leveys 3}
            {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %))
-            :leveys 2}
+            :leveys 4}
            {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
             :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-")
-            :leveys 2}
-           {:otsikko "Tila" :nimi :tila :leveys 1 :hae #(kuittaustyypin-selite (:tila %))}]
-          @tiedot/haetut-ilmoitukset]]]))))
+            :leveys 3}
+
+           {:otsikko "Tila" :nimi :tila :leveys 3 :hae #(kuittaustyypin-selite (:tila %))}]
+          (mapv #(if (:yhteydenottopyynto %)
+                   (assoc % :lihavoi true)
+                   %)
+                @tiedot/haetut-ilmoitukset)]]]))))
 
 (defn ilmoitukset []
   (komp/luo
@@ -183,7 +194,9 @@
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
     (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus! %2))
-    (komp/lippu tiedot/ilmoitusnakymassa? tiedot/karttataso-ilmoitukset istunto/ajastin-taukotilassa?)
+    (komp/lippu tiedot/ilmoitusnakymassa?
+                tiedot/karttataso-ilmoitukset
+                istunto/ajastin-taukotilassa?)
     (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
 
     (fn []
