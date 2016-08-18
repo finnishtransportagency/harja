@@ -105,6 +105,12 @@
                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
                                                                 selitteet))]
                                            (vec (sort itemit))))))}
+         {:nimi :tr-numero
+          :palstoja 1
+          :otsikko "Tienumero"
+          :placeholder "Rajaa tienumerolla"
+          :tyyppi :positiivinen-numero :kokonaisluku? true}
+
          (lomake/ryhma
            {:rivi? true}
            {:nimi             :kuittaustyypit
