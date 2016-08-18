@@ -110,33 +110,37 @@
       (log/error e (format "Numerosta: %s vastaanotetun viestin: %s käsittelyssä tapahtui poikkeus." puhelinnumero viesti))
       +virhe-viesti+)))
 
+(defn ilmoitus-tekstiviesti [ilmoitus viestinumero]
+  (let [ilmoitus-id (:ilmoitus-id ilmoitus)
+        otsikko (:otsikko ilmoitus)
+        paikankuvaus (:paikankuvaus ilmoitus)
+        lisatietoja (if (:lisatieto ilmoitus)
+                      (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
+                      "")
+        selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
+    (format +ilmoitusviesti+
+            otsikko
+            ilmoitus-id
+            viestinumero
+            (fmt/totuus (:yhteydenottopyynto ilmoitus))
+            paikankuvaus
+            selitteet
+            lisatietoja
+            viestinumero
+            viestinumero
+            viestinumero
+            viestinumero
+            viestinumero)))
+
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try
     (if-let [puhelinnumero (or (:matkapuhelin paivystaja) (:tyopuhelin paivystaja))]
       (do
-        (log/debug (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s" (:ilmoitus-id ilmoitus) puhelinnumero))
-        (let [paivystaja-id (:id paivystaja)
-              ilmoitus-id (:ilmoitus-id ilmoitus)
-              otsikko (:otsikko ilmoitus)
-              paikankuvaus (:paikankuvaus ilmoitus)
-              lisatietoja (if (:lisatieto ilmoitus)
-                            (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
-                            "")
-              selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
-              viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ilmoitus-id puhelinnumero)
-              viesti (format +ilmoitusviesti+
-                             otsikko
-                             ilmoitus-id
-                             viestinumero
-                             (fmt/totuus (:yhteydenottopyynto ilmoitus))
-                             paikankuvaus
-                             selitteet
-                             lisatietoja
-                             viestinumero
-                             viestinumero
-                             viestinumero
-                             viestinumero
-                             viestinumero)]
+        (log/debug (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s"
+                           (:ilmoitus-id ilmoitus) puhelinnumero))
+        (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
+                            db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
+              viesti (ilmoitus-tekstiviesti ilmoitus viestinumero)]
           (sms/laheta sms puhelinnumero viesti)))
       (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
     (catch Exception e
