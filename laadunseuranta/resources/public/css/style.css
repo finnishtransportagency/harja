@@ -867,11 +867,11 @@ button:disabled {
     background-color: white;
 }
 
-.painikelaatikko .painikerivi {
+.painikelaatikko > .painikerivi {
     height: 100px;
 }
 
-.painikerivi .pikavalintapainike {
+.painikerivi > .pikavalintapainike {
     float: left;
     width: 22.5%;
     height: 100%;
@@ -893,7 +893,7 @@ button:disabled {
     color: black;
 }
 
-.painikelaatikko .peruuta {
+.painikelaatikko > .peruuta {
     background-color: gray;
     color: white;
     width: 50%;
