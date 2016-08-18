@@ -38,6 +38,7 @@ WHERE t.urakka = :urakka
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
+  ORDER BY t.aika DESC
 LIMIT :maxrivimaara;
 
 -- name: hae-urakan-tarkastukset-kartalle
