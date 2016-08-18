@@ -99,7 +99,8 @@
 (defn hae-ilmoitukset
   [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                    kuittaustyypit aikavali hakuehto selite vain-myohassa?
-                   aloituskuittauksen-ajankohta tr-numero]}]
+                   aloituskuittauksen-ajankohta tr-numero
+                   ilmoittaja-nimi ilmoittaja-puhelin]}]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -127,24 +128,29 @@
                             (and (:suljetut tilat) (:avoimet tilat)) ", ja näistä avoimet JA suljetut."
                             (:suljetut tilat) ", ainoastaan suljetut."))
         _ (log/debug debug-viesti)
-        ilmoitukset (when-not (empty? urakat)
-                      (konv/sarakkeet-vektoriin
-                       (into []
-                             (ilmoitus-xf kuittaustyypit)
-                             (q/hae-ilmoitukset db
-                                                {:urakat urakat
-                                                 :alku_annettu  (hakuehto-annettu? aikavali-alku)
-                                                 :loppu_annettu (hakuehto-annettu? aikavali-loppu)
-                                                 :alku aikavali-alku
-                                                 :loppu aikavali-loppu
-                                                 :tyypit_annettu (hakuehto-annettu? tyypit)
-                                                 :tyypit tyypit
-                                                 :teksti_annettu (hakuehto-annettu? hakuehto)
-                                                 :teksti (str "%" hakuehto "%")
-                                                 :selite_annettu selite-annettu?
-                                                 :selite selite
-                                                 :tr-numero tr-numero}))
-                        {:kuittaus :kuittaukset}))
+        ilmoitukset
+        (when-not (empty? urakat)
+          (konv/sarakkeet-vektoriin
+           (into []
+                 (ilmoitus-xf kuittaustyypit)
+                 (q/hae-ilmoitukset db
+                                    {:urakat urakat
+                                     :alku_annettu  (hakuehto-annettu? aikavali-alku)
+                                     :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                     :alku aikavali-alku
+                                     :loppu aikavali-loppu
+                                     :tyypit_annettu (hakuehto-annettu? tyypit)
+                                     :tyypit tyypit
+                                     :teksti_annettu (hakuehto-annettu? hakuehto)
+                                     :teksti (str "%" hakuehto "%")
+                                     :selite_annettu selite-annettu?
+                                     :selite selite
+                                     :tr-numero tr-numero
+                                     :ilmoittaja-nimi (when ilmoittaja-nimi
+                                                        (str "%" ilmoittaja-nimi "%"))
+                                     :ilmoittaja-puhelin (when ilmoittaja-puhelin
+                                                           (str "%" ilmoittaja-puhelin "%"))}))
+           {:kuittaus :kuittaukset}))
         ilmoitukset (mapv
                       #(-> %
                            (assoc :uusinkuittaus
