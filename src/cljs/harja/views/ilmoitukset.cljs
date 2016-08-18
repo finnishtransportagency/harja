@@ -153,7 +153,9 @@
         [:div
          (pollauksen-merkki)
          [grid
-          {:tyhja             (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
+          {:tyhja             (if @tiedot/haetut-ilmoitukset
+                                "Ei löytyneitä tietoja"
+                                [ajax-loader "Haetaan ilmoutuksia"])
            :rivi-klikattu     #(tiedot/avaa-ilmoitus! %)
            :piilota-toiminnot true}
 
