@@ -20,6 +20,7 @@
     (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
     [:span
      [yleiset/tietoja {}
+      "Urakka: " (:urakkanimi ilmoitus)
       "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
       "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
       "Otsikko: " (:otsikko ilmoitus)
