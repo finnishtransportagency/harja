@@ -2,6 +2,7 @@
 SELECT
   i.id,
   i.urakka,
+  u.nimi as urakkanimi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi,
   i.ilmoitusid,
