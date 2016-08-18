@@ -19,6 +19,13 @@
    :muutos "Muutos"
    :vastaus "Vastaus"})
 
+(def kuittaustyypin-lyhenne
+  {:vastaanotto "VOT"
+   :aloitus "ALO"
+   :lopetus "LOP"
+   :muutos "MUU"
+   :vastaus "VAS"})
+
 (defn ilmoitustyypin-nimi
   [tyyppi]
   (case tyyppi
