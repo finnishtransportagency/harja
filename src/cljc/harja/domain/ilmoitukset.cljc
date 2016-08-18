@@ -196,11 +196,13 @@
   "Ottaa ilmoituksen, jolla on tieto siitä, millaisia kuittauksia se sisältää.
   Asettaa ilmoituksen tilan viimeisimmän kuittauksen perusteella."
   [ilmoitus]
-  (reduce (fn [ilmoitus {tyyppi :kuittaustyyppi}]
-            (case tyyppi
-              :lopetettu (assoc ilmoitus :tila :lopetettu)
-              :aloitettu (assoc ilmoitus :tila :aloitettu)
-              :vastaanotto (assoc ilmoitus :tila :vastaanotettu)
-              ilmoitus))
-          (assoc ilmoitus :tila :kuittaamaton)
-          (:kuittaukset ilmoitus)))
+  (let [kuittaukset (sort-by :kuitattu (:kuittaukset ilmoitus))]
+    (reduce (fn [ilmoitus {tyyppi :kuittaustyyppi :as k}]
+              (case tyyppi
+                :lopetus (assoc ilmoitus :tila :lopetus)
+                :aloitus (assoc ilmoitus :tila :aloitus)
+                :vastaanotto (assoc ilmoitus :tila :vastaanotto)
+                ilmoitus))
+            (assoc ilmoitus :tila :kuittaamaton
+                   :kuittaukset kuittaukset)
+            kuittaukset)))

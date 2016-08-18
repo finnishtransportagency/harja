@@ -14,11 +14,10 @@
             [harja.domain.oikeudet :as oikeudet])
 (:import (java.util Date)))
 
-(defn ilmoitus-xf [kuittaustyypit]
+(def ilmoitus-xf
   (comp
    (harja.geo/muunna-pg-tulokset :sijainti)
    (map konv/alaviiva->rakenne)
-   (filter #(kuittaustyypit (:tila %))) ;; FIXME: miksi tämä ei ole filteröity SQL:ssä?
    (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
    (map #(konv/array->vec % :selitteet))
    (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
@@ -129,29 +128,30 @@
         _ (log/debug debug-viesti)
         ilmoitukset
         (when-not (empty? urakat)
-          (mapv
-           ilmoitukset-domain/lisaa-ilmoituksen-tila
-           (konv/sarakkeet-vektoriin
-            (into []
-                  (ilmoitus-xf kuittaustyypit)
-                  (q/hae-ilmoitukset db
-                                     {:urakat urakat
-                                      :alku_annettu  (hakuehto-annettu? aikavali-alku)
-                                      :loppu_annettu (hakuehto-annettu? aikavali-loppu)
-                                      :alku aikavali-alku
-                                      :loppu aikavali-loppu
-                                      :tyypit_annettu (hakuehto-annettu? tyypit)
-                                      :tyypit tyypit
-                                      :teksti_annettu (hakuehto-annettu? hakuehto)
-                                      :teksti (str "%" hakuehto "%")
-                                      :selite_annettu selite-annettu?
-                                      :selite selite
-                                      :tr-numero tr-numero
-                                      :ilmoittaja-nimi (when ilmoittaja-nimi
-                                                         (str "%" ilmoittaja-nimi "%"))
-                                      :ilmoittaja-puhelin (when ilmoittaja-puhelin
-                                                            (str "%" ilmoittaja-puhelin "%"))}))
-            {:kuittaus :kuittaukset})))
+          (into []
+                (comp (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
+                      (filter #(kuittaustyypit (:tila %))))
+                (konv/sarakkeet-vektoriin
+                 (into []
+                       ilmoitus-xf
+                       (q/hae-ilmoitukset db
+                                          {:urakat urakat
+                                           :alku_annettu  (hakuehto-annettu? aikavali-alku)
+                                           :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                           :alku aikavali-alku
+                                           :loppu aikavali-loppu
+                                           :tyypit_annettu (hakuehto-annettu? tyypit)
+                                           :tyypit tyypit
+                                           :teksti_annettu (hakuehto-annettu? hakuehto)
+                                           :teksti (str "%" hakuehto "%")
+                                           :selite_annettu selite-annettu?
+                                           :selite selite
+                                           :tr-numero tr-numero
+                                           :ilmoittaja-nimi (when ilmoittaja-nimi
+                                                              (str "%" ilmoittaja-nimi "%"))
+                                           :ilmoittaja-puhelin (when ilmoittaja-puhelin
+                                                                 (str "%" ilmoittaja-puhelin "%"))}))
+                 {:kuittaus :kuittaukset})))
         ilmoitukset (mapv
                       #(-> %
                            (assoc :uusinkuittaus
