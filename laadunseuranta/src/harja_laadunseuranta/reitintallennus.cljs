@@ -8,8 +8,7 @@
             [cljs.core.async :as async :refer [<! chan put! close!]]
             [cljs.core.match]
             [cljs-time.coerce :as tc]
-            [cljs-time.local :as lt]
-            [harja-laadunseuranta.virhekasittely :as virhekasittely])
+            [cljs-time.local :as lt])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [run!]]
                    [harja-laadunseuranta.macros :refer [with-delay-loop after-delay]]
@@ -23,7 +22,7 @@
                                                                   with-count]]))
 
 (def db-spec {:version 2
-              :on-error #(virhekasittely/ilmoita-virhe (str "Tietokantavirhe " (pr-str %)))
+              :on-error #(js/console.log (str "Tietokantavirhe " (pr-str %)))
               :objectstores [{:name asetukset/+tapahtumastore+
                               :key-path :id
                               :auto-increment true}

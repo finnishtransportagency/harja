@@ -88,4 +88,16 @@
                                    18 :yleishavainto
                                    42 :rumpu-rikki
                                    37 :pl-alue-puhdistettava
-                                   8 :polanteessa-jyrkat-urat}))))
+                                   8 :polanteessa-jyrkat-urat
+                                   45 :saumavirhe
+                                   46 :lajittuma
+                                   47 :epatasaisuus
+                                   48 :halkeamat
+                                   49 :vesilammikot
+                                   50 :epatasaisetreunat
+                                   51 :jyranjalkia
+                                   52 :sideainelaikkia
+                                   53 :vaarakorkeusasema
+                                   54 :pintaharva
+                                   55 :pintakuivatuspuute
+                                   56 :kaivojenkorjeusasema}))))

@@ -209,7 +209,7 @@ button {
 }
 
 .sidepanel {
-    position: relative;
+    position: absolute;
     padding-top: 10px;
     box-sizing: border-box;
     height: 390px;
@@ -854,4 +854,53 @@ button:disabled {
     background-color: transparent;
     color: rgb(9,79,192);
     border: 1px solid rgb(9,79,192);
+}
+
+.painikelaatikko {
+    position: fixed;
+    top: 15%;
+    left: 12%;
+    width: 75%;
+    height: 470px;
+    z-index: 10000;
+    overflow: hidden;
+    background-color: white;
+}
+
+.painikelaatikko > .painikerivi {
+    height: 100px;
+}
+
+.painikerivi > .pikavalintapainike {
+    float: left;
+    width: 22.5%;
+    height: 100%;
+    background-color: rgb(9,79,192);
+    border: 1px solid black;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-left: 2%;
+    mergin-right: 3%;
+    color: white;
+    padding-top: 20px;
+    font-size: 20px;
+    text-align: center;
+    line-height: 20px;
+}
+
+.painikelaatikko .painike-aktiivinen {
+    background-color: yellow;
+    color: black;
+}
+
+.painikelaatikko > .peruuta {
+    background-color: gray;
+    color: white;
+    width: 50%;
+    height: 80px;
+    float: left;
+    text-align: center;
+    margin-top: 20px;
+    margin-left: 25%;
+    line-height: 80px;
 }

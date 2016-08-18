@@ -1,8 +1,7 @@
 (ns harja-laadunseuranta.kamera
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.kuvat :as kuvat]
-            [harja-laadunseuranta.asetukset :as asetukset]
-            [harja-laadunseuranta.virhekasittely :as virhekasittely])
+            [harja-laadunseuranta.asetukset :as asetukset])
   (:require-macros
    [harja-laadunseuranta.macros :as m]
    [cljs.core.async.macros :refer [go go-loop]]
