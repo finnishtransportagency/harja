@@ -31,6 +31,18 @@
             [harja.ui.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def selitehaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [haku second
+                selitteet +ilmoitusten-selitteet+
+                itemit (if (< (count teksti) 1)
+                         selitteet
+                         (filter #(not= (.indexOf (.toLowerCase (haku %))
+                                                  (.toLowerCase teksti)) -1)
+                                 selitteet))]
+            (vec (sort itemit)))))))
+
 (defn pollauksen-merkki []
   [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
 
@@ -91,15 +103,7 @@
            :tyyppi                :haku
            :hae-kun-yli-n-merkkia 0
            :nayta                 second :fmt second
-           :lahde                 (reify protokollat/Haku
-                                    (hae [_ teksti]
-                                      (go (let [haku second
-                                                selitteet +ilmoitusten-selitteet+
-                                                itemit (if (< (count teksti) 1)
-                                                         selitteet
-                                                         (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
-                                                                 selitteet))]
-                                            (vec (sort itemit))))))}
+           :lahde selitehaku}
           {:nimi :tr-numero
            :palstoja 1
            :otsikko "Tienumero"
