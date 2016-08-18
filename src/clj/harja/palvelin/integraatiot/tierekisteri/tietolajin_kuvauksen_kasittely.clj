@@ -6,7 +6,8 @@
             [harja.tyokalut.merkkijono :as merkkijono]
             [clojure.string :as str]
             [clojure.set :as set]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.format :as df]))
 
 (defn- jarjesta-ja-suodata-tietolajin-kuvaus [tietolajin-kuvaus]
   (sort-by :jarjestysnumero (filter :jarjestysnumero (:ominaisuudet tietolajin-kuvaus))))
@@ -17,21 +18,25 @@
 
 (defn- validoi-tyyppi
   "Validoi, että annettu arvo on annettua tyyppiä. Jos ei ole, heittää poikkeuksen. Jos on, palauttaa nil."
-  [arvo tietolaji kenttatunniste tietotyyppi koodisto]
+  [arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen]
   (case tietotyyppi
     :merkkijono nil ;; Kaikki kentät ovat pohjimmiltaan merkkijonoja
     :numeerinen (when-not (merkkijono/kokonaisluku? arvo)
                   (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole kokonaisluku.")))
-    :paivamaara (try
-                  (pvm/iso-8601->pvm arvo)
-                  (catch Exception e
-                    (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601."))))
-    :koodisto (when (empty? (filter #(= (str (:koodi %)) arvo) koodisto))
-                (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei sisälly koodistoon.")))))
+    :paivamaara (when (or pakollinen arvo)
+                  (try
+                    (df/parse (df/formatter "yyyyMMdd") arvo)
+                    (catch Exception e
+                      (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo ei ole muotoa iso-8601.")))))
+    :koodisto (when (and (or
+                           (and pakollinen (not (nil? koodisto)))
+                           (not (empty? arvo)))
+                         (empty? (filter #(= (str (:koodi %)) arvo) koodisto)))
+                (heita-validointipoikkeus tietolaji (str "Kentän '" kenttatunniste "' arvo '" arvo "' ei sisälly koodistoon.")))))
 
 (defn- validoi-pituus [arvo tietolaji kenttatunniste pituus]
   (when (< pituus (count arvo))
-    (heita-validointipoikkeus tietolaji (str "Liian pitkä arvo kentässä '" kenttatunniste "', maksimipituus: " pituus "."))))
+    (heita-validointipoikkeus tietolaji (str "Liian pitkä arvo '" arvo "' kentässä '" kenttatunniste "', maksimipituus: " pituus "."))))
 
 (defn- validoi-pakollisuus [arvo tietolaji kenttatunniste pakollinen]
   (when (and pakollinen (not arvo))
@@ -44,8 +49,9 @@
   (assert tietolaji "Arvoa ei voi validoida ilman tietolajia")
   (assert kentan-kuvaus "Arvoa ei voida validoida ilman kuvausta")
   (validoi-pakollisuus arvo tietolaji kenttatunniste pakollinen)
-  (validoi-pituus arvo tietolaji kenttatunniste pituus)
-  (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto))
+  (when arvo
+    (validoi-pituus arvo tietolaji kenttatunniste pituus)
+    (validoi-tyyppi arvo tietolaji kenttatunniste tietotyyppi koodisto pakollinen)))
 
 (defn validoi-tietolajin-arvot
   "Tarkistaa, että tietolajin arvot on annettu oikein tietolajin kuvauksen mukaisesti.
@@ -58,6 +64,7 @@
         kuvatut-kenttatunnisteet (into #{} (map :kenttatunniste kenttien-kuvaukset))
         annetut-kenttatunnisteet (into #{} (keys arvot))
         ylimaaraiset-kentat (set/difference annetut-kenttatunnisteet kuvatut-kenttatunnisteet)]
+
     ;; Tarkista, ettei ole ylimääräisiä kenttiä
     (when-not (empty? ylimaaraiset-kentat)
       (heita-validointipoikkeus

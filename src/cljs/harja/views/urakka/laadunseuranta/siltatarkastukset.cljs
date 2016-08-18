@@ -32,6 +32,7 @@
 
 (defonce muokattava-tarkastus (atom nil))
 (def +valitse-tulos+ "- Valitse tulos -")
+(def +ei-kirjattu+ "Ei kirjattu")
 
 (def siltatarkastuksen-valiotsikot
   {1 (grid/otsikko "Alusrakenne")
@@ -186,7 +187,7 @@
     "C" "C - urakan kunnostettava"
     "D" "D - korjaus ohjelmoitava"
     "-" "Ei päde tähän siltaan"
-    +valitse-tulos+))
+    +ei-kirjattu+))
 
 (defn tarkastustulos-ja-liitteet
   "Komponentti vanhan tarkastuksen tuloksen ja liitteiden näyttämiselle. Liite on ikoni, jota klikkaamalla
@@ -391,9 +392,9 @@
             riveja (count (vals tarkastusrivit))
             riveja-taytetty (count (filter #(not (nil? (:tulos %)))
                                            (vals tarkastusrivit)))
-            taulukon-riveilla-tulos (= riveja riveja-taytetty)
+            ainakin-yksi-tulos? (> riveja-taytetty 0)
             voi-tallentaa? (and (lomake/voi-tallentaa? tarkastus)
-                                taulukon-riveilla-tulos)]
+                                ainakin-yksi-tulos?)]
         [:div.uusi-siltatarkastus
          [napit/takaisin "Palaa tallentamatta" #(reset! muokattava-tarkastus nil)]
 
@@ -478,10 +479,14 @@
                             (reset! tallennus-kaynnissa false)
                             (reset! muokattava-tarkastus nil))))))}
           (ikonit/tallenna) " Tallenna tarkastus"]
-         (when (not voi-tallentaa?)
+         (let [vinkki (if (= 24 riveja-taytetty)
+                        (str "Kaikki " riveja-taytetty "/" riveja " kohdetta arvioitu.")
+                        (if (and ainakin-yksi-tulos? (< riveja-taytetty 24))
+                          (str "Vasta " riveja-taytetty "/" riveja " kohdetta arvioitu. Voit tallentaa lomakkeen myös keskeneräisenä.")
+                          (when (= 0 riveja-taytetty)
+                            "Arvioi vähintään yksi kohde ennen tallentamista.")))]
            [:span.napin-vinkki
-            (str riveja-taytetty " / " riveja) " kohdetta täytetty. "
-            "Täytä kaikki tiedot ennen tallennusta"])]))))
+            vinkki])]))))
 
 (defn siltatarkastukset []
 

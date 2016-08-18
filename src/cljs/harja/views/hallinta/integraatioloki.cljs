@@ -61,6 +61,11 @@
         (ikonit/eye-open)]]
       teksti)))
 
+(defn lataa-tiedostona [sisalto]
+  (let [encode (aget js/window "encodeURIComponent")
+        url (str "data:Application/octet-stream,"(encode sisalto))]
+    (set! (.-location js/document) url)))
+
 (defn nayta-sisalto [sisalto]
   (let [max-pituus 30]
     (if (> (count sisalto) max-pituus)
@@ -69,7 +74,16 @@
         [:button.nappi-toissijainen.grid-lisaa
          {:on-click
           (fn [e]
-            (nayta-sisalto-modaalissa-dialogissa "Viestin sisältö" [:pre sisalto]))}
+            (nayta-sisalto-modaalissa-dialogissa
+              "Viestin sisältö"
+              [:span.viesti
+               [:pre sisalto]
+
+               [:button.nappi-toissijainen {:type "button"
+                                            :on-click #(do
+                                                        (.preventDefault %)
+                                                        (lataa-tiedostona sisalto))}
+                (ikonit/download-alt) " Lataa"]]))}
          (ikonit/eye-open)]]]
       sisalto)))
 
@@ -83,18 +97,18 @@
          [:div.container
           [grid
            {:otsikko "Viestit"}
-           [{:otsikko     "Suunta" :nimi :suunta :leveys "10%" :tyyppi :komponentti
+           [{:otsikko "Suunta" :nimi :suunta :leveys "10%" :tyyppi :komponentti
              :komponentti #(if (= "sisään" (:suunta %))
                             [:span.integraatioloki-onnistunut (ikonit/circle-arrow-right) " Sisään"]
                             [:span.integraatioloki-varoitus (ikonit/circle-arrow-left) " Ulos"])}
             {:otsikko "Osoite" :nimi :osoite :leveys "30%"}
-            {:otsikko     "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
+            {:otsikko "Parametrit" :nimi :parametrit :leveys "20%" :tyyppi :komponentti
              :komponentti #(fmt/leikkaa-merkkijono 50 (kartta-merkkijonoksi (:parametrit %)))}
-            {:otsikko     "Otsikko" :nimi :otsikko :leveys "30%" :tyyppi :komponentti
+            {:otsikko "Otsikko" :nimi :otsikko :leveys "30%" :tyyppi :komponentti
              :komponentti #(nayta-otsikko (:otsikko %))}
             {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys "20%"}
             {:otsikko "Sisältötyyppi" :nimi :sisaltotyyppi :leveys "20%"}
-            {:otsikko     "Sisältö" :nimi :sisalto :leveys "30%" :tyyppi :komponentti
+            {:otsikko "Sisältö" :nimi :sisalto :leveys "30%" :tyyppi :komponentti
              :komponentti #(nayta-sisalto (:sisalto %))}]
            @viestit]]]))))
 
@@ -119,14 +133,14 @@
                   (js/Math.round (* .75 lkm-max))
                   lkm-max]
            nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 10)]
-       [vis/bars {:width         w
-                  :height        (min 200 h)
-                  :label-fn      #(if nayta-labelit?
-                                   (pvm/paiva-kuukausi (:pvm %))
-                                   "")
-                  :value-fn      :maara
+       [vis/bars {:width w
+                  :height (min 200 h)
+                  :label-fn #(if nayta-labelit?
+                              (pvm/paiva-kuukausi (:pvm %))
+                              "")
+                  :value-fn :maara
                   :format-amount str
-                  :ticks         tikit}
+                  :ticks tikit}
         pvm-kohtaiset-maarat-summattu])]))
 
 (defn eniten-kutsutut-integraatiot [tiedot]
@@ -141,9 +155,9 @@
                              ryhmitellyt)
         eniten-kutsutut (take 5 (reverse (sort-by :maara maarat-summattu)))]
     [grid
-     {:otsikko      "Eniten kutsutut integraatiot"
+     {:otsikko "Eniten kutsutut integraatiot"
       :voi-muokata? false
-      :tunniste     :integraatio}
+      :tunniste :integraatio}
 
      [{:otsikko "Järjestelmä" :nimi :jarjestelma :leveys "15%" :tyyppi :string}
       {:otsikko "Nimi" :nimi :nimi :leveys "40%" :tyyppi :string}
@@ -157,25 +171,25 @@
    [:div.container
     [:div.label-ja-alasveto
      [:span.alasvedon-otsikko "Järjestelmä"]
-     [livi-pudotusvalikko {:valinta    @tiedot/valittu-jarjestelma
-                           :format-fn  #(if % (:jarjestelma %)
-                                              "Kaikki järjestelmät")
+     [livi-pudotusvalikko {:valinta @tiedot/valittu-jarjestelma
+                           :format-fn #(if % (:jarjestelma %)
+                                             "Kaikki järjestelmät")
                            :valitse-fn #(do
                                          (reset! tiedot/valittu-jarjestelma %)
                                          (when-not (and @tiedot/valittu-jarjestelma
                                                         (contains? (:integraatiot @tiedot/valittu-jarjestelma)
                                                                    @tiedot/valittu-integraatio))
                                            (reset! tiedot/valittu-integraatio nil)))
-                           :class      "suunnittelu-alasveto"}
+                           :class "suunnittelu-alasveto"}
       (vec (concat [nil] @tiedot/jarjestelmien-integraatiot))]]
 
     (when @tiedot/valittu-jarjestelma
       [:div.label-ja-alasveto
        [:span.alasvedon-otsikko "Integraatio"]
-       [livi-pudotusvalikko {:valinta    @tiedot/valittu-integraatio
-                             :format-fn  #(if % (str %) "Kaikki integraatiot")
+       [livi-pudotusvalikko {:valinta @tiedot/valittu-integraatio
+                             :format-fn #(if % (str %) "Kaikki integraatiot")
                              :valitse-fn #(reset! tiedot/valittu-integraatio %)
-                             :class      "suunnittelu-alasveto"}
+                             :class "suunnittelu-alasveto"}
         (vec (concat [nil] (:integraatiot @tiedot/valittu-jarjestelma)))]])
 
 
@@ -193,8 +207,8 @@
       [:div "Ei pyyntöjä annetuilla parametreillä"])
 
     [grid
-     {:otsikko      (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
-      :tyhja        (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
+     {:otsikko (if (nil? @tiedot/valittu-aikavali) "Uusimmat tapahtumat (päivitetään automaattisesti)" "Tapahtumat")
+      :tyhja (if @tiedot/haetut-tapahtumat "Tapahtumia ei löytynyt" [ajax-loader "Haetaan tapahtumia"])
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
@@ -208,15 +222,15 @@
                 {:otsikko "Järjestelmä" :nimi :jarjestelma :hae (comp :jarjestelma :integraatio) :leveys 10})
               (when-not @tiedot/valittu-integraatio
                 {:otsikko "Integraatio" :nimi :integraatio :hae (comp :nimi :integraatio) :leveys 15})
-              {:otsikko     "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
+              {:otsikko "Tila" :nimi :onnistunut :leveys 10 :tyyppi :komponentti
                :komponentti #(if (nil? (:paattynyt %))
                               [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
                               (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
                                                   [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
               {:otsikko "Alkanut" :nimi :alkanut :leveys 15
-               :hae     #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
+               :hae #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
               {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
-               :hae     #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
+               :hae #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
               {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
               {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
 

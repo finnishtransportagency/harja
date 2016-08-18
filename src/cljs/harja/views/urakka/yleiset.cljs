@@ -83,7 +83,7 @@
 (defn tallenna-sopimustyyppi [ur uusi-sopimustyyppi]
   (go (let [res (<! (sopimus/tallenna-sopimustyyppi (:id ur) uusi-sopimustyyppi))]
         (if-not (k/virhe? res)
-          (nav/paivita-urakka! (:id ur) assoc :sopimustyyppi res)
+          (nav/paivita-urakan-tiedot! (:id ur) assoc :sopimustyyppi res)
           true))))
 
 (defn vahvista-urakkatyypin-vaihtaminen [ur uusi-urakkatyyppi]
@@ -93,7 +93,7 @@
                                                     (:id ur)
                                                     (name uusi-urakkatyyppi)))]
                                       (if-not (k/virhe? res)
-                                        (nav/paivita-urakka! (:id ur) assoc :tyyppi res)
+                                        (nav/paivita-urakan-tiedot! (:id ur) assoc :tyyppi res)
                                         true))))]
       (modal/nayta!
         {:otsikko "Vaihdetaanko urakkatyyppi?"
@@ -148,9 +148,9 @@
 (defn paivystajalista
   [ur paivystajat tallenna!]
   [grid/grid
-   {:otsikko      "Päivystystiedot"
-    :tyhja        "Ei päivystystietoja."
-    :tallenna     tallenna!
+   {:otsikko "Päivystystiedot"
+    :tyhja "Ei päivystystietoja."
+    :tallenna tallenna!
     :rivin-luokka #(when (and (< (:alku %) (pvm/nyt))
                               (< (pvm/nyt) (:loppu %)))
                     " bold")}
@@ -226,7 +226,7 @@
             [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu"}
              (r/wrap (get-in ur [:takuu :loppupvm])
                      #(do (reset! tallennus-kaynnissa (:id ur))
-                          (nav/paivita-urakka! (:id ur) assoc-in [:takuu :loppupvm] %)
+                          (nav/paivita-urakan-tiedot! (:id ur) assoc-in [:takuu :loppupvm] %)
                           (go (reset! tallennus-kaynnissa
                                       (if (k/virhe? (<! (urakka/aseta-takuu-loppupvm (:id ur) %)))
                                         :virhe

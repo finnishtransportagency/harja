@@ -17,16 +17,15 @@
   (let [xml (slurp "resources/xsd/tierekisteri/esimerkit/hae-tietolaji-response.xml")
         vastaus (vastaus/lue xml)
         tietolaji (:tietolaji vastaus)
-        ominaisuus (first (:ominaisuudet (:tietolaji vastaus)))
-        koodisto (:koodisto (second  (:ominaisuudet (:tietolaji vastaus))))
+        ominaisuus (second (:ominaisuudet (:tietolaji vastaus)))
+        koodisto (:koodisto (nth  (:ominaisuudet (:tietolaji vastaus)) 2))
         koodi (first koodisto)]
 
-    (println vastaus)
     (is (= "tl506" (:tunniste tietolaji)))
-    (is (= 14 (count (:ominaisuudet (:tietolaji vastaus)))))
+    (is (= 15 (count (:ominaisuudet (:tietolaji vastaus)))))
 
     (is (= "LMNUMERO" (:kenttatunniste ominaisuus)))
-    (is (= 1 (:jarjestysnumero ominaisuus)))
+    (is (= 2 (:jarjestysnumero ominaisuus)))
     (is (= 12 (:pituus ominaisuus)))
     (is (:pakollinen ominaisuus))
     (is (= "Liikennemerkin tieliikenneasetuksen mukainen numero on pakollinen tieto." (:selite ominaisuus)))

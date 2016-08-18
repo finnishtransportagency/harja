@@ -13,7 +13,6 @@
             [harja.palvelin.integraatiot.tierekisteri.tietolajit :as tietolajit]
             [clojure.data.json :as json]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.api.tyokalut.xml-esimerkit :as xml-esimerkit]
             [clj-time.core :as t])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -35,18 +34,19 @@
       (let [vastausdata (tierekisteri/hae-tietolajit (:tierekisteri jarjestelma) "tl506" nil)]
         (is (true? (:onnistunut vastausdata)))
         (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))
-        (is (= 14 (count (get-in vastausdata [:tietolaji :ominaisuudet]))))
+        (is (= 15 (count (get-in vastausdata [:tietolaji :ominaisuudet]))))
         (let [ominaisuus (first (get-in vastausdata [:tietolaji :ominaisuudet]))
-              odotettu-ominaisuus {:kenttatunniste "LMNUMERO",
-                                   :selite "Liikennemerkin tieliikenneasetuksen mukainen numero on pakollinen tieto.",
-                                   :jarjestysnumero 1,
-                                   :koodisto nil,
-                                   :desimaalit nil,
-                                   :voimassaolo {:alkupvm #inst "2015-05-25T21:00:00.000-00:00", :loppupvm nil},
-                                   :alaraja nil,
-                                   :pakollinen true,
-                                   :tietotyyppi :merkkijono,
-                                   :pituus 12,
+              odotettu-ominaisuus {:alaraja nil
+                                   :desimaalit nil
+                                   :jarjestysnumero 1
+                                   :kenttatunniste "tunniste"
+                                   :koodisto nil
+                                   :pakollinen false
+                                   :pituus 20
+                                   :selite "Tunniste"
+                                   :tietotyyppi :merkkijono
+                                   :voimassaolo {:alkupvm #inst "2008-09-01T21:00:00.000-00:00"
+                                                 :loppupvm nil}
                                    :ylaraja nil}]
           (is (= odotettu-ominaisuus ominaisuus)))))))
 
@@ -106,7 +106,7 @@
                                                 :losa 1
                                                 :numero 1
                                                 :puoli 1}}
-                               :tietolaji {:arvot ["LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
+                               :tietolaji {:arvot ["1234567890          LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
                                            :tietolajitunniste "tl506"}
                                :tunniste "1245rgfsd"
                                :urakka 100}]
@@ -139,7 +139,7 @@
                                               :losa 1
                                               :numero 1
                                               :puoli 1}}
-                             :tietolaji {:arvot ["LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
+                             :tietolaji {:arvot ["1234567890          LMNUMERO    1           12345678904112345678901211   LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMTEKSTI  LMOMIST   LMOMIST   LMOMIST   LMOMIST   LMOMIST   OPASTETUNNOPASTETUNN1OPASTETUNNOPASTETUNNURAKKA"]
                                          :tietolajitunniste "tl506"}
                              :tunniste "1245rgfsd"
                              :urakka 100}
