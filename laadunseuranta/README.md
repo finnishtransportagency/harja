@@ -11,6 +11,7 @@ Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja/laadunseuranta:
     lein figwheel
 
 Palvelimen käynnistys kansiosta /harja/laadunseuranta:
+
     lein run
 
 
