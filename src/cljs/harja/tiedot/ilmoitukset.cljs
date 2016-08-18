@@ -21,19 +21,20 @@
 
 (defonce kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
-(defonce valinnat (reaction-writable
-                   {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-                             :urakka          (:id @nav/valittu-urakka)
-                             :urakoitsija     (:id @nav/valittu-urakoitsija)
-                             :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
-                             :hoitokausi      @u/valittu-hoitokausi
-                             :aikavali        (or @u/valittu-hoitokausi [nil nil])
-                             :tyypit          +ilmoitustyypit+
-                             :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
-                             :hakuehto        ""
-                             :selite          [nil ""]
-                             :vain-myohassa?  false
-                             :aloituskuittauksen-ajankohta :kaikki}))
+(defonce valinnat
+  (reaction-writable
+   {:hallintayksikko (:id @nav/valittu-hallintayksikko)
+    :urakka          (:id @nav/valittu-urakka)
+    :urakoitsija     (:id @nav/valittu-urakoitsija)
+    :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
+    :hoitokausi      @u/valittu-hoitokausi
+    :aikavali        (or @u/valittu-hoitokausi [nil nil])
+    :tyypit          +ilmoitustyypit+
+    :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
+    :hakuehto        ""
+    :selite          [nil ""]
+    :vain-myohassa?  false
+    :aloituskuittauksen-ajankohta :kaikki}))
 
 (defonce ilmoitushaku (atom 0))
 
@@ -57,25 +58,25 @@
                     (conj nykyiset-kuittaukset kuittaus)))))
 
 (defonce haetut-ilmoitukset
-         (reaction<! [valinnat @valinnat
-                      haku @ilmoitushaku]
-                     {:odota 100}
-           (go
-             (if (zero? haku)
-               []
-               (let [tulos (<! (k/post! :hae-ilmoitukset
-                                        (-> valinnat
-                                            ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                                            (update :tyypit
-                                                    #(if (empty? %) +ilmoitustyypit+ %))
-                                            (update :kuittaustyypit
-                                                    #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))]
+  (reaction<! [valinnat @valinnat
+               haku @ilmoitushaku]
+              {:odota 100}
+              (go
+                (if (zero? haku)
+                  []
+                  (let [tulos (<! (k/post! :hae-ilmoitukset
+                                           (-> valinnat
+                                               ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                                               (update :tyypit
+                                                       #(if (empty? %) +ilmoitustyypit+ %))
+                                               (update :kuittaustyypit
+                                                       #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))]
 
-                 (when-not (k/virhe? tulos)
-                   (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
-                     (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
-                       (reset! valittu-ilmoitus nil)))
-                   (jarjesta-ilmoitukset tulos)))))))
+                    (when-not (k/virhe? tulos)
+                      (when @valittu-ilmoitus                  ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
+                        (when-not (some #{(:ilmoitusid @valittu-ilmoitus)} (map :ilmoitusid tulos))
+                          (reset! valittu-ilmoitus nil)))
+                      (jarjesta-ilmoitukset tulos)))))))
 
 (defonce karttataso-ilmoitukset (atom false))
 

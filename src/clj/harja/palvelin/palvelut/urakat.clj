@@ -61,6 +61,16 @@
      {:urakka :urakat}
      (comp :id :hallintayksikko))))
 
+(defn kayttajan-urakka-idt-aikavalilta
+  ([db user oikeus]
+   (kayttajan-urakka-idt-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
+  ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
+   (into #{}
+         (comp (mapcat :urakat)
+               (map :id))
+         (kayttajan-urakat-aikavalilta db user oikeus urakka-id urakoitsija urakkatyyppi
+                                       hallintayksikot alku loppu))))
+
 (defn urakoiden-alueet
   [db user oikeus urakka-idt toleranssi]
   (when-not (empty? urakka-idt)

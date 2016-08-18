@@ -1,6 +1,6 @@
 (ns harja.views.ilmoitukset
   "Harjan ilmoituksien pääsivu."
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [clojure.string :refer [capitalize]]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<!]]
             [harja.tiedot.ilmoitukset :as tiedot]
@@ -27,8 +27,21 @@
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.views.ilmoituksen-tiedot :as it]
             [harja.ui.ikonit :as ikonit]
-            [harja.domain.tierekisteri :as tr-domain])
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(def selitehaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [haku second
+                selitteet +ilmoitusten-selitteet+
+                itemit (if (< (count teksti) 1)
+                         selitteet
+                         (filter #(not= (.indexOf (.toLowerCase (haku %))
+                                                  (.toLowerCase teksti)) -1)
+                                 selitteet))]
+            (vec (sort itemit)))))))
 
 (defn pollauksen-merkki []
   [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
@@ -45,67 +58,72 @@
   []
   (tiedot/hae-ilmoitukset)
   (komp/luo
-    (fn []
-      [:span.ilmoitukset
-       [lomake/lomake
-        {:luokka   :horizontal
-         :muokkaa! (fn [uusi]
-                     (log "UUDET ILMOITUSVALINNAT: " (pr-str uusi))
-                     (tiedot/hae-ilmoitukset)
-                     (swap! tiedot/valinnat
-                            (fn [vanha]
-                              (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
-                                (assoc uusi
-                                  :aikavali (:hoitokausi uusi))
-                                uusi))))}
+   (fn []
+     (let [{:keys [aikavali] :as valinnat-nyt} @tiedot/valinnat]
+       [:span.ilmoitukset
+        [lomake/lomake
+         {:luokka   :horizontal
+          :muokkaa! (fn [uusi]
+                      (log "UUDET ILMOITUSVALINNAT: " (pr-str uusi))
+                      (swap! tiedot/valinnat
+                             (fn [vanha]
+                               (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
+                                 (assoc uusi
+                                        :aikavali (:hoitokausi uusi))
+                                 uusi))))}
 
-        [(when @nav/valittu-urakka
-           {:nimi          :hoitokausi
-            :palstoja      1
-            :otsikko       "Hoitokausi"
-            :tyyppi        :valinta
-            :valinnat      @u/valitun-urakan-hoitokaudet
-            :valinta-nayta fmt/pvm-vali-opt})
+         [(when @nav/valittu-urakka
+            {:nimi          :hoitokausi
+             :palstoja      1
+             :otsikko       "Hoitokausi"
+             :tyyppi        :valinta
+             :valinnat      @u/valitun-urakan-hoitokaudet
+             :valinta-nayta fmt/pvm-vali-opt})
 
-         (lomake/ryhma
-           {:ulkoasu  :rivi
-            :palstoja 2}
-           {:nimi     :saapunut-alkaen
-            :hae      (comp first :aikavali)
-            :aseta    #(assoc-in %1 [:aikavali 0] %2)
-            :otsikko  "Alkaen"
+          {:nimi :aikavali
+           :otsikko "Saapunut aikavälillä"
+           :tyyppi :komponentti
+           :komponentti (fn [{muokkaa! :muokkaa-lomaketta}]
+                          [valinnat/aikavali
+                           (r/wrap aikavali
+                                   #(swap! tiedot/valinnat
+                                           assoc :aikavali %))
+                           {:lomake? true}])}
+
+
+          {:nimi        :hakuehto :otsikko "Hakusana"
+           :placeholder "Hae tekstillä..."
+           :tyyppi      :string
+           :pituus-max  64
+           :palstoja    1}
+          {:nimi                  :selite
+           :palstoja              1
+           :otsikko               "Selite"
+           :placeholder           "Hae ja valitse selite"
+           :tyyppi                :haku
+           :hae-kun-yli-n-merkkia 0
+           :nayta                 second :fmt second
+           :lahde selitehaku}
+          {:nimi :tr-numero
+           :palstoja 1
+           :otsikko "Tienumero"
+           :placeholder "Rajaa tienumerolla"
+           :tyyppi :positiivinen-numero :kokonaisluku? true}
+
+          (lomake/ryhma
+           {:rivi? true}
+           {:nimi :ilmoittaja-nimi
             :palstoja 1
-            :tyyppi   :pvm}
-
-           {:nimi     :saapunut-paattyen
-            :otsikko  "Päättyen"
+            :otsikko "Ilmoittajan nimi"
+            :placeholder "Rajaa ilmoittajan nimellä"
+            :tyyppi :string}
+           {:nimi :ilmoittaja-puhelin
             :palstoja 1
-            :hae      (comp second :aikavali)
-            :aseta    #(assoc-in %1 [:aikavali 1] %2)
-            :tyyppi   :pvm})
+            :otsikko "Ilmoittajan puhelinnumero"
+            :placeholder "Rajaa ilmoittajan puhelinnumerolla"
+            :tyyppi :puhelin})
 
-         {:nimi        :hakuehto :otsikko "Hakusana"
-          :placeholder "Hae tekstillä..."
-          :tyyppi      :string
-          :pituus-max  64
-          :palstoja    1}
-         {:nimi                  :selite
-          :palstoja              1
-          :otsikko               "Selite"
-          :placeholder           "Hae ja valitse selite"
-          :tyyppi                :haku
-          :hae-kun-yli-n-merkkia 0
-          :nayta                 second :fmt second
-          :lahde                 (reify protokollat/Haku
-                                   (hae [_ teksti]
-                                     (go (let [haku second
-                                               selitteet +ilmoitusten-selitteet+
-                                               itemit (if (< (count teksti) 1)
-                                                        selitteet
-                                                        (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase teksti)) -1)
-                                                                selitteet))]
-                                           (vec (sort itemit))))))}
-         (lomake/ryhma
+          (lomake/ryhma
            {:rivi? true}
            {:nimi             :kuittaustyypit
             :otsikko          "Tila"
@@ -130,22 +148,24 @@
                                 ({:kaikki     "Älä rajoita aloituskuittauksella"
                                   :alle-tunti "Alle tunnin kuluessa"
                                   :myohemmin  "Yli tunnin päästä"}
-                                  arvo))})]
-        @tiedot/valinnat]
-       [:div
-        (pollauksen-merkki)
-        [grid
-         {:tyhja             (if @tiedot/haetut-ilmoitukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan ilmoutuksia"])
-          :rivi-klikattu     #(tiedot/avaa-ilmoitus! %)
-          :piilota-toiminnot true}
+                                 arvo))})]
+         valinnat-nyt]
+        [:div
+         (pollauksen-merkki)
+         [grid
+          {:tyhja             (if @tiedot/haetut-ilmoitukset
+                                "Ei löytyneitä tietoja"
+                                [ajax-loader "Haetaan ilmoutuksia"])
+           :rivi-klikattu     #(tiedot/avaa-ilmoitus! %)
+           :piilota-toiminnot true}
 
-         [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "15%"}
-          {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "15%"}
-          {:otsikko "Sijainti" :nimi :tierekisteri :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %)) :leveys "15%"}
-          {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %)) :leveys "15%"}
-          {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "15%"}
-          {:otsikko "Tila" :nimi :tila :leveys "10%" :hae #(kuittaustyypin-selite (:tila %))}]
-         @tiedot/haetut-ilmoitukset]]])))
+          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "15%"}
+           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "15%"}
+           {:otsikko "Sijainti" :nimi :tierekisteri :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %)) :leveys "15%"}
+           {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %)) :leveys "15%"}
+           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "15%"}
+           {:otsikko "Tila" :nimi :tila :leveys "10%" :hae #(kuittaustyypin-selite (:tila %))}]
+          @tiedot/haetut-ilmoitukset]]]))))
 
 (defn ilmoitukset []
   (komp/luo

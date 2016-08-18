@@ -96,6 +96,38 @@
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
 
+(deftest hae-ilmoituksia-tienumerolla
+  (let [oletusparametrit {:hallintayksikko nil
+                    :urakka          nil
+                    :hoitokausi      nil
+                    :aikavali        [(java.util.Date. 0 0 0) (java.util.Date.)]
+                    :tyypit          +ilmoitustyypit+
+                    :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus :lopetus}
+                    :tilat           +ilmoitustilat+
+                    :aloituskuittauksen-ajankohta :kaikki
+                    :hakuehto        ""}
+        hae (fn [parametrit]
+              (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-ilmoitukset +kayttaja-jvh+
+                              (merge oletusparametrit parametrit)))
+
+        ilmoitukset-kaikille-teille (hae {:tr-numero nil})
+        ilmoitukset-tielle-6 (hae {:tr-numero 6})
+        ilmoitukset-olemattomalle-tielle (hae {:tr-numero 9999999})]
+    (is (> (count ilmoitukset-kaikille-teille) (count ilmoitukset-tielle-6))
+        "Haku ilman tierajausta löytää enemmän ilmoituksia")
+    (is (> (count ilmoitukset-tielle-6) 0) "Tielle 6 on ilmoituksia")
+
+    (is (some #(= 6 (get-in % [:tr :numero])) ilmoitukset-kaikille-teille)
+        "Tien 6 ilmoituksia löytyy myös kaikista ilmoituksista")
+
+    (is (every? #(= 6 (get-in % [:tr :numero])) ilmoitukset-tielle-6)
+        "Vain tien 6 ilmoituksia on rajatussa hakujoukossa")
+
+    (is (zero? (count ilmoitukset-olemattomalle-tielle))
+        "Olemattomalle tielle rajattu haku ei löydy ilmoituksia")))
+
+
 (deftest ilmoitus-myohassa-ilman-kuittauksia
   (let [myohastynyt-kysely {:ilmoitustyyppi :kysely :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
         myohastynyt-toimenpidepyynto {:ilmoitustyyppi :toimenpidepyynto :ilmoitettu (c/to-sql-time (t/minus (t/now) (t/days 7))) :kuittaukset []}
