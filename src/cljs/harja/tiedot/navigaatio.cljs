@@ -140,14 +140,7 @@
   (run! (when-let [ur @valittu-urakka]
           (reset! valittu-urakkatyyppi (urakkatyyppi (:tyyppi ur))))))
 
-(defn paivita-urakka! [urakka-id funktio & argumentit]
-  (swap! hallintayksikon-urakkalista (fn [urakat]
-                                       (mapv #(if (= urakka-id (:id %))
-                                               (apply funktio % argumentit)
-                                               %) urakat)))
-  (swap! valittu-urakka #(if (= urakka-id (:id %))
-                          (apply funktio % argumentit)
-                          %)))
+
 ;; kehittäessä voit tarkkailla atomien tilan muutoksia
 ;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
 
