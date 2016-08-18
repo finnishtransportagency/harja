@@ -34,22 +34,22 @@
 (deftest hae-ilmoitukset-sarakkeet
   (let []
     (is (oikeat-sarakkeet-palvelussa?
-          [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :paikankuvaus :lisatieto
-           :ilmoitustyyppi :selitteet :urakkatyyppi :sijainti :uusinkuittaus :tila
+         [:id :urakka :ilmoitusid :ilmoitettu :valitetty :yhteydenottopyynto :otsikko :paikankuvaus :lisatieto
+          :ilmoitustyyppi :selitteet :urakkatyyppi :sijainti :uusinkuittaus :tila
 
-           [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]
-           [:ilmoittaja :etunimi] [:ilmoittaja :sukunimi] [:ilmoittaja :tyopuhelin] [:ilmoittaja :matkapuhelin]
-           [:ilmoittaja :sahkoposti] [:ilmoittaja :tyyppi]
-           [:lahettaja :etunimi] [:lahettaja :sukunimi] [:lahettaja :puhelinnumero] [:lahettaja :sahkoposti]
+          [:tr :numero] [:tr :alkuosa] [:tr :loppuosa] [:tr :alkuetaisyys] [:tr :loppuetaisyys]
+          [:ilmoittaja :etunimi] [:ilmoittaja :sukunimi] [:ilmoittaja :tyopuhelin] [:ilmoittaja :matkapuhelin]
+          [:ilmoittaja :sahkoposti] [:ilmoittaja :tyyppi]
+          [:lahettaja :etunimi] [:lahettaja :sukunimi] [:lahettaja :puhelinnumero] [:lahettaja :sahkoposti]
 
-           [:kuittaukset 0 :id] [:kuittaukset 0 :kuitattu] [:kuittaukset 0 :vapaateksti] [:kuittaukset 0 :kuittaustyyppi]
-           [:kuittaukset 0 :kuittaaja :etunimi] [:kuittaukset 0 :kuittaaja :sukunimi] [:kuittaukset 0 :kuittaaja :matkapuhelin]
-           [:kuittaukset 0 :kuittaaja :tyopuhelin] [:kuittaukset 0 :kuittaaja :sahkoposti]
-           [:kuittaukset 0 :kuittaaja :organisaatio] [:kuittaukset 0 :kuittaaja :ytunnus]
-           [:kuittaukset 0 :kasittelija :etunimi] [:kuittaukset 0 :kasittelija :sukunimi]
-           [:kuittaukset 0 :kasittelija :matkapuhelin] [:kuittaukset 0 :kasittelija :tyopuhelin]
-           [:kuittaukset 0 :kasittelija :sahkoposti] [:kuittaukset 0 :kasittelija :organisaatio]
-           [:kuittaukset 0 :kasittelija :ytunnus]]
+          [:kuittaukset 0 :id] [:kuittaukset 0 :kuitattu] [:kuittaukset 0 :vapaateksti] [:kuittaukset 0 :kuittaustyyppi]
+          [:kuittaukset 0 :kuittaaja :etunimi] [:kuittaukset 0 :kuittaaja :sukunimi] [:kuittaukset 0 :kuittaaja :matkapuhelin]
+          [:kuittaukset 0 :kuittaaja :tyopuhelin] [:kuittaukset 0 :kuittaaja :sahkoposti]
+          [:kuittaukset 0 :kuittaaja :organisaatio] [:kuittaukset 0 :kuittaaja :ytunnus]
+          [:kuittaukset 0 :kasittelija :etunimi] [:kuittaukset 0 :kasittelija :sukunimi]
+          [:kuittaukset 0 :kasittelija :matkapuhelin] [:kuittaukset 0 :kasittelija :tyopuhelin]
+          [:kuittaukset 0 :kasittelija :sahkoposti] [:kuittaukset 0 :kasittelija :organisaatio]
+          [:kuittaukset 0 :kasittelija :ytunnus]]
 
           :hae-ilmoitukset
           {:hallintayksikko nil
@@ -169,11 +169,11 @@
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
-(deftest ilmoituksen-tyyppi
- (let [kuittaamaton-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu false}
-       vastaanotettu-ilmoitus {:aloitettu false :lopetettu false :vastaanotettu true}
-       aloitettu-ilmoitus {:aloitettu true :lopetettu false :vastaanotettu true}
-       lopetettu-ilmoitus {:aloitettu true :lopetettu true :vastaanotettu true}]
+(deftest ilmoituksen-tila
+ (let [kuittaamaton-ilmoitus {:kuittaukset []}
+       vastaanotettu-ilmoitus {:kuittaukset [{:kuittaustyyppi :vastaanotto}]}
+       aloitettu-ilmoitus {:kuittaukset [{:kuittaustyyppi :aloitus}]}
+       lopetettu-ilmoitus {:kuittaukset [{:kuittaustyyppi :lopetus}]}]
    (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila kuittaamaton-ilmoitus)) :kuittaamaton))
    (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotto))
    (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitus))
