@@ -159,12 +159,20 @@
            :rivi-klikattu     #(tiedot/avaa-ilmoitus! %)
            :piilota-toiminnot true}
 
-          [{:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys "15%"}
-           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %)) :leveys "15%"}
-           {:otsikko "Sijainti" :nimi :tierekisteri :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %)) :leveys "15%"}
-           {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %)) :leveys "15%"}
-           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-") :leveys "15%"}
-           {:otsikko "Tila" :nimi :tila :leveys "10%" :hae #(kuittaustyypin-selite (:tila %))}]
+          [{:otsikko "Urakka" :nimi :urakkanimi :leveys 2
+            :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+           {:otsikko "Ilmoitettu" :nimi :ilmoitettu :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 1}
+           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi :hae #(ilmoitustyypin-nimi (:ilmoitustyyppi %))
+            :leveys 2}
+           {:otsikko "Sijainti" :nimi :tierekisteri
+            :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
+            :leveys 2}
+           {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %))
+            :leveys 2}
+           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
+            :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-")
+            :leveys 2}
+           {:otsikko "Tila" :nimi :tila :leveys 1 :hae #(kuittaustyypin-selite (:tila %))}]
           @tiedot/haetut-ilmoitukset]]]))))
 
 (defn ilmoitukset []
