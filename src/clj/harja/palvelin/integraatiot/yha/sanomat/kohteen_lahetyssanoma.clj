@@ -63,17 +63,18 @@
      (when pitoisuus [:sideainepitoisuus pitoisuus])
      [:lisa-aineet lisaaineet]]]])
 
-(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi aosa let verkon-tarkoitus kasittelymenetelma losa aet
-                                              tekninen-toimenpide paksuus verkon-sijainti]}
+(defn tee-alustalle-tehty-toimenpide [{:keys [verkkotyyppi tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                                              verkon-tarkoitus kasittelymenetelma tekninen-toimenpide paksuus
+                                              verkon-sijainti]}
                                       tienumero karttapvm]
   [:alustalle-tehty-toimenpide
    [:tierekisteriosoitevali
     [:karttapaivamaara (xml/formatoi-paivamaara (if karttapvm karttapvm (pvm/nyt)))]
     [:tienumero tienumero]
-    [:aosa aosa]
-    [:aet aet]
-    [:losa losa]
-    [:let let]]
+    [:aosa tr-alkuosa]
+    [:aet tr-alkuetaisyys]
+    [:losa tr-loppuosa]
+    [:let tr-loppuetaisyys]]
    [:kasittelymenetelma kasittelymenetelma]
    [:kasittelypaksuus paksuus]
    [:verkkotyyppi verkkotyyppi]
