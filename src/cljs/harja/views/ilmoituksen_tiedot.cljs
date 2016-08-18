@@ -22,6 +22,7 @@
      [yleiset/tietoja {}
       "Urakka: " (:urakkanimi ilmoitus)
       "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+      "Yhteydenottopyyntö:" (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
       "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
       "Otsikko: " (:otsikko ilmoitus)
       "Paikan kuvaus: " (:paikankuvaus ilmoitus)
