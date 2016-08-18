@@ -1,5 +1,5 @@
 (defproject harja-laadunseuranta "0.1.0-SNAPSHOT"
-  :description "FIXME: write this!"
+  :description "Harjan laadunseurantatyökalu, jolla valvotaan tiestön kuntoa osana tieverkon kunnossapitoa."
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}

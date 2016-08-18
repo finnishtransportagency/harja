@@ -209,10 +209,36 @@
          [kertapainike "Ojat" #(alivalikkoon :ojat)]
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
+(defn- paallystys [alivalikot havainnot]
+  [:div.painikelaatikko
+   [:div.painikerivi
+    [toggle-painike "Saumavirhe" havainnot :saumavirhe]
+    [toggle-painike "Lajittuma" havainnot :lajittuma]
+    [toggle-painike "Epätasaisuus" havainnot :epatasaisuus]
+    [toggle-painike "Halkeamat" havainnot :halkeamat]]
+   [:div.painikerivi
+    [toggle-painike "Vesilammikot" havainnot :vesilammikot]
+    [toggle-painike "Epätasaiset reunat" havainnot :epatasaisetreunat]
+    [toggle-painike "Jyrän jälkiä" havainnot :jyranjalkia]
+    [toggle-painike "Sideaineläikkiä" havainnot :sideainelaikkia]]
+   [:div.painikerivi
+    [toggle-painike "Väärä korkeusasema" havainnot :vaarakorkeusasema]
+    [toggle-painike "Pinta harva" havainnot :pintaharva]
+    [toggle-painike "Pintakuivatus puutteellinen" havainnot :pintakuivatuspuute]
+    [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema]]
+   [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]])
+
+
+(defn- tiemerkinta [alivalikot]
+  [:div.painikelaatikko
+   [:div "1"]
+   [:div.peruuta {:on-click #(turn-off alivalikot :tiemerkinta)} "Peruuta"]])
+
 (defn pikavalintapaneeli [tr-osoite moodi havainnot alivalikot kitkamittaus-kirjattu kertakirjaus-kirjattu yleishavainto-kirjattu
                           lumisuus-kirjattu tasaisuus-kirjattu soratiehavainto-kirjattu keskiarvo-atom lumimaara-atom
                           tasaisuus-atom kiinteys-atom polyavyys-atom]
-  (if (= :kelitarkastus @moodi)
+  (condp = @moodi
+    :kelitarkastus
     [:div.sidepanel
      (cond (:liukasta @havainnot)
            [liukkaus-paalla havainnot kitkamittaus-kirjattu keskiarvo-atom]
@@ -240,7 +266,8 @@
             [on-painike "P- & L-alueet" alivalikot :pl-alueet]
             [on-painike "Pysäkit" alivalikot :pysakit]
             [on-painike "Liikennemerkit" alivalikot :liikennemerkit]])]
-    
+
+    :soratietarkastus
     [:div.sidepanel
      (cond (:soratie @alivalikot)
            [soratiet alivalikot soratiehavainto-kirjattu tasaisuus-atom kiinteys-atom polyavyys-atom]
@@ -260,7 +287,20 @@
             #_[toggle-painike "Soratie alkaa" alivalikot :soratie :on-click #(swap! havainnot assoc :soratie true)]
             [on-painike "Liikenneympäristö" alivalikot :liikenneymparisto]
             [on-painike "Viherhoito" alivalikot :viherhoito]
-            [on-painike "Muut" alivalikot :muut]])]))
+            [on-painike "Muut" alivalikot :muut]])]
+
+    :yllapitotarkastus
+    [:div.sidepanel
+     (cond (:paallystys @alivalikot)
+           [paallystys alivalikot havainnot]
+
+           (:tiemerkinta @alivalikot)
+           [tiemerkinta alivalikot]
+
+           :default
+           [:div.sidepanel-box
+            [on-painike "Päällystys" alivalikot :paallystys]
+            [on-painike "Tiemerkintä" alivalikot :tiemerkinta]])]))
 
 (defn lisaa-havainto [aktiivinen on-click on-press]
   [:div.sidepanel-box

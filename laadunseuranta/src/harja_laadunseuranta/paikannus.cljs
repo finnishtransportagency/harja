@@ -1,6 +1,5 @@
 (ns harja-laadunseuranta.paikannus
   (:require [reagent.core :as reagent :refer [atom]]
-            [harja-laadunseuranta.virhekasittely :as virhekasittely]
             [harja-laadunseuranta.asetukset :as asetukset]
             [harja-laadunseuranta.kalman :as kalman]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
@@ -58,19 +57,15 @@
                       :timestamp ts)}))
 
 (defn kaynnista-paikannus [sijainti-atomi]
-  (if (not (geolokaatio-tuettu?))
-    (do
-      (virhekasittely/ilmoita-virhe "Selaimesi ei tue paikkatietoa")
-      nil)
-    (do
-      (.log js/console "Paikannus käynnistetään")
-      (js/setInterval (fn []
-         (.getCurrentPosition (geolocation-api)
-                              #(swap! sijainti-atomi (fn [entinen]
-                                                       (paivita-sijainti entinen (konvertoi-latlon %) (timestamp))))
-                              #(swap! sijainti-atomi identity)
-                              paikannusoptiot))
-                      +paikan-raportointivali+))))
+  (when (geolokaatio-tuettu?)
+    (.log js/console "Paikannus käynnistetään")
+    (js/setInterval (fn []
+                      (.getCurrentPosition (geolocation-api)
+                                           #(swap! sijainti-atomi (fn [entinen]
+                                                                    (paivita-sijainti entinen (konvertoi-latlon %) (timestamp))))
+                                           #(swap! sijainti-atomi identity)
+                                           paikannusoptiot))
+                    +paikan-raportointivali+)))
 
 (defn lopeta-paikannus [n]
   (when n

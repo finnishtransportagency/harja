@@ -252,8 +252,8 @@
     (run! (paivita-kirjausikonit kartta kirjatut-pisteet ikonikerros @kirjatut-pisteet-atomi))))
 
 
-(defn karttakomponentti [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
-                         ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot]
+(defn karttakomponentti [{:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
+                                 ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot]}]
   (reagent/create-class {:reagent-render kartta-render
                          :component-did-mount #(kartta-did-mount %
                                                                  wmts-url
@@ -287,10 +287,14 @@
     (reagent/as-element
      [:div {:style {:width "100%"
                     :height "800px"}}
-      [karttakomponentti (paikallinen asetukset/+wmts-url+)
-                         (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
-                         (paikallinen asetukset/+wmts-url-ortokuva+)
-                         sijainti sijainti test-reittipisteet test-ikonit testioptiot]]))
+      [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
+                          :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
+                          :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
+                          :sijainti-atomi sijainti
+                          :ajoneuvon-sijainti-atomi sijainti
+                          :reittipisteet-atomi test-reittipisteet
+                          :kirjauspisteet-atomi test-ikonit
+                          :optiot testioptiot}]]))
   test-sijainti  
   {:inspect-data true
    :watch-atom true})

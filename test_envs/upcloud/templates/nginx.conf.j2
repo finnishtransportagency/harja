@@ -93,7 +93,7 @@ server {
           proxy_pass https://testisonja/harja/tierekisteri/$path$is_args$args;
         }
 
-    location ~ /harja/laadunseuranta/(?<path>.*)$ {
+    location ~ ^/harja/laadunseuranta/(?<path>.*)$ {
       proxy_pass_request_headers on;
       proxy_pass_header OAM_REMOTE_USER;
       proxy_pass_header OAM_GROUPS;
