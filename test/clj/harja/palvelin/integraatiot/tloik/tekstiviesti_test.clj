@@ -17,7 +17,8 @@
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tekstiviestit]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml]
+            [clojure.string :as str]))
 
 (def kayttaja "jvh")
 (def +labyrintti-url+ "http://localhost:28080/sendsms")
@@ -111,3 +112,16 @@
 
       (poista-paivystajatekstiviestit)
       (poista-ilmoitus))))
+
+(deftest tekstiviestin-muodostus
+  (let [ilmoitus {:ilmoitus-id 666
+                  :otsikko "Testiympäristö liekeissä!"
+                  :paikankuvaus "Konesali"
+                  :lisatieto "Soittakaapa äkkiä"
+                  :yhteydenottopyynto true
+                  :selitteet #{:toimenpidekysely}}
+        rivit (into #{} (str/split-lines
+                         (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
+    (is (rivit "Uusi toimenpidepyyntö: Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "Selitteet: Toimenpidekysely."))))
