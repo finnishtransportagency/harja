@@ -110,19 +110,18 @@
            :placeholder "Rajaa tienumerolla"
            :tyyppi :positiivinen-numero :kokonaisluku? true}
 
-          (lomake/ryhma "Rajaa ilmoittajan perusteella"
-
-
-                        {:nimi :ilmoittaja-nimi
-                         :palstoja 1
-                         :otsikko "Ilmoittajan nimi"
-                         :placeholder "Rajaa ilmoittajan nimellä"
-                         :tyyppi :string}
-                        {:nimi :ilmoittaja-puhelin
-                         :palstoja 1
-                         :otsikko "Ilmoittajan puhelinnumero"
-                         :placeholder "Rajaa ilmoittajan puhelinnumerolla"
-                         :tyyppi :puhelin})
+          (lomake/ryhma
+           {:rivi? true}
+           {:nimi :ilmoittaja-nimi
+            :palstoja 1
+            :otsikko "Ilmoittajan nimi"
+            :placeholder "Rajaa ilmoittajan nimellä"
+            :tyyppi :string}
+           {:nimi :ilmoittaja-puhelin
+            :palstoja 1
+            :otsikko "Ilmoittajan puhelinnumero"
+            :placeholder "Rajaa ilmoittajan puhelinnumerolla"
+            :tyyppi :puhelin})
 
           (lomake/ryhma
            {:rivi? true}
