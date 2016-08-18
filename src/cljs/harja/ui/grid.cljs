@@ -719,6 +719,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
            (muokkauspaneeli true)
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
+              ^{:key "kiinnitettyotsikko"}
               [:table.grid
                {:style {:position "fixed"
                         :top      0
@@ -727,6 +728,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                [thead]])
             (if (nil? tiedot)
               (ajax-loader)
+              ^{:key "taulukkodata"}
               [:table.grid
                [thead]
                [:tbody
