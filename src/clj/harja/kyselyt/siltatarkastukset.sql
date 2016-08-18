@@ -38,7 +38,7 @@ SELECT
   s.tr_loppuosa,
   s.tr_loppuetaisyys,
   s.tr_numero,
-  (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
+  (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus = s1.id
          AND k.tulos != 'A') AS kohteet
@@ -68,7 +68,7 @@ SELECT
   s.tr_loppuosa,
   s.tr_loppuetaisyys,
   s.tr_numero,
-  (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
+  (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus = s1.id
          AND
@@ -99,7 +99,7 @@ SELECT
   s.tr_loppuosa,
   s.tr_loppuetaisyys,
   s.tr_numero,
-  (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
+  (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus = s1.id
          AND k.tulos = 'D') AS kohteet
@@ -160,7 +160,7 @@ SELECT
   muokattu,
   muokkaaja,
   poistettu,
-  (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
+  (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus = st.id) AS kohteet,
   skl.kohde as liite_kohde,
@@ -189,7 +189,7 @@ SELECT
   muokattu,
   muokkaaja,
   poistettu,
-  (SELECT array_agg(concat(k.kohde, '=', k.tulos, ':', k.lisatieto))
+  (SELECT array_agg(concat(k.kohde, '=', COALESCE(k.tulos, ' '), ':', k.lisatieto))
    FROM siltatarkastuskohde k
    WHERE k.siltatarkastus = st.id) AS kohteet,
   skl.kohde as liite_kohde,

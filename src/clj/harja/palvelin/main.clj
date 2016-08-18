@@ -61,6 +61,7 @@
     [harja.palvelin.palvelut.tyokoneenseuranta :as tyokoneenseuranta]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
+    [harja.palvelin.palvelut.status :as status]
 
     ;; karttakuvien renderöinti
     [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
@@ -369,17 +370,27 @@
                          [:http-palvelin :db :integraatioloki :klusterin-tapahtumat
                           :tloik])
       :api-yllapitokohteet (component/using
-                             (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db :integraatioloki]))))
+                            (api-yllapitokohteet/->Yllapitokohteet)
+                             [:http-palvelin :db :integraatioloki])
+
+      :status (component/using
+               (status/luo-status)
+               [:http-palvelin :db :db-replica :sonja]))))
 
 (defonce harja-jarjestelma nil)
 
-(defn kaynnista-jarjestelma [asetusfile]
-  (alter-var-root #'harja-jarjestelma
-                  (constantly
-                    (-> (lue-asetukset asetusfile)
-                        luo-jarjestelma
-                        component/start))))
+(defn kaynnista-jarjestelma [asetusfile lopeta-jos-virhe?]
+  (try
+    (alter-var-root #'harja-jarjestelma
+                    (constantly
+                     (-> (lue-asetukset asetusfile)
+                         luo-jarjestelma
+                         component/start)))
+    (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
+    (catch Throwable t
+      (log/fatal t "Harjan käynnistyksessä virhe")
+      (when lopeta-jos-virhe?
+        (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
   (when harja-jarjestelma
@@ -388,13 +399,13 @@
                                           nil))))
 
 (defn -main [& argumentit]
-  (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn"))
+  (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
 (defn dev-start []
   (if harja-jarjestelma
     (println "Harja on jo käynnissä!")
-    (kaynnista-jarjestelma "asetukset.edn")))
+    (kaynnista-jarjestelma "asetukset.edn" false)))
 
 (defn dev-stop []
   (sammuta-jarjestelma))
