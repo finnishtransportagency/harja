@@ -203,7 +203,7 @@
   "Ottaa ilmoituksen, jolla on tieto siitä, millaisia kuittauksia se sisältää.
   Asettaa ilmoituksen tilan viimeisimmän kuittauksen perusteella."
   [ilmoitus]
-  (let [kuittaukset (sort-by :kuitattu (:kuittaukset ilmoitus))]
+  (let [kuittaukset (vec (sort-by :kuitattu (:kuittaukset ilmoitus)))]
     (reduce (fn [ilmoitus {tyyppi :kuittaustyyppi :as k}]
               (case tyyppi
                 :lopetus (assoc ilmoitus :tila :lopetus)
