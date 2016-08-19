@@ -353,15 +353,20 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 ;; indeksillä löytyvää. Yleensä pitäisi tieten oikeanlainenkin rivi löytyä, mutta
 ;; teoriassa on hyvinkin mahdollista, että huonolla tuurilla ei löydy.
 (defn sisaltaa-ainakin-sarakkeet?
-  [tulos sarakkeet]
-  (every?
-   #(let [loytyi? (not= ::ei-loydy
-                        (get-in (first tulos) (if (vector? %)
-                                           %
-                                           [%]) ::ei-loydy))]
-      (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos))))
-      loytyi?)
-   sarakkeet))
+  ([tulos sarakkeet] (sisaltaa-ainakin-sarakkeet? tulos sarakkeet true))
+  ([tulos sarakkeet assertoi-kaikki?]
+   (let [tulos (if (map? tulos)
+                 tulos
+                 (first tulos))]
+     (every?
+      #(let [loytyi? (not= ::ei-loydy
+                           (get-in tulos (if (vector? %)
+                                                   %
+                                                   [%]) ::ei-loydy))]
+         (when assertoi-kaikki?
+           (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos)))))
+         loytyi?)
+      sarakkeet))))
 
 (defn oikeat-sarakkeet-palvelussa?
   "Tarkastaa sisältääkö palvelun palauttama tietorakenne ainakin annetut avaimet.
@@ -390,14 +395,27 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
    (oikeat-sarakkeet-palvelussa? sarakkeet palvelu parametrit +kayttaja-jvh+))
 
   ([sarakkeet palvelu parametrit kayttaja]
+   (oikeat-sarakkeet-palvelussa? sarakkeet palvelu parametrit kayttaja true))
+  ([sarakkeet palvelu parametrit kayttaja assertoi-kaikki?]
    (let [vastaus (if parametrit
                    (kutsu-palvelua (:http-palvelin jarjestelma) palvelu (or kayttaja +kayttaja-jvh+) parametrit)
                    (kutsu-palvelua (:http-palvelin jarjestelma) palvelu (or kayttaja +kayttaja-jvh+)))]
      (log/debug "Tarkistetaan sarakkeet vastauksesta:" (pr-str vastaus))
-     (if (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet)
+     (if (sisaltaa-ainakin-sarakkeet? vastaus sarakkeet assertoi-kaikki?)
        true
-       (do (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus))
-           false)))))
+       (let [tulos (if (map? vastaus)
+                     vastaus
+                     (first vastaus))]
+         (log/error "Vastaus poikkeaa annetusta mallista. Vastaus: " (pr-str vastaus)
+                    "\nPuuttuvat polut: " (pr-str
+                                           (keep (fn [sarake]
+                                                   (let [sarake (if (vector? sarake)
+                                                                  sarake
+                                                                  [sarake])]
+                                                     (when (= ::ei-loydy
+                                                              (get-in tulos sarake ::ei-loydy))
+                                                       sarake))) sarakkeet)))
+         false)))))
 
 (def portti nil)
 (def urakka nil)
