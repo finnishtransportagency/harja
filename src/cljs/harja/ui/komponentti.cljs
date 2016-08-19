@@ -123,8 +123,8 @@
 (defn piirretty
   "Mixin, joka kutsutaan kun komponentti on oikeasti DOMissa asti (component-did-mount)"
   [piirretty]
-  {:component-did-mount (fn [& _]
-                          (piirretty))})
+  {:component-did-mount (fn [comp]
+                          (piirretty comp))})
 
 (defn lippu-arvo
   "Mixin joka asettaa ensimmäisen arvon kun komponentti näytetään ja toisen arvon kun komponentti poistuu."

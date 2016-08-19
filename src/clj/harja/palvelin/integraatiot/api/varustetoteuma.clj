@@ -127,7 +127,7 @@
 (defn- hae-toimenpiteen-geometria [db toimenpiteen-tiedot]
   "Muuntaa toimenpiteen tierekisteriosoitteen geometriaksi (PGgeometry)
    Jos geometriaa ei voida muodostaa, palauttaa nil (esim. poistotoimenpiteellä ei ole sijaintia"
-  (println "Tie: " (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie]))
+  (log/debug "Tie: " (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie]))
   (let [tr-osoite (get-in toimenpiteen-tiedot [:varuste :tietue :sijainti :tie])
         viiva? (and (:losa tr-osoite)
                     (:let tr-osoite))

@@ -7,7 +7,8 @@
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
             [slingshot.test]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [taoensso.timbre :as log]))
 
 (deftest tarkista-json-datan-validius
   (let [json-data (slurp (io/resource "api/examples/virhe-response.json"))]
@@ -19,7 +20,7 @@
       (json-skeemat/virhevastaus json-data)
       (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
       (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-        (println virheet)
+        (log/debug "VIRHEET:" virheet)
         (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
 
 (deftest tarkista-syntaksiltaan-virheellinen-json
@@ -28,7 +29,7 @@
      (json-skeemat/virhevastaus json-data)
      (assert false "Invalidi JSON ei aiheuttanut oletettua poikkeusta")
      (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-       (println virheet)
+       (log/debug "VIRHEET:" virheet)
        (is (.contains (:viesti (first virheet)) "JSON ei ole validia"))))))
 
 (deftest urakkahaun-vastaus

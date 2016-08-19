@@ -9,7 +9,7 @@
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite]]
+              kuittaustyypin-selite kuittaustyypin-lyhenne]]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -59,6 +59,21 @@
       (pollauksen-merkki)
       [it/ilmoitus ilmoitus]]]))
 
+(defn kuittauslista [{kuittaukset :kuittaukset}]
+  [:div.kuittauslista
+   (map-indexed
+    (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
+      ^{:key i}
+      [yleiset/tooltip {}
+       [:div.kuittaus {:class (name kuittaustyyppi)}
+        (kuittaustyypin-lyhenne kuittaustyyppi)]
+       [:div
+        (kuittaustyypin-selite kuittaustyyppi)
+        [:br]
+        (pvm/pvm-aika kuitattu)
+        [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
+    kuittaukset)])
+
 (defn ilmoitusten-paanakyma
   []
   (tiedot/hae-ilmoitukset)
@@ -69,7 +84,6 @@
         [lomake/lomake
          {:luokka   :horizontal
           :muokkaa! (fn [uusi]
-                      (log "UUDET ILMOITUSVALINNAT: " (pr-str uusi))
                       (swap! tiedot/valinnat
                              (fn [vanha]
                                (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
@@ -174,11 +188,13 @@
            {:otsikko "Sijainti" :nimi :tierekisteri
             :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
             :leveys 3}
+
            {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %))
-            :leveys 4}
-           {:otsikko "Viimeisin kuittaus" :nimi :uusinkuittaus
-            :hae #(if (:uusinkuittaus %) (pvm/pvm-aika (:uusinkuittaus %)) "-")
-            :leveys 3}
+            :leveys 2}
+           {:otsikko "Kuittaukset" :nimi :kuittaukset
+            :tyyppi :komponentti
+            :komponentti kuittauslista
+            :leveys 2}
 
            {:otsikko "Tila" :nimi :tila :leveys 3 :hae #(kuittaustyypin-selite (:tila %))}]
           (mapv #(if (:yhteydenottopyynto %)

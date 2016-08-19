@@ -8,7 +8,8 @@
             [clojure.java.io :as io]
             [cheshire.core :as cheshire]
             [org.httpkit.fake :refer [with-fake-http]]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [taoensso.timbre :as log]))
 
 (def kayttaja "jvh")
 (def +testi-tierekisteri-url+ "harja.testi.tierekisteri")
@@ -32,7 +33,7 @@
       [(str +testi-tierekisteri-url+ tierekisteri-resurssi) vastaus-xml
        (str "http://localhost:" portti validi-kutsu) :allow]
       (let [vastaus (api-tyokalut/get-kutsu [validi-kutsu] kayttaja portti)]
-        (println "Vastaus saatiin: " (pr-str vastaus))
+        (log/debug "Vastaus saatiin: " (pr-str vastaus))
         (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla")))))
 
 (deftest tarkista-tietolajin-virheellinen-haku

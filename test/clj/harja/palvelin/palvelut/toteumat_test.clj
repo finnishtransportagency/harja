@@ -188,7 +188,7 @@
       (is (= (get-in lisatty [:toteuma :tyyppi]) :yksikkohintainen) "Tallennetun työn toteuman tyyppi")
 
       (is (== 333 (get-in summat-lisayksen-jalkeen [1368 :maara])))
-      (println "LISÄTTY: " lisatty)
+      (log/debug "LISÄTTY: " lisatty)
 
       (let [toteuma-id (get-in lisatty [:toteuma :toteuma-id])
             toteuma (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -196,7 +196,7 @@
                                     +kayttaja-jvh+
                                     {:urakka-id urakka-id
                                      :toteuma-id toteuma-id})
-            _ (println "HAETTU TOTEUMA: " toteuma)
+            _ (log/debug "HAETTU TOTEUMA: " toteuma)
             muokattu-tyo (assoc tyo
                                 :toteuma-id toteuma-id
                                 :tehtavat [{:toimenpidekoodi 1369 :maara 666

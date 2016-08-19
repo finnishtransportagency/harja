@@ -19,6 +19,13 @@
    :muutos "Muutos"
    :vastaus "Vastaus"})
 
+(def kuittaustyypin-lyhenne
+  {:vastaanotto "VOT"
+   :aloitus "ALO"
+   :lopetus "LOP"
+   :muutos "MUU"
+   :vastaus "VAS"})
+
 (defn ilmoitustyypin-nimi
   [tyyppi]
   (case tyyppi
@@ -194,14 +201,15 @@
 
 (defn lisaa-ilmoituksen-tila
   "Ottaa ilmoituksen, jolla on tieto siitä, millaisia kuittauksia se sisältää.
-  Poistaa nämä tiedot ja sen sijaan lisää tiedon siitä, missä tilassa ilmoitus on
-  sen sisältämien kuittausten perusteella."
+  Asettaa ilmoituksen tilan viimeisimmän kuittauksen perusteella."
   [ilmoitus]
-  (let [lisaa-tila (fn [ilmoitus]
-                     (cond (true? (:lopetettu ilmoitus)) (assoc ilmoitus :tila :lopetus)
-                           (true? (:aloitettu ilmoitus)) (assoc ilmoitus :tila :aloitus)
-                           (true? (:vastaanotettu ilmoitus)) (assoc ilmoitus :tila :vastaanotto)
-                           :default (assoc ilmoitus :tila :kuittaamaton)))]
-    (-> ilmoitus
-        (lisaa-tila)
-        (dissoc :vastaanotettu :aloitettu :lopetettu))))
+  (let [kuittaukset (vec (sort-by :kuitattu (:kuittaukset ilmoitus)))]
+    (reduce (fn [ilmoitus {tyyppi :kuittaustyyppi :as k}]
+              (case tyyppi
+                :lopetus (assoc ilmoitus :tila :lopetus)
+                :aloitus (assoc ilmoitus :tila :aloitus)
+                :vastaanotto (assoc ilmoitus :tila :vastaanotto)
+                ilmoitus))
+            (assoc ilmoitus :tila :kuittaamaton
+                   :kuittaukset kuittaukset)
+            kuittaukset)))

@@ -167,8 +167,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
        [:div.vihjeen-sisalto
         (harja.ui.ikonit/livicon-info-sign)
         [:span (str " " (first vihjeet))]
-        (for [vihje (rest vihjeet)]
-          [:div.vihjeen-lisarivi (str "  " vihje)])]])))
+        (map-indexed
+         (fn [i vihje]
+           ^{:key i}
+           [:div.vihjeen-lisarivi (str "  " vihje)])
+          (rest vihjeet))]])))
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"

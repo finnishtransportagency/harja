@@ -109,18 +109,18 @@
            tm.poistettu is not true
            WHERE urakka is not null;")]
     (is
-      (some
-        true?
-        (map
-        (fn [[urakka toteuma]]
-          (oikeat-sarakkeet-palvelussa?
-            [[:toteumamateriaalit 0 :materiaali :nimi] [:toteumamateriaalit 0 :materiaali :yksikko]
-             [:toteumamateriaalit 0 :maara] :alkanut :paattynyt [:toteumamateriaalit 0 :materiaali  :id]
-             :id [:toteumamateriaalit 0 :tmid] :suorittaja :ytunnus :lisatieto]
-            :hae-toteuman-materiaalitiedot
-            {:urakka-id urakka
-             :toteuma-id toteuma}))
-        tunnisteet)))))
+     (some
+      (fn [[urakka toteuma]]
+        (oikeat-sarakkeet-palvelussa?
+         [[:toteumamateriaalit 0 :materiaali :nimi] [:toteumamateriaalit 0 :materiaali :yksikko]
+          [:toteumamateriaalit 0 :maara] :alkanut :paattynyt [:toteumamateriaalit 0 :materiaali  :id]
+          :id [:toteumamateriaalit 0 :tmid] :suorittaja :ytunnus :lisatieto]
+         :hae-toteuman-materiaalitiedot
+         {:urakka-id urakka
+          :toteuma-id toteuma}
+         +kayttaja-jvh+
+         false))
+      tunnisteet))))
 
 
 

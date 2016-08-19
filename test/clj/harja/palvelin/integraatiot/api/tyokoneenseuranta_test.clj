@@ -5,7 +5,8 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [clojure.test :refer :all]
             [harja.kyselyt.konversio :as konv]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [taoensso.timbre :as log]))
 
 (def kayttaja "destia")
 
@@ -59,7 +60,7 @@
     (let [sijainti (ffirst (q "SELECT sijainti FROM tyokonehavainto WHERE tyokoneid=666"))
           tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
                        (konv/array->set))]
-      (println (pr-str tehtavat))
+      (log/debug "TEHTÄVÄT:" (pr-str tehtavat))
       (is (= 200 (:status kutsu)))
       (is (= (str sijainti) "(429015.0,7198161.0)"))
       (is (= tehtavat #{"suolaus"})))))
