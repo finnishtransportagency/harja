@@ -53,8 +53,8 @@ SELECT id FROM vakiohavainto WHERE jatkuva = TRUE;
 SELECT avain,nimi FROM vakiohavainto WHERE jatkuva = FALSE;
 
 -- name: luo-uusi-tarkastus<!
-INSERT INTO tarkastus (urakka, sopimus, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde)
- VALUES (:urakka, :sopimus, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, :sijainti, :tarkastaja, :tyyppi::tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde::lahde);
+INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde)
+ VALUES (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, :sijainti, :tarkastaja, :tyyppi::tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde::lahde);
 
 -- name: luo-uusi-tarkastuksen-vakiohavainto<!
 INSERT INTO tarkastus_vakiohavainto (tarkastus, vakiohavainto) VALUES (:tarkastus, :vakiohavainto);
