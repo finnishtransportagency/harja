@@ -7,7 +7,8 @@
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [taoensso.timbre :as log]
-            [harja.geo :as geo]))
+            [harja.geo :as geo]
+            [harja.fmt :as fmt]))
 
 
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
@@ -68,6 +69,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
    [:div
     [:table
      (for [[kentta arvo] [["Ilmoitettu" (:ilmoitettu ilmoitus)]
+                          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
                           ["Otsikko" (:otsikko ilmoitus)]
                           ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
                           ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
@@ -135,7 +137,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                                   :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
 
 (defn vastaanota-sahkopostikuittaus
-  "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään 
+  "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
 kuittauksen lähettäjälle."
   [jms-lahettaja db {:keys [lahettaja otsikko sisalto]}]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
