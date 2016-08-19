@@ -3,7 +3,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
-            [slingshot.slingshot :refer [try+]]))
+            [slingshot.slingshot :refer [try+]]
+            [taoensso.timbre :as log]))
 
 (deftest tarkista-toimenpiteen-tallentuminen
   (tuo-toimenpide)
@@ -51,7 +52,7 @@
     (is (some #(= (first %) "Laiturialue: Sakot") nimet))
     (is (some #(= (first %) "Laiturialue: Äkilliset hoitotyöt") nimet))
     (is (some #(= (first %) "Laiturialue: Muut") nimet))
-    (println "nimet: " nimet))
+    (log/debug "nimet: " nimet))
 
   (poista-toimenpide))
 

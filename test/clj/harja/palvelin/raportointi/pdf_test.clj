@@ -3,7 +3,8 @@
   (:require [harja.palvelin.raportointi.pdf :as pdf :refer [muodosta-pdf]]
             [clojure.zip :as zip]
             [clojure.test :refer [deftest is]]
-            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]))
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [taoensso.timbre :as log]))
 
 
 ;; Testataan, että virheellisistä syötteistä tulee oikein poikkeukset
@@ -43,7 +44,7 @@
     ;; PENDING: tämä testaa *TODELLA* tarkkaan, että rakenne on tismalleen oikein
     ;; XSL-FO generointia on hankala testata muuten, koska ei voi lopputulos PDF:n
     ;; visuaalista rakennetta oikein assertoida.
-    (println "Palautus: " fo)
+    (log/debug "Palautus: " fo)
     (is (= fo `[:fo:block
                 {:space-before "1em", :font-size "8pt", :font-weight "bold"}
                 "Taulukko"
