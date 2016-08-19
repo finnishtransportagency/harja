@@ -3,7 +3,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]))
+            [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
+            [taoensso.timbre :as log]))
 
 (def kayttaja "destia")
 
@@ -45,7 +46,7 @@
                                                     (.replace "__SUKUNIMI__" tarkastaja-sukunimi)
                                                     (.replace "__SILTATUNNUS__" (str siltatunnus))
                                                     (.replace "__TARKASTUSAIKA__" tarkastusaika)))]
-    (println "Vastaus: " vastaus-lisays)
+    (log/debug "Vastaus: " vastaus-lisays)
     (is (= 200 (:status vastaus-lisays)))
     (let [siltatarkastus-kannassa (first (q (str "SELECT id, ulkoinen_id, tarkastaja, tarkastusaika FROM siltatarkastus WHERE ulkoinen_id = '" ulkoinen-id "';")))
           siltatarkastus-kannassa-id (first siltatarkastus-kannassa)]
