@@ -31,10 +31,6 @@
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
-(log/set-config! [:appenders :standard-out :min-level] (if (or (ollaanko-jenkinsissa?)
-                                                               (travis?))
-                                                         :info
-                                                         :debug))
 (log/set-config! [:appenders :standard-out :min-level]
                  (cond
                    (or (ollaanko-jenkinsissa?)
@@ -358,15 +354,14 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 ;; teoriassa on hyvinkin mahdollista, että huonolla tuurilla ei löydy.
 (defn sisaltaa-ainakin-sarakkeet?
   [tulos sarakkeet]
-  (nil?
-    (some
-      false?
-      (map
-        #(contains?
-          (get-in
-            (if (vector? tulos) (first tulos) tulos)
-            (when (vector? %) (butlast %)))
-          (if (vector? %) (last %) %)) sarakkeet))))
+  (every?
+   #(let [loytyi? (not= ::ei-loydy
+                        (get-in (first tulos) (if (vector? %)
+                                           %
+                                           [%]) ::ei-loydy))]
+      (assert loytyi? (str "Polku " (pr-str %) " EI löydy tuloksesta! " (pr-str (first tulos))))
+      loytyi?)
+   sarakkeet))
 
 (defn oikeat-sarakkeet-palvelussa?
   "Tarkastaa sisältääkö palvelun palauttama tietorakenne ainakin annetut avaimet.
