@@ -2807,3 +2807,25 @@ UPDATE toimenpidekoodi SET suoritettavatehtava = 'tiemerkinta' :: suoritettavate
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'kuumennus' :: suoritettavatehtava WHERE nimi = 'Kuumennus';
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'sekoitus tai stabilointi' :: suoritettavatehtava WHERE nimi = 'Sekoitus tai stabilointi';
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'turvalaite' :: suoritettavatehtava WHERE nimi = 'Turvalaite';
+
+
+-- Luodaan 'Ei yksilöity' tehtävä kaikille 3. tason 'Laaja toimenpide' -toimenpiteiden alle HAR-2465
+-- params (p_nimi        VARCHAR(255),
+-- p_koodi       VARCHAR(16),
+-- p_taso        INTEGER,
+-- p_yksikko     VARCHAR(32),
+-- p_tuotenumero INTEGER,
+-- p_emo_nimi    VARCHAR(255),
+-- p_emo_koodi   VARCHAR(16),
+-- p_emo_taso    INTEGER)
+
+SELECT lisaa_toimenpidekoodi('Ei yksilöity', NULL, 4, '-', NULL, t.nimi, t.koodi, t.taso)
+  FROM toimenpidekoodi t WHERE taso = 3 AND nimi = 'Laaja toimenpide';
+
+
+UPDATE toimenpidekoodi
+   SET hinnoittelu = ARRAY['kokonaishintainen'::hinnoittelutyyppi],
+       api_seuranta = TRUE
+ WHERE taso = 4 AND
+       emo in (SELECT id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide')
+       AND nimi = 'Ei yksilöity';
