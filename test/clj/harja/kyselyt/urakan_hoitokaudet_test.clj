@@ -1,9 +1,10 @@
 (ns harja.kyselyt.urakan-hoitokaudet-test
   (:require
-    [clj-time.core :as time]
-    [clojure.test :refer [deftest is testing use-fixtures]]
-    [harja.testi :refer :all]
-    [clj-time.coerce :as coerce]))
+   [clj-time.core :as time]
+   [clojure.test :refer [deftest is testing use-fixtures]]
+   [harja.testi :refer :all]
+   [clj-time.coerce :as coerce]
+   [taoensso.timbre :as log]))
 
 (use-fixtures :each urakkatieto-fixture)
 
@@ -33,7 +34,7 @@
       (let [hoitokaudet (q (str "SELECT * FROM urakan_hoitokaudet(" urakka-id ")"))]
         (is (= 3 (count hoitokaudet)))
         (mapv (fn [hoitokausi]
-                (println "HOITOKAUSI: " hoitokausi)
+                (log/debug "HOITOKAUSI: " hoitokausi)
                 (let [alkupvm (paikallinen-aika (first hoitokausi))
                       loppupvm (paikallinen-aika (second hoitokausi))]
                   (is (= 1 (time/day alkupvm)))
@@ -87,7 +88,3 @@
         (is (= 1 (time/month neljas-alkupvm)))
         (is (= 7 (time/day neljas-loppupvm)))
         (is (= 7 (time/month neljas-loppupvm)))))))
-
-
-
-
