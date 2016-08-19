@@ -11,8 +11,9 @@
             [clj-time.core :as t]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [harja.domain.oikeudet :as oikeudet])
-(:import (java.util Date)))
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.java.jdbc :as jdbc])
+  (:import (java.util Date)))
 
 (def ilmoitus-xf
   (comp
@@ -223,9 +224,7 @@
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
   (log/debug "Haetaan päivitetyt tiedot ilmoituksille " (pr-str id))
   (let [id-vektori (if (vector? id) id [id])
-        kayttajan-urakat (set (map :id
-                                   (mapcat :urakat
-                                           (urakat/kayttajan-urakat-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset))))
+        kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)
         tiedot (q/hae-ilmoitukset-idlla db id-vektori)
         tulos (mapv
                ilmoitukset-domain/lisaa-ilmoituksen-tila
@@ -245,26 +244,36 @@
     (log/debug "Löydettiin tiedot " (count tulos) " ilmoitukselle.")
     tulos))
 
+(defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
+  (jdbc/with-db-transaction [db db]
+    (doseq [ilmoitustoimenpide ilmoitustoimenpiteet]
+      (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))
+    :ok))
+
 (defrecord Ilmoitukset []
   component/Lifecycle
-  (start [this]
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-ilmoitukset
+  (start [{db :db
+           tloik :tloik
+           http :http-palvelin
+           :as this}]
+    (julkaise-palvelu http :hae-ilmoitukset
                       (fn [user tiedot]
-                        (hae-ilmoitukset (:db this) user tiedot)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :tallenna-ilmoitustoimenpide
+                        (hae-ilmoitukset db user tiedot)))
+    (julkaise-palvelu http :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]
-                        (tallenna-ilmoitustoimenpide (:db this) (:tloik this) user tiedot)))
-    (julkaise-palvelu (:http-palvelin this)
-                      :hae-ilmoituksia-idlla
+                        (tallenna-ilmoitustoimenpide db tloik user tiedot)))
+    (julkaise-palvelu http :tallenna-ilmoitustoimenpiteet
+                      (fn [user ilmoitustoimenpiteet]
+                        (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet)))
+    (julkaise-palvelu http :hae-ilmoituksia-idlla
                       (fn [user tiedot]
-                        (hae-ilmoituksia-idlla (:db this) user tiedot)))
+                        (hae-ilmoituksia-idlla db user tiedot)))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-ilmoitukset
                      :tallenna-ilmoitustoimenpide
+                     :tallenna-ilmoitustoimenpiteet
                      :hae-ilmoituksia-idlla)
     this))
