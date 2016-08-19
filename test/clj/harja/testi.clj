@@ -35,6 +35,15 @@
                                                                (travis?))
                                                          :info
                                                          :debug))
+(log/set-config! [:appenders :standard-out :min-level]
+                 (cond
+                   (or (ollaanko-jenkinsissa?)
+                       (travis?)
+                       (= "true" (System/getenv "NOLOG")))
+                   :fatal
+
+                   :default
+                   :debug))
 
 (def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
                                   "172.17.238.100"
