@@ -3,7 +3,6 @@
   (:require [reagent.core :refer [atom wrap] :as reagent]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
-            [harja.ui.bootstrap :as bs]
             [harja.tiedot.toimenpidekoodit :refer [koodit tyokoneiden-reaaliaikaseuranna-tehtavat]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.grid :as grid]
@@ -175,7 +174,9 @@
            [:div [yleiset/vihje "Valitse taso nähdäksesi tehtävät"]])
 
          [:h2 "API-seuranta"]
-         (let [tehtavat (rakenna-tasot kaikki-koodit (filter #(true? (:api-seuranta %)) (get koodit-tasoittain 4)))
+         (let [tehtavat (rakenna-tasot kaikki-koodit (filter #(and (true? (:api-seuranta %))
+                                                                   (not= "Ei yksilöity" (:nimi %)))
+                                                             (get koodit-tasoittain 4)))
                kokonaishintaiset-tehtavat (filter #(some (fn [h] (= h "kokonaishintainen")) (:hinnoittelu %)) tehtavat)
                yksikkohintaiset-tehtavat (filter #(some (fn [h] (= h "yksikkohintainen")) (:hinnoittelu %)) tehtavat)]
            [:div
@@ -183,7 +184,7 @@
              {:otsikko "API:n kautta seurattavat kokonaishintaiset toteumatehtävät"
               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
               :piilota-toiminnot? true
-              :tunniste :id}
+              :tunniste #(str "kht" (:id %))}
 
              [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
               {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
@@ -194,7 +195,7 @@
              {:otsikko "API:n kautta seurattavat yksikköhintaiset toteumatehtävät"
               :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
               :piilota-toiminnot? true
-              :tunniste :id}
+              :tunniste #(str "yht" (:id %))}
 
              [{:otsikko "Id" :nimi :id :tyyppi :string :leveys "40"}
               {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}
@@ -206,7 +207,7 @@
             {:otsikko "API:n kautta seurattavat työkoneiden reaaliaikaseurannan tehtävät"
              :tyhja (if (nil? tehtavat) [yleiset/ajax-loader "Tehtäviä haetaan..."] "Ei tehtävätietoja")
              :piilota-toiminnot? true
-             :tunniste :id}
+             :tunniste #(str "ras" (:nimi %))}
             [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "20%"}]
             (sort-by :nimi tehtavat)])]))
 
