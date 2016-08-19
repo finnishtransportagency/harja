@@ -325,7 +325,7 @@
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
 
-    (println "SAIN OSAT: " osat)
+    (log/debug "SAIN OSAT: " osat)
     (let [hae-osat #(hae-urakan-yllapitokohdeosat c user
                                                   {:urakka-id urakka-id
                                                    :sopimus-id sopimus-id
