@@ -232,7 +232,9 @@
   [{:keys [kohdeosat-paivitetty-fn muokkaa!]}
    urakka kohdeosat
    {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
-    alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde} osan-pituus]
+    alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys
+    kohdetyyppi :yllapitokohdetyyppi
+    :as kohde} osan-pituus]
   (let [kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
@@ -253,7 +255,8 @@
           (fn [_ {:keys [index]}]
             [:span
              [:button.nappi-ensisijainen.btn-xs
-              {:on-click
+              {:disabled (= kohdetyyppi :sora)
+               :on-click
                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
               (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
              [:button.nappi-kielteinen.btn-xs
@@ -380,7 +383,9 @@
                              [:span#kohdeosien-pituus-yht
                               "Tierekisterikohteiden pituus yhteensä: "
                               (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus)
-                                                            (vals @grid-data))))])}
+                                                            (vals @grid-data))))
+                              (when (= kohdetyyppi :sora)
+                                [:p (yleiset/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
 
 
