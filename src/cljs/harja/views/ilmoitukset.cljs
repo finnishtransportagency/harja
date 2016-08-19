@@ -65,11 +65,12 @@
     (fn [i {:keys [kuitattu kuittaustyyppi kuittaaja]}]
       ^{:key i}
       [yleiset/tooltip {}
-       [:div.kuittaus {:class (name kuittaustyyppi)
-                                        ;:title
-                       }
+       [:div.kuittaus {:class (name kuittaustyyppi)}
         (kuittaustyypin-lyhenne kuittaustyyppi)]
-       [:div (kuittaustyypin-selite kuittaustyyppi) " " (pvm/pvm kuitattu)
+       [:div
+        (kuittaustyypin-selite kuittaustyyppi)
+        [:br]
+        (pvm/pvm-aika kuitattu)
         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
     kuittaukset)])
 
@@ -83,7 +84,6 @@
         [lomake/lomake
          {:luokka   :horizontal
           :muokkaa! (fn [uusi]
-                      (log "UUDET ILMOITUSVALINNAT: " (pr-str uusi))
                       (swap! tiedot/valinnat
                              (fn [vanha]
                                (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
