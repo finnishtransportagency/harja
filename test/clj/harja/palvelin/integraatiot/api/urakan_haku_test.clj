@@ -31,7 +31,7 @@
 
     (let [kokonaishintaiset (get-in encoodattu-body [:urakka :tehtavat :kokonaishintaiset])
           yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
-      (is (= 25 (count kokonaishintaiset)))
+      (is (= 225 (count kokonaishintaiset)))
       (is (= 55 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
