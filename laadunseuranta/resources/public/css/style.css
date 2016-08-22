@@ -333,7 +333,7 @@ button {
 
 .pikavalinta-footer {
     position: absolute;
-    bottom: 5px;
+    bottom: 65px;
     padding-top: 5px;
     height: 70px;
     z-index: 2000;
