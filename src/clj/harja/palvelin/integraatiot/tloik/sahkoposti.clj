@@ -45,8 +45,9 @@
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
 (defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi] :as ilmoitus}]
-  (str (when (ilm/virka-apupyynto? ilmoitus) "VIRKA-APUPYYNTÖ ")
-       "#[" urakka-id "/" ilmoitus-id "] " (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))))
+  (str "#[" urakka-id "/" ilmoitus-id "] "
+       (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))
+       (when (ilm/virka-apupyynto? ilmoitus) " (VIRKA-APUPYYNTÖ)")))
 
 (defn- html-nappi [napin-teksti linkki]
   [:table {:width "100%" :border "0" :cellspacing "0" :cellpadding "0"}

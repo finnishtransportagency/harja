@@ -13,7 +13,7 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
-  (str "Uusi toimenpidepyyntö: %s (id: %s, viestinumero: %s).\n\n"
+  (str "Uusi toimenpidepyyntö %s: %s (id: %s, viestinumero: %s).\n\n"
        "Yhteydenottopyyntö: %s\n\n"
        "Paikka: %s\n\n"
        "Selitteet: %s.\n\n"
@@ -119,21 +119,22 @@
                       (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
                       "")
         selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
-        virka-apu? (ilm/virka-apupyynto? ilmoitus)]
-    (str (when virka-apu? "VIRKA-APUPYYNTÖ ")
-         (format +ilmoitusviesti+
-                 otsikko
-                 ilmoitus-id
-                 viestinumero
-                 (fmt/totuus (:yhteydenottopyynto ilmoitus))
-                 paikankuvaus
-                 selitteet
-                 lisatietoja
-                 viestinumero
-                 viestinumero
-                 viestinumero
-                 viestinumero
-                 viestinumero))))
+        virka-apupyynto (if (ilm/virka-apupyynto? ilmoitus) "(VIRKA-APUPYYNTÖ)" "")]
+    (str
+      (format +ilmoitusviesti+
+              virka-apupyynto
+              otsikko
+              ilmoitus-id
+              viestinumero
+              (fmt/totuus (:yhteydenottopyynto ilmoitus))
+              paikankuvaus
+              selitteet
+              lisatietoja
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try
@@ -142,7 +143,7 @@
         (log/debug (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s"
                            (:ilmoitus-id ilmoitus) puhelinnumero))
         (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
-                            db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
+                             db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
               viesti (ilmoitus-tekstiviesti ilmoitus viestinumero)]
           (sms/laheta sms puhelinnumero viesti)))
       (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))

@@ -197,7 +197,7 @@
                      selitteet)))
 
 (defn virka-apupyynto? [ilmoitus]
-  (some #(= % :virkaApupyynto) (:selitteet ilmoitus)))
+  (some #(or (= % :virkaApupyynto) (= % "virkaApupyynto")) (:selitteet ilmoitus)))
 
 (def +ilmoitustilat+ #{:suljetut :avoimet})
 
