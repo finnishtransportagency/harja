@@ -18,7 +18,9 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.ui.viesti :as viesti]
-            [harja.asiakas.tapahtumat :as tapahtumat]))
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [cljs.core.async :refer [<!]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kasittele-kuittauskasityksen-vastaus [vastaus]
   (when vastaus
@@ -131,3 +133,38 @@
        "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
        "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
 
+(defn kuittaa-monta-lomake [{:keys [ilmoitukset tyyppi vapaateksti] :as data} muokkaa!
+                            kuittaukset-tallennettu]
+  (let [valittuna (count ilmoitukset)]
+    [:div.ilmoitukset-kuittaa-monta
+     [lomake/lomake
+      {:muokkaa! muokkaa!
+       :palstoja 2
+       :otsikko "Kuittaa monta ilmoitusta"}
+      [{:otsikko "Kuittaustyyppi"
+        :pakollinen? true
+        :tyyppi :valinta
+        :valinnat apurit/kuittaustyypit
+        :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
+        :nimi :tyyppi}
+
+       {:otsikko "Vapaateksti"
+        :pakollinen? true
+        :tyyppi :text
+        :koko [80 :auto]
+        :nimi :vapaateksti}]
+
+      data]
+     [napit/palvelinkutsu-nappi
+      (if (> valittuna 1)
+        (str "Kuittaa " valittuna " ilmoitusta")
+        "Kuittaa ilmoitus")
+      #(go (<! (tiedot/laheta-kuittaukset! ilmoitukset {:tyyppi tyyppi
+                                                        :vapaateksti vapaateksti}))
+           (kuittaukset-tallennettu))
+
+      {:luokka   "nappi-ensisijainen kuittaa-monta-tallennus"
+       :disabled (or (not (lomake/voi-tallentaa-ja-muokattu? data))
+                     (zero? valittuna))}]
+     [napit/peruuta "Peruuta" #(muokkaa! nil)]
+     [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))

@@ -288,13 +288,19 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                               (rivi-valinta-peruttu rivi)))
                         (reset! valittu-rivi rivi))))}
    (map-indexed
-     (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
-                    pakota-rivitys? reunus]}]
+    (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
+                   solu-klikattu
+                   pakota-rivitys? reunus]}]
        (if (= :vetolaatikon-tila tyyppi)
          ^{:key (str "vetolaatikontila" id)}
          [vetolaatikon-tila ohjaus vetolaatikot id]
          ^{:key (str i nimi)}
-         [:td {:class (y/luokat
+         [:td {:on-click (when solu-klikattu
+                           #(do
+                              (.preventDefault %)
+                              (.stopPropagation %)
+                              (solu-klikattu rivi)))
+               :class (y/luokat
                         (y/tasaus-luokka tasaa)
                         (when pakota-rivitys? "grid-pakota-rivitys")
                         (case reunus
@@ -340,6 +346,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                         :ei       ei kumpaakaan reunusta
                                         :vasen    vain vasemman puolen reunus
                                         :oikea    vain oikean puolen reunus
+  :solu-klikattu                        Valinnainen käsittelijä kyseisen solun klikkaamiselle,
+                                        saa rivin tiedot parametrina. Jos solulle on annettu
+                                        käsittelijä, ei rivi-klikattu käsittelijää kutsuta.
 
   Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
