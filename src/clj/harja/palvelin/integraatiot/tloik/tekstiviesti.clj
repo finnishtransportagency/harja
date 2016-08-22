@@ -8,7 +8,8 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.domain.ilmoitukset :as ilm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
@@ -117,20 +118,22 @@
         lisatietoja (if (:lisatieto ilmoitus)
                       (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
                       "")
-        selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-    (format +ilmoitusviesti+
-            otsikko
-            ilmoitus-id
-            viestinumero
-            (fmt/totuus (:yhteydenottopyynto ilmoitus))
-            paikankuvaus
-            selitteet
-            lisatietoja
-            viestinumero
-            viestinumero
-            viestinumero
-            viestinumero
-            viestinumero)))
+        selitteet (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))
+        virka-apu? (ilm/virka-apupyynto? ilmoitus)]
+    (str (when virka-apu? "VIRKA-APUPYYNTÖ ")
+         (format +ilmoitusviesti+
+                 otsikko
+                 ilmoitus-id
+                 viestinumero
+                 (fmt/totuus (:yhteydenottopyynto ilmoitus))
+                 paikankuvaus
+                 selitteet
+                 lisatietoja
+                 viestinumero
+                 viestinumero
+                 viestinumero
+                 viestinumero
+                 viestinumero))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try
