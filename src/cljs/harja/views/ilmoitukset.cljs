@@ -188,7 +188,7 @@
            (when-not kuittaa-monta-nyt
              [napit/yleinen "Kuittaa monta ilmoitusta" #(reset! kuittaa-monta {:ilmoitukset #{}
                                                                                :tyyppi nil})
-              {:luokka "pull-right"}])
+              {:luokka "pull-right kuittaa-monta"}])
 
            (when kuittaa-monta-nyt
              [kuittaukset/kuittaa-monta-lomake @kuittaa-monta

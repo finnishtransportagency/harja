@@ -163,7 +163,8 @@
                                                         :vapaateksti vapaateksti}))
            (kuittaukset-tallennettu))
 
-      {:disabled (or (not (lomake/voi-tallentaa-ja-muokattu? data))
+      {:luokka   "nappi-ensisijainen kuittaa-monta-tallennus"
+       :disabled (or (not (lomake/voi-tallentaa-ja-muokattu? data))
                      (zero? valittuna))}]
      [napit/peruuta "Peruuta" #(muokkaa! nil)]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))
