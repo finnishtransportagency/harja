@@ -6,6 +6,7 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
+            [harja.domain.ilmoitukset :as ilm]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
             [harja.fmt :as fmt]))
@@ -43,8 +44,9 @@
   goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
-(defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi]}]
-  (str "#[" urakka-id "/" ilmoitus-id "] " (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))))
+(defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi] :as ilmoitus}]
+  (str (when (ilm/virka-apupyynto? ilmoitus) "VIRKA-APUPYYNTÖ ")
+       "#[" urakka-id "/" ilmoitus-id "] " (apurit/ilmoitustyypin-nimi (keyword ilmoitustyyppi))))
 
 (defn- html-nappi [napin-teksti linkki]
   [:table {:width "100%" :border "0" :cellspacing "0" :cellpadding "0"}
