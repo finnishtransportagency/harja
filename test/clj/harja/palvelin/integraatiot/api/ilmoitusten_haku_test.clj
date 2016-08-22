@@ -58,7 +58,7 @@
    "lisatieto" "Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti."})
 
 (deftest kuuntele-urakan-ilmoituksia
-  (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"] kayttaja portti))
+  (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?odotaUusia=true"] kayttaja portti))
         tloik-kuittaukset (atom [])]
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
