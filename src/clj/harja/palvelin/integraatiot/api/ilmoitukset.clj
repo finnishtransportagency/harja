@@ -77,7 +77,7 @@
            sulje-lahetyksen-jalkeen?)))
 
 (defn pura-ilmoitusten-kuuntelun-kutsuparametrit [request]
-  (let [{urakka-id "id"
+  (let [{urakka-id :id
          muuttunut-jalkeen "muuttunutJalkeen"
          odota-uusia "odotaUusia"
          sulje-vastauksen-jalkeen "suljeVastauksenJalkeen"} (:params request)

@@ -9,10 +9,10 @@
            (:loppuosa tierekisteriosoite))
     (assoc-in ilmoitus [:sijainti :tie]
               {:numero (:numero tierekisteriosoite)
-               :aet    (:alkuetaisyys tierekisteriosoite)
-               :aosa   (:alkuosa tierekisteriosoite)
-               :let    (:loppuetaisyys tierekisteriosoite)
-               :losa   (:loppuosa tierekisteriosoite)})
+               :aet (:alkuetaisyys tierekisteriosoite)
+               :aosa (:alkuosa tierekisteriosoite)
+               :let (:loppuetaisyys tierekisteriosoite)
+               :losa (:loppuosa tierekisteriosoite)})
     ilmoitus))
 
 (defn rakenna-sijanti [ilmoitus]
@@ -28,9 +28,10 @@
         (rakenna-tierekisteriosoite tierekisteriosoite))))
 
 (defn rakenna-selitteet [ilmoitus]
-  (let [selitteet-kannassa (vec (.getArray (:selitteet ilmoitus)))
-        selitteet-vastauksessa (mapv (fn [selite] {:selite selite}) selitteet-kannassa)]
-    (update ilmoitus :selitteet (constantly selitteet-vastauksessa))))
+  (when (:selitteet ilmoitus)
+    (let [selitteet-kannassa (vec (.getArray (:selitteet ilmoitus)))
+          selitteet-vastauksessa (mapv (fn [selite] {:selite selite}) selitteet-kannassa)]
+      (update ilmoitus :selitteet (constantly selitteet-vastauksessa)))))
 
 (defn rakenna-henkilo [ilmoitus henkiloavain]
   (let [henkilo (henkiloavain ilmoitus)]
