@@ -54,7 +54,7 @@
                         :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
                         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
                         :ilmoitukset {:google-static-maps-key "AIzaSyAHMEbpTzPW-H-qxvlUCH1rh8iKZCI6SBM"}
-                        :paivittainen-lahetysaika [12 00 00] }
+                        :paivittainen-lahetysaika [12 11 00] }
 
  :turi                 {:url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/poikkeamaTuonti"
                         :kayttajatunnus "testi"
