@@ -199,33 +199,39 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
       (fn [laatupoikkeama optiot]
         (let [uusi? (not (:id @laatupoikkeama))
               sanktion-validointi (partial lisaa-sanktion-validointi
-                                           #(sanktiotietoja-annettu? @laatupoikkeama))]
+                                           #(sanktiotietoja-annettu? @laatupoikkeama))
+              kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
+              yllapitokohteet (:yllapitokohteet optiot)]
           (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
-                     (nil? (:yllapitokohteet optiot)))
+                     (nil? yllapitokohteet))
             [ajax-loader "Ladataan..."]
             [:div.laatupoikkeama
             [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
 
             [lomake/lomake
-             {:otsikko "Laatupoikkeaman tiedot"
-              :muokkaa! #(reset! laatupoikkeama %)
+             {:otsikko      "Laatupoikkeaman tiedot"
+              :muokkaa!     #(let [uusi-lp
+                                   (if (kohde-muuttui? (:yllapitokohde @laatupoikkeama) (:yllapitokohde %))
+                                     (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                                     %)]
+                              (reset! laatupoikkeama uusi-lp))
               :voi-muokata? @laatupoikkeamat/voi-kirjata?
-              :footer [napit/palvelinkutsu-nappi
-                       ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
-                       ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
-                       (cond
-                         (and (not (paatos? @laatupoikkeama))
-                              (paatos? @laatupoikkeama))
-                         "Tallenna ja lukitse laatupoikkeama"
+              :footer       [napit/palvelinkutsu-nappi
+                             ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
+                             ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
+                             (cond
+                               (and (not (paatos? @laatupoikkeama))
+                                    (paatos? @laatupoikkeama))
+                               "Tallenna ja lukitse laatupoikkeama"
 
-                         :default
-                         "Tallenna laatupoikkeama")
+                               :default
+                               "Tallenna laatupoikkeama")
 
-                       #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
-                       {:ikoni (ikonit/tallenna)
-                        :disabled (validoi-laatupoikkeama @laatupoikkeama)
-                        :virheviesti "Laatupoikkeaman tallennus epäonnistui"
-                        :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]}
+                             #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
+                             {:ikoni        (ikonit/tallenna)
+                              :disabled     (validoi-laatupoikkeama @laatupoikkeama)
+                              :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
+                              :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]}
 
              [{:otsikko "Päivämäärä ja aika"
                :pakollinen? true
@@ -243,7 +249,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  :palstoja 1
                  :pakollinen? true
                  :muokattava? muokattava?
-                 :valinnat (:yllapitokohteet optiot)
+                 :valinnat yllapitokohteet
                  :jos-tyhja "Ei valittavia kohteita"
                  :valinta-arvo :id
                  :valinta-nayta (fn [arvo muokattava?]
