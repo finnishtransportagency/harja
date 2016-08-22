@@ -196,6 +196,9 @@
                (mapv #(get +ilmoitusten-selitteet+ %)
                      selitteet)))
 
+(defn virka-apupyynto? [ilmoitus]
+  (some #(= % :virkaApupyynto) (:selitteet ilmoitus)))
+
 (def +ilmoitustilat+ #{:suljetut :avoimet})
 
 
