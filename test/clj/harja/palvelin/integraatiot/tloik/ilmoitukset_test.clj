@@ -83,7 +83,7 @@
                     #(swap! viestit conj (.getText %)))
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
-    (let [ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset"]
+    (let [ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
@@ -102,7 +102,6 @@
 
       (let [{:keys [status body]} @ilmoitushaku]
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
-        ;; todo: tarkista miksi ei palaudu yhtään ilmoitusta API-kutsun responsessa
         (is (= (-> (cheshire/decode body)
                    (get "ilmoitukset")
                    count) 1) "Ilmoituksia on vastauksessa yksi")))

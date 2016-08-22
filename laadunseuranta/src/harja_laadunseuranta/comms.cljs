@@ -6,9 +6,10 @@
 
 (defn- hanskaa-virhe [response c]
   (let [{:keys [failure status status-text]} response]
-    (when (and (= status 0)
-               (= "Request failed." status-text))
+    #_(when-not (or (= :abort failure)
+                  (= :failure failure))
       (set! (.-location js/window) (str (.-location js/window) "?relogin=true")))
+    (js/console.log (str "Virhe: " failure status status-text response))
     (close! c)))
 
 (defn post! [url data]
