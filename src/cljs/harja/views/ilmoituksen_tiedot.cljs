@@ -4,15 +4,25 @@
             [harja.ui.bootstrap :as bs]
             [clojure.string :refer [capitalize]]
             [harja.tiedot.ilmoitukset :as tiedot]
-            [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
-                                              +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
-                                              +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-                                              kuittaustyypin-selite]]
+            [harja.domain.ilmoitukset
+             :refer [+ilmoitustyypit+ ilmoitustyypin-nimi ilmoitustyypin-lyhenne-ja-nimi
+                     +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
+                     +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
+                     kuittaustyypin-selite]
+             :as ilmoitukset]
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tierekisteri :as tr-domain]))
+
+(defn selitelista [{:keys [selitteet] :as ilmoitus}]
+  (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]
+    [:div.selitelista.inline-block
+     (when virka-apu?
+       [:div.selite-virkaapu
+        [ikonit/livicon-warning-sign] "Virka-apupyyntö"])
+     (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
 
 (defn ilmoitus [ilmoitus]
   [:div
@@ -28,7 +38,7 @@
       "Paikan kuvaus: " (:paikankuvaus ilmoitus)
       "Lisatieto:  " (when (:lisatieto ilmoitus)
                          [yleiset/pitka-teksti (:lisatieto ilmoitus)])
-      "Selitteet: " (parsi-selitteet (:selitteet ilmoitus))]
+      "Selitteet: " [selitelista ilmoitus]]
 
      [:br]
      [yleiset/tietoja {}
