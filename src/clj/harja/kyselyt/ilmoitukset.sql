@@ -396,3 +396,8 @@ FROM asiakaspalauteluokka apl
        (:alkupvm :: DATE IS NULL OR i.ilmoitettu >= :alkupvm) AND
        (:loppupvm :: DATE IS NULL OR i.ilmoitettu <= :loppupvm)
 GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
+
+-- name: hae-lahettamattomat-ilmoitustoimenpiteet
+SELECT id
+FROM ilmoitustoimenpide
+WHERE tila IS NULL OR tila = 'virhe';
