@@ -30,6 +30,15 @@
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id)
       (throw e))))
 
+(defn laheta-lahettamattomat-ilmoitustoimenpiteet [jms-lahettaja db]
+  (log/debug "Lähetetään lähettämättömät ilmoitustoimenpiteet T-LOIK:n.")
+  (let [idt (mapv :id (ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))]
+    (doseq [id idt]
+      (try
+        (laheta-ilmoitustoimenpide jms-lahettaja db id)
+        (catch Exception _))))
+  (log/debug "Ilmoitustoimenpiteiden lähetys T-LOIK:n valmis."))
+
 (defn vastaanota-kuittaus [db viesti-id onnistunut]
   (if onnistunut
     (do
