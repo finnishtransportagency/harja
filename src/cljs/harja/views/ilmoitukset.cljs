@@ -77,14 +77,6 @@
         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
     kuittaukset)])
 
-(defn selitelista [{:keys [selitteet]}]
-  (let [virka-apu? (some #(= % :virkaApupyynto) selitteet)]
-    [:div.selitelista
-     (when virka-apu?
-       [:div.selite-virkaapu
-        [ikonit/livicon-warning-sign] "Virka-apupyyntö"])
-     (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
-
 (defn ilmoitusten-hakuehdot [{:keys [aikavali] :as valinnat-nyt} muokkaa!]
   [lomake/lomake
    {:luokka   :horizontal
@@ -237,7 +229,7 @@
 
              {:otsikko "Selitteet" :nimi :selitteet
               :tyyppi :komponentti
-              :komponentti selitelista
+              :komponentti it/selitelista
               :leveys 6}
              {:otsikko "Kuittaukset" :nimi :kuittaukset
               :tyyppi :komponentti

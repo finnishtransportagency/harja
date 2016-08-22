@@ -14,6 +14,14 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tierekisteri :as tr-domain]))
 
+(defn selitelista [{:keys [selitteet]}]
+  (let [virka-apu? (some #(= % :virkaApupyynto) selitteet)]
+    [:div.selitelista.inline-block
+     (when virka-apu?
+       [:div.selite-virkaapu
+        [ikonit/livicon-warning-sign] "Virka-apupyyntö"])
+     (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
+
 (defn ilmoitus [ilmoitus]
   [:div
    [bs/panel {}
@@ -28,7 +36,7 @@
       "Paikan kuvaus: " (:paikankuvaus ilmoitus)
       "Lisatieto:  " (when (:lisatieto ilmoitus)
                          [yleiset/pitka-teksti (:lisatieto ilmoitus)])
-      "Selitteet: " (parsi-selitteet (:selitteet ilmoitus))]
+      "Selitteet: " [selitelista ilmoitus]]
 
      [:br]
      [yleiset/tietoja {}
