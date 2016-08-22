@@ -12,7 +12,7 @@
   {:replikoinnin-viive-sekunteina (q/hae-replikoinnin-viive db-replica)})
 
 (defn sonja-yhteyden-tila [{:keys [yhteys-ok?]}]
-  {:sonja-yhteys-ok? @yhteys-ok?})
+  {:sonja-yhteys-ok? (and yhteys-ok? @yhteys-ok?)})
 
 (defrecord Status [status]
   component/Lifecycle
