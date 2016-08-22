@@ -57,6 +57,9 @@
              :style "font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; display: inline-block;"}
          napin-teksti]]]]]]])
 
+(def +vastausohje+ (str "Läheta tämä viesti kuitataksesi. Älä muuta otsikkoa tai hakasuluissa "
+                        "olevaa kuittaustyyppiä. Voit kirjoittaa myös kommentin viestin alkuun."))
+
 (defn- html-mailto-nappi
   "Luo HTML-fragmentin mailto: napin sähköpostia varten. Tämä täytyy tyylitellä inline, koska ei voida
 resursseja liitää sähköpostiin mukaan luotettavasti."
@@ -84,7 +87,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                             lat lon google-static-maps-key)}]))
     (for [teksti (map first kuittaustyypit)]
       [:div {:style "padding-top: 10px;"}
-       (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "]"))])]))
+       (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
 (defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
   (let [otsikko (otsikko ilmoitus)
@@ -98,15 +101,17 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                            second)]
     (second (first (filter #(= (first %) nimi) kuittaustyypit)))))
 
-(defn viesti-ilman-kuittaustyyppia [sisalto]
-  (str/replace sisalto kuittaustyyppi-pattern ""))
+(defn viesti-ilman-kuittaustyyppia-ja-ohjetta [sisalto]
+  (-> sisalto
+      (str/replace kuittaustyyppi-pattern "")
+      (str/replace +vastausohje+ "")))
 
 (defn lue-kuittausviesti
   "Lukee annetun kuittausviestin otsikosta ja sisällöstä kuittauksen tiedot mäpiksi"
   [otsikko sisalto]
   (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
         kuittaustyyppi (viestin-kuittaustyyppi sisalto)
-        kommentti (str/trim (viesti-ilman-kuittaustyyppia sisalto))]
+        kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))]
     (if (and urakka-id ilmoitus-id kuittaustyyppi)
       {:urakka-id (Long/parseLong urakka-id)
        :ilmoitus-id (Long/parseLong ilmoitus-id)
