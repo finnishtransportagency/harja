@@ -36,6 +36,7 @@ tuotanto/
 tuotanto_test.sh
 .labyrintti-salasana
 .turi-salasana
+.google-static-maps-key
 .hipchat-token
 opt/sonic/7.6.2/sonic-client.jar
 opt/sonic/7.6.2/sonic-crypto.jar
