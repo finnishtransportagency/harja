@@ -229,7 +229,6 @@
                                      :let (:aet paatepiste)}]    
     (assoc tarkastus
            ;:sijainti (:geometria koko-tarkastuksen-tr-osoite)
-           :sopimus 2  ;; TODO: tarviiko tätä ollenkaan?
            :tarkastaja (:kayttajanimi kayttaja)
            :tr_numero (:tie koko-tarkastuksen-tr-osoite)
            :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)

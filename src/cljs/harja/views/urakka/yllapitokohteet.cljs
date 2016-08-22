@@ -232,7 +232,9 @@
   [{:keys [kohdeosat-paivitetty-fn muokkaa!]}
    urakka kohdeosat
    {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa
-    alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys :as kohde} osan-pituus]
+    alkuet :tr-alkuetaisyys loppuet :tr-loppuetaisyys
+    kohdetyyppi :yllapitokohdetyyppi
+    :as kohde} osan-pituus]
   (let [kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
@@ -253,7 +255,8 @@
           (fn [_ {:keys [index]}]
             [:span
              [:button.nappi-ensisijainen.btn-xs
-              {:on-click
+              {:disabled (= kohdetyyppi :sora)
+               :on-click
                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
               (yleiset/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
              [:button.nappi-kielteinen.btn-xs
@@ -285,8 +288,8 @@
                             [{:nimi :nimi}
                              {:nimi :tunnus}
                              {:nimi :tr-numero :muokattava? (constantly false)}
-                             {:nimi :tr-ajorata}
-                             {:nimi :tr-kaista}
+                             {:nimi :tr-ajorata :muokattava? (constantly false)}
+                             {:nimi :tr-kaista :muokattava? (constantly false)}
                              {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
                                                                (pos? rivi))
                               :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
@@ -380,7 +383,9 @@
                              [:span#kohdeosien-pituus-yht
                               "Tierekisterikohteiden pituus yhteensä: "
                               (fmt/pituus (reduce + 0 (keep (partial pituus osan-pituus)
-                                                            (vals @grid-data))))])}
+                                                            (vals @grid-data))))
+                              (when (= kohdetyyppi :sora)
+                                [:p (yleiset/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
 
 
@@ -422,6 +427,12 @@
        kohde
        @osan-pituus])))
 
+(defn kohteen-vetolaatikko [_ _ _]
+  (fn [urakka kohteet-atom rivi]
+    (if @grid/gridia-muokataan?
+     [:span "Kohteen tierekisterikohteet ovat muokattavissa kohteen tallennuksen jälkeen."]
+     [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi])))
+
 (defn yllapitokohteet [urakka kohteet-atom optiot]
   (let [tr-sijainnit (atom {})                              ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {})                                ;; virheelliset TR sijainnit
@@ -438,11 +449,9 @@
            :vetolaatikot
            (into {}
                  (map (juxt
-                       :id
-                       (fn [rivi]
-                         (if @grid/gridia-muokataan?
-                           [:span "Kohteen tierekisterikohteet ovat muokattavissa kohteen tallennuksen jälkeen."]
-                           [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi]))))
+                        :id
+                        (fn [rivi]
+                          [kohteen-vetolaatikko urakka kohteet-atom rivi])))
                  @kohteet-atom)
            :tallenna @tallenna
            :muutos (fn [grid]
@@ -463,7 +472,8 @@
                     :tyyppi :string :leveys kohde-leveys}
                    {:otsikko "Tyyppi"
                     :nimi :yllapitokohdetyyppi :tyyppi :string :leveys yllapitokohdetyyppi-leveys
-                    :muokattava? (constantly false) :fmt #({:paallyste "Päällyste"
+                    :muokattava? (constantly false)
+                    :fmt #({:paallyste "Päällyste"
                                                             :sora "Sora"
                                                             :kevytliikenne "Kevytliikenne"} %)}]
                   (tierekisteriosoite-sarakkeet
@@ -471,8 +481,8 @@
                     [nil
                      nil
                      {:nimi :tr-numero :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                     {:nimi :tr-ajorata}
-                     {:nimi :tr-kaista}
+                     {:nimi :tr-ajorata :muokattava? (constantly (not (:yha-sidottu? optiot)))}
+                     {:nimi :tr-kaista :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                      {:nimi :tr-alkuosa}
                      {:nimi :tr-alkuetaisyys}
                      {:nimi :tr-loppuosa}

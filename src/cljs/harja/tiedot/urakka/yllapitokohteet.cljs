@@ -105,6 +105,8 @@
                    :tr-alkuetaisyys nil
                    :tr-loppuosa (:tr-loppuosa rivi)
                    :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
+                   :tr-ajorata (:tr-ajorata rivi)
+                   :tr-kaista (:tr-kaista rivi)
                    :toimenpide ""}]
     (-> kohdeosat
         (assoc-in [key :tr-loppuosa] nil)
