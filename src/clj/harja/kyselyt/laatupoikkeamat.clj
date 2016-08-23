@@ -19,7 +19,7 @@
     (when yllapitokohde
       (yllapitokohteet/tarkista-yllapitokohteen-urakka db urakka yllapitokohde))
     (if id
-     (do
+      (do
        (paivita-laatupoikkeaman-perustiedot<! db
                                                 (konv/sql-timestamp aika)
                                                 (when tekija (name tekija))

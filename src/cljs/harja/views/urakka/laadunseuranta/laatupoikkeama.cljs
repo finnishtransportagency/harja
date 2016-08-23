@@ -202,6 +202,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                            #(sanktiotietoja-annettu? @laatupoikkeama))
               kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
               yllapitokohteet (:yllapitokohteet optiot)]
+          (log "laatupoikkeama" (pr-str @laatupoikkeama))
           (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
                      (nil? yllapitokohteet))
             [ajax-loader "Ladataan..."]
@@ -211,9 +212,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             [lomake/lomake
              {:otsikko      "Laatupoikkeaman tiedot"
               :muokkaa!     #(let [uusi-lp
-                                   (if (kohde-muuttui? (:yllapitokohde @laatupoikkeama) (:yllapitokohde %))
+                                   (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
+                                                       (get-in % [:yllapitokohde :id]))
                                      (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
                                      %)]
+                              (log "muokkaa")
                               (reset! laatupoikkeama uusi-lp))
               :voi-muokata? @laatupoikkeamat/voi-kirjata?
               :footer       [napit/palvelinkutsu-nappi
@@ -245,19 +248,19 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     (= (:nakyma optiot) :paallystys)
                     (= (:nakyma optiot) :paikkaus)
                     (= (:nakyma optiot) :tiemerkinta))
-                {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
-                 :palstoja 1
-                 :pakollinen? true
-                 :muokattava? muokattava?
-                 :valinnat yllapitokohteet
-                 :jos-tyhja "Ei valittavia kohteita"
-                 :valinta-arvo :id
+                {:otsikko       "Kohde" :tyyppi :valinta :nimi :yllapitokohde
+                 ;:hae #(get-in % [:yllapitokohde :id])
+                 :palstoja      1
+                 :pakollinen?   true
+                 :muokattava?   muokattava?
+                 :valinnat      yllapitokohteet
+                 :jos-tyhja     "Ei valittavia kohteita"
                  :valinta-nayta (fn [arvo muokattava?]
                                   (if arvo (tierekisteri/yllapitokohde-tekstina arvo {:osoite arvo})
                                            (if muokattava?
                                              "- Valitse kohde -"
                                              "")))
-                 :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
+                 :validoi       [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
                 {:otsikko "Kohde" :tyyppi :string :nimi :kohde
                  :palstoja 1
                  :pakollinen? true
