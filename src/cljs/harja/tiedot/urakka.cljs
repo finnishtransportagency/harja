@@ -359,4 +359,4 @@
 
 (defn lukitse-urakan-yha-sidonta! [urakka-id]
   (when (= @nav/valittu-urakka-id urakka-id)
-    (swap! nav/valittu-urakka assoc-in [:yhatiedot :sidonta-lukittu?] true)))
+    (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc-in [:yhatiedot :sidonta-lukittu?] true)))
