@@ -304,11 +304,14 @@
 
 (defn lisaa-havainto [aktiivinen on-click on-press]
   [:div.sidepanel-box
-   [painike/painike {:otsikko "Lisää havainto"
-                     :aktiivinen-otsikko "Kirjaa"
-                     :delay 500
-                     :on-click on-click
-                     :on-press on-press} aktiivinen]])
+   [:nav.pikavalintapainike {:on-click (if aktiivinen
+                                         #(on-click true)
+                                         on-press)
+                             :class (when aktiivinen "painike-aktiivinen")}
+    (if aktiivinen
+      "Lopeta väli"
+      "Aloita väli")]
+   [:nav.pikavalintapainike {:on-click #(on-click false)} "Lisää havainto"]])
  
 (def testihavainnot (atom {:liukasta false}))
 

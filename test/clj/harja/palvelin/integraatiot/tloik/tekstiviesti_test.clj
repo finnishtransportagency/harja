@@ -122,6 +122,6 @@
                   :selitteet #{:toimenpidekysely}}
         rivit (into #{} (str/split-lines
                          (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (is (rivit "Uusi toimenpidepyyntö: Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Selitteet: Toimenpidekysely."))))

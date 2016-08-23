@@ -51,6 +51,9 @@
 (defn yhdeydenottopyynnot-lihavoitu []
   [yleiset/vihje "Yhdeydenottopyynnöt lihavoitu" "inline-block bold"])
 
+(defn virkaapupyynnot-korostettu []
+  [:span.selite-virkaapu [ikonit/livicon-warning-sign] "Virka-apupyynnöt korostettu"])
+
 (defn ilmoituksen-tiedot []
   (let [ilmoitus @tiedot/valittu-ilmoitus]
     [:div
@@ -184,6 +187,7 @@
           [:div
            [pollauksen-merkki]
            [yhdeydenottopyynnot-lihavoitu]
+           [virkaapupyynnot-korostettu]
 
            (when-not kuittaa-monta-nyt
              [napit/yleinen "Kuittaa monta ilmoitusta" #(reset! kuittaa-monta {:ilmoitukset #{}
@@ -223,7 +227,9 @@
               :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
               :leveys 7}
 
-             {:otsikko "Selitteet" :nimi :selitteet :hae #(parsi-selitteet (:selitteet %))
+             {:otsikko "Selitteet" :nimi :selitteet
+              :tyyppi :komponentti
+              :komponentti it/selitelista
               :leveys 6}
              {:otsikko "Kuittaukset" :nimi :kuittaukset
               :tyyppi :komponentti
