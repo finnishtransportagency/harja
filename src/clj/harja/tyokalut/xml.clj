@@ -51,7 +51,7 @@
                               (log/error e (format "Fataali XSD-validointi virhe skeemalle: %s" xsd-skeema-tiedosto) )
                               (swap! virheet conj (.getMessage e)))
                             (warning [this e]
-                              (log/error e (format "XSD-validointivaroitus skeemalle: %s" xsd-skeema-tiedosto) ))))
+                              (log/warn e (format "XSD-validointivaroitus skeemalle: %s" xsd-skeema-tiedosto) ))))
         (.validate v (StreamSource. (ByteArrayInputStream. (.getBytes xml-sisalto)))))
       (if (empty? @virheet)
         nil
