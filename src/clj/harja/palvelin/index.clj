@@ -27,7 +27,6 @@
        [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
        [:script {:type "text/javascript" :src "js/less-2.5.0.js"}]
-       [:script {:type "text/javascript" :src "js/proj4.js"}]
        [:script {:type "text/javascript"}
         "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");"
         "proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
@@ -48,7 +47,6 @@
        [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
        [:script {:type "text/javascript" :src "js/harja.js"}]
-       [:script {:type "text/javascript" :src "js/proj4.js"}]
        [:script {:type "text/javascript"}
         "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");"
         "proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
