@@ -45,6 +45,7 @@
     (= (:jatkuvat-havainnot nykyinen-reittimerkinta) (:jatkuvat-havainnot seuraava-reittimerkinta))
     ;; Seuraava piste on osa samaa tietä ja tieosaa. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
     ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta
+    (not (:laadunalitus seuraava-reittimerkinta))
     (or (nil? (:tr-osoite seuraava-reittimerkinta))
         (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) (get-in seuraava-reittimerkinta [:tr-osoite :tie])))
     ;; Seuraava piste ei aiheuta reitin kääntymistä ympäri
@@ -113,7 +114,8 @@
                     :tasaisuus (:tasaisuus reittimerkinta)
                     :kiinteys (:kiinteys reittimerkinta)
                     :polyavyys (:polyavyys reittimerkinta)
-                    :sivukaltevuus (:sivukaltevuus reittimerkinta)}})
+                    :sivukaltevuus (:sivukaltevuus reittimerkinta)}
+   :laadunalitus (or (:laadunalitus reittimerkinta) false)})
 
 (defn viimeinen-indeksi [sekvenssi]
   (- (count sekvenssi) 1))
@@ -226,9 +228,9 @@
                                      :aosa (:aosa lahtopiste)
                                      :aet (:aet lahtopiste)
                                      :losa (:aosa paatepiste)
-                                     :let (:aet paatepiste)}]    
+                                     :let (:aet paatepiste)}]
     (assoc tarkastus
-           ;:sijainti (:geometria koko-tarkastuksen-tr-osoite)
+                                        ;:sijainti (:geometria koko-tarkastuksen-tr-osoite)
            :tarkastaja (:kayttajanimi kayttaja)
            :tr_numero (:tie koko-tarkastuksen-tr-osoite)
            :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)

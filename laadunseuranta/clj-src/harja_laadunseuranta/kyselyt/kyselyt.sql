@@ -37,10 +37,10 @@ INSERT INTO liite (lahde, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu)
 -- name: hae-reitin-merkinnat-raw
 SELECT x.id, x.sijainti, x.kitkamittaus, x.lampotila, x.tasaisuus, x.lumisuus, x.kuvaus, x.kuva, x.havainnot, x.tarkastusajo,
        x.aikaleima, x.polyavyys, x.sivukaltevuus, x.kiinteys, x.tyyppi, 
-       (x.trosoite).tie, (x.trosoite).aosa, (x.trosoite).aet
+       (x.trosoite).tie, (x.trosoite).aosa, (x.trosoite).aet, x.laadunalitus
 FROM (SELECT t.id, t.sijainti, t.kitkamittaus, t.lampotila, t.tasaisuus, t.lumisuus, t.kuvaus, t.kuva, t.havainnot, t.tarkastusajo,
        t.aikaleima, t.polyavyys, t.sivukaltevuus, t.kiinteys, a.tyyppi,
-       CAST(tierekisteriosoite_pisteelle_noex(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite
+       CAST(tierekisteriosoite_pisteelle_noex(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite, t.laadunalitus
   FROM tarkastusreitti t
  INNER JOIN tarkastusajo a ON a.id=t.tarkastusajo
  WHERE t.tarkastusajo=:tarkastusajo
@@ -53,8 +53,8 @@ SELECT id FROM vakiohavainto WHERE jatkuva = TRUE;
 SELECT avain,nimi FROM vakiohavainto WHERE jatkuva = FALSE;
 
 -- name: luo-uusi-tarkastus<!
-INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde)
- VALUES (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, :sijainti, :tarkastaja, :tyyppi::tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde::lahde);
+INSERT INTO tarkastus (urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti, tarkastaja, tyyppi, tarkastusajo, luoja, havainnot, lahde, laadunalitus)
+ VALUES (:urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, :sijainti, :tarkastaja, :tyyppi::tarkastustyyppi, :tarkastusajo, :luoja, :havainnot, :lahde::lahde, :laadunalitus);
 
 -- name: luo-uusi-tarkastuksen-vakiohavainto<!
 INSERT INTO tarkastus_vakiohavainto (tarkastus, vakiohavainto) VALUES (:tarkastus, :vakiohavainto);

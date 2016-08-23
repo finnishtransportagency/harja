@@ -47,7 +47,7 @@ button {
     font-size: 23px;
     font-weight: normal;
     padding-left: 10px;
-    left: 480px;
+    left: 470px;
 }
 
 .ylapalkki .hoitoluokka {
@@ -101,7 +101,7 @@ button {
 
 
 .ylapalkki .infonappi {
-    left: 430px;
+    left: 420px;
 }
 
 .ylapalkki .kiinteistorajat {
@@ -109,7 +109,7 @@ button {
 }
 
 .ylapalkki .ortokuva {
-    left: 380px;
+    left: 370px;
 }
 
 .keskityspainike {
@@ -333,7 +333,7 @@ button {
 
 .pikavalinta-footer {
     position: absolute;
-    bottom: 5px;
+    bottom: 65px;
     padding-top: 5px;
     height: 70px;
     z-index: 2000;
@@ -426,8 +426,12 @@ button {
     margin: 0;
     padding: 0;
     left: 600px;
-    width: calc(100%);
+    right: 0;
     height: 100%;
+}
+
+.lomake-kartta-container .ol-zoom {
+    display: none;
 }
 
 .havaintolomake input {
@@ -623,7 +627,7 @@ button {
     border: 1px solid blue;
     width: 120px;
     height: 112px;
-    padding-left: 13px;
+    padding-left: 2px;
     padding-top: 10px;
     margin-left: 10px;
     box-sizing: border-box;
@@ -746,6 +750,7 @@ button {
     border: 1px solid black;
     width: 345px;
     height: 35px;
+    padding: 5px;
     background-color: rgb(217,218,219);
     box-sizing: border-box;
 }
