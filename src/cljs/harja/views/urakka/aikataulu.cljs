@@ -97,7 +97,7 @@
             :muokattava? (constantly false)}
            {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
             :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
-           {:otsikko "Yl\u00ADlä\u00ADpi\u00ADto\u00ADluok\u00ADka"
+           {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
            ; FIXME Tallennus epäonnistuu jos kellonaikaa ei anna
