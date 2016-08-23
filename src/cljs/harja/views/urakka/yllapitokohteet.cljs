@@ -454,6 +454,7 @@
                           [kohteen-vetolaatikko urakka kohteet-atom rivi])))
                  @kohteet-atom)
            :tallenna @tallenna
+           :piilota-toiminnot? true
            :muutos (fn [grid]
                      (validoi-tr-osoite grid tr-sijainnit tr-virheet))
            :voi-lisata? (not (:yha-sidottu? optiot))
@@ -490,7 +491,7 @@
                   [{:otsikko "KVL"
                     :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
-                   {:otsikko "Yl\u00ADlä\u00ADpi\u00ADto\u00ADluok\u00ADka"
+                   {:otsikko "YP-lk"
                     :nimi :yllapitoluokka :tyyppi :numero :leveys yllapitoluokka-leveys
                     :muokattava? (constantly (not (:yha-sidottu? optiot)))}
                    {:otsikko "Ny\u00ADkyi\u00ADnen pääl\u00ADlys\u00ADte"
@@ -564,6 +565,7 @@
              :kokonaishinta kokonaishinta}]))]
     [grid/grid
      {:otsikko "Yhteensä"
+      :piilota-toiminnot? true
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
      [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
       {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
@@ -597,6 +599,5 @@
       {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys :tasaa :oikea}
       {:otsikko "Kokonais\u00ADhinta (indeksit mukana)" :nimi :kokonaishinta :fmt fmt/euro-opt
-       :tyyppi :numero :leveys yhteensa-leveys :tasaa :oikea}
-      {:otsikko "" :nimi :muokkaustoiminnot-tyhja :tyyppi :string :leveys 3}]
+       :tyyppi :numero :leveys yhteensa-leveys :tasaa :oikea}]
      @yhteensa]))
