@@ -163,9 +163,9 @@
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validi-xml? +xsd-polku+ "poikkeama-rest.xsd" xml)
-      xml
-      (let [virheviesti "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia."]
+    (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
+      (let [virheviesti (format "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia. Validointivirheet: %s " virheet)]
         (log/error virheviesti)
         (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
-                 :error virheviesti})))))
+                 :error virheviesti}))
+      xml)))
