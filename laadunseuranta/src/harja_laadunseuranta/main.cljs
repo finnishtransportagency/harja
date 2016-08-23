@@ -169,8 +169,8 @@
                                         :tallennus-kaynnissa s/tallennus-kaynnissa
                                         :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
                                         :keskita-ajoneuvoon s/keskita-ajoneuvoon
-                                        :disabloi-kaynnistys? s/palautettava-tarkastusajo}]
-       
+                                        :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)}]
+        
        [kartta/karttakomponentti
         {:wmts-url asetukset/+wmts-url+
          :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
