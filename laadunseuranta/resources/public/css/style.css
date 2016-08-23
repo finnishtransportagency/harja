@@ -430,6 +430,10 @@ button {
     height: 100%;
 }
 
+.lomake-kartta-container .ol-zoom {
+    display: none;
+}
+
 .havaintolomake input {
     height: 30px;
     font-size: 17px;
