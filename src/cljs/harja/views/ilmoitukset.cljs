@@ -237,7 +237,7 @@
 
 (defn- ilmoitukset* [e! ilmoitukset]
   (komp/luo
-   (komp/kuuntelija :ilmoitus-klikattu #(e! (v/->ValitseIlmoitus %)))
+   (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
 
    #_(komp/lippu tiedot/ilmoitusnakymassa?
                  tiedot/karttataso-ilmoitukset
