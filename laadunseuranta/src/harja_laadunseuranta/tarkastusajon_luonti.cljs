@@ -29,7 +29,7 @@
       (if @kylla-klikattu
         [:div.tarkastusajon-luonti-dialog
          [:p "Päätetään, älä sulje selainta..."]
-         [:div [:img {:src kuvat/+spinner+
+         [:div [:img.centered {:src kuvat/+spinner+
                       :height "32px"}]]]
         [:div.tarkastusajon-luonti-dialog
          [:p "Päätetäänkö tarkastusajo?"]

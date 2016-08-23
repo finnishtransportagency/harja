@@ -27,6 +27,12 @@ button {
     box-shadow: 4px 4px 4px 2px #777;
 }
 
+.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /* ---------- ylapalkki ---------- */
 .ylapalkki {
     position: absolute;
