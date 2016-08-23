@@ -58,16 +58,18 @@
    [:div.kuittaukset
     [:h3 "Kuittaukset"]
     [:div
-     (if @tiedot/uusi-kuittaus-auki?
-       [kuittaukset/uusi-kuittaus-lomake]
-       (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
-                                       (:id @nav/valittu-urakka))
-         [:button.nappi-ensisijainen
-          {:class    "uusi-kuittaus-nappi"
-           :on-click #(do
-                       (tiedot/avaa-uusi-kuittaus!)
-                       (.preventDefault %))}
-          (ikonit/livicon-plus) " Uusi kuittaus"]))
+     (comment
+       ;; FIXME: implement
+       (if @tiedot/uusi-kuittaus-auki?
+         [kuittaukset/uusi-kuittaus-lomake]
+         (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                         (:id @nav/valittu-urakka))
+           [:button.nappi-ensisijainen
+            {:class    "uusi-kuittaus-nappi"
+             :on-click #(do
+                          (tiedot/avaa-uusi-kuittaus!)
+                          (.preventDefault %))}
+            (ikonit/livicon-plus) " Uusi kuittaus"])))
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div
