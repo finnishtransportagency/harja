@@ -22,12 +22,12 @@ WHERE k.kayttajanimi = :koka
 -- single?: true
 -- Varmistaa että KOKA käyttäjä on tietokannassa
 INSERT
-  INTO kayttaja (kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, organisaatio)
-  VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio)
+  INTO kayttaja (kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, organisaatio, luotu)
+  VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio, NOW())
 ON CONFLICT ON CONSTRAINT uniikki_kayttajanimi DO
   UPDATE SET etunimi = :etunimi, sukunimi = :sukunimi,
              sahkoposti = :sahkoposti, puhelin = :puhelin,
-             organisaatio = :organisaatio
+             organisaatio = :organisaatio, muokattu = NOW()
 RETURNING id
 
 -- name: hae-ely-numerolla
