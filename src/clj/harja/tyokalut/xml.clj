@@ -13,16 +13,16 @@
            (javax.xml.transform.stream StreamSource)
            (java.io ByteArrayInputStream)
            (org.w3c.dom.ls LSResourceResolver LSInput)
-           (org.xml.sax SAXParseException)
+           (org.xml.sax SAXParseException ErrorHandler)
            (java.text SimpleDateFormat ParseException)
            (java.util Date)))
 
-(defn validi-xml?
+(defn validoi-xml
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
   [xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto]
   (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd-skeema-tiedosto ". XML:n sisältö on:" xml-sisalto)
-  (let [schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
-
+  (let [virheet (atom [])
+        schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
     (.setResourceResolver schema-factory
                           (reify LSResourceResolver
                             (resolveResource [this type namespaceURI publicId systemId baseURI]
@@ -38,14 +38,32 @@
                                   (getCharacterStream [_] (io/reader xsd-file))
                                   (getEncoding [_] "UTF-8")
                                   (getStringData [_] (slurp xsd-file)))))))
-    (try (-> schema-factory
-             (.newSchema (StreamSource. (io/input-stream (io/resource (str xsd-skeema-polku xsd-skeema-tiedosto)))))
-             .newValidator
-             (.validate (StreamSource. (ByteArrayInputStream. (.getBytes xml-sisalto)))))
-         true
-         (catch SAXParseException e
-           (log/error "Invalidi XML: " e)
-           false))))
+    (try
+      (let [v (-> schema-factory
+                  (.newSchema (StreamSource. (io/input-stream (io/resource (str xsd-skeema-polku xsd-skeema-tiedosto)))))
+                  .newValidator)]
+        (.setErrorHandler v
+                          (reify ErrorHandler
+                            (error [this e]
+                              (log/error e (format "XSD-validointivirhe skeemalle: %s" xsd-skeema-tiedosto) )
+                              (swap! virheet conj (.getMessage e)))
+                            (fatalError [this e]
+                              (log/error e (format "Fataali XSD-validointi virhe skeemalle: %s" xsd-skeema-tiedosto) )
+                              (swap! virheet conj (.getMessage e)))
+                            (warning [this e]
+                              (log/warn e (format "XSD-validointivaroitus skeemalle: %s" xsd-skeema-tiedosto) ))))
+        (.validate v (StreamSource. (ByteArrayInputStream. (.getBytes xml-sisalto)))))
+      (if (empty? @virheet)
+        nil
+        @virheet)
+      (catch SAXParseException e
+        (log/error e (format "XSD-validointivirhe skeemalle: %s" xsd-skeema-tiedosto))
+        @virheet))))
+
+(defn validi-xml?
+  "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
+  [xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto]
+  (nil? (validoi-xml xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto)))
 
 (defn lue
   ([xml] (lue xml "UTF-8"))
@@ -88,14 +106,14 @@
            nil))))
 
 (defn parsi-aikaleima
-  ([teksti] (parsi-aika teksti "yyyy-MM-dd'T'HH:mm:ss.SSS" ))
+  ([teksti] (parsi-aika teksti "yyyy-MM-dd'T'HH:mm:ss.SSS"))
   ([teksti formaatti] (parsi-aika formaatti teksti)))
 
 (defn parsi-paivamaara [teksti] (f/formatters :date-time-no-ms)
   (parsi-aika "yyyy-MM-dd" teksti))
 
 (def xsd-datetime-fmt
-  (f/with-zone (f/formatters :date-hour-minute-second)  (org.joda.time.DateTimeZone/forID "EET")))
+  (f/with-zone (f/formatters :date-hour-minute-second) (org.joda.time.DateTimeZone/forID "EET")))
 
 (defn parsi-xsd-datetime [teksti]
   (tc/to-date (f/parse xsd-datetime-fmt teksti)))

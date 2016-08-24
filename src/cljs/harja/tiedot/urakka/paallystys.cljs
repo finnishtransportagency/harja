@@ -66,7 +66,7 @@
       (tr-domain/jarjesta-kohteiden-kohdeosat yha-kohteet))))
 
 (def harjan-paikkauskohteet
-  (reaction
+  (reaction-writable
     (let [kohteet @yllapitokohteet
           ei-yha-kohteet (when kohteet
                            (filter

@@ -18,7 +18,9 @@ SELECT
   o.nimi         AS hallintayksikko_nimi,
   o.elynumero    AS hallintayksikko_elynumero,
   (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2,
-  kuukauden_indeksikorotus(lp.aika::DATE, indeksi, maara, u.id) AS indeksikorotus
+  CASE WHEN indeksi IS NOT NULL THEN
+    kuukauden_indeksikorotus(lp.aika::DATE, indeksi, maara, u.id) - maara
+  END AS indeksikorotus
 FROM sanktio s
   JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id

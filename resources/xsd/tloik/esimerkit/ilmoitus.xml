@@ -30,5 +30,6 @@
     <seliteet>
         <selite>auraustarve</selite>
         <selite>aurausvallitNakemaesteena</selite>
+        <selite>virkaApupyynto</selite>
     </seliteet>
 </harja:ilmoitus>
