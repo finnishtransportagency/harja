@@ -141,8 +141,10 @@
                     :json (.stringify js/JSON (clj->js tieosoitteet))}]
     (vkm-kutsu "muunnos" parametrit)))
 
-(defn tieosien-pituudet [tie aosa losa]
-  (k/post! :hae-tr-osien-pituudet
-           {:tie tie
-            :aosa aosa
-            :losa losa}))
+(defn tieosien-pituudet
+  ([tie] (tieosien-pituudet tie nil nil))
+  ([tie aosa losa]
+   (k/post! :hae-tr-osien-pituudet
+            {:tie tie
+             :aosa aosa
+             :losa losa})))
