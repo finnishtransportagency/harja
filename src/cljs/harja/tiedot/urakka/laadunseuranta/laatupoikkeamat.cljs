@@ -87,7 +87,10 @@
 (defn paivita-yllapitokohteen-tr-tiedot
   [tiedot yllapitokohteet]
   (when yllapitokohteet
-    (let [k (first (filter #(= (:id %) (get-in tiedot [:yllapitokohde :id]))
+    (let [ypk-id (if (integer? (:yllapitokohde tiedot))
+                   (:yllapitokohde tiedot)
+                   (get-in tiedot [:yllapitokohde :id]))
+          k (first (filter #(= (:id %) ypk-id)
                            yllapitokohteet))
           [tie aosa aet losa let] [(:tr-numero k)
                                    (:tr-alkuosa k)

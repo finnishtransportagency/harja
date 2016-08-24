@@ -43,7 +43,10 @@
                              ;; hoitoon, ja emme halua että hoidon lomakkeessa tallentuu myös ylläpitokohde)
                              (if (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])
                                (dissoc lp :kohde)
-                               (dissoc lp :yllapitokohde)))]
+                               (dissoc lp :yllapitokohde))
+                             (if (integer? (:yllapitokohde lp))
+                               lp
+                               (assoc lp :yllapitokohde (get-in lp [:yllapitokohde :id]))))]
     (go
       (let [tulos (<! (laatupoikkeamat/tallenna-laatupoikkeama laatupoikkeama))]
         (if (k/virhe? tulos)
