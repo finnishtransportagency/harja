@@ -233,16 +233,22 @@
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
                                                   urakka-id)
         voi-muokata? (and voi-kirjoittaa?
-                          (not jarjestelmasta?))]
+                          (not jarjestelmasta?))
+        kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
+        yllapitokohteet (:yllapitokohteet optiot)]
     (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
-             (nil? (:yllapitokohteet optiot)))
+             (nil? yllapitokohteet))
       [yleiset/ajax-loader "Ladataan..."]
       [:div.tarkastus
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
        [lomake/lomake
         {:otsikko      (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
-         :muokkaa!     #(reset! tarkastus-atom %)
+         :muokkaa!     #(let [uusi-tarkastus
+                               (if (kohde-muuttui? (:yllapitokohde @tarkastus-atom) (:yllapitokohde %))
+                                 (tiedot-laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                                 %)]
+                          (reset! tarkastus-atom uusi-tarkastus))
          :voi-muokata? voi-muokata?
          :footer-fn    (fn [virheet _ _]
                          (when voi-kirjoittaa?
@@ -272,7 +278,7 @@
            {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
             :palstoja 1
             :pakollinen? true
-            :valinnat (:yllapitokohteet optiot)
+            :valinnat yllapitokohteet
             :jos-tyhja "Ei valittavia kohteita"
             :valinta-arvo :id
             :valinta-nayta (fn [arvo muokattava?]

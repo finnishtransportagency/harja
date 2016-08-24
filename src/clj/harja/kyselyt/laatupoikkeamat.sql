@@ -153,7 +153,6 @@ SELECT
   lp.id,
   lp.aika,
   lp.kohde,
-  lp.yllapitokohde,
   lp.tekija,
   lp.kuvaus,
   lp.sijainti,
@@ -169,10 +168,19 @@ SELECT
   lp.tr_alkuetaisyys,
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
-  tl.tarkastus                       AS tarkastusid
+  tl.tarkastus                       AS tarkastusid,
+  ypk.id               AS "yllapitokohde_id",
+  ypk.tr_numero        AS "yllapitokohde_tr-numero",
+  ypk.tr_alkuosa       AS "yllapitokohde_tr-alkuosa",
+  ypk.tr_alkuetaisyys  AS "yllapitokohde_tr-alkuetaisyys",
+  ypk.tr_loppuosa      AS "yllapitokohde_tr-loppuosa",
+  ypk.tr_loppuetaisyys AS "yllapitokohde_tr-loppuetaisyys",
+  ypk.kohdenumero      AS "yllapitokohde_numero",
+  ypk.nimi             AS "yllapitokohde_nimi"
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   LEFT JOIN tarkastus_laatupoikkeama tl on lp.id = tl.laatupoikkeama
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
       AND lp.id = :id;
