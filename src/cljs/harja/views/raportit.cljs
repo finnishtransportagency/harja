@@ -270,10 +270,10 @@
 (def urakan-sillat (reaction<! [nakymassa? @raportit/raportit-nakymassa?
                                 urakka @nav/valittu-urakka]
                                {:nil-kun-haku-kaynnissa? true}
-                               (when urakka nakymassa?
-                                            (k/post! :hae-urakan-sillat
-                                                     {:urakka-id (:id urakka)
-                                                      :listaus :kaikki}))))
+                               (when (and urakka nakymassa?)
+                                 (k/post! :hae-urakan-sillat
+                                          {:urakka-id (:id urakka)
+                                           :listaus :kaikki}))))
 
 (defmethod raportin-parametri "silta" [p arvo]
   (reset! arvo {:silta-id (if (= @silta :kaikki)

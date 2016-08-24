@@ -83,3 +83,25 @@
                                  (assoc :urakka (:id @nav/valittu-urakka))
                                  (assoc :sanktiot (into {}
                                                         (map (juxt :id identity) (:sanktiot laatupoikkeama))))))))))
+
+(defn paivita-yllapitokohteen-tr-tiedot
+  [tiedot yllapitokohteet]
+  (when yllapitokohteet
+    (let [ypk-id (if (integer? (:yllapitokohde tiedot))
+                   (:yllapitokohde tiedot)
+                   (get-in tiedot [:yllapitokohde :id]))
+          k (first (filter #(= (:id %) ypk-id)
+                           yllapitokohteet))
+          [tie aosa aet losa let] [(:tr-numero k)
+                                   (:tr-alkuosa k)
+                                   (:tr-alkuetaisyys k)
+                                   (:tr-loppuosa k)
+                                   (:tr-loppuetaisyys k)]]
+      (if (and k tie aosa aet)
+        (assoc tiedot
+          :tr {:numero        tie
+               :alkuosa       aosa
+               :alkuetaisyys  aet
+               :loppuosa      losa
+               :loppuetaisyys let})
+        tiedot))))

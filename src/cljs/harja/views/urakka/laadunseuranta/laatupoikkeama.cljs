@@ -43,7 +43,10 @@
                              ;; hoitoon, ja emme halua että hoidon lomakkeessa tallentuu myös ylläpitokohde)
                              (if (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])
                                (dissoc lp :kohde)
-                               (dissoc lp :yllapitokohde)))]
+                               (dissoc lp :yllapitokohde))
+                             (if (integer? (:yllapitokohde lp))
+                               lp
+                               (assoc lp :yllapitokohde (get-in lp [:yllapitokohde :id]))))]
     (go
       (let [tulos (<! (laatupoikkeamat/tallenna-laatupoikkeama laatupoikkeama))]
         (if (k/virhe? tulos)
@@ -199,33 +202,42 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
       (fn [laatupoikkeama optiot]
         (let [uusi? (not (:id @laatupoikkeama))
               sanktion-validointi (partial lisaa-sanktion-validointi
-                                           #(sanktiotietoja-annettu? @laatupoikkeama))]
+                                           #(sanktiotietoja-annettu? @laatupoikkeama))
+              kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
+              yllapitokohteet (:yllapitokohteet optiot)]
+          (log "laatupoikkeama" (pr-str @laatupoikkeama))
           (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
-                     (nil? (:yllapitokohteet optiot)))
+                     (nil? yllapitokohteet))
             [ajax-loader "Ladataan..."]
             [:div.laatupoikkeama
             [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
 
             [lomake/lomake
-             {:otsikko "Laatupoikkeaman tiedot"
-              :muokkaa! #(reset! laatupoikkeama %)
+             {:otsikko      "Laatupoikkeaman tiedot"
+              :muokkaa!     #(let [uusi-lp
+                                   (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
+                                                       (get-in % [:yllapitokohde :id]))
+                                     (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                                     %)]
+                              (log "muokkaa")
+                              (reset! laatupoikkeama uusi-lp))
               :voi-muokata? @laatupoikkeamat/voi-kirjata?
-              :footer [napit/palvelinkutsu-nappi
-                       ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
-                       ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
-                       (cond
-                         (and (not (paatos? @laatupoikkeama))
-                              (paatos? @laatupoikkeama))
-                         "Tallenna ja lukitse laatupoikkeama"
+              :footer       [napit/palvelinkutsu-nappi
+                             ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
+                             ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
+                             (cond
+                               (and (not (paatos? @laatupoikkeama))
+                                    (paatos? @laatupoikkeama))
+                               "Tallenna ja lukitse laatupoikkeama"
 
-                         :default
-                         "Tallenna laatupoikkeama")
+                               :default
+                               "Tallenna laatupoikkeama")
 
-                       #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
-                       {:ikoni (ikonit/tallenna)
-                        :disabled (validoi-laatupoikkeama @laatupoikkeama)
-                        :virheviesti "Laatupoikkeaman tallennus epäonnistui"
-                        :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]}
+                             #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
+                             {:ikoni        (ikonit/tallenna)
+                              :disabled     (validoi-laatupoikkeama @laatupoikkeama)
+                              :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
+                              :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]}
 
              [{:otsikko "Päivämäärä ja aika"
                :pakollinen? true
@@ -239,19 +251,19 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     (= (:nakyma optiot) :paallystys)
                     (= (:nakyma optiot) :paikkaus)
                     (= (:nakyma optiot) :tiemerkinta))
-                {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
-                 :palstoja 1
-                 :pakollinen? true
-                 :muokattava? muokattava?
-                 :valinnat (:yllapitokohteet optiot)
-                 :jos-tyhja "Ei valittavia kohteita"
-                 :valinta-arvo :id
+                {:otsikko       "Kohde" :tyyppi :valinta :nimi :yllapitokohde
+                 ;:hae #(get-in % [:yllapitokohde :id])
+                 :palstoja      1
+                 :pakollinen?   true
+                 :muokattava?   muokattava?
+                 :valinnat      yllapitokohteet
+                 :jos-tyhja     "Ei valittavia kohteita"
                  :valinta-nayta (fn [arvo muokattava?]
                                   (if arvo (tierekisteri/yllapitokohde-tekstina arvo {:osoite arvo})
                                            (if muokattava?
                                              "- Valitse kohde -"
                                              "")))
-                 :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
+                 :validoi       [[:ei-tyhja "Anna laatupoikkeaman kohde"]]}
                 {:otsikko "Kohde" :tyyppi :string :nimi :kohde
                  :palstoja 1
                  :pakollinen? true
