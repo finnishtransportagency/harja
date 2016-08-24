@@ -78,17 +78,22 @@
         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
     kuittaukset)])
 
-(defn ilmoitusten-hakuehdot [e! {:keys [aikavali] :as valinnat-nyt}]
+(defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
    {:luokka   :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [#_(when @nav/valittu-urakka
+   [(when (and urakka valitun-urakan-hoitokaudet)
       {:nimi          :hoitokausi
        :palstoja      1
        :otsikko       "Hoitokausi"
        :tyyppi        :valinta
-       :valinnat      @u/valitun-urakan-hoitokaudet
+       :aseta (fn [rivi hk]
+                ;; Jos hoitokautta vaihdetaan, vaihdetaan myös aikaväli samaan
+                (assoc rivi
+                       :hoitokausi hk
+                       :aikavali hk))
+       :valinnat      (:valitun-urakan-hoitokaudet valinnat-nyt)
        :valinta-nayta fmt/pvm-vali-opt})
 
     {:nimi :aikavali

@@ -22,6 +22,7 @@
   (reaction
    {:hallintayksikko (:id @nav/valittu-hallintayksikko)
     :urakka          (:id @nav/valittu-urakka)
+    :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
     :urakoitsija     (:id @nav/valittu-urakoitsija)
     :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
     :hoitokausi      @u/valittu-hoitokausi
