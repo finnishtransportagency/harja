@@ -350,6 +350,7 @@
            {:otsikko "Pääll. työ\u00ADmenetelmä"
             :nimi :tyomenetelma
             :tyyppi :valinta
+            :validoi [[:ei-tyhja "Valitse päällystysmenetelmä"]]
             :valinta-arvo :koodi
             :valinta-nayta (fn [rivi muokattava?]
                              (if rivi
