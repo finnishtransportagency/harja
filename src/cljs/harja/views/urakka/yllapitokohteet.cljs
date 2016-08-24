@@ -204,7 +204,8 @@
   (if (empty? kohdeosat)
     {1 (select-keys kohde #{:tr-numero
                             :tr-alkuosa :tr-alkuetaisyys
-                            :tr-loppuosa :tr-loppuetaisyys})}
+                            :tr-loppuosa :tr-loppuetaisyys
+                            :tr-kaista :tr-ajorata})}
     (varmista-alku-ja-loppu (zipmap (iterate inc 1)
                                     kohdeosat)
                             (tr/nouseva-jarjestys kohde))))
@@ -474,8 +475,8 @@
                     :nimi :yllapitokohdetyyppi :tyyppi :string :leveys yllapitokohdetyyppi-leveys
                     :muokattava? (constantly false)
                     :fmt #({:paallyste "Päällyste"
-                                                            :sora "Sora"
-                                                            :kevytliikenne "Kevytliikenne"} %)}]
+                            :sora "Sora"
+                            :kevytliikenne "Kevytliikenne"} %)}]
                   (tierekisteriosoite-sarakkeet
                     tr-leveys
                     [nil
