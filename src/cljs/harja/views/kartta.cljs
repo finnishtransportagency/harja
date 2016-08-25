@@ -644,15 +644,10 @@ tyyppi ja sijainti. Kun kaappaaminen lopetetaan, suljetaan myös annettu kanava.
                                 :layer "taustakartta"}]}]))))
 
 (defn kartan-edistyminen [kuvataso geometriataso]
-  (let [taso (if (and kuvataso (not= 0 (:ladataan kuvataso))) kuvataso geometriataso)
-        ladattu (:ladattu taso)
-        ladataan (:ladataan taso)
-        ;; Näytetään jo edistymispalkki vaikka lataustilanne olisi esim 0/1
-        [ladattu ladataan] (if (and (= ladattu 0) (not= ladataan 0))
-                             [(inc ladattu) (inc ladataan)]
-                             [ladattu ladataan])]
-    (when (and taso (not= 0 ladattu ladataan) @nav/kartta-nakyvissa?)
-     [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}])))
+  (let [ladattu (+ (:ladattu kuvataso) (:ladattu geometriataso))
+        ladataan (+ (:ladataan kuvataso) (:ladattu geometriataso))]
+    (when (and @nav/kartta-nakyvissa? (pos? ladataan))
+      [:div.kartta-progress {:style {:width (str (* 100.0 (/ ladattu ladataan)) "%")}}])))
 
 (defn kartta []
   [:div.karttacontainer
