@@ -110,7 +110,7 @@
   [:div.murupolku-urakkatyyppi
    [:div.livi-valikkonimio.murupolku-urakkatyyppi-otsikko "Urakkatyyppi"]
    [livi-pudotusvalikko {:valinta    @nav/urakkatyyppi
-                         :format-fn  #(if % (:nimi %) "Kaikki")
+                         :format-fn  #(if % (nav/urakkatyyppi-fmt %) "Kaikki")
                          :valitse-fn nav/vaihda-urakkatyyppi!
                          :class      (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
                          :disabled   (boolean @nav/valittu-urakka)}

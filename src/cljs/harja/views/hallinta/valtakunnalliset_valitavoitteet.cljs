@@ -40,14 +40,11 @@
      {:otsikko "Urakka\u00ADtyyppi" :leveys 20 :nimi :urakkatyyppi
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
-      :valinta-nayta #(or (:nimi (first (filter
-                                          (fn [tyyppi] (= (:arvo tyyppi) %))
-                                          nav/+urakkatyypit+)))
-                          "- valitse -")
-      :fmt #(:nimi (first (filter
-                            (fn [tyyppi] (= (:arvo tyyppi) %))
-                            nav/+urakkatyypit+)))
-      :valinnat (mapv :arvo nav/+urakkatyypit+)
+      :valinta-nayta #(if %
+                       (nav/urakkatyyppi-fmt %)
+                       "- valitse -")
+      :fmt nav/urakkatyyppi-fmt
+      :valinnat nav/+urakkatyypit+
       :muokattava? #(neg? (:id %))}
 
      {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
@@ -76,14 +73,11 @@
      {:otsikko "Urakka\u00ADtyyppi" :leveys 20 :nimi :urakkatyyppi
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
-      :valinta-nayta #(or (:nimi (first (filter
-                                          (fn [tyyppi] (= (:arvo tyyppi) %))
-                                          nav/+urakkatyypit+)))
-                          "- valitse -")
-      :fmt #(:nimi (first (filter
-                            (fn [tyyppi] (= (:arvo tyyppi) %))
-                            nav/+urakkatyypit+)))
-      :valinnat (mapv :arvo nav/+urakkatyypit+)
+      :valinta-nayta #(if %
+                       (nav/urakkatyyppi-fmt %)
+                       "- valitse -")
+      :fmt nav/urakkatyyppi-fmt
+      :valinnat nav/+urakkatyypit+
       :muokattava? #(neg? (:id %))}
      {:otsikko "Taka\u00ADrajan toisto\u00ADpäi\u00ADvä" :leveys 10 :nimi :takaraja-toistopaiva
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}

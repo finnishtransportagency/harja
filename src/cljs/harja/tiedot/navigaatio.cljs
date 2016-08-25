@@ -85,20 +85,14 @@
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
 
 (def +urakkatyypit+
-  [{:nimi "Hoito" :arvo :hoito}
-   {:nimi "Tiemerkintä" :arvo :tiemerkinta}
-   {:nimi "Päällystys" :arvo :paallystys}
-   {:nimi "Paikkaus" :arvo :paikkaus}
-   {:nimi "Valaistus" :arvo :valaistus}])
+  [:hoito :tiemerkinta :paallystys :paikkaus :valaistus])
 
-(defn urakkatyyppi-arvolle [tyyppi]
-  (first (filter #(= tyyppi (:arvo %))
-                 +urakkatyypit+)))
-
-(defn nayta-urakkatyyppi [tyyppi]
-  (:nimi (first
-           (filter #(= tyyppi (:arvo %))
-                   +urakkatyypit+))))
+(def urakkatyyppi-fmt
+  {:hoito "Hoito"
+   :tiemerkinta "Tiemerkintä"
+   :paallystys "Päällystys"
+   :paikkaus "Paikkaus"
+   :valaistus "Valaistus"})
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden
@@ -140,9 +134,9 @@
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
 (defonce urakkatyyppi
   (reaction
-    (let [oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+    (let [oletus-urakkatyyppi (:urakkatyyppi @istunto/kayttaja)
           valittu-urakkatyyppi @valittu-urakkatyyppi
-          urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))]
+          urakan-urakkatyyppi (:tyyppi @valittu-urakka)]
       (or urakan-urakkatyyppi valittu-urakkatyyppi oletus-urakkatyyppi))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
@@ -193,10 +187,11 @@
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
    löydy valitun tyyppisten urakoitsijain listasta."
   [ut]
+  (log "vaihda ur tyyppi" (pr-str ut))
   (when (= @valittu-vaylamuoto :tie)
     (reset! valittu-urakkatyyppi ut)
     (swap! valittu-urakoitsija
-           #(let [nykyisen-urakkatyypin-urakoitsijat (case (:arvo ut)
+           #(let [nykyisen-urakkatyypin-urakoitsijat (case ut
                                                        :hoito @urk/urakoitsijat-hoito
                                                        :paallystys @urk/urakoitsijat-paallystys
                                                        :paikkaus @urk/urakoitsijat-paikkaus
@@ -270,7 +265,7 @@
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
   (reaction
-    (let [v-ur-tyyppi (:arvo @urakkatyyppi)
+    (let [v-ur-tyyppi @urakkatyyppi
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista]
       (into []

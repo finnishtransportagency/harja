@@ -26,7 +26,7 @@
     {:hallintayksikko              (:id @nav/valittu-hallintayksikko)
      :urakka                       (:id @nav/valittu-urakka)
      :urakoitsija                  (:id @nav/valittu-urakoitsija)
-     :urakkatyyppi                 (:arvo @nav/urakkatyyppi)
+     :urakkatyyppi                 @nav/urakkatyyppi
      :hoitokausi                   @u/valittu-hoitokausi
      :aikavali                     (or @u/valittu-hoitokausi [nil nil])
      :tyypit                       +ilmoitustyypit+

@@ -108,9 +108,9 @@
                                                             (vaihda-urakkatyyppi))}
                    "Vaihda"]]}
         [:div
-         [:p (str "Haluatko varmasti vaihtaa " (navigaatio/nayta-urakkatyyppi (:tyyppi ur))
+         [:p (str "Haluatko varmasti vaihtaa " (navigaatio/urakkatyyppi-fmt (:tyyppi ur))
                   "-tyyppisen urakan ")
-          [:strong (str (navigaatio/nayta-urakkatyyppi uusi-urakkatyyppi) "-tyyppiseksi")] "?"]]))))
+          [:strong (str (navigaatio/urakkatyyppi-fmt uusi-urakkatyyppi) "-tyyppiseksi")] "?"]]))))
 
 (defn urakkaan-liitetyt-kayttajat [urakka-id]
   (let [kayttajat (atom nil)
@@ -311,7 +311,7 @@
                              :default nil)}
          [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
                                        :valinta (:tyyppi ur)
-                                       :format-fn #(navigaatio/nayta-urakkatyyppi %)
+                                       :format-fn #(navigaatio/urakkatyyppi-fmt %)
                                        :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
                                        :disabled (or (not yha-tuontioikeus?)
                                                      sidonta-lukittu?)}
