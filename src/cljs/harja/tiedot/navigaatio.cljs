@@ -15,6 +15,7 @@
     [harja.asiakas.tapahtumat :as t]
     [harja.tiedot.urakoitsijat :as urk]
     [harja.tiedot.hallintayksikot :as hy]
+    [harja.tiedot.istunto :as istunto]
     [harja.tiedot.urakat :as ur]
     [harja.tiedot.raportit :as raportit]
     [harja.tiedot.navigaatio.reitit :as reitit]
@@ -133,8 +134,12 @@
 
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
+;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
 (defonce valittu-urakkatyyppi
-  (atom (urakkatyyppi :hoito)))
+  (reaction
+    (if-let [ur-tyyppi (:urakkatyyppi @istunto/kayttaja)]
+      (urakkatyyppi ur-tyyppi)
+      (urakkatyyppi :hoito))))
 
 (defonce paivita-valittu-urakkatyyppi!
   (run! (when-let [ur @valittu-urakka]

@@ -358,3 +358,7 @@ SELECT id FROM urakka WHERE sampoid = :sampoid
 -- name: hae-urakoitsijan-id-ytunnuksella
 -- single?: true
 SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus
+
+-- name: hae-kayttajan-yleisin-urakkatyyppi
+-- single?: true
+SELECT tyyppi FROM urakka WHERE id IN (:idt) GROUP BY tyyppi ORDER BY count(id) DESC LIMIT 1;
