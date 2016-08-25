@@ -309,7 +309,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                           [:input {:type      "radio"
                                    :value i
                                    :checked   (= nykyinen-arvo arvo)
-                                   on-change* #(reset! data arvo)}]
+                                   :on-change #(reset! data arvo)}]
                           [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
                            otsikko]]))
                      valinnat))])))
