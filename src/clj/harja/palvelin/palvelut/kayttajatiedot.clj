@@ -1,10 +1,8 @@
 (ns harja.palvelin.palvelut.kayttajatiedot
   "Palvelu, jolla voi hakea perustietoja nykyisestä käyttäjästä"
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.kayttajat :as q]
-            [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]))
 
 (defn oletusurakkatyyppi
