@@ -68,10 +68,6 @@
 ;; :L (korkeampi täysleveä)
 (def kartan-kokovalinta "Kartan koko" (atom :S))
 
-(def kartta-nakyvissa? "Kartta ei piilotettu" (reaction (let [koko @kartan-kokovalinta]
-                                                          (and (not= :S koko)
-                                                               (not= :hidden koko)))))
-
 (defn vaihda-kartan-koko! [uusi-koko]
   (let [vanha-koko @kartan-kokovalinta]
     (when uusi-koko
@@ -151,7 +147,6 @@
 ;; jos haluat palauttaa kartan edelliseen kokoon, säilö edellinen koko tähän (esim. Valitse kartalta -toiminto)
 (def kartan-edellinen-koko (atom nil))
 
-
 (def kartan-koko
   "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
   (reaction (let [valittu-koko @kartan-kokovalinta
@@ -168,6 +163,13 @@
                       (and (= sivu :urakat)
                            (not v-ur)) :XL
                       :default valittu-koko)))))
+
+(def kartta-nakyvissa?
+  "Kartta ei piilotettu"
+  (reaction (let [koko @kartan-koko]
+              (and (not= :S koko)
+                   (not= :hidden koko)))))
+
 
 (def kartan-kontrollit-nakyvissa?
   (reaction
