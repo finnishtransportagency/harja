@@ -23,18 +23,18 @@
 
 (defonce valinnat
   (reaction-writable
-   {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-    :urakka          (:id @nav/valittu-urakka)
-    :urakoitsija     (:id @nav/valittu-urakoitsija)
-    :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
-    :hoitokausi      @u/valittu-hoitokausi
-    :aikavali        (or @u/valittu-hoitokausi [nil nil])
-    :tyypit          +ilmoitustyypit+
-    :kuittaustyypit  (into #{} kuittaustyyppi-filtterit)
-    :hakuehto        ""
-    :selite          [nil ""]
-    :vain-myohassa?  false
-    :aloituskuittauksen-ajankohta :kaikki}))
+    {:hallintayksikko              (:id @nav/valittu-hallintayksikko)
+     :urakka                       (:id @nav/valittu-urakka)
+     :urakoitsija                  (:id @nav/valittu-urakoitsija)
+     :urakkatyyppi                 (:arvo @nav/urakkatyyppi)
+     :hoitokausi                   @u/valittu-hoitokausi
+     :aikavali                     (or @u/valittu-hoitokausi [nil nil])
+     :tyypit                       +ilmoitustyypit+
+     :kuittaustyypit               (into #{} kuittaustyyppi-filtterit)
+     :hakuehto                     ""
+     :selite                       [nil ""]
+     :vain-myohassa?               false
+     :aloituskuittauksen-ajankohta :kaikki}))
 
 (defonce ilmoitushaku (atom 0))
 

@@ -15,6 +15,7 @@
     [harja.asiakas.tapahtumat :as t]
     [harja.tiedot.urakoitsijat :as urk]
     [harja.tiedot.hallintayksikot :as hy]
+    [harja.tiedot.istunto :as istunto]
     [harja.tiedot.urakat :as ur]
     [harja.tiedot.raportit :as raportit]
     [harja.tiedot.navigaatio.reitit :as reitit]
@@ -86,7 +87,7 @@
    {:nimi "Paikkaus" :arvo :paikkaus}
    {:nimi "Valaistus" :arvo :valaistus}])
 
-(defn urakkatyyppi [tyyppi]
+(defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
                  +urakkatyypit+)))
 
@@ -128,17 +129,17 @@
         (some #(when (= id (:id %)) %) urakat)))))
 
 
+(defonce valittu-urakkatyyppi (atom nil))
+
+
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
-(defonce valittu-urakkatyyppi
-  (atom (urakkatyyppi :hoito)))
-
-(defonce paivita-valittu-urakkatyyppi!
-  (run! (when-let [ur @valittu-urakka]
-          (reset! valittu-urakkatyyppi (urakkatyyppi (:tyyppi ur))))))
-
-
-;; kehittäessä voit tarkkailla atomien tilan muutoksia
-;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
+;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
+(defonce urakkatyyppi
+  (reaction
+    (let [oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+          valittu-urakkatyyppi @valittu-urakkatyyppi
+          urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))]
+      (or urakan-urakkatyyppi valittu-urakkatyyppi oletus-urakkatyyppi))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
@@ -271,7 +272,7 @@
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
   (reaction
-    (let [v-ur-tyyppi (:arvo @valittu-urakkatyyppi)
+    (let [v-ur-tyyppi (:arvo @urakkatyyppi)
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista]
       (into []
