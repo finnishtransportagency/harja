@@ -91,7 +91,7 @@
    {:nimi "Paikkaus" :arvo :paikkaus}
    {:nimi "Valaistus" :arvo :valaistus}])
 
-(defn urakkatyyppi [tyyppi]
+(defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
                  +urakkatyypit+)))
 
@@ -133,21 +133,17 @@
         (some #(when (= id (:id %)) %) urakat)))))
 
 
+(defonce valittu-urakkatyyppi (atom nil))
+
+
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
-(defonce valittu-urakkatyyppi
+(defonce urakkatyyppi
   (reaction
-    (if-let [ur-tyyppi (:urakkatyyppi @istunto/kayttaja)]
-      (urakkatyyppi ur-tyyppi)
-      (urakkatyyppi :hoito))))
-
-(defonce paivita-valittu-urakkatyyppi!
-  (run! (when-let [ur @valittu-urakka]
-          (reset! valittu-urakkatyyppi (urakkatyyppi (:tyyppi ur))))))
-
-
-;; kehittäessä voit tarkkailla atomien tilan muutoksia
-;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
+    (let [oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+          valittu-urakkatyyppi @valittu-urakkatyyppi
+          urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))]
+      (or urakan-urakkatyyppi valittu-urakkatyyppi oletus-urakkatyyppi))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
@@ -274,7 +270,7 @@
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
   (reaction
-    (let [v-ur-tyyppi (:arvo @valittu-urakkatyyppi)
+    (let [v-ur-tyyppi (:arvo @urakkatyyppi)
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista]
       (into []

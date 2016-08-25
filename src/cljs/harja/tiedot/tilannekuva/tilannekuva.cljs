@@ -285,7 +285,7 @@ hakutiheys-historiakuva 1200000)
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
               (go (when nakymassa?
-                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/valittu-urakkatyyppi))
+                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/urakkatyyppi))
                           yhdistetyt (yhdista-aluesuodattimet (:alueet @suodattimet) tulos)]
                       (swap! suodattimet assoc :alueet yhdistetyt)
                       tulos)))))

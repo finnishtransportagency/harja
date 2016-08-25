@@ -59,7 +59,7 @@
                                                (keep identity [(when v-ur "urakka")
                                                                (when v-hal "hallintayksikko")]))
                   urakkatyypin-raportit (filter
-                                          #(= (:urakkatyyppi %) (:arvo @nav/valittu-urakkatyyppi))
+                                          #(= (:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
                                           (vals @raporttityypit))]
               (sort-by raportin-sort-avain
                        (into []
@@ -449,7 +449,7 @@
                                 @parametri-arvot))
         arvot-nyt (merge arvot-nyt
                          (get @muistetut-parametrit (:nimi raporttityyppi))
-                         {:urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)})
+                         {:urakkatyyppi (:arvo @nav/urakkatyyppi)})
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)]
@@ -573,7 +573,7 @@
     (komp/sisaan #(nav/valitse-urakoitsija! nil))
     (fn []
       (let [v-ur @nav/valittu-urakka
-            v-ur-tyyppi @nav/valittu-urakkatyyppi
+            v-ur-tyyppi @nav/urakkatyyppi
             v-hal @nav/valittu-hallintayksikko
             urakan-nimen-pituus 36
             konteksti (cond
