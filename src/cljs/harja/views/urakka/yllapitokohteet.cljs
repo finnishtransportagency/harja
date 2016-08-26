@@ -222,6 +222,22 @@
       (not (contains? osan-pituus osa))
       (str "Tiellä " tie " ei ole osaa  " osa))))
 
+(defn validoi-alkuetaisyys-kohteen-sisalla [{kohde-alkuosa :tr-alkuosa
+                                             kohde-alkuet :tr-alkuetaisyys}
+                                            alkuet
+                                            {alkuosa :tr-alkuosa}]
+  (when (and (= alkuosa kohde-alkuosa)
+             (< alkuet kohde-alkuet))
+    "Alkuetäisyys ei voi olla ennen kohteen alkua"))
+
+(defn validoi-loppuetaisyys-kohteen-sisalla [{kohde-loppuosa :tr-loppuosa
+                                              kohde-loppuet :tr-loppuetaisyys}
+                                            loppuet
+                                            {loppuosa :tr-loppuosa}]
+  (when (and (= loppuosa kohde-loppuosa)
+             (> loppuet kohde-loppuet))
+    "Loppuetäisyys ei voi olla kohteen lopun jälkeen"))
+
 (defn- validoi-osan-maksimipituus [osan-pituus key pituus rivi]
   (when (integer? pituus)
     (let [osa (get rivi key)]
@@ -230,7 +246,8 @@
           (str "Osan " osa " maksimietäisyys on " pit))))))
 
 (defn validoi-kohteen-osoite
-  [osan-pituudet-teille kentta _ {:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  [osan-pituudet-teille kentta _ {:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                         tr-loppuosa tr-loppuetaisyys] :as kohde}]
   (let [osan-pituudet (osan-pituudet-teille tr-numero)]
     (or
       (cond
@@ -313,13 +330,15 @@
                                  :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
                                                                        (pos? rivi))
-                                 :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)]}
+                                 :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)
+                                           (partial validoi-alkuetaisyys-kohteen-sisalla kohde)]}
                                 {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
                                                                    (< rivi (dec kohdeosia)))
                                  :validoi [(partial validoi-osa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
                                                                         (< rivi (dec kohdeosia)))
-                                 :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)]}
+                                 :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
+                                           (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
                                 {:hae (partial tr/laske-tien-pituus osan-pituus)}])
                              [{:otsikko "Toimenpide" :nimi :toimenpide :tyyppi :string
                                :leveys toimenpide-leveys}])))
