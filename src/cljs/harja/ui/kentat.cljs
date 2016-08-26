@@ -338,7 +338,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                     :disabled (if disabloi
                                                 (disabloi valitut v)
                                                 false)
-                                    on-change* #(let [valittu? (-> % .-target .-checked)]
+                                    :on-change #(let [valittu? (-> % .-target .-checked)]
                                                   (reset! data
                                                           ((if valittu? conj disj) valitut v)))}]
                            (vaihtoehto-nayta v)]]))]
@@ -359,7 +359,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
      (let [checkbox [:div.checkbox
                      [:label
                       [:input {:type      "checkbox" :checked arvo
-                               on-change* #(let [valittu? (-> % .-target .-checked)]
+                               :on-change #(let [valittu? (-> % .-target .-checked)]
                                              (reset! data valittu?))}]
                       teksti]]]
        (if nayta-rivina?
