@@ -341,7 +341,7 @@
            {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
             :leveys "10%" :tasaa :oikea
             :validoi [[:rajattu-numero nil 0 99]]}
-           {:otsikko "Massamenekki (kg/m2)" :nimi :massamenekki
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m2)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys "10%"}
            {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0
@@ -362,7 +362,7 @@
             :leveys "30%"}
            {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
             :tasaa :oikea}
-           {:otsikko "Kohteen kokonaismassamäärä (t)" :nimi :kokonaismassamaara :leveys "15%"
+           {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara :leveys "15%"
             :tyyppi :positiivinen-numero :tasaa :oikea}
            {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
             :tasaa :oikea}
