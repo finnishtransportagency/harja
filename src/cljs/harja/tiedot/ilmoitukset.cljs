@@ -131,9 +131,7 @@
 
   v/AsetaKuittausTiedot
   (process-event [{tiedot :tiedot} app]
-    (update-in app [:kuittaa-monta] merge tiedot))
-
-  )
+    (update-in app [:kuittaa-monta] merge tiedot)))
 
 
 

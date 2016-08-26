@@ -211,6 +211,14 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
+(defn- normalisoi-numero [str]
+  (-> str
+      ;; Poistetaan whitespace
+      (str/replace #"\s" "")
+
+      ;; Poistetaan mahd. euromerkki lopusta
+      (str/replace #"€$" "")))
+
 (defmethod tee-kentta :numero [kentta data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
@@ -221,7 +229,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
     (fn [{:keys [lomake? kokonaisluku?] :as kentta} data]
       (let [nykyinen-data @data
             nykyinen-teksti (or @teksti
-                                (fmt nykyinen-data)
+                                (normalisoi-numero (fmt nykyinen-data))
                                 "")
             vaadi-ei-negatiivinen? (= :positiivinen-numero (:tyyppi kentta))
             kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
@@ -234,7 +242,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                  :on-focus    (:on-focus kentta)
                  :on-blur     #(reset! teksti nil)
                  :value       nykyinen-teksti
-                 on-change*   #(let [v (-> % .-target .-value)]
+                 on-change*   #(let [v (normalisoi-numero (-> % .-target .-value))]
                                  (when (or (= v "")
                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
                                            (re-matches (if kokonaisluku?
@@ -301,7 +309,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                           [:input {:type      "radio"
                                    :value i
                                    :checked   (= nykyinen-arvo arvo)
-                                   on-change* #(reset! data arvo)}]
+                                   :on-change #(reset! data arvo)}]
                           [:span.radiovalinta-label.klikattava {:on-click #(reset! data arvo)}
                            otsikko]]))
                      valinnat))])))

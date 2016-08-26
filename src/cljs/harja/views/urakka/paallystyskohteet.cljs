@@ -42,14 +42,14 @@
                      (fn [kohteet]
                       (go (let [urakka-id (:id @nav/valittu-urakka)
                                 [sopimus-id _] @u/valittu-sopimusnumero
-                                _ (log "[PÄÄ] Tallennetaan YHA-päällystyskohteet: " (pr-str kohteet))
+                                _ (log "[PÄÄLLYSTYSKOHTEET] Tallennetaan YHA-päällystyskohteet: " (pr-str kohteet))
                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet!
                                               urakka-id sopimus-id
                                               (mapv #(assoc % :tyyppi :paallystys)
                                                     kohteet)))]
                             (if (k/virhe? vastaus)
                               (viesti/nayta! "YHA-kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                              (do (log "[PÄÄ] YHA-kohteet tallennettu: " (pr-str vastaus))
+                              (do (log "[PÄÄLLYSTYSKOHTEET] YHA-kohteet tallennettu: " (pr-str vastaus))
                                   (reset! paallystys/yhan-paallystyskohteet (filter yllapitokohteet/yha-kohde? vastaus))))))))
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
@@ -64,14 +64,14 @@
                      (fn [kohteet]
                       (go (let [urakka-id (:id @nav/valittu-urakka)
                                 [sopimus-id _] @u/valittu-sopimusnumero
-                                _ (log "[PÄÄ] Tallennetaan Harjan kohteet: " (pr-str kohteet))
+                                _ (log "[PÄÄLLYSTYSKOHTEET] Tallennetaan Harjan kohteet: " (pr-str kohteet))
                                 vastaus (<! (yllapitokohteet/tallenna-yllapitokohteet!
                                               urakka-id sopimus-id
                                               (mapv #(assoc % :tyyppi :paikkaus)
                                                     kohteet)))]
                             (if (k/virhe? vastaus)
                               (viesti/nayta! "Harjan kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                              (do (log "[PÄÄ] Harja-kohteiden tallennettu: " (pr-str vastaus))
+                              (do (log "[PÄÄLLYSTYSKOHTEET] Harja-kohteiden tallennettu: " (pr-str vastaus))
                                   (reset! paallystys/harjan-paikkauskohteet (filter (comp not yllapitokohteet/yha-kohde?) vastaus))))))))}]
 
        [yllapitokohteet-view/yllapitokohteet-yhteensa

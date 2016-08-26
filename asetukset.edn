@@ -53,12 +53,12 @@
                         :ilmoituskuittausjono   "Harja.T-LOIKToHarja.Ack"
                         :toimenpideviestijono   "Harja.HarjaToT-LOIK.Msg"
                         :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
-                        :ilmoitukset {:google-static-maps-key #=(slurp ".google-static-maps-key")}
+                        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
                         :paivittainen-lahetysaika [12 11 00] }
 
  :turi                 {:url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/poikkeamaTuonti"
                         :kayttajatunnus "testi"
-                        :salasana #=(slurp ".turi-salasana")
+                        :salasana #=(slurp "../.harja/turi-salasana")
                         :paivittainen-lahetysaika [15 49 00]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
@@ -111,6 +111,6 @@
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti           {:url            "http://localhost:28080/sendsms"
                         :kayttajatunnus "solita-2"
-                        :salasana       #=(slurp ".labyrintti-salasana")}
+                        :salasana       #=(slurp "../.harja/labyrintti-salasana")}
 
  }

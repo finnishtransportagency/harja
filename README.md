@@ -67,6 +67,9 @@ VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaks
 
 Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
 
+### Tunnukset ulkoisiin järjestelmiin
+Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa. 
+
 ### Kääntäminen
 
 Siirry projektin juureen. Käännä backend & käynnistä REPL:<br/>
