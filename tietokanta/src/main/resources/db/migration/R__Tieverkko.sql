@@ -292,8 +292,8 @@ BEGIN
   ELSE
     SELECT geom FROM tieverkko_geom WHERE tie=tie_.tie AND suunta=1::bit INTO otie_;
     
-    alkuet := projektion_etaisyys(apiste, otie_.geom);
-    loppuet := projektion_etaisyys(bpiste, otie_.geom);
+    alkuet := projektion_etaisyys(bpiste, otie_.geom);
+    loppuet := projektion_etaisyys(apiste, otie_.geom);
 
     alkuet2 := CAST(alkuet * ST_Length(otie_.geom) AS INTEGER);
     loppuet2 := CAST(loppuet * ST_Length(otie_.geom) AS INTEGER);
@@ -301,7 +301,7 @@ BEGIN
     tmp := etaisyyden_osa(tie_.tie, alkuet2);
     tmp2 := etaisyyden_osa(tie_.tie, loppuet2);
     
-    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),kaanna_viiva(ST_LineSubstring(otie_.geom, loppuet, alkuet)));
+    RETURN ROW(tie_.tie,tmp.osa,CAST(alkuet2-tmp.p AS INTEGER),tmp2.osa,CAST(loppuet2-tmp2.p AS INTEGER),kaanna_viiva(ST_LineSubstring(otie_.geom, alkuet, loppuet)));
   END IF;  
 END;
 $$ LANGUAGE plpgsql;
