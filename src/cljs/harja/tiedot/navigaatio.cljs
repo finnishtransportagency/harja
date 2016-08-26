@@ -15,6 +15,7 @@
     [harja.asiakas.tapahtumat :as t]
     [harja.tiedot.urakoitsijat :as urk]
     [harja.tiedot.hallintayksikot :as hy]
+    [harja.tiedot.istunto :as istunto]
     [harja.tiedot.urakat :as ur]
     [harja.tiedot.raportit :as raportit]
     [harja.tiedot.navigaatio.reitit :as reitit]
@@ -68,10 +69,6 @@
 ;; :L (korkeampi täysleveä)
 (def kartan-kokovalinta "Kartan koko" (atom :S))
 
-(def kartta-nakyvissa? "Kartta ei piilotettu" (reaction (let [koko @kartan-kokovalinta]
-                                                          (and (not= :S koko)
-                                                               (not= :hidden koko)))))
-
 (defn vaihda-kartan-koko! [uusi-koko]
   (let [vanha-koko @kartan-kokovalinta]
     (when uusi-koko
@@ -90,7 +87,7 @@
    {:nimi "Paikkaus" :arvo :paikkaus}
    {:nimi "Valaistus" :arvo :valaistus}])
 
-(defn urakkatyyppi [tyyppi]
+(defn urakkatyyppi-arvolle [tyyppi]
   (first (filter #(= tyyppi (:arvo %))
                  +urakkatyypit+)))
 
@@ -132,17 +129,17 @@
         (some #(when (= id (:id %)) %) urakat)))))
 
 
+(defonce valittu-urakkatyyppi (atom nil))
+
+
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
-(defonce valittu-urakkatyyppi
-  (atom (urakkatyyppi :hoito)))
-
-(defonce paivita-valittu-urakkatyyppi!
-  (run! (when-let [ur @valittu-urakka]
-          (reset! valittu-urakkatyyppi (urakkatyyppi (:tyyppi ur))))))
-
-
-;; kehittäessä voit tarkkailla atomien tilan muutoksia
-;;(tarkkaile! "valittu-hallintayksikko" valittu-hallintayksikko)
+;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
+(defonce urakkatyyppi
+  (reaction
+    (let [oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+          valittu-urakkatyyppi @valittu-urakkatyyppi
+          urakan-urakkatyyppi (urakkatyyppi-arvolle (:tyyppi @valittu-urakka))]
+      (or urakan-urakkatyyppi valittu-urakkatyyppi oletus-urakkatyyppi))))
 
 (def tarvitsen-isoa-karttaa "Set käyttöliittymänäkymiä (keyword), jotka haluavat pakottaa kartan näkyviin.
   Jos tässä setissä on itemeitä, tulisi kartta pakottaa näkyviin :L kokoisena vaikka se ei olisikaan muuten näkyvissä."
@@ -150,7 +147,6 @@
 
 ;; jos haluat palauttaa kartan edelliseen kokoon, säilö edellinen koko tähän (esim. Valitse kartalta -toiminto)
 (def kartan-edellinen-koko (atom nil))
-
 
 (def kartan-koko
   "Kartan laskettu koko riippuu kartan kokovalinnasta sekä kartan pakotteista."
@@ -168,6 +164,13 @@
                       (and (= sivu :urakat)
                            (not v-ur)) :XL
                       :default valittu-koko)))))
+
+(def kartta-nakyvissa?
+  "Kartta ei piilotettu"
+  (reaction (let [koko @kartan-koko]
+              (and (not= :S koko)
+                   (not= :hidden koko)))))
+
 
 (def kartan-kontrollit-nakyvissa?
   (reaction
@@ -269,7 +272,7 @@
 
 (def suodatettu-urakkalista "Urakat suodatettuna urakkatyypin ja urakoitsijan mukaan."
   (reaction
-    (let [v-ur-tyyppi (:arvo @valittu-urakkatyyppi)
+    (let [v-ur-tyyppi (:arvo @urakkatyyppi)
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista]
       (into []

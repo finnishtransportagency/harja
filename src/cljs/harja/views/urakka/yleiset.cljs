@@ -313,8 +313,10 @@
                                        :valinta (:tyyppi ur)
                                        :format-fn #(navigaatio/nayta-urakkatyyppi %)
                                        :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                       :disabled (or (not yha-tuontioikeus?)
-                                                     sidonta-lukittu?)}
+                                       ;; todo: Urakkatyypin vaihto on toiseseksi estetty, sillä paikkausurakoiden toteutus on kesken.
+                                       :disabled (constantly true)
+                                       #_(or (not yha-tuontioikeus?)
+                                             sidonta-lukittu?)}
           [:paallystys :paikkaus]]])]]))
 
 (defn yhteyshenkilot [ur]
