@@ -118,37 +118,42 @@
       asiatarkastus]]))
 
 (defn kasittelytiedot [otsikko muokattava? valmistumispvm osa muokkaa!]
-  [lomake/lomake
-   {:otsikko otsikko
-    :muokkaa! muokkaa!
-    :voi-muokata? muokattava?}
-   [{:otsikko "Käsitelty"
-     :nimi :kasittelyaika
-     :tyyppi :pvm
-     :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]
-               [:pvm-toisen-pvmn-jalkeen valmistumispvm
-                "Käsittely ei voi olla ennen valmistumista"]]}
+  (let [pvm-validoinnit (if (:paatos osa)
+                          [[:ei-tyhja "Anna käsittelypvm"]
+                           [:pvm-toisen-pvmn-jalkeen valmistumispvm
+                            "Käsittely ei voi olla ennen valmistumista"]]
+                          [[:pvm-toisen-pvmn-jalkeen valmistumispvm
+                            "Käsittely ei voi olla ennen valmistumista"]])]
+    [lomake/lomake
+    {:otsikko      otsikko
+     :muokkaa!     muokkaa!
+     :voi-muokata? muokattava?}
+    [{:otsikko     "Käsitelty"
+      :nimi        :kasittelyaika
+      :pakollinen? (when (:paatos osa) true)
+      :tyyppi      :pvm
+      :validoi     pvm-validoinnit}
 
-    {:otsikko "Päätös"
-     :nimi :paatos
-     :tyyppi :valinta
-     :valinnat [:hyvaksytty :hylatty]
-     :validoi [[:ei-tyhja "Anna päätös"]]
-     :valinta-nayta #(cond
-                      % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
-                      muokattava? "- Valitse päätös -"
-                      :default "-")
-     :palstoja 1}
+     {:otsikko       "Päätös"
+      :nimi          :paatos
+      :tyyppi        :valinta
+      :valinnat      [:hyvaksytty :hylatty]
+      :validoi       [[:ei-tyhja "Anna päätös"]]
+      :valinta-nayta #(cond
+                       % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                       muokattava? "- Valitse päätös -"
+                       :default "-")
+      :palstoja      1}
 
-    (when (:paatos osa)
-      {:otsikko "Selitys"
-       :nimi :perustelu
-       :tyyppi :text
-       :koko [60 3]
-       :pituus-max 2048
-       :palstoja 2
-       :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})]
-   osa])
+     (when (:paatos osa)
+       {:otsikko    "Selitys"
+        :nimi       :perustelu
+        :tyyppi     :text
+        :koko       [60 3]
+        :pituus-max 2048
+        :palstoja   2
+        :validoi    [[:ei-tyhja "Anna päätöksen selitys"]]})]
+    osa]))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
