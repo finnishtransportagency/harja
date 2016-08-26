@@ -1,3 +1,7 @@
+;; Tarkoitettu demoamaan ylläpidon reaaliaikaseurantaa tilannekuvan kanssa.
+;; Lähettää ensinnä suljetun tieosuuden, jonka jälkeen sille TMA-aidat ja lopulta asettaa työkonehavaintoja 10s välein suljetun tieosuuden rajaavalle alueelle
+;; Tarvii ssh putken stagingin tietokantaan porttiin 7771
+
 (ns harja.tyokalut.yllapidon-reaaliaikaseurannan-demo
   (:require [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.kyselyt.konversio :as konv]
@@ -70,8 +74,8 @@
                     :tietokanta "harja"
                     :portti 7771
                     :yhteyspoolin-koko 16
-                    :kayttaja "flyway"
-                    :salasana "migrate123"}
+                    :kayttaja "[KAYTTAJATUNNUS]"
+                    :salasana "[SALASANA]"}
         urakka-id 348
         yllapitokohde-id 7
         alkux 570095
