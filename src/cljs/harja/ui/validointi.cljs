@@ -145,6 +145,12 @@
   (when-not (<= min-arvo data max-arvo)
     (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo ""))))
 
+(defmethod validoi-saanto :rajattu-numero-tai-tyhja [_ _ data rivi _ _ & [min-arvo max-arvo viesti]]
+  (and
+    data
+    (when-not (<= min-arvo data max-arvo)
+      (or viesti (str "Anna arvo välillä " min-arvo " - " max-arvo "")))))
+
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
   [nimi data rivi taulukko saannot]
