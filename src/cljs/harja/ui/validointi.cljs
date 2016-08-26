@@ -176,6 +176,12 @@
              (recur (if (empty? virheet) v (assoc v nimi virheet))
                     skeema))))))))
 
+(defn tyhja-tr-osoite? [arvo]
+  (or (nil? (:numero arvo))
+      (nil? (:alkuosa arvo))
+      (nil? (:alkuetaisyys arvo))))
+
+
 (defn tyhja-arvo? [arvo]
   (or (nil? arvo)
       (str/blank? arvo)))
@@ -183,10 +189,14 @@
 (defn puuttuvat-pakolliset-kentat
   "Palauttaa pakolliset kenttäskeemat, joiden arvo puuttuu"
   [rivi skeema]
-  (keep (fn [{:keys [pakollinen? hae nimi] :as s}]
+  (keep (fn [{:keys [pakollinen? hae nimi tyyppi] :as s}]
           (when (and pakollinen?
-                     (tyhja-arvo? (if hae
-                                    (hae rivi)
-                                    (get rivi nimi))))
+                     (if (= :tierekisteriosoite tyyppi)
+                       (tyhja-tr-osoite? (if hae
+                                           (hae rivi)
+                                           (get rivi nimi)))
+                       (tyhja-arvo? (if hae
+                                      (hae rivi)
+                                      (get rivi nimi)))))
             s))
         skeema))
