@@ -479,6 +479,7 @@
                    {:otsikko "Tekninen toimen\u00ADpide"
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
                     :valinnat pot/+tekniset-toimenpiteet+
