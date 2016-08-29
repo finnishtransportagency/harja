@@ -118,37 +118,42 @@
       asiatarkastus]]))
 
 (defn kasittelytiedot [otsikko muokattava? valmistumispvm osa muokkaa!]
-  [lomake/lomake
-   {:otsikko otsikko
-    :muokkaa! muokkaa!
-    :voi-muokata? muokattava?}
-   [{:otsikko "Käsitelty"
-     :nimi :kasittelyaika
-     :tyyppi :pvm
-     :validoi [[:ei-tyhja "Anna käsittelypäivämäärä"]
-               [:pvm-toisen-pvmn-jalkeen valmistumispvm
-                "Käsittely ei voi olla ennen valmistumista"]]}
+  (let [pvm-validoinnit (if (:paatos osa)
+                          [[:ei-tyhja "Anna käsittelypvm"]
+                           [:pvm-toisen-pvmn-jalkeen valmistumispvm
+                            "Käsittely ei voi olla ennen valmistumista"]]
+                          [[:pvm-toisen-pvmn-jalkeen valmistumispvm
+                            "Käsittely ei voi olla ennen valmistumista"]])]
+    [lomake/lomake
+    {:otsikko      otsikko
+     :muokkaa!     muokkaa!
+     :voi-muokata? muokattava?}
+    [{:otsikko     "Käsitelty"
+      :nimi        :kasittelyaika
+      :pakollinen? (when (:paatos osa) true)
+      :tyyppi      :pvm
+      :validoi     pvm-validoinnit}
 
-    {:otsikko "Päätös"
-     :nimi :paatos
-     :tyyppi :valinta
-     :valinnat [:hyvaksytty :hylatty]
-     :validoi [[:ei-tyhja "Anna päätös"]]
-     :valinta-nayta #(cond
-                      % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
-                      muokattava? "- Valitse päätös -"
-                      :default "-")
-     :palstoja 1}
+     {:otsikko       "Päätös"
+      :nimi          :paatos
+      :tyyppi        :valinta
+      :valinnat      [:hyvaksytty :hylatty]
+      :validoi       [[:ei-tyhja "Anna päätös"]]
+      :valinta-nayta #(cond
+                       % (paallystys-ja-paikkaus/kuvaile-paatostyyppi %)
+                       muokattava? "- Valitse päätös -"
+                       :default "-")
+      :palstoja      1}
 
-    (when (:paatos osa)
-      {:otsikko "Selitys"
-       :nimi :perustelu
-       :tyyppi :text
-       :koko [60 3]
-       :pituus-max 2048
-       :palstoja 2
-       :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})]
-   osa])
+     (when (:paatos osa)
+       {:otsikko    "Selitys"
+        :nimi       :perustelu
+        :tyyppi     :text
+        :koko       [60 3]
+        :pituus-max 2048
+        :palstoja   2
+        :validoi    [[:ei-tyhja "Anna päätöksen selitys"]]})]
+    osa]))
 
 (defn kasittely
   "Ilmoituksen käsittelyosio, kun ilmoitus on valmis.
@@ -341,7 +346,7 @@
            {:otsikko "Rae\u00ADkoko" :nimi :raekoko :tyyppi :numero :desimaalien-maara 0
             :leveys "10%" :tasaa :oikea
             :validoi [[:rajattu-numero nil 0 99]]}
-           {:otsikko "Massamenekki (kg/m2)" :nimi :massamenekki
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m2)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys "10%"}
            {:otsikko "RC-%" :nimi :rc% :leveys "10%" :tyyppi :numero :desimaalien-maara 0
@@ -362,7 +367,7 @@
             :leveys "30%"}
            {:otsikko "Leveys (m)" :nimi :leveys :leveys "10%" :tyyppi :positiivinen-numero
             :tasaa :oikea}
-           {:otsikko "Kohteen kokonaismassamäärä (t)" :nimi :kokonaismassamaara :leveys "15%"
+           {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara :leveys "15%"
             :tyyppi :positiivinen-numero :tasaa :oikea}
            {:otsikko "Pinta-ala (m2)" :nimi :pinta-ala :leveys "10%" :tyyppi :positiivinen-numero
             :tasaa :oikea}
@@ -474,6 +479,7 @@
                    {:otsikko "Tekninen toimen\u00ADpide"
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
                     :valinnat pot/+tekniset-toimenpiteet+
@@ -680,7 +686,7 @@
          [:h3 "Päällystysilmoitukset"]
          (paallystysilmoitukset-taulukko paallystysilmoitukset)
          [:h3 "YHA-lähetykset"]
-         [yleiset/vihje "Kohteen täytyy olla merkitty valmiiksi ja teknisen osan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
+         [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
          (yha-lahetykset-taulukko urakka-id sopimus-id paallystysilmoitukset)
          [yha/laheta-kohteet-yhaan
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
