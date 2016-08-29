@@ -65,7 +65,7 @@
 
 (defn alkuosa-ei-lopun-jalkeen [aosa {losa :tr-loppuosa}]
   (when (and aosa losa (> aosa losa))
-    "Alkuosan ei voi olla loppuosan jälkeen"))
+    "Al\u00ADku\u00ADo\u00ADsa ei voi olla lop\u00ADpu\u00ADo\u00ADsan jäl\u00ADkeen"))
 
 (defn alkuetaisyys-ei-lopun-jalkeen [alkuet {aosa :tr-alkuosa
                                              losa :tr-loppuosa
@@ -73,11 +73,11 @@
   (when (and aosa losa alkuet loppuet
              (= aosa losa)
              (> alkuet loppuet))
-    "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
+    "Alku\u00ADe\u00ADtäi\u00ADsyys ei voi olla lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyy\u00ADden jäl\u00ADkeen"))
 
 (defn loppuosa-ei-alkua-ennen [losa {aosa :tr-alkuosa}]
   (when (and aosa losa (< losa aosa))
-    "Loppuosa ei voi olla alkuosaa ennen"))
+    "Lop\u00ADpu\u00ADosa ei voi olla al\u00ADku\u00ADo\u00ADsaa ennen"))
 
 (defn loppuetaisyys-ei-alkua-ennen [loppuet {aosa :tr-alkuosa
                                              losa :tr-loppuosa
@@ -85,7 +85,7 @@
   (when (and aosa losa alkuet loppuet
              (= aosa losa)
              (< loppuet alkuet))
-    "Loppuetäisyys ei voi olla ennen alkuetäisyyttä"))
+    "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä"))
 
 (defn tierekisteriosoite-sarakkeet [perusleveys
                                     [nimi tunnus tie ajorata kaista aosa aet losa let pituus]]
@@ -127,25 +127,25 @@
             :leveys (- perusleveys 2)}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea
-            :validoi (into [[:ei-tyhja "Anna alkuosa"]
+            :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
                             alkuosa-ei-lopun-jalkeen]
                            (:validoi aosa))
             :muokattava? (or (:muokattava? aosa) (constantly true))}
            {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea
-            :validoi (into [[:ei-tyhja "Anna alkuetäisyys"]
+            :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
                             alkuetaisyys-ei-lopun-jalkeen]
                            (:validoi aet))
             :muokattava? (or (:muokattava? aet) (constantly true))}
            {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea
-            :validoi (into [[:ei-tyhja "Anna loppuosa"]
+            :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
                             loppuosa-ei-alkua-ennen]
                            (:validoi losa))
             :muokattava? (or (:muokattava? losa) (constantly true))}
            {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea
-            :validoi (into [[:ei-tyhja "Anna loppuetäisyys"]
+            :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
                             loppuetaisyys-ei-alkua-ennen]
                            (:validoi let))
             :muokattava? (or (:muokattava? let) (constantly true))}
