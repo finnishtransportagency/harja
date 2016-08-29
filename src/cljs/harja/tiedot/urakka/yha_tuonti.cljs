@@ -266,9 +266,11 @@
 (defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id paallystysilmoitukset]
   (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
                                     (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
-                                          (or (= :valmis (:tila paallystysilmoitus))
-                                              (= :lukittu (:tila paallystysilmoitus)))))
-        kohde-idt (mapv :paallystyskohde-id (filter ilmoituksen-voi-lahettaa? paallystysilmoitukset))]
+                                         (= :hyvaksytty (:paatos-taloudellinen-osa paallystysilmoitus))
+                                         (or (= :valmis (:tila paallystysilmoitus))
+                                             (= :lukittu (:tila paallystysilmoitus)))))
+        lahetettavat-ilmoitukset (filter ilmoituksen-voi-lahettaa? paallystysilmoitukset)
+        kohde-idt (mapv :paallystyskohde-id lahetettavat-ilmoitukset)]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
