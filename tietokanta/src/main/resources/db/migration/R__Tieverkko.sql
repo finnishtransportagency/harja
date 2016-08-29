@@ -147,6 +147,8 @@ DECLARE
   kok_pituus FLOAT;
   apituus FLOAT;
   bpituus FLOAT;
+  apituus_clamp FLOAT;
+  bpituus_clamp FLOAT;
   suunta_ BIT;
 BEGIN
   suunta_ := tr_osoitteen_suunta(aosa_,aet_,losa_,let_);
@@ -154,10 +156,12 @@ BEGIN
   kok_pituus := tien_kokonaispituus(tie_);
   apituus := etaisyys_alusta(tie_, aosa_, aet_);
   bpituus := etaisyys_alusta(tie_, losa_, let_);
+  apituus_clamp := LEAST(1, apituus::FLOAT/kok_pituus::FLOAT);
+  bpituus_clamp := LEAST(1, bpituus::FLOAT/kok_pituus::FLOAT);
   IF suunta_=1::bit THEN
-     tmp := kaanna_viiva(ST_LineSubstring(tmp, bpituus::FLOAT/kok_pituus::FLOAT, apituus::FLOAT/kok_pituus::FLOAT));
+     tmp := kaanna_viiva(ST_LineSubstring(tmp, bpituus_clamp, apituus_clamp));
   ELSE
-     tmp := ST_LineSubstring(tmp, apituus::FLOAT/kok_pituus::FLOAT, bpituus::FLOAT/kok_pituus::FLOAT);
+     tmp := ST_LineSubstring(tmp, apituus_clamp, bpituus_clamp);
   END IF;
   IF aosa_=losa_ AND aet_=let_ THEN
     -- tässä tapauksessa tulee geometrycollection, puretaan sen ainoa piste ulos
@@ -184,13 +188,13 @@ BEGIN
            etaisyys := etaisyys + ST_Length(tmp);
         ELSE
            etaisyys := etaisyys + ST_Length(ST_LineSubstring(tmp, 0, pit));
-           RETURN (etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
+           RETURN LEAST(1, etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
         END IF;
      END LOOP;
-     RETURN etaisyys::FLOAT / ST_Length(viiva)::FLOAT;
+     RETURN LEAST(1, etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
   ELSE
      etaisyys := ST_Length(ST_LineSubstring(viiva, 0, ST_LineLocatePoint(viiva, apiste)));
-     RETURN etaisyys::FLOAT / ST_Length(viiva)::FLOAT;
+     RETURN LEAST(1, etaisyys::FLOAT / ST_Length(viiva)::FLOAT);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
