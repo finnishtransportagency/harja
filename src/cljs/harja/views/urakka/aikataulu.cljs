@@ -106,7 +106,9 @@
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 10 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)
+            :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paallystys
+                       "Päällystystä ei ole merkitty aloitetuksi."]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 13 :nimi :suorittava-tiemerkintaurakka
