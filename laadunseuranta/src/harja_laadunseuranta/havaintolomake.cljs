@@ -23,19 +23,21 @@
       [:div.tr-osoite
        "Tie vaihtunut"]
       [:div.tr-osoite
-       [:input {:type "text" :value tie :placeholder "Tie#"}] [:span.valiviiva " / "]
-       [:input {:type "text" :value aosa :placeholder "aosa"}] [:span.valiviiva " / "]
-       [:input {:type "text" :value aet :placeholder "aet"}] [:span.valiviiva " / "]
-       [:input {:type "text" :value losa :placeholder "losa"}] [:span.valiviiva " / "]
-       [:input {:type "text" :value let :placeholder "let"}]])))
+       [:input {:type "text" :value tie :on-change #()  :placeholder "Tie#"}] [:span.valiviiva " / "]
+       [:input {:type "text" :value aosa :on-change #() :placeholder "aosa"}] [:span.valiviiva " / "]
+       [:input {:type "text" :value aet :on-change #() :placeholder "aet"}] [:span.valiviiva " / "]
+       [:input {:type "text" :value losa :on-change #() :placeholder "losa"}] [:span.valiviiva " / "]
+       [:input {:type "text" :value let :on-change #() :placeholder "let"}]])))
 
 (defn pvm-aika [aika]
   [:div.pvm-aika
    [:input {:type "text"
             :value (fmt/unparse pvm-fmt @aika)
+            :on-change #()
             :name "pvm"}]
    [:input {:type "text"
             :value (fmt/unparse klo-fmt @aika)
+            :on-change #()
             :name "klo"}]])
 
 (defn- parse-and-check-value [s min max]
@@ -181,7 +183,7 @@
 
         [:div.lisatietoja
          [:input#laatupoikkeamacheck {:type "checkbox"
-                                      :on-change #(swap! laadunalitus? not)} "Laadun alitus"]
+                                      :on-change #(swap! laadunalitus? not)}] "Laadun alitus"
          [:div.title "Lisätietoja"]
          [tekstialue kuvaus]
          [kamera/kamerakomponentti kuva]]

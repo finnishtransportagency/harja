@@ -22,8 +22,6 @@
 (def urakoitsijat-valaistus
   (reaction (into #{} (filter #(= (:urakkatyyppi %) "valaistus") @urakoitsijat))))
 
-(tarkkaile! "urakoitsijat" urakoitsijat)
-
 (defn ^:export hae-urakoitsijat []
   (let [ch (chan)]
     (go

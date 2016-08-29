@@ -118,10 +118,11 @@
 (defn muodosta [urakka kohteet]
   (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validi-xml? +xsd-polku+ "yha.xsd" xml)
-      xml
-      (let [virheviesti "Kohdetta ei voi lähettää YHA:n. XML ei ole validia."]
+    (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
+      (let [virheviesti (format "Kohdetta ei voi lähettää YHA:n. XML ei ole validia. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
         (throw+ {:type :invalidi-yha-kohde-xml
-                 :error virheviesti})))))
+                 :error virheviesti}))
+      xml)))
+
 

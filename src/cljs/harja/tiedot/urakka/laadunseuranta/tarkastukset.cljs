@@ -31,7 +31,9 @@
                                 :tarkastus (as-> tarkastus t
                                                  (if-not (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])
                                                    (dissoc t :yllapitokohde)
-                                                   t))}))
+                                                   (if (integer? (:yllapitokohde t))
+                                                     t
+                                                     (assoc t :yllapitokohde (get-in t [:yllapitokohde :id])))))}))
 
 (defn hae-urakan-tarkastukset
   "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."

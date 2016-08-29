@@ -213,7 +213,7 @@
    [(Math/min e1-minx e2-minx) (Math/min e1-miny e2-miny)
     (Math/max e1-maxx e2-maxx) (Math/max e1-maxy e2-maxy)]))
 
-(defn- pisteet
+(defn pisteet
   "Palauttaa annetun geometrian pisteet sekvenssinä"
   [{type :type :as g}]
   (case type

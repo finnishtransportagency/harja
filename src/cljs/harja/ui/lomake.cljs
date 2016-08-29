@@ -210,7 +210,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
          [:span.kentan-label otsikko]
          (when yksikko [:span.kentan-yksikko yksikko])]])
      (if (= tyyppi :komponentti)
-       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)})]
+       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
+                                       :data data})]
        (if muokattava?
          (do (have #(contains? % :tyyppi) s)
              [tee-kentta (assoc s :lomake? true) arvo])
@@ -309,7 +310,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
           :as data}]
       (let [{virheet ::virheet
              varoitukset ::varoitukset
-             huomautukset ::huomautukset} (validoi data skeema)]
+             huomautukset ::huomautukset :as validoitu-data} (validoi data skeema)]
         (kasittele-virhe
           (let [voi-muokata? (if (some? voi-muokata?)
                                voi-muokata?
@@ -334,8 +335,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                    (rest skeemat)
                                    skeemat)
                          rivi-ui [nayta-rivi skeemat
-                                  data
-                                  #(atomina % data (muokkaa-kenttaa-fn (:nimi %)))
+                                  validoitu-data
+                                  #(atomina % validoitu-data (muokkaa-kenttaa-fn (:nimi %)))
                                   voi-muokata?
                                   @fokus
                                   #(reset! fokus %)
@@ -353,7 +354,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
-                                 (footer-fn virheet varoitukset huomautukset)
+                                 (footer-fn validoitu-data)
                                  footer)]
                [:div.lomake-footer.row
                 [:div.col-md-12 footer]])]))))))

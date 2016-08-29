@@ -97,7 +97,7 @@
                          :class (str "alasveto-urakoitsija" (when (boolean @nav/valittu-urakka) " disabled"))
                          :disabled (or (some? @nav/valittu-urakka)
                                        (= (:sivu @reitit/url-navigaatio) :raportit))}
-    (vec (conj (into [] (case (:arvo @nav/valittu-urakkatyyppi)
+    (vec (conj (into [] (case (:arvo @nav/urakkatyyppi)
                           :hoito @urakoitsijat/urakoitsijat-hoito
                           :paallystys @urakoitsijat/urakoitsijat-paallystys
                           :tiemerkinta @urakoitsijat/urakoitsijat-tiemerkinta
@@ -109,7 +109,7 @@
 (defn urakkatyyppi []
   [:div.murupolku-urakkatyyppi
    [:div.livi-valikkonimio.murupolku-urakkatyyppi-otsikko "Urakkatyyppi"]
-   [livi-pudotusvalikko {:valinta    @nav/valittu-urakkatyyppi
+   [livi-pudotusvalikko {:valinta    @nav/urakkatyyppi
                          :format-fn  #(if % (:nimi %) "Kaikki")
                          :valitse-fn nav/vaihda-urakkatyyppi!
                          :class      (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))

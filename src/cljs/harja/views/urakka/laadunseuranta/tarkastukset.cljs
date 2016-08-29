@@ -163,7 +163,7 @@
      :hae (comp :tasaisuus :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :tasaisuus] %2)}
     {:otsikko "Kitka" :tyyppi :numero
      :nimi :kitka
-     :validoi [[:rajattu-numero nil 0.01 0.99 "Arvon tulee olla välillä 0.01-0.99"]]
+     :validoi [[:rajattu-numero-tai-tyhja nil 0.01 0.99 "Arvon tulee olla välillä 0.01-0.99"]]
      :hae (comp :kitka :talvihoitomittaus) :aseta #(assoc-in %1 [:talvihoitomittaus :kitka] %2)}
     {:otsikko "Ilma" :tyyppi :numero :yksikko "\u2103"
      :validoi [#(when-not (<= -55 %1 55)
@@ -221,10 +221,6 @@
       (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
       (not validi?))))
 
-(defn disabloi-lomake? [tarkastus lomakkeen-virheet]
-  ;; Palauttaa false (ei disabloida) kun virheet ovat tyhjät, ja (validoi-tarkastuslomake) palauttaa false
-  (not (and (empty? lomakkeen-virheet) (false? (validoi-tarkastuslomake tarkastus)))))
-
 (defn tarkastuslomake [tarkastus-atom optiot]
   (let [urakka-id (:id @nav/valittu-urakka)
         urakkatyyppi (:tyyppi @nav/valittu-urakka)
@@ -233,24 +229,30 @@
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
                                                   urakka-id)
         voi-muokata? (and voi-kirjoittaa?
-                          (not jarjestelmasta?))]
+                          (not jarjestelmasta?))
+        kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
+        yllapitokohteet (:yllapitokohteet optiot)]
     (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
-             (nil? (:yllapitokohteet optiot)))
+             (nil? yllapitokohteet))
       [yleiset/ajax-loader "Ladataan..."]
       [:div.tarkastus
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
        [lomake/lomake
         {:otsikko      (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
-         :muokkaa!     #(reset! tarkastus-atom %)
+         :muokkaa!     #(let [uusi-tarkastus
+                               (if (kohde-muuttui? (:yllapitokohde @tarkastus-atom) (:yllapitokohde %))
+                                 (tiedot-laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                                 %)]
+                          (reset! tarkastus-atom uusi-tarkastus))
          :voi-muokata? voi-muokata?
-         :footer-fn    (fn [virheet _ _]
+         :footer-fn    (fn [tarkastus]
                          (when voi-kirjoittaa?
                            [napit/palvelinkutsu-nappi
                             "Tallenna tarkastus"
                             (fn []
                               (tarkastukset/tallenna-tarkastus (:id @nav/valittu-urakka) tarkastus (:nakyma optiot)))
-                            {:disabled     (disabloi-lomake? tarkastus virheet)
+                            {:disabled     (not (lomake/voi-tallentaa? tarkastus))
                              :kun-onnistuu (fn [tarkastus]
                                              (reset! tarkastukset/valittu-tarkastus nil)
                                              (tarkastukset/paivita-tarkastus-listaan! tarkastus))
@@ -272,7 +274,7 @@
            {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
             :palstoja 1
             :pakollinen? true
-            :valinnat (:yllapitokohteet optiot)
+            :valinnat yllapitokohteet
             :jos-tyhja "Ei valittavia kohteita"
             :valinta-arvo :id
             :valinta-nayta (fn [arvo muokattava?]
@@ -310,6 +312,7 @@
          {:otsikko "Havain\u00ADnot"
           :nimi :havainnot
           :koko [80 :auto]
+          :pakollinen? (when (:laadunalitus tarkastus) true)
           :tyyppi :text
           :palstoja 2
           :validoi (when (:laadunalitus tarkastus)
@@ -348,7 +351,7 @@
             :vihje (if (:laatupoikkeamaid tarkastus)
                      "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
                      "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
-            :komponentti (fn [_]
+            :komponentti (fn [{tarkastus :data}]
                            [napit/palvelinkutsu-nappi
                            (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
                            (fn []
@@ -358,7 +361,7 @@
                                                                    tarkastus
                                                                    (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
                                  tarkastus-ja-laatupoikkeama)))
-                           {:disabled (disabloi-lomake? tarkastus nil)
+                           {:disabled (not (lomake/voi-tallentaa? tarkastus))
                             :kun-onnistuu (fn [tarkastus]
                                             (reset! tarkastus-atom tarkastus)
                                             (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))

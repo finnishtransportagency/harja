@@ -54,7 +54,7 @@
   (jdbc/query (:db *raportin-suoritus*)
               haku-ja-parametrit))
 
-(def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus})
+(def tarvitsee-write-tietokannan #{:laskutusyhteenveto :indeksitarkistus :tyomaakokous})
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id hallintayksikko-id]
                                            :as parametrit} raportti]

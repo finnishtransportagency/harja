@@ -107,15 +107,16 @@
            [:kuvaus (:kuvaus data)]])))
 
 (defn rakenna-tapahtumapaikka [data]
-  [:tapahtumapaikka
-   [:paikka (:paikan-kuvaus data)]
-   [:eureffinn (second (get-in data [:sijainti :coordinates]))]
-   [:eureffine (first (get-in data [:sijainti :coordinates]))]
-   [:tienumero (get-in data [:tr :numero])]
-   [:tieaosa (get-in data [:tr :alkuosa])]
-   (when (get-in data [:tr :loppuosa]) [:tielosa (get-in data [:tr :loppuosa])])
-   [:tieaet (get-in data [:tr :alkuetaisyys])]
-   (when (get-in data [:tr :loppuetaisyys]) [:tielet (get-in data [:tr :loppuetaisyys])])])
+  (let [[x y] (first (geo/pisteet (:sijainti data)))]
+    [:tapahtumapaikka
+     [:paikka (:paikan-kuvaus data)]
+     [:eureffinn y]
+     [:eureffine x]
+     [:tienumero (get-in data [:tr :numero])]
+     [:tieaosa (get-in data [:tr :alkuosa])]
+     (when (get-in data [:tr :loppuosa]) [:tielosa (get-in data [:tr :loppuosa])])
+     [:tieaet (get-in data [:tr :alkuetaisyys])]
+     (when (get-in data [:tr :loppuetaisyys]) [:tielet (get-in data [:tr :loppuetaisyys])])]))
 
 (defn rakenna-syyt-ja-seuraukset [data]
   (into [:syytjaseuraukset]
@@ -137,10 +138,10 @@
 (defn rakenna-poikkeamatoimenpide [data]
   (mapv (fn [toimenpide]
           [:poikkeamatoimenpide
-             [:otsikko (:otsikko toimenpide)]
-             [:kuvaus (:kuvaus toimenpide)]
-             [:toteuttaja (:toteuttaja toimenpide)]
-             [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
+           [:otsikko (:otsikko toimenpide)]
+           [:kuvaus (:kuvaus toimenpide)]
+           [:toteuttaja (:toteuttaja toimenpide)]
+           [:tila (korjaava-toimenpide-tila->numero (:tila toimenpide))]])
         (:korjaavattoimenpiteet data)))
 
 (defn rakenna-poikkeamaliite [data]
@@ -163,9 +164,9 @@
 (defn muodosta [data]
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
-    (if (xml/validi-xml? +xsd-polku+ "poikkeama-rest.xsd" xml)
-      xml
-      (let [virheviesti "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia."]
+    (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
+      (let [virheviesti (format "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia. Validointivirheet: %s " virheet)]
         (log/error virheviesti)
         (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
-                 :error virheviesti})))))
+                 :error virheviesti}))
+      xml)))

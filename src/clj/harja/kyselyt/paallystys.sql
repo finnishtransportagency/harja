@@ -43,6 +43,7 @@ SELECT
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi              AS "bitumi-indeksi",
   ypk.kaasuindeksi,
+  ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
   paatos_tekninen_osa             AS "tekninen-osa_paatos",
   paatos_taloudellinen_osa        AS "taloudellinen-osa_paatos",
