@@ -114,7 +114,9 @@
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
-                       "Päällystystä ei ole merkitty aloitetuksi."]]}
+                       "Päällystystä ei ole merkitty aloitetuksi."]
+                      [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
+                       "Valmistuminen ei voi olla ennen aloitusta."]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 13 :nimi :suorittava-tiemerkintaurakka
