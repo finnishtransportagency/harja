@@ -184,11 +184,16 @@
 
 (defn aikasuodattimet []
   [:div#tk-paavalikko
-   [:span "Näytä seuraavat aikavälillä (max. yksi vuosi):"]
+   [:span "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
+                                " (max. yksi vuosi):")]
    (when (= :nykytilanne @tiedot/valittu-tila)
      [nykytilanteen-aikavalinnat])
    (when (= :historiakuva @tiedot/valittu-tila)
      [historiankuvan-aikavalinnat])
+   (when (= :nykytilanne @tiedot/valittu-tila)
+     [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
+   (when (= :nykytilanne @tiedot/valittu-tila)
+     [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
    [:div.tk-suodatinryhmat
     (when (= :historiakuva @tiedot/valittu-tila)
       [:div.tk-suodatinryhmat
@@ -215,10 +220,6 @@
       (fn []
         [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
          [tilan-vaihtaja]
-         (when (= :nykytilanne @tiedot/valittu-tila)
-           [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
-         (when (= :nykytilanne @tiedot/valittu-tila)
-           [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
          [aikasuodattimet]
          [aluesuodattimet]]))))
 
