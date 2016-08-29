@@ -68,10 +68,8 @@
                                    (keyword (get-in % [:ilmoittaja :tyyppi])))))
                  (q/hae-ilmoitukset db
                                     toleranssi
-                                    (when-not (:nykytilanne? tiedot)
-                                      (konv/sql-date (:alku tiedot)))
-                                    (when-not (:nykytilanne? tiedot)
-                                      (konv/sql-date (:loppu tiedot)))
+                                    (konv/sql-date (:alku tiedot))
+                                    (konv/sql-date (:loppu tiedot))
                                     urakat
                                     (mapv name haettavat)))
            {:kuittaus :kuittaukset}))))))
