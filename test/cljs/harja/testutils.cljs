@@ -6,7 +6,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<! >! timeout alts!] :as async]
             [harja.tiedot.istunto :as istunto]
-            [cljs-react-test.simulate :as sim])
+            [cljs-react-test.simulate :as sim]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def *test-container* (atom nil))
@@ -145,3 +146,6 @@
 (defn text [path]
   (when-let [e (->elt path)]
     (.-innerText e)))
+
+(defn ilman-tavutusta [teksti]
+  (str/replace teksti #"\u00AD" ""))
