@@ -1,6 +1,6 @@
 -- Indeksilaskennan perusluvut
 
-CREATE OR REPLACE FUNCTION hoitourakan_indeksilaskennan_perusluku(urakka_id INTEGER, indeksinimi VARCHAR)
+CREATE OR REPLACE FUNCTION hoitourakan_indeksilaskennan_perusluku(urakka_id INTEGER)
   RETURNS NUMERIC AS $$
 DECLARE
   indeksilukujen_lkm           INTEGER;
@@ -8,10 +8,11 @@ DECLARE
   kilpailutusvuosi             INTEGER;
   perusluku                    NUMERIC;
   tulosrivi                    RECORD;
-  indeksit_kaytossa            BOOLEAN;
+  indeksinimi TEXT;
 BEGIN
-  SELECT u.indeksit_kaytossa FROM urakka u WHERE u.id = urakka_id INTO indeksit_kaytossa;
-  IF indeksit_kaytossa = FALSE THEN
+  SELECT indeksi FROM urakka WHERE id = urakka_id INTO indeksinimi;
+  IF indeksinimi IS NULL THEN
+    RAISE NOTICE 'Indeksit eivät ole käytössä urakassa %', urakka_id;
     RETURN NULL;
   ELSE
     SELECT INTO kilpailutusvuosi (SELECT EXTRACT(YEAR FROM (SELECT alkupvm
@@ -38,26 +39,5 @@ BEGIN
       RETURN NULL;
     END IF;
   END IF;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION hoitourakan_indeksilaskennan_perusluku(urakka_id INTEGER)
-  RETURNS NUMERIC AS $$
-DECLARE
-  kilpailutusvuosi INTEGER;
-  indeksinimi TEXT;
-BEGIN
-  -- Päätellään indeksilaskennan perustiedot
-  SELECT INTO kilpailutusvuosi (SELECT EXTRACT(YEAR FROM (SELECT alkupvm
-                                                          FROM urakka
-                                                          WHERE id = urakka_id)));
-  IF kilpailutusvuosi < 2017 THEN
-    indeksinimi := 'MAKU 2005';
-  ELSE
-    indeksinimi := 'MAKU 2010';
-  END IF;
-
-  RETURN hoitourakan_indeksilaskennan_perusluku(urakka_id, indeksinimi);
 END;
 $$ LANGUAGE plpgsql;
