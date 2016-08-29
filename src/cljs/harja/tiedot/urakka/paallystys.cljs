@@ -103,5 +103,4 @@
                            (keep #(and (:sijainti %) %))
                            (map #(assoc % :tyyppi-kartalla :paallystys))))))))
 
-(defonce kohteet-yha-lahetyksessa
-         (atom nil))
+(defonce kohteet-yha-lahetyksessa (atom nil))
