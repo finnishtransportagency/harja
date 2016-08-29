@@ -166,7 +166,7 @@
         [:div#tk-aluevalikko
          [:span#tk-alueotsikko (cond
                                  @ensimmainen-haku-kaynnissa? "Haetaan alueita"
-                                 @onko-alueita? "Näytä alueilta:"
+                                 @onko-alueita? "Näytä alueilta"
                                  :else "Ei näytettäviä alueita")]
          (if @ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
