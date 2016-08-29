@@ -170,8 +170,16 @@
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]
                                             (and (= (:nakyma optiot) :tiemerkinta)
                                                  tiemerkintaurakoitsijana?
-                                                 (:valmis-tiemerkintaan rivi)))}
+                                                 (:valmis-tiemerkintaan rivi)))
+            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
+                       "Tiemerkintää ei ole merkitty aloitetuksi."]
+                      [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
+                       "Valmistuminen ei voi olla ennen aloitusta."]]}
            {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}]
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)
+            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-loppu
+                       "Tiemerkintää ei ole merkitty lopetetuksi."]
+                      [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
+                       "Kohde ei voi olla valmis ennen kuin tiemerkintä on valmistunut."]]}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))
