@@ -1,10 +1,20 @@
 -- Uusi suolasakon laskenta
 
-CREATE OR REPLACE FUNCTION hoitokauden_suolasakko(
+CREATE TYPE hk_suolasakko AS (
+ keskilampotila NUMERIC,         -- hoitokauden talven keskilämpötila
+ pitkakeskilampotila NUMERIC,    -- vertailukauden pitkä keskilämpötila
+ lampotilapoikkeama NUMERIC,     -- keskilämmön ja vertailujakson erotus
+ suolankaytto NUMERIC,           -- hk toteutunut suolan käyttö
+ sallittu_suolankaytto NUMERIC,  -- hoitokauden suolankäyttöraja
+ maara NUMERIC,                  -- suolasakon määrä per ylitystonni
+ suolasakko NUMERIC              -- sakon loppusumma
+);
+
+CREATE OR REPLACE FUNCTION hoitokauden_suolasakkorivi(
   urakka_id INTEGER,
   hk_alkupvm DATE,
   hk_loppupvm DATE)
-  RETURNS NUMERIC AS $$
+  RETURNS hk_suolasakko AS $$
 DECLARE
   ss suolasakko%rowtype; -- hoitokauden suolasakkomäärittely
   lampotilat lampotilat%rowtype; -- talvikauden lämpötilat
@@ -89,11 +99,27 @@ BEGIN
 
   -- Tarkistetaan ylittyykö sallittu suolankäyttö yli 5%
   IF suolankaytto > 1.05 * sallittu_suolankaytto THEN
+    RAISE NOTICE 'sakotellaan, %', ss.maara;
     suolasakko := ss.maara * (suolankaytto - (1.05 * sallittu_suolankaytto));
   ELSE
     suolasakko := 0.0;
   END IF;
 
-  RETURN -suolasakko;
+  RETURN (lampotilat.keskilampotila, vertailu, lampotilapoikkeama,
+          suolankaytto, sallittu_suolankaytto, ss.maara, -suolasakko);
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION hoitokauden_suolasakko(
+  urakka_id INTEGER,
+  hk_alkupvm DATE,
+  hk_loppupvm DATE)
+  RETURNS NUMERIC AS $$
+DECLARE
+  ss hk_suolasakko;
+BEGIN
+  ss := hoitokauden_suolasakkorivi(urakka_id, hk_alkupvm, hk_loppupvm);
+  RETURN ss.suolasakko;
 END;
 $$ LANGUAGE plpgsql;
