@@ -353,9 +353,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
                      :tyyppi :valinta
                      :valinnat [:tyomaakokous :puhelin :kommentit :muu]
-                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %) (if paatosoikeus?
-                                                                                       "- Valitse käsittelytapa -"
-                                                                                       ""))
+                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %)
+                                           (if paatosoikeus?
+                                             "- Valitse käsittelytapa -"
+                                             ""))
                      :palstoja 2
                      :muokattava? (constantly (and muokattava? paatosoikeus?))}
                     "Anna käsittelytapa")
@@ -378,9 +379,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :valinnat [:sanktio :ei_sanktiota :hylatty]
                      :hae (comp :paatos :paatos)
                      :aseta #(assoc-in %1 [:paatos :paatos] %2)
-                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %) (if paatosoikeus?
-                                                                                      "- Valitse päätös -"
-                                                                                      ""))
+                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %)
+                                           (if paatosoikeus?
+                                             "- Valitse päätös -"
+                                             ""))
                      :palstoja 2
                      :muokattava? (constantly (and muokattava? paatosoikeus?))}
                     "Anna päätös")
