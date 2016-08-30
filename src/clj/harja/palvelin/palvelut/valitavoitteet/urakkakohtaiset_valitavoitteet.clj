@@ -36,15 +36,17 @@
 (defn- merkitse-valitavoite-valmiiksi! [db user
                                        {:keys [urakka-id id valmispvm valmis-kommentti] :as tiedot}]
   (log/info "Merkitään välitavoite valmiiksi: " tiedot)
-  (q/merkitse-valmiiksi! db (konv/sql-date valmispvm) valmis-kommentti
+  (q/merkitse-valmiiksi! db
+                         (when valmispvm
+                              (konv/sql-date valmispvm))
+                         valmis-kommentti
                          (:id user) urakka-id id))
 
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
   (doseq [{:keys [id takaraja nimi] :as valitavoite} (filter #(and (> (:id %) 0)
                                                                    (not (:poistettu %))) valitavoitteet)]
     (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
-    (when (and (:valmispvm valitavoite)
-               (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user))
+    (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
       (merkitse-valitavoite-valmiiksi! db user valitavoite))))
 
 (defn tallenna-urakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
