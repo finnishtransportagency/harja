@@ -26,7 +26,7 @@
           "Uusi"
 
           (and takaraja valmispvm)
-          (str "Valmistunut " (pvm/pvm valmispvm))
+          "Valmistunut"
 
           (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
           (str "Ei valmis (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval (t/now) takaraja))) " jäljellä)")
@@ -66,11 +66,13 @@
        :fmt #(if %
               (pvm/pvm-opt %)
               "-")}
+      {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
+       :leveys 25 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
+                                                     (:valmispvm %))
+       :nimi :valmis-kommentti}
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
-                                (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}
-      {:otsikko "Kommentti" :leveys 25 :tyyppi :string :muokattava? (constantly voi-merkita-valmiiksi?)
-       :nimi :valmis-kommentti}]
+                                (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      @urakan-valitavoitteet-atom]))
 
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
@@ -123,11 +125,13 @@
         :fmt #(if %
                (pvm/pvm-opt %)
                "-")}
+       {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
+        :leveys 25 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
+                                                      (:valmispvm %))
+        :nimi :valmis-kommentti}
        {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :merkitsija :hae (fn [rivi]
-                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}
-       {:otsikko "Kommentti" :leveys 25 :tyyppi :string :muokattava? (constantly voi-merkita-valmiiksi?)
-        :nimi :valmis-kommentti}]
+                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
       @valtakunnalliset-valitavoitteet-atom]
      [yleiset/vihje (str "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. "
                          (when voi-muokata?
