@@ -35,7 +35,6 @@
 
 (defn- merkitse-valitavoite-valmiiksi! [db user
                                        {:keys [urakka-id id valmispvm valmis-kommentti] :as tiedot}]
-  (log/info "Merkitään välitavoite valmiiksi: " tiedot)
   (q/merkitse-valmiiksi! db
                          (when valmispvm
                               (konv/sql-date valmispvm))
