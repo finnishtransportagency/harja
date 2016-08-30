@@ -64,13 +64,12 @@ BEGIN
 
   -- Haetaan suolankäytön toteuma
   SELECT SUM(maara) INTO suolankaytto
-  FROM toteuma_materiaali tm
-    JOIN materiaalikoodi mk ON tm.materiaalikoodi=mk.id
-    JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
-  WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
-        AND tm.poistettu IS NOT TRUE
-        AND t.urakka = urakka_id
-        AND t.alkanut >= hk_alkupvm AND t.alkanut <= hk_loppupvm;
+    FROM sopimuksen_kaytetty_materiaali skm
+         JOIN materiaalikoodi mk ON skm.materiaalikoodi=mk.id
+   WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi AND
+         skm.sopimus IN (SELECT id FROM sopimus WHERE urakka = urakka_id) AND
+	 skm.pvm BETWEEN hk_alkupvm AND hk_loppupvm;
+
   RAISE NOTICE 'Suolaa käytetty: %', suolankaytto;
 
   -- Tarkistetaan lämpötilakorjaus sallittuun suolamäärään
