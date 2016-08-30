@@ -61,8 +61,11 @@
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
-      {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm :muokattava? (constantly false)
-       :nimi :valmispvm :hae #(fmt/pvm-opt (get-in % [:valmis :pvm]))}
+      {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
+       :muokattava? (constantly voi-merkita-valmiiksi?)
+       :nimi :valmispvm
+       :hae #(fmt/pvm-opt (get-in % [:valmis :pvm]))
+       :aseta #(assoc-in %1 [:valmis :pvm] %2)}
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (get-in rivi [:valmis :merkitsija :etunimi])
