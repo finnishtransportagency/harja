@@ -22,7 +22,9 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -76,14 +78,15 @@
 (defn laatupoikkeaman-sanktiot
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
-  [_ _]
+  [_ _ _]
   (let [g (grid/grid-ohjaus)]
-    (fn [sanktiot-atom sanktio-virheet]
+    (fn [sanktiot-atom sanktio-virheet paatosoikeus?]
       [:div.sanktiot
        [grid/muokkaus-grid
         {:tyhja "Ei kirjattuja sanktioita."
          :lisaa-rivi " Lisää sanktio"
          :ohjaus g
+         :voi-muokata? paatosoikeus?
          :uusi-rivi (fn [rivi]
                       (assoc rivi :sakko? true))}
 
@@ -113,8 +116,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                        (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
           :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
           :valinta-nayta :nimi
-          :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]
-          }
+          :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
 
          {:otsikko "Sakko/muistutus"
           :nimi :sakko?
@@ -197,7 +199,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   ([laatupoikkeama] (laatupoikkeamalomake laatupoikkeama {}))
   ([laatupoikkeama optiot]
   (let [sanktio-virheet (atom {})
-        muokattava? (constantly (not (paatos? @laatupoikkeama)))]
+        muokattava? (not (paatos? @laatupoikkeama))
+        paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-laadunseuranta-sanktiot
+                                               (:id @nav/valittu-urakka) @istunto/kayttaja)]
     (komp/luo
       (fn [laatupoikkeama optiot]
         (let [uusi? (not (:id @laatupoikkeama))
@@ -255,7 +260,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                  ;:hae #(get-in % [:yllapitokohde :id])
                  :palstoja      1
                  :pakollinen?   true
-                 :muokattava?   muokattava?
+                 :muokattava?   (constantly muokattava?)
                  :valinnat      yllapitokohteet
                  :jos-tyhja     "Ei valittavia kohteita"
                  :valinta-nayta (fn [arvo muokattava?]
@@ -267,7 +272,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 {:otsikko "Kohde" :tyyppi :string :nimi :kohde
                  :palstoja 1
                  :pakollinen? true
-                 :muokattava? muokattava?
+                 :muokattava? (constantly muokattava?)
                  :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
 
               {:otsikko "Tekijä" :nimi :tekija
@@ -280,12 +285,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                 :konsultti "Konsultti"
                                 "- valitse osapuoli -")
                :palstoja 1
-               :muokattava? muokattava?
+               :muokattava? (constantly muokattava?)
                :validoi [[:ei-tyhja "Valitse laatupoikkeaman tehnyt osapuoli"]]}
 
               {:tyyppi :tierekisteriosoite
                :nimi :tr
-               :muokattava? muokattava?
+               :muokattava? (constantly muokattava?)
                :sijainti (r/wrap (:sijainti @laatupoikkeama)
                                  #(swap! laatupoikkeama assoc :sijainti %))}
 
@@ -338,7 +343,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :hae (comp :kasittelyaika :paatos)
                      :aseta #(assoc-in %1 [:paatos :kasittelyaika] %2)
                      :tyyppi :pvm-aika
-                     :muokattava? muokattava?}
+                     :muokattava? (constantly (and muokattava? paatosoikeus?))}
                     "Anna käsittelyn päivämäärä ja aika")
 
                   (sanktion-validointi
@@ -348,9 +353,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :aseta #(assoc-in %1 [:paatos :kasittelytapa] %2)
                      :tyyppi :valinta
                      :valinnat [:tyomaakokous :puhelin :kommentit :muu]
-                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %) "- valitse käsittelytapa -")
+                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-kasittelytapa %) (if paatosoikeus?
+                                                                                       "- Valitse käsittelytapa -"
+                                                                                       ""))
                      :palstoja 2
-                     :muokattava? muokattava?}
+                     :muokattava? (constantly (and muokattava? paatosoikeus?))}
                     "Anna käsittelytapa")
 
                   (when (= :muu (:kasittelytapa (:paatos @laatupoikkeama)))
@@ -361,7 +368,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :tyyppi :string
                      :palstoja 2
                      :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]
-                     :muokattava? muokattava?})
+                     :muokattava? (constantly (and muokattava? paatosoikeus?))})
 
 
                   (sanktion-validointi
@@ -371,9 +378,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :valinnat [:sanktio :ei_sanktiota :hylatty]
                      :hae (comp :paatos :paatos)
                      :aseta #(assoc-in %1 [:paatos :paatos] %2)
-                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %) "- valitse päätös -")
+                     :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %) (if paatosoikeus?
+                                                                                      "- Valitse päätös -"
+                                                                                      ""))
                      :palstoja 2
-                     :muokattava? muokattava?}
+                     :muokattava? (constantly (and muokattava? paatosoikeus?))}
                     "Anna päätös")
 
                   (when (:paatos (:paatos @laatupoikkeama))
@@ -385,21 +394,21 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :koko [80 :auto]
                      :palstoja 2
                      :aseta #(assoc-in %1 [:paatos :perustelu] %2)
-                     :muokattava? muokattava?
+                     :muokattava? (constantly (and muokattava? paatosoikeus?))
                      :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})
 
 
                   (when (= :sanktio (:paatos (:paatos @laatupoikkeama)))
-                    ;; FIXME: tarkista myös oikeus, urakanvalvoja... urakoitsija/konsultti EI saa päätöstä tehdä
                     {:otsikko "Sanktiot"
                      :nimi :sanktiot
                      :tyyppi :komponentti
                      :palstoja 2
                      :komponentti (fn [_]
                                     [laatupoikkeaman-sanktiot
-                                    (r/wrap (:sanktiot @laatupoikkeama)
-                                            #(swap! laatupoikkeama assoc :sanktiot %))
-                                    sanktio-virheet])})
+                                     (r/wrap (:sanktiot @laatupoikkeama)
+                                             #(swap! laatupoikkeama assoc :sanktiot %))
+                                     sanktio-virheet
+                                     paatosoikeus?])})
                   (when (:tarkastusid @laatupoikkeama)
                     {:rivi? true
                      :uusi-rivi? true
