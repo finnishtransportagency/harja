@@ -12,7 +12,14 @@ DECLARE
   suolankaytto NUMERIC; -- yhteenlaskettu suolan käyttö hoitokaudella
   sallittu_suolankaytto NUMERIC; -- kuinka paljon suolaa sallitaan
   suolasakko NUMERIC; -- suolasakon määrä
+  vertailu NUMERIC; -- pitkä keskilämpö vertailukaudelle
+  urakan_alkuvuosi INTEGER;
 BEGIN
+  -- Haetaan urakan alkuvuosi vertailukauden päättelemiseksi
+  SELECT EXTRACT(YEAR FROM alkupvm) INTO urakan_alkuvuosi
+    FROM urakka
+   WHERE id = urakka_id;
+
   -- Haetaan relevantti suolasakkomäärittely ja lämpötilat
   SELECT * INTO ss FROM suolasakko
   WHERE urakka = urakka_id
@@ -28,10 +35,16 @@ BEGIN
   WHERE urakka = urakka_id
         AND alkupvm = hk_alkupvm AND loppupvm = hk_loppupvm;
 
-  IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR lampotilat.pitka_keskilampotila IS NULL)
+  IF urakan_alkuvuosi <= 2014 THEN
+    vertailu := lampotilat.pitka_keskilampotila_vanha;
+  ELSE
+    vertailu := lampotilat.pitka_keskilampotila;
+  END IF;
+
+  IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR vertailu IS NULL)
   THEN
     RAISE NOTICE 'Urakalle % ei ole lämpötiloja hoitokaudelle % - %', urakka_id, hk_alkupvm, hk_loppupvm;
-    RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, lampotilat.pitka_keskilampotila;
+    RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, vertailu;
     RETURN NULL;
   END IF;
 
@@ -60,7 +73,7 @@ BEGIN
   RAISE NOTICE 'Suolaa käytetty: %', suolankaytto;
 
   -- Tarkistetaan lämpötilakorjaus sallittuun suolamäärään
-  lampotilapoikkeama := lampotilat.keskilampotila - lampotilat.pitka_keskilampotila;
+  lampotilapoikkeama := lampotilat.keskilampotila - vertailu;
   IF lampotilapoikkeama >= 4.0 THEN
     RAISE NOTICE 'Lämpötilapoikkeama % >= 4 astetta, 30%% korotus sallittuun suolankäyttöön', lampotilapoikkeama;
     sallittu_suolankaytto := 1.30 * sallittu_suolankaytto;
