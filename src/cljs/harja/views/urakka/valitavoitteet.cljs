@@ -30,7 +30,7 @@
           (str "Valmistunut " (pvm/pvm valmis-pvm))
 
           (and takaraja (nil? valmis-pvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
-          "Ei valmis"
+          (str "Ei valmis (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval (t/now) takaraja))) " jäljellä)")
 
           (and takaraja (nil? valmis-pvm) (t/after? (pvm/nyt) takaraja))
           (str "Myöhässä (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval takaraja (t/now)))) ")"))))
@@ -121,13 +121,17 @@
                           @urakan-valitavoitteet-atom)}
 
      [{:tyyppi :vetolaatikon-tila :leveys 5}
-      {:otsikko "Nimi" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+      {:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                    (pvm/pvm-opt %)
                                                                    "Ei takarajaa")
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
-       :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
+       :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+      {:otsikko "Valmistumispäivä" :leveys 25 :tyyppi :pvm :muokattava? (constantly false)
+       :nimi :valmispvm}
+      {:otsikko "Kommentti" :leveys 25 :tyyppi :string :muokattava? (constantly false)
+       :nimi :kommentti}]
      @urakan-valitavoitteet-atom]))
 
 (defn- valtakunnalliset-valitavoitteet [urakka
