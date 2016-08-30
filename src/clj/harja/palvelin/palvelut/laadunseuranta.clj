@@ -178,10 +178,9 @@
         (log/info "UUSI LIITE: " uusi-liite)
         (laatupoikkeamat/liita-liite<! c id (:id uusi-liite)))
 
-
-      (when (:paatos (:paatos laatupoikkeama))
-        ;; Urakanvalvoja voi kirjata päätöksen
-        (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-laadunseuranta-sanktiot user urakka)
+      ;; Urakanvalvoja voi kirjata päätöksen
+      (when (and (:paatos (:paatos laatupoikkeama))
+                 (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka))
         (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
         (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
           (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c
