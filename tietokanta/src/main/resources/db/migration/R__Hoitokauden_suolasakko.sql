@@ -1,14 +1,5 @@
 -- Uusi suolasakon laskenta
 
-CREATE TYPE hk_suolasakko AS (
- keskilampotila NUMERIC,         -- hoitokauden talven keskilämpötila
- pitkakeskilampotila NUMERIC,    -- vertailukauden pitkä keskilämpötila
- lampotilapoikkeama NUMERIC,     -- keskilämmön ja vertailujakson erotus
- suolankaytto NUMERIC,           -- hk toteutunut suolan käyttö
- sallittu_suolankaytto NUMERIC,  -- hoitokauden suolankäyttöraja
- maara NUMERIC,                  -- suolasakon määrä per ylitystonni
- suolasakko NUMERIC              -- sakon loppusumma
-);
 
 CREATE OR REPLACE FUNCTION hoitokauden_suolasakkorivi(
   urakka_id INTEGER,
@@ -105,8 +96,10 @@ BEGIN
     suolasakko := 0.0;
   END IF;
 
-  RETURN (lampotilat.keskilampotila, vertailu, lampotilapoikkeama,
-          suolankaytto, sallittu_suolankaytto, ss.maara, -suolasakko);
+  RETURN (urakka_id, lampotilat.keskilampotila, vertailu, lampotilapoikkeama,
+          suolankaytto, ss.talvisuolaraja, sallittu_suolankaytto,
+	  1.05 * sallittu_suolankaytto,
+	  ss.maara, -suolasakko);
 END;
 $$ LANGUAGE plpgsql;
 
