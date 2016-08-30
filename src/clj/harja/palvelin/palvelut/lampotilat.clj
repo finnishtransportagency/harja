@@ -31,13 +31,12 @@
     (into {}
           (comp
            (map (fn [urakka]
-                  (assoc urakka
-                         :pitkakeskilampotila (:pitkakeskilampotila
-                                               (get hoidon-urakoiden-lampotilat-1981-2010
-                                                    (:alueurakkanro urakka)))
-                         :pitkakeskilampotila_vanha (:pitkakeskilampotila
-                                                     (get hoidon-urakoiden-lampotilat-1971-2000
-                                                          (:alueurakkanro urakka))))))
+                  (merge urakka
+                         (get hoidon-urakoiden-lampotilat-1981-2010
+                              (:alueurakkanro urakka))
+                         {:pitkakeskilampotila_vanha (:pitkakeskilampotila
+                                                      (get hoidon-urakoiden-lampotilat-1971-2000
+                                                           (:alueurakkanro urakka)))})))
            (map (juxt :id identity)))
           hoidon-urakka-ja-alueurakkanro-avaimet)))
 
