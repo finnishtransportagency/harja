@@ -21,19 +21,18 @@
 
 (def tallennus-kaynnissa? (atom false))
 
-(defn valmiustilan-kuvaus [{:keys [valmis takaraja]}]
-  (let [valmis-pvm (:pvm valmis)]
-    (cond (nil? takaraja)
+(defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
+  (cond (nil? takaraja)
           "Uusi"
 
-          (and takaraja valmis-pvm)
-          (str "Valmistunut " (pvm/pvm valmis-pvm))
+          (and takaraja valmispvm)
+          (str "Valmistunut " (pvm/pvm valmispvm))
 
-          (and takaraja (nil? valmis-pvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
+          (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
           (str "Ei valmis (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval (t/now) takaraja))) " jäljellä)")
 
-          (and takaraja (nil? valmis-pvm) (t/after? (pvm/nyt) takaraja))
-          (str "Myöhässä (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval takaraja (t/now)))) ")"))))
+          (and takaraja (nil? valmispvm) (t/after? (pvm/nyt) takaraja))
+          (str "Myöhässä (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval takaraja (t/now)))) ")")))
 
 (defn- urakan-valitavoitteet [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet-atom]
   (log "Listalla: " (pr-str urakan-valitavoitteet-atom))
@@ -64,17 +63,14 @@
       {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
        :muokattava? (constantly voi-merkita-valmiiksi?)
        :nimi :valmispvm
-       :hae #(fmt/pvm-opt (get-in % [:valmis :pvm]))
-       :aseta #(assoc-in %1 [:valmis :pvm] %2)}
+       :fmt #(if %
+              (pvm/pvm-opt %)
+              "-")}
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
-                                (str (get-in rivi [:valmis :merkitsija :etunimi])
-                                     " "
-                                     (get-in rivi [:valmis :merkitsija :sukunimi])))}
+                                (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}
       {:otsikko "Kommentti" :leveys 25 :tyyppi :string :muokattava? (constantly voi-merkita-valmiiksi?)
-       :nimi :kommentti
-       :hae (comp :kommentti :valmis)
-       :aseta #(assoc-in %1 [:valmis :kommentti] %2)}]
+       :nimi :valmis-kommentti}]
      @urakan-valitavoitteet-atom]))
 
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
