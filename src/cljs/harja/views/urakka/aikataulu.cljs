@@ -23,12 +23,18 @@
 
 (def tiemerkinta-oltava-valmiina-raja (t/days 14))
 
-(defn valmis-tiemerkintaan [kohde-id urakka-id]
+(defn valmis-tiemerkintaan [kohde-id urakka-id paallystys-valmis? suorittava-urakka-annettu?]
   (let [valmis-tiemerkintaan-lomake (atom nil)
         valmis-tallennettavaksi? (reaction (some? (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)))]
-    (fn [kohde-id urakka-id]
-      [:button.nappi-ensisijainen.nappi-grid
+    (fn [kohde-id urakka-id paallystys-valmis? suorittava-urakka-annettu?]
+      [:div
+       {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
+                     (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
+                     :default nil)}
+       [:button.nappi-ensisijainen.nappi-grid
        {:type "button"
+        :disabled (or (not paallystys-valmis?)
+                      (not suorittava-urakka-annettu?))
         :on-click
         (fn []
           (modal/nayta!
@@ -66,7 +72,7 @@
                 :pakollinen? true
                 :tyyppi :pvm}]
               @valmis-tiemerkintaan-lomake]]))}
-       "Aseta päivä\u00ADmäärä"])))
+       "Aseta päivä\u00ADmäärä"]])))
 
 (defn aikataulu
   [urakka optiot]
@@ -100,13 +106,17 @@
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
-           ; FIXME Tallennus epäonnistuu jos kellonaikaa ei anna
+           ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 10 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 10 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)
+            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
+                       "Päällystystä ei ole merkitty aloitetuksi."]
+                      [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
+                       "Valmistuminen ei voi olla ennen aloitusta."]]}
            (when (= (:nakyma optiot) :paallystys)
              {:otsikko "Tie\u00ADmer\u00ADkin\u00ADnän suo\u00ADrit\u00ADta\u00ADva u\u00ADrak\u00ADka"
               :leveys 13 :nimi :suorittava-tiemerkintaurakka
@@ -133,11 +143,15 @@
                              [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
                              (if (= (:nakyma optiot) :paallystys)
                                ;; Voi merkitä valmiiksi tiemerkintään vain päällystysurakassa
-                               ;; Ei kuitenkaan jos gridi on muokkaustilassa, sillä päivämääränä asettaminen
-                               ;; dialogista resetoi muokkaustilan
+                               ;; Ei kuitenkaan jos gridi on muokkaustilassa, sillä päivämäärän asettaminen
+                               ;; dialogista resetoi muokkaustilan.
                                (if muokataan?
                                  [:span]
-                                 [valmis-tiemerkintaan (:id rivi) urakka-id])
+                                 [valmis-tiemerkintaan
+                                  (:id rivi)
+                                  urakka-id
+                                  (some? (:aikataulu-paallystys-loppu rivi))
+                                  (some? (:suorittava-tiemerkintaurakka rivi))])
                                [:span "Ei"])))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-valmis-viimeistaan :tyyppi :pvm
@@ -156,8 +170,16 @@
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]
                                             (and (= (:nakyma optiot) :tiemerkinta)
                                                  tiemerkintaurakoitsijana?
-                                                 (:valmis-tiemerkintaan rivi)))}
+                                                 (:valmis-tiemerkintaan rivi)))
+            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
+                       "Tiemerkintää ei ole merkitty aloitetuksi."]
+                      [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
+                       "Valmistuminen ei voi olla ennen aloitusta."]]}
            {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)}]
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) paallystysurakoitsijana?)
+            :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-loppu
+                       "Tiemerkintää ei ole merkitty lopetetuksi."]
+                      [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
+                       "Kohde ei voi olla valmis ennen kuin tiemerkintä on valmistunut."]]}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))

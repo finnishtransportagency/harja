@@ -311,7 +311,9 @@
     (if aktiivinen
       "Lopeta väli"
       "Aloita väli")]
-   [:nav.pikavalintapainike {:on-click #(on-click false)} "Lisää havainto"]])
+   [:nav.pikavalintapainike {:on-click #(on-click false)}
+    [:i.livicon-upload " "]
+    "Lisää havainto"]])
  
 (def testihavainnot (atom {:liukasta false}))
 

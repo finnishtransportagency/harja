@@ -236,7 +236,6 @@
 (defn paallystysilmoitus-perustiedot [urakka {:keys [tila valmispvm-kohde] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
   (let [valmis-kasiteltavaksi?
         (do
-
           #_(log "[PÄÄLLYSTYS] valmis käsiteltäväksi " (pr-str valmispvm-kohde) (pr-str tila))
           (and tila
                valmispvm-kohde
@@ -265,7 +264,7 @@
                         (= :aloitettu (:tila lomakedata-nyt)))
                   "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
          :tyyppi :pvm
-         :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paallystys
+         :validoi [[:toinen-arvo-annettu-ensin :valmispvm-paallystys
                     "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
         {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
@@ -686,7 +685,7 @@
          [:h3 "Päällystysilmoitukset"]
          (paallystysilmoitukset-taulukko paallystysilmoitukset)
          [:h3 "YHA-lähetykset"]
-         [yleiset/vihje "Kohteen täytyy olla merkitty valmiiksi ja teknisen osan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
+         [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
          (yha-lahetykset-taulukko urakka-id sopimus-id paallystysilmoitukset)
          [yha/laheta-kohteet-yhaan
           oikeudet/urakat-kohdeluettelo-paallystyskohteet

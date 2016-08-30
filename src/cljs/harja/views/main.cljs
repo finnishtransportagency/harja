@@ -168,7 +168,9 @@
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
    ;; se asemoidaan mountin jälkeen
    ^{:key "kartta-container"}
-   [:div#kartta-container {:style {:position "absolute" :top (- korkeus)}}
+   [:div#kartta-container {:style {:position "absolute"
+                                   :top (- korkeus)
+                                   :overflow "hidden"}}
     [kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []

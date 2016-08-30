@@ -264,10 +264,13 @@
                  "ei koskaan"))]))
 
 (defn laheta-kohteet-yhaan [oikeus urakka-id sopimus-id paallystysilmoitukset]
-  (let [kohde-idt (mapv :paallystyskohde-id (filter #(and (= :hyvaksytty (:paatos-tekninen-osa %))
-                                                          (or (= :valmis (:tila %))
-                                                              (= :lukittu (:tila %))))
-                                                    paallystysilmoitukset))]
+  (let [ilmoituksen-voi-lahettaa? (fn [paallystysilmoitus]
+                                    (and (= :hyvaksytty (:paatos-tekninen-osa paallystysilmoitus))
+                                         (= :hyvaksytty (:paatos-taloudellinen-osa paallystysilmoitus))
+                                         (or (= :valmis (:tila paallystysilmoitus))
+                                             (= :lukittu (:tila paallystysilmoitus)))))
+        lahetettavat-ilmoitukset (filter ilmoituksen-voi-lahettaa? paallystysilmoitukset)
+        kohde-idt (mapv :paallystyskohde-id lahetettavat-ilmoitukset)]
     (when-not @yha-kohteiden-paivittaminen-kaynnissa?
       [harja.ui.napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
@@ -281,7 +284,7 @@
         :disabled (or (not (empty? @paallystys/kohteet-yha-lahetyksessa))
                       (empty? kohde-idt)
                       (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
-        :virheviesti "Kohteiden lähettäminen epäonnistui."
+        :virheviesti "Lähetys epäonnistui."
         :kun-valmis #(reset! paallystys/kohteet-yha-lahetyksessa nil)
         :kun-onnistuu (fn [paivitetyt-ilmoitukset]
                         (if (every? #(or (:lahetys-onnistunut %) (nil? (:lahetys-onnistunut %))) paivitetyt-ilmoitukset)
