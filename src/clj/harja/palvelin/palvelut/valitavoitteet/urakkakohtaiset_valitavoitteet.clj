@@ -38,7 +38,8 @@
   (q/merkitse-valmiiksi! db
                          (when valmispvm
                               (konv/sql-date valmispvm))
-                         valmis-kommentti
+                         (when valmispvm
+                           valmis-kommentti)
                          (:id user) urakka-id id))
 
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
