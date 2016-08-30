@@ -33,7 +33,7 @@
                                       :valtakunnallinen_valitavoite nil
                                       :luoja (:id user)})))
 
-(defn merkitse-valitavoite-valmiiksi! [db user
+(defn- merkitse-valitavoite-valmiiksi! [db user
                                        {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
   (log/info "Merkitään välitavoite valmiiksi: " tiedot)
   (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
