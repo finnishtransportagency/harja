@@ -68,7 +68,7 @@ BEGIN
          JOIN materiaalikoodi mk ON skm.materiaalikoodi=mk.id
    WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi AND
          skm.sopimus IN (SELECT id FROM sopimus WHERE urakka = urakka_id) AND
-	 skm.pvm BETWEEN hk_alkupvm AND hk_loppupvm;
+	 skm.alkupvm BETWEEN hk_alkupvm AND hk_loppupvm;
 
   RAISE NOTICE 'Suolaa käytetty: %', suolankaytto;
 
@@ -95,9 +95,20 @@ BEGIN
     suolasakko := 0.0;
   END IF;
 
-  RETURN (urakka_id, lampotilat.keskilampotila, vertailu, lampotilapoikkeama,
-          suolankaytto, ss.talvisuolaraja, sallittu_suolankaytto,
-	  1.05 * sallittu_suolankaytto,
+  RETURN (urakka_id,
+  	  -- talvikauden keskilämpötila, vertailukauden keskilämpötila ja poikkeama
+          lampotilat.keskilampotila, vertailu, lampotilapoikkeama,
+
+          -- toteutunut suolankäyttö
+          suolankaytto,
+
+	  -- käyttöraja ja sakkoraja ennen kohtuullistamista
+	  ss.talvisuolaraja, 1.05 * ss.talvisuolaraja,
+
+	  -- käyttöraja ja sakkoraja kohtuullistamisen jälkeen
+	  sallittu_suolankaytto, 1.05 * sallittu_suolankaytto,
+
+          -- sakon määrä per ylitystonni ja sakon loppusumma
 	  ss.maara, -suolasakko);
 END;
 $$ LANGUAGE plpgsql;
