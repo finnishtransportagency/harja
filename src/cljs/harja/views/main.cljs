@@ -58,9 +58,12 @@
 
 (defn header [s]
   [bs/navbar {}
-   [:img#harja-brand-icon {:alt      "HARJA"
-                           :src      "images/harja_logo_soft.svg"
-                           :on-click #(.reload js/window.location)}]
+   [:span
+    [:img#harja-brand-icon {:alt      "HARJA"
+                            :src      "images/harja_logo_soft.svg"
+                            :on-click #(.reload js/window.location)}]
+    (when (k/kehitysymparistossa?)
+      [:span#testiharja "TESTI"])]
    [haku/haku]
 
    [:ul#sivut.nav.nav-pills

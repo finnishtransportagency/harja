@@ -251,4 +251,6 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   "Tarkistaa ollaanko kehitysympäristössä"
   (let [host (.-host js/location)]
     (or (gstr/startsWith host "10.10.")
-        (#{"localhost" "localhost:3000" "localhost:8000" "harja-test.solitaservices.fi"} host))))
+        (#{"localhost" "localhost:3000" "localhost:8000"
+           "harja-test.solitaservices.fi"
+           "testiextranet.liikennevirasto.fi"} host))))
