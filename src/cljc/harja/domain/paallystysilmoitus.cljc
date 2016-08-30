@@ -81,7 +81,9 @@
   "Tekniset toimenpidetyypit POT-lomake Excelistä"
   [{:nimi "Rakentaminen" :koodi 1}
    {:nimi "Suuntauksen parantaminen" :koodi 2}
-   {:nimi "Raskas rakenteen parantaminen" :koodi 3}])
+   {:nimi "Raskas rakenteen parantaminen" :koodi 3}
+   {:nimi "Kevyt rakenteen parantaminen" :koodi 4}])
+
 
 (def +tekninen-toimenpide+ "Teknisen toimenpiteen valinta koodilla"
   (apply s/enum (map :koodi +tekniset-toimenpiteet+)))
