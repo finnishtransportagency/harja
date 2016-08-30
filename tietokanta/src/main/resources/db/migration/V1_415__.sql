@@ -10,6 +10,7 @@ CREATE TYPE hk_suolasakko AS (
  lampotilapoikkeama NUMERIC,     -- keskilämmön ja vertailujakson erotus
  suolankaytto NUMERIC,           -- hk toteutunut suolan käyttö
  sallittu_suolankaytto NUMERIC,  -- hoitokauden suolankäyttöraja
+ suolankayton_sakkoraja NUMERIC, -- suolankäytön sakkoraja ennen kohtuullistamista
  kohtuullisuustarkistettu_sakkoraja NUMERIC, -- yo raja kohtuullisuustarkistuksen jälkeen
  sakkoraja NUMERIC,              -- suolankäytön sakkoraja
  maara NUMERIC,                  -- suolasakon määrä per ylitystonni
