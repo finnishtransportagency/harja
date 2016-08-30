@@ -74,7 +74,8 @@
      @urakan-valitavoitteet-atom]))
 
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
-  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))]
+  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
+        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [:div
      [grid/grid
       {:otsikko "Valtakunnalliset välitavoitteet"
@@ -93,10 +94,10 @@
        :voi-lisata? false
        :voi-poistaa? (constantly false)}
 
-      [{:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 55
+      [{:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 25
         :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
-       {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+       {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
        {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
         :nimi :valtakunnallinen-takaraja :hae #(cond
                                                 (:valtakunnallinen-takaraja %)
@@ -114,8 +115,19 @@
         :tyyppi :pvm
         :muokattava? (constantly false)}
        {:otsikko "Taka\u00ADraja ura\u00ADkassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
-       {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
-        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
+       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+       {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
+        :muokattava? (constantly voi-merkita-valmiiksi?)
+        :nimi :valmispvm
+        :fmt #(if %
+               (pvm/pvm-opt %)
+               "-")}
+       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+        :nimi :merkitsija :hae (fn [rivi]
+                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}
+       {:otsikko "Kommentti" :leveys 25 :tyyppi :string :muokattava? (constantly voi-merkita-valmiiksi?)
+        :nimi :valmis-kommentti}]
       @valtakunnalliset-valitavoitteet-atom]
      [yleiset/vihje (str "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. "
                          (when voi-muokata?
