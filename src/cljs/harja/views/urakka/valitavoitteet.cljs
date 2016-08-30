@@ -22,14 +22,18 @@
 (def tallennus-kaynnissa? (atom false))
 
 (defn valmiustilan-kuvaus [{:keys [valmis takaraja]}]
-  (if-not takaraja
-    "Uusi"
-    (let [valmis-pvm (:pvm valmis)]
-      (if valmis-pvm
-        (str "Valmistunut " (pvm/pvm valmis-pvm))
-        (if (t/after? (pvm/nyt) takaraja)
-          "Myöhässä"
-          "Ei valmis")))))
+  (let [valmis-pvm (:pvm valmis)]
+    (cond (nil? takaraja)
+          "Uusi"
+
+          (and takaraja valmis-pvm)
+          (str "Valmistunut " (pvm/pvm valmis-pvm))
+
+          (and takaraja (nil? valmis-pvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
+          "Ei valmis"
+
+          (and takaraja (nil? valmis-pvm) (t/after? (pvm/nyt) takaraja))
+          (str "Myöhässä (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval takaraja (t/now)))) ")"))))
 
 (defn valitavoite-valmis-lomake [_ ur vt]
   (let [valmis-pvm (atom nil)
