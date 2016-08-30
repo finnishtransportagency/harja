@@ -67,7 +67,7 @@
               (pvm/pvm-opt %)
               "-")}
       {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
-       :leveys 25 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
+       :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                      (:valmispvm %))
        :nimi :valmis-kommentti}
       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
@@ -126,7 +126,7 @@
                (pvm/pvm-opt %)
                "-")}
        {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
-        :leveys 25 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
+        :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                       (:valmispvm %))
         :nimi :valmis-kommentti}
        {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
