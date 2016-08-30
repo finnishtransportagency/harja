@@ -180,7 +180,7 @@
 
       ;; Urakanvalvoja voi kirjata päätöksen
       (when (and (:paatos (:paatos laatupoikkeama))
-                 (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka))
+                 (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka user))
         (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
         (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
           (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c
