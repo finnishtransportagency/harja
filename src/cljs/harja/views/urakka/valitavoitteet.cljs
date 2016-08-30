@@ -69,7 +69,9 @@
                                      " "
                                      (get-in rivi [:valmis :merkitsija :sukunimi])))}
       {:otsikko "Kommentti" :leveys 25 :tyyppi :string :muokattava? (constantly voi-merkita-valmiiksi?)
-       :nimi :kommentti :hae (comp :kommentti :valmis)}]
+       :nimi :kommentti
+       :hae (comp :kommentti :valmis)
+       :aseta #(assoc-in %1 [:valmis :kommentti] %2)}]
      @urakan-valitavoitteet-atom]))
 
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
