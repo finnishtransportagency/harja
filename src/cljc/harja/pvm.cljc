@@ -655,7 +655,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                              (nth pvm-vector 2))))))
 
 (defn paivia-valissa
-  "Palauttaa kokonaisluvun, joka kertoo montako päivää kahden päivämäärän välissä on."
+  "Palauttaa kokonaisluvun, joka kertoo montako päivää kahden päivämäärän välissä on.
+   Annettujen päivämäärien ei tarvitse olla kronologisessa järjestyksessä."
   [eka toka]
   (if (t/before? eka toka)
     (t/in-days (t/interval eka toka))
