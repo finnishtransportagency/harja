@@ -461,9 +461,11 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
      (alter-var-root #'jarjestelma component/stop)))
 
 (defn =marginaalissa?
-  "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan tulosten vertailussa."
-  [eka toka marginaali]
-  (< (Math/abs (double (- eka toka))) marginaali))
+  "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan
+  tulosten vertailussa. Oletusmarginaali on 0.05"
+  ([eka toka] (=marginaalissa? eka toka 0.05))
+  ([eka toka marginaali]
+   (< (Math/abs (double (- eka toka))) marginaali)))
 
 (def suomen-aikavyohyke (t/time-zone-for-id "EET"))
 
