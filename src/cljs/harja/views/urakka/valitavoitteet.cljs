@@ -23,16 +23,20 @@
 
 (defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
   (cond (nil? takaraja)
-          "Uusi"
+        "Uusi"
 
-          (and takaraja valmispvm)
-          "Valmistunut"
+        (and takaraja valmispvm)
+        "Valmistunut"
 
-          (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
-          (str "Ei valmis (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval (t/now) takaraja))) " jäljellä)")
+        (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
+        (let [paivia-valissa (t/in-days (t/interval (t/now) takaraja))]
+              (str "Ei valmis" (when (pos? paivia-valissa)
+                                 (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) " jäljellä)"))))
 
-          (and takaraja (nil? valmispvm) (t/after? (pvm/nyt) takaraja))
-          (str "Myöhässä (" (fmt/kuvaile-paivien-maara (t/in-days (t/interval takaraja (t/now)))) ")")))
+        (and takaraja (nil? valmispvm) (t/after? (pvm/nyt) takaraja))
+        (let [paivia-valissa (t/in-days (t/interval takaraja (t/now)))]
+              (str "Myöhässä" (when (pos? paivia-valissa)
+                                (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) ")"))))))
 
 (defn- urakan-valitavoitteet [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet-atom]
   (log "Listalla: " (pr-str urakan-valitavoitteet-atom))
