@@ -200,9 +200,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
   ([laatupoikkeama optiot]
   (let [sanktio-virheet (atom {})
         muokattava? (not (paatos? @laatupoikkeama))
+        urakka-id (:id @nav/valittu-urakka)
+        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-laatupoikkeamat
+                                                  urakka-id)
         paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-laadunseuranta-sanktiot
-                                               (:id @nav/valittu-urakka) @istunto/kayttaja)]
+                                               urakka-id @istunto/kayttaja)]
     (komp/luo
       (fn [laatupoikkeama optiot]
         (let [uusi? (not (:id @laatupoikkeama))
@@ -227,22 +230,23 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                               (log "muokkaa")
                               (reset! laatupoikkeama uusi-lp))
               :voi-muokata? @laatupoikkeamat/voi-kirjata?
-              :footer       [napit/palvelinkutsu-nappi
-                             ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
-                             ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
-                             (cond
-                               (and (not (paatos? @laatupoikkeama))
-                                    (paatos? @laatupoikkeama))
-                               "Tallenna ja lukitse laatupoikkeama"
+              :footer       (when voi-kirjoittaa?
+                              [napit/palvelinkutsu-nappi
+                               ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
+                               ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
+                               (cond
+                                 (and (not (paatos? @laatupoikkeama))
+                                      (paatos? @laatupoikkeama))
+                                 "Tallenna ja lukitse laatupoikkeama"
 
-                               :default
-                               "Tallenna laatupoikkeama")
+                                 :default
+                                 "Tallenna laatupoikkeama")
 
-                             #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
-                             {:ikoni        (ikonit/tallenna)
-                              :disabled     (validoi-laatupoikkeama @laatupoikkeama)
-                              :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
-                              :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]}
+                               #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
+                               {:ikoni        (ikonit/tallenna)
+                                :disabled     (and (validoi-laatupoikkeama @laatupoikkeama))
+                                :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
+                                :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}])}
 
              [{:otsikko "Päivämäärä ja aika"
                :pakollinen? true
@@ -316,7 +320,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                :palstoja 2
                :tyyppi :komponentti
                :komponentti (fn [_]
-                              [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet @laatupoikkeama)
+                              [liitteet/liitteet urakka-id (:liitteet @laatupoikkeama)
                               {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
                                                         #(swap! laatupoikkeama assoc :uusi-liite %))
                                :uusi-liite-teksti "Lisää liite laatupoikkeamaan"}])}
