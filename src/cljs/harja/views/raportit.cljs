@@ -24,7 +24,8 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.tiedot.hallintayksikot :as hy]
             [cljs-time.core :as t]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -515,18 +516,17 @@
                                            (:id v-ur)
                                            (:id v-hal)]
                    _ (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                   raportti
-                   (<! (case konteksti
-                         "koko maa"
-                         (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                             arvot-nyt)
-                         "hallintayksikko"
-                         (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                   raportti (<! (case konteksti
+                                  "koko maa"
+                                  (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
+                                                                      arvot-nyt)
+                                  "hallintayksikko"
+                                  (raportit/suorita-raportti-hallintayksikko (:id v-hal)
+                                                                             (:nimi raporttityyppi)
+                                                                             arvot-nyt)
+                                  "urakka"
+                                  (raportit/suorita-raportti-urakka (:id v-ur)
                                                                     (:nimi raporttityyppi)
-                                                                    arvot-nyt)
-                         "urakka"
-                         (raportit/suorita-raportti-urakka (:id v-ur)
-                                                           (:nimi raporttityyppi)
                                                            arvot-nyt)))]
                (log "[RAPORTTI] Raportin suoritus valmis")
                (cond
@@ -540,6 +540,7 @@
 
                  (k/virhe? raportti)
                  (do
+                   (viesti/nayta! "Raportin suoritus epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
                    (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)
                    (reset! raportit/suoritettu-raportti nil)
                      raportti)
