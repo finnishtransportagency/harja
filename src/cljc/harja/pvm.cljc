@@ -638,7 +638,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn aikavali-paivina [alku loppu]
      (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
-(defn paivia-valissa
+(defn paivia-aikavalien-leikkauskohdassa
   "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
   [[alkupvm loppupvm] [vali-alkupvm vali-loppupvm]]
   (let [pvm-vector (sort t/before? [alkupvm loppupvm vali-alkupvm vali-loppupvm])]
@@ -653,6 +653,14 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       0
       (t/in-days (t/interval (nth pvm-vector 1)
                              (nth pvm-vector 2))))))
+
+(defn paivia-valissa
+  "Palauttaa kokonaisluvun, joka kertoo montako päivää kahden päivämäärän välissä on."
+  [eka toka]
+  (if (t/before? eka toka)
+    (t/in-days (t/interval eka toka))
+    (t/in-days (t/interval toka eka))))
+
 #?(:clj
    (defn iso-8601->pvm
      "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
