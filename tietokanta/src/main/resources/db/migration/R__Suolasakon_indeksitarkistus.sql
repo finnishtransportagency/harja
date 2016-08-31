@@ -64,7 +64,7 @@ BEGIN
    SELECT INTO indeksinimi indeksi
      FROM suolasakko
     WHERE urakka = urakka_id AND hoitokauden_alkuvuosi = talvikauden_alkuvuosi;
-   it := laske_suolasakon_indeksitarkistus(talvikauden_alkuvuosi, indeksinimi, summa);
+   it := laske_suolasakon_indeksitarkistus(talvikauden_alkuvuosi, indeksinimi, summa, urakka_id);
    RETURN it;
 END;
 $$ LANGUAGE plpgsql;
