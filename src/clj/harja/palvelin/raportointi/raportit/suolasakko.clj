@@ -18,9 +18,9 @@
   (let [urakat (into #{}
                      (map :urakka-id)
                      (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
-                                                            :hallintayksikko hallintayksikko-id
-                                                            :alku alkupvm
-                                                            :loppu loppupvm
+                                                        :hallintayksikko hallintayksikko-id
+                                                        :alku alkupvm
+                                                        :loppu loppupvm
                                                         :urakkatyyppi "hoito"}))
         raportin-data (hae-suolasakot db {:alkupvm (konv/sql-date alkupvm)
                                           :loppupvm (konv/sql-date loppupvm)
