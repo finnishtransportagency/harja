@@ -246,6 +246,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
              [{:otsikko "Päivämäärä ja aika"
                :pakollinen? true
+               :muokattava? (constantly muokattava?)
                :tyyppi :pvm-aika
                :nimi :aika
                :validoi [[:ei-tyhja "Anna laatupoikkeaman päivämäärä ja aika"]]
@@ -302,6 +303,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               {:otsikko "Kuvaus"
                :uusi-rivi? true
                :nimi :kuvaus
+               :muokattava? (constantly muokattava?)
                :tyyppi :text
                :pakollinen? true
                :palstoja 2
