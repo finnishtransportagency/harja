@@ -467,6 +467,26 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   ([eka toka marginaali]
    (< (Math/abs (double (- eka toka))) marginaali)))
 
+(defn tarkista-map-arvot
+  "Tarkistaa, että mäpissä on oikeat arvot. Numeroita vertaillaan =marginaalissa? avulla, muita
+  = avulla. Tarkistaa myös, että kaikki arvot ovat olemassa. Odotetussa mäpissa saa olla
+  ylimääräisiä avaimia."
+  [odotetut saadut]
+  (doseq [k (keys odotetut)
+          :let [odotettu-arvo (get odotetut k)
+                saatu-arvo (get saadut k ::ei-olemassa)]]
+    (if (= saatu-arvo ::ei-olemassa)
+      (is false (str "Odotetussa mäpissä ei arvoa avaimelle: " k
+                     ", odotettiin arvoa: " odotettu-arvo))
+
+      (if (and (number? odotettu-arvo) (number? saatu-arvo))
+        (is (=marginaalissa? odotettu-arvo saatu-arvo)
+            (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
+                 odotettu-arvo ", saatu: " saatu-arvo))
+        (is (= odotettu-arvo saatu-arvo)
+            (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
+                 ", saatu: " saatu-arvo))))))
+
 (def suomen-aikavyohyke (t/time-zone-for-id "EET"))
 
 (defn paikallinen-aika [dt]
