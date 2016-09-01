@@ -133,7 +133,8 @@
         "arvot": {
           "id": "urn:harja/tietolaji/arvot",
           "type": "object",
-          "required": true
+          "required": true,
+          "patternProperties": {".*": {"type": "string"}}
         }
       },
       "additionalProperties": false
