@@ -156,16 +156,15 @@
 (deftest tekstiviestin-muodostus-ilman-tr-osoitetta
   (let [ilmoitus {:ilmoitus-id 666
                   :otsikko "Testiympäristö liekeissä!"
-                  :paikankuvaus "Konesali"
+                  :paikankuvaus "Kilpisjärvi"
                   :lisatieto "Soittakaapa äkkiä"
-                  :yhteydenottopyynto true
+                  :yhteydenottopyynto false
                   :selitteet #{:toimenpidekysely}}
         rivit (into #{} (str/split-lines
                           (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (println "Rivit on: " (pr-str rivit))
     (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
-    (is (rivit "Yhteydenottopyyntö: Kyllä"))
-    (is (rivit "Paikka: Konesali"))
+    (is (rivit "Yhteydenottopyyntö: Ei"))
+    (is (rivit "Paikka: Kilpisjärvi"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
     (is (rivit "TR-osoite: Ei tierekisteriosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
