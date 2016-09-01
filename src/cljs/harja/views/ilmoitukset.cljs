@@ -20,6 +20,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
+            [harja.tiedot.ilmoituskuittaukset :as ilmoituskuittaukset]
             [harja.tiedot.urakka :as u]
             [harja.ui.bootstrap :as bs]
             [harja.tiedot.istunto :as istunto]
@@ -195,8 +196,13 @@
               {:luokka "pull-right kuittaa-monta"}])
 
            (when kuittaa-monta-nyt
-             [kuittaukset/kuittaa-monta-lomake @kuittaa-monta
-              #(reset! kuittaa-monta %)
+             [kuittaukset/kuittaa-monta-lomake
+              @kuittaa-monta
+              (fn [uusi-data]
+                (let [kasitelty-lomakedata (ilmoituskuittaukset/tarkista-ja-paivita-vapaateksti
+                                             uusi-data
+                                             @kuittaa-monta)]
+                  (reset! kuittaa-monta kasitelty-lomakedata)))
               #(do (reset! kuittaa-monta %)
                    (tiedot/hae-ilmoitukset))])
 

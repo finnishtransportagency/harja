@@ -38,27 +38,29 @@
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
-    {:muokkaa! #(reset! tiedot/uusi-kuittaus %)
-     :luokka   :horizontal
-     :footer   [:div
-                [napit/palvelinkutsu-nappi
-                 "Lähetä"
-                 #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
-                 {:ikoni        (ikonit/tallenna)
-                  :disabled     (esta-lahetys?)
-                  :kun-onnistuu (fn [vastaus]
-                                  (kasittele-kuittauskasityksen-vastaus vastaus)
-                                  (tapahtumat/julkaise!
-                                    {:aihe :ilmoituksen-kuittaustiedot-päivitetty
-                                     :id (:id @ilmoitukset/valittu-ilmoitus)}))
-                  :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
-                  :luokka       "nappi-ensisijainen"}]
-                [napit/peruuta
-                 "Peruuta"
-                 #(do
-                   (ilmoitukset/sulje-uusi-kuittaus!)
-                   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))
-                 {:luokka "pull-right"}]]}
+    {:muokkaa! (fn [uusi-data]
+                 (let [kasitelty-lomakedata (tiedot/tarkista-ja-paivita-vapaateksti uusi-data @tiedot/uusi-kuittaus)]
+                   (reset! tiedot/uusi-kuittaus kasitelty-lomakedata)))
+     :luokka :horizontal
+     :footer [:div
+              [napit/palvelinkutsu-nappi
+               "Lähetä"
+               #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
+               {:ikoni (ikonit/tallenna)
+                :disabled (esta-lahetys?)
+                :kun-onnistuu (fn [vastaus]
+                                (kasittele-kuittauskasityksen-vastaus vastaus)
+                                (tapahtumat/julkaise!
+                                  {:aihe :ilmoituksen-kuittaustiedot-päivitetty
+                                   :id (:id @ilmoitukset/valittu-ilmoitus)}))
+                :virheviesti "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
+                :luokka "nappi-ensisijainen"}]
+              [napit/peruuta
+               "Peruuta"
+               #(do
+                 (ilmoitukset/sulje-uusi-kuittaus!)
+                 (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))
+               {:luokka "pull-right"}]]}
     [(lomake/ryhma {:otsikko    "Kuittaus"
                     :leveys-col 3}
                    {:nimi          :tyyppi
@@ -133,7 +135,8 @@
        "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
        "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
 
-(defn kuittaa-monta-lomake [{:keys [ilmoitukset tyyppi vapaateksti] :as data} muokkaa!
+(defn kuittaa-monta-lomake [{:keys [ilmoitukset tyyppi vapaateksti] :as data}
+                            muokkaa!
                             kuittaukset-tallennettu]
   (let [valittuna (count ilmoitukset)]
     [:div.ilmoitukset-kuittaa-monta
