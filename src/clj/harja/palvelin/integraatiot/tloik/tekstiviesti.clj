@@ -8,6 +8,7 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.tyokalut.merkkijono :as merkkijono]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.domain.tierekisteri :as tierekisteri]
             [harja.fmt :as fmt]
             [harja.domain.ilmoitukset :as ilm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
@@ -16,6 +17,7 @@
   (str "Uusi toimenpidepyyntö %s: %s (id: %s, viestinumero: %s).\n\n"
        "Yhteydenottopyyntö: %s\n\n"
        "Paikka: %s\n\n"
+       "TR-osoite: %s\n\n"
        "Selitteet: %s.\n\n"
        "Lisätietoja: %s.\n\n"
        "Kuittauskoodit:\n"
@@ -115,6 +117,9 @@
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         otsikko (:otsikko ilmoitus)
         paikankuvaus (:paikankuvaus ilmoitus)
+        tr-osoite (tierekisteri/tierekisteriosoite-tekstina
+                    ilmoitus
+                    {:teksti-tie? false})
         lisatietoja (if (:lisatieto ilmoitus)
                       (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
                       "")
@@ -128,6 +133,7 @@
               viestinumero
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
               paikankuvaus
+              tr-osoite
               selitteet
               lisatietoja
               viestinumero
