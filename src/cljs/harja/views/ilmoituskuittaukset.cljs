@@ -35,10 +35,11 @@
     {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
      :luokka   :horizontal
      :footer   [:div
-                [napit/palvelinkutsu-nappi
+                [napit/tallenna
                  "Lähetä"
-                 #(go (e! (v/->Kuittaa)))
-                 {:ikoni        (ikonit/tallenna)
+                 #(e! (v/->Kuittaa))
+                 {:tallennus-kaynnissa? (:tallennus-kaynnissa? kuittaus)
+                  :ikoni        (ikonit/tallenna)
                   :disabled     (esta-lahetys? kuittaus)
                   :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
                   :luokka       "nappi-ensisijainen"}]
