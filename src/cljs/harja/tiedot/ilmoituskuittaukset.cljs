@@ -16,12 +16,21 @@
 (defn laheta-uusi-kuittaus [kuittaus]
   (k/post! :tallenna-ilmoitustoimenpide kuittaus nil true))
 
+(def kuittauksen-tyypin-vakiofraasit
+  {:vastaanotto "Vastaanotettu"
+   :aloitus "Aloitettu"
+   :lopetus "Lopetettu"
+   :muutos "Muutos"
+   :vastaus "Vastaus"})
+
 (defn uusi-kuittaus-ilmoitukselle [ilmoitus]
   (let [kayttaja @istunto/kayttaja
-        organisaatio (:organisaatio kayttaja)]
+        organisaatio (:organisaatio kayttaja)
+        vakiotyyppi :vastaanotto]
     {:ilmoituksen-id          (:id ilmoitus)
      :ulkoinen-ilmoitusid     (:ilmoitusid ilmoitus)
-     :tyyppi                  :vastaanotto
+     :tyyppi                  vakiotyyppi
+     :vapaateksti             (kuittauksen-tyypin-vakiofraasit vakiotyyppi)
      :ilmoittaja-etunimi      (:etunimi kayttaja)
      :ilmoittaja-sukunimi     (:sukunimi kayttaja)
      :ilmoittaja-matkapuhelin (:puhelin kayttaja)
