@@ -114,8 +114,19 @@
   (process-event [_ app]
     (assoc app :valittu-ilmoitus nil))
 
-  ;; Kuittaukset
+  ;; Valitun ilmoituksen uuden kuittauksen teko
 
+  v/AvaaUusiKuittaus
+  (process-event [_ app]
+    (assoc-in app [:valittu-ilmoitus :uusi-kuittaus] {}))
+
+
+  v/SuljeUusiKuittaus
+  (process-event [_ app]
+    (assoc-in app [:valittu-ilmoitus :uusi-kuittaus] nil))
+
+
+  ;; Monen kuittaaminen
   v/AloitaMonenKuittaus
   (process-event [_ app]
     (assoc app :kuittaa-monta {:ilmoitukset #{}
@@ -130,8 +141,36 @@
                    (conj ilmoitukset i)))))
 
   v/AsetaKuittausTiedot
-  (process-event [{tiedot :tiedot} app]
-    (update-in app [:kuittaa-monta] merge tiedot)))
+  (process-event [{tiedot :tiedot} {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
+    (if valittu-ilmoitus
+      (update-in app [:valittu-ilmoitus :uusi-kuittaus] merge tiedot)
+      (update-in app [:kuittaa-monta] merge tiedot)))
+
+  v/Kuittaa
+  (process-event [_ {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
+    (let [kuittaus (if valittu-ilmoitus
+                     (:uusi-kuittaus valittu-ilmoitus)
+                     (dissoc kuittaa-monta :ilmoitukset))
+          ilmoitukset (or (and valittu-ilmoitus [valittu-ilmoitus])
+                          (:ilmoitukset kuittaa-monta))
+          tulos! (t/send-async! v/->KuittaaVastaus)]
+      (go
+        (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset! ilmoitukset kuittaus)))))
+    (if valittu-ilmoitus
+      (assoc-in app [:valittu-ilmoitus :uusi-kuittaus :tallennus-kaynnissa?] true)
+      (assoc-in app [:kuittaa-monta :tallennus-kaynnissa?] true)))
+
+  v/KuittaaVastaus
+  (process-event [{v :vastaus} {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
+    (hae
+     (if valittu-ilmoitus
+       ;; FIXME: käsittele tloik virhe
+       (assoc-in app [:valittu-ilmoitus :uusi-kuittaus] nil)
+       (assoc app :kuittaa-monta nil))))
+
+  v/PeruMonenKuittaus
+  (process-event [_ app]
+    (assoc app :kuittaa-monta nil)))
 
 
 

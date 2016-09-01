@@ -61,7 +61,7 @@
    [:span
     [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta))]
     (pollauksen-merkki)
-    [it/ilmoitus ilmoitus]]])
+    [it/ilmoitus e! ilmoitus]]])
 
 (defn kuittauslista [{kuittaukset :kuittaukset}]
   [:div.kuittauslista

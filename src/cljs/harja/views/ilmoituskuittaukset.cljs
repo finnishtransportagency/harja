@@ -32,87 +32,75 @@
     (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
     (ilmoitukset/sulje-uusi-kuittaus!)))
 
-(defn esta-lahetys? []
-  (let [kuittaus @tiedot/uusi-kuittaus]
-    (or (empty? (:vapaateksti kuittaus))
-        (not (some #(= (:tyyppi kuittaus) %) apurit/kuittaustyypit)))))
+(defn esta-lahetys? [kuittaus]
+  (or (:tallennus-kaynnissa? kuittaus)
+      (nil? (:tyyppi kuittaus))))
 
-(defn uusi-kuittaus []
+(defn uusi-kuittaus [e! kuittaus]
   [:div
    {:class "uusi-kuittaus"}
-   ;; FIXME: implement
-   (comment
-     [lomake/lomake
-      {:muokkaa! #(reset! tiedot/uusi-kuittaus %)
-       :luokka   :horizontal
-       :footer   [:div
-                  [napit/palvelinkutsu-nappi
-                   "Lähetä"
-                   #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
-                   {:ikoni        (ikonit/tallenna)
-                    :disabled     (esta-lahetys?)
-                    :kun-onnistuu (fn [vastaus]
-                                    (kasittele-kuittauskasityksen-vastaus vastaus)
-                                    (tapahtumat/julkaise!
-                                     {:aihe :ilmoituksen-kuittaustiedot-päivitetty
-                                      :id (:id @ilmoitukset/valittu-ilmoitus)}))
-                    :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
-                    :luokka       "nappi-ensisijainen"}]
-                  [napit/peruuta
-                   "Peruuta"
-                   #(do
-                      (ilmoitukset/sulje-uusi-kuittaus!)
-                      (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))
-                   {:luokka "pull-right"}]]}
-      [(lomake/ryhma {:otsikko    "Kuittaus"
-                      :leveys-col 3}
-                     {:nimi          :tyyppi
-                      :otsikko       "Tyyppi"
-                      :pakollinen?   true
-                      :tyyppi        :valinta
-                      :valinnat      apurit/kuittaustyypit
-                      :valinta-nayta apurit/kuittaustyypin-selite
-                      :leveys-col    3}
-                     {:nimi        :vapaateksti
-                      :otsikko     "Vapaateksti"
-                      :pakollinen? true
-                      :tyyppi      :text
-                      :leveys-col  3})
-       (lomake/ryhma {:otsikko    "Käsittelijä"
-                      :leveys-col 3}
-                     {:nimi       :kasittelija-etunimi
-                      :otsikko    "Etunimi"
-                      :leveys-col 3
-                      :tyyppi     :string}
-                     {:nimi       :kasittelija-sukunimi
-                      :otsikko    "Sukunimi"
-                      :leveys-col 3
-                      :tyyppi     :string}
-                     {:nimi       :kasittelija-matkapuhelin
-                      :otsikko    "Matkapuhelin"
-                      :leveys-col 3
-                      :tyyppi     :puhelin}
-                     {:nimi       :kasittelija-tyopuhelin
-                      :otsikko    "Työpuhelin"
-                      :leveys-col 3
-                      :tyyppi     :puhelin}
-                     {:nimi       :kasittelija-sahkoposti
-                      :otsikko    "Sähköposti"
-                      :leveys-col 3
-                      :tyyppi     :email}
-                     {:nimi       :kasittelija-organisaatio
-                      :otsikko    "Organisaation nimi"
-                      :leveys-col 3
-                      :tyyppi     :string}
-                     {:nimi       :kasittelija-ytunnus
-                      :otsikko    "Organisaation y-tunnus"
-                      :leveys-col 3
-                      :tyyppi     :string})]
-      @tiedot/uusi-kuittaus])])
+   [lomake/lomake
+    {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
+     :luokka   :horizontal
+     :footer   [:div
+                [napit/palvelinkutsu-nappi
+                 "Lähetä"
+                 #(go (e! (v/->Kuittaa)))
+                 {:ikoni        (ikonit/tallenna)
+                  :disabled     (esta-lahetys? kuittaus)
+                  :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
+                  :luokka       "nappi-ensisijainen"}]
+                [napit/peruuta
+                 "Peruuta"
+                 #(e! (v/->SuljeUusiKuittaus))
+                 {:luokka "pull-right"}]]}
+    [(lomake/ryhma {:otsikko    "Kuittaus"
+                    :leveys-col 3}
+                   {:nimi          :tyyppi
+                    :otsikko       "Tyyppi"
+                    :pakollinen?   true
+                    :tyyppi        :valinta
+                    :valinnat      apurit/kuittaustyypit
+                    :valinta-nayta #(if %
+                                      (apurit/kuittaustyypin-selite %)
+                                      "- Valitse kuittaustyyppi -")
+                    :leveys-col    3}
+                   {:nimi        :vapaateksti
+                    :otsikko     "Vapaateksti"
+                    :tyyppi      :text
+                    :leveys-col  3})
+     (lomake/ryhma {:otsikko    "Käsittelijä"
+                    :leveys-col 3}
+                   {:nimi       :kasittelija-etunimi
+                    :otsikko    "Etunimi"
+                    :leveys-col 3
+                    :tyyppi     :string}
+                   {:nimi       :kasittelija-sukunimi
+                    :otsikko    "Sukunimi"
+                    :leveys-col 3
+                    :tyyppi     :string}
+                   {:nimi       :kasittelija-matkapuhelin
+                    :otsikko    "Matkapuhelin"
+                    :leveys-col 3
+                    :tyyppi     :puhelin}
+                   {:nimi       :kasittelija-tyopuhelin
+                    :otsikko    "Työpuhelin"
+                    :leveys-col 3
+                    :tyyppi     :puhelin}
+                   {:nimi       :kasittelija-sahkoposti
+                    :otsikko    "Sähköposti"
+                    :leveys-col 3
+                    :tyyppi     :email}
+                   {:nimi       :kasittelija-organisaatio
+                    :otsikko    "Organisaation nimi"
+                    :leveys-col 3
+                    :tyyppi     :string}
+                   {:nimi       :kasittelija-ytunnus
+                    :otsikko    "Organisaation y-tunnus"
+                    :leveys-col 3
+                    :tyyppi     :string})]
+    kuittaus]])
 
-(defn uusi-kuittaus-lomake []
-  (komp/luo
-    uusi-kuittaus))
 
 (defn kuittauksen-tiedot [kuittaus]
   ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
@@ -153,7 +141,6 @@
         :nimi :tyyppi}
 
        {:otsikko "Vapaateksti"
-        :pakollinen? true
         :tyyppi :text
         :koko [80 :auto]
         :nimi :vapaateksti}]
@@ -166,7 +153,8 @@
       #(go (e! (v/->Kuittaa)))
 
       {:luokka   "nappi-ensisijainen kuittaa-monta-tallennus"
-       :disabled (or (not (lomake/voi-tallentaa-ja-muokattu? data))
+       :disabled (or (:tallennus-kaynnissa? data)
+                     (not (lomake/voi-tallentaa-ja-muokattu? data))
                      (zero? valittuna))}]
      [napit/peruuta "Peruuta" #(e! (v/->PeruMonenKuittaus))]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))
