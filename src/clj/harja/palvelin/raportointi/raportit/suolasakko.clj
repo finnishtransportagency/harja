@@ -14,7 +14,8 @@
 (defqueries "harja/kyselyt/suolasakkoraportti.sql"
   {:positional? true})
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id urakkatyyppi]
+                        :as parametrit}]
   (let [urakat (into #{}
                      (map :urakka-id)
                      (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
