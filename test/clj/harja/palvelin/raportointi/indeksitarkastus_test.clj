@@ -50,6 +50,8 @@
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Indeksitarkistus")
+
+    ;; Kaikki yhteensä
     (let [otsikko "Kaikki yhteensä"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -70,4 +72,69 @@
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? suolabonus)
+                                                    (number? yhteensa)))))
+
+    ;; Talvihoito
+    (let [otsikko "Talvihoito"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Kuukausi"}
+                                          {:otsikko "Kokonaishintaiset työt"}
+                                          {:otsikko "Yksikköhintaiset työt"}
+                                          {:otsikko "Äkillinen hoitotyö"}
+                                          {:otsikko "Sanktiot"}
+                                          {:otsikko "Suolabonukset ja -sanktiot"}
+                                          {:otsikko "Yhteensä (€)"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko
+                                             (fn [[kuukausi kok-hint yks-hint akilliset-hoitotyot sanktiot
+                                                   suolabonus yhteensa :as rivi]]
+                                               (and (= (count rivi) 7)
+                                                    (string? kuukausi)
+                                                    (number? kok-hint)
+                                                    (number? yks-hint)
+                                                    (number? akilliset-hoitotyot)
+                                                    (number? sanktiot)
+                                                    (number? suolabonus)
+                                                    (number? yhteensa)))))
+
+    ;; Liikenneympäristön hoito
+    (let [otsikko "Liikenneympäristön hoito"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Kuukausi"}
+                                          {:otsikko "Kokonaishintaiset työt"}
+                                          {:otsikko "Yksikköhintaiset työt"}
+                                          {:otsikko "Äkillinen hoitotyö"}
+                                          {:otsikko "Sanktiot"}
+                                          {:otsikko "Yhteensä (€)"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko
+                                             (fn [[kuukausi kok-hint yks-hint akilliset-hoitotyot sanktiot
+                                                   yhteensa :as rivi]]
+                                               (and (= (count rivi) 6)
+                                                    (string? kuukausi)
+                                                    (number? kok-hint)
+                                                    (number? yks-hint)
+                                                    (number? akilliset-hoitotyot)
+                                                    (number? sanktiot)
+                                                    (number? yhteensa)))))
+
+    ;; Soratien hoito
+    (let [otsikko "Soratien hoito"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Kuukausi"}
+                                          {:otsikko "Kokonaishintaiset työt"}
+                                          {:otsikko "Yksikköhintaiset työt"}
+                                          {:otsikko "Äkillinen hoitotyö"}
+                                          {:otsikko "Sanktiot"}
+                                          {:otsikko "Yhteensä (€)"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko
+                                             (fn [[kuukausi kok-hint yks-hint akilliset-hoitotyot sanktiot
+                                                   yhteensa :as rivi]]
+                                               (and (= (count rivi) 6)
+                                                    (string? kuukausi)
+                                                    (number? kok-hint)
+                                                    (number? yks-hint)
+                                                    (number? akilliset-hoitotyot)
+                                                    (number? sanktiot)
                                                     (number? yhteensa)))))))
