@@ -31,7 +31,7 @@
            (concat
             (when suola?
               [{:otsikko "Suolabonukset ja -sanktiot" :leveys 2 :fmt :raha :tasaa :oikea}])
-            [{:otsikko "Yhteensä (€)" :leveys 2 :fmt :raha :tasaa :oikea}]))
+            [{:otsikko "Yhteensä (€)" :leveys (if suola? 2 4) :fmt :raha :tasaa :oikea}]))
 
      (into
       []
