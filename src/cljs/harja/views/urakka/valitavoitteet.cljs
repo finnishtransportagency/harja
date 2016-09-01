@@ -21,78 +21,27 @@
 
 (def tallennus-kaynnissa? (atom false))
 
-(defn valmiustilan-kuvaus [{:keys [valmis takaraja]}]
-  (if-not takaraja
-    "Uusi"
-    (let [valmis-pvm (:pvm valmis)]
-      (if valmis-pvm
-        (str "Valmistunut " (pvm/pvm valmis-pvm))
-        (if (t/after? (pvm/nyt) takaraja)
-          "Myöhässä"
-          "Ei valmis")))))
+(defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
+  (cond (nil? takaraja)
+        "Uusi"
 
-(defn valitavoite-valmis-lomake [_ ur vt]
-  (let [valmis-pvm (atom nil)
-        kommentti (atom "")
-        tallennus-kaynnissa (atom false)]
-    (fn [{aseta-tavoitteet :aseta-tavoitteet} ur vt]
-      [:div {:style {:position "relative"}}
-       (when @tallennus-kaynnissa
-         (y/lasipaneeli (y/keskita (y/ajax-loader))))
-       [:form
-        [:div.form-group
-         [:label {:for "valmispvm"} "Valmistumispäivä"]
-         [tee-kentta {:tyyppi :pvm}
-          valmis-pvm]]
+        (and takaraja valmispvm)
+        "Valmistunut"
 
-        [:div.form-group
-         [:label {:for "kommentti"} "Kommentti"]
-         [:textarea#kommentti.form-control {:on-change #(reset! kommentti (-> % .-target .-value))
-                                            :rows 3
-                                            :value @kommentti}]]
+        (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (t/now) takaraja))
+        (let [paivia-valissa (pvm/paivia-valissa (t/now) takaraja)]
+          (str "Ei valmis" (when (pos? paivia-valissa)
+                             (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) " jäljellä)"))))
 
-        [:div.toiminnot
-         [:button.nappi-ensisijainen
-          {:disabled (nil? @valmis-pvm)
-           :on-click #(do (.preventDefault %)
-                          (reset! tallennus-kaynnissa true)
-                          (go (let [res (<! (vt/merkitse-valmiiksi! (:id ur) (:id vt)
-                                                                    @valmis-pvm @kommentti))]
-                                (if (k/virhe? res)
-                                  (viesti/nayta! "Valmiiksi merkitseminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
-                                  (do
-                                    (aseta-tavoitteet res)
-                                    (reset! tallennus-kaynnissa false))))))}
-          "Merkitse valmiiksi"]]]])))
+        (and takaraja (nil? valmispvm) (t/after? (t/now) takaraja))
+        (let [paivia-valissa (pvm/paivia-valissa takaraja (t/now))]
+          (str "Myöhässä" (when (pos? paivia-valissa)
+                            (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) ")"))))))
 
-(defn valitavoite-lomake [opts ur vt]
-  (let [{:keys [pvm merkitsija merkitty kommentti]} (:valmis vt)]
-    [:div.valitavoite
-     [:div.valmis
-      (when pvm
-        [y/rivi
-         {:koko y/tietopaneelin-elementtikoko}
-
-
-         [y/otsikolla "Valmistunut" (fmt/pvm pvm)]
-
-         (when merkitty
-           [y/otsikolla "Merkitty valmiiksi"
-            [:span (fmt/pvm-opt merkitty) " " (fmt/kayttaja-opt merkitsija)]])
-
-
-         (when kommentti
-           [y/otsikolla "Urakoitsijan kommentti" kommentti])])]
-
-     (when (and (nil? pvm)
-                (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id ur)))
-       ;; Ei ole valmis, sallitaan urakoitsijan käyttäjän merkitä se valmiiksi
-       [valitavoite-valmis-lomake opts ur vt])]))
-
-(defn- urakan-valitavoitteet [urakka
-                              kaikki-valitavoitteet-atom
-                              urakan-valitavoitteet-atom]
-  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))]
+(defn- urakan-valitavoitteet [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet-atom]
+  (log "Listalla: " (pr-str urakan-valitavoitteet-atom))
+  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
+        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [grid/grid
      {:otsikko "Urakan välitavoitteet"
       :tyhja (if (nil? @urakan-valitavoitteet-atom)
@@ -106,30 +55,33 @@
                              (viesti/nayta! "Tallentaminen epäonnistui"
                                             :warning viesti/viestin-nayttoaika-lyhyt)
                              (reset! kaikki-valitavoitteet-atom vastaus)))
-                         (reset! tallennus-kaynnissa? false))))
+                         (reset! tallennus-kaynnissa? false))))}
 
-      :vetolaatikot (into {}
-                          (map
-                            (juxt :id
-                                  (partial valitavoite-lomake
-                                           {:aseta-tavoitteet
-                                            #(reset! kaikki-valitavoitteet-atom %)} urakka)))
-                          @urakan-valitavoitteet-atom)}
-
-     [{:tyyppi :vetolaatikon-tila :leveys 5}
-      {:otsikko "Nimi" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+     [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                    (pvm/pvm-opt %)
                                                                    "Ei takarajaa")
        :tyyppi :pvm}
-      {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
-       :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
+      {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+       :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+      {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
+       :muokattava? (constantly voi-merkita-valmiiksi?)
+       :nimi :valmispvm
+       :fmt #(if %
+              (pvm/pvm-opt %)
+              "-")}
+      {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
+       :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
+                                                     (:valmispvm %))
+       :nimi :valmis-kommentti}
+      {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+       :nimi :merkitsija :hae (fn [rivi]
+                                (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      @urakan-valitavoitteet-atom]))
 
-(defn- valtakunnalliset-valitavoitteet [urakka
-                                        kaikki-valitavoitteet-atom
-                                        valtakunnalliset-valitavoitteet-atom]
-  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))]
+(defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
+  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
+        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
     [:div
      [grid/grid
       {:otsikko "Valtakunnalliset välitavoitteet"
@@ -145,21 +97,13 @@
                                              :warning viesti/viestin-nayttoaika-lyhyt)
                               (reset! kaikki-valitavoitteet-atom vastaus)))
                           (reset! tallennus-kaynnissa? false))))
-       :vetolaatikot (into {}
-                           (map
-                             (juxt :id
-                                   (partial valitavoite-lomake
-                                            {:aseta-tavoitteet
-                                             #(reset! kaikki-valitavoitteet-atom %)} urakka)))
-                           @valtakunnalliset-valitavoitteet-atom)
        :voi-lisata? false
        :voi-poistaa? (constantly false)}
 
-      [{:tyyppi :vetolaatikon-tila :leveys 5}
-       {:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 55
+      [{:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 25
         :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
-       {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 55 :nimi :nimi :tyyppi :string :pituus-max 128}
+       {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
        {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
         :nimi :valtakunnallinen-takaraja :hae #(cond
                                                 (:valtakunnallinen-takaraja %)
@@ -177,8 +121,21 @@
         :tyyppi :pvm
         :muokattava? (constantly false)}
        {:otsikko "Taka\u00ADraja ura\u00ADkassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
-       {:otsikko "Tila" :leveys 25 :tyyppi :string :muokattava? (constantly false)
-        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}]
+       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+       {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
+        :muokattava? (constantly voi-merkita-valmiiksi?)
+        :nimi :valmispvm
+        :fmt #(if %
+               (pvm/pvm-opt %)
+               "-")}
+       {:otsikko "Kom\u00ADmentti val\u00ADmis\u00ADtu\u00ADmi\u00ADses\u00ADta"
+        :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
+                                                      (:valmispvm %))
+        :nimi :valmis-kommentti}
+       {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+        :nimi :merkitsija :hae (fn [rivi]
+                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
       @valtakunnalliset-valitavoitteet-atom]
      [yleiset/vihje (str "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. "
                          (when voi-muokata?
