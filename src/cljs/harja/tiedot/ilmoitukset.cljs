@@ -147,6 +147,7 @@
       (update-in app [:valittu-ilmoitus :uusi-kuittaus] merge tiedot)
       (update-in app [:kuittaa-monta] merge tiedot)))
 
+  ;; Kuittaa joko monta tai valitun ilmoituksen kuittaus
   v/Kuittaa
   (process-event [_ {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
     (let [kuittaus (if valittu-ilmoitus
@@ -170,9 +171,11 @@
      (if valittu-ilmoitus
        (-> app
            (assoc-in [:valittu-ilmoitus :uusi-kuittaus] nil)
-           #_(update-in [:valittu-ilmoitus :kuittaukset]
-                      ;; FIXME: tarkista, että palvelin palauttaa vastauksen
-                      conj v))
+           (update-in [:valittu-ilmoitus :kuittaukset]
+                      (fn [kuittaukset]
+                        ;; Palvelin palauttaa vektorin kuittauksia, joihin
+                        ;; olemassaolevat liitetään
+                        (into v kuittaukset))))
        (assoc app :kuittaa-monta nil))))
 
   v/PeruMonenKuittaus
