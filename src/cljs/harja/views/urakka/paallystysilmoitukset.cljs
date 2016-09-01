@@ -236,7 +236,6 @@
 (defn paallystysilmoitus-perustiedot [urakka {:keys [tila valmispvm-kohde] :as lomakedata-nyt} lukittu? kirjoitusoikeus? muokkaa!]
   (let [valmis-kasiteltavaksi?
         (do
-
           #_(log "[PÄÄLLYSTYS] valmis käsiteltäväksi " (pr-str valmispvm-kohde) (pr-str tila))
           (and tila
                valmispvm-kohde
@@ -265,7 +264,7 @@
                         (= :aloitettu (:tila lomakedata-nyt)))
                   "Kohteen valmistumispäivämäärä annettu, ilmoitus tallennetaan valmiina urakanvalvojan käsiteltäväksi.")
          :tyyppi :pvm
-         :validoi [[:pvm-ei-annettu-ennen-toista :valmispvm-paallystys
+         :validoi [[:toinen-arvo-annettu-ensin :valmispvm-paallystys
                     "Kohdetta ei voi merkitä valmistuneeksi ennen kuin päällystys on valmistunut."]]}
         {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
          :hae #(-> % laske-hinta :toteuman-kokonaishinta)
@@ -643,12 +642,12 @@
 
 (defn nayta-lahetystiedot [rivi]
   (if (some #(= % (:paallystyskohde-id rivi)) @paallystys/kohteet-yha-lahetyksessa)
-    [:span.maksuera-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
+    [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
     (if (:lahetetty rivi)
       (if (:lahetys-onnistunut rivi)
-        [:span.maksuera-lahetetty
+        [:span.tila-lahetetty
          (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
-        [:span.maksuera-virhe
+        [:span.tila-virhe
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
       [:span "Ei lähetetty"])))
 

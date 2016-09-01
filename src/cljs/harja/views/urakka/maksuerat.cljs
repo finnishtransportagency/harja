@@ -130,11 +130,11 @@
 
 (defn nayta-tila [tila lahetetty]
   (case tila
-    :odottaa_vastausta [:span.maksuera-odottaa-vastausta "Lähetetty, odottaa kuittausta" [yleiset/ajax-loader-pisteet]]
-    :lahetetty [:span.maksuera-lahetetty (if (not (nil? lahetetty))
+    :odottaa_vastausta [:span.tila-odottaa-vastausta "Lähetetty, odottaa kuittausta" [yleiset/ajax-loader-pisteet]]
+    :lahetetty [:span.tila-lahetetty (if (not (nil? lahetetty))
                                            (str "Lähetetty, kuitattu " (pvm/pvm-aika lahetetty))
                                            (str "Lähetetty, kuitattu (kuittauspäivämäärää puuttuu)"))]
-    :virhe [:span.maksuera-virhe "Lähetys epäonnistui!"]
+    :virhe [:span.tila-virhe "Lähetys epäonnistui!"]
     [:span "Ei lähetetty"]))
 
 (defn maksuerat-listaus

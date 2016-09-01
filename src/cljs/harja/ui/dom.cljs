@@ -44,8 +44,8 @@
    seuraava numero kertoo version. Versiossa 11 tätä ei välttämättä ole, mutta sillä ei ole väliä, koska
    tarkoitus on havaita nimenomaan versiota 11 vanhemmat selaimet."
   (let [ua (-> js/window .-navigator .-userAgent)
-                         ie-versio (maarita-ie-versio-user-agentista ua)]
-                       (and (integer? ie-versio) (<= 10 ie-versio))))
+        ie-versio (maarita-ie-versio-user-agentista ua)]
+    (and (integer? ie-versio) (<= 10 ie-versio))))
 
 (defonce korkeus (atom (-> js/window .-innerHeight)))
 (defonce leveys (atom (-> js/window .-innerWidth)))
