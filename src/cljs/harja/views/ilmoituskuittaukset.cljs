@@ -34,22 +34,12 @@
     (or (empty? (:vapaateksti kuittaus))
         (not (some #(= (:tyyppi kuittaus) %) apurit/kuittaustyypit)))))
 
-(defn- tarkista-ja-paivita-vapaateksti [lomakedata-nyt edellinen-data]
-  (let [tyyppi-muuttunut? (not= (:tyyppi edellinen-data)
-                                (:tyyppi lomakedata-nyt))
-        kasitelty-uusi-data (if tyyppi-muuttunut?
-                              (assoc lomakedata-nyt
-                                :vapaateksti
-                                (tiedot/kuittauksen-tyypin-vakiofraasit (:tyyppi lomakedata-nyt)))
-                              lomakedata-nyt)]
-    kasitelty-uusi-data))
-
 (defn uusi-kuittaus []
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
     {:muokkaa! (fn [uusi-data]
-                 (let [kasitelty-lomakedata (tarkista-ja-paivita-vapaateksti uusi-data @tiedot/uusi-kuittaus)]
+                 (let [kasitelty-lomakedata (tiedot/tarkista-ja-paivita-vapaateksti uusi-data @tiedot/uusi-kuittaus)]
                    (reset! tiedot/uusi-kuittaus kasitelty-lomakedata)))
      :luokka :horizontal
      :footer [:div
@@ -145,7 +135,8 @@
        "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
        "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
 
-(defn kuittaa-monta-lomake [{:keys [ilmoitukset tyyppi vapaateksti] :as data} muokkaa!
+(defn kuittaa-monta-lomake [{:keys [ilmoitukset tyyppi vapaateksti] :as data}
+                            muokkaa!
                             kuittaukset-tallennettu]
   (let [valittuna (count ilmoitukset)]
     [:div.ilmoitukset-kuittaa-monta

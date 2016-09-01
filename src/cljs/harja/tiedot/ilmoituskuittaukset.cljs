@@ -52,3 +52,13 @@
           organisaatio (:organisaatio kayttaja)]
       (reset! uusi-kuittaus
               (uusi-kuittaus-ilmoitukselle @valittu-ilmoitus)))))
+
+(defn tarkista-ja-paivita-vapaateksti [lomakedata-nyt edellinen-data]
+  (let [tyyppi-muuttunut? (not= (:tyyppi edellinen-data)
+                                (:tyyppi lomakedata-nyt))
+        kasitelty-uusi-data (if tyyppi-muuttunut?
+                              (assoc lomakedata-nyt
+                                :vapaateksti
+                                (kuittauksen-tyypin-vakiofraasit (:tyyppi lomakedata-nyt)))
+                              lomakedata-nyt)]
+    kasitelty-uusi-data))
