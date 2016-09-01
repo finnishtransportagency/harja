@@ -49,7 +49,8 @@
                            ;; esiintyvät avaimissa
                            (let [suunniteltu-maara (:suunniteltu_maara (first tehtavat))
                                  maara-yhteensa (reduce + (keep :toteutunut_maara tehtavat))
-                                 toteumaprosentti (if (and (number? suunniteltu-maara) (not= suunniteltu-maara 0))
+                                 toteumaprosentti (when (and (number? suunniteltu-maara)
+                                                             (not (zero? suunniteltu-maara)))
                                                     (with-precision 10 (* (/ maara-yhteensa suunniteltu-maara) 100)))
                                  kuukausittaiset-summat (reduce
                                                           (fn [map tehtava]

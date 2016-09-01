@@ -172,8 +172,7 @@
    ;; se asemoidaan mountin jälkeen
    ^{:key "kartta-container"}
    [:div#kartta-container {:style {:position "absolute"
-                                   :top (- korkeus)
-                                   :overflow "hidden"}}
+                                   :top (- korkeus)}}
     [kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []

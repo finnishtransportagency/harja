@@ -52,6 +52,9 @@
 (defmethod erikoiskentta :liitteet [liitteet]
   (count (second liitteet)))
 
+(defmethod erikoiskentta :arvo-ja-osuus [arvo-ja-osuus]
+  (:arvo (second arvo-ja-osuus)))
+
 (defmethod erikoiskentta :info [solu] (raportti-domain/virheen-viesti solu))
 (defmethod erikoiskentta :varoitus [solu] (raportti-domain/virheen-viesti solu))
 (defmethod erikoiskentta :virhe [solu] (raportti-domain/virheen-viesti solu))
