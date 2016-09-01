@@ -127,10 +127,45 @@
                   :selitteet #{:toimenpidekysely}}
         rivit (into #{} (str/split-lines
                          (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
-    (println "Rivit on: " (pr-str rivit))
     (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
     (is (rivit "TR-osoite: 1 / 2 / 3 / 4 / 5"))
+    (is (rivit "Selitteet: Toimenpidekysely."))))
+
+(deftest tekstiviestin-muodostus-pisteelle
+  (let [ilmoitus {:ilmoitus-id 666
+                  :otsikko "Testiympäristö liekeissä!"
+                  :paikankuvaus "Konesali"
+                  :tr-numero 1
+                  :tr-alkuosa 2
+                  :tr-alkuetaisyys 3
+                  :lisatieto "Soittakaapa äkkiä"
+                  :yhteydenottopyynto true
+                  :selitteet #{:toimenpidekysely}}
+        rivit (into #{} (str/split-lines
+                          (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "Paikka: Konesali"))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
+    (is (rivit "TR-osoite: 1 / 2 / 3"))
+    (is (rivit "Selitteet: Toimenpidekysely."))))
+
+(deftest tekstiviestin-muodostus-ilman-tr-osoitetta
+  (let [ilmoitus {:ilmoitus-id 666
+                  :otsikko "Testiympäristö liekeissä!"
+                  :paikankuvaus "Konesali"
+                  :lisatieto "Soittakaapa äkkiä"
+                  :yhteydenottopyynto true
+                  :selitteet #{:toimenpidekysely}}
+        rivit (into #{} (str/split-lines
+                          (tekstiviestit/ilmoitus-tekstiviesti ilmoitus 1234)))]
+    (println "Rivit on: " (pr-str rivit))
+    (is (rivit "Uusi toimenpidepyyntö : Testiympäristö liekeissä! (id: 666, viestinumero: 1234)."))
+    (is (rivit "Yhteydenottopyyntö: Kyllä"))
+    (is (rivit "Paikka: Konesali"))
+    (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
+    (is (rivit "TR-osoite: Ei tierekisteriosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
