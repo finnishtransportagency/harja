@@ -16,7 +16,7 @@
 (defn laheta-uusi-kuittaus [kuittaus]
   (k/post! :tallenna-ilmoitustoimenpide kuittaus nil true))
 
-(def kuittauksen-tyypin-vakiofraasit
+(def kuittauksen-tyypin-vakiofraasi
   {:vastaanotto "Vastaanotettu"
    :aloitus "Aloitettu"
    :lopetus "Lopetettu"
@@ -30,7 +30,7 @@
     {:ilmoituksen-id          (:id ilmoitus)
      :ulkoinen-ilmoitusid     (:ilmoitusid ilmoitus)
      :tyyppi                  vakiotyyppi
-     :vapaateksti             (kuittauksen-tyypin-vakiofraasit vakiotyyppi)
+     :vapaateksti             (kuittauksen-tyypin-vakiofraasi vakiotyyppi)
      :ilmoittaja-etunimi      (:etunimi kayttaja)
      :ilmoittaja-sukunimi     (:sukunimi kayttaja)
      :ilmoittaja-matkapuhelin (:puhelin kayttaja)
@@ -59,6 +59,6 @@
         kasitelty-uusi-data (if tyyppi-muuttunut?
                               (assoc lomakedata-nyt
                                 :vapaateksti
-                                (kuittauksen-tyypin-vakiofraasit (:tyyppi lomakedata-nyt)))
+                                (kuittauksen-tyypin-vakiofraasi (:tyyppi lomakedata-nyt)))
                               lomakedata-nyt)]
     kasitelty-uusi-data))
