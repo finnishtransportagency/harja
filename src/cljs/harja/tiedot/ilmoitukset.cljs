@@ -11,7 +11,8 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]
             [harja.tiedot.ilmoitukset.viestit :as v]
-            [tuck.core :as t])
+            [tuck.core :as t]
+            [harja.ui.viesti :as viesti])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -162,10 +163,16 @@
 
   v/KuittaaVastaus
   (process-event [{v :vastaus} {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
+    ;; Jos kuittaus onnistui, näytä viesti
+    (when v
+      (viesti/nayta! "Kuittaus lähetetty Tieliikennekeskukseen." :success))
     (hae
      (if valittu-ilmoitus
-       ;; FIXME: käsittele tloik virhe
-       (assoc-in app [:valittu-ilmoitus :uusi-kuittaus] nil)
+       (-> app
+           (assoc-in [:valittu-ilmoitus :uusi-kuittaus] nil)
+           #_(update-in [:valittu-ilmoitus :kuittaukset]
+                      ;; FIXME: tarkista, että palvelin palauttaa vastauksen
+                      conj v))
        (assoc app :kuittaa-monta nil))))
 
   v/PeruMonenKuittaus

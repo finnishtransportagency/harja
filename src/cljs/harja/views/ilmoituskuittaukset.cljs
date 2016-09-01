@@ -23,14 +23,6 @@
             [harja.tiedot.ilmoitukset.viestit :as v])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn kasittele-kuittauskasityksen-vastaus [vastaus]
-  ;; FIXME: implement
-  (comment
-    (when vastaus
-      (viesti/nayta! "Kuittaus lähetetty Tieliikennekeskukseen." :success)
-      (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
-    (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
-    (ilmoitukset/sulje-uusi-kuittaus!)))
 
 (defn esta-lahetys? [kuittaus]
   (or (:tallennus-kaynnissa? kuittaus)
