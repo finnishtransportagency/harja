@@ -58,7 +58,7 @@
         ur
         paallystys/harjan-paikkauskohteet
         {:otsikko "Harjan paikkauskohteet"
-         :nakyma :paallystys
+         :nakyma :paikkaus
          :yha-sidottu? false
          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
                      (fn [kohteet]
