@@ -118,7 +118,8 @@
        "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
        "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
 
-(defn kuittaa-monta-lomake [e! {:keys [ilmoitukset tyyppi vapaateksti] :as data}]
+(defn kuittaa-monta-lomake [e! {:keys [ilmoitukset tyyppi vapaateksti tallennus-kaynnissa?]
+                                :as data}]
   (let [valittuna (count ilmoitukset)]
     [:div.ilmoitukset-kuittaa-monta
      [lomake/lomake
@@ -138,13 +139,15 @@
         :nimi :vapaateksti}]
 
       data]
-     [napit/palvelinkutsu-nappi
+     [napit/tallenna
       (if (> valittuna 1)
         (str "Kuittaa " valittuna " ilmoitusta")
         "Kuittaa ilmoitus")
-      #(go (e! (v/->Kuittaa)))
+      #(e! (v/->Kuittaa))
 
-      {:luokka   "nappi-ensisijainen kuittaa-monta-tallennus"
+      {:ikoni (ikonit/tallenna)
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :luokka   (str (when tallennus-kaynnissa? "disabled ") "nappi-ensisijainen kuittaa-monta-tallennus")
        :disabled (or (:tallennus-kaynnissa? data)
                      (not (lomake/voi-tallentaa-ja-muokattu? data))
                      (zero? valittuna))}]
