@@ -24,7 +24,6 @@
           " VALUES ((SELECT id FROM sopimus WHERE urakka = " ur " AND paasopimus IS NULL), '2015-01-01'::date,"
           " 1, " kaytetty-maara ");"))
   (let [hae-suolasakko-sql (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')")]
-    (println "SS RIVI: " (q (str "SELECT * FROM hoitokauden_suolasakkorivi(" ur ", '2014-10-01','2015-09-30')")))
     (Math/abs (double (ffirst (q hae-suolasakko-sql))))))
 
 
@@ -62,5 +61,4 @@
                                   sakko-per-tonni
                                   sallittu-maara
                                   kaytetty-maara)]
-                  (println "LASKETTU: " laskettu-suolasakko ", TIETOKANTA: " tietokannan-suolasakko)
                   (=marginaalissa? laskettu-suolasakko tietokannan-suolasakko 0.01))))
