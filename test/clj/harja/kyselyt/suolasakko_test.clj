@@ -12,17 +12,22 @@
 (deftest laske-urakan-suolasakko
   (let [ur @oulun-alueurakan-2014-2019-id]
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
-      (is (= -2280.0M
-             (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')"))))))))
+      (is (== 0
+              (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')"))))))))
 
 (defn suolasakko [ur lampotila lampotila-pitka sakko-per-tonni sallittu-maara kaytetty-maara]
   ;; Muokkaa oulun alueurakan testidatan toteumia
-  (u (str "UPDATE lampotilat SET keskilampotila = " lampotila ", pitka_keskilampotila = " lampotila-pitka " WHERE urakka = " ur " AND alkupvm='2014-10-01'"))
+  (u (str "UPDATE lampotilat SET keskilampotila = " lampotila ", pitka_keskilampotila_vanha = " lampotila-pitka " WHERE urakka = " ur " AND alkupvm='2014-10-01'"))
   (u (str "UPDATE suolasakko SET maara=" sakko-per-tonni ", talvisuolaraja=" sallittu-maara " WHERE urakka=" ur " AND hoitokauden_alkuvuosi=2014"))
-  (u (str "UPDATE toteuma_materiaali SET maara = " kaytetty-maara " WHERE toteuma IN (SELECT id FROM toteuma WHERE urakka = " ur ")"))
-  (Math/abs (double (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')"))))))
+  (u (str "DELETE FROM sopimuksen_kaytetty_materiaali WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " ur ")"))
+  (u (str "INSERT INTO sopimuksen_kaytetty_materiaali (sopimus,alkupvm,materiaalikoodi,maara)"
+          " VALUES ((SELECT id FROM sopimus WHERE urakka = " ur " AND paasopimus IS NULL), '2015-01-01'::date,"
+          " 1, " kaytetty-maara ");"))
+  (let [hae-suolasakko-sql (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')")]
+    (println "SS RIVI: " (q (str "SELECT * FROM hoitokauden_suolasakkorivi(" ur ", '2014-10-01','2015-09-30')")))
+    (Math/abs (double (ffirst (q hae-suolasakko-sql))))))
 
-  
+
 (defspec muuta-sakon-maaraa
   100
   ;; Muuta sakon laskennassa käytettyjä arvoja oulun alueurakkaan:
@@ -45,17 +50,17 @@
                             (>= erotus 4) (* sallittu-maara 1.30)
                             (>= erotus 3) (* sallittu-maara 1.20)
                             (> erotus 2) (* sallittu-maara 1.10)
-                            :default sallittu-maara)]
-                  (=marginaalissa?
-                                (if (> kaytetty-maara (* sal 1.05))
-                                    (* sakko-per-tonni (- kaytetty-maara (* sal 1.05)))
-                                    0.0)
-                                  (suolasakko @oulun-alueurakan-2014-2019-id
-                                              lampotila
-                                              lampotila-pitka
-                                              sakko-per-tonni
-                                              sallittu-maara
-                                              kaytetty-maara)
-                                0.01))))
-
-
+                            :default sallittu-maara)
+                      laskettu-suolasakko
+                      (if (> kaytetty-maara (* sal 1.05))
+                        (* sakko-per-tonni (- kaytetty-maara (* sal 1.05)))
+                        0.0)
+                      tietokannan-suolasakko
+                      (suolasakko @oulun-alueurakan-2014-2019-id
+                                  lampotila
+                                  lampotila-pitka
+                                  sakko-per-tonni
+                                  sallittu-maara
+                                  kaytetty-maara)]
+                  (println "LASKETTU: " laskettu-suolasakko ", TIETOKANTA: " tietokannan-suolasakko)
+                  (=marginaalissa? laskettu-suolasakko tietokannan-suolasakko 0.01))))
