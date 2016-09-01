@@ -118,7 +118,7 @@
         otsikko (:otsikko ilmoitus)
         paikankuvaus (:paikankuvaus ilmoitus)
         tr-osoite (tierekisteri/tierekisteriosoite-tekstina
-                    ilmoitus
+                    (:sijainti ilmoitus)
                     {:teksti-tie? false})
         lisatietoja (if (:lisatieto ilmoitus)
                       (merkkijono/leikkaa 500 (:lisatieto ilmoitus))
