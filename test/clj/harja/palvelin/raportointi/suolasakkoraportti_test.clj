@@ -143,7 +143,6 @@
                                               :loppupvm     (c/to-date (t/local-date 2015 9 30))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (println "VASTAUS: " (pr-str vastaus) )
     (let [elementit (apurit/tarkista-raportti vastaus "Suolasakkoraportti")
           taulukko (apurit/taulukko-otsikolla
                     vastaus
