@@ -41,7 +41,11 @@
     (nayta-web-notifikaatio otsikko teksti)
     (pyyda-notifikaatiolupa)))
 
-(defn luo-notifikaatio [otsikko teksti]
+(defn luo-notifikaatio
+  "Näyttää notifikaation ja soittaa ääniefektin.
+   Notifikaatio näytetään vain jos käyttäjä on antanut tähän
+   luvan. Jos lupaa ei ole vielä pyydetty, pyydetään."
+  [otsikko teksti]
   (when kayta-web-notification-apia?
     (yrita-nayttaa-web-notifikaatio otsikko teksti))
   ;; Notification API tukee äänen soittamista suoraan,
