@@ -38,11 +38,11 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
 (def +aanimerkki-uusista-ilmoituksista-localstorage+ "ilmoitukset-aanimerkki-uusista-ilmoituksista")
 (def aanimerkki-uusista-ilmoituksista? (r/wrap (or
-                                                 (localstorage/lue-arvo
+                                                 (localstorage/lue-totuusarvo
                                                    +aanimerkki-uusista-ilmoituksista-localstorage+)
                                                  true)
                                                (fn [uusi]
-                                                 (localstorage/aseta-arvo
+                                                 (localstorage/tallenna-totuusarvo
                                                    +aanimerkki-uusista-ilmoituksista-localstorage+
                                                    uusi))))
 (tarkkaile! "[ILMO] Ääni? " aanimerkki-uusista-ilmoituksista?)
