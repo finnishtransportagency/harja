@@ -243,13 +243,6 @@
 (defn- ilmoitukset* [e! ilmoitukset]
   (komp/luo
    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
-
-   #_(komp/lippu tiedot/ilmoitusnakymassa?
-                 tiedot/karttataso-ilmoitukset
-                 istunto/ajastin-taukotilassa?)
-
-   ;(komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
-
    (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
      [:span
       [kartta/kartan-paikka]
