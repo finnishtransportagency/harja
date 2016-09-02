@@ -1,13 +1,13 @@
 (ns harja.ui.notifikaatiot
   (:require [harja.loki :refer [log logt tarkkaile!]]))
 
-(defn tarkista-notification-api-tuki []
+(defn notification-api-tuettu? []
   (some? (.-Notification js/window)))
 
 ;; Käytetään Notification Web APIa jos selain tukee sitä,
 ;; muuten fallbackinä pelkkä äänen soittaminen.
 (def kayta-web-notification-apia?
-  (tarkista-notification-api-tuki))
+  (notification-api-tuettu?))
 
 (defn notifikaatiolupa? []
   (= (.-permission js/Notification) "granted"))
@@ -28,8 +28,8 @@
     (.requestPermission js/Notification)))
 
 (defn- nayta-web-notifikaatio [otsikko teksti]
-  ;; TODO Implement me
-  )
+  (if (notifikaatiolupa?)
+    (js/Notification. otsikko #js {:body teksti})))
 
 (defn- yrita-nayttaa-web-notifikaatio
   "Näyttää web-notifikaation, jos käyttäjä on antanut siihen luvan.
