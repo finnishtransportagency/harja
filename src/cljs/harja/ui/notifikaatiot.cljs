@@ -1,6 +1,8 @@
 (ns harja.ui.notifikaatiot
   (:require [harja.loki :refer [log logt tarkkaile!]]))
 
+(def +notifikaatio-ikoni+ "images/harja_favicon.png")
+
 (defn notification-api-tuettu? []
   (some? (.-Notification js/window)))
 
@@ -29,7 +31,8 @@
 
 (defn- nayta-web-notifikaatio [otsikko teksti]
   (if (notifikaatiolupa?)
-    (js/Notification. otsikko #js {:body teksti})))
+    (js/Notification. otsikko #js {:body teksti
+                                   :icon +notifikaatio-ikoni+})))
 
 (defn- yrita-nayttaa-web-notifikaatio
   "Näyttää web-notifikaation, jos käyttäjä on antanut siihen luvan.
