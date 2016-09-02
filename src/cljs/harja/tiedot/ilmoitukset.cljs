@@ -39,7 +39,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
          :valittu-ilmoitus nil
          :uusi-kuittaus-auki? false
          :ilmoitushaku-id nil ;; ilmoitushaun timeout
-         :notifioi-uudet false ;; vain taustalla tehty haku notifioi uudet ilmoitukset (ja jos käyttäjä hyväksyy)
+         :notifioi-uudet? false ;; vain taustalla tehty haku notifioi uudet ilmoitukset (ja jos käyttäjä hyväksyy)
          :ilmoitukset nil ;; haetut ilmoitukset
          :valinnat {:tyypit +ilmoitustyypit+
                     :kuittaustyypit (into #{} kuittaustyyppi-filtterit)
@@ -114,7 +114,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
   ([app] (hae app 300))
   ([app timeout] (hae app timeout false))
-  ([{haku :ilmoitushaku :as app} timeout notifioi?]
+  ([{haku :ilmoitushaku :as app} timeout notifioi-uudet?]
     ;; Jos seuraava haku ollaan laukaisemassa, peru se
    (when haku
      (.clearTimeout js/window haku))
@@ -122,7 +122,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
        (assoc :ilmoitushaku-id (.setTimeout js/window
                                             (t/send-async! v/->HaeIlmoitukset)
                                             timeout))
-       (assoc :notifioi-uudet notifioi?))))
+       (assoc :notifioi-uudet? notifioi-uudet?))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -137,7 +137,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
       (update-in app [:valinnat] merge valinnat)))
 
   v/HaeIlmoitukset
-  (process-event [_ {valinnat :valinnat notifioi-uudet :notifioi-uudet :as app}]
+  (process-event [_ {valinnat :valinnat notifioi-uudet? :notifioi-uudet? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (log "[ILMO] Haetaan uudet ilmoitukset")
       (go
@@ -149,7 +149,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
                                                  #(if (empty? %) +ilmoitustyypit+ %))
                                          (update :kuittaustyypit
                                                  #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))
-           :notifioi-uudet notifioi-uudet})))
+           :notifioi-uudet? notifioi-uudet?})))
     app)
 
   v/IlmoitusHaku
@@ -157,13 +157,15 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
     (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
-      (when (:notifioi-uudet tulokset)
+      (when (:notifioi-uudet? tulokset)
         (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset))
       (hae (assoc app
              ;; Uudet ilmoitukset
-             :ilmoitukset (-> (:ilmoitukset tulokset)
-                              (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
-                              (jarjesta-ilmoitukset))
+             :ilmoitukset (cond-> (:ilmoitukset tulokset)
+                                  (:notifioi-uudet? tulokset)
+                                  (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
+                                  true
+                                  (jarjesta-ilmoitukset))
 
              ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
              :valittu-ilmoitus (if (some #(= (:ilmoitusid valittu) %)
