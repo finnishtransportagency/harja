@@ -10,7 +10,8 @@
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]
             [harja.pvm :as pvm]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.string :as str]))
 
 
 (defn hae-lampotilat-ilmatieteenlaitokselta [db user url vuosi]
@@ -18,16 +19,25 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user) ;; vaatii KIRJOITUS oikeuden
   (assert (and url vuosi) "Annettava url ja vuosi kun haetaan ilmatieteenlaitokselta lämpötiloja.")
   ;; Ilmatieteenlaitos käyttää :urakka-id -kentässään Harjan :alueurakkanro -kenttää, siksi muunnoksia alla
-  (let [hoidon-urakoiden-lampotilat (into {}
-                                          (map (juxt :urakka-id #(dissoc % :urakka-id)))
-                                          (ilmatieteenlaitos/hae-talvikausi url vuosi))
-        hoidon-urakka-ja-alueurakkanro-avaimet (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)]
+  (let [hae-urakoiden-lampotilat (fn [url]
+                                   (into {}
+                                         (map (juxt :urakka-id #(dissoc % :urakka-id)))
+                                         (ilmatieteenlaitos/hae-talvikausi url vuosi)))
+        hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url)
+        hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
+                                               (str/replace url "tieindeksi2" "tieindeksi"))
+        hoidon-urakka-ja-alueurakkanro-avaimet
+        (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)]
     (into {}
-
           (comp
-            (map (fn [urakka]
-                   (merge urakka (get hoidon-urakoiden-lampotilat (:alueurakkanro urakka)))))
-            (map (juxt :id identity)))
+           (map (fn [urakka]
+                  (merge urakka
+                         (get hoidon-urakoiden-lampotilat-1981-2010
+                              (:alueurakkanro urakka))
+                         {:pitkakeskilampotila_vanha (:pitkakeskilampotila
+                                                      (get hoidon-urakoiden-lampotilat-1971-2000
+                                                           (:alueurakkanro urakka)))})))
+           (map (juxt :id identity)))
           hoidon-urakka-ja-alueurakkanro-avaimet)))
 
 (defn hae-teiden-hoitourakoiden-lampotilat [db user hoitokausi]
@@ -46,7 +56,9 @@
     (doseq [lt lampotilat]
       (let [id (:lampotilaid lt)
             parametrit [(:urakka lt) (:alkupvm lt) (:loppupvm lt)
-                        (:keskilampotila lt) (:pitkakeskilampotila lt)]]
+                        (:keskilampotila lt)
+                        (:pitkakeskilampotila lt)
+                        (:pitkakeskilampotila_vanha lt)]]
         (if id
           (apply q/paivita-lampotila<! db (concat parametrit [id]))
           (apply q/uusi-lampotila<! db parametrit))))

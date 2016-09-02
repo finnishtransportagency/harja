@@ -43,7 +43,7 @@ popd
 
 msg "Deploy valmis palvelimelle $HARJA_ENV. Laitoin Harja Projekti HipChat-kanavalle tiedon asiasta."
 
-HIPCHAT_TOKEN=`cat ../.harja/.hipchat-token`
+HIPCHAT_TOKEN=`cat ../.harja/hipchat-token`
 # HipChat notifikaatio
 CONFIG="from=deploy2.sh&color=purple"
 MESSAGE="$USER deployasi juuri uuden Harja-version haarasta $BRANCH palvelimelle <a href=\"https://$HARJA_ENV\">$HARJA_ENV</a>"
