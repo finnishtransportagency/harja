@@ -6,7 +6,8 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.testi :as testi]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -38,10 +39,14 @@
                                   {:urakka-id @kajaanin-alueurakan-2014-2019-id
                                    :alkupvm   (pvm/->pvm "1.8.2015")
                                    :loppupvm  (pvm/->pvm "31.8.2015")})
-          poista-tpi (fn [tiedot]
-                       (map #(dissoc % :tpi) tiedot))
-          haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
-          haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
+          poista-tpi-ja-suola (fn [tiedot]
+                                (map #(dissoc %
+                                              :tpi
+                                              :suolasakot_laskutetaan
+                                              :suolasakot_laskutetaan_ind_korotus
+                                              :suolasakot_laskutetaan_ind_korotettuna) tiedot))
+          haetut-tiedot-oulu-ilman-tpita (poista-tpi-ja-suola haetut-tiedot-oulu)
+          haetut-tiedot-kajaani-ilman-tpita (poista-tpi-ja-suola haetut-tiedot-kajaani)
 
           haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))
           haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
@@ -68,12 +73,12 @@
                                :erilliskustannukset_laskutettu                  1000.0M
                                :erilliskustannukset_laskutettu_ind_korotettuna  990.42451324609000255000M
                                :erilliskustannukset_laskutettu_ind_korotus      -9.57548675390999745000M
-                               :kaikki_laskutetaan                              4309.8340248962656517440000000M
-                               :kaikki_laskutetaan_ind_korotus                  89.8340248962656517440000000M
+                               :kaikki_laskutetaan                              6597.111
+                               :kaikki_laskutetaan_ind_korotus                  97.111
                                :kaikki_laskutettu                               39229.07756144270691680200M
                                :kaikki_laskutettu_ind_korotus                   129.07756144270691680200M
-                               :kaikki_paitsi_kht_laskutetaan                   809.8340248962656517440000000M
-                               :kaikki_paitsi_kht_laskutetaan_ind_korotus       30.6255984679221517440000000M
+                               :kaikki_paitsi_kht_laskutetaan                   3097.111
+                               :kaikki_paitsi_kht_laskutetaan_ind_korotus       37.90
                                :kaikki_paitsi_kht_laskutettu                    4229.07756144270691680200M
                                :kaikki_paitsi_kht_laskutettu_ind_korotus        12.89498882859880851200M
                                :kht_laskutetaan                                 3500.0M
@@ -97,13 +102,6 @@
                                :sakot_laskutettu                                100.0M
                                :sakot_laskutettu_ind_korotettuna                99.48930737312480054200M
                                :sakot_laskutettu_ind_korotus                    -0.51069262687519945800M
-                               :suolasakko_kaytossa                             true
-                               :suolasakot_laskutetaan                          -2280.00000M
-                               :suolasakot_laskutetaan_ind_korotettuna          -2287.2773699329715941860000000M
-                               :suolasakot_laskutetaan_ind_korotus              -7.2773699329715941860000000M
-                               :suolasakot_laskutettu                           0.0M
-                               :suolasakot_laskutettu_ind_korotettuna           0.0M
-                               :suolasakot_laskutettu_ind_korotus               0.0M
                                :tpi                                             4
                                :tuotekoodi                                      "23100"
                                :yht_laskutetaan                                 0.0M
@@ -160,13 +158,6 @@
                                       :sakot_laskutettu                                1200.0M
                                       :sakot_laskutettu_ind_korotettuna                1203.6706032556655000M
                                       :sakot_laskutettu_ind_korotus                    3.6706032556655000M
-                                      :suolasakko_kaytossa                             true
-                                      :suolasakot_laskutetaan                          0.0M
-                                      :suolasakot_laskutetaan_ind_korotettuna          0.0M
-                                      :suolasakot_laskutetaan_ind_korotus              0.0M
-                                      :suolasakot_laskutettu                           0.0M
-                                      :suolasakot_laskutettu_ind_korotettuna           0.0M
-                                      :suolasakot_laskutettu_ind_korotus               0.0M
                                       :tpi                                             5
                                       :tuotekoodi                                      "23110"
                                       :yht_laskutetaan                                 3000.0M
@@ -223,13 +214,6 @@
                              :sakot_laskutettu                                0.0M
                              :sakot_laskutettu_ind_korotettuna                0.0M
                              :sakot_laskutettu_ind_korotus                    0.0M
-                             :suolasakko_kaytossa                             true
-                             :suolasakot_laskutetaan                          0.0M
-                             :suolasakot_laskutetaan_ind_korotettuna          0.0M
-                             :suolasakot_laskutetaan_ind_korotus              0.0M
-                             :suolasakot_laskutettu                           0.0M
-                             :suolasakot_laskutettu_ind_korotettuna           0.0M
-                             :suolasakot_laskutettu_ind_korotus               0.0M
                              :tpi                                             6
                              :tuotekoodi                                      "23120"
                              :yht_laskutetaan                                 0.0M
@@ -241,11 +225,14 @@
 
           ]
 
-
-      (is (= haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita))
-      (is (= odotetut-talvihoito haetut-tiedot-oulu-talvihoito) "laskutusyhteenvedon-tiedot talvihoito")
-      (is (= odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto) "laskutusyhteenvedon-tiedot liikenneympäristön hoito")
-      (is (= odotetut-soratiet haetut-tiedot-oulu-soratiet) "laskutusyhteenvedon-tiedot sorateiden hoito"))))
+      (is (= (count haetut-tiedot-oulu-ilman-tpita)
+             (count haetut-tiedot-kajaani-ilman-tpita)))
+      (mapv (fn [eka toka]
+              (testi/tarkista-map-arvot eka toka))
+            haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita)
+      (testi/tarkista-map-arvot odotetut-talvihoito haetut-tiedot-oulu-talvihoito)
+      (testi/tarkista-map-arvot odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto)
+      (testi/tarkista-map-arvot odotetut-soratiet haetut-tiedot-oulu-soratiet))))
 
 
 ;; HAR-1959: Laskutusyhteenveto ottaa talvisuolasakon väärään hoitokauteen loka-joulukuussa
