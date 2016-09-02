@@ -65,20 +65,13 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
     (apply dissoc suodattimet merkitsevat-suodattimet)))
 
 ;; FIXME Jos tulee kuittaus, ei haluta nähdä uutta ilmoitusta
-(defn- nayta-notifikaatio-uusista-ilmoituksista [suodattimet-nyt
-                                                 suodattimet-kun-haku-tehtiin
-                                                 uudet-ilmoitukset
+(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset
                                                  vanhat-ilmoitukset]
-  (let [merkitsevat-uudet-suodattimet (merkitsevat-suodattimet suodattimet-nyt)
-        merkitsevat-vanhat-suodattimet (merkitsevat-suodattimet suodattimet-kun-haku-tehtiin)
-        suodattimet-muuttuneet? (not= merkitsevat-vanhat-suodattimet merkitsevat-uudet-suodattimet)
-        uudet-ilmoitusidt
+  (let [uudet-ilmoitusidt
         (set/difference (into #{} (map :id uudet-ilmoitukset))
                         (into #{} (map :id vanhat-ilmoitukset)))
         uusia-ilmoituksia-monta? (> (count uudet-ilmoitusidt) 1)]
-    (when (and
-            suodattimet-muuttuneet?
-            (not (empty? uudet-ilmoitusidt)))
+    (when (not (empty? uudet-ilmoitusidt))
       (log "[ILMO] Uudet notifioitavat ilmoitukset: " (pr-str uudet-ilmoitusidt))
       (notifikaatiot/luo-notifikaatio
         (if uusia-ilmoituksia-monta? "Uusia ilmoituksia Harjassa" "Uusi ilmoitus Harjassa")
@@ -127,10 +120,8 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
     (do
-      ;; TODO Vain jos filtterit eivät muuttuneet tai on muuten tiedossa että haku tehtiin taustalla
+      ;; TODO Vain jos haku tehtiin taustalla
       (nayta-notifikaatio-uusista-ilmoituksista
-        (:valinnat app)
-        ;; TODO Mistä vanhat suodattimet tähän
         tulokset
         (:ilmoitukset app))
       (hae (assoc app
