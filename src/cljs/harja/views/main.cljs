@@ -172,7 +172,11 @@
    ;; se asemoidaan mountin jälkeen
    ^{:key "kartta-container"}
    [:div#kartta-container {:style {:position "absolute"
-                                   :top (- korkeus)}}
+                                   :top (- korkeus)
+                                   ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
+                                   :overflow (if @nav/kartta-nakyvissa?
+                                               "hidden"
+                                               "visible")}}
     [kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []

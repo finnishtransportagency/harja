@@ -16,13 +16,7 @@
         (map konv/alaviiva->rakenne)
         (q/hae-urakan-valitavoitteet db urakka-id)))
 
-(defn merkitse-valmiiksi! [db user {:keys [urakka-id valitavoite-id valmis-pvm kommentti] :as tiedot}]
-  (log/info "merkitse valmiiksi: " tiedot)
-  (oikeudet/vaadi-oikeus "valmis" oikeudet/urakat-valitavoitteet user urakka-id)
-  (jdbc/with-db-transaction [c db]
-    (and (= 1 (q/merkitse-valmiiksi! db (konv/sql-date valmis-pvm) kommentti
-                                     (:id user) urakka-id valitavoite-id))
-         (hae-urakan-valitavoitteet db user urakka-id))))
+
 
 (defn- poista-poistetut-urakan-valitavoitteet [db user valitavoitteet urakka-id]
   (doseq [poistettava (filter :poistettu valitavoitteet)]
@@ -39,10 +33,21 @@
                                       :valtakunnallinen_valitavoite nil
                                       :luoja (:id user)})))
 
-(defn- paivita-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [id takaraja nimi]} (filter #(and (> (:id %) 0)
-                                                   (not (:poistettu %))) valitavoitteet)]
-    (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)))
+(defn- merkitse-valitavoite-valmiiksi! [db user
+                                       {:keys [urakka-id id valmispvm valmis-kommentti] :as tiedot}]
+  (q/merkitse-valmiiksi! db
+                         (when valmispvm
+                              (konv/sql-date valmispvm))
+                         (when valmispvm
+                           valmis-kommentti)
+                         (:id user) urakka-id id))
+
+(defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
+  (doseq [{:keys [id takaraja nimi] :as valitavoite} (filter #(and (> (:id %) 0)
+                                                                   (not (:poistettu %))) valitavoitteet)]
+    (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
+    (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
+      (merkitse-valitavoite-valmiiksi! db user valitavoite))))
 
 (defn tallenna-urakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
@@ -50,5 +55,5 @@
   (jdbc/with-db-transaction [db db]
     (poista-poistetut-urakan-valitavoitteet db user valitavoitteet urakka-id)
     (luo-uudet-urakan-valitavoitteet db user valitavoitteet urakka-id)
-    (paivita-urakan-valitavoitteet db user valitavoitteet urakka-id)
+    (paivita-urakan-valitavoitteet! db user valitavoitteet urakka-id)
     (hae-urakan-valitavoitteet db user urakka-id)))

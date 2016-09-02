@@ -214,54 +214,54 @@
   (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
 
 (def paallystysilmoitus-osoitteet
-   [{(s/optional-key :nimi) (s/maybe s/Str)
-     (s/optional-key :tunnus) (s/maybe s/Str)
-     :tr-numero s/Int
-     (s/optional-key :tr-ajorata) (s/maybe +ajorata+)
-     (s/optional-key :tr-kaista) (s/maybe +kaista+)
-     :tr-alkuosa s/Int
-     :tr-alkuetaisyys s/Int
-     :tr-loppuosa s/Int
-     :tr-loppuetaisyys s/Int
-     (s/optional-key :toimenpide) (s/maybe s/Str)
-     (s/optional-key :kohdeosa-id) (s/maybe s/Int)
+  [{(s/optional-key :nimi) (s/maybe s/Str)
+    (s/optional-key :tunnus) (s/maybe s/Str)
+    :tr-numero s/Int
+    (s/optional-key :tr-ajorata) (s/maybe +ajorata+)
+    (s/optional-key :tr-kaista) (s/maybe +kaista+)
+    :tr-alkuosa s/Int
+    :tr-alkuetaisyys s/Int
+    :tr-loppuosa s/Int
+    :tr-loppuetaisyys s/Int
+    (s/optional-key :toimenpide) (s/maybe s/Str)
+    (s/optional-key :kohdeosa-id) (s/maybe s/Int)
 
-     ; Osoitteelle tehdyt toimenpiteet
-     (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
-     (s/optional-key :raekoko) (s/maybe s/Int)
-     (s/optional-key :massamenekki) (s/maybe s/Int)                ;; kg/m2
-     (s/optional-key :rc%) (s/maybe s/Int)
-     (s/optional-key :tyomenetelma) (s/maybe +tyomenetelma+) ;; koodisto "työmenetelmä"
-     (s/optional-key :leveys) (s/maybe s/Num)               ;; metriä, esim. 4,2
-     (s/optional-key :kokonaismassamaara) (s/maybe s/Num)           ;; tonnia
-     (s/optional-key :pinta-ala) (s/maybe s/Num)            ;; m2
-     (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
-     (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
+    ; Osoitteelle tehdyt toimenpiteet
+    (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
+    (s/optional-key :raekoko) (s/maybe s/Int)
+    (s/optional-key :massamenekki) (s/maybe s/Int) ;; kg/m2
+    (s/optional-key :rc%) (s/maybe s/Int)
+    (s/optional-key :tyomenetelma) (s/maybe +tyomenetelma+)
+    (s/optional-key :leveys) (s/maybe s/Num) ;; metriä
+    (s/optional-key :kokonaismassamaara) (s/maybe s/Num) ;; tonnia
+    (s/optional-key :pinta-ala) (s/maybe s/Num) ;; m2
+    (s/optional-key :kuulamylly) (s/maybe +kuulamylly+)
+    (s/optional-key :edellinen-paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
 
-     ;; N kpl kiviainesesiintymiä (ei liity osoitteiden järjestykseen)
-     (s/optional-key :esiintyma) (s/maybe s/Str)
-     (s/optional-key :km-arvo) (s/maybe s/Str)
-     (s/optional-key :muotoarvo) (s/maybe s/Str)
-     (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
-     (s/optional-key :pitoisuus) (s/maybe s/Num)
-     (s/optional-key :lisaaineet) (s/maybe s/Str)
-     (s/optional-key :poistettu) s/Bool}])
+    ;; N kpl kiviainesesiintymiä
+    (s/optional-key :esiintyma) (s/maybe s/Str)
+    (s/optional-key :km-arvo) (s/maybe s/Str)
+    (s/optional-key :muotoarvo) (s/maybe s/Str)
+    (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
+    (s/optional-key :pitoisuus) (s/maybe s/Num)
+    (s/optional-key :lisaaineet) (s/maybe s/Str)
+    (s/optional-key :poistettu) s/Bool}])
 
 (def paallystysilmoitus-alustatoimet
-  [{(s/optional-key :tr-alkuosa) s/Int
-    (s/optional-key :tr-alkuetaisyys) s/Int
-    (s/optional-key :tr-loppuosa) s/Int
-    (s/optional-key :tr-loppuetaisyys) s/Int
-    (s/optional-key :kasittelymenetelma) (s/maybe +alustamenetelma+) ;; +alustamenetelma+ skeemasta
-    (s/optional-key :paksuus) (s/maybe s/Num)              ;; cm
-    (s/optional-key :verkkotyyppi) (s/maybe +verkkotyyppi+) ;; +verkkotyyppi+ skeemasta
-    (s/optional-key :verkon-tarkoitus) (s/maybe +verkon-tarkoitus+)
-    (s/optional-key :verkon-sijainti) (s/maybe +verkon-sijainti+)
-    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+) ;; +tekninen-toimenpide+ skeemasta
+  [{:tr-alkuosa s/Int
+    :tr-alkuetaisyys s/Int
+    :tr-loppuosa s/Int
+    :tr-loppuetaisyys s/Int
+    :kasittelymenetelma +alustamenetelma+
+    :paksuus s/Num ;; cm
+    :verkkotyyppi +verkkotyyppi+
+    :verkon-tarkoitus +verkon-tarkoitus+
+    :verkon-sijainti +verkon-sijainti+
+    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)
     (s/optional-key :poistettu) s/Bool}])
 
 (def paallystysilmoitus-tyot
-  [{:tyyppi +paallystystyon-tyyppi+ ; +paallystystyon-tyyppi+ skeemasta
+  [{:tyyppi +paallystystyon-tyyppi+
     :tyo s/Str
     :tilattu-maara s/Num
     :toteutunut-maara s/Num

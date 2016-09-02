@@ -63,7 +63,8 @@
             (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
                                              (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
                                              (:toimenpideinstanssi tyo)
-                                             sopimusnumero (:vuosi tyo) (:kuukausi tyo))
+                                             sopimusnumero (:vuosi tyo) (:kuukausi tyo)
+                                             (:id user))
             ;;update
             (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
                                               (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)

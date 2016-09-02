@@ -1,4 +1,3 @@
-
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
@@ -118,4 +117,8 @@ SELECT paivita_pohjavesialueet();
 
 -- Tieverkkoon tie 20
 \i testidata/tierekisteri.sql
+
+
+SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
+
 -- ****
