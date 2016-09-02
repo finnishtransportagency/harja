@@ -70,14 +70,42 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
   (let [uudet-ilmoitusidt
         (set/difference (into #{} (map :id uudet-ilmoitukset))
                         (into #{} (map :id vanhat-ilmoitukset)))
-        uusia-ilmoituksia-monta? (> (count uudet-ilmoitusidt) 1)]
+        uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) uudet-ilmoitukset)
+        uusien-ilmoitusten-maara (count uudet-ilmoitusidt)
+        uusien-toimenpidepyyntojen-maara (count
+                                           (filter #(= (:ilmoitustyyppi %) :toimenpidepyynto)
+                                                   uudet-ilmoitukset))
+        uusien-tiedoituksien-maara (count
+                                     (filter #(= (:ilmoitustyyppi %) :tiedoitus)
+                                             uudet-ilmoitukset))
+        uusien-kyselyjen-maara (count
+                                 (filter #(= (:ilmoitustyyppi %) :kysely)
+                                         uudet-ilmoitukset))
+        notifikaatio-body
+        (fn [uusien-toimenpidepyyntojen-maara
+             uusien-tiedoituksien-maara
+             uusien-kyselyjen-maara]
+          (str (when (> uusien-toimenpidepyyntojen-maara 0)
+                 (if (= uusien-toimenpidepyyntojen-maara 1)
+                   "1 uusi toimenpidepyyntö\n"
+                   (str uusien-toimenpidepyyntojen-maara " uutta toimenpidepyyntöä\n")))
+               (when (> uusien-tiedoituksien-maara 0)
+                 (if (= uusien-tiedoituksien-maara 1)
+                   "1 uusi tiedoitus\n"
+                   (str uusien-tiedoituksien-maara " uutta tiedoitusta\n")))
+               (when (> uusien-kyselyjen-maara 0)
+                 (if (= uusien-kyselyjen-maara 1)
+                   "1 uusi kysely\n"
+                   (str uusien-kyselyjen-maara " uutta kyselyä\n")))))]
     (when (not (empty? uudet-ilmoitusidt))
       (log "[ILMO] Uudet notifioitavat ilmoitukset: " (pr-str uudet-ilmoitusidt))
       (notifikaatiot/luo-notifikaatio
-        (if uusia-ilmoituksia-monta? "Uusia ilmoituksia Harjassa" "Uusi ilmoitus Harjassa")
-        (if uusia-ilmoituksia-monta?
-          (str (count uudet-ilmoitusidt) " uutta ilmoitusta.")
-          "1 uusi ilmoitus.")))))
+        (if (= uusien-ilmoitusten-maara 1)
+          "Uusi ilmoitus Harjassa"
+          (str uusien-ilmoitusten-maara " uutta ilmoitusta Harjassa"))
+        (notifikaatio-body uusien-toimenpidepyyntojen-maara
+                           uusien-tiedoituksien-maara
+                           uusien-kyselyjen-maara)))))
 
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."

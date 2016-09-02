@@ -20,8 +20,8 @@
     (.play aani)))
 
 (defn pyyda-notifikaatiolupa
-  "Pyytää käyttäjältä lupaa näyttää web-notifikaatioita, jos lupaa ei ole annettu eikä pyyntöä
-   ole jo kertaalleen esitetty."
+  "Pyytää käyttäjältä lupaa näyttää web-notifikaatioita,
+  jos lupaa ei ole annettu eikä pyyntöä ole jo kertaalleen esitetty."
   []
   (when (and (not= (.-permission js/Notification) "granted")
              (not @notifikaatiolupaa-pyydetty?))
