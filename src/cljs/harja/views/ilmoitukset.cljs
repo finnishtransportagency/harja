@@ -30,7 +30,9 @@
             [harja.views.ilmoituksen-tiedot :as it]
             [harja.ui.ikonit :as ikonit]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.ui.valinnat :as valinnat])
+            [harja.ui.valinnat :as valinnat]
+            [tuck.core :refer [tuck send-value! send-async!]]
+            [harja.tiedot.ilmoitukset.viestit :as v])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
@@ -54,13 +56,12 @@
 (defn virkaapupyynnot-korostettu []
   [:span.selite-virkaapu [ikonit/livicon-warning-sign] "Virka-apupyynnöt korostettu"])
 
-(defn ilmoituksen-tiedot []
-  (let [ilmoitus @tiedot/valittu-ilmoitus]
-    [:div
-     [:span
-      [napit/takaisin "Listaa ilmoitukset" #(tiedot/sulje-ilmoitus!)]
-      (pollauksen-merkki)
-      [it/ilmoitus ilmoitus]]]))
+(defn ilmoituksen-tiedot [e! ilmoitus]
+  [:div
+   [:span
+    [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta))]
+    (pollauksen-merkki)
+    [it/ilmoitus e! ilmoitus]]])
 
 (defn kuittauslista [{kuittaukset :kuittaukset}]
   [:div.kuittauslista
@@ -77,17 +78,22 @@
         [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
     kuittaukset)])
 
-(defn ilmoitusten-hakuehdot [{:keys [aikavali] :as valinnat-nyt} muokkaa!]
+(defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
    {:luokka   :horizontal
-    :muokkaa! muokkaa!}
+    :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [(when @nav/valittu-urakka
+   [(when (and urakka valitun-urakan-hoitokaudet)
       {:nimi          :hoitokausi
        :palstoja      1
        :otsikko       "Hoitokausi"
        :tyyppi        :valinta
-       :valinnat      @u/valitun-urakan-hoitokaudet
+       :aseta (fn [rivi hk]
+                ;; Jos hoitokautta vaihdetaan, vaihdetaan myös aikaväli samaan
+                (assoc rivi
+                       :hoitokausi hk
+                       :aikavali hk))
+       :valinnat      (:valitun-urakan-hoitokaudet valinnat-nyt)
        :valinta-nayta fmt/pvm-vali-opt})
 
     {:nimi :aikavali
@@ -96,8 +102,8 @@
      :komponentti (fn [{muokkaa! :muokkaa-lomaketta}]
                     [valinnat/aikavali
                      (r/wrap aikavali
-                             #(swap! tiedot/valinnat
-                                     assoc :aikavali %))
+                             #(muokkaa! (merge valinnat-nyt
+                                               {:aikavali %})))
                      {:lomake? true}])}
 
 
@@ -162,102 +168,96 @@
    valinnat-nyt])
 
 (defn ilmoitusten-paanakyma
-  []
-  (let [kuittaa-monta (atom nil)]
-    (tiedot/hae-ilmoitukset)
-    (komp/luo
-     (fn []
-       (let [valinnat-nyt @tiedot/valinnat
-             {valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} @kuittaa-monta
-             valitse-ilmoitus! (when kuittaa-monta-nyt
-                                 #(swap! kuittaa-monta update :ilmoitukset
-                                         (if (valitut-ilmoitukset %)
-                                           disj
-                                           conj) %))]
-         [:span.ilmoitukset
+  [e! ilmoitukset]
 
-          [ilmoitusten-hakuehdot valinnat-nyt
-           (fn [uusi]
-             (swap! tiedot/valinnat
-                    (fn [vanha]
-                      (if (not= (:hoitokausi vanha) (:hoitokausi uusi))
-                        (assoc uusi
-                               :aikavali (:hoitokausi uusi))
-                        uusi))))]
-          [:div
-           [pollauksen-merkki]
-           [yhdeydenottopyynnot-lihavoitu]
-           [virkaapupyynnot-korostettu]
+  ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
+  (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
-           (when-not kuittaa-monta-nyt
-             [napit/yleinen "Kuittaa monta ilmoitusta" #(reset! kuittaa-monta {:ilmoitukset #{}
-                                                                               :tyyppi nil})
-              {:luokka "pull-right kuittaa-monta"}])
+  (komp/luo
+   ;; Kun jokin navigaation valinnoista muuttuu, yhdistetään ne valintoihin
+   (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                   (e! (v/->YhdistaValinnat uusi))))
+   (fn [e! {valinnat-nyt :valinnat
+            kuittaa-monta :kuittaa-monta
+            haetut-ilmoitukset :ilmoitukset :as ilmoitukset}]
+     (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
+           valitse-ilmoitus! (when kuittaa-monta-nyt
+                               #(e! (v/->ValitseKuitattavaIlmoitus %)))]
+       [:span.ilmoitukset
 
-           (when kuittaa-monta-nyt
-             [kuittaukset/kuittaa-monta-lomake @kuittaa-monta
-              #(reset! kuittaa-monta %)
-              #(do (reset! kuittaa-monta %)
-                   (tiedot/hae-ilmoitukset))])
+        [ilmoitusten-hakuehdot e! valinnat-nyt]
+        [:div
+         [pollauksen-merkki]
+         [yhdeydenottopyynnot-lihavoitu]
+         [virkaapupyynnot-korostettu]
 
-           [grid
-            {:tyhja             (if @tiedot/haetut-ilmoitukset
-                                  "Ei löytyneitä tietoja"
-                                  [ajax-loader "Haetaan ilmoutuksia"])
-             :rivi-klikattu     (or valitse-ilmoitus!
-                                  #(tiedot/avaa-ilmoitus! %))
-             :piilota-toiminnot true}
+         (when-not kuittaa-monta-nyt
+           [napit/yleinen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
+            {:luokka "pull-right kuittaa-monta"}])
 
-            [(when kuittaa-monta-nyt
-               {:otsikko " "
-                :tasaa :keskita
-                :tyyppi :komponentti
-                :komponentti (fn [rivi]
-                               [:input {:type "checkbox"
-                                        :checked (valitut-ilmoitukset rivi)}])
-                :leveys 1})
-             {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
-              :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-             {:otsikko "Ilmoitettu" :nimi :ilmoitettu
-              :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
-             {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-              :hae #(ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
-              :leveys 2}
-             {:otsikko "Sijainti" :nimi :tierekisteri
-              :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
-              :leveys 7}
+         (when kuittaa-monta-nyt
+           [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
 
-             {:otsikko "Selitteet" :nimi :selitteet
+         [grid
+          {:tyhja (if haetut-ilmoitukset
+                    "Ei löytyneitä tietoja"
+                    [ajax-loader "Haetaan ilmoutuksia"])
+           :rivi-klikattu (or valitse-ilmoitus!
+                              #(e! (v/->ValitseIlmoitus %)))
+           :piilota-toiminnot true}
+
+          [(when kuittaa-monta-nyt
+             {:otsikko " "
+              :tasaa :keskita
               :tyyppi :komponentti
-              :komponentti it/selitelista
-              :leveys 6}
-             {:otsikko "Kuittaukset" :nimi :kuittaukset
-              :tyyppi :komponentti
-              :komponentti kuittauslista
-              :leveys 6}
+              :komponentti (fn [rivi]
+                             [:input {:type "checkbox"
+                                      :checked (valitut-ilmoitukset rivi)}])
+              :leveys 1})
+           {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
+            :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+           {:otsikko "Ilmoitettu" :nimi :ilmoitettu
+            :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
+           {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
+            :hae #(ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
+            :leveys 2}
+           {:otsikko "Sijainti" :nimi :tierekisteri
+            :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
+            :leveys 7}
 
-             {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(kuittaustyypin-selite (:tila %))}]
-            (mapv #(if (:yhteydenottopyynto %)
-                     (assoc % :lihavoi true)
-                     %)
-                  @tiedot/haetut-ilmoitukset)]]])))))
+           {:otsikko "Selitteet" :nimi :selitteet
+            :tyyppi :komponentti
+            :komponentti it/selitelista
+            :leveys 6}
+           {:otsikko "Kuittaukset" :nimi :kuittaukset
+            :tyyppi :komponentti
+            :komponentti kuittauslista
+            :leveys 6}
+
+           {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(kuittaustyypin-selite (:tila %))}]
+          (mapv #(if (:yhteydenottopyynto %)
+                   (assoc % :lihavoi true)
+                   %)
+                haetut-ilmoitukset)]]]))))
+
+(defn- ilmoitukset* [e! ilmoitukset]
+  (komp/luo
+   (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
+   (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
+     [:span
+      [kartta/kartan-paikka]
+      (if valittu-ilmoitus
+        [ilmoituksen-tiedot e! valittu-ilmoitus]
+        [ilmoitusten-paanakyma e! ilmoitukset])])))
 
 (defn ilmoitukset []
   (komp/luo
-    (komp/sisaan-ulos #(do
+   (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
-                      #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-    (komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
-    (komp/kuuntelija :ilmoitus-klikattu #(tiedot/avaa-ilmoitus! %2))
-    (komp/lippu tiedot/ilmoitusnakymassa?
-                tiedot/karttataso-ilmoitukset
-                istunto/ajastin-taukotilassa?)
-    (komp/ulos (paivita-periodisesti tiedot/haetut-ilmoitukset 60000)) ;1min
+                     #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+   (komp/lippu tiedot/karttataso-ilmoitukset)
+    ;;(komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
 
     (fn []
-      [:span
-       [kartta/kartan-paikka]
-       (if @tiedot/valittu-ilmoitus
-         [ilmoituksen-tiedot]
-         [ilmoitusten-paanakyma])])))
+      [tuck tiedot/ilmoitukset ilmoitukset*])))
