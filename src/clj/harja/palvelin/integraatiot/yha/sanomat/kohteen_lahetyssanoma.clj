@@ -80,7 +80,8 @@
    [:verkkotyyppi verkkotyyppi]
    [:verkon-tarkoitus verkon-tarkoitus]
    [:verkon-sijainti verkon-sijainti]
-   [:tekninen-toimenpide tekninen-toimenpide]])
+   (when tekninen-toimenpide
+     [:tekninen-toimenpide tekninen-toimenpide])])
 
 (defn tee-kohde [{:keys [yhaid id yllapitokohdetyyppi yllapitokohdetyotyyppi yhatunnus tr-numero karttapvm] :as kohde}
                  alikohteet
