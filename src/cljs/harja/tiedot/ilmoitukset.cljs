@@ -65,12 +65,12 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
     (apply dissoc suodattimet merkitsevat-suodattimet)))
 
 ;; FIXME Jos tulee kuittaus, ei haluta nähdä uutta ilmoitusta
-(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-suodattimet
-                                                 vanhat-suodattimet
+(defn- nayta-notifikaatio-uusista-ilmoituksista [suodattimet-nyt
+                                                 suodattimet-kun-haku-tehtiin
                                                  uudet-ilmoitukset
                                                  vanhat-ilmoitukset]
-  (let [merkitsevat-uudet-suodattimet (merkitsevat-suodattimet uudet-suodattimet)
-        merkitsevat-vanhat-suodattimet (merkitsevat-suodattimet vanhat-suodattimet)
+  (let [merkitsevat-uudet-suodattimet (merkitsevat-suodattimet suodattimet-nyt)
+        merkitsevat-vanhat-suodattimet (merkitsevat-suodattimet suodattimet-kun-haku-tehtiin)
         suodattimet-muuttuneet? (not= merkitsevat-vanhat-suodattimet merkitsevat-uudet-suodattimet)
         uudet-ilmoitusidt
         (set/difference (into #{} (map :id uudet-ilmoitukset))
@@ -129,6 +129,8 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
     (do
       ;; TODO Vain jos filtterit eivät muuttuneet tai on muuten tiedossa että haku tehtiin taustalla
       (nayta-notifikaatio-uusista-ilmoituksista
+        (:valinnat app)
+        ;; TODO Mistä vanhat suodattimet tähän
         tulokset
         (:ilmoitukset app))
       (hae (assoc app
