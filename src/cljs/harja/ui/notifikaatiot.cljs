@@ -42,12 +42,20 @@
     (pyyda-notifikaatiolupa)))
 
 (defn luo-notifikaatio
-  "Näyttää notifikaation ja soittaa ääniefektin.
+  "Näyttää web-notifikaation ja soittaa ääniefektin.
    Notifikaatio näytetään vain jos käyttäjä on antanut tähän
-   luvan. Jos lupaa ei ole vielä pyydetty, pyydetään."
-  [otsikko teksti]
-  (when kayta-web-notification-apia?
-    (yrita-nayttaa-web-notifikaatio otsikko teksti))
-  ;; Notification API tukee äänen soittamista suoraan,
-  ;; mutta ATM tämä on huonosti tuettu selaimissa.
-  (soita-aani))
+   luvan. Jos lupaa ei ole vielä pyydetty, pyydetään.
+
+   Optiot:
+   aani?      Soitetaanko äänimerkki (true/false), default true.
+              Jos false ja web-notifikaatioita ei ole sallittu, ei luoda minkäänlaista
+              notifikaatiota"
+  ([otsikko teksti] (luo-notifikaatio otsikko teksti {}))
+  ([otsikko teksti {:keys [aani?] :as optiot}]
+   (log "Luodaan notifikaatio. Otsikko: " (pr-str otsikko) " Teksti: " (pr-str teksti) " Optiot: " (pr-str optiot))
+   (when kayta-web-notification-apia?
+     (yrita-nayttaa-web-notifikaatio otsikko teksti))
+    ;; Notification API tukee äänen soittamista suoraan,
+    ;; mutta ATM tämä on huonosti tuettu selaimissa.
+   (when (or (nil? aani?) (some? aani?))
+     (soita-aani))))

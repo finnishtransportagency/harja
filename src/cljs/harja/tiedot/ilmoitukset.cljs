@@ -16,7 +16,8 @@
             [harja.tiedot.ilmoitukset.viestit :as v]
             [tuck.core :as t]
             [harja.ui.viesti :as viesti]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [reagent.core :as r])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -35,10 +36,16 @@
 (def ^{:const true}
 kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
-(def aanimerkki-uusista-ilmoituksista? (atom (or
-                                               (localstorage/lue-arvo
-                                                 "ilmoitukset-aanimerkki-uusista-ilmoituksista")
-                                               true)))
+(def +aanimerkki-uusista-ilmoituksista-localstorage+ "ilmoitukset-aanimerkki-uusista-ilmoituksista")
+(def aanimerkki-uusista-ilmoituksista? (r/wrap (or
+                                                 (localstorage/lue-arvo
+                                                   +aanimerkki-uusista-ilmoituksista-localstorage+)
+                                                 true)
+                                               (fn [uusi]
+                                                 (localstorage/aseta-arvo
+                                                   +aanimerkki-uusista-ilmoituksista-localstorage+
+                                                   uusi))))
+(tarkkaile! "[ILMO] Ääni? " aanimerkki-uusista-ilmoituksista?)
 
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa? false
@@ -114,7 +121,8 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
           (str uusien-ilmoitusten-maara " uutta ilmoitusta Harjassa"))
         (notifikaatio-body uusien-toimenpidepyyntojen-maara
                            uusien-tiedoituksien-maara
-                           uusien-kyselyjen-maara)))))
+                           uusien-kyselyjen-maara)
+        {:aani? @aanimerkki-uusista-ilmoituksista?}))))
 
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
@@ -145,7 +153,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat notifioi-uudet? :notifioi-uudet? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
-      (log "[ILMO] Haetaan uudet ilmoitukset")
+      ;(log "[ILMO] Haetaan uudet ilmoitukset")
       (go
         (tulos!
           {:ilmoitukset (<! (k/post! :hae-ilmoitukset
@@ -163,7 +171,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
     (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
-      (log "[ILMO] Haku valmis, " (count uudet-ilmoitusidt) " uutta ilmoitusta. Notifioi uudet? " (:notifioi-uudet? tulokset))
+      ;(log "[ILMO] Haku valmis, " (count uudet-ilmoitusidt) " uutta ilmoitusta. Notifioi uudet? " (:notifioi-uudet? tulokset))
       (when (:notifioi-uudet? tulokset)
         (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset))
       (hae (assoc app
