@@ -182,16 +182,6 @@
   (process-event [_ app]
     (assoc app :kuittaa-monta nil)))
 
-
-
-(defn lisaa-kuittaus-valitulle-ilmoitukselle [kuittaus]
-  (let [nykyiset-kuittaukset (:kuittaukset (:valittu-ilmoitus ilmoitukset))]
-    ;; FIXME: implement
-    #_(swap! valittu-ilmoitus assoc :kuittaukset
-           (sort-by :kuitattu pvm/ennen?
-                    (conj nykyiset-kuittaukset kuittaus)))))
-
-
 (defonce karttataso-ilmoitukset (atom false))
 
 (defonce ilmoitukset-kartalla
@@ -204,17 +194,11 @@
          ilmoitukset)
         valittu-ilmoitus)))))
 
-(comment
-  (defn avaa-uusi-kuittaus! []
-    (reset! uusi-kuittaus-auki? true))
 
-  (defn sulje-uusi-kuittaus! []
-    (reset! uusi-kuittaus-auki? false)))
+;; Kartan popupit käyttää näitä funktioita
 
-;; FIXME: nämä menevät tuck process-event käsittelyn ohi
 (defn avaa-ilmoitus! [ilmoitus]
   (swap! ilmoitukset assoc :valittu-ilmoitus ilmoitus))
 
 (defn sulje-ilmoitus! []
-  ;; FIXME: tämä menee tuck ohi
   (swap! ilmoitukset assoc :valittu-ilmoitus nil))
