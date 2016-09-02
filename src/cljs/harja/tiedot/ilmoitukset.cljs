@@ -38,7 +38,8 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
   (atom {:ilmoitusnakymassa? false
          :valittu-ilmoitus nil
          :uusi-kuittaus-auki? false
-         :ilmoitushaku nil ;; ilmoitushaun timeout
+         :ilmoitushaku-id nil ;; ilmoitushaun timeout
+         :notifioi-uudet false ;; vain taustalla tehty haku notifioi uudet ilmoitukset (ja jos käyttäjä hyväksyy)
          :ilmoitukset nil ;; haetut ilmoitukset
          :valinnat {:tyypit +ilmoitustyypit+
                     :kuittaustyypit (into #{} kuittaustyyppi-filtterit)
@@ -110,14 +111,16 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
   ([app] (hae app 300))
-  ([{haku :ilmoitushaku :as app} timeout]
+  ([app timeout] (hae app timeout false))
+  ([{haku :ilmoitushaku :as app} timeout notifioi?]
     ;; Jos seuraava haku ollaan laukaisemassa, peru se
    (when haku
      (.clearTimeout js/window haku))
-   (assoc app
-     :ilmoitushaku (.setTimeout js/window
-                                (t/send-async! v/->HaeIlmoitukset)
-                                timeout))))
+   (-> app
+       (assoc :ilmoitushaku-id (.setTimeout js/window
+                                            (t/send-async! v/->HaeIlmoitukset)
+                                            timeout))
+       (assoc :notifioi-uudet notifioi?))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -132,36 +135,41 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
       (update-in app [:valinnat] merge valinnat)))
 
   v/HaeIlmoitukset
-  (process-event [_ {valinnat :valinnat :as app}]
+  (process-event [_ {valinnat :valinnat notifioi-uudet :notifioi-uudet :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
+      (log "[ILMO] Haetaan uudet ilmoitukset")
       (go
         (tulos!
-          (<! (k/post! :hae-ilmoitukset
-                       (-> valinnat
-                           ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                           (update :tyypit
-                                   #(if (empty? %) +ilmoitustyypit+ %))
-                           (update :kuittaustyypit
-                                   #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))))))))
+          {:ilmoitukset (<! (k/post! :hae-ilmoitukset
+                                     (-> valinnat
+                                         ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                                         (update :tyypit
+                                                 #(if (empty? %) +ilmoitustyypit+ %))
+                                         (update :kuittaustyypit
+                                                 #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))
+           :notifioi-uudet notifioi-uudet})))
     app)
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
     (do
-      ;; TODO Vain jos haku tehtiin taustalla
-      (nayta-notifikaatio-uusista-ilmoituksista
-        tulokset
-        (:ilmoitukset app))
+      (log "[ILMO] Saatiin " (count (:ilmoitukset tulokset)) " uutta ilmoitusta")
+      (log "[ILMO] Notifioidaanko? " (:notifioi-uudet tulokset))
+      (when (:notifioi-uudet tulokset)
+        (nayta-notifikaatio-uusista-ilmoituksista
+          (:ilmoitukset tulokset)
+          (:ilmoitukset app)))
       (hae (assoc app
              ;; Uudet ilmoitukset
-             :ilmoitukset (jarjesta-ilmoitukset tulokset)
+             :ilmoitukset (jarjesta-ilmoitukset (:ilmoitukset tulokset))
 
              ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
              :valittu-ilmoitus (if (some #(= (:ilmoitusid valittu) %)
-                                         (map :ilmoitusid tulokset))
+                                         (map :ilmoitusid (:ilmoitukset tulokset)))
                                  valittu
                                  nil))
-           60000)))
+           10000
+           true)))
 
   v/ValitseIlmoitus
   (process-event [{ilm :ilmoitus} app]
