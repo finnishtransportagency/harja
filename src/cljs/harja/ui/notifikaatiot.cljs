@@ -7,8 +7,6 @@
 (defn notification-api-tuettu? []
   (some? (.-Notification js/window)))
 
-;; Käytetään Notification Web APIa jos selain tukee sitä,
-;; muuten fallbackinä pelkkä äänen soittaminen.
 (def kayta-web-notification-apia?
   (notification-api-tuettu?))
 
