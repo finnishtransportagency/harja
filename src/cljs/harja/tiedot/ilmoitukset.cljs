@@ -59,20 +59,22 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
                              (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
                tulos))))
 
+(defn- merkitse-uudet-ilmoitukset [ilmoitukset uudet-ilmoitusidt]
+  (map
+    (fn [ilmoitus]
+      (if (uudet-ilmoitusidt (:id ilmoitus))
+        (with-meta ilmoitus {:uusi? true})
+        ilmoitus))
+    ilmoitukset))
+
 (defn- merkitsevat-suodattimet [suodattimet]
   (let [pida-suodatin? (fn [suodatin-avain]
                          (not (str/starts-with? (str suodatin-avain) ":harja.ui.lomake")))
         merkitsevat-suodattimet (filter pida-suodatin? (keys suodattimet))]
     (apply dissoc suodattimet merkitsevat-suodattimet)))
 
-;; FIXME Jos tulee kuittaus, ei haluta nähdä uutta ilmoitusta
-(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset
-                                                 vanhat-ilmoitukset]
-  (let [uudet-ilmoitusidt
-        (set/difference (into #{} (map :id uudet-ilmoitukset))
-                        (into #{} (map :id vanhat-ilmoitukset)))
-        uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) uudet-ilmoitukset)
-        uusien-ilmoitusten-maara (count uudet-ilmoitusidt)
+(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset]
+  (let [uusien-ilmoitusten-maara (count uudet-ilmoitukset)
         uusien-toimenpidepyyntojen-maara (count
                                            (filter #(= (:ilmoitustyyppi %) :toimenpidepyynto)
                                                    uudet-ilmoitukset))
@@ -98,8 +100,8 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
                  (if (= uusien-kyselyjen-maara 1)
                    "1 uusi kysely\n"
                    (str uusien-kyselyjen-maara " uutta kyselyä\n")))))]
-    (when (not (empty? uudet-ilmoitusidt))
-      (log "[ILMO] Uudet notifioitavat ilmoitukset: " (pr-str uudet-ilmoitusidt))
+    (when (not (empty? uudet-ilmoitukset))
+      (log "[ILMO] Uudet notifioitavat ilmoitukset: " (count uudet-ilmoitukset))
       (notifikaatiot/luo-notifikaatio
         (if (= uusien-ilmoitusten-maara 1)
           "Uusi ilmoitus Harjassa"
@@ -152,16 +154,16 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
-    (do
-      (log "[ILMO] Saatiin " (count (:ilmoitukset tulokset)) " uutta ilmoitusta")
-      (log "[ILMO] Notifioidaanko? " (:notifioi-uudet tulokset))
+    (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
+                                            (into #{} (map :id (:ilmoitukset app))))
+          uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
       (when (:notifioi-uudet tulokset)
-        (nayta-notifikaatio-uusista-ilmoituksista
-          (:ilmoitukset tulokset)
-          (:ilmoitukset app)))
+        (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset))
       (hae (assoc app
              ;; Uudet ilmoitukset
-             :ilmoitukset (jarjesta-ilmoitukset (:ilmoitukset tulokset))
+             :ilmoitukset (-> (:ilmoitukset tulokset)
+                              (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
+                              (jarjesta-ilmoitukset))
 
              ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
              :valittu-ilmoitus (if (some #(= (:ilmoitusid valittu) %)
