@@ -5,8 +5,10 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka :as u]
+            [harja.ui.notifikaatiot :as notifikaatiot]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
+            [clojure.set :as set]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<! reaction-writable]]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]
@@ -20,16 +22,16 @@
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
   (reaction
-   {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-    :urakka          (:id @nav/valittu-urakka)
-    :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
-    :urakoitsija     (:id @nav/valittu-urakoitsija)
-    :urakkatyyppi    (:arvo @nav/valittu-urakkatyyppi)
-    :hoitokausi      @u/valittu-hoitokausi
-    :aikavali        (or @u/valittu-hoitokausi [nil nil])}))
+    {:hallintayksikko (:id @nav/valittu-hallintayksikko)
+     :urakka (:id @nav/valittu-urakka)
+     :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
+     :urakoitsija (:id @nav/valittu-urakoitsija)
+     :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
+     :hoitokausi @u/valittu-hoitokausi
+     :aikavali (or @u/valittu-hoitokausi [nil nil])}))
 
 (def ^{:const true}
-  kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
+kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa? false
@@ -47,64 +49,82 @@
 
 (defn- jarjesta-ilmoitukset [tulos]
   (reverse (sort-by
-            :ilmoitettu
-            pvm/ennen?
-            (mapv
-             (fn [ilmo]
-               (assoc ilmo :kuittaukset
-                      (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
-             tulos))))
+             :ilmoitettu
+             pvm/ennen?
+             (mapv
+               (fn [ilmo]
+                 (assoc ilmo :kuittaukset
+                             (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
+               tulos))))
+
+(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset vanhat-ilmoitukset]
+  (let [uudet-ilmoitusidt
+        (set/difference (into #{} (map :id uudet-ilmoitukset))
+                        (into #{} (map :id vanhat-ilmoitukset)))
+        uusia-ilmoituksia-monta? (> (count uudet-ilmoitusidt) 1)]
+    (when-not (empty? uudet-ilmoitusidt)
+      (log "[ILMO] Uudet notifioitavat ilmoitukset: " (pr-str uudet-ilmoitusidt))
+      (notifikaatiot/luo-notifikaatio
+        (if uusia-ilmoituksia-monta? "Uusia ilmoituksia Harjassa" "Uusi ilmoitus Harjassa")
+        (if uusia-ilmoituksia-monta?
+          (str (count uudet-ilmoitusidt) " uutta ilmoitusta.")
+          "1 uusi ilmoitus.")))))
 
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
   ([app] (hae app 300))
   ([{haku :ilmoitushaku :as app} timeout]
-   ;; Jos seuraava haku ollaan laukaisemassa, peru se
+    ;; Jos seuraava haku ollaan laukaisemassa, peru se
    (when haku
      (.clearTimeout js/window haku))
    (assoc app
-          :ilmoitushaku (.setTimeout js/window
-                                     (t/send-async! v/->HaeIlmoitukset)
-                                     timeout))))
+     :ilmoitushaku (.setTimeout js/window
+                                (t/send-async! v/->HaeIlmoitukset)
+                                timeout))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
   v/AsetaValinnat
   (process-event [{valinnat :valinnat} app]
     (hae
-     (assoc app :valinnat valinnat)))
+      (assoc app :valinnat valinnat)))
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
     (hae
-     (update-in app [:valinnat] merge valinnat)))
+      (update-in app [:valinnat] merge valinnat)))
 
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (go
         (tulos!
-         (<! (k/post! :hae-ilmoitukset
-                      (-> valinnat
-                          ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                          (update :tyypit
-                                  #(if (empty? %) +ilmoitustyypit+ %))
-                          (update :kuittaustyypit
-                                  #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))))))))
+          (<! (k/post! :hae-ilmoitukset
+                       (-> valinnat
+                           ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                           (update :tyypit
+                                   #(if (empty? %) +ilmoitustyypit+ %))
+                           (update :kuittaustyypit
+                                   #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %))))))))
     app)
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
-    (hae (assoc app
-                ;; Uudet ilmoitukset
-                :ilmoitukset (jarjesta-ilmoitukset tulokset)
+    (do
+      ;; TODO Vain jos filtterit eivät muuttuneet tai on muuten tiedossa että haku tehtiin taustalla
+      (nayta-notifikaatio-uusista-ilmoituksista
+        tulokset
+        (:ilmoitukset app))
+      (hae (assoc app
+             ;; Uudet ilmoitukset
+             :ilmoitukset (jarjesta-ilmoitukset tulokset)
 
-                ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
-                :valittu-ilmoitus (if (some #(= (:ilmoitusid valittu) %)
-                                            (map :ilmoitusid tulokset))
-                                    valittu
-                                    nil))
-         60000))
+             ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
+             :valittu-ilmoitus (if (some #(= (:ilmoitusid valittu) %)
+                                         (map :ilmoitusid tulokset))
+                                 valittu
+                                 nil))
+           60000)))
 
   v/ValitseIlmoitus
   (process-event [{ilm :ilmoitus} app]
@@ -167,15 +187,15 @@
     (when v
       (viesti/nayta! "Kuittaus lähetetty Tieliikennekeskukseen." :success))
     (hae
-     (if valittu-ilmoitus
-       (-> app
-           (assoc-in [:valittu-ilmoitus :uusi-kuittaus] nil)
-           (update-in [:valittu-ilmoitus :kuittaukset]
-                      (fn [kuittaukset]
-                        ;; Palvelin palauttaa vektorin kuittauksia, joihin
-                        ;; olemassaolevat liitetään
-                        (into v kuittaukset))))
-       (assoc app :kuittaa-monta nil))))
+      (if valittu-ilmoitus
+        (-> app
+            (assoc-in [:valittu-ilmoitus :uusi-kuittaus] nil)
+            (update-in [:valittu-ilmoitus :kuittaukset]
+                       (fn [kuittaukset]
+                         ;; Palvelin palauttaa vektorin kuittauksia, joihin
+                         ;; olemassaolevat liitetään
+                         (into v kuittaukset))))
+        (assoc app :kuittaa-monta nil))))
 
   v/PeruMonenKuittaus
   (process-event [_ app]
@@ -185,13 +205,13 @@
 
 (defonce ilmoitukset-kartalla
   (reaction
-   (let [{:keys [ilmoitukset valittu-ilmoitus]} @ilmoitukset]
-     (when @karttataso-ilmoitukset
-       (kartalla-esitettavaan-muotoon
-        (map
-         #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
-         ilmoitukset)
-        valittu-ilmoitus)))))
+    (let [{:keys [ilmoitukset valittu-ilmoitus]} @ilmoitukset]
+      (when @karttataso-ilmoitukset
+        (kartalla-esitettavaan-muotoon
+          (map
+            #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
+            ilmoitukset)
+          valittu-ilmoitus)))))
 
 
 ;; Kartan popupit käyttää näitä funktioita
