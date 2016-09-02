@@ -157,6 +157,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
     (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
+      (log "[ILMO] Haku valmis, " (count uudet-ilmoitusidt) " uutta ilmoitusta. Notifioi uudet? " (:notifioi-uudet? tulokset))
       (when (:notifioi-uudet? tulokset)
         (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset))
       (hae (assoc app
