@@ -35,6 +35,7 @@
   [hal alueet]
   ;; Disabloitu localStorage tallennus, pitää miettiä miten se tehdään paremmin.
   ;; Tila loppuu kesken pohjavesialueissa ja virhetilanteessa jää toimimaton versio cacheen.
+  ;; TODO Käytä harja.ui.localstorage
   (comment (try
              (.setItem js/localStorage (str "pohjavesialueet-" hal) (t/write (t/writer :json) alueet))
              (catch :default _
@@ -43,6 +44,7 @@
 (defn lue-pohjavesialueet
   "Lukee localStoragesta muitissa olevat pohjavesialueet"
   [hal]
+  ;; TODO Käytä harja.ui.localstorage
   (comment
     (try
       (let [alueet (.getItem js/localStorage (str "pohjavesialueet-" hal))]
