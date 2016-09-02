@@ -9,7 +9,7 @@
 (defn- boolean->boolean-teksti
   "Tallentaa totuusarvon tekstinä 'true' tai 'false'."
   [totuus]
-  (if (some? totuus)
+  (if (boolean totuus)
     "true"
     "false"))
 
