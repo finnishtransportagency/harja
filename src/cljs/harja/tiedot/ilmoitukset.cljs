@@ -14,7 +14,8 @@
             [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [tuck.core :as t]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [clojure.string :as str])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -57,12 +58,27 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
                              (sort-by :kuitattu pvm/ennen? (:kuittaukset ilmo))))
                tulos))))
 
-(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset vanhat-ilmoitukset]
-  (let [uudet-ilmoitusidt
+(defn- merkitsevat-suodattimet [suodattimet]
+  (let [pida-suodatin? (fn [suodatin-avain]
+                         (not (str/starts-with? (str suodatin-avain) ":harja.ui.lomake")))
+        merkitsevat-suodattimet (filter pida-suodatin? (keys suodattimet))]
+    (apply dissoc suodattimet merkitsevat-suodattimet)))
+
+;; FIXME Jos tulee kuittaus, ei haluta nähdä uutta ilmoitusta
+(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-suodattimet
+                                                 vanhat-suodattimet
+                                                 uudet-ilmoitukset
+                                                 vanhat-ilmoitukset]
+  (let [merkitsevat-uudet-suodattimet (merkitsevat-suodattimet uudet-suodattimet)
+        merkitsevat-vanhat-suodattimet (merkitsevat-suodattimet vanhat-suodattimet)
+        suodattimet-muuttuneet? (not= merkitsevat-vanhat-suodattimet merkitsevat-uudet-suodattimet)
+        uudet-ilmoitusidt
         (set/difference (into #{} (map :id uudet-ilmoitukset))
                         (into #{} (map :id vanhat-ilmoitukset)))
         uusia-ilmoituksia-monta? (> (count uudet-ilmoitusidt) 1)]
-    (when-not (empty? uudet-ilmoitusidt)
+    (when (and
+            suodattimet-muuttuneet?
+            (not (empty? uudet-ilmoitusidt)))
       (log "[ILMO] Uudet notifioitavat ilmoitukset: " (pr-str uudet-ilmoitusidt))
       (notifikaatiot/luo-notifikaatio
         (if uusia-ilmoituksia-monta? "Uusia ilmoituksia Harjassa" "Uusi ilmoitus Harjassa")
