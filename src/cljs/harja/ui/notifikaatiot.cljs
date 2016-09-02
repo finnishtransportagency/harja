@@ -2,6 +2,7 @@
   (:require [harja.loki :refer [log logt tarkkaile!]]))
 
 (def +notifikaatio-ikoni+ "images/harja_favicon.png")
+(def +notifikaatio-aani+ "sounds/notifikaatio.mp3")
 
 (defn notification-api-tuettu? []
   (some? (.-Notification js/window)))
@@ -17,8 +18,8 @@
 (def notifikaatiolupaa-pyydetty? (atom false))
 
 (defn- soita-aani []
-  ;; TODO Implement me
-  (log "Soitetaan ääni: BLING!"))
+  (let [aani (js/Audio. +notifikaatio-aani+)]
+    (.play aani)))
 
 (defn pyyda-notifikaatiolupa
   "Pyytää käyttäjältä lupaa näyttää web-notifikaatioita, jos lupaa ei ole jo annettu
@@ -43,6 +44,8 @@
     (nayta-web-notifikaatio otsikko teksti)))
 
 (defn luo-notifikaatio [otsikko teksti]
-  (if kayta-web-notification-apia?
-    (yrita-nayttaa-web-notifikaatio otsikko teksti)
-    (soita-aani)))
+  (when kayta-web-notification-apia?
+    (yrita-nayttaa-web-notifikaatio otsikko teksti))
+  ;; Notification API tukee äänen soittamista suoraan,
+  ;; mutta ATM tämä on huonosti tuettu selaimissa.
+  (soita-aani))
