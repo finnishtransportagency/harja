@@ -205,8 +205,8 @@
                      [ajax-loader "Haetaan ilmoutuksia"])
             :rivi-klikattu (or valitse-ilmoitus!
                                #(e! (v/->ValitseIlmoitus %)))
+            :rivin-luokka  #(when (= (:uusi? (meta %))) "korosta")
             :piilota-toiminnot true}
-
            [(when kuittaa-monta-nyt
               {:otsikko " "
                :tasaa :keskita
