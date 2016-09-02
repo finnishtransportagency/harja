@@ -9,14 +9,22 @@
 (def kayta-web-notification-apia?
   (tarkista-notification-api-tuki))
 
-(def notifikaatiolupa? (atom false))
+(defn notifikaatiolupa? []
+  (= (.-permission js/Notification) "granted"))
+
+(def notifikaatiolupaa-pyydetty? (atom false))
 
 (defn- soita-aani []
   ;; TODO Implement me
   (log "Soitetaan ääni: BLING!"))
 
-(defn pyyda-notifikaatiolupa []
-  (when (not= (.-permission js/Notification) "granted")
+(defn pyyda-notifikaatiolupa
+  "Pyytää käyttäjältä lupaa näyttää web-notifikaatioita, jos lupaa ei ole jo annettu
+   eikä ole jo kerran pyydetty (ei häiritä useilla pyynnöillä jos vastaus on ollut kielteinen)"
+  []
+  (when (and (not= (.-permission js/Notification) "granted")
+             (not @notifikaatiolupaa-pyydetty?))
+    (reset! notifikaatiolupaa-pyydetty? true)
     (.requestPermission js/Notification)))
 
 (defn- nayta-web-notifikaatio [otsikko teksti]
@@ -27,7 +35,7 @@
   "Näyttää web-notifikaation, jos käyttäjä on antanut siihen luvan.
    Muussa tapauksessa pyytää lupaa."
   [otsikko teksti]
-  (if @notifikaatiolupa?
+  (if (notifikaatiolupa?)
     (pyyda-notifikaatiolupa)
     (nayta-web-notifikaatio otsikko teksti)))
 

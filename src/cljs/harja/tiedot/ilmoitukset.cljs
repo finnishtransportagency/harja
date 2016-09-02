@@ -17,7 +17,6 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
   (reaction
