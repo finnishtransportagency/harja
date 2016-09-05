@@ -28,6 +28,7 @@
 (defn tallenna-totuusarvo
   "Tallentaa totuusarvon tekstimuodossa avaimen taakse."
   [avain totuus]
+  (log "Tallenna totuusarvo localstorageen: " (pr-str totuus))
   (assert avain "Arvoa ei voi asettaa localstorageen ilman avainta")
   (.setItem js/localStorage avain (boolean->boolean-teksti totuus)))
 
@@ -35,6 +36,7 @@
   "Lukee tallennetun totuusarvon avaimen takaa palauttaen true tai false.
    Jos avainta ei ole, palauttaa nil."
   [avain]
+  (log "Lue totuusarvo localstoragesta: " (pr-str avain))
   (assert avain "Ei voida hakea localstoragesta ilman avainta")
   (when-let [arvo (.getItem js/localStorage avain)]
     (boolean-teksti->boolean arvo)))
