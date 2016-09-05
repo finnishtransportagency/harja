@@ -5,8 +5,7 @@
 (def +notifikaatio-aani+ "sounds/notifikaatio.mp3")
 
 (defn notification-api-tuettu? []
-  (not (or (= (.-Notification js/window) "undefined")
-           (nil? (.-Notification js/window)))))
+  (some? (.-Notification js/window)))
 
 (def kayta-web-notification-apia?
   (notification-api-tuettu?))
