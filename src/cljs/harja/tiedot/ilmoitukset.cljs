@@ -86,7 +86,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
         merkitsevat-suodattimet (filter pida-suodatin? (keys suodattimet))]
     (apply dissoc suodattimet merkitsevat-suodattimet)))
 
-(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset]
+(defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset optiot]
   (let [uusien-ilmoitusten-maara (count uudet-ilmoitukset)
         uusien-toimenpidepyyntojen-maara (count
                                            (filter #(= (:ilmoitustyyppi %) :toimenpidepyynto)
@@ -122,7 +122,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
         (notifikaatio-body uusien-toimenpidepyyntojen-maara
                            uusien-tiedoituksien-maara
                            uusien-kyselyjen-maara)
-        {:aani? @aanimerkki-uusista-ilmoituksista?}))))
+        optiot))))
 
 (defn- hae
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
@@ -173,7 +173,8 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
       ;(log "[ILMO] Haku valmis, " (count uudet-ilmoitusidt) " uutta ilmoitusta. Notifioi uudet? " (:notifioi-uudet? tulokset))
       (when (:notifioi-uudet? tulokset)
-        (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset))
+        (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset
+                                                  {:aani? @aanimerkki-uusista-ilmoituksista?}))
       (hae (assoc app
              ;; Uudet ilmoitukset
              :ilmoitukset (cond-> (:ilmoitukset tulokset)
