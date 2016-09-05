@@ -16,7 +16,7 @@
 
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi sopimustyyppi hallintayksikko]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
-  (urakat/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko urakka-id sopimustyyppi))
+  (urakat/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko sopimustyyppi urakka-id))
 
 (defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi sopimustyyppi hallintayksikko]
   (log/debug "Luodaan uusi urakka.")
