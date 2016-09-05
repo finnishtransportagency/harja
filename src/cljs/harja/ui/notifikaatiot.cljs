@@ -15,7 +15,7 @@
 
 (def notifikaatiolupaa-pyydetty? (atom false))
 
-(defn- soita-aani []
+(defn soita-merkkiaani []
   (let [aani (js/Audio. +notifikaatio-aani+)]
     (.play aani)))
 
@@ -60,4 +60,4 @@
     ;; Notification API tukee äänen soittamista suoraan,
     ;; mutta ATM tämä on huonosti tuettu selaimissa.
    (when (or (nil? aani?) (boolean aani?))
-     (soita-aani))))
+     (soita-merkkiaani))))
