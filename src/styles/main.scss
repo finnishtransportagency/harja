@@ -1,4 +1,10 @@
-@import "./normalize.css";
+@import "../../node_modules/foundation-sites/scss/foundation";
+
+@include foundation-flex-grid;
+@include foundation-flex-classes;
+@include foundation-everything;
+
+
 
 $primary-color: green;
 

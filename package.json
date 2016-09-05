@@ -9,11 +9,10 @@
     "babel-preset-react": "^6.11.1",
     "babelify": "^7.3.0",
     "browserify": "^13.1.0",
-    "gulp": "^3.8.7",
+    "gulp": "^3.9.1",
     "gulp-connect": "^5.0.0",
     "gulp-sass": "^2.3.2",
     "gulp-util": "^3.0.7",
-    "reactify": "^1.1.1",
     "require-dir": "^0.3.0",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
@@ -39,11 +38,14 @@
   "dependencies": {
     "babel-eslint": "^6.1.2",
     "eslint": "^3.4.0",
-    "eslint-config-airbnb": "^10.0.1",
     "eslint-plugin-react": "^6.2.0",
     "flux": "^2.1.1",
     "gulp-eslint": "^3.0.1",
     "object-assign": "^4.1.0",
-    "react": "^0.13.3"
+    "keymirror": "^0.1.1",
+    "foundation-sites": "^6.2.3",
+    "react": "^15.3.1",
+    "react-dom" : "^15.3.1",
+    "react-foundation": "^0.6.8"
   }
 }
