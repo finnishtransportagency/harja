@@ -51,3 +51,20 @@ BEGIN
   RETURN (summa, summa * kerroin, summa * kerroin - summa);
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Urakan suolasakon indeksitarkistus
+CREATE OR REPLACE FUNCTION laske_urakan_suolasakon_indeksitarkistus(
+                             urakka_id INTEGER, talvikauden_alkuvuosi INTEGER, summa NUMERIC)
+  RETURNS indeksitarkistettu_suolasakko_rivi AS $$
+DECLARE
+  indeksinimi TEXT;
+  it indeksitarkistettu_suolasakko_rivi;
+BEGIN
+   SELECT INTO indeksinimi indeksi
+     FROM suolasakko
+    WHERE urakka = urakka_id AND hoitokauden_alkuvuosi = talvikauden_alkuvuosi;
+   it := laske_suolasakon_indeksitarkistus(talvikauden_alkuvuosi, indeksinimi, summa, urakka_id);
+   RETURN it;
+END;
+$$ LANGUAGE plpgsql;
