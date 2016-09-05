@@ -7,7 +7,7 @@
             [harja.tiedot.urakka :as u]
             [harja.ui.notifikaatiot :as notifikaatiot]
             [harja.loki :refer [log tarkkaile!]]
-            [harja.ui.localstorage :as localstorage]
+            [alandipert.storage-atom :refer [local-storage]]
             [cljs.core.async :refer [<!]]
             [clojure.set :as set]
             [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<! reaction-writable]]
@@ -36,16 +36,7 @@
 (def ^{:const true}
 kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
-(def +aanimerkki-uusista-ilmoituksista-localstorage-avain+ "ilmoitukset-aanimerkki-uusista-ilmoituksista")
-(def aanimerkki-uusista-ilmoituksista? (atom (or
-                                               (localstorage/lue-totuusarvo
-                                                 +aanimerkki-uusista-ilmoituksista-localstorage-avain+)
-                                               true)))
-(add-watch aanimerkki-uusista-ilmoituksista?
-  :paivita-aanimerkin-asetus-localstorageen
-  (fn [_ _ vanha uusi] (localstorage/tallenna-totuusarvo
-                         +aanimerkki-uusista-ilmoituksista-localstorage-avain+
-                         uusi)))
+(def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa? false
