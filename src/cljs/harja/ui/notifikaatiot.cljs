@@ -57,5 +57,5 @@
      (yrita-nayttaa-web-notifikaatio otsikko teksti))
     ;; Notification API tukee äänen soittamista suoraan,
     ;; mutta ATM tämä on huonosti tuettu selaimissa.
-   (when (or (nil? aani?) (some? aani?))
+   (when (or (nil? aani?) (boolean aani?))
      (soita-aani))))
