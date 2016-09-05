@@ -29,8 +29,7 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
             [tuck.core :refer [tuck send-value! send-async!]]
-            [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.tyokalut.merkkijono :as merkkijono])
+            [harja.tiedot.ilmoitukset.viestit :as v])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
