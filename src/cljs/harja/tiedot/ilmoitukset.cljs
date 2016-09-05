@@ -188,7 +188,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
                                          (map :ilmoitusid (:ilmoitukset tulokset)))
                                  valittu
                                  nil))
-           10000
+           60000
            true)))
 
   v/ValitseIlmoitus
