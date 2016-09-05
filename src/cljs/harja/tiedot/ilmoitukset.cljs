@@ -36,16 +36,16 @@
 (def ^{:const true}
 kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
-(def +aanimerkki-uusista-ilmoituksista-localstorage+ "ilmoitukset-aanimerkki-uusista-ilmoituksista")
-(def aanimerkki-uusista-ilmoituksista? (r/wrap (or
-                                                 (localstorage/lue-totuusarvo
-                                                   +aanimerkki-uusista-ilmoituksista-localstorage+)
-                                                 true)
-                                               (fn [uusi]
-                                                 (localstorage/tallenna-totuusarvo
-                                                   +aanimerkki-uusista-ilmoituksista-localstorage+
-                                                   uusi))))
-(tarkkaile! "[ILMO] Ääni? " aanimerkki-uusista-ilmoituksista?)
+(def +aanimerkki-uusista-ilmoituksista-localstorage-avain+ "ilmoitukset-aanimerkki-uusista-ilmoituksista")
+(def aanimerkki-uusista-ilmoituksista? (atom (or
+                                               (localstorage/lue-totuusarvo
+                                                 +aanimerkki-uusista-ilmoituksista-localstorage-avain+)
+                                               true)))
+(add-watch aanimerkki-uusista-ilmoituksista?
+  :paivita-aanimerkin-asetus-localstorageen
+  (fn [_ _ vanha uusi] (localstorage/tallenna-totuusarvo
+                         +aanimerkki-uusista-ilmoituksista-localstorage-avain+
+                         uusi)))
 
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa? false
