@@ -20,9 +20,6 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.bootstrap :as bs]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
@@ -167,6 +164,11 @@
                            arvo))})]
    valinnat-nyt])
 
+(defn leikkaa-otsikko [{:keys [otsikko]}]
+  (if (> (count otsikko) 30)
+    (str (apply str (take 30 otsikko)) "...")
+    otsikko))
+
 (defn ilmoitusten-paanakyma
   [e! ilmoitukset]
 
@@ -216,6 +218,8 @@
               :leveys 1})
            {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
             :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+           {:otsikko "Otsikko" :nimi :otsikko :leveys 7
+            :hae #(leikkaa-otsikko %)}
            {:otsikko "Ilmoitettu" :nimi :ilmoitettu
             :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
            {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
