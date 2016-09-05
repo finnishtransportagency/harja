@@ -4,10 +4,10 @@ import Constants from '../Constants';
 /* eslint-disable no-console */
 
 export default {
-  addItem(text) {
+  addItem(data) {
     Dispatcher.handleViewAction({
       type: Constants.ActionTypes.CARENOTICE_ADDED,
-      text: text
+      data: data
     });
   },
 
