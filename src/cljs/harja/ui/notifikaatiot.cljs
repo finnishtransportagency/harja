@@ -11,7 +11,9 @@
   (notification-api-tuettu?))
 
 (defn notifikaatiolupa? []
-  (= (.-permission js/Notification) "granted"))
+  (if kayta-web-notification-apia?
+    (= (.-permission js/Notification) "granted")
+    false))
 
 (def notifikaatiolupaa-pyydetty? (atom false))
 
@@ -23,12 +25,12 @@
   "Pyytää käyttäjältä lupaa näyttää web-notifikaatioita,
   jos lupaa ei ole annettu eikä pyyntöä ole jo kertaalleen esitetty."
   []
-  (when (and
-          kayta-web-notification-apia?
-          (not= (.-permission js/Notification) "granted")
-          (not @notifikaatiolupaa-pyydetty?))
-    (reset! notifikaatiolupaa-pyydetty? true)
-    (.requestPermission js/Notification)))
+  (when kayta-web-notification-apia?
+    (when (and
+           (not= (.-permission js/Notification) "granted")
+           (not @notifikaatiolupaa-pyydetty?))
+     (reset! notifikaatiolupaa-pyydetty? true)
+     (.requestPermission js/Notification))))
 
 (defn- nayta-web-notifikaatio [otsikko teksti]
   (if (notifikaatiolupa?)
