@@ -20,10 +20,6 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.notifikaatiot :as notifikaatiot]
-            [harja.ui.bootstrap :as bs]
-            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
@@ -33,8 +29,7 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
             [tuck.core :refer [tuck send-value! send-async!]]
-            [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.ui.kentat :as kentat])
+            [harja.tiedot.ilmoitukset.viestit :as v])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
@@ -169,6 +164,11 @@
                              arvo))})]
    valinnat-nyt])
 
+(defn leikkaa-otsikko [{:keys [otsikko]}]
+  (if (> (count otsikko) 30)
+    (str (fmt/leikkaa-merkkijono 30 otsikko) "...")
+    otsikko))
+
 (defn ilmoitusten-paanakyma
   [e! ilmoitukset]
 
@@ -206,8 +206,8 @@
                      [ajax-loader "Haetaan ilmoutuksia"])
             :rivi-klikattu (or valitse-ilmoitus!
                                #(e! (v/->ValitseIlmoitus %)))
-            :rivin-luokka  #(when (:uusi? (meta %)) "korosta")
             :piilota-toiminnot true}
+
            [(when kuittaa-monta-nyt
               {:otsikko " "
                :tasaa :keskita
@@ -218,6 +218,8 @@
                :leveys 1})
             {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
              :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+            {:otsikko "Otsikko" :nimi :otsikko :leveys 7
+             :hae #(leikkaa-otsikko %)}
             {:otsikko "Ilmoitettu" :nimi :ilmoitettu
              :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
             {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
@@ -240,10 +242,7 @@
            (mapv #(if (:yhteydenottopyynto %)
                    (assoc % :lihavoi true)
                    %)
-                 haetut-ilmoitukset)]
-          [kentat/tee-kentta {:tyyppi :checkbox
-                              :teksti "Äänimerkki uusista ilmoituksista"}
-           tiedot/aanimerkki-uusista-ilmoituksista?]]]))))
+                 haetut-ilmoitukset)]]]))))
 
 (defn- ilmoitukset* [e! ilmoitukset]
   (komp/luo
@@ -257,12 +256,12 @@
 
 (defn ilmoitukset []
   (komp/luo
-    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/lippu tiedot/karttataso-ilmoitukset)
+    ;;(komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
 
     (fn []
       [tuck tiedot/ilmoitukset ilmoitukset*])))

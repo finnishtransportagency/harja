@@ -1,10 +1,12 @@
 -- name: uusi-lampotila<!
-INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
-VALUES (:urakka, :alku, :loppu, :keskilampo, :pitkalampo);
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila,
+                        pitka_keskilampotila, pitka_keskilampotila_vanha)
+VALUES (:urakka, :alku, :loppu, :keskilampo, :pitkalampo, :pitkalampo_vanha);
 
 -- name: paivita-lampotila<!
 UPDATE lampotilat SET
-  urakka = :urakka, alkupvm = :alku, loppupvm = :loppu, keskilampotila = :keskilampo, pitka_keskilampotila = :pitkalampo
+  urakka = :urakka, alkupvm = :alku, loppupvm = :loppu, keskilampotila = :keskilampo,
+  pitka_keskilampotila = :pitkalampo, pitka_keskilampotila_vanha = :pitkalampo_vanha
 WHERE id = :id;
 
 -- name: hae-urakan-suolasakot
@@ -56,8 +58,8 @@ INSERT INTO pohjavesialue_talvisuola
        (talvisuolaraja, urakka, hoitokauden_alkuvuosi, pohjavesialue)
 VALUES (:talvisuolaraja, :urakka, :hoitokauden_alkuvuosi, :pohjavesialue);
 
- 
- 
+
+
 -- name: aseta-suolasakon-kaytto!
 UPDATE suolasakko
    SET kaytossa = :kaytossa, muokattu = NOW(), muokkaaja = :kayttaja
@@ -74,7 +76,8 @@ SELECT
   lt.alkupvm as alkupvm,
   lt.loppupvm as loppupvm,
   lt.keskilampotila as keskilampotila,
-  lt.pitka_keskilampotila as pitkakeskilampotila
+  lt.pitka_keskilampotila as pitkakeskilampotila,
+  lt.pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
 FROM urakka u
   LEFT JOIN lampotilat lt ON (lt.urakka = u.id AND lt.alkupvm = :alkupvm AND lt.loppupvm = :loppupvm)
 WHERE (u.tyyppi = 'hoito'::urakkatyyppi AND
