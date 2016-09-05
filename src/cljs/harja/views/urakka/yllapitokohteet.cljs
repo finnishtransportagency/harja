@@ -501,12 +501,10 @@
                           [kohteen-vetolaatikko urakka kohteet-atom rivi])))
                  @kohteet-atom)
            :tallenna @tallenna
-           :piilota-toiminnot? true
            :muutos (fn [grid]
                      (hae-osan-pituudet grid osan-pituudet-teille)
                      (validoi-tr-osoite grid tr-sijainnit tr-virheet))
            :voi-lisata? (not (:yha-sidottu? optiot))
-           :voi-poistaa? (constantly (not (:yha-sidottu? optiot)))
            :esta-poistaminen? (fn [rivi] (or (not (nil? (:paallystysilmoitus-id rivi)))
                                              (not (nil? (:paikkausilmoitus-id rivi)))))
            :esta-poistaminen-tooltip
