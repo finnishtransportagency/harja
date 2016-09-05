@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.2.4</b>
-<b>Julkaistu: 27.7.2016</b>
+<b>Nykyinen versio: 0.2.7</b>
+<b>Julkaistu: 1.9.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.7. Julkaistu: 1.9.2016:
+    - Haettaessa tietolajin kuvaus Harjasta ei enää palauteta sellaisia ominaisuuksia, joilla ei ole järjestysnumeroa.
 - Versionumero: 0.2.6. Julkaistu: 11.8.2016:
     - Työkoneiden reaaliaikaseurantaan on lisätty uudet tehtävät ylläpidon ajoneuvoja varten: asfaltointi (pääasfaltointilaite), tiemerkintä, kuumennus (kuumennus-/remix-laitteet), sekoitus tai stabilointi (sekoitus- ja stabilointijyrsimet), turvalaite (TMA-laitteet)
 - Versionumero: 0.2.5. Julkaistu 8.8.2016:

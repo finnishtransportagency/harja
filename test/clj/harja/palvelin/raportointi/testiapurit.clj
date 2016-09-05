@@ -16,7 +16,8 @@
 
 (defn tarkista-taulukko-yhteensa [taulukko numero-sarake]
   (let [rivit (nth taulukko 3)
-        laskettu-summa (reduce + 0 (keep #(nth % numero-sarake) (butlast rivit)))
+        laskettu-summa (reduce + 0 (keep #(nth % numero-sarake)
+                                         (filter vector? (butlast rivit))))
         raportoitu-summa (nth (last rivit) numero-sarake)]
     (is (== laskettu-summa raportoitu-summa)
         (str "Laskettu ja raportoitu yhteensä summa ei täsmää: "

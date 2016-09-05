@@ -28,3 +28,16 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION paivita_kaikki_sopimuksen_kaytetty_materiaali() RETURNS void AS $$
+BEGIN
+  -- Poistetaan kaikki
+  DELETE FROM sopimuksen_kaytetty_materiaali;
+
+  -- Luodaan uudet haun perusteella
+  INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
+      SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara)
+        FROM toteuma_materiaali tm join toteuma t ON tm.toteuma=t.id
+	GROUP BY t.sopimus, t.alkanut::date, tm.materiaalikoodi;
+END;
+$$ LANGUAGE plpgsql;
