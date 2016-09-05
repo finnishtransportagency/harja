@@ -472,7 +472,7 @@
                       (if (k/virhe? res)
                         ;; Epäonnistui jostain syystä
                         (do
-                          (viesti/nayta! "Tallentaminen epäonnistui" :danger viesti/viestin-nayttoaika-lyhyt)
+                          (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
                           (reset! tallennus-kaynnissa false))
                         ;; Tallennus ok
                         (do (viesti/nayta! "Siltatarkastus tallennettu")

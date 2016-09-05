@@ -246,9 +246,9 @@
 
 (defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
   (jdbc/with-db-transaction [db db]
-    (doseq [ilmoitustoimenpide ilmoitustoimenpiteet]
-      (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))
-    :ok))
+    (vec
+     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
+       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide)))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle

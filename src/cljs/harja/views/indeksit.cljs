@@ -34,7 +34,7 @@
        :valinta-arvo  identity
        :valinta-nayta #(if (nil? %) "- valitse -" %)
 
-       :valinnat      (vec (filter #(not (varatut-vuodet %)) (range 2010 (inc (t/year (t/now))))))
+       :valinnat      (vec (filter #(not (varatut-vuodet %)) (range 2009 (inc (t/year (t/now))))))
 
        :validoi       [[:ei-tyhja "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
        :muokattava?   #(not (:kannassa? %))}
