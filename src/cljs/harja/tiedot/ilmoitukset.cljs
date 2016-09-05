@@ -71,12 +71,6 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
         ilmoitus))
     ilmoitukset))
 
-(defn- merkitsevat-suodattimet [suodattimet]
-  (let [pida-suodatin? (fn [suodatin-avain]
-                         (not (str/starts-with? (str suodatin-avain) ":harja.ui.lomake")))
-        merkitsevat-suodattimet (filter pida-suodatin? (keys suodattimet))]
-    (apply dissoc suodattimet merkitsevat-suodattimet)))
-
 (defn- nayta-notifikaatio-uusista-ilmoituksista [uudet-ilmoitukset optiot]
   (let [uusien-ilmoitusten-maara (count uudet-ilmoitukset)
         uusien-toimenpidepyyntojen-maara (count
