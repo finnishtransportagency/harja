@@ -346,7 +346,7 @@
             <xs:element name="kiviaineksen-km-arvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
             <xs:element name="kiviaineksen-muotoarvo" type="xs:string" minOccurs="0" maxOccurs="1"/>
             <xs:element name="sideainetyyppi" type="sideainetyyppi" minOccurs="0" maxOccurs="1"/>
-            <xs:element name="sideainepitoisuus" type="xs:integer" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="sideainepitoisuus" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
             <xs:element name="lisa-aineet" type="xs:string" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
@@ -365,7 +365,7 @@
             <xs:element name="verkkotyyppi" type="alustan-verkkotyyppi" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="verkon-tarkoitus" type="alustan-verkon-sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
             <xs:element name="verkon-sijainti" type="alustan-verkon-sijainti" nillable="false" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" nillable="false" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="tekninen-toimenpide" type="alustan-tekninen-toimenpide" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 

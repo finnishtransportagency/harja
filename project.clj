@@ -119,6 +119,9 @@
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
+
+                 ;; Tuck UI apuri
+                 [webjure/tuck "0.2.1"]
                  ]
 
 
