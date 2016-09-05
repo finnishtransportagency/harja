@@ -101,9 +101,9 @@ button > .ajax-loader {
 
 .korosta {
   -webkit-animation-name: rivin-korostusanimaatio; /* Chrome, Safari, Opera */
-  -webkit-animation-duration: 8s; /* Chrome, Safari, Opera */
+  -webkit-animation-duration: 12s; /* Chrome, Safari, Opera */
   animation-name: rivin-korostusanimaatio;
-  animation-duration: 8s;
+  animation-duration: 12s;
 }
 
 .korostettu div.haku-lista-item-nimi {
@@ -112,26 +112,20 @@ button > .ajax-loader {
 
 /* Chrome, Safari, Opera */
 @-webkit-keyframes rivin-korostusanimaatio {
-  0% {
+  from {
     background-color: @onnistuminen;
   }
-  50% {
-    background-color: @onnistuminen;
-  }
-  100% {
+  to {
     background-color: @harjan-taustavari;
   }
 }
 
 /* Standard syntax */
 @keyframes rivin-korostusanimaatio {
-  0% {
+  from {
     background-color: @onnistuminen;
   }
-  50% {
-    background-color: @onnistuminen;
-  }
-  100% {
+  to {
     background-color: @harjan-taustavari;
   }
 }
