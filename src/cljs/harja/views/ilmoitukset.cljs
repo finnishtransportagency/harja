@@ -167,7 +167,7 @@
 
 (defn leikkaa-otsikko [{:keys [otsikko]}]
   (if (> (count otsikko) 30)
-    (str (merkkijono/leikkaa 30 otsikko) "...")
+    (str (fmt/leikkaa-merkkijono 30 otsikko) "...")
     otsikko))
 
 (defn ilmoitusten-paanakyma
