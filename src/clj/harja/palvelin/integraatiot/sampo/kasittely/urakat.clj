@@ -14,26 +14,26 @@
             [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi hallintayksikko]
+(defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi sopimustyyppi hallintayksikko]
   (log/debug "Päivitetään urakka, jonka id on: " urakka-id ".")
-  (urakat/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko urakka-id))
+  (urakat/paivita-urakka! db nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi hallintayksikko urakka-id sopimustyyppi))
 
-(defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi hallintayksikko]
+(defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi sopimustyyppi hallintayksikko]
   (log/debug "Luodaan uusi urakka.")
   (let [uusi-id (:id (urakat/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id
-                                          sampo-id urakkatyyppi hallintayksikko))]
+                                          sampo-id urakkatyyppi hallintayksikko sopimustyyppi))]
     (log/debug "Uusi urakka id on:" uusi-id)
     (urakat/paivita-urakka-alueiden-nakyma db)
     uusi-id))
 
-(defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi ely-id]
+(defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi sopimustyyppi ely-id]
   (let [urakka-id (:id (first (urakat/hae-id-sampoidlla db sampo-id)))]
     (if urakka-id
       (do
-        (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi ely-id)
+        (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkatyyppi sopimustyyppi ely-id)
         urakka-id)
       (do
-        (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi ely-id)))))
+        (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi sopimustyyppi ely-id)))))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
   (yhteyshenkilot/irrota-sampon-yhteyshenkilot-urakalta! db urakka-id)
@@ -55,7 +55,7 @@
   ;; Samposta ei tuoda paikkausurakoita
   (some? (#{"paallystys" "tiemerkinta" "valaistus"} urakkatyyppi)))
 
-(defn- luo-yllapidon-toimenpiteet [db {:keys [urakka-id urakkatyyppi alkupvm loppupvm ] :as urakan-tiedot}]
+(defn- luo-yllapidon-toimenpiteet [db {:keys [urakka-id urakkatyyppi alkupvm loppupvm] :as urakan-tiedot}]
   (when (yllapito-urakka? urakkatyyppi)
     (log/debug "Luodaan " urakkatyyppi "-urakalle toimenpideinstanssi")
     (let [yllapidon-3-tason-toimenpidekoodit {"paallystys" "PAAL_YKSHINT"
@@ -69,13 +69,20 @@
                                                           loppupvm
                                                           urakka-id)))))
 
+(defn paattele-sopimustyyppi [urakkatyyppi]
+  (case urakkatyyppi
+    "paallystys" "kokonaisurakka"
+    "hoito" "palvelusopimus"
+    nil))
+
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id
                                    yhteyshenkilo-sampo-id ely-hash]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
     (let [urakkatyyppi (paattele-urakkatyyppi db hanke-sampo-id)
+          sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
           ely-id (:id (first (organisaatiot/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
-          urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi ely-id)]
+          urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkatyyppi sopimustyyppi ely-id)]
       (log/debug "Käsiteltävän urakan id on:" urakka-id)
       (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
       (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
@@ -93,9 +100,9 @@
     (catch Exception e
       (log/error e "Tapahtui poikkeus tuotaessa urakkaa Samposta (Sampo id:" sampo-id ", viesti id:" viesti-id ").")
       (let [kuittaus (kuittaus-sanoma/muodosta-muu-virhekuittaus viesti-id "Project" "Internal Error")]
-        (throw+ {:type     virheet/+poikkeus-samposisaanluvussa+
+        (throw+ {:type virheet/+poikkeus-samposisaanluvussa+
                  :kuittaus kuittaus
-                 :virheet  [{:poikkeus e}]})))))
+                 :virheet [{:poikkeus e}]})))))
 
 (defn kasittele-urakat [db urakat]
   (mapv #(kasittele-urakka db %) urakat))
