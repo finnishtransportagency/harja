@@ -84,33 +84,33 @@
                             false))))
 
 (deftest paivia-valissa-toimii
-  (is (= (pvm/paivia-valissa [nyt
+  (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
                           (t/plus nyt (t/days 5))]
-                         [(t/plus nyt (t/days 1))
+                                                 [(t/plus nyt (t/days 1))
                           (t/plus nyt (t/days 3))])
          2))
-  (is (= (pvm/paivia-valissa [nyt
+  (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
                           (t/plus nyt (t/days 2))]
-                         [(t/plus nyt (t/days 1))
+                                                 [(t/plus nyt (t/days 1))
                           (t/plus nyt (t/days 5))])
          1))
-  (is (= (pvm/paivia-valissa [(t/plus nyt (t/days 1))
+  (is (= (pvm/paivia-aikavalien-leikkauskohdassa [(t/plus nyt (t/days 1))
                           (t/plus nyt (t/days 3))]
-                         [nyt
+                                                 [nyt
                           (t/plus nyt (t/days 2))])
          1))
-  (is (= (pvm/paivia-valissa [(t/plus nyt (t/days 1))
+  (is (= (pvm/paivia-aikavalien-leikkauskohdassa [(t/plus nyt (t/days 1))
                           (t/plus nyt (t/days 3))]
-                         [nyt
+                                                 [nyt
                           (t/plus nyt (t/days 5))])
          2))
-  (is (= (pvm/paivia-valissa [nyt
+  (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
                           (t/plus nyt (t/days 3))]
-                         [(t/plus nyt (t/days 5))
+                                                 [(t/plus nyt (t/days 5))
                           (t/plus nyt (t/days 10))])
          0))
-  (is (= (pvm/paivia-valissa [nyt
+  (is (= (pvm/paivia-aikavalien-leikkauskohdassa [nyt
                           (t/plus nyt (t/days 3))]
-                         [(t/minus nyt (t/days 3))
+                                                 [(t/minus nyt (t/days 3))
                           (t/minus nyt (t/days 2))])
          0)))

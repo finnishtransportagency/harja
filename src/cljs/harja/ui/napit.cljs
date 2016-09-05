@@ -158,3 +158,18 @@ Asetukset on optionaalinen mäppi ja voi sisältää:
     (if ikoni
       [:span ikoni (str " " teksti)]
       teksti)]))
+
+(defn tallenna
+  "Yleinen 'Tallenna' nappi."
+  ([sisalto toiminto-fn] (tallenna sisalto toiminto-fn {}))
+  ([sisalto toiminto-fn {:keys [disabled luokka ikoni tallennus-kaynnissa?]}]
+   [:button.nappi-ensisijainen
+    {:class (str (when disabled "disabled " luokka))
+     :disabled disabled
+     :on-click #(do (.preventDefault %)
+                    (toiminto-fn))}
+    (if tallennus-kaynnissa?
+      [y/ajax-loader]
+      ikoni)
+    (when (or ikoni tallennus-kaynnissa?) " ")
+    sisalto]))

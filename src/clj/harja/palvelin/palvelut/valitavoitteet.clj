@@ -11,9 +11,6 @@
     (julkaise-palvelu (:http-palvelin this) :hae-urakan-valitavoitteet
                       (fn [user urakka-id]
                         (urakkakohtaiset/hae-urakan-valitavoitteet (:db this) user urakka-id)))
-    (julkaise-palvelu (:http-palvelin this) :merkitse-valitavoite-valmiiksi
-                      (fn [user tiedot]
-                        (urakkakohtaiset/merkitse-valmiiksi! (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this) :tallenna-urakan-valitavoitteet
                       (fn [user tiedot]
                         (urakkakohtaiset/tallenna-urakan-valitavoitteet! (:db this) user tiedot)))
