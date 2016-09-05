@@ -70,10 +70,8 @@
                                                           urakka-id)))))
 
 (defn paattele-sopimustyyppi [urakkatyyppi]
-  (case urakkatyyppi
-    "paallystys" "kokonaisurakka"
-    "hoito" "palvelusopimus"
-    nil))
+  (when (= urakkatyyppi "paallystys")
+    "kokonaisurakka"))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id
                                    yhteyshenkilo-sampo-id ely-hash]}]
