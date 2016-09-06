@@ -12,7 +12,7 @@
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.yhatuonti :as yhatiedot]
             [harja.views.urakka.yhatuonti :as yha]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
 
             [cljs.core.async :refer [<!]]
@@ -325,7 +325,10 @@
         hae! (fn [ur]
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
-                           (<! (yht/hae-urakan-yhteyshenkilot (:id ur))))))]
+                           (filter
+                             #(not= "urakoitsijan paivystaja" (:rooli %))
+                             (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
+    (tarkkaile! "yhteyshenkilöt" yhteyshenkilot)
     (go (reset! yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))))
     (hae! ur)
     (komp/luo
