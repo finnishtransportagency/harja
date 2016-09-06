@@ -16,11 +16,15 @@ export default React.createClass({
   getInitialState() {
     return {
       careNotices: [],
+      maintenanceNotices: [],
+      faqNotices: []
     };
   },
 
   componentDidMount() {
-      this.getNotices('carenotices.json', this.state.careNotices)
+      this.getNotices('care.json', 'careNotices');
+      this.getNotices('maintenance.json', 'maintenanceNotices');
+      this.getNotices('faq.json', 'faqNotices');
   },
 
   getNotices(file, result) {
@@ -29,20 +33,21 @@ export default React.createClass({
       .set('Accept', 'application/json')
       .end((err, response) => {
         if (err) return console.error(err);
-        debugger;
         this.setState({
-          careNotices: response.body,
+          [result]: response.body,
         });
       });
   },
 
   render() {
-    let {careNotices} = this.state;
+    let {careNotices, maintenanceNotices, faqNotices} = this.state;
     return (
       <div>
         <h1>Learn Flux</h1>
         <Button color={Colors.SUCCESS}>TESTSAVE</Button>
         <NoticeList notices={careNotices} />
+        <NoticeList notices={maintenanceNotices} />
+        <NoticeList notices={faqNotices} />
       </div>
     );
   }

@@ -21,11 +21,12 @@ export default React.createClass({
     var loadingEl;
     var noticesEl;
 
-    if (!this.props.notices.length > 0) {
+    let {notices} = this.props;
+
+    if (!notices.length > 0) {
       loadingEl = (<p>Loading...</p>);
     }
     else {
-      let {notices} = this.props;
       noticesEl = (
         <ul>
           {notices.map(notice =>
