@@ -137,7 +137,12 @@
           palteen-poisto
           paallystetyn-tien-sorapientareen-taytto
           ojitus
-          muu]})
+          muu]
+   :urakkatyyppi [urakkatyyppi-hoito
+                  urakkatyyppi-tiemerkinta
+                  urakkatyyppi-paallystys
+                  urakkatyyppi-paikkaus
+                  urakkatyyppi-valaistus]})
 
 (def yllapidon-reaaliaikaseurattavat
   #{(:id paaasfalttilevitin)
