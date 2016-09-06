@@ -7,7 +7,6 @@
             [harja.palvelin.integraatiot.yha.sanomat.urakan-kohdehakuvastaussanoma :as urakan-kohdehakuvastaus]
             [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
             [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
-            [org.httpkit.fake :refer [with-fake-http]]
             [harja.kyselyt.yha :as q-yha-tiedot]
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
@@ -115,7 +114,7 @@
         {:type +virhe-kohteen-lahetyksessa+
          :virheet {:virhe virhe}}))))
 
-(defn hae-urakat-yhasta [integraatioloki db url yha-nimi sampotunniste vuosi]
+(defn hae-urakat-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} yha-nimi sampotunniste vuosi]
   (let [url (str url "urakkahaku")]
     (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
                        yha-nimi sampotunniste vuosi url))
@@ -128,12 +127,14 @@
                              (conj (when vuosi ["vuosi" vuosi])))
               http-asetukset {:metodi :GET
                               :url url
-                              :parametrit parametrit}
+                              :parametrit parametrit
+                              :kayttajatunnus kayttajatunnus
+                              :salasana salasana}
               {body :body headers :headers}
               (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (kasittele-urakoiden-hakuvastaus body headers))))))
 
-(defn hae-urakan-kohteet-yhasta [integraatioloki db url urakka-id kayttajatunnus]
+(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kayttajatunnus]
   (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "haeUrakanKohteet" yha-id))
           vuosi (pvm/vuosi (pvm/nyt))]
@@ -145,7 +146,11 @@
                                (lisaa-http-parametri "yha-id" yha-id)
                                (lisaa-http-parametri "vuosi" vuosi)
                                (lisaa-http-parametri "kayttaja" kayttajatunnus))
-                http-asetukset {:metodi :GET :url url :parametrit parametrit}
+                http-asetukset {:metodi :GET
+                                :url url
+                                :parametrit parametrit
+                                :kayttajatunnus kayttajatunnus
+                                :salasana salasana}
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
             (kasittele-urakan-kohdehakuvastaus body headers)))))
@@ -156,7 +161,7 @@
           {:type +virhe-urakan-kohdehaussa+
            :virheet {:virhe virhe}})))))
 
-(defn laheta-kohteet-yhaan [integraatioloki db url urakka-id kohde-idt]
+(defn laheta-kohteet-yhaan [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
   (integraatiotapahtuma/suorita-integraatio
     db integraatioloki "yha" "kohteiden-lahetys"
@@ -166,7 +171,10 @@
               kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
               url (str url "toteumatiedot")
               kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-              http-asetukset {:metodi :POST :url url}
+              http-asetukset {:metodi :POST
+                              :url url
+                              :kayttajatunnus kayttajatunnus
+                              :salasana salasana}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
           (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
 
@@ -184,8 +192,8 @@
   YllapidonUrakoidenHallinta
 
   (hae-urakat [this yha-nimi sampotunniste vuosi]
-    (hae-urakat-yhasta (:integraatioloki this) (:db this) (:url asetukset) yha-nimi sampotunniste vuosi))
+    (hae-urakat-yhasta (:integraatioloki this) (:db this) asetukset yha-nimi sampotunniste vuosi))
   (hae-kohteet [this urakka-id kayttajatunnus]
-    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) (:url asetukset) urakka-id kayttajatunnus))
+    (hae-urakan-kohteet-yhasta (:integraatioloki this) (:db this) asetukset urakka-id kayttajatunnus))
   (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) (:url asetukset) urakka-id kohde-idt)))
+    (laheta-kohteet-yhaan (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
