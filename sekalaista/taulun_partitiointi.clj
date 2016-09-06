@@ -81,4 +81,4 @@
 
      )))
 
-(println (luo-tarkastus-partitiot))
+;(spit "tark_part.sql" (luo-tarkastus-partitiot))
