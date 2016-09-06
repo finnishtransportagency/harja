@@ -155,31 +155,6 @@
                                     (konv/sql-date loppu)
                                     (map name haettavat)))))))
 
-(defn- hae-tarkastukset
-  [db user {:keys [toleranssi alku loppu tarkastukset]} urakat]
-  (when-not (empty? urakat)
-    (let [haettavat (haettavat tarkastukset)]
-     (when-not (empty? haettavat)
-       (into []
-             (comp
-               (map #(konv/array->set % :vakiohavainnot))
-               (map laadunseuranta/tarkastus-tiedolla-onko-ok)
-               (geo/muunna-pg-tulokset :sijainti)
-               (map konv/alaviiva->rakenne)
-               (map #(konv/string->keyword % :tyyppi))
-               (map (fn [tarkastus]
-                      (condp = (:tyyppi tarkastus)
-                        :talvihoito (dissoc tarkastus :soratiemittaus)
-                        :soratie (dissoc tarkastus :talvihoitomittaus)
-                        :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
-                        :laatu (dissoc tarkastus :soratiemittaus :talvihoitomittaus)))))
-             (q/hae-tarkastukset db
-                                 toleranssi
-                                 urakat
-                                 (konv/sql-date alku)
-                                 (konv/sql-date loppu)
-                                 (map name haettavat)))))))
-
 (defn- hae-turvallisuuspoikkeamat
   [db user {:keys [toleranssi alku loppu turvallisuus]} urakat]
   (when-not (empty? urakat)
@@ -248,6 +223,21 @@
                        :xmax (:xmax alue)
                        :ymax (:ymax alue)}))))
 
+(defn- hae-tarkastusten-reitit
+  [db ch user {:keys [toleranssi alue alku loppu tarkastukset] :as tiedot} urakat]
+  (log/debug "Tarkastukset: " tiedot " => " (haettavat tarkastukset) ", urakat: " urakat )
+  (when-not (empty? urakat)
+    (q/hae-tarkastukset db ch
+                        {:toleranssi toleranssi
+                         :alku (konv/sql-date alku)
+                         :loppu (konv/sql-date loppu)
+                         :urakat urakat
+                         :xmin (:xmin alue)
+                         :ymin (:ymin alue)
+                         :xmax (:xmax alue)
+                         :ymax (:ymax alue)
+                         :tyypit (map name (haettavat tarkastukset))})))
+
 (defn- hae-suljetut-tieosuudet
   [db user {:keys [yllapito alue urakkatyyppi]} urakat]
   (when (tk/valittu? yllapito tk/suljetut-tiet)
@@ -281,10 +271,6 @@
   (tulosta-tulos! "toteuman selitettä"
                   (hae-toteumien-selitteet db user tiedot urakat)))
 
-(defmethod hae-osio :toteumat-kuva [db user tiedot urakat _]
-  (tulosta-tulos! "toteuman reittiä"
-                  (hae-toteumien-reitit db user tiedot urakat)))
-
 (defmethod hae-osio :tyokoneet [db user tiedot urakat _]
   (tulosta-tulos! "tyokonetta"
                   (hae-tyokoneet db user tiedot urakat)))
@@ -292,10 +278,6 @@
 (defmethod hae-osio :turvallisuuspoikkeamat [db user tiedot urakat _]
   (tulosta-tulos! "turvallisuuspoikkeamaa"
                   (hae-turvallisuuspoikkeamat db user tiedot urakat)))
-
-(defmethod hae-osio :tarkastukset [db user tiedot urakat _]
-  (tulosta-tulos! "tarkastusta"
-                  (hae-tarkastukset db user tiedot urakat)))
 
 (defmethod hae-osio :laatupoikkeamat [db user tiedot urakat _]
   (tulosta-tulos! "laatupoikkeamaa"
@@ -325,11 +307,12 @@
       nil)))
 
 (defn hae-urakat [db user tiedot]
-  (urakat/kayttajan-urakat-aikavalilta-alueineen db user (if (:nykytilanne? tiedot)
-                                                           oikeudet/tilannekuva-nykytilanne
-                                                           oikeudet/tilannekuva-historia)
-                                                 nil (:urakoitsija tiedot) (:urakkatyyppi tiedot)
-                                                 nil (:alku tiedot) (:loppu tiedot)))
+  (urakat/kayttajan-urakat-aikavalilta-alueineen
+   db user (if (:nykytilanne? tiedot)
+             oikeudet/tilannekuva-nykytilanne
+             oikeudet/tilannekuva-historia)
+   nil (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+   nil (:alku tiedot) (:loppu tiedot)))
 
 (defn hae-tilannekuvaan
   ([db user tiedot]
@@ -345,35 +328,24 @@
              (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
              osiot)))))
 
-;; {:urakka-id nil, :alue {:xmin 440408, :ymin 7191776, :xmax 451848, :ymax 7196880}
-;;  :ilmoitukset {:tilat #{:avoimet}}, :hallintayksikko nil, :urakoitsija nil,
-;;  :tarkastukset #{7 6 9 10 8},
-;;  :alku #inst "2016-02-05T14:48:16.000-00:00"
-;;  :loppu #inst "2016-02-26T14:48:16.000-00:00"
-;;  :nykytilanne? true,  :urakkatyyppi :hoito}
-
 (defn- karttakuvan-suodattimet
   "Tekee karttakuvan URL parametreistä suodattimet"
   [{:keys [extent parametrit]}]
   (let [[x1 y1 x2 y2] extent
-        hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string)
-        ]
+        hakuparametrit (some-> parametrit (get "tk") transit/lue-transit-string)]
     (as-> hakuparametrit p
           (merge p
                  {:alue {:xmin x1 :ymin y1
                          :xmax x2 :ymax y2}})
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
-(defn- hae-karttakuvan-tiedot [db user parametrit]
+(defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf ]
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
         ch (async/chan 32
                        (comp
                          (map konv/alaviiva->rakenne)
-                         (map #(assoc %
-                                :tyyppi :toteuma
-                                :tyyppi-kartalla :toteuma
-                                :tehtavat [(:tehtava %)]))
+                         xf
                          kartalle-xf))
         urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
                                                oikeudet/tilannekuva-nykytilanne
@@ -382,8 +354,27 @@
     (async/thread
       (jdbc/with-db-transaction [db db
                                  :read-only? true]
-        (hae-toteumien-reitit db ch user tiedot urakat)))
+        (try (haku-fn db ch user tiedot urakat)
+             (catch Throwable t
+               (println t "Virhe haettaessa tilannekuvan karttatietoja")
+               (throw t)))))
     ch))
+
+(defn- hae-toteumat-kartalle [db user parametrit]
+  (hae-karttakuvan-tiedot db user parametrit hae-toteumien-reitit
+                          (map #(assoc %
+                                       :tyyppi :toteuma
+                                       :tyyppi-kartalla :toteuma
+                                       :tehtavat [(:tehtava %)]))))
+
+(defn- hae-tarkastukset-kartalle [db user parametrit]
+  (hae-karttakuvan-tiedot db user parametrit hae-tarkastusten-reitit
+                          (comp (map laadunseuranta/tarkastus-tiedolla-onko-ok)
+                                (map #(konv/string->keyword % :tyyppi :tekija))
+                                (map #(assoc %
+                                             :tyyppi-kartalla :tarkastus
+                                             :sijainti (:reitti %))))))
+
 
 (defrecord Tilannekuva []
   component/Lifecycle
@@ -398,14 +389,18 @@
                       (fn [user tiedot]
                         (hae-urakat db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
-      karttakuvat :tilannekuva
+      karttakuvat :tilannekuva-toteumat
       ;; Viitataan var kautta funktioon, jotta sen voi RPELissä määritellä uudestaan
-      (partial #'hae-karttakuvan-tiedot db))
+      (partial #'hae-toteumat-kartalle db))
+    (karttakuvat/rekisteroi-karttakuvan-lahde!
+     karttakuvat :tilannekuva-tarkastukset
+     (partial #'hae-tarkastukset-kartalle db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
     (poista-palvelut (:http-palvelin this)
                      :hae-tilannekuvaan
                      :hae-urakat-tilannekuvaan)
-    (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva)
+    (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-toteumat)
+    (karttakuvat/poista-karttakuvan-lahde! karttakuvat :tilannekuva-tarkastukset)
     this))

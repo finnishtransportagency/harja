@@ -61,15 +61,27 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    nil nil
    (map (lisaa-karttatyyppi-fn taso))))
 
+(defn- muodosta-kuva-karttataso [nimi selitteet hakuparametrit]
+  (openlayers/luo-kuvataso
+   nimi
+   selitteet
+   "tk" hakuparametrit))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
   (log "toteumat taso tehdään!" (pr-str toimenpiteet))
-  (openlayers/luo-kuvataso
-   :tilannekuva
+  (muodosta-kuva-karttataso
+   :tilannekuva-toteumat
    (into #{}
          (map (comp esitettavat-asiat/toimenpiteen-selite :toimenpide))
          toimenpiteet)
-   "tk" @url-hakuparametrit))
+   @url-hakuparametrit))
+
+(defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
+  (log "tarkastukset taso tehdään! " (pr-str tarkastukset))
+  (muodosta-kuva-karttataso
+   :tilannekuva-tarkastukset
+   #{}
+   @url-hakuparametrit))
 
 ;; Päivittää tilannekuvan karttatasot kun niiden tiedot ovat muuttuneet.
 ;; Muuntaa kartalla esitettävään muotoon ne tasot, joiden tiedot on oikeasti
