@@ -168,11 +168,13 @@
                                  @ensimmainen-haku-kaynnissa? "Haetaan alueita"
                                  @onko-alueita? "Näytä alueilta"
                                  :else "Ei näytettäviä alueita")]
-         [kentat/tee-kentta {:tyyppi :valinta
-                             :valinnat nav/+urakkatyypit+
-                             :valinta-nayta #(nav/nayta-urakkatyyppi (:arvo %))
-                             :pakota-suunta :ylos}
-          nav/valittu-urakkatyyppi]
+         [yleiset/livi-pudotusvalikko {:valinta @nav/urakkatyyppi
+                                       :format-fn #(if % (:nimi %) "Kaikki")
+                                       :valitse-fn nav/vaihda-urakkatyyppi!
+                                       :class (str "alasveto-urakkatyyppi" (when (boolean @nav/valittu-urakka) " disabled"))
+                                       :disabled (boolean @nav/valittu-urakka)
+                                       :pakota-suunta :ylos}
+          nav/+urakkatyypit+]
 
          (if @ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
