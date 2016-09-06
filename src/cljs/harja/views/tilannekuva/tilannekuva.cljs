@@ -155,33 +155,31 @@
                           "Lappi"])
 
 (defn aluesuodattimet []
-  (let [onko-alueita? (reaction-writable
-                        (some
-                          (fn [[_ suodattimet]]
-                            (not (empty? suodattimet)))
-                          (:alueet @tiedot/suodattimet)))
-        ensimmainen-haku-kaynnissa? (reaction-writable
-                                      (and (empty? (:alueet @tiedot/suodattimet))
-                                           (nil? @tiedot/uudet-aluesuodattimet)))]
-    (komp/luo
-      (fn []
+  (komp/luo
+    (fn []
+      (let [onko-alueita? (some
+                            (fn [[_ suodattimet]]
+                              (not (empty? suodattimet)))
+                            (:alueet @tiedot/suodattimet))
+            ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
+                                             (nil? @tiedot/uudet-aluesuodattimet))]
         [:div.tk-asetuskokoelma
          [:div.tk-otsikko (cond
-                                 @ensimmainen-haku-kaynnissa? "Haetaan alueita"
-                                 @onko-alueita? "Näytä alueilta"
-                                 :else "Ei näytettäviä alueita")]
+                            ensimmainen-haku-kaynnissa? "Haetaan alueita"
+                            onko-alueita? "Näytä alueilta"
+                            :else "Ei näytettäviä alueita")]
 
-         (if @ensimmainen-haku-kaynnissa?
+         (if ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
            [:div.tk-suodatinryhmat
-             (doall
-               (for [alue tilannekuvan-alueet]
-                 [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
+            (doall
+              (for [alue tilannekuvan-alueet]
+                [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
 
 (defn aikasuodattimet []
   [:div.tk-asetuskokoelma
    [:div.tk-otsikko "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
-                                           " (max. yksi vuosi):")]
+                                          " (max. yksi vuosi):")]
    (when (= :nykytilanne @tiedot/valittu-tila)
      [nykytilanteen-aikavalinnat])
    (when (= :historiakuva @tiedot/valittu-tila)
