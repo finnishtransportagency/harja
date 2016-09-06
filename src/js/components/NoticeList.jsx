@@ -5,33 +5,27 @@ import request from 'superagent';
 export default React.createClass({
   getInitialState() {
     return {
-      notices: [],
-      loading: true
     };
   },
 
+  getDefaultProps() {
+    return {
+      notices: []
+    }
+  },
+
   componentDidMount() {
-      const url = '../data/' + this.props.url;
-      request.get(url)
-        .set('Accept', 'application/json')
-        .end((err, response) => {
-          if (err) return console.error(err);
-          this.setState({
-            notices: response.body,
-            loading: false
-          });
-        });
   },
 
   render() {
     var loadingEl;
     var noticesEl;
 
-    if (this.state.loading) {
+    if (!this.props.notices.length > 0) {
       loadingEl = (<p>Loading...</p>);
     }
     else {
-      let {notices} = this.state;
+      let {notices} = this.props;
       noticesEl = (
         <ul>
           {notices.map(notice =>
