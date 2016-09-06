@@ -178,7 +178,7 @@
             [:div.tk-suodatinryhmat
              [checkbox-suodatinryhma "Urakkatyypit"
               tiedot/suodattimet
-              [:urakkatyyppi]
+              [:urakkatyypit]
               nil]]
 
             [:div.tk-suodatinryhmat

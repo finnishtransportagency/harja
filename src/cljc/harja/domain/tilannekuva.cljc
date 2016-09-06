@@ -138,7 +138,7 @@
           paallystetyn-tien-sorapientareen-taytto
           ojitus
           muu]
-   :urakkatyyppi [urakkatyyppi-hoito
+   :urakkatyypit [urakkatyyppi-hoito
                   urakkatyyppi-tiemerkinta
                   urakkatyyppi-paallystys
                   urakkatyyppi-paikkaus
