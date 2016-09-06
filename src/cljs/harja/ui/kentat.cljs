@@ -1,5 +1,5 @@
 (ns harja.ui.kentat
-  "UI input kenttien muodostaminen typpin perusteella, esim. grid ja lomake komponentteihin."
+  "UI input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
