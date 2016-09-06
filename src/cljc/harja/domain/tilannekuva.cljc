@@ -82,13 +82,7 @@
   [aurausviitoitus-ja-kinostimet "aurausviitoitus ja kinostimet"
    "Aurausviitoitus ja kinostimet"]
   [lumensiirto "lumensiirto" "Lumensiirto"]
-  [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
-
-  [urakkatyyppi-hoito "hoito" "Hoito"]
-  [urakkatyyppi-tiemerkinta "tiemerkinta" "Tiemerkintä"]
-  [urakkatyyppi-paallystys "paallystys" "Päällystys"]
-  [urakkatyyppi-paikkaus "paikkaus" "Paikkaus"]
-  [urakkatyyppi-valaistus "valaistus" "Valaistus"])
+  [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"])
 
 (def tehtavien-jarjestys
   {:ilmoitukset {:tyypit [tpp tur urk]}
@@ -137,12 +131,7 @@
           palteen-poisto
           paallystetyn-tien-sorapientareen-taytto
           ojitus
-          muu]
-   :urakkatyypit [urakkatyyppi-hoito
-                  urakkatyyppi-tiemerkinta
-                  urakkatyyppi-paallystys
-                  urakkatyyppi-paikkaus
-                  urakkatyyppi-valaistus]})
+          muu]})
 
 (def yllapidon-reaaliaikaseurattavat
   #{(:id paaasfalttilevitin)

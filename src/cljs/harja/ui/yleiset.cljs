@@ -142,9 +142,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
-(defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti
-                                          max-korkeus-atom suunta-atom
-                                          pakota-suunta]
+(defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti max-korkeus-atom suunta-atom]
   (let [ikkunan-reunaan-jaava-tyhja-tila 15
         solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
         etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan solmu)
@@ -152,8 +150,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         suunta (if (< etaisyys-alareunaan 75)
                  :ylos
                  :alas)]
-    (when-not pakota-suunta
-      (reset! suunta-atom suunta))
+    (reset! suunta-atom suunta)
     (if (= suunta :alas)
       (reset! max-korkeus-atom (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila))
       (reset! max-korkeus-atom (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila)))))
@@ -169,15 +166,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            {:bottom "calc(100% - 1px)"
             :top    "auto"})))
 
-(defn livi-pudotusvalikko [{:keys [pakota-suunta]}
-                           vaihtoehdot]
+(defn livi-pudotusvalikko [_ vaihtoehdot]
   (let [auki? (atom false)
-        avautumissuunta (atom (or pakota-suunta :alas))
+        avautumissuunta (atom :alas)
         max-korkeus (atom 0)
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
                                                   (maarita-pudotusvalikon-max-korkeus
-                                                    this max-korkeus avautumissuunta
-                                                    pakota-suunta))]
+                                                    this max-korkeus avautumissuunta))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki? false))
       (komp/dom-kuuntelija js/window

@@ -115,12 +115,9 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
-     :urakkatyypit {tk/urakkatyyppi-hoito false
-                    tk/urakkatyyppi-tiemerkinta false
-                    tk/urakkatyyppi-paallystys false
-                    tk/urakkatyyppi-paikkaus false
-                    tk/urakkatyyppi-valaistus false}
      :alueet oletusalueet}))
+
+(tarkkaile! "Suodattimet: " suodattimet)
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))

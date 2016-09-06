@@ -173,18 +173,10 @@
 
          (if @ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
-
-           [:div
-            [:div.tk-suodatinryhmat
-             [checkbox-suodatinryhma "Urakkatyypit"
-              tiedot/suodattimet
-              [:urakkatyypit]
-              nil]]
-
-            [:div.tk-suodatinryhmat
+           [:div.tk-suodatinryhmat
              (doall
                (for [alue tilannekuvan-alueet]
-                 [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))]])]))))
+                 [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
 
 (defn aikasuodattimet []
   [:div.tk-asetuskokoelma

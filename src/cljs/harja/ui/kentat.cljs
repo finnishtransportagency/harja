@@ -83,8 +83,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         max-korkeus (atom 0)
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
                                                   (maarita-pudotusvalikon-max-korkeus
-                                                    this max-korkeus avautumissuunta
-                                                    false))]
+                                                    this max-korkeus avautumissuunta))]
     (komp/luo
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
@@ -397,8 +396,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus jos-tyhja
-                                        nayta-ryhmat ryhmittely ryhman-otsikko
-                                        pakota-suunta]} data]
+                                        nayta-ryhmat ryhmittely ryhman-otsikko]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
   (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
@@ -415,7 +413,6 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                           :nayta-ryhmat nayta-ryhmat
                           :ryhmittely ryhmittely
                           :ryhman-otsikko ryhman-otsikko
-                          :pakota-suunta pakota-suunta
                           :on-focus on-focus
                           :format-fn (if (empty? valinnat)
                                        (constantly (or jos-tyhja "Ei valintoja"))
