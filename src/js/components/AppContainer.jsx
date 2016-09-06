@@ -1,23 +1,22 @@
 import React from 'react';
-import TodoStore from '../stores/TodoStore';
-import ActionCreator from '../actions/TodoActionCreators';
 import App from './App.jsx';
 
 export default React.createClass({
   _onChange() {
-    this.setState(TodoStore.getAll());
+    //this.setState(TodoStore.getAll());
   },
 
   getInitialState() {
-    return TodoStore.getAll();
+    //return TodoStore.getAll();
+    return null;
   },
 
   componentDidMount() {
-    TodoStore.addChangeListener(this._onChange);
+    //TodoStore.addChangeListener(this._onChange);
   },
 
   componentWillUnmount() {
-    TodoStore.removeChangeListener(this._onChange);
+    //TodoStore.removeChangeListener(this._onChange);
   },
 
   handleAddTask(e) {
@@ -32,12 +31,12 @@ export default React.createClass({
   },
 
   render() {
-    let {tasks} = this.state;
+
     return (
       <App
         onAddTask={this.handleAddTask}
         onClear={this.handleClear}
-        tasks={tasks} />
+        />
     );
   }
 });
