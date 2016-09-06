@@ -176,13 +176,10 @@
 
            [:div
             [:div.tk-suodatinryhmat
-             (doall
-               ;; FIXME Ei rendaa mitään?
-               #_(for [urakkatyyppi nav/+urakkatyypit+]
-                 [checkbox-suodatinryhma (:nimi urakkatyyppi)
-                  tiedot/suodattimet
-                  [:urakkatyypi (:arvo urakkatyyppi)]
-                  nil]))]
+             [checkbox-suodatinryhma "Urakkatyyppi"
+              tiedot/suodattimet
+              [:urakkatyypi]
+              nil]]
 
             [:div.tk-suodatinryhmat
              (doall

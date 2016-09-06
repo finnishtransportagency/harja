@@ -82,7 +82,13 @@
   [aurausviitoitus-ja-kinostimet "aurausviitoitus ja kinostimet"
    "Aurausviitoitus ja kinostimet"]
   [lumensiirto "lumensiirto" "Lumensiirto"]
-  [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"])
+  [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
+
+  [urakkatyyppi-hoito "hoito" "Hoito"]
+  [urakkatyyppi-tiemerkinta "tiemerkinta" "Tiemerkintä"]
+  [urakkatyyppi-paallystys "paallystys" "Päällystys"]
+  [urakkatyyppi-paikkaus "paikkaus" "Paikkaus"]
+  [urakkatyyppi-valaistus "valaistus" "Valaistus"])
 
 (def tehtavien-jarjestys
   {:ilmoitukset {:tyypit [tpp tur urk]}
