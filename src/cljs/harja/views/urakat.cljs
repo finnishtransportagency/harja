@@ -17,7 +17,9 @@
             [harja.views.kartta :as kartta]
             [harja.views.urakka :as urakka]
             [harja.pvm :as pvm]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
@@ -40,7 +42,11 @@
 
 (defn valitse-urakka []
   (let [urakkalista @nav/hallintayksikon-urakkalista
-        suodatettu-urakkalista @nav/suodatettu-urakkalista]
+        suodatettu-urakkalista @nav/suodatettu-urakkalista
+        urakat-joihin-oikeus (filter
+                               (fn [urakka]
+                                 (oikeudet/voi-lukea? oikeudet/urakat (:id urakka) @istunto/kayttaja))
+                                     suodatettu-urakkalista)]
     [:div.row
      [:div.col-md-4
       (if (nil? urakkalista)
@@ -63,7 +69,7 @@
                              :vinkki         #(when (empty? suodatettu-urakkalista)
                                                "Hakuehdoilla ei löytynyt urakoita")
                              :aputeksti      "Kirjoita urakan nimi tähän"}
-           suodatettu-urakkalista]]])]
+           urakat-joihin-oikeus]]])]
      [:div.col-md-8
       [kartta/kartan-paikka suodatettu-urakkalista]]]))
 
