@@ -86,6 +86,7 @@
 
 (defn checkbox-suodatinryhma
   "ryhma-polku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa.
+
    kokoelma-atomin antaminen tarkoittaa, että checkbox-ryhmä on osa usean checkbox-ryhmän kokoelmaa, joista
    vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
    itse omaa auki/kiinni-tilaansa."
@@ -173,10 +174,20 @@
          (if @ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
 
-           [:div.tk-suodatinryhmat
+           [:div
+            [:div.tk-suodatinryhmat
+             (doall
+               ;; FIXME Ei rendaa mitään?
+               #_(for [urakkatyyppi nav/+urakkatyypit+]
+                 [checkbox-suodatinryhma (:nimi urakkatyyppi)
+                  tiedot/suodattimet
+                  [:urakkatyypi (:arvo urakkatyyppi)]
+                  nil]))]
+
+            [:div.tk-suodatinryhmat
              (doall
                (for [alue tilannekuvan-alueet]
-                 [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
+                 [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))]])]))))
 
 (defn aikasuodattimet []
   [:div.tk-asetuskokoelma

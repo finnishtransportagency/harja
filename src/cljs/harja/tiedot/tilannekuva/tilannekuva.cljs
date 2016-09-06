@@ -45,6 +45,7 @@ hakutiheys-historiakuva 1200000)
 (def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 
 (def oletusalueet {})
+(def oletusurakkatyypit {})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
 (def valittu-hallintayksikko-tilannekuvaan-tullessa (atom nil))
@@ -115,6 +116,7 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
+     :urakkatyypit oletusurakkatyypit
      :alueet oletusalueet}))
 
 (defn- tunteja-vuorokausissa [vuorokaudet]
