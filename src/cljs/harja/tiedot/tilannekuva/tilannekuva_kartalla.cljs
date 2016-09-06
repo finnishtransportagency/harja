@@ -79,8 +79,7 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
 (defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
   (log "tarkastukset taso tehdään! " (pr-str tarkastukset))
   (muodosta-kuva-karttataso
-   :tilannekuva-tarkastukset
-   #{}
+   :tilannekuva-tarkastukset esitettavat-asiat/tarkastus-selitteet
    @url-hakuparametrit))
 
 (def kuvataso? #{:tarkastukset :toteumat})
