@@ -38,7 +38,7 @@
       [:div#tk-tilan-vaihto
        [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
        [:div.tk-tilan-vaihto-historia "Historia"]
-       [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
+       [on-off/on-off-valinta on-off-tila {:luokka "on-off-tilannekuva"
                                            :on-change (fn []
                                                         ;; Päivitä valittu tila
                                                         (reset! tiedot/valittu-tila
@@ -56,17 +56,17 @@
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
-   [kentat/tee-kentta {:tyyppi        :radio
+   [kentat/tee-kentta {:tyyppi :radio
                        :valinta-nayta first
-                       :valinta-arvo  second
-                       :valinnat      tiedot/nykytilanteen-aikasuodatin-tunteina}
+                       :valinta-arvo second
+                       :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
     tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
-   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko?              false
-                                                        :aikavalin-rajoitus          [12 :kuukausi]
-                                                        :aloitusaika-pakota-suunta   :alas-oikea
+   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
+                                                        :aikavalin-rajoitus [12 :kuukausi]
+                                                        :aloitusaika-pakota-suunta :alas-oikea
                                                         :paattymisaika-pakota-suunta :alas-vasen}]])
 
 (defn yksittainen-suodatincheckbox
@@ -74,7 +74,7 @@
   [nimi suodattimet-atom suodatin-polku]
   [checkbox/checkbox
    (r/wrap (checkbox/boolean->checkbox-tila-keyword
-            (get-in @suodattimet-atom suodatin-polku))
+             (get-in @suodattimet-atom suodatin-polku))
            (fn [uusi-tila]
              (swap! suodattimet-atom
                     assoc-in
@@ -155,12 +155,12 @@
         lappi "Lappi"
         onko-alueita? (reaction-writable
                         (some
-                         (fn [[_ suodattimet]]
-                           (not (empty? suodattimet)))
-                         (:alueet @tiedot/suodattimet)))
+                          (fn [[_ suodattimet]]
+                            (not (empty? suodattimet)))
+                          (:alueet @tiedot/suodattimet)))
         ensimmainen-haku-kaynnissa? (reaction-writable
-                                     (and (empty? (:alueet @tiedot/suodattimet))
-                                          (nil? @tiedot/uudet-aluesuodattimet)))]
+                                      (and (empty? (:alueet @tiedot/suodattimet))
+                                           (nil? @tiedot/uudet-aluesuodattimet)))]
     (komp/luo
       (fn []
         [:div#tk-aluevalikko
@@ -168,19 +168,25 @@
                                  @ensimmainen-haku-kaynnissa? "Haetaan alueita"
                                  @onko-alueita? "Näytä alueilta"
                                  :else "Ei näytettäviä alueita")]
+         [kentat/tee-kentta {:tyyppi :valinta
+                             :valinnat nav/+urakkatyypit+
+                             :valinta-nayta #(nav/nayta-urakkatyyppi (:arvo %))
+                             :pakota-suunta :ylos}
+          nav/valittu-urakkatyyppi]
+
          (if @ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
 
            [:div#tk-aluevaihtoehdot
-           [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
-           [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
-           [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
-           [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
-           [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
-           [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
-           [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
-           [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
-           [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]])]))))
+            [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
+            [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
+            [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
+            [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
+            [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
+            [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
+            [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
+            [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
+            [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]])]))))
 
 (defn aikasuodattimet []
   [:div#tk-paavalikko
@@ -249,10 +255,10 @@
                      (fn [_ ilmoitus]
                        (modal/piilota!)
                        (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
-    {:component-will-mount   (fn [_]
-                               (kartta/aseta-yleiset-kontrollit!
-                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
-                                                                   :luokka               "haitari-tilannekuva"}]))
+    {:component-will-mount (fn [_]
+                             (kartta/aseta-yleiset-kontrollit!
+                               [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
+                                                                 :luokka "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
                                (kartta/tyhjenna-yleiset-kontrollit!)
                                (kartta/poista-popup!))}
