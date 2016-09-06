@@ -163,30 +163,29 @@
                                            (nil? @tiedot/uudet-aluesuodattimet)))]
     (komp/luo
       (fn []
-        [:div#tk-aluevalikko
-         [:span#tk-alueotsikko (cond
+        [:div.tk-asetuskokoelma
+         [:div.tk-otsikko (cond
                                  @ensimmainen-haku-kaynnissa? "Haetaan alueita"
                                  @onko-alueita? "Näytä alueilta"
                                  :else "Ei näytettäviä alueita")]
 
          (if @ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
-
-           [:div#tk-aluevaihtoehdot
-            [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
-            [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
-            [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
-            [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
-            [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
-            [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
-            [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
-            [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
-            [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]])]))))
+           [:div.tk-suodatinryhmat
+             [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
+             [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
+             [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
+             [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
+             [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
+             [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
+             [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
+             [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
+             [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]])]))))
 
 (defn aikasuodattimet []
-  [:div#tk-paavalikko
-   [:span "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
-                                " (max. yksi vuosi):")]
+  [:div.tk-asetuskokoelma
+   [:div.tk-otsikko "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
+                                           " (max. yksi vuosi):")]
    (when (= :nykytilanne @tiedot/valittu-tila)
      [nykytilanteen-aikavalinnat])
    (when (= :historiakuva @tiedot/valittu-tila)
