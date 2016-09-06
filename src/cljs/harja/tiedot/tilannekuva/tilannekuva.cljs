@@ -117,8 +117,6 @@ hakutiheys-historiakuva 1200000)
             tk/muu false}
      :alueet oletusalueet}))
 
-(tarkkaile! "Suodattimet: " suodattimet)
-
 (defn- tunteja-vuorokausissa [vuorokaudet]
   (* 24 vuorokaudet))
 
