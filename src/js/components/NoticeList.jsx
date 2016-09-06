@@ -10,12 +10,9 @@ export default React.createClass({
     };
   },
 
-  getDefaultProps() {
-    return {};
-  },
-
   componentDidMount() {
-      request.get('../data/carenotices.json')
+      const url = '../data/' + this.props.url;
+      request.get(url)
         .set('Accept', 'application/json')
         .end((err, response) => {
           if (err) return console.error(err);

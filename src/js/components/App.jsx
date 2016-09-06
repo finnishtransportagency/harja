@@ -4,23 +4,22 @@ import {Button, Colors} from 'react-foundation';
 
 export default React.createClass({
   propTypes: {
-    onAddTask: PropTypes.func.isRequired,
-    onClear: PropTypes.func.isRequired
+    careNoticesUrl: PropTypes.string.isRequired
   },
 
   getDefaultProps() {
     return {
-      carenotices: []
+      careNoticesUrl: 'carenotices.json'
     }
   },
 
   render() {
-    let {onAddTask, onClear} = this.props;
+    let {careNoticesUrl} = this.props;
     return (
       <div>
         <h1>Learn Flux</h1>
         <Button color={Colors.SUCCESS}>TESTSAVE</Button>
-        <NoticeList/>
+        <NoticeList url={careNoticesUrl} />
       </div>
     );
   }
