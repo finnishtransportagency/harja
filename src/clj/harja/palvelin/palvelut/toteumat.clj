@@ -574,10 +574,13 @@
                                         :tehtavat [(:tehtava %)]))
                            kartalle-xf))]
     (async/thread
-      (try (kysely-fn db ch
-                      (merge p
-                             alue
-                             {:toleranssi toleranssi}))
+      (try
+        (jdbc/with-db-connection [db db
+                                  :read-only? true]
+          (kysely-fn db ch
+                     (merge p
+                            alue
+                            {:toleranssi toleranssi})))
            (catch Throwable t
              (log/warn t "Toteumareittien haku epäonnistui"))))
     ch))

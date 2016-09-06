@@ -35,6 +35,7 @@
         (is (true? (:onnistunut vastausdata)))
         (is (= "tl506" (get-in vastausdata [:tietolaji :tunniste])))
         (is (= 15 (count (get-in vastausdata [:tietolaji :ominaisuudet]))))
+        (is (every? :jarjestysnumero (get-in vastausdata [:tietolaji :ominaisuudet])))
         (let [ominaisuus (first (get-in vastausdata [:tietolaji :ominaisuudet]))
               odotettu-ominaisuus {:alaraja nil
                                    :desimaalit nil

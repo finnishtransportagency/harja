@@ -306,15 +306,17 @@
                              (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
     (async/thread
       (try
-        (tarkastukset/hae-urakan-tarkastukset-kartalle
-         db ch
-         (merge alue
-                {:urakka urakka-id
-                 :toleranssi toleranssi
-                 :alku alkupvm :loppu loppupvm
-                 :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
-                 :rajaa_tyypilla (some? tyyppi) :tyyppi tyyppi
-                 :vain_laadunalitukset vain-laadunalitukset?}))
+        (jdbc/with-db-transaction [db db
+                                   :read-only? true]
+          (tarkastukset/hae-urakan-tarkastukset-kartalle
+           db ch
+           (merge alue
+                  {:urakka urakka-id
+                   :toleranssi toleranssi
+                   :alku alkupvm :loppu loppupvm
+                   :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
+                   :rajaa_tyypilla (some? tyyppi) :tyyppi tyyppi
+                   :vain_laadunalitukset vain-laadunalitukset?})))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 

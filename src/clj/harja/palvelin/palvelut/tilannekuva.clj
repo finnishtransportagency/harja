@@ -23,7 +23,8 @@
             [harja.transit :as transit]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -379,7 +380,9 @@
                                                oikeudet/tilannekuva-historia) % user)
                        (:urakat tiedot))]
     (async/thread
-      (hae-toteumien-reitit db ch user tiedot urakat))
+      (jdbc/with-db-transaction [db db
+                                 :read-only? true]
+        (hae-toteumien-reitit db ch user tiedot urakat)))
     ch))
 
 (defrecord Tilannekuva []

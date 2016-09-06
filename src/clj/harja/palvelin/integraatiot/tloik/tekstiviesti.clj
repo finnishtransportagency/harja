@@ -77,7 +77,7 @@
   (try+
     (let [data (parsi-tekstiviesti viesti)
           paivystajatekstiviesti (hae-paivystajatekstiviesti db (:viestinumero data) puhelinnumero)
-          paivystaja (yhteyshenkilot/hae-yhteyshenkilo db (:yhteyshenkilo paivystajatekstiviesti))
+          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db (:yhteyshenkilo paivystajatekstiviesti)))
           ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
                                   db
                                   (:ilmoitus paivystajatekstiviesti)
