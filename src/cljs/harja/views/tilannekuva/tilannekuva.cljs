@@ -173,8 +173,9 @@
            [yleiset/ajax-loader]
            [:div.tk-suodatinryhmat
             (doall
-              (for [alue tilannekuvan-alueet]
-                [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
+             (for [alue tilannekuvan-alueet]
+               ^{:key alue}
+               [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
 
 (defn aikasuodattimet []
   [:div.tk-asetuskokoelma
