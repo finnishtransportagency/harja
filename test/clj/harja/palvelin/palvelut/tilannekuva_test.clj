@@ -117,7 +117,7 @@
     ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
     (is (> (count (distinct (map :toimenpidekoodi (:toteumat vastaus)))) 1))
     (is (>= (count (:turvallisuuspoikkeamat vastaus)) 1))
-    (is (>= (count (:tarkastukset vastaus)) 1))
+    (is (not (contains? vastaus :tarkastus)))
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
     (is (>= (count (:paikkaus vastaus)) 1))
     (is (>= (count (:paallystys vastaus)) 1))
