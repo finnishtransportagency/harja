@@ -255,6 +255,7 @@
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2
             :tyyppi :komponentti
+            :vihje "Voit syöttää toteumia tehtäville, joille on syötetty hinta yksikköhintaisten töiden suunnitteluosiossa."
             :komponentti (fn [_]
                            [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet])}
 
