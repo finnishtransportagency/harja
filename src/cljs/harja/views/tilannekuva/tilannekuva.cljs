@@ -143,17 +143,18 @@
                         suodattimet-atom
                         (conj ryhma-polku elementti)]))])])))))
 
+(def tilannekuvan-alueet ["Uusimaa"
+                          "Varsinais-Suomi"
+                          "Kaakkois-Suomi"
+                          "Pirkanmaa"
+                          "Pohjois-Savo"
+                          "Keski-Suomi"
+                          "Etelä-Pohjanmaa"
+                          "Pohjois-Pohjanmaa ja Kainuu"
+                          "Lappi"])
+
 (defn aluesuodattimet []
-  (let [uusimaa "Uusimaa"
-        varsinais-suomi "Varsinais-Suomi"
-        kaakkois-suomi "Kaakkois-Suomi"
-        pirkanmaa "Pirkanmaa"
-        pohjois-savo "Pohjois-Savo"
-        keski-suomi "Keski-Suomi"
-        etela-pohjanmaa "Etelä-Pohjanmaa"
-        pohjois-pohjanmaa "Pohjois-Pohjanmaa ja Kainuu"
-        lappi "Lappi"
-        onko-alueita? (reaction-writable
+  (let [onko-alueita? (reaction-writable
                         (some
                           (fn [[_ suodattimet]]
                             (not (empty? suodattimet)))
@@ -171,16 +172,11 @@
 
          (if @ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
+
            [:div.tk-suodatinryhmat
-             [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
-             [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
-             [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
-             [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
-             [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
-             [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
-             [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
-             [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
-             [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]])]))))
+             (doall
+               (for [alue tilannekuvan-alueet]
+                 [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
 
 (defn aikasuodattimet []
   [:div.tk-asetuskokoelma
