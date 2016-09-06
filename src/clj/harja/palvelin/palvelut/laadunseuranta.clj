@@ -315,7 +315,7 @@
                    :toleranssi toleranssi
                    :alku alkupvm :loppu loppupvm
                    :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
-                   :rajaa_tyypilla (some? tyyppi) :tyyppi tyyppi
+                   :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
                    :vain_laadunalitukset vain-laadunalitukset?})))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
