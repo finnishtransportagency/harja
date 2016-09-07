@@ -541,6 +541,8 @@
   [:span.livicon-arrow-down])
 (defn livicon-check []
   [:span.livicon-check])
+(defn livicon-wrench []
+  [:span.livicon-wrench])
 
 ;; Tiettyjen toimintojen vakioikonit
 
