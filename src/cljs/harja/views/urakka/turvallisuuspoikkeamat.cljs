@@ -261,7 +261,8 @@
                           :pakollinen? true
                           :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
-                          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)})
+                          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
+                          :vihje       "Vakava työtapaturma, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. Vakava vaaratilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. Vakava ympäristövahinko, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.\n"})
            {:otsikko "Tierekisteriosoite"
             :nimi :tr
             :pakollinen? true
