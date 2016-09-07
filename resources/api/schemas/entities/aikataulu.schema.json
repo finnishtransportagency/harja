@@ -5,32 +5,37 @@
   "additionalProperties": false,
   "properties": {
     "paallystys_alku": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys_alku",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys-alku",
       "type": "string",
       "format": "date-time"
     },
     "paallystys_loppu": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys_loppu",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys-loppu",
       "type": "string",
       "format": "date-time"
     },
     "valmis_tiemerkintaan": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/valmis_tiemerkintaan",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/valmis-tiemerkintaan",
+      "type": "string",
+      "format": "date-time"
+    },
+    "tiemerkinnan-oltava-valmis": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinnan-oltava-valmis",
       "type": "string",
       "format": "date-time"
     },
     "tiemerkinta_alku": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta_alku",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta-alku",
       "type": "string",
       "format": "date-time"
     },
     "tiemerkinta_loppu": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta_loppu",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta-loppu",
       "type": "string",
       "format": "date-time"
     },
     "kohde_valmis": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/kohde_valmis",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/kohde-valmis",
       "type": "string",
       "format": "date-time"
     },

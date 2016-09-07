@@ -5,22 +5,22 @@
   "additionalProperties": false,
   "properties": {
     "aloituspvm": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys_alku",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/aloituspvm",
       "type": "string",
       "format": "date-time"
     },
-    "valmispvm_paallystys": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys_loppu",
+    "valmispvm-paallystys": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/valmispvm-loppu",
       "type": "string",
       "format": "date-time"
     },
-    "valmispvm_kohde": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/valmis_tiemerkintaan",
+    "valmispvm-kohde": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/valmispvm-kohde",
       "type": "string",
       "format": "date-time"
     },
     "takuupvm": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta_alku",
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/takuupvm",
       "type": "string",
       "format": "date-time"
     }
