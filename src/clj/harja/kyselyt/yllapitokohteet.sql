@@ -433,13 +433,27 @@ SELECT exists(SELECT id
               WHERE urakka = :urakka AND id = :kohde);
 
 -- name: paivita-yllapitokohteen-sijainti!
--- Päivittää ylläpitokohteen
+-- Päivittää ylläpitokohteen sijainnin
 UPDATE yllapitokohde
 SET
   tr_alkuosa       = :tr_alkuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuosa      = :tr_loppuosa,
   tr_loppuetaisyys = :tr_loppuetaisyys
+WHERE id = :id;
+
+-- name: paivita-yllapitokohteen-aikataulu!
+-- Päivittää ylläpitokohteen aikataulutiedot
+UPDATE yllapitokohde
+SET
+  aikataulu_paallystys_alku = :paallystys_alku,
+  aikataulu_paallystys_loppu = :paallystys_loppu,
+  aikataulu_kohde_valmis = :kohde_valmis,
+  valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
+  aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
+  aikataulu_muokattu = NOW(),
+  aikataulu_muokkaaja = :muokkaaja
 WHERE id = :id;
 
 -- name: poista-yllapitokohteen-kohdeosat!

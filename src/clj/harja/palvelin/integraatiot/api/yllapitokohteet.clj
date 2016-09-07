@@ -35,14 +35,18 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
+(defn- vaadi-kohde-kuuluu-urakkaan [urakka-id kohde-id]
+  ;; TODO Tee tämä...
+  )
+
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))
-  ;; TODO Oikeustarkistus: vaadi kohde kuuluu urakkaan & POT kuuluu ylläpitokohteeseen
   (let [urakka-id (Integer/parseInt urakka-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (vaadi-kohde-kuuluu-urakkaan urakka-id kohde-id)
     (jdbc/with-db-transaction
       [db db]
       (let [kohde-id (Integer/parseInt kohde-id)
@@ -51,18 +55,28 @@
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id id})))))
 
+(defn paivita-yllapitokohteen-aikataulu [db kayttaja kohde-id data]
+  (q-yllapitokohteet/paivita-yllapitokohteen-aikataulu! db {:paallystys_alku (:paallystys-alku data)
+                                                            :paallystys_loppu (:paallystys-loppu data)
+                                                            :kohde_valmis (:kohde-valmis data)
+                                                            :valmis_tiemerkintaan (:valmis-tiemerkintaan data)
+                                                            :tiemerkinta_alku (:tiemerkinta-alku data)
+                                                            :tiemerkinta_loppu (:tiemerkinta-loppu data)
+                                                            :muokkaaja (:id kayttaja)
+                                                            :id kohde-id}))
+
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))
-  ;; TODO Oikeustarkistus: vaadi kohde kuuluu urakkaan
+  (vaadi-kohde-kuuluu-urakkaan urakka-id kohde-id)
   (let [urakka-id (Integer/parseInt urakka-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction
       [db db]
       (let [kohde-id (Integer/parseInt kohde-id)
-            id (ilmoitus/kirjaa-aikataulu db kayttaja urakka-id kohde-id data)]
+            id (paivita-yllapitokohteen-aikataulu db kayttaja kohde-id data)]
         (tee-kirjausvastauksen-body
           {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")
            :id id})))))
@@ -155,7 +169,7 @@
     :tyyppi :POST
     :kutsu-skeema json-skeemat/aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-aikatauluilmoitus db kayttaja parametrit data))}
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-aikataulu db kayttaja parametrit data))}
    {:palvelu :kirjaa-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :POST
