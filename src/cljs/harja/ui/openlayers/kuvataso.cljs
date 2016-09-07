@@ -62,3 +62,9 @@
 
 (defn luo-kuvataso [projection extent selitteet parametrit]
   (->Kuvataso projection extent 99 selitteet parametrit))
+
+(defn sama? [kt1 kt2]
+  (and (instance? Kuvataso kt1)
+       (instance? Kuvataso kt2)
+       (= (:selitteet kt1) (:selitteet kt2))
+       (= (:parametrit kt1) (:parametrit kt2))))
