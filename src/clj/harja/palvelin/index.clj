@@ -17,6 +17,7 @@
 
 (defn tee-paasivu [token devmode]
   (html
+    "<!DOCTYPE html>\n"
    (if devmode
      [:html
       [:head

@@ -417,7 +417,7 @@
                                "- Valitse sideainetyyppi -"))
             :valinnat (conj pot/+sideainetyypit+
                             {:nimi "Ei sideainetyyppi" :lyhenne "Ei sideainetyyppiä" :koodi nil})}
-           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :tasaa :oikea}
+           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys "20%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
            {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys "20%" :tyyppi :string
             :pituus-max 256}]
           paallystystoimenpiteet]
@@ -441,7 +441,8 @@
                     :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
                    {:otsikko "Pituus (m)" :nimi :pituus :leveys "10%" :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false)
-                    :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)}
+                    :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsittely\u00ADmenetelmä"
                     :nimi :kasittelymenetelma
                     :tyyppi :valinta
@@ -451,37 +452,42 @@
                                        (str (:lyhenne rivi) " - " (:nimi rivi))
                                        "- Valitse menetelmä -"))
                     :valinnat pot/+alustamenetelmat+
-                    :leveys "30%"}
+                    :leveys "30%"
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys "15%"
-                    :tyyppi :positiivinen-numero :tasaa :oikea}
+                    :tyyppi :positiivinen-numero :tasaa :oikea
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Verkko\u00ADtyyppi"
                     :nimi :verkkotyyppi
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkkotyyppi -")
                     :valinnat pot/+verkkotyypit+
-                    :leveys "25%"}
+                    :leveys "25%"
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Verkon sijainti"
                     :nimi :verkon-sijainti
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkon sijainti -")
                     :valinnat pot/+verkon-sijainnit+
-                    :leveys "25%"}
+                    :leveys "25%"
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Verkon tarkoitus"
                     :nimi :verkon-tarkoitus
                     :tyyppi :valinta
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse verkon tarkoitus -")
                     :valinnat pot/+verkon-tarkoitukset+
-                    :leveys "25%"}
+                    :leveys "25%"
+                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
                    {:otsikko "Tekninen toimen\u00ADpide"
                     :nimi :tekninen-toimenpide
                     :tyyppi :valinta
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]
                     :valinta-arvo :koodi
                     :valinta-nayta #(if % (:nimi %) "- Valitse toimenpide -")
-                    :valinnat pot/+tekniset-toimenpiteet+
+                    :valinnat (conj pot/+tekniset-toimenpiteet+
+                                    {:nimi "Ei toimenpidettä" :lyhenne "Ei toimenpidettä" :koodi nil})
                     :leveys "30%"}]
                   alustalle-tehdyt-toimet]])]))))
 
@@ -642,12 +648,12 @@
 
 (defn nayta-lahetystiedot [rivi]
   (if (some #(= % (:paallystyskohde-id rivi)) @paallystys/kohteet-yha-lahetyksessa)
-    [:span.maksuera-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
+    [:span.tila-odottaa-vastausta "Lähetys käynnissä " [yleiset/ajax-loader-pisteet]]
     (if (:lahetetty rivi)
       (if (:lahetys-onnistunut rivi)
-        [:span.maksuera-lahetetty
+        [:span.tila-lahetetty
          (str "Lähetetty onnistuneesti: " (pvm/pvm-aika (:lahetetty rivi)))]
-        [:span.maksuera-virhe
+        [:span.tila-virhe
          (str "Lähetys epäonnistunut: " (pvm/pvm-aika (:lahetetty rivi)) ". Virhe: \"" (:lahetysvirhe rivi) "\"")])
       [:span "Ei lähetetty"])))
 

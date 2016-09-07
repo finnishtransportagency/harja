@@ -268,14 +268,17 @@ WHERE hanke_sampoid = :hanke_sampo_id;
 
 -- name: luo-urakka<!
 -- Luo uuden urakan.
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko)
-VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko);
+INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko,
+                    sopimustyyppi)
+VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko,
+        :sopimustyyppi::sopimustyyppi);
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
 UPDATE urakka
 SET nimi = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm, hanke_sampoid = :hanke_sampoid,
-  tyyppi = :urakkatyyppi :: urakkatyyppi, hallintayksikko = :hallintayksikko
+  tyyppi = :urakkatyyppi :: urakkatyyppi, hallintayksikko = :hallintayksikko,
+  sopimustyyppi = :sopimustyyppi::sopimustyyppi
 WHERE id = :id;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!

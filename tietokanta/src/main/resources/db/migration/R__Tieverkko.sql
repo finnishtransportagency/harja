@@ -18,7 +18,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION etsi_jatkopatka(viiva geometry, jatkopatkat geometry) RETURNS geometry AS $$
+CREATE OR REPLACE FUNCTION etsi_jatkopatka(nykyinen INTEGER, viiva geometry, jatkopatkat geometry) RETURNS geometry AS $$
 DECLARE
   tmp geometry;
   minimi geometry;
@@ -26,10 +26,12 @@ DECLARE
 BEGIN
   etaisyys := 'Infinity' :: FLOAT;
   FOR i IN 1..ST_NumGeometries(jatkopatkat) LOOP
-     tmp := ST_GeometryN(jatkopatkat, i);
-     IF ST_Distance(vika_piste(viiva), eka_piste(tmp))<etaisyys THEN
-       etaisyys := ST_Distance(vika_piste(viiva), eka_piste(tmp));
-       minimi := tmp;
+     IF i!=nykyinen THEN
+       tmp := ST_GeometryN(jatkopatkat, i);
+       IF ST_Distance(vika_piste(viiva), eka_piste(tmp))<etaisyys THEN
+         etaisyys := ST_Distance(vika_piste(viiva), eka_piste(tmp));
+         minimi := tmp;
+       END IF;
      END IF;
   END LOOP;
   RETURN ST_LineMerge(ST_Collect(viiva, minimi));
@@ -46,7 +48,7 @@ BEGIN
     
     jarjestetty := ST_GeometryN(viiva,1);
     FOR i IN 1..ST_NumGeometries(viiva) LOOP
-        jarjestetty := etsi_jatkopatka(jarjestetty, viiva);
+        jarjestetty := etsi_jatkopatka(i, jarjestetty, viiva);
     END LOOP;
   RETURN jarjestetty;
 END;

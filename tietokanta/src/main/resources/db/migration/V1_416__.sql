@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+ALTER TABLE ilmoitus
+  ADD COLUMN tr_lopputienumero INTEGER,
+  ADD COLUMN ulkoinen_id VARCHAR(25),
+  ADD COLUMN luoja INTEGER,
+  ADD CONSTRAINT ilmoitus_luoja_fkey FOREIGN KEY (luoja) REFERENCES kayttaja (id),
+  ADD CONSTRAINT ilmoitus_uniikki_ulkoinen_id_luoja UNIQUE (ulkoinen_id, luoja),
+  ALTER COLUMN ilmoitusid DROP NOT NULL;
+=======
 -- Lisää myös vanha vertailukausi
 ALTER TABLE lampotilat ADD pitka_keskilampotila_vanha NUMERIC (4,2);
 
@@ -25,3 +34,4 @@ INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, m
     SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara)
       FROM toteuma_materiaali tm join toteuma t ON tm.toteuma=t.id
   GROUP BY t.sopimus, t.alkanut::date, tm.materiaalikoodi;
+>>>>>>> develop

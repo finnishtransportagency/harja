@@ -16,6 +16,7 @@
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
   "Palautetta HARJAsta")
+
 (def palaute-body
   (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
        "mukaan liittämistä, ne ovat meille erittäin hyödyllisiä. "
@@ -24,20 +25,21 @@
 (def virhe-otsikko
   "HARJA räsähti")
 
-(defn tekniset-tiedot [kayttaja url]
+(defn tekniset-tiedot [kayttaja url selain]
   (let [enc #(.encodeURIComponent js/window %)]
     (str "\n---\n"
          "Sijainti Harjassa: " (enc url) "\n"
+         "Selain: " (enc selain) "\n"
          "Käyttäjä: " (enc (pr-str kayttaja)))))
 
-(defn virhe-body [virheviesti kayttaja url]
+(defn virhe-body [virheviesti kayttaja url selain]
   (str
    "\n---\n"
    "Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös "
    "hyvä apu. Ethän pyyhi alla olevia virheen teknisiä tietoja pois."
    "\n---\nTekniset tiedot:\n"
    virheviesti
-   (tekniset-tiedot kayttaja url)))
+   (tekniset-tiedot kayttaja url selain)))
 
 (defn- mailto []
   (str "mailto:" sahkoposti))
@@ -64,14 +66,21 @@
   [:a#palautelinkki
    {:href (-> (mailto)
               (subject palaute-otsikko "?")
-              (body (str palaute-body (tekniset-tiedot @istunto/kayttaja @url))))}
+              (body (str palaute-body
+                         (tekniset-tiedot
+                           @istunto/kayttaja
+                           @url
+                           (-> js/window .-navigator .-userAgent)))))}
    [:span (ikonit/livicon-kommentti) " Palautetta!"]])
 
 (defn virhe-palaute [virhe]
   [:a#palautelinkki
    {:href (-> (mailto)
               (subject virhe-otsikko "?")
-              (body (virhe-body virhe @istunto/kayttaja @url)))
+              (body (virhe-body virhe
+                                @istunto/kayttaja
+                                @url
+                                (-> js/window .-navigator .-userAgent))))
     :on-click #(.stopPropagation %)}
    [:span
     [ikonit/envelope]

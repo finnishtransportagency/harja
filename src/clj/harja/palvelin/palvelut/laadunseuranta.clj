@@ -178,10 +178,9 @@
         (log/info "UUSI LIITE: " uusi-liite)
         (laatupoikkeamat/liita-liite<! c id (:id uusi-liite)))
 
-
-      (when (:paatos (:paatos laatupoikkeama))
-        ;; Urakanvalvoja voi kirjata päätöksen
-        (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-laadunseuranta-sanktiot user urakka)
+      ;; Urakanvalvoja voi kirjata päätöksen
+      (when (and (:paatos (:paatos laatupoikkeama))
+                 (oikeudet/on-muu-oikeus? "päätös" oikeudet/urakat-laadunseuranta-sanktiot urakka user))
         (log/info "Kirjataan päätös havainnolle: " id ", päätös: " (:paatos laatupoikkeama))
         (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
           (laatupoikkeamat/kirjaa-laatupoikkeaman-paatos! c
@@ -307,15 +306,17 @@
                              (esitettavat-asiat/kartalla-esitettavaan-muotoon-xf)))]
     (async/thread
       (try
-        (tarkastukset/hae-urakan-tarkastukset-kartalle
-         db ch
-         (merge alue
-                {:urakka urakka-id
-                 :toleranssi toleranssi
-                 :alku alkupvm :loppu loppupvm
-                 :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
-                 :rajaa_tyypilla (some? tyyppi) :tyyppi tyyppi
-                 :vain_laadunalitukset vain-laadunalitukset?}))
+        (jdbc/with-db-transaction [db db
+                                   :read-only? true]
+          (tarkastukset/hae-urakan-tarkastukset-kartalle
+           db ch
+           (merge alue
+                  {:urakka urakka-id
+                   :toleranssi toleranssi
+                   :alku alkupvm :loppu loppupvm
+                   :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
+                   :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
+                   :vain_laadunalitukset vain-laadunalitukset?})))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 

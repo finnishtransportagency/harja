@@ -19,45 +19,33 @@
             [harja.tiedot.ilmoitukset :as ilmoitukset]
             [harja.ui.viesti :as viesti]
             [harja.asiakas.tapahtumat :as tapahtumat]
-            [cljs.core.async :refer [<!]])
+            [cljs.core.async :refer [<!]]
+            [harja.tiedot.ilmoitukset.viestit :as v])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn kasittele-kuittauskasityksen-vastaus [vastaus]
-  (when vastaus
-    (viesti/nayta! "Kuittaus lähetetty Tieliikennekeskukseen." :success)
-    (ilmoitukset/lisaa-kuittaus-valitulle-ilmoitukselle vastaus))
-  (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus)
-  (ilmoitukset/sulje-uusi-kuittaus!))
 
-(defn esta-lahetys? []
-  (let [kuittaus @tiedot/uusi-kuittaus]
-    (or (empty? (:vapaateksti kuittaus))
-        (not (some #(= (:tyyppi kuittaus) %) apurit/kuittaustyypit)))))
+(defn esta-lahetys? [kuittaus]
+  (or (:tallennus-kaynnissa? kuittaus)
+      (nil? (:tyyppi kuittaus))))
 
-(defn uusi-kuittaus []
+(defn uusi-kuittaus [e! kuittaus]
   [:div
    {:class "uusi-kuittaus"}
    [lomake/lomake
-    {:muokkaa! #(reset! tiedot/uusi-kuittaus %)
+    {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
      :luokka   :horizontal
      :footer   [:div
-                [napit/palvelinkutsu-nappi
+                [napit/tallenna
                  "Lähetä"
-                 #(tiedot/laheta-uusi-kuittaus @tiedot/uusi-kuittaus)
-                 {:ikoni        (ikonit/tallenna)
-                  :disabled     (esta-lahetys?)
-                  :kun-onnistuu (fn [vastaus]
-                                  (kasittele-kuittauskasityksen-vastaus vastaus)
-                                  (tapahtumat/julkaise!
-                                    {:aihe :ilmoituksen-kuittaustiedot-päivitetty
-                                     :id (:id @ilmoitukset/valittu-ilmoitus)}))
+                 #(e! (v/->Kuittaa))
+                 {:tallennus-kaynnissa? (:tallennus-kaynnissa? kuittaus)
+                  :ikoni        (ikonit/tallenna)
+                  :disabled     (esta-lahetys? kuittaus)
                   :virheviesti  "Kuittauksen tallennuksessa tai lähetyksessä T-LOIK:n tapahtui virhe."
                   :luokka       "nappi-ensisijainen"}]
                 [napit/peruuta
                  "Peruuta"
-                 #(do
-                   (ilmoitukset/sulje-uusi-kuittaus!)
-                   (tiedot/alusta-uusi-kuittaus ilmoitukset/valittu-ilmoitus))
+                 #(e! (v/->SuljeUusiKuittaus))
                  {:luokka "pull-right"}]]}
     [(lomake/ryhma {:otsikko    "Kuittaus"
                     :leveys-col 3}
@@ -66,11 +54,12 @@
                     :pakollinen?   true
                     :tyyppi        :valinta
                     :valinnat      apurit/kuittaustyypit
-                    :valinta-nayta apurit/kuittaustyypin-selite
+                    :valinta-nayta #(if %
+                                      (apurit/kuittaustyypin-selite %)
+                                      "- Valitse kuittaustyyppi -")
                     :leveys-col    3}
                    {:nimi        :vapaateksti
                     :otsikko     "Vapaateksti"
-                    :pakollinen? true
                     :tyyppi      :text
                     :leveys-col  3})
      (lomake/ryhma {:otsikko    "Käsittelijä"
@@ -103,11 +92,8 @@
                     :otsikko    "Organisaation y-tunnus"
                     :leveys-col 3
                     :tyyppi     :string})]
-    @tiedot/uusi-kuittaus]])
+    kuittaus]])
 
-(defn uusi-kuittaus-lomake []
-  (komp/luo
-    uusi-kuittaus))
 
 (defn kuittauksen-tiedot [kuittaus]
   ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
@@ -133,12 +119,12 @@
        "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
        "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
 
-(defn kuittaa-monta-lomake [{:keys [ilmoitukset tyyppi vapaateksti] :as data} muokkaa!
-                            kuittaukset-tallennettu]
+(defn kuittaa-monta-lomake [e! {:keys [ilmoitukset tyyppi vapaateksti tallennus-kaynnissa?]
+                                :as data}]
   (let [valittuna (count ilmoitukset)]
     [:div.ilmoitukset-kuittaa-monta
      [lomake/lomake
-      {:muokkaa! muokkaa!
+      {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
        :palstoja 2
        :otsikko "Kuittaa monta ilmoitusta"}
       [{:otsikko "Kuittaustyyppi"
@@ -149,22 +135,22 @@
         :nimi :tyyppi}
 
        {:otsikko "Vapaateksti"
-        :pakollinen? true
         :tyyppi :text
         :koko [80 :auto]
         :nimi :vapaateksti}]
 
       data]
-     [napit/palvelinkutsu-nappi
+     [napit/tallenna
       (if (> valittuna 1)
         (str "Kuittaa " valittuna " ilmoitusta")
         "Kuittaa ilmoitus")
-      #(go (<! (tiedot/laheta-kuittaukset! ilmoitukset {:tyyppi tyyppi
-                                                        :vapaateksti vapaateksti}))
-           (kuittaukset-tallennettu))
+      #(e! (v/->Kuittaa))
 
-      {:luokka   "nappi-ensisijainen kuittaa-monta-tallennus"
-       :disabled (or (not (lomake/voi-tallentaa-ja-muokattu? data))
+      {:ikoni (ikonit/tallenna)
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :luokka   (str (when tallennus-kaynnissa? "disabled ") "nappi-ensisijainen kuittaa-monta-tallennus")
+       :disabled (or (:tallennus-kaynnissa? data)
+                     (not (lomake/voi-tallentaa-ja-muokattu? data))
                      (zero? valittuna))}]
-     [napit/peruuta "Peruuta" #(muokkaa! nil)]
+     [napit/peruuta "Peruuta" #(e! (v/->PeruMonenKuittaus))]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))

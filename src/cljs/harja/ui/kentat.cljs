@@ -317,6 +317,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
+;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
 (defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
                                                tyhjenna-kaikki? nayta-rivina? disabloi]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
@@ -351,6 +352,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                         checkboxit)]]
          checkboxit))]))
 
+;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
   (let [arvo (if (nil? @data)
                false
