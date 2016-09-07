@@ -26,7 +26,10 @@
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :as r]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.domain.roolit :as roolit]
+            [harja.ui.napit :as napit]
+            [harja.tiedot.urakat :as urakat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -297,12 +300,49 @@
                                    :valinta (:tyyppi ur)
                                    :format-fn #(navigaatio/nayta-urakkatyyppi %)
                                    :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                   ;; todo: Urakkatyypin vaihto on toiseseksi estetty, sillä paikkausurakoiden toteutus on kesken.
+                                   ;; todo: Urakkatyypin vaihto on toiseseksi estetty,
+                                   ;; sillä paikkausurakoiden toteutus on kesken.
                                    :disabled (constantly true)
                                    #_(or (not yha-tuontioikeus?)
                                          sidonta-lukittu?)}
       [:paallystys :paikkaus]]]))
 
+(defn- urakan-indeksi [ur]
+  (let [auki? (atom false)]
+    (fn [ur]
+      [:span
+       (or (:indeksi ur)
+           "Ei käytössä")
+       (when (and (:indeksi ur)
+                  (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
+         [:span
+          [:span.klikattava {:on-click #(swap! auki? not)}
+           " "
+           (ikonit/livicon-wrench)
+           " "]
+          (when @auki?
+            [napit/yleinen "Poista indeksi käytöstä"
+             (fn []
+               (modal/nayta! {}
+                             [:div
+                              [:b "Haluatko poistaa indeksin käytön tässä urakassa?"]
+                              [yleiset/tietoja {}
+                               "Urakka: " (:nimi ur)
+                               "Nykyinen indeksi: " (:indeksi ur)]
+                              [:div
+                               [:br]
+                               [napit/palvelinkutsu-nappi "Poista indeksi käytöstä"
+                                #(urakat/poista-indeksi-kaytosta! ur)
+                                {:luokka "nappi-kielteinen"
+                                 :kun-onnistuu #(do (nav/paivita-urakan-tiedot! (:id ur)
+                                                                                assoc :indeksi nil)
+                                                    (modal/piilota!)
+                                                    (reset! auki? false))}]
+                               [napit/yleinen "Peruuta" #(do (modal/piilota!)
+                                                             (reset! auki? false))
+                                {:luokka "nappi-toissijainen pull-right"}]]]))
+             {:luokka "nappi-kielteinen btn-xs"}])])])))
 (defn yleiset-tiedot [ur]
   (let [{:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?]
          :as yha-tiedot} (yha-tiedot ur)]
@@ -333,6 +373,8 @@
 
       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
       (yllapidon-urakkatyypin-vaihto ur yha-tiedot)
+
+      "Indeksi: " [urakan-indeksi ur]
       ]]))
 
 (defn yhteyshenkilot [ur]

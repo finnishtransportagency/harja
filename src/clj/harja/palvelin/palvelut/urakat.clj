@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.urakat
   (:require [com.stuartsierra.component :as component]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.kyselyt.konversio :as konv]
@@ -240,43 +240,66 @@
   (q/aseta-takuun-loppupvm! db {:urakka urakka-id
                                 :loppupvm (:loppupvm takuu)}))
 
+(defn poista-indeksi-kaytosta [db user {:keys [urakka-id]}]
+  (when-not (roolit/tilaajan-kayttaja? user)
+    (throw (SecurityException. "Vain tilaaja voi poistaa indeksin käytöstä")))
+
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
+  (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
+  :ok)
+
+
 (defrecord Urakat []
   component/Lifecycle
-  (start [this]
-    (let [http (:http-palvelin this)]
-      (julkaise-palvelu http :hallintayksikon-urakat
-                        (fn [user hallintayksikko]
-                          (hallintayksikon-urakat (:db this) user hallintayksikko)))
-      (julkaise-palvelu http :hae-urakka
-                        (fn [user urakka-id]
-                          (hae-yksittainen-urakka (:db this) user urakka-id)))
-      (julkaise-palvelu http :hae-urakoita
-                        (fn [user teksti]
-                          (hae-urakoita (:db this) user teksti)))
-      (julkaise-palvelu http :hae-organisaation-urakat
-                        (fn [user organisaatio-id]
-                          (hae-organisaation-urakat (:db this) user organisaatio-id)))
-      (julkaise-palvelu http :hae-urakan-organisaatio
-                        (fn [user urakka-id]
-                          (hae-urakan-organisaatio (:db this) user urakka-id)))
-      (julkaise-palvelu http :tallenna-urakan-sopimustyyppi
-                        (fn [user tiedot]
-                          (tallenna-urakan-sopimustyyppi (:db this) user tiedot)))
-      (julkaise-palvelu http :tallenna-urakan-tyyppi
-                        (fn [user tiedot]
-                          (tallenna-urakan-tyyppi (:db this) user tiedot)))
-      (julkaise-palvelu http :aseta-takuun-loppupvm
-                        (fn [user tiedot]
-                          (aseta-takuun-loppupvm (:db this) user tiedot)))
-      this))
+  (start [{http :http-palvelin
+           db :db :as this}]
+    (julkaise-palvelut
+     http
+     :hallintayksikon-urakat
+     (fn [user hallintayksikko]
+       (hallintayksikon-urakat db user hallintayksikko))
 
-  (stop [this]
-    (poista-palvelu (:http-palvelin this) :hallintayksikon-urakat)
-    (poista-palvelu (:http-palvelin this) :hae-urakka)
-    (poista-palvelu (:http-palvelin this) :hae-urakoita)
-    (poista-palvelu (:http-palvelin this) :hae-organisaation-urakat)
-    (poista-palvelu (:http-palvelin this) :tallenna-urakan-sopimustyyppi)
-    (poista-palvelu (:http-palvelin this) :tallenna-urakan-tyyppi)
-    (poista-palvelu (:http-palvelin this) :aseta-takuun-loppupvm)
+     :hae-urakka
+     (fn [user urakka-id]
+       (hae-yksittainen-urakka db user urakka-id))
+
+     :hae-urakoita
+     (fn [user teksti]
+       (hae-urakoita db user teksti))
+
+     :hae-organisaation-urakat
+     (fn [user organisaatio-id]
+       (hae-organisaation-urakat db user organisaatio-id))
+
+     :hae-urakan-organisaatio
+     (fn [user urakka-id]
+       (hae-urakan-organisaatio db user urakka-id))
+
+     :tallenna-urakan-sopimustyyppi
+     (fn [user tiedot]
+       (tallenna-urakan-sopimustyyppi db user tiedot))
+
+     :tallenna-urakan-tyyppi
+     (fn [user tiedot]
+       (tallenna-urakan-tyyppi db user tiedot))
+
+     :aseta-takuun-loppupvm
+     (fn [user tiedot]
+       (aseta-takuun-loppupvm db user tiedot))
+
+     :poista-indeksi-kaytosta
+     (fn [user tiedot]
+       (poista-indeksi-kaytosta db user tiedot)))
+    this)
+
+  (stop [{http :http-palvelin :as this}]
+    (poista-palvelut http
+                     :hallintayksikon-urakat
+                     :hae-urakka
+                     :hae-urakoita
+                     :hae-organisaation-urakat
+                     :tallenna-urakan-sopimustyyppi
+                     :tallenna-urakan-tyyppi
+                     :aseta-takuun-loppupvm)
 
     this))
