@@ -12,11 +12,11 @@
             [harja.tiedot.urakat :as urakat]
             [harja.atom :refer-macros [reaction<!]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.istunto :as istunto])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
 
 (def hakutermi (atom ""))
 
@@ -26,6 +26,17 @@
                :nil-kun-haku-kaynnissa? true}
               (when (> (count termi) 1)
                 (k/post! :hae termi))))
+
+(def hakutulokset-joihin-oikeus
+  (reaction
+    (let [hakutulokset @hakutulokset]
+      (when hakutulokset
+        (filter #(if (and
+                       (= (:tyyppi %) :urakka)
+                       (= "urakoitsija" (get-in @istunto/kayttaja [:organisaatio :tyyppi])))
+                 (oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)
+                 true)
+               hakutulokset)))))
 
 (defn nayta-organisaation-yhteystiedot
   [o]
@@ -144,9 +155,10 @@
        [:div.form-group.haku
         [suodatettu-lista {:format :hakusanat
                            :haku :hakusanat
-                           :term (r/wrap @hakutermi (fn [uusi-termi]
-                                                      (reset! hakutermi
-                                                              (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
+                           :term (r/wrap @hakutermi
+                                         (fn [uusi-termi]
+                                           (reset! hakutermi
+                                                   (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
                            :ryhmittely :tyyppi
                            :ryhman-otsikko #(case %
                                              :urakka "Urakat"
@@ -156,8 +168,9 @@
                            :on-select #(valitse-hakutulos %)
                            :aputeksti "Hae Harjasta"
                            :tunniste #((juxt :tyyppi :id) %)
-                           :vinkki #(if (liikaa-osumia? @hakutulokset)
-                                     "Paljon osumia, tarkenna hakua..."
-                                     (when (= [] hakutulokset)
-                                       (str "Ei tuloksia haulla " @hakutermi)))}
-         @hakutulokset]]])))
+                           :vinkki #(when-not (empty? @hakutermi)
+                                     (if (liikaa-osumia? @hakutulokset-joihin-oikeus)
+                                       "Paljon osumia, tarkenna hakua..."
+                                       (when (= [] @hakutulokset-joihin-oikeus)
+                                         (str "Ei tuloksia haulla " @hakutermi))))}
+         @hakutulokset-joihin-oikeus]]])))
