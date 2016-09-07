@@ -40,6 +40,7 @@
                      urakka-id
                      kohde-id
                      kayttaja))
+  ;; TODO Oikeustarkistus: vaadi kohde kuuluu urakkaan & POT kuuluu ylläpitokohteeseen
   (let [urakka-id (Integer/parseInt urakka-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction
@@ -48,6 +49,22 @@
             id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+           :id id})))))
+
+(defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  ;; TODO Oikeustarkistus: vaadi kohde kuuluu urakkaan
+  (let [urakka-id (Integer/parseInt urakka-id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (jdbc/with-db-transaction
+      [db db]
+      (let [kohde-id (Integer/parseInt kohde-id)
+            id (ilmoitus/kirjaa-aikataulu db kayttaja urakka-id kohde-id data)]
+        (tee-kirjausvastauksen-body
+          {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")
            :id id})))))
 
 (defn hae-tr-osoite [db alkukoordinaatit loppukoordinaatit]
@@ -127,11 +144,18 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db] (hae-yllapitokohteet db parametit kayttaja))}
    {:palvelu :kirjaa-paallystysilmoitus
+    ;; FIXME Lisää mahdollisuus ottaa vastaan / päivittää POT-lomakkeen perusosan päivämäärät
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
+   {:palvelu :kirjaa-aikataulu
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/aikataulun-kirjaus
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-aikatauluilmoitus db kayttaja parametrit data))}
    {:palvelu :kirjaa-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :POST
