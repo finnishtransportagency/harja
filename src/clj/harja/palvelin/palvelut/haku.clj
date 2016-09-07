@@ -6,7 +6,8 @@
             [harja.kyselyt.urakat :as ur-q]
             [harja.kyselyt.kayttajat :as k-q]
             [harja.kyselyt.hallintayksikot :as org-q]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn hae-harjasta
   "Palvelu, joka hakee Harjasta hakutermin avulla."
@@ -14,6 +15,9 @@
   (let [termi (str "%" hakutermi "%")
         kayttajan-org (:organisaatio user)
         loytyneet-urakat (into []
+                               (filter #(if (= "urakoitsija" (:tyyppi kayttajan-org))
+                                         (oikeudet/voi-lukea? oikeudet/urakat (:id %) user)
+                                         true))
                                (map #(assoc % :tyyppi :urakka
                                               :hakusanat (str (:nimi %) ", " (:sampoid %)))
                                     (ur-q/hae-urakoiden-tunnistetiedot db termi
@@ -22,7 +26,7 @@
         loytyneet-kayttajat (into []
                                   (map #(assoc % :tyyppi :kayttaja
                                                  :hakusanat (if (:jarjestelmasta %)
-                                                              (str "Järjstelmäkäyttäjä: "(:kayttajanimi %))
+                                                              (str "Järjestelmäkäyttäjä: "(:kayttajanimi %))
                                                               (clojure.string/trimr (str (:etunimi %) " " (:sukunimi %) ", " (:org_nimi %)))))
                                        (k-q/hae-kayttajien-tunnistetiedot db termi)))
         loytyneet-organisaatiot (into []

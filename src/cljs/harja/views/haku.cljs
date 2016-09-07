@@ -27,17 +27,6 @@
               (when (> (count termi) 1)
                 (k/post! :hae termi))))
 
-(def hakutulokset-joihin-oikeus
-  (reaction
-    (let [hakutulokset @hakutulokset]
-      (when hakutulokset
-        (filter #(if (and
-                       (= (:tyyppi %) :urakka)
-                       (= "urakoitsija" (get-in @istunto/kayttaja [:organisaatio :tyyppi])))
-                 (oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)
-                 true)
-               hakutulokset)))))
-
 (defn nayta-organisaation-yhteystiedot
   [o]
   (modal/nayta! {:otsikko (:nimi o)
@@ -169,8 +158,8 @@
                            :aputeksti "Hae Harjasta"
                            :tunniste #((juxt :tyyppi :id) %)
                            :vinkki #(when-not (empty? @hakutermi)
-                                     (if (liikaa-osumia? @hakutulokset-joihin-oikeus)
+                                     (if (liikaa-osumia? @hakutulokset)
                                        "Paljon osumia, tarkenna hakua..."
-                                       (when (= [] @hakutulokset-joihin-oikeus)
+                                       (when (= [] @hakutulokset)
                                          (str "Ei tuloksia haulla " @hakutermi))))}
-         @hakutulokset-joihin-oikeus]]])))
+         @hakutulokset]]])))
