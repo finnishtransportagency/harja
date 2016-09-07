@@ -491,3 +491,8 @@ FROM urakka where sampoid = :sampoid;
 UPDATE urakka
    SET takuu_loppupvm = :loppupvm
  WHERE id = :urakka
+
+-- name: aseta-urakan-indeksi!
+UPDATE urakka
+   SET indeksi = :indeksi
+ WHERE id = :urakka
