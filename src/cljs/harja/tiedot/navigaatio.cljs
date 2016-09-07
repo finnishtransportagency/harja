@@ -131,7 +131,6 @@
 
 (defonce valittu-urakkatyyppi (atom nil))
 
-
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
 (defonce urakkatyyppi
