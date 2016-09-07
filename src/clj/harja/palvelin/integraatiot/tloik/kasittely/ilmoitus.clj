@@ -75,5 +75,5 @@
       (throw+ {:type virheet/+urakkaa-ei-loydy+}))
     uusi-id))
 
-
-
+(defn hae-ilmoituksen-tieosoite [db ilmoitus-id]
+  (first (ilmoitukset/hae-ilmoituksen-tieosoite db ilmoitus-id)))
