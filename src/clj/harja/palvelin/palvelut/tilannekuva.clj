@@ -390,11 +390,10 @@
                         (hae-urakat db user tiedot)))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
-      ;; Viitataan var kautta funktioon, jotta sen voi RPELissä määritellä uudestaan
-      (partial #'hae-toteumat-kartalle db))
+      (partial hae-toteumat-kartalle db))
     (karttakuvat/rekisteroi-karttakuvan-lahde!
      karttakuvat :tilannekuva-tarkastukset
-     (partial #'hae-tarkastukset-kartalle db))
+     (partial hae-tarkastukset-kartalle db))
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
