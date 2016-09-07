@@ -36,8 +36,11 @@
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (defn- vaadi-kohde-kuuluu-urakkaan [urakka-id kohde-id]
-  ;; TODO Tee tämä...
-  )
+  (let [urakan-kohteet (map :urakka (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db urakka-id))]
+      (log/debug "Tarkistetaan, että annettu ylläpitokohde " kohde-id " kuuluu väitettyyn urakkaan " urakka-id)
+      (when (or (empty? urakan-kohteet)
+                (not (some #(= urakka-id %) urakan-kohteet)))
+        (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -176,7 +179,7 @@
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}
-   {:palvelu :kirjaa-suljettu-tieosuus
+   {:palvelu :kirjaa-suljettu-tieosuus ;; TODO Pitäisikö olla eri palvelunimi?
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-poisto
