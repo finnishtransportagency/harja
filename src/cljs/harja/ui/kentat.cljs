@@ -1,5 +1,5 @@
 (ns harja.ui.kentat
-  "UI input kenttien muodostaminen typpin perusteella, esim. grid ja lomake komponentteihin."
+  "UI input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
@@ -8,7 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.tierekisteri :as tr]
             [harja.ui.yleiset :refer [linkki ajax-loader livi-pudotusvalikko nuolivalinta
-                                      maarita-pudotusvalikon-max-korkeus avautumissuunta-ja-korkeus-tyylit]]
+                                      maarita-pudotusvalikon-suunta-ja-max-korkeus avautumissuunta-ja-korkeus-tyylit]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
             [clojure.string :as str]
@@ -82,8 +82,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
-                                                  (maarita-pudotusvalikon-max-korkeus
-                                                    this max-korkeus avautumissuunta))]
+                                                  (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
+                                                    (reset! avautumissuunta (:suunta maaritys))
+                                                    (reset! max-korkeus (:max-korkeus maaritys))))]
     (komp/luo
       (komp/dom-kuuntelija js/window
                            EventType/SCROLL pudotusvalikon-korkeuden-kasittelija-fn
@@ -317,6 +318,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
 (defmethod nayta-arvo :radio [{:keys [valinta-nayta]} data]
   [:span ((or valinta-nayta str) @data)])
 
+;; Luo usean checkboksin, jossa valittavissa N-kappaleita vaihtoehtoja. Arvo on setti ruksittuja asioita
 (defmethod tee-kentta :checkbox-group [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
                                                tyhjenna-kaikki? nayta-rivina? disabloi]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
@@ -351,6 +353,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                         checkboxit)]]
          checkboxit))]))
 
+;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina?]} data]
   (let [arvo (if (nil? @data)
                false
