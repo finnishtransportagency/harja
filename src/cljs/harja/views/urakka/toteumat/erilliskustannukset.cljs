@@ -24,7 +24,8 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -68,14 +69,16 @@
     :muu "Muu"
     +valitse-tyyppi+))
 
-;; "tilaajan_maa-aines" -tyyppisiä erilliskustannuksia otetaan vastaan Aura-konversiossa
-;; mutta ei anneta enää syöttää Harjaan käyttöliittymän kautta. -Anne L. palaverissa 2015-06-02"
-(def +erilliskustannustyypit+
-  [:asiakastyytyvaisyysbonus :muu])
+(defn luo-kustannustyypit [urakkatyyppi kayttaja]
+  ;; Ei sallita urakoitsijan antaa itselleen asiakastyytyväisyysbonuksia
+  (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
+            (not= :asiakastyytyvaisyysbonus %)
+            true)
+          (case urakkatyyppi
+            :hoito [:asiakastyytyvaisyysbonus :muu]
 
-(defn luo-kustannustyypit [urakkatyyppi]
-  ;; jätetään funktio tähän, jos jatkossa halutaan urakkatyypin perusteella antaa eri vaihtoehtoja
-  +erilliskustannustyypit+)
+            :default
+            [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
@@ -215,7 +218,7 @@
             :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
-            :valinnat      (luo-kustannustyypit (:tyyppi ur))
+            :valinnat      (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja)
             :fmt           #(erilliskustannustyypin-teksti %)
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1

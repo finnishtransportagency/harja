@@ -325,7 +325,9 @@
         hae! (fn [ur]
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
-                           (<! (yht/hae-urakan-yhteyshenkilot (:id ur))))))]
+                           (filter
+                             #(not= "urakoitsijan paivystaja" (:rooli %))
+                             (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
     (go (reset! yhteyshenkilotyypit (<! (yht/hae-yhteyshenkilotyypit))))
     (hae! ur)
     (komp/luo
