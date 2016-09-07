@@ -54,6 +54,7 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
+  u.indeksi,
   hal.id                      AS hallintayksikko_id,
   hal.nimi                    AS hallintayksikko_nimi,
   hal.lyhenne                 AS hallintayksikko_lyhenne,
