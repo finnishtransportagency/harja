@@ -61,15 +61,37 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    nil nil
    (map (lisaa-karttatyyppi-fn taso))))
 
+(defn- muodosta-kuva-karttataso [nimi selitteet hakuparametrit]
+  (openlayers/luo-kuvataso
+   nimi
+   selitteet
+   "tk" hakuparametrit))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
-  (log "toteumat taso tehdään!" (pr-str toimenpiteet))
-  (openlayers/luo-kuvataso
-   :tilannekuva
+  (muodosta-kuva-karttataso
+   :tilannekuva-toteumat
    (into #{}
          (map (comp esitettavat-asiat/toimenpiteen-selite :toimenpide))
          toimenpiteet)
-   "tk" @url-hakuparametrit))
+   @url-hakuparametrit))
+
+(defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
+  (muodosta-kuva-karttataso
+   :tilannekuva-tarkastukset esitettavat-asiat/tarkastus-selitteet
+   @url-hakuparametrit))
+
+(def kuvataso? #{:tarkastukset :toteumat})
+
+(defn- yhdista-uudet-tasot [vanhat-tasot uudet-tasot]
+  (reduce-kv (fn [nykyiset-tasot nimi taso]
+               (let [nykyinen-taso (get nykyiset-tasot nimi)]
+                 ;; Ei korvata tasoa, jos se on sama kuvataso (jottai ei
+                 ;; menetetä jo ladattuja tilejä eikä tule flickeriä)
+                 (if (openlayers/sama-kuvataso? nykyinen-taso taso)
+                   nykyiset-tasot
+                   (assoc nykyiset-tasot nimi taso))))
+             vanhat-tasot
+             uudet-tasot))
 
 ;; Päivittää tilannekuvan karttatasot kun niiden tiedot ovat muuttuneet.
 ;; Muuntaa kartalla esitettävään muotoon ne tasot, joiden tiedot on oikeasti
@@ -87,7 +109,7 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
       (loop [uudet-tasot {}
              [taso & tasot] (seq tasot)]
         (if-not taso
-          (swap! tilannekuvan-asiat-kartalla merge uudet-tasot)
+          (swap! tilannekuvan-asiat-kartalla yhdista-uudet-tasot uudet-tasot)
           (let [vanhat-asiat (get vanha taso)
                 uudet-asiat (get uusi taso)
                 tason-nimi (karttatason-nimi taso)]
@@ -99,7 +121,8 @@ ovat muuttuneet. Ottaa sisään haettujen asioiden vanhan ja uuden version."
 
                      ;; Jos tason asiat ovat muuttuneet, muodostetaan
                      ;; kartalla esitettävä muoto
-                     (not= vanhat-asiat uudet-asiat)
+                     (or (not= vanhat-asiat uudet-asiat)
+                         (kuvataso? taso))
                      (assoc uudet-tasot
                             tason-nimi (muodosta-karttataso taso uudet-asiat))
 

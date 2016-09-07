@@ -373,6 +373,7 @@ hakutiheys-historiakuva 1200000)
             (k/url-parametri (aikaparametrilla (dissoc hakuparametrit :alue))))
 
     (let [tulos (-> (<! (k/post! :hae-tilannekuvaan (aikaparametrilla hakuparametrit)))
+                    (assoc :tarkastukset (:tarkastukset hakuparametrit))
                     (yhdista-tyokonedata)
                     (julkaise-tyokonedata!))]
       (when @nakymassa?
@@ -385,7 +386,7 @@ hakutiheys-historiakuva 1200000)
                ;; Uusi haku myös kun aikasuodattimien arvot muuttuvat
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
-               ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet, 
+               ;; Kun vaihdetaan nykytilanteen ja historiakuvan välillä, haetaan uudet,
                ;; aikasuodattimeen ja tilaan sopivat urakat. Kun tämä haku on valmis,
                ;; lähdetään hakemaan kartalle piirrettävät jutut. Tämän takia emme halua tehdä
                ;; asioiden hakua tilaan sidottuna!

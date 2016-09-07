@@ -401,3 +401,13 @@ GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
 SELECT id
 FROM ilmoitustoimenpide
 WHERE tila IS NULL OR tila = 'virhe';
+
+-- name: hae-ilmoituksen-tieosoite
+SELECT
+  tr_numero as "tr-numero",
+  tr_alkuosa as "tr-alkuosa",
+  tr_alkuetaisyys as "tr-alkuetaisyys",
+  tr_loppuosa as "tr-loppuosa",
+  tr_loppuetaisyys as "tr-loppuetaisyys"
+FROM ilmoitus
+WHERE id = :id;
