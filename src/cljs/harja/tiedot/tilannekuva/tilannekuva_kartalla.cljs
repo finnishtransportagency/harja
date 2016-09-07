@@ -68,7 +68,6 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    "tk" hakuparametrit))
 
 (defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
-  (log "toteumat taso tehdään!" (pr-str toimenpiteet))
   (muodosta-kuva-karttataso
    :tilannekuva-toteumat
    (into #{}
@@ -77,7 +76,6 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
    @url-hakuparametrit))
 
 (defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
-  (log "tarkastukset taso tehdään! " (pr-str tarkastukset))
   (muodosta-kuva-karttataso
    :tilannekuva-tarkastukset esitettavat-asiat/tarkastus-selitteet
    @url-hakuparametrit))
