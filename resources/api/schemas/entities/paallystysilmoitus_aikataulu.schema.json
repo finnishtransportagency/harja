@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "aloituspvm": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys_alku",
+      "type": "string",
+      "format": "date-time"
+    },
+    "valmispvm_paallystys": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/paallystys_loppu",
+      "type": "string",
+      "format": "date-time"
+    },
+    "valmispvm_kohde": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/valmis_tiemerkintaan",
+      "type": "string",
+      "format": "date-time"
+    },
+    "takuupvm": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinta_alku",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
