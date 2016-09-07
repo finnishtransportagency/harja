@@ -65,16 +65,16 @@
           }
         ],
         "aikataulu": {
-          "paallystys_alku": "2015-01-10T12:00:00Z",
-          "paallystys_loppu": "2015-01-12T12:00:00Z",
-          "valmis_tiemerkintaan": "2015-01-12T14:00:00Z",
-          "tiemerkinta_alku": "2015-01-12T16:00:00Z",
-          "tiemerkinta_loppu": "2015-01-15T12:00:00Z",
-          "kohde_valmis": "2015-01-16T12:00:00Z",
+          "paallystys-alku": "2015-01-10T12:00:00Z",
+          "paallystys-loppu": "2015-01-12T12:00:00Z",
+          "valmis-tiemerkintaan": "2015-01-12T14:00:00Z",
+          "tiemerkinta-alku": "2015-01-12T16:00:00Z",
+          "tiemerkinta-loppu": "2015-01-15T12:00:00Z",
+          "kohde-valmis": "2015-01-16T12:00:00Z",
           "paallystysilmoitus": {
             "aloituspvm": "2015-01-10T12:00:00Z",
-            "valmispvm_paallystys": "2015-01-12T12:00:00Z",
-            "valmispvm_kohde": "2015-01-16T12:00:00Z",
+            "valmispvm-paallystys": "2015-01-12T12:00:00Z",
+            "valmispvm-kohde": "2015-01-16T12:00:00Z",
             "takuupvm": "2015-02-15T12:00:00Z"
           }
         }
