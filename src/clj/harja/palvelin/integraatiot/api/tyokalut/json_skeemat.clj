@@ -75,6 +75,9 @@
 (def +paallystysilmoituksen-kirjaus+ "api/schemas/paallystysilmoituksen-kirjaus-request.schema.json")
 (def paallystysilmoituksen-kirjaus (tee-validaattori +paallystysilmoituksen-kirjaus+))
 
+(def +aikataulun-kirjaus+ "api/schemas/aikataulun-kirjaus-request.schema.json")
+(def aikataulun-kirjaus (tee-validaattori +aikataulun-kirjaus+))
+
 (def +suljetun-tieosuuden-kirjaus+ "api/schemas/suljetun-tieosuuden-kirjaus-request.schema.json")
 (def suljetun-tieosuuden-kirjaus (tee-validaattori +suljetun-tieosuuden-kirjaus+))
 (def +suljetun-tieosuuden-poisto+ "api/schemas/suljetun-tieosuuden-poisto-request.schema.json")
