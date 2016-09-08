@@ -450,6 +450,14 @@ SET
   aikataulu_paallystys_loppu = :paallystys_loppu,
   aikataulu_kohde_valmis = :kohde_valmis,
   valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  aikataulu_muokattu = NOW(),
+  aikataulu_muokkaaja = :muokkaaja
+WHERE id = :id;
+
+-- name: paivita-yllapitokohteen-tiemerkintaaikataulu!
+-- Päivittää ylläpitokohteen aikataulutiedot
+UPDATE yllapitokohde
+SET
   aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
   aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
   aikataulu_muokattu = NOW(),

@@ -13,9 +13,11 @@
             [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus])
+            [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -37,10 +39,10 @@
 
 (defn- vaadi-kohde-kuuluu-urakkaan [urakka-id kohde-id]
   (let [urakan-kohteet (map :urakka (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db urakka-id))]
-      (log/debug "Tarkistetaan, että annettu ylläpitokohde " kohde-id " kuuluu väitettyyn urakkaan " urakka-id)
-      (when (or (empty? urakan-kohteet)
-                (not (some #(= urakka-id %) urakan-kohteet)))
-        (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
+    (log/debug "Tarkistetaan, että annettu ylläpitokohde " kohde-id " kuuluu väitettyyn urakkaan " urakka-id)
+    (when (or (empty? urakan-kohteet)
+              (not (some #(= urakka-id %) urakan-kohteet)))
+      (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -58,15 +60,28 @@
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id id})))))
 
-(defn paivita-yllapitokohteen-aikataulu [db kayttaja kohde-id data]
-  (q-yllapitokohteet/paivita-yllapitokohteen-aikataulu! db {:paallystys_alku (:paallystys-alku data)
-                                                            :paallystys_loppu (:paallystys-loppu data)
-                                                            :kohde_valmis (:kohde-valmis data)
-                                                            :valmis_tiemerkintaan (:valmis-tiemerkintaan data)
-                                                            :tiemerkinta_alku (:tiemerkinta-alku data)
-                                                            :tiemerkinta_loppu (:tiemerkinta-loppu data)
-                                                            :muokkaaja (:id kayttaja)
-                                                            :id kohde-id}))
+(defn paivita-yllapitokohteen-aikataulu [db kayttaja urakka-id kohde-id data]
+  (let [urakan-tyyppi (keyword (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
+    (case urakan-tyyppi
+      :paallystys
+      (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
+        db
+        {:paallystys_alku (:paallystys-alku data)
+         :paallystys_loppu (:paallystys-loppu data)
+         :kohde_valmis (:kohde-valmis data)
+         :valmis_tiemerkintaan (:valmis-tiemerkintaan data)
+         :muokkaaja (:id kayttaja)
+         :id kohde-id})
+      :tiemerkinta
+      (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
+        db
+        {:tiemerkinta_alku (:tiemerkinta-alku data)
+         :tiemerkinta_loppu (:tiemerkinta-loppu data)
+         :muokkaaja (:id kayttaja)
+         :id kohde-id})
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+viallinen-kutsu+
+                          :viesti "Urakka ei ole päällystys- tai tiemerkintäurakka"}]}))))
 
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -79,7 +94,7 @@
     (jdbc/with-db-transaction
       [db db]
       (let [kohde-id (Integer/parseInt kohde-id)
-            id (paivita-yllapitokohteen-aikataulu db kayttaja kohde-id data)]
+            id (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
           {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")
            :id id})))))
