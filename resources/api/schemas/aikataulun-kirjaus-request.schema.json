@@ -4,6 +4,13 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
     "aikataulu": {
       "type": "object",
       "id": "urn:harja/yllapitokohde/aikataulu",
