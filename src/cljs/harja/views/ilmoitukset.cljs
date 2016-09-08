@@ -29,6 +29,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
+            [harja.ui.notifikaatiot :as notifikaatiot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat])
@@ -253,6 +254,7 @@
 
 (defn- ilmoitukset* [e! ilmoitukset]
   (komp/luo
+    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
@@ -263,12 +265,12 @@
 
 (defn ilmoitukset []
   (komp/luo
+    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/lippu tiedot/karttataso-ilmoitukset)
-    ;;(komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
 
     (fn []
       [tuck tiedot/ilmoitukset ilmoitukset*])))

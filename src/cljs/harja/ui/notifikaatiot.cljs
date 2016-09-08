@@ -25,7 +25,7 @@
   "Pyytää käyttäjältä lupaa näyttää web-notifikaatioita,
   jos lupaa ei ole annettu eikä pyyntöä ole jo kertaalleen esitetty."
   []
-  (when kayta-web-notification-apia?
+  (when kayta-web-notification-apia? ;; Tsekkaa tämä ensin, jottei kaadu jos Notification API ei ole tuettu
     (when (and
            (not= (.-permission js/Notification) "granted")
            (not @notifikaatiolupaa-pyydetty?))

@@ -231,7 +231,7 @@
                                      :let (:aet paatepiste)}]
     (assoc tarkastus
                                         ;:sijainti (:geometria koko-tarkastuksen-tr-osoite)
-           :tarkastaja (:kayttajanimi kayttaja)
+           :tarkastaja (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
            :tr_numero (:tie koko-tarkastuksen-tr-osoite)
            :tr_alkuosa (:aosa koko-tarkastuksen-tr-osoite)
            :tr_alkuetaisyys (:aet koko-tarkastuksen-tr-osoite)

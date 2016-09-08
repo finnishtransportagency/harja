@@ -142,27 +142,39 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        [:div.virheviesti-sailio viesti
         (when rasti-funktio sulkemisnappi)]))))
 
-(defn maarita-pudotusvalikon-max-korkeus [pudotusvalikko-komponentti max-korkeus-atom suunta-atom]
+(defn maarita-pudotusvalikon-suunta-ja-max-korkeus [pudotusvalikko-komponentti]
   (let [ikkunan-reunaan-jaava-tyhja-tila 15
         solmu (.-parentNode (r/dom-node pudotusvalikko-komponentti))
         etaisyys-alareunaan (dom/elementin-etaisyys-viewportin-alareunaan solmu)
         etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan solmu)
+        etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan solmu)
         suunta (if (< etaisyys-alareunaan 75)
-                 :ylos
-                 :alas)]
-    (reset! suunta-atom suunta)
-    (if (= suunta :alas)
-      (reset! max-korkeus-atom (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila))
-      (reset! max-korkeus-atom (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila)))))
-
+                 (if (< etaisyys-oikeaan-reunaan 75)
+                   :ylos-vasen
+                   :ylos-oikea)
+                 (if (< etaisyys-oikeaan-reunaan 75)
+                   :alas-vasen
+                   :alas-oikea))]
+    {:suunta suunta
+     :max-korkeus (if (or (= suunta :alas-oikea) (= suunta :alas-vasen))
+                      (- etaisyys-alareunaan ikkunan-reunaan-jaava-tyhja-tila)
+                      (- etaisyys-ylareunaan ikkunan-reunaan-jaava-tyhja-tila))}))
 
 (defn avautumissuunta-ja-korkeus-tyylit
   [max-korkeus avautumissuunta]
   (merge {:max-height (fmt/pikseleina max-korkeus)}
-         (when (= avautumissuunta :alas)
+         (when (= avautumissuunta :alas-vasen)
+           {:top    "calc(100% - 1px)"
+            :right "0"
+            :bottom "auto"})
+         (when (= avautumissuunta :alas-oikea)
            {:top    "calc(100% - 1px)"
             :bottom "auto"})
-         (when (= avautumissuunta :ylos)
+         (when (= avautumissuunta :ylos-vasen)
+           {:bottom "calc(100% - 1px)"
+            :right "0"
+            :top    "auto"})
+         (when (= avautumissuunta :ylos-oikea)
            {:bottom "calc(100% - 1px)"
             :top    "auto"})))
 
@@ -171,8 +183,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
         pudotusvalikon-korkeuden-kasittelija-fn (fn [this _]
-                                                  (maarita-pudotusvalikon-max-korkeus
-                                                    this max-korkeus avautumissuunta))]
+                                                  (let [maaritys (maarita-pudotusvalikon-suunta-ja-max-korkeus this)]
+                                                    (reset! avautumissuunta (:suunta maaritys))
+                                                    (reset! max-korkeus (:max-korkeus maaritys))))]
     (komp/luo
       (komp/klikattu-ulkopuolelle #(reset! auki? false))
       (komp/dom-kuuntelija js/window

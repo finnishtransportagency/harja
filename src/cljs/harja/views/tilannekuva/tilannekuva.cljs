@@ -38,7 +38,7 @@
       [:div#tk-tilan-vaihto
        [:div.tk-tilan-vaihto-nykytilanne "Nykytilanne"]
        [:div.tk-tilan-vaihto-historia "Historia"]
-       [on-off/on-off-valinta on-off-tila {:luokka    "on-off-tilannekuva"
+       [on-off/on-off-valinta on-off-tila {:luokka "on-off-tilannekuva"
                                            :on-change (fn []
                                                         ;; Päivitä valittu tila
                                                         (reset! tiedot/valittu-tila
@@ -48,17 +48,17 @@
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
-   [kentat/tee-kentta {:tyyppi        :radio
+   [kentat/tee-kentta {:tyyppi :radio
                        :valinta-nayta first
-                       :valinta-arvo  second
-                       :valinnat      tiedot/nykytilanteen-aikasuodatin-tunteina}
+                       :valinta-arvo second
+                       :valinnat tiedot/nykytilanteen-aikasuodatin-tunteina}
     tiedot/nykytilanteen-aikasuodattimen-arvo]])
 
 (defn historiankuvan-aikavalinnat []
   [:div#tk-historiakuvan-aikavalit
-   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko?              false
-                                                        :aikavalin-rajoitus          [12 :kuukausi]
-                                                        :aloitusaika-pakota-suunta   :alas-oikea
+   [ui-valinnat/aikavali tiedot/historiakuvan-aikavali {:nayta-otsikko? false
+                                                        :aikavalin-rajoitus [12 :kuukausi]
+                                                        :aloitusaika-pakota-suunta :alas-oikea
                                                         :paattymisaika-pakota-suunta :alas-vasen}]])
 
 (defn yksittainen-suodatincheckbox
@@ -66,7 +66,7 @@
   [nimi suodattimet-atom suodatin-polku]
   [checkbox/checkbox
    (r/wrap (checkbox/boolean->checkbox-tila-keyword
-            (get-in @suodattimet-atom suodatin-polku))
+             (get-in @suodattimet-atom suodatin-polku))
            (fn [uusi-tila]
              (swap! suodattimet-atom
                     assoc-in
@@ -78,6 +78,7 @@
 
 (defn checkbox-suodatinryhma
   "ryhma-polku on polku, josta tämän checkbox-ryhmän jäsenten nimet ja tilat löytyvät suodattimet-atomissa.
+
    kokoelma-atomin antaminen tarkoittaa, että checkbox-ryhmä on osa usean checkbox-ryhmän kokoelmaa, joista
    vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
    itse omaa auki/kiinni-tilaansa."
@@ -108,7 +109,7 @@
                            (swap! oma-auki-tila not))
                          (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
             [:span {:class (str
-                             "tk-checkbox-ryhma-tila chevron-rotate "
+                             "tk-chevron-ryhma-tila chevron-rotate "
                              (when-not (auki?) "chevron-rotate-down"))}
              (if (auki?)
                (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
@@ -135,73 +136,87 @@
                         suodattimet-atom
                         (conj ryhma-polku elementti)]))])])))))
 
-(defn aluesuodattimet []
-  (let [uusimaa "Uusimaa"
-        varsinais-suomi "Varsinais-Suomi"
-        kaakkois-suomi "Kaakkois-Suomi"
-        pirkanmaa "Pirkanmaa"
-        pohjois-savo "Pohjois-Savo"
-        keski-suomi "Keski-Suomi"
-        etela-pohjanmaa "Etelä-Pohjanmaa"
-        pohjois-pohjanmaa "Pohjois-Pohjanmaa ja Kainuu"
-        lappi "Lappi"
-        onko-alueita? (reaction-writable
-                        (some
-                         (fn [[_ suodattimet]]
-                           (not (empty? suodattimet)))
-                         (:alueet @tiedot/suodattimet)))
-        ensimmainen-haku-kaynnissa? (reaction-writable
-                                     (and (empty? (:alueet @tiedot/suodattimet))
-                                          (nil? @tiedot/uudet-aluesuodattimet)))]
-    (komp/luo
-      (fn []
-        [:div#tk-aluevalikko
-         [:span#tk-alueotsikko (cond
-                                 @ensimmainen-haku-kaynnissa? "Haetaan alueita"
-                                 @onko-alueita? "Näytä alueilta"
-                                 :else "Ei näytettäviä alueita")]
-         (if @ensimmainen-haku-kaynnissa?
+(defn- asetuskokoelma [otsikko {:keys [salli-piilotus?] :as optiot} sisalto]
+  (let [auki? (atom true)]
+    (fn [otsikko optiot sisalto]
+      [:div.tk-asetuskokoelma
+       (when salli-piilotus?
+         [:div {:class (str
+                        "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
+                        (when-not @auki? "chevron-rotate-down"))
+               :on-click #(swap! auki? not)}
+         (if @auki?
+           (ikonit/livicon-chevron-down)
+           (ikonit/livicon-chevron-right))])
+       [:div {:class (str "tk-otsikko " (when salli-piilotus?
+                                          "tk-otsikko-sisenna"))}
+        otsikko]
+       (when @auki?
+         sisalto)])))
+
+(def tilannekuvan-alueet ["Uusimaa"
+                          "Varsinais-Suomi"
+                          "Kaakkois-Suomi"
+                          "Pirkanmaa"
+                          "Pohjois-Savo"
+                          "Keski-Suomi"
+                          "Etelä-Pohjanmaa"
+                          "Pohjois-Pohjanmaa ja Kainuu"
+                          "Lappi"])
+
+(defn- aluesuodattimet []
+  (komp/luo
+    (fn []
+      (let [onko-alueita? (some
+                            (fn [[_ suodattimet]]
+                              (not (empty? suodattimet)))
+                            (:alueet @tiedot/suodattimet))
+            ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
+                                             (nil? @tiedot/uudet-aluesuodattimet))]
+        [asetuskokoelma
+         (cond
+           ensimmainen-haku-kaynnissa? "Haetaan alueita"
+           onko-alueita? "Näytä alueilta"
+           :else "Ei näytettäviä alueita")
+         {:salli-piilotus? true}
+        (if ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
+           [:div.tk-suodatinryhmat
+            (doall
+             (for [alue tilannekuvan-alueet]
+               ^{:key alue}
+               [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
 
-           [:div#tk-aluevaihtoehdot
-           [checkbox-suodatinryhma uusimaa tiedot/suodattimet [:alueet uusimaa] nil]
-           [checkbox-suodatinryhma varsinais-suomi tiedot/suodattimet [:alueet varsinais-suomi] nil]
-           [checkbox-suodatinryhma kaakkois-suomi tiedot/suodattimet [:alueet kaakkois-suomi] nil]
-           [checkbox-suodatinryhma pirkanmaa tiedot/suodattimet [:alueet pirkanmaa] nil]
-           [checkbox-suodatinryhma pohjois-savo tiedot/suodattimet [:alueet pohjois-savo] nil]
-           [checkbox-suodatinryhma keski-suomi tiedot/suodattimet [:alueet keski-suomi] nil]
-           [checkbox-suodatinryhma etela-pohjanmaa tiedot/suodattimet [:alueet etela-pohjanmaa] nil]
-           [checkbox-suodatinryhma pohjois-pohjanmaa tiedot/suodattimet [:alueet pohjois-pohjanmaa] nil]
-           [checkbox-suodatinryhma lappi tiedot/suodattimet [:alueet lappi] nil]])]))))
-
-(defn aikasuodattimet []
-  [:div#tk-paavalikko
-   [:span "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
-                                " (max. yksi vuosi):")]
-   (when (= :nykytilanne @tiedot/valittu-tila)
-     [nykytilanteen-aikavalinnat])
-   (when (= :historiakuva @tiedot/valittu-tila)
-     [historiankuvan-aikavalinnat])
-   (when (= :nykytilanne @tiedot/valittu-tila)
-     [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
-   (when (= :nykytilanne @tiedot/valittu-tila)
-     [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
-   [:div.tk-suodatinryhmat
+(defn- aikasuodattimet []
+  [asetuskokoelma
+   (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
+                         " (max. yksi vuosi):"))
+   {:salli-piilotus? false}
+   [:div
+    (when (= :nykytilanne @tiedot/valittu-tila)
+      [nykytilanteen-aikavalinnat])
     (when (= :historiakuva @tiedot/valittu-tila)
-      [:div.tk-suodatinryhmat
-       ^{:key "ilmoitukset"} ; Avainta ei ehkä tarvittaisi tässä, mutta jostain syystä Reagent luulee näitä muuten samoiksi
-       [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
-       ^{:key "yllapito"}
-       [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]])
+      [historiankuvan-aikavalinnat])
+    (when (= :nykytilanne @tiedot/valittu-tila)
+      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
+    (when (= :nykytilanne @tiedot/valittu-tila)
+      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
     [:div.tk-suodatinryhmat
-     [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
-     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]
-     [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
-     [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]]
-   [:div.tk-yksittaiset-suodattimet
-    [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
-     tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
-     auki-oleva-checkbox-ryhma]]])
+     (when (= :historiakuva @tiedot/valittu-tila)
+       [:div.tk-suodatinryhmat
+        ^{:key "ilmoitukset"} ; Avainta ei ehkä tarvittaisi tässä, mutta jostain syystä Reagent luulee näitä muuten samoiksi
+        [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
+        ^{:key "yllapito"}
+        [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]])
+     [:div.tk-suodatinryhmat
+      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
+      [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]
+      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
+      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]]
+    [:div.tk-yksittaiset-suodattimet
+     [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
+      tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
+      auki-oleva-checkbox-ryhma]]]])
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
@@ -241,10 +256,10 @@
                      (fn [_ ilmoitus]
                        (modal/piilota!)
                        (tiedot/paivita-ilmoituksen-tiedot (:id ilmoitus))))
-    {:component-will-mount   (fn [_]
-                               (kartta/aseta-yleiset-kontrollit!
-                                 [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
-                                                                   :luokka               "haitari-tilannekuva"}]))
+    {:component-will-mount (fn [_]
+                             (kartta/aseta-yleiset-kontrollit!
+                               [yleiset/haitari hallintapaneeli {:piiloita-kun-kiinni? false
+                                                                 :luokka "haitari-tilannekuva"}]))
      :component-will-unmount (fn [_]
                                (kartta/tyhjenna-yleiset-kontrollit!)
                                (kartta/poista-popup!))}

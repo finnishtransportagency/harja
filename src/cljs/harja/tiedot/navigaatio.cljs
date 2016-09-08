@@ -22,7 +22,8 @@
     [harja.atom :refer-macros [reaction<! reaction-writable]]
     [harja.pvm :as pvm]
     [clojure.string :as str]
-    [harja.geo :as geo])
+    [harja.geo :as geo]
+    [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
@@ -130,7 +131,6 @@
 
 
 (defonce valittu-urakkatyyppi (atom nil))
-
 
 ;; Tällä hetkellä valittu väylämuodosta riippuvainen urakkatyyppi
 ;; Jos käyttäjällä urakkarooleja, valitaan urakoista yleisin urakkatyyppi
@@ -277,7 +277,10 @@
           urakkalista @hallintayksikon-urakkalista]
       (into []
             (comp (filter #(= v-ur-tyyppi (:tyyppi %)))
-                  (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+                  (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %)))))
+                  (filter #(if (= "urakoitsija" (get-in @istunto/kayttaja [:organisaatio :tyyppi]))
+                            (oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)
+                            true)))
             urakkalista))))
 
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"

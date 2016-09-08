@@ -7,8 +7,6 @@
       [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
       [harja.domain.ilmoitukset :as ilmoitukset]
       [harja.geo :as geo]
-      [harja.ui.kartta.varit.puhtaat :as puhtaat]
-
       [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
 #?(:clj (defn log [& things]
@@ -248,7 +246,7 @@
 
 (def tarkastus-selitteet
   #{{:teksti "Tarkastus (ok)" :vari (:ok-tarkastus ulkoasu/viivojen-varit)}
-    {:teksti "Tarkastus (havaintoja)" :vari (:ei-ok-tarkastus ulkoasu/viivojen-varit)}})
+    {:teksti "Laadun\u00ADalitus" :vari (:ei-ok-tarkastus ulkoasu/viivojen-varit)}})
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni

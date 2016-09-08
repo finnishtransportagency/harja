@@ -36,9 +36,8 @@
         (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
                          korrelaatio-id tapahtuma-id false virhe)))))
 
-(defn hae-urakka [db ilmoitus]
-  (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus)
-                                                                        (:sijainti ilmoitus)))]
+(defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
+  (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi sijainti))]
     (first (urakat/hae-urakka db urakka-id))))
 
 (defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
@@ -83,12 +82,15 @@
                                            paivystajat nil)
         ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)
-        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
-
+        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db ilmoitus)
+        tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
       (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-      (laheta-ilmoitus-paivystajille db ilmoitus paivystajat urakka-id ilmoitusasetukset))
+      (laheta-ilmoitus-paivystajille db
+                                     (assoc ilmoitus :sijainti
+                                                     (merge (:sijainti ilmoitus) tieosoite))
+                                     paivystajat urakka-id ilmoitusasetukset))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 

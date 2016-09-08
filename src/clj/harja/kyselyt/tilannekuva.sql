@@ -99,26 +99,23 @@ WHERE (l.urakka IN (:urakat) OR l.urakka IS NULL)
       AND l.poistettu IS NOT TRUE;
 
 -- name: hae-tarkastukset
+-- fetch-size: 64
+-- row-fn: geo/muunna-reitti
 SELECT
-  t.id,
-  t.aika,
-  t.tr_numero,
-  t.tr_alkuosa,
-  t.tr_alkuetaisyys,
-  t.tr_loppuosa,
-  t.tr_loppuetaisyys,
-  ST_Simplify(t.sijainti, :toleranssi) AS sijainti,
-  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
-    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
-  WHERE tarkastus = t.id) as vakiohavainnot,
-  t.tarkastaja,
-  t.havainnot,
+  ST_Simplify(t.sijainti, :toleranssi) AS reitti,
   t.laadunalitus,
-  t.tyyppi
+  t.tyyppi,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+       THEN 'urakoitsija' :: osapuoli
+       ELSE 'tilaaja' :: osapuoli
+       END AS tekija
 FROM tarkastus t
-WHERE sijainti IS NOT NULL
-      AND (t.urakka IN (:urakat) OR t.urakka IS NULL)
-      AND (t.aika BETWEEN :alku AND :loppu) AND
+     JOIN kayttaja k ON t.luoja = k.id
+     JOIN organisaatio o ON o.id = k.organisaatio
+WHERE sijainti IS NOT NULL AND
+      (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      (t.aika BETWEEN :alku AND :loppu) AND
+      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)) AND
       t.tyyppi :: TEXT IN (:tyypit);
 
 -- name: hae-turvallisuuspoikkeamat
