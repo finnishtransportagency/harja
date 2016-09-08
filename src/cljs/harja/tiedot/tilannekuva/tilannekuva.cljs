@@ -41,10 +41,6 @@ hakutiheys-nykytilanne 10000)
        :const true}
 hakutiheys-historiakuva 1200000)
 
-;; todo: muuta tilafiltteriksi
-(def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
-(def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
-
 (def oletusalueet {})
 
 (def valittu-urakka-tilannekuvaan-tullessa (atom nil))
@@ -63,8 +59,7 @@ hakutiheys-historiakuva 1200000)
                 tk/tma-laite false}
      :ilmoitukset {:tyypit {tk/tpp false
                             tk/tur false
-                            tk/urk false}
-                   :tilat ilmoitusten-tilat-nykytilanteessa}
+                            tk/urk false}}
      :turvallisuus {tk/turvallisuuspoikkeamat false}
      :laatupoikkeamat {tk/laatupoikkeama-tilaaja false
                        tk/laatupoikkeama-urakoitsija false

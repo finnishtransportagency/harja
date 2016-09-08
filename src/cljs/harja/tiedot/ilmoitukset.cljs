@@ -33,9 +33,9 @@
      :hoitokausi @u/valittu-hoitokausi
      :aikavali (or @u/valittu-hoitokausi [nil nil])}))
 
-;; todo: muuta tilafiltteriksi
+
 (def ^{:const true}
-kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
+tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 
@@ -47,7 +47,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
          :notifioi-uudet? false ;; vain taustalla tehty haku notifioi uudet ilmoitukset (ja jos käyttäjä hyväksyy)
          :ilmoitukset nil ;; haetut ilmoitukset
          :valinnat {:tyypit +ilmoitustyypit+
-                    :kuittaustyypit (into #{} kuittaustyyppi-filtterit)
+                    :tilat (into #{} tila-filtterit)
                     :hakuehto ""
                     :selite [nil ""]
                     :vain-myohassa? false
@@ -139,7 +139,6 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat notifioi-uudet? :notifioi-uudet? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
-      ;(log "[ILMO] Haetaan uudet ilmoitukset")
       (go
         (tulos!
           {:ilmoitukset (<! (k/post! :hae-ilmoitukset
@@ -147,14 +146,13 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
                                          ;; jos tyyppiä/tilaa ei valittu, ota kaikki
                                          (update :tyypit
                                                  #(if (empty? %) +ilmoitustyypit+ %))
-                                         (update :kuittaustyypit
-                                                 #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))
+                                         (update :tilat
+                                                 #(if (empty? %) (into #{} tila-filtterit) %)))))
            :notifioi-uudet? notifioi-uudet?})))
     app)
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
-    (log "--> " (count (:ilmoitukset tulokset)))
     (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]

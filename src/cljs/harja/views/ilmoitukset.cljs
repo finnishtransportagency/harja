@@ -140,11 +140,11 @@
 
     (lomake/ryhma
       {:rivi? true}
-      {:nimi :kuittaustyypit
+      {:nimi :tilat
        :otsikko "Tila"
        :tyyppi :checkbox-group
-       :vaihtoehdot tiedot/kuittaustyyppi-filtterit
-       :vaihtoehto-nayta kuittaustyypin-selite}
+       :vaihtoehdot tiedot/tila-filtterit
+       :vaihtoehto-nayta tilan-selite}
       {:nimi :tyypit
        :otsikko "Tyyppi"
        :tyyppi :checkbox-group

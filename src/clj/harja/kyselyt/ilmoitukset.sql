@@ -42,6 +42,12 @@ WHERE
     (i.ilmoitettu  BETWEEN :alku AND :loppu)
   ) AND
 
+  -- Tarkista ilmoituksen tilat
+  (:kuittaamattomat IS TRUE AND i.tila = 'kuittaamaton' :: ilmoituksen_tila) AND
+  (:vastaanotetut IS TRUE OR i.tila = 'vastaanotettu' :: ilmoituksen_tila) AND
+  (:aloitetut IS TRUE OR i.tila = 'aloitettu' :: ilmoituksen_tila) AND
+  (:lopetetut IS TRUE OR i.tila = 'lopetettu' :: ilmoituksen_tila) AND
+
   -- Tarkasta ilmoituksen tyypit
   (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
@@ -69,6 +75,7 @@ LIMIT 501;
 SELECT
   ilmoitusid,
   ilmoitettu,
+  tila,
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,

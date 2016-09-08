@@ -112,6 +112,7 @@
         tyypit (mapv name tyypit)
         selite-annettu? (boolean (and selite (first selite)))
         selite (if selite-annettu? (name (first selite)) "")
+        tilat (apply hash-set tilat)
         debug-viesti (str "Haetaan ilmoituksia: "
                           (viesti urakat "urakoista" "ilman urakoita")
                           (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
@@ -137,6 +138,10 @@
                                      {:urakat urakat
                                       :alku_annettu (hakuehto-annettu? aikavali-alku)
                                       :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                      :kuittaamattomat (contains? tilat :kuittaamaton)
+                                      :vastaanotetut (contains? tilat :vastaanotettu)
+                                      :aloitetut (contains? tilat :aloitettu)
+                                      :lopetetut (contains? tilat :lopetettu)
                                       :alku aikavali-alku
                                       :loppu aikavali-loppu
                                       :tyypit_annettu (hakuehto-annettu? tyypit)
@@ -224,21 +229,20 @@
   (let [id-vektori (if (vector? id) id [id])
         kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)
         tiedot (q/hae-ilmoitukset-idlla db id-vektori)
-        tulos (mapv
-                ilmoitukset-domain/lisaa-ilmoituksen-tila
-                (konv/sarakkeet-vektoriin
-                  (into []
-                        (comp
-                          (filter #(or (nil? (:urakka %)) (kayttajan-urakat (:urakka %))))
-                          (harja.geo/muunna-pg-tulokset :sijainti)
-                          (map konv/alaviiva->rakenne)
-                          (map #(konv/array->vec % :selitteet))
-                          (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                          (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                          (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                          (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                        tiedot)
-                  {:kuittaus :kuittaukset}))]
+        tulos (konv/sarakkeet-vektoriin
+                (into []
+                      (comp
+                        (filter #(or (nil? (:urakka %)) (kayttajan-urakat (:urakka %))))
+                        (harja.geo/muunna-pg-tulokset :sijainti)
+                        (map konv/alaviiva->rakenne)
+                        (map #(konv/string->keyword % :tila))
+                        (map #(konv/array->vec % :selitteet))
+                        (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                        (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                        (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                        (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                      tiedot)
+                {:kuittaus :kuittaukset})]
     (log/debug "Löydettiin tiedot " (count tulos) " ilmoitukselle.")
     tulos))
 

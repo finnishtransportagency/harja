@@ -9,7 +9,7 @@ SELECT
   i.otsikko,
   i.paikankuvaus,
   i.lisatieto,
-  -- selitteet
+  i.tila,
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
