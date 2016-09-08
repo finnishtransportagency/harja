@@ -53,8 +53,7 @@
     (jdbc/with-db-transaction
       [db db]
       (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
-      (let [kohde-id (Integer/parseInt kohde-id)
-            id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
+      (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id id})))))
