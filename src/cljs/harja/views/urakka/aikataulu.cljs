@@ -13,6 +13,7 @@
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tiemerkinta :as tiemerkinta]
             [harja.ui.modal :as modal]
             [harja.ui.lomake :as lomake]
             [cljs-time.core :as t]
@@ -20,8 +21,6 @@
             [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
-
-(def tiemerkinta-oltava-valmiina-raja (t/days 14))
 
 (defn valmis-tiemerkintaan [kohde-id urakka-id paallystys-valmis? suorittava-urakka-annettu?]
   (let [valmis-tiemerkintaan-lomake (atom nil)
@@ -156,9 +155,7 @@
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-valmis-viimeistaan :tyyppi :pvm
             :muokattava? (constantly false)
-            :hae (fn [rivi] (let [valmis-tiemerkintaan (:valmis-tiemerkintaan rivi)]
-                              (when (some? valmis-tiemerkintaan)
-                                (fmt/pvm (t/plus valmis-tiemerkintaan tiemerkinta-oltava-valmiina-raja)))))}
+            :hae (comp fmt/pvm-opt tiemerkinta/tiemerkinta-oltava-valmis :valmis-tiemerkintaan)}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt :muokattava? (fn [rivi]
