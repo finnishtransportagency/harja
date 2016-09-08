@@ -245,7 +245,6 @@
                       perustelu_tekninen_osa = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
-
 (deftest lisaa-kohdeosa
   (let [paallystyskohde-id paallystyskohde-id-jolla-on-ilmoitus]
     (is (not (nil? paallystyskohde-id)))

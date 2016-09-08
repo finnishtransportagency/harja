@@ -341,11 +341,11 @@ WHERE id = :id
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
               FROM paallystysilmoitus
-              WHERE paallystyskohde = :yllapitokohde) AS sisaltaa_paallystysilmoituksen;
+              WHERE paallystyskohde = :yllapitokohde);
 -- name: yllapitokohteella-paikkausilmoitus
 SELECT EXISTS(SELECT id
               FROM paikkausilmoitus
-              WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;
+              WHERE paikkauskohde = :yllapitokohde);
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
