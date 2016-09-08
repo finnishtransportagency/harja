@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "aikataulu": {
+      "type": "object",
+      "id": "urn:harja/yllapitokohde/aikataulu",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/aikataulu.schema.json"
+    }
+  }
+}
