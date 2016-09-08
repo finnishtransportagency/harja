@@ -51,40 +51,7 @@
                                              muutoshinta, takuupvm, valmispvm_paallystys
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
-      (is (= ilmoitustiedot {:tyot [{:tyo "työtehtävä"
-                                     :tyyppi "tasaukset"
-                                     :yksikko "kpl"
-                                     :yksikkohinta 55.4
-                                     :tilattu-maara 1.2
-                                     :toteutunut-maara 1.2}],
-                             :osoitteet [{:kohdeosa-id 15
-                                          :edellinen-paallystetyyppi nil
-                                          :lisaaineet "lisäaineet"
-                                          :leveys 1.2
-                                          :kokonaismassamaara 12.3
-                                          :sideainetyyppi 1
-                                          :muotoarvo "testi"
-                                          :esiintyma "testi"
-                                          :pitoisuus 1.2
-                                          :pinta-ala 2.2
-                                          :massamenekki 22
-                                          :kuulamylly 4
-                                          :raekoko 12
-                                          :tyomenetelma 72
-                                          :rc% 54
-                                          :paallystetyyppi 11
-                                          :km-arvo "testi"}],
-                             :alustatoimet [{:verkkotyyppi 1 ;; TODO TR-osoitteet eivät tallennu oikein
-                                             :aosa 1
-                                             :let 15
-                                             :verkon-tarkoitus 5
-                                             :kasittelymenetelma 1
-                                             :losa 5
-                                             :aet 1
-                                             :tekninen-toimenpide 1
-                                             :paksuus 1.2
-                                             :verkon-sijainti 1}]}))
-      #_(is (match ilmoitustiedot
+      (is (match ilmoitustiedot
                  {:tyot [{:tyo "työtehtävä"
                           :tyyppi "tasaukset"
                           :yksikko "kpl"
@@ -109,12 +76,12 @@
                                :paallystetyyppi 11
                                :km-arvo "testi"}],
                   :alustatoimet [{:verkkotyyppi 1
-                                  :aosa 1
-                                  :let 15
+                                  :tr-alkuosa 1
+                                  :tr-loppuetaisyys 15
                                   :verkon-tarkoitus 5
                                   :kasittelymenetelma 1
-                                  :losa 5
-                                  :aet 1
+                                  :tr-loppuosa 5
+                                  :tr-alkuetaisyys 1
                                   :tekninen-toimenpide 1
                                   :paksuus 1.2
                                   :verkon-sijainti 1}]}

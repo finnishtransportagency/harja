@@ -55,8 +55,6 @@
 (defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id
                                           {:keys [perustiedot] :as paallystysilmoitus}]
   (let [ilmoitustiedot (paallystysilmoitussanoma/rakenna paallystysilmoitus)
-        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                          ilmoitustiedot)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
                              (q-paallystys/paivita-paallystysilmoitus<!
                                db
