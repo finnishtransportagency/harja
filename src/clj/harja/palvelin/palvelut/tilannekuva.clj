@@ -73,7 +73,6 @@
                                           urakat
                                           (mapv name haettavat)))
                  {:kuittaus :kuittaukset})]
-           (println "--->" ilmoitukset)
            ilmoitukset))))))
 
 (defn- hae-paallystystyot
