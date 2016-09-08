@@ -187,7 +187,7 @@
    {:palvelu :kirjaa-yllapidon-aikataulu
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu"
     :tyyppi :POST
-    :kutsu-skeema json-skeemat/aikataulun-kirjaus
+    :kutsu-skeema json-skeemat/yllapidon-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-aikataulu db kayttaja parametrit data))}
    {:palvelu :kirjaa-suljettu-tieosuus
