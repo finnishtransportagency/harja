@@ -15,6 +15,13 @@
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
         },
+        "perustiedot": {
+          "id": "urn:harja/paallystysilmoitusaikataulu",
+          "type": "object",
+          "required": true,
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/paallystysilmoitus_aikataulu.schema.json"
+        },
         "alikohteet": {
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet",
           "type": "array",
