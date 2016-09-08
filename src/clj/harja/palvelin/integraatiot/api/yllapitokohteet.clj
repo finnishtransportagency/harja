@@ -61,8 +61,8 @@
            :id id})))))
 
 (defn paivita-yllapitokohteen-aikataulu [db kayttaja urakka-id kohde-id data]
-  (let [urakan-tyyppi (keyword (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
-    (case urakan-tyyppi
+  (let [urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
+    (case (keyword urakan-tyyppi)
       :paallystys
       ;; TODO Jos päällystysilmoitusta ei ole, palautetaan varoitus että se pitää lisätä ensin.
       (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
@@ -82,7 +82,8 @@
          :id kohde-id})
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+viallinen-kutsu+
-                          :viesti "Urakka ei ole päällystys- tai tiemerkintäurakka"}]}))))
+                          :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
+                                       urakan-tyyppi)}]}))))
 
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
