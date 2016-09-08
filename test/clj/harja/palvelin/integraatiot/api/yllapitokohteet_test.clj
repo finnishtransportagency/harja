@@ -46,6 +46,14 @@
 
     ))
 
+(deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+                                         +kayttaja-tero+ portti
+                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+    (is (= 403 (:status vastaus)))))
+
 (deftest paallystysilmoituksen-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
@@ -83,6 +91,15 @@
     ;; TODO Tarkista arvot kannasta
 
     ))
+
+(deftest aikataulun-kirjaaminen-ei-toimi-ilman-oikeuksia
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
+                                         +kayttaja-tero+ portti
+                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+
+    (is (= 403 (:status vastaus)))))
 
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
