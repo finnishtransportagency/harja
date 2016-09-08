@@ -442,7 +442,7 @@ SET
   tr_loppuetaisyys = :tr_loppuetaisyys
 WHERE id = :id;
 
--- name: paivita-yllapitokohteen-aikataulu!
+-- name: paivita-yllapitokohteen-paallystysaikataulu!
 -- Päivittää ylläpitokohteen aikataulutiedot
 UPDATE yllapitokohde
 SET
