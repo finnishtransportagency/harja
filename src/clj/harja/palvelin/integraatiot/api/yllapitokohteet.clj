@@ -80,7 +80,7 @@
                :muokkaaja (:id kayttaja)
                :kohde_id kohde-id})
             {})
-        {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten päällystysilmoituksen tietoja ei päivitetä."})))
+        {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten sen tietoja ei päivitetä."})))
 
 (defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id data]
   (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
