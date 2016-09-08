@@ -82,7 +82,7 @@
                                                              (pvm/jalkeen? (:loppupvm %) (pvm/nyt)))
                                                            @nav/suodatettu-urakkalista))]
           (if (empty? muut-kaynnissaolevat-urakat)
-            [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita valituilla hakukriteereillä."]
+            [alasveto-ei-loydoksia "Tästä hallintayksiköstä ei löydy muita urakoita, joita on oikeus tarkastella."]
 
             (for [urakka muut-kaynnissaolevat-urakat]
               ^{:key (str "urakka-" (:id urakka))}
