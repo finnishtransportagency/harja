@@ -1,5 +1,5 @@
--- name: hae-urakan-yllapitokohteet-alikohteineen
--- Hakee urakan kaikki yllapitokohteet sekä niiden alikohteet
+-- name: hae-urakan-yllapitokohteet
+-- Hakee urakan kaikki yllapitokohteet sekä niiden päällystysilmoitukset ja alikohteet
 SELECT
   ypk.id,
   ypk.urakka,
@@ -22,6 +22,12 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.tr_ajorata                        AS "tr-ajorata",
   ypk.tr_kaista                         AS "tr-kaista",
+  ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
+  ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
+  ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
+  ypk.aikataulu_tiemerkinta_alku        AS "tiemerkinta-alku",
+  ypk.aikataulu_tiemerkinta_loppu       AS "tiemerkinta-loppu",
+  ypk.aikataulu_kohde_valmis            AS "kohde-valmis",
   ypk.yhaid,
   ypko.id                               AS "kohdeosa_id",
   ypko.yllapitokohde                    AS "kohdeosa_yllapitokohde",
@@ -37,9 +43,14 @@ SELECT
   ypko.poistettu                        AS "kohdeosa_poistettu",
   ypko.sijainti                         AS "kohdeosa_sijainti",
   ypko.yhaid                            AS "kohdeosa_yhaid",
-  ypko.toimenpide                       AS "kohdeosa_toimenpide"
+  ypko.toimenpide                       AS "kohdeosa_toimenpide",
+  pi.aloituspvm                         AS "paallystysilmoitus_aloituspvm",
+  pi.valmispvm_paallystys               AS "paallystysilmoitus_valmispvm-paallystys",
+  pi.valmispvm_kohde                    AS "paallystysilmoitus_valmispvm-kohde",
+  pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
+  LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id AND pi.poistettu IS NOT TRUE
 WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
