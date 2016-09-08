@@ -167,7 +167,10 @@
                              laskutettu-teksti laskutettu
                              laskutetaan-teksti laskutetaan
                              yhteenveto-teksti kyseessa-kk-vali?
-                             tiedot (or summa-fmt fmt/luku-indeksikorotus))))
+                             tiedot (or summa-fmt
+                                        (if indeksi-kaytossa?
+                                          fmt/luku-indeksikorotus
+                                          fmt/euro-opt)))))
                [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
                  :kht_laskutettu :kht_laskutetaan tiedot]
                 [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
