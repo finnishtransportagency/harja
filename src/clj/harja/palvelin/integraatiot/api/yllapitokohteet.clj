@@ -37,7 +37,7 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
-(defn- vaadi-kohde-kuuluu-urakkaan [urakka-id kohde-id]
+(defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
   (let [urakan-kohteet (map :urakka (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db urakka-id))]
     (log/debug "Tarkistetaan, että annettu ylläpitokohde " kohde-id " kuuluu väitettyyn urakkaan " urakka-id)
     (when (or (empty? urakan-kohteet)
@@ -51,9 +51,9 @@
                      kayttaja))
   (let [urakka-id (Integer/parseInt urakka-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (vaadi-kohde-kuuluu-urakkaan urakka-id kohde-id)
     (jdbc/with-db-transaction
       [db db]
+      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
       (let [kohde-id (Integer/parseInt kohde-id)
             id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
@@ -64,6 +64,7 @@
   (let [urakan-tyyppi (keyword (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
     (case urakan-tyyppi
       :paallystys
+      ;; TODO Jos päällystysilmoitusta ei ole, palautetaan varoitus että se pitää lisätä ensin.
       (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
         db
         {:paallystys_alku (:paallystys-alku data)
@@ -88,10 +89,10 @@
                      urakka-id
                      kohde-id
                      kayttaja))
-  (vaadi-kohde-kuuluu-urakkaan urakka-id kohde-id)
   (let [urakka-id (Integer/parseInt urakka-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction
+      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
       [db db]
       (let [kohde-id (Integer/parseInt kohde-id)
             id (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
@@ -182,7 +183,7 @@
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
-   {:palvelu :kirjaa-aikataulu
+   {:palvelu :kirjaa-yllapidon-aikataulu
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/aikataulun-kirjaus
