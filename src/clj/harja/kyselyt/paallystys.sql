@@ -205,12 +205,3 @@ INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES 
 SELECT exists(SELECT *
               FROM paallystysilmoitus
               WHERE paallystyskohde = :id);
-
--- name: paivita-paallystysilmoituksen-ilmoitustiedot<!
--- Päivittää päällystysilmoituksen ilmoitustiedot
-UPDATE paallystysilmoitus
-SET
-  ilmoitustiedot       = :ilmoitustiedot :: JSONB,
-  muokattu             = NOW(),
-  muokkaaja            = :muokkaaja
-WHERE paallystyskohde = :id;

@@ -54,9 +54,17 @@
                                           {:keys [perustiedot] :as paallystysilmoitus}]
   (let [ilmoitustiedot (paallystysilmoitussanoma/rakenna paallystysilmoitus)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
-                             (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
+                             (q-paallystys/paivita-paallystysilmoitus<!
                                db
                                {:ilmoitustiedot ilmoitustiedot
+                                :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
+                                :valmispvm_paallystys (json/aika-string->java-sql-date
+                                                        (:valmispvm-paallystys perustiedot))
+                                :valmispvm_kohde (json/aika-string->java-sql-date
+                                                   (:valmispvm-kohde perustiedot))
+                                :takuupvm (json/aika-string->java-sql-date
+                                            (:takuupvm perustiedot))
+                                ;; TODO ja muutoshinta myös?
                                 :muokkaaja (:id kayttaja)
                                 :id kohde-id})
                              (q-paallystys/luo-paallystysilmoitus<!
