@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.yllapitokohteet_test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
+            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
@@ -30,4 +31,13 @@
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja portti)]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
+
+(deftest paallystysilmoituksen-kirjaaminen-toimii
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+                                         kayttaja portti
+                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+    (is (= 200 (:status vastaus)))
+    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))))
 
