@@ -264,7 +264,7 @@
                                               (filter (comp not :poistettu))))})
           paallystysilmoitus-kannassa
           (first (into []
-                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot)) ;; TODO Validoi skeemaa vasten ennen nostoa
+                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot)) ;; TODO Validoi skeemaa vasten ennen nostoa, testaa virheellisyys
                              (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                              (map #(konv/string-poluista->keyword %
                                                                   [[:paatos :taloudellinen-osa]

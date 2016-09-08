@@ -5,7 +5,9 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]))
+            [clojure.core.match :refer [match]]
+            [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
+            [harja.kyselyt.konversio :as konv]))
 
 (def kayttaja "skanska")
 
@@ -32,19 +34,93 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
+;; TODO Feikkaa tieverkon tsekkaus.
 (deftest paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+
     (log/debug "Vastaus: " (pr-str vastaus))
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
-    ;; TODO Tarkista arvot kannasta
 
-    ))
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
+                                             muutoshinta, takuupvm, valmispvm_paallystys
+                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
+          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
+      (is (= ilmoitustiedot {:tyot [{:tyo "työtehtävä"
+                                     :tyyppi "tasaukset"
+                                     :yksikko "kpl"
+                                     :yksikkohinta 55.4
+                                     :tilattu-maara 1.2
+                                     :toteutunut-maara 1.2}],
+                             :osoitteet [{:kohdeosa-id 15
+                                          :edellinen-paallystetyyppi nil
+                                          :lisaaineet "lisäaineet"
+                                          :leveys 1.2
+                                          :kokonaismassamaara 12.3
+                                          :sideainetyyppi 1
+                                          :muotoarvo "testi"
+                                          :esiintyma "testi"
+                                          :pitoisuus 1.2
+                                          :pinta-ala 2.2
+                                          :massamenekki 22
+                                          :kuulamylly 4
+                                          :raekoko 12
+                                          :tyomenetelma 72
+                                          :rc% 54
+                                          :paallystetyyppi 11
+                                          :km-arvo "testi"}],
+                             :alustatoimet [{:verkkotyyppi 1 ;; TODO TR-osoitteet eivät tallennu oikein
+                                             :aosa 1
+                                             :let 15
+                                             :verkon-tarkoitus 5
+                                             :kasittelymenetelma 1
+                                             :losa 5
+                                             :aet 1
+                                             :tekninen-toimenpide 1
+                                             :paksuus 1.2
+                                             :verkon-sijainti 1}]}))
+      #_(is (match ilmoitustiedot
+                 {:tyot [{:tyo "työtehtävä"
+                          :tyyppi "tasaukset"
+                          :yksikko "kpl"
+                          :yksikkohinta 55.4
+                          :tilattu-maara 1.2
+                          :toteutunut-maara 1.2}],
+                  :osoitteet [{:kohdeosa-id _
+                               :edellinen-paallystetyyppi nil
+                               :lisaaineet "lisäaineet"
+                               :leveys 1.2
+                               :kokonaismassamaara 12.3
+                               :sideainetyyppi 1
+                               :muotoarvo "testi"
+                               :esiintyma "testi"
+                               :pitoisuus 1.2
+                               :pinta-ala 2.2
+                               :massamenekki 22
+                               :kuulamylly 4
+                               :raekoko 12
+                               :tyomenetelma 72
+                               :rc% 54
+                               :paallystetyyppi 11
+                               :km-arvo "testi"}],
+                  :alustatoimet [{:verkkotyyppi 1
+                                  :aosa 1
+                                  :let 15
+                                  :verkon-tarkoitus 5
+                                  :kasittelymenetelma 1
+                                  :losa 5
+                                  :aet 1
+                                  :tekninen-toimenpide 1
+                                  :paksuus 1.2
+                                  :verkon-sijainti 1}]}
+                 true))
+      ;; TODO Tarkista pvm:t
+      (log/debug "POT: " (pr-str paallystysilmoitus)))))
 
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -68,7 +144,6 @@
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
-    (log/debug "Vastaus: " (pr-str vastaus))
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
