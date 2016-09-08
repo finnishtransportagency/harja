@@ -93,8 +93,8 @@
   (let [urakka-id (Integer/parseInt urakka-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction
-      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
       [db db]
+      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
       (let [kohde-id (Integer/parseInt kohde-id)
             id (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
