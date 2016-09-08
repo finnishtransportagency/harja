@@ -38,7 +38,8 @@
             sopimus-id (first (:sopimus muokattu))
             tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
             tyyppi (name (:tyyppi muokattu))
-            indeksi (if (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
+            indeksi (if (or (not (urakka/indeksi-kaytossa?))
+                            (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu)))
                       nil
                       (:indeksin_nimi muokattu))
             rahasumma (if (= (:maksaja muokattu) :urakoitsija)

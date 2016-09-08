@@ -206,6 +206,7 @@ SELECT
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
+  u.indeksi,
   u.takuu_loppupvm,
   h.alueurakkanro AS alueurakkanumero,
   urk.nimi        AS urakoitsija_nimi,

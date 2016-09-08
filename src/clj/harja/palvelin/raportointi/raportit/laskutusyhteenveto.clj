@@ -93,7 +93,8 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
-  (let [urakan-nimi (when urakka-id (:nimi (first (urakat-q/hae-urakka db urakka-id))))
+  (let [{urakan-nimi :nimi indeksi :indeksi} (first (urakat-q/hae-urakka db urakka-id))
+        indeksi-kaytossa? (some? indeksi)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
         kyseessa-vuosi-vali? (pvm/kyseessa-vuosi-vali? alkupvm loppupvm)
@@ -131,15 +132,16 @@
                                               " Lämpötilatietoja puuttuu. "
                                               " ")
         varoitus-indeksitietojen-puuttumisesta
-        (if perusluku-puuttuu?
-          " Huom! Laskutusyhteenvedon laskennassa tarvittava urakan indeksiarvojen perusluku puuttuu tältä urakalta puutteellisten indeksitietojen vuoksi. "
-          (if (and indeksiarvo-puuttuu-jo-laskutetulta-ajalta? indeksiarvo-puuttuu-valitulta-kklta?)
-            " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu sekä valitulta kuukaudelta että ajalta ennen sitä. "
-            (if indeksiarvo-puuttuu-jo-laskutetulta-ajalta?
-              " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu ajalta ennen valittua kuukautta. "
-              (if indeksiarvo-puuttuu-valitulta-kklta?
-                " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu. "
-                " "))))
+        (when indeksi-kaytossa?
+          (if perusluku-puuttuu?
+            " Huom! Laskutusyhteenvedon laskennassa tarvittava urakan indeksiarvojen perusluku puuttuu tältä urakalta puutteellisten indeksitietojen vuoksi. "
+            (if (and indeksiarvo-puuttuu-jo-laskutetulta-ajalta? indeksiarvo-puuttuu-valitulta-kklta?)
+              " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu sekä valitulta kuukaudelta että ajalta ennen sitä. "
+              (if indeksiarvo-puuttuu-jo-laskutetulta-ajalta?
+                " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu ajalta ennen valittua kuukautta. "
+                (if indeksiarvo-puuttuu-valitulta-kklta?
+                  " Huom! Laskutusyhteenvedon laskennassa tarvittavia indeksiarvoja puuttuu. "
+                  " ")))))
         vain-jvh-voi-muokata-tietoja-viesti (str "Vain järjestelmän vastuuhenkilö voi syöttää "
                                                  (if (str/blank? varoitus-indeksitietojen-puuttumisesta)
                                                    ""
@@ -157,55 +159,66 @@
                                 varoitus-lampotilojen-puuttumisesta
                                 vain-jvh-voi-muokata-tietoja-viesti)])
 
-        taulukot (aseta-sheet-nimi
-                  (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt]]
-                          (taulukko otsikko tyhja
-                                    laskutettu-teksti laskutettu
-                                    laskutetaan-teksti laskutetaan
-                                    yhteenveto-teksti kyseessa-kk-vali?
-                                    tiedot (or summa-fmt fmt/luku-indeksikorotus)))
-                        [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
-                          :kht_laskutettu :kht_laskutetaan tiedot]
-                         [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
-                          :yht_laskutettu :yht_laskutetaan tiedot]
-                         [" Sanktiot " " Ei sanktioita "
-                          :sakot_laskutettu :sakot_laskutetaan tiedot]
-                         (when talvisuolasakko-kaytossa?
-                           [" Talvisuolasakko (autom. laskettu) " " Ei talvisuolasakkoa "
-                            :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
-                         [" Muutos- ja lisätyöt sekä vahinkojen korjaukset " " Ei muutos- ja lisätöitä "
-                          :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
-                         [" Äkilliset hoitotyöt " " Ei äkillisiä hoitotöitä "
-                          :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
-                         [" Bonukset " " Ei bonuksia "
-                          :bonukset_laskutettu :bonukset_laskutetaan tiedot]
-                         [" Erilliskustannukset (muut kuin bonukset) " " Ei erilliskustannuksia "
-                          :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
-                         [" Kokonaishintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot]
-                         [" Yksikköhintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot]
-                         [" Sanktioiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot]
-                         (when talvisuolasakko-kaytossa?
-                           [" Talvisuolasakon indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
-                            :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
-                         [" Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot]
-                         [" Äkillisten hoitotöiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot]
-                         [" Bonusten indeksitarkistukset " " Ei indeksitarkistuksia "
-                          :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus tiedot]
-                         [" Erilliskustannusten indeksitarkistukset (muut kuin bonukset) " " Ei indeksitarkistuksia "
-                          :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot]
-                         [" Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
-                          :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot]
-                         [" Kaikki indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
-                          :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot]
-                         [" Kaikki paitsi kok.hint. työt yhteensä " " Ei kustannuksia "
-                          :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
-                         [" Kaikki yhteensä " " Ei kustannuksia "
-                          :kaikki_laskutettu :kaikki_laskutetaan tiedot]]))]
+        taulukot
+        (aseta-sheet-nimi
+         (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt :as taulukko-rivi]]
+                 (when taulukko-rivi
+                   (taulukko otsikko tyhja
+                             laskutettu-teksti laskutettu
+                             laskutetaan-teksti laskutetaan
+                             yhteenveto-teksti kyseessa-kk-vali?
+                             tiedot (or summa-fmt fmt/luku-indeksikorotus))))
+               [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
+                 :kht_laskutettu :kht_laskutetaan tiedot]
+                [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
+                 :yht_laskutettu :yht_laskutetaan tiedot]
+                [" Sanktiot " " Ei sanktioita "
+                 :sakot_laskutettu :sakot_laskutetaan tiedot]
+                (when talvisuolasakko-kaytossa?
+                  [" Talvisuolasakko (autom. laskettu) " " Ei talvisuolasakkoa "
+                   :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
+                [" Muutos- ja lisätyöt sekä vahinkojen korjaukset " " Ei muutos- ja lisätöitä "
+                 :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+                [" Äkilliset hoitotyöt " " Ei äkillisiä hoitotöitä "
+                 :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
+                [" Bonukset " " Ei bonuksia "
+                 :bonukset_laskutettu :bonukset_laskutetaan tiedot]
+                [" Erilliskustannukset (muut kuin bonukset) " " Ei erilliskustannuksia "
+                 :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
+                (when indeksi-kaytossa?
+                  [" Kokonaishintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                   :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot])
+                (when indeksi-kaytossa?
+                  [" Yksikköhintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                   :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot])
+                (when indeksi-kaytossa?
+                  [" Sanktioiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                   :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot])
+                (when talvisuolasakko-kaytossa?
+                  [" Talvisuolasakon indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
+                   :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
+                (when indeksi-kaytossa?
+                  [" Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "
+                   :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot])
+                (when indeksi-kaytossa?
+                  [" Äkillisten hoitotöiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                   :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot])
+                (when indeksi-kaytossa?
+                  [" Bonusten indeksitarkistukset " " Ei indeksitarkistuksia "
+                   :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus tiedot])
+                (when indeksi-kaytossa?
+                  [" Erilliskustannusten indeksitarkistukset (muut kuin bonukset) " " Ei indeksitarkistuksia "
+                   :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot])
+                (when indeksi-kaytossa?
+                  [" Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
+                   :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot])
+                (when indeksi-kaytossa?
+                  [" Kaikki indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
+                   :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot])
+                [" Kaikki paitsi kok.hint. työt yhteensä " " Ei kustannuksia "
+                 :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
+                [" Kaikki yhteensä " " Ei kustannuksia "
+                 :kaikki_laskutettu :kaikki_laskutetaan tiedot]]))]
 
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}
