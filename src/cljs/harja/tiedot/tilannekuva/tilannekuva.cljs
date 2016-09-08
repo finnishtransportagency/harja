@@ -41,6 +41,7 @@ hakutiheys-nykytilanne 10000)
        :const true}
 hakutiheys-historiakuva 1200000)
 
+;; todo: muuta tilafiltteriksi
 (def ilmoitusten-tilat-nykytilanteessa #{:kuittaamaton :vastaanotto :aloitus :muutos :vastaus})
 (def ilmoitusten-tilat-historiakuvassa #{:kuittaamaton :vastaanotto :aloitus :lopetus :muutos :vastaus})
 

@@ -8,7 +8,7 @@
  :http-palvelin        {:threads 16}
  :tietokanta           {:palvelin          "localhost"
                         :tietokanta        "harja"
-                        :portti            5432
+                        :portti            7772
                         :yhteyspoolin-koko 16
                         :kayttaja          "harja"
                         :salasana          ""}

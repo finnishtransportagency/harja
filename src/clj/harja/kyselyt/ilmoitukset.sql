@@ -16,6 +16,7 @@ SELECT
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
+  i.tila,
 
   i.sijainti,
   i.tr_numero,
@@ -68,9 +69,9 @@ WHERE
   -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
   (
     (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-    (:loppu_annettu IS FALSE AND i.ilmoitettu :: DATE >= :alku) OR
-    (:alku_annettu IS FALSE AND i.ilmoitettu :: DATE <= :loppu) OR
-    (i.ilmoitettu :: DATE BETWEEN :alku AND :loppu)
+    (:loppu_annettu IS FALSE AND i.ilmoitettu  >= :alku) OR
+    (:alku_annettu IS FALSE AND i.ilmoitettu  <= :loppu) OR
+    (i.ilmoitettu  BETWEEN :alku AND :loppu)
   ) AND
 
   -- Tarkasta ilmoituksen tyypit
@@ -93,7 +94,8 @@ WHERE
   (:ilmoittaja-puhelin::TEXT IS NULL OR
    i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
 
-ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
+ORDER BY i.ilmoitettu DESC, it.kuitattu DESC
+LIMIT 501;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT

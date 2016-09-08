@@ -33,6 +33,7 @@
      :hoitokausi @u/valittu-hoitokausi
      :aikavali (or @u/valittu-hoitokausi [nil nil])}))
 
+;; todo: muuta tilafiltteriksi
 (def ^{:const true}
 kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
@@ -153,6 +154,7 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
+    (log "--> " (count (:ilmoitukset tulokset)))
     (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]

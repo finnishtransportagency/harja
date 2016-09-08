@@ -9,7 +9,8 @@
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite kuittaustyypin-lyhenne]]
+              kuittaustyypin-selite kuittaustyypin-lyhenne
+              tilan-selite] :as domain]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -207,7 +208,9 @@
                      [ajax-loader "Haetaan ilmoutuksia"])
             :rivi-klikattu (or valitse-ilmoitus!
                                #(e! (v/->ValitseIlmoitus %)))
-            :piilota-toiminnot true}
+            :piilota-toiminnot true
+            :max-rivimaara 500
+            :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
 
            [(when kuittaa-monta-nyt
               {:otsikko " "
@@ -224,7 +227,7 @@
             {:otsikko "Ilmoitettu" :nimi :ilmoitettu
              :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
             {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-             :hae #(ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
+             :hae #(domain/ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
              :leveys 2}
             {:otsikko "Sijainti" :nimi :tierekisteri
              :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
@@ -239,7 +242,7 @@
              :komponentti kuittauslista
              :leveys 6}
 
-            {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(kuittaustyypin-selite (:tila %))}]
+            {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
            (mapv #(if (:yhteydenottopyynto %)
                    (assoc % :lihavoi true)
                    %)
