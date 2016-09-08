@@ -64,10 +64,15 @@
        [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
        (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
                                        (:id @nav/valittu-urakka))
-         [:button.nappi-ensisijainen
-          {:class    "uusi-kuittaus-nappi"
-           :on-click #(e! (v/->AvaaUusiKuittaus))}
-          (ikonit/livicon-plus) " Uusi kuittaus"]))
+
+         (if (:ilmoitusid ilmoitus)
+
+           [:button.nappi-ensisijainen
+           {:class "uusi-kuittaus-nappi"
+            :on-click #(e! (v/->AvaaUusiKuittaus))}
+           (ikonit/livicon-plus) " Uusi kuittaus"]
+           [yleiset/vihje-elementti
+            [:span "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia"]])))
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div

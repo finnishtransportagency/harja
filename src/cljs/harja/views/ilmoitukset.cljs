@@ -193,6 +193,10 @@
 
          [ilmoitusten-hakuehdot e! valinnat-nyt]
          [:div
+          [kentat/tee-kentta {:tyyppi :checkbox
+                              :teksti "Äänimerkki uusista ilmoituksista"}
+           tiedot/aanimerkki-uusista-ilmoituksista?]
+
           [pollauksen-merkki]
           [yhdeydenottopyynnot-lihavoitu]
           [virkaapupyynnot-korostettu]
@@ -249,10 +253,7 @@
            (mapv #(if (:yhteydenottopyynto %)
                    (assoc % :lihavoi true)
                    %)
-                 haetut-ilmoitukset)]
-          [kentat/tee-kentta {:tyyppi :checkbox
-                              :teksti "Äänimerkki uusista ilmoituksista"}
-           tiedot/aanimerkki-uusista-ilmoituksista?]]]))))
+                 haetut-ilmoitukset)]]]))))
 
 (defn- ilmoitukset* [e! ilmoitukset]
   (komp/luo
