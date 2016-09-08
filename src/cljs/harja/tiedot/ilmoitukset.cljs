@@ -31,7 +31,7 @@
             :urakoitsija (:id @nav/valittu-urakoitsija)
             :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
             :hoitokausi @u/valittu-hoitokausi
-            :aikavali (or @u/valittu-hoitokausi [nil nil])}))
+            :aikavali [(pvm/paivaa-sitten 7) (pvm/nyt)]}))
 
 
 (def ^{:const true}

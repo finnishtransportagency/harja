@@ -677,3 +677,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
     (mapv t/year pvmt)))
+
+
+#?(:cljs
+   (defn paivaa-sitten [paivaa]
+     (-> paivaa cljs-time.core/days cljs-time.core/ago)))
