@@ -5,10 +5,12 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [taoensso.timbre :as log]
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitussanoma]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn paivita-alikohteet [db kohde alikohteet]
@@ -48,7 +50,8 @@
          :id
          kohde-id)))
 
-(defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
+(defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id
+                                          {:keys [perustiedot] :as paallystysilmoitus}]
   (let [ilmoitustiedot (paallystysilmoitussanoma/rakenna paallystysilmoitus)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
                              (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
@@ -61,11 +64,14 @@
                                {:paallystyskohde kohde-id
                                 :tila "aloitettu"
                                 :ilmoitustiedot ilmoitustiedot
-                                :aloituspvm nil
-                                :valmispvm_kohde nil
-                                :valmispvm_paallystys nil
-                                :takuupvm nil
-                                :muutoshinta nil
+                                :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
+                                :valmispvm_paallystys (json/aika-string->java-sql-date
+                                                        (:valmispvm-paallystys perustiedot))
+                                :valmispvm_kohde (json/aika-string->java-sql-date
+                                                   (:valmispvm-kohde perustiedot))
+                                :takuupvm (json/aika-string->java-sql-date
+                                            (:takuupvm perustiedot))
+                                :muutoshinta nil ;; TODO Pitää varmaan laskea muutoshinta jos taloudellista osiota täytelty?
                                 :kayttaja (:id kayttaja)}))]
     (str (:id paallystysilmoitus))))
 
