@@ -39,7 +39,6 @@
 
 (defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
   (let [urakan-kohteet (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id})]
-    (log/debug "Onko kohde-id " kohde-id " joukossa " (mapv :id urakan-kohteet) ": " (some #(= kohde-id %) (mapv :id urakan-kohteet)))
     (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
       (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
 
@@ -48,7 +47,8 @@
                      urakka-id
                      kohde-id
                      kayttaja))
-  (let [urakka-id (Integer/parseInt urakka-id)]
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction
       [db db]
@@ -111,13 +111,13 @@
                      urakka-id
                      kohde-id
                      kayttaja))
-  (let [urakka-id (Integer/parseInt urakka-id)]
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction
       [db db]
       (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
-      (let [kohde-id (Integer/parseInt kohde-id)
-            paivitys-vastaus (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
+      (let [paivitys-vastaus (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
           (merge {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")}
                  paivitys-vastaus))))))
