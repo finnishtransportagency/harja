@@ -56,7 +56,7 @@
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
                              (q-paallystys/paivita-paallystysilmoitus<!
                                db
-                               {:ilmoitustiedot ilmoitustiedot
+                               {:ilmoitustiedot ilmoitustiedot ;; TODO Validoi skeemaa vasten ennen tallennusta
                                 :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
                                 :valmispvm_paallystys (json/aika-string->java-sql-date
                                                         (:valmispvm-paallystys perustiedot))
@@ -71,7 +71,7 @@
                                db
                                {:paallystyskohde kohde-id
                                 :tila "aloitettu"
-                                :ilmoitustiedot ilmoitustiedot
+                                :ilmoitustiedot ilmoitustiedot ;; TODO Validoi skeemaa vasten ennen tallennusta
                                 :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
                                 :valmispvm_paallystys (json/aika-string->java-sql-date
                                                         (:valmispvm-paallystys perustiedot))

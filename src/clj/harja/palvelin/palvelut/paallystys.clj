@@ -158,7 +158,7 @@
            db
            {:paallystyskohde paallystyskohde-id
             :tila tila
-            :ilmoitustiedot encoodattu-ilmoitustiedot
+            :ilmoitustiedot encoodattu-ilmoitustiedot ;; TODO Validoi skeemaa vasten ennen tallennusta
             :aloituspvm (konv/sql-date aloituspvm)
             :valmispvm_kohde (konv/sql-date valmispvm-kohde)
             :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
@@ -264,7 +264,7 @@
                                               (filter (comp not :poistettu))))})
           paallystysilmoitus-kannassa
           (first (into []
-                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot)) ;; TODO Validoi skeemaa vasten ennen nostoa
                              (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                              (map #(konv/string-poluista->keyword %
                                                                   [[:paatos :taloudellinen-osa]
