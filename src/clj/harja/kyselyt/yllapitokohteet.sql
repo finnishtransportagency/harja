@@ -1,5 +1,5 @@
 -- name: hae-urakan-yllapitokohteet
--- Hakee urakan kaikki yllapitokohteet sekä niiden päällystysulmoitukset ja alikohteet
+-- Hakee urakan kaikki yllapitokohteet sekä niiden päällystysilmoitukset ja alikohteet
 SELECT
   ypk.id,
   ypk.sopimus,
