@@ -57,8 +57,7 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
-        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                          (:ilmoitustiedot paallystysilmoitus))
+        _ (log/debug "Kohdeosat: " (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus
@@ -69,13 +68,7 @@
                            (map (fn [kohdeosa]
                                   ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
                                   (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                         (some
-                                          (fn [paallystystoimenpide]
-                                            (when (= (:id kohdeosa)
-                                                     (:kohdeosa-id paallystystoimenpide))
-                                              paallystystoimenpide))
-                                          (get-in paallystysilmoitus
-                                                  [:ilmoitustiedot :osoitteet])))))
+                                         nil)))
                            (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
                            vec))
             (dissoc :kohdeosat))
