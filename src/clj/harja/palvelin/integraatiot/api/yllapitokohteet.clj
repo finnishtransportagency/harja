@@ -98,8 +98,7 @@
       (let [kohde-id (Integer/parseInt kohde-id)
             id (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
-          {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")
-           :id id})))))
+          {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")})))))
 
 (defn hae-tr-osoite [db alkukoordinaatit loppukoordinaatit]
   (try
