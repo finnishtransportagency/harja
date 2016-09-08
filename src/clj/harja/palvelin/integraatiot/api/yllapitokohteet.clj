@@ -196,7 +196,7 @@
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}
-   {:palvelu :kirjaa-suljettu-tieosuus ;; TODO Pitäisikö olla eri palvelunimi?
+   {:palvelu :poista-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-poisto
