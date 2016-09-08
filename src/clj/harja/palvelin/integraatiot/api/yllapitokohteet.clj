@@ -38,7 +38,7 @@
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
-  (let [urakan-kohteet (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id})]
+  (let [urakan-kohteet (q-yllapitokohteet/hae-urakan-yllapitokohteet db {:urakka urakka-id})]
     (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
       (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
 
