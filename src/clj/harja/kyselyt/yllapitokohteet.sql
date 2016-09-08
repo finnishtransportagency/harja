@@ -455,6 +455,17 @@ SET
   aikataulu_muokkaaja = :muokkaaja
 WHERE id = :id;
 
+-- name: paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
+-- Päivittää päällystysilmoituksen aikataulutiedot
+UPDATE paallystysilmoitus
+SET
+  aloituspvm = :aloituspvm,
+  valmispvm_paallystys = :valmispvm_paallystys,
+  valmispvm_kohde = :valmispvm_kohde,
+  takuupvm = :takuupvm
+WHERE paallystyskohde = :kohde_id
+AND poistettu IS NOT TRUE;
+
 -- name: paivita-yllapitokohteen-tiemerkintaaikataulu!
 -- Päivittää ylläpitokohteen aikataulutiedot
 UPDATE yllapitokohde

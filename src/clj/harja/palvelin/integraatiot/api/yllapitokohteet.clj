@@ -60,12 +60,9 @@
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id id})))))
 
-(defn paivita-yllapitokohteen-aikataulu [db kayttaja urakka-id kohde-id data]
-  (let [urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
-    (case (keyword urakan-tyyppi)
-      :paallystys
-      ;; TODO Jos päällystysilmoitusta ei ole, palautetaan varoitus että se pitää lisätä ensin.
-      (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
+(defn- paivita-paallystyksen-aikataulu [db kayttaja urakka-id kohde-id data]
+  (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
+    (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
         db
         {:paallystys_alku (:paallystys-alku data)
          :paallystys_loppu (:paallystys-loppu data)
@@ -73,13 +70,38 @@
          :valmis_tiemerkintaan (:valmis-tiemerkintaan data)
          :muokkaaja (:id kayttaja)
          :id kohde-id})
+      (if kohteella-paallystysilmoitus?
+        (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
+              db
+              {:aloituspvm (:aloituspvm data)
+               :valmispvm_paallystys (:valmispvm_paallystys data)
+               :valmispvm_kohde (:valmispvm_kohde data)
+               :takuupvm (:takuupvm data)
+               :muokkaaja (:id kayttaja)
+               :kohde_id kohde-id})
+            {})
+        {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten päällystysilmoituksen tietoja ei päivitetä."})))
+
+(defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id data]
+  (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
+    db
+    {:tiemerkinta_alku (:tiemerkinta-alku data)
+     :tiemerkinta_loppu (:tiemerkinta-loppu data)
+     :muokkaaja (:id kayttaja)
+     :id kohde-id})
+  {})
+
+(defn- paivita-yllapitokohteen-aikataulu
+  "Päivittää ylläpitokohteen aikataulutiedot.
+   Palauttaa mapin mahdollisista varoituksista"
+  [db kayttaja urakka-id kohde-id data]
+  (let [urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
+    (log/debug "Kirjataan aikataulu urakalle: " urakan-tyyppi)
+    (case (keyword urakan-tyyppi)
+      :paallystys
+      (paivita-paallystyksen-aikataulu db kayttaja urakka-id kohde-id data)
       :tiemerkinta
-      (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
-        db
-        {:tiemerkinta_alku (:tiemerkinta-alku data)
-         :tiemerkinta_loppu (:tiemerkinta-loppu data)
-         :muokkaaja (:id kayttaja)
-         :id kohde-id})
+      (paivita-tiemerkinnan-aikataulu db kayttaja kohde-id data)
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi virheet/+viallinen-kutsu+
                           :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
@@ -96,9 +118,10 @@
       [db db]
       (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
       (let [kohde-id (Integer/parseInt kohde-id)
-            id (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
+            paivitys-vastaus (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
-          {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")})))))
+          (merge {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")}
+                 paivitys-vastaus))))))
 
 (defn hae-tr-osoite [db alkukoordinaatit loppukoordinaatit]
   (try
