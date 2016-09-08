@@ -10,7 +10,9 @@
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitussanoma]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json])
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [harja.domain.skeema :as skeema])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn paivita-alikohteet [db kohde alikohteet]
@@ -53,10 +55,12 @@
 (defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id
                                           {:keys [perustiedot] :as paallystysilmoitus}]
   (let [ilmoitustiedot (paallystysilmoitussanoma/rakenna paallystysilmoitus)
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          ilmoitustiedot)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
                              (q-paallystys/paivita-paallystysilmoitus<!
                                db
-                               {:ilmoitustiedot ilmoitustiedot ;; TODO Validoi skeemaa vasten ennen tallennusta
+                               {:ilmoitustiedot ilmoitustiedot
                                 :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
                                 :valmispvm_paallystys (json/aika-string->java-sql-date
                                                         (:valmispvm-paallystys perustiedot))
@@ -71,7 +75,7 @@
                                db
                                {:paallystyskohde kohde-id
                                 :tila "aloitettu"
-                                :ilmoitustiedot ilmoitustiedot ;; TODO Validoi skeemaa vasten ennen tallennusta
+                                :ilmoitustiedot ilmoitustiedot
                                 :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
                                 :valmispvm_paallystys (json/aika-string->java-sql-date
                                                         (:valmispvm-paallystys perustiedot))
