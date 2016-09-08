@@ -74,6 +74,7 @@
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " @muhoksen-paallystysurakan-id ")")))]
     (is (= (count res) kohteiden-lkm) "Päällystyskohteiden määrä")))
 
+; TODO Testaapa ettei anna poistaa kohdeosaa jolle on ilmoitus, nyt on ollut bugi tässä toiminnallisuudessa
 (deftest tallenna-paallystyskohde-kantaan
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
