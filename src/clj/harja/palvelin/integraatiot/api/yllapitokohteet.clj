@@ -60,7 +60,7 @@
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id id})))))
 
-(defn- paivita-paallystyksen-aikataulu [db kayttaja urakka-id kohde-id data]
+(defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id data]
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
         db
@@ -99,7 +99,7 @@
     (log/debug "Kirjataan aikataulu urakalle: " urakan-tyyppi)
     (case (keyword urakan-tyyppi)
       :paallystys
-      (paivita-paallystyksen-aikataulu db kayttaja urakka-id kohde-id data)
+      (paivita-paallystyksen-aikataulu db kayttaja kohde-id data)
       :tiemerkinta
       (paivita-tiemerkinnan-aikataulu db kayttaja kohde-id data)
       (throw+ {:type virheet/+viallinen-kutsu+
