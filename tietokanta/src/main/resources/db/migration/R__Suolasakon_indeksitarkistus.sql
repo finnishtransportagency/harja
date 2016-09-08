@@ -26,6 +26,11 @@ BEGIN
   loppuv := talvikauden_alkuvuosi + 1;
   perusluku := hoitourakan_indeksilaskennan_perusluku(ur);
 
+  -- Indeksi ei käytössä palauta summa ja korotettuna samana
+  IF indeksinimi IS NULL THEN
+    RETURN (summa, summa, 0);
+  END IF;
+
   IF perusluku IS NULL
   THEN
     RAISE NOTICE 'Suolasakon indeksitarkistusta ei voitu laskea koska urakan id=% peruslukua ei voitu laskea.', ur;
