@@ -46,6 +46,14 @@
 
     ))
 
+(deftest paallystysilmoituksen-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+                                         kayttaja portti
+                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+    (is (= 500 (:status vastaus)))))
+
 (deftest aikataulun-kirjaaminen-ilmoituksettomalle-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
