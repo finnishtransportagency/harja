@@ -57,6 +57,8 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          (:ilmoitustiedot paallystysilmoitus))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus
@@ -158,7 +160,7 @@
            db
            {:paallystyskohde paallystyskohde-id
             :tila tila
-            :ilmoitustiedot encoodattu-ilmoitustiedot ;; TODO Validoi skeemaa vasten ennen tallennusta
+            :ilmoitustiedot encoodattu-ilmoitustiedot
             :aloituspvm (konv/sql-date aloituspvm)
             :valmispvm_kohde (konv/sql-date valmispvm-kohde)
             :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
@@ -264,7 +266,7 @@
                                               (filter (comp not :poistettu))))})
           paallystysilmoitus-kannassa
           (first (into []
-                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot)) ;; TODO Validoi skeemaa vasten ennen nostoa, testaa virheellisyys
+                       (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                              (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                              (map #(konv/string-poluista->keyword %
                                                                   [[:paatos :taloudellinen-osa]
