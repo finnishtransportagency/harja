@@ -38,7 +38,7 @@
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
-  (let [urakan-kohteet (map :urakka (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db urakka-id))]
+  (let [urakan-kohteet (map :urakka (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id}))]
     (log/debug "Tarkistetaan, että annettu ylläpitokohde " kohde-id " kuuluu väitettyyn urakkaan " urakka-id)
     (when (or (empty? urakan-kohteet)
               (not (some #(= urakka-id %) urakan-kohteet)))
@@ -86,7 +86,7 @@
                                        urakan-tyyppi)}]}))))
 
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
-  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) aikataulu käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))

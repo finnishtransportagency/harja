@@ -2,6 +2,7 @@
 -- Hakee urakan kaikki yllapitokohteet sekä niiden alikohteet
 SELECT
   ypk.id,
+  ypk.urakka,
   ypk.sopimus,
   ypk.kohdenumero,
   ypk.nimi,
