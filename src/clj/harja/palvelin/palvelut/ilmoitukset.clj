@@ -177,6 +177,11 @@
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
     ilmoitukset))
 
+(defn hae-ilmoitus [db user id]
+  (first (into []
+               ilmoitus-xf
+               (q/hae-ilmoitus db {:id id}))))
+
 (defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
   (let [toimenpide (q/luo-ilmoitustoimenpide<!
@@ -261,6 +266,9 @@
     (julkaise-palvelu http :hae-ilmoitukset
                       (fn [user tiedot]
                         (hae-ilmoitukset db user tiedot)))
+    (julkaise-palvelu http :hae-ilmoitus
+                      (fn [user tiedot]
+                        (hae-ilmoitus db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]
                         (tallenna-ilmoitustoimenpide db tloik user tiedot)))

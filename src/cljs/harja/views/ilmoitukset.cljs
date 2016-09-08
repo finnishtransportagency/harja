@@ -184,7 +184,8 @@
                                     (e! (v/->YhdistaValinnat uusi))))
     (fn [e! {valinnat-nyt :valinnat
              kuittaa-monta :kuittaa-monta
-             haetut-ilmoitukset :ilmoitukset :as ilmoitukset}]
+             haetut-ilmoitukset :ilmoitukset
+             ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
       (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
             valitse-ilmoitus! (when kuittaa-monta-nyt
                                 #(e! (v/->ValitseKuitattavaIlmoitus %)))]
@@ -207,8 +208,9 @@
            {:tyhja (if haetut-ilmoitukset
                      "Ei löytyneitä tietoja"
                      [ajax-loader "Haetaan ilmoutuksia"])
-            :rivi-klikattu (or valitse-ilmoitus!
-                               #(e! (v/->ValitseIlmoitus %)))
+            :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
+                             (or valitse-ilmoitus!
+                                #(e! (v/->ValitseIlmoitus %))))
             :piilota-toiminnot true
             :max-rivimaara 500
             :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}

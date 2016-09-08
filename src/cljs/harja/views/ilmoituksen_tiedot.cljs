@@ -15,7 +15,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.tiedot.ilmoitukset.viestit :as v]))
+            [harja.tiedot.ilmoitukset.viestit :as v]
+            [harja.loki :refer [log]]))
 
 (defn selitelista [{:keys [selitteet] :as ilmoitus}]
   (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]

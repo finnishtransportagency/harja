@@ -100,6 +100,71 @@ SELECT
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
+-- name: hae-ilmoitus
+SELECT
+  i.id,
+  i.urakka,
+  u.nimi as urakkanimi,
+  hy.id                                                              AS hallintayksikko_id,
+  hy.nimi                                                            AS hallintayksikko_nimi,
+  i.ilmoitusid,
+  i.ilmoitettu,
+  i.valitetty,
+  i.yhteydenottopyynto,
+  i.otsikko,
+  i.paikankuvaus,
+  i.lisatieto,
+  i.ilmoitustyyppi,
+  i.selitteet,
+  i.urakkatyyppi,
+  i.tila,
+
+  i.sijainti,
+  i.tr_numero,
+  i.tr_alkuosa,
+  i.tr_loppuosa,
+  i.tr_alkuetaisyys,
+  i.tr_loppuetaisyys,
+
+  i.ilmoittaja_etunimi,
+  i.ilmoittaja_sukunimi,
+  i.ilmoittaja_tyopuhelin,
+  i.ilmoittaja_matkapuhelin,
+  i.ilmoittaja_sahkoposti,
+  i.ilmoittaja_tyyppi,
+
+  i.lahettaja_etunimi,
+  i.lahettaja_sukunimi,
+  i.lahettaja_puhelinnumero,
+  i.lahettaja_sahkoposti,
+
+  it.id                                                              AS kuittaus_id,
+  it.kuitattu                                                        AS kuittaus_kuitattu,
+  it.vapaateksti                                                     AS kuittaus_vapaateksti,
+  it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
+
+  it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
+  it.kuittaaja_henkilo_matkapuhelin                                  AS kuittaus_kuittaaja_matkapuhelin,
+  it.kuittaaja_henkilo_tyopuhelin                                    AS kuittaus_kuittaaja_tyopuhelin,
+  it.kuittaaja_henkilo_sahkoposti                                    AS kuittaus_kuittaaja_sahkoposti,
+  it.kuittaaja_organisaatio_nimi                                     AS kuittaus_kuittaaja_organisaatio,
+  it.kuittaaja_organisaatio_ytunnus                                  AS kuittaus_kuittaaja_ytunnus,
+
+  it.kasittelija_henkilo_etunimi                                     AS kuittaus_kasittelija_etunimi,
+  it.kasittelija_henkilo_sukunimi                                    AS kuittaus_kasittelija_sukunimi,
+  it.kasittelija_henkilo_matkapuhelin                                AS kuittaus_kasittelija_matkapuhelin,
+  it.kasittelija_henkilo_tyopuhelin                                  AS kuittaus_kasittelija_tyopuhelin,
+  it.kasittelija_henkilo_sahkoposti                                  AS kuittaus_kasittelija_sahkoposti,
+  it.kasittelija_organisaatio_nimi                                   AS kuittaus_kasittelija_organisaatio,
+  it.kasittelija_organisaatio_ytunnus                                AS kuittaus_kasittelija_ytunnus
+
+FROM ilmoitus i
+  LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
+  LEFT JOIN urakka u ON i.urakka = u.id
+  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+WHERE i.id = :id;
+
 -- name: hae-ilmoitukset-idlla
 SELECT
   i.id,
