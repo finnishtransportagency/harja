@@ -40,9 +40,13 @@
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
     (log/debug "Vastaus: " (pr-str vastaus))
     (is (= 200 (:status vastaus)))
-    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))))
+    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
-(deftest aikataulun-kirjaaminen-toimii
+    ;; TODO Tarkista arvot kannasta
+
+    ))
+
+(deftest aikataulun-kirjaaminen-ilmoituksettomalle-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
@@ -51,8 +55,31 @@
     (log/debug "Vastaus: " (pr-str vastaus))
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
-    (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))))
+    (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
 
-;; TODO Lisää testit:
-;; - Kirjataan aikataulu kohteelle jolla on ilmoitus
-;; - Kirjataan aikataulu / POT kohteelle joka ei kuulu annettuun urakkaan
+    ;; TODO Tarkista arvot kannasta
+
+    ))
+
+(deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-jolla-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
+                                         kayttaja portti
+                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+
+    (is (= 200 (:status vastaus)))
+    (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
+    (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
+
+    ;; TODO Tarkista arvot kannasta
+
+    ))
+
+(deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
+                                         kayttaja portti
+                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+    (is (= 500 (:status vastaus)))))

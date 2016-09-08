@@ -302,6 +302,14 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
+(defn hae-yllapitokohde-jolla-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE urakka != " urakka-id ";"))))
+
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
   (luo-kannat-uudelleen)

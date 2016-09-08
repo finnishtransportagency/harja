@@ -38,10 +38,9 @@
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
 (defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
-  (let [urakan-kohteet (map :urakka (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id}))]
-    (log/debug "Tarkistetaan, että annettu ylläpitokohde " kohde-id " kuuluu väitettyyn urakkaan " urakka-id)
-    (when (or (empty? urakan-kohteet)
-              (not (some #(= urakka-id %) urakan-kohteet)))
+  (let [urakan-kohteet (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id})]
+    (log/debug "Onko kohde-id " kohde-id " joukossa " (mapv :id urakan-kohteet) ": " (some #(= kohde-id %) (mapv :id urakan-kohteet)))
+    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
       (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
