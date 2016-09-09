@@ -80,8 +80,9 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
-        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                          (:ilmoitustiedot paallystysilmoitus))
+        _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
+            (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                            ilmoitustiedot))
         paallystysilmoitus (tyot-tyyppi-string->avain paallystysilmoitus [:ilmoitustiedot :tyot])
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
