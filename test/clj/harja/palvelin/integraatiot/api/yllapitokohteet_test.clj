@@ -34,6 +34,7 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
+;; TODO Älä validoi tieverkkoa?
 ;; TODO Oma testi uusi + päivitys
 (deftest paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
