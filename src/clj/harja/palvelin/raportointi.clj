@@ -97,7 +97,7 @@
          (finally
            (swap! lkm# dec))))))
 
-(defn raportoinnissa-ruuhkaa-sivu [params]
+(defn raportoinnissa-ruuhkaa-sivu [polku params]
   {:status 200
    :headers {"Content-Type" "text/html; charset=UTF-8"}
    :body (html
@@ -106,7 +106,7 @@
             [:title "Raportoinnissa ruuhkaa"]
             [:script {:type "text/javascript"}
              "setTimeout(function() { window.location = '"
-             (str "pdf?_=raportointi&parametrit="
+             (str polku "?_=raportointi&parametrit="
                   (java.net.URLEncoder/encode (t/clj->transit params)))
              "'; }, 5000);"]]
            [:body
@@ -127,7 +127,7 @@
      (fn [kayttaja params]
        (let [raportti (suorita-raportti this kayttaja params)]
          (if (= :raportoinnissa-ruuhkaa raportti)
-           (raportoinnissa-ruuhkaa-sivu params)
+           (raportoinnissa-ruuhkaa-sivu "pdf" params)
            (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti))))))
 
     (when excel-vienti
@@ -135,9 +135,11 @@
        excel-vienti :raportointi
        (fn [workbook kayttaja params]
          (let [raportti (suorita-raportti this kayttaja params)]
-           (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
-           (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
-                                 workbook)))))
+           (if (= :raportoinnissa-ruuhkaa raportti)
+             (raportoinnissa-ruuhkaa-sivu "excel" params)
+             (do (log/info "RAPORTTI MUODOSTETTU, TEHDÄÄN EXCEL " workbook)
+                 (excel/muodosta-excel (liita-suorituskontekstin-kuvaus db params raportti)
+                                       workbook)))))))
     this)
 
   (stop [this]
