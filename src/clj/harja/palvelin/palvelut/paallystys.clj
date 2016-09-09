@@ -300,6 +300,7 @@
                                               :ilmoitustiedot
                                               :osoitteet
                                               (filter (comp not :poistettu))))})
+          ;; TODO Ilmoitustietojen osoitteisiin pitää lisätä kohdeosa-id:t!
           paallystysilmoitus-kannassa
           (first (into []
                        (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
