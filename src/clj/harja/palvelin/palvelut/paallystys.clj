@@ -277,6 +277,7 @@
                                :kommentti (:id kommentti)}))))
 
 (defn- lisaa-paallystysilmoitukseen-kohdeosien-idt [paallystysilmoitus paivitetyt-kohdeosat]
+  (assert (not (empty? paivitetyt-kohdeosat)) "Ei voida liittää päällystysilmoitukseen tyhjiä kohdeosia")
   (-> paallystysilmoitus
       (assoc-in [:ilmoitustiedot :osoitteet]
                 (into []
@@ -310,7 +311,6 @@
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
-
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                  db user {:urakka-id urakka-id :sopimus-id sopimus-id
