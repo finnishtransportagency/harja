@@ -16,7 +16,7 @@ VALUES
     'L03', 'Leppäjärven ramppi', 400, 100, 4543.95, 0,
     '2016-05-19 06:00:00+02', '2016-05-21 16:00:00+02', null, null,
                                                               null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), '2016-05-21 16:00:00+02', 'paallyste' :: yllapitokohdetyyppi, 'paallystys'::yllapitokohdetyotyyppi, 1233534,
-                                                              18652, 1, 5190, 1, 3312, 1, 1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018')),
+                                                              20, 1, 1, 20, 1, 1, 1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018')),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
     308, 'Tie 833', 9000, 200, 565, 100,
