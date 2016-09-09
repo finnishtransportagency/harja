@@ -65,7 +65,8 @@
                                  :sideainetyyppi 1
                                  :pitoisuus 54
                                  :lisaaineet "asd"}
-                                {:nimi "Tie 555"
+                                {:poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
+                                 :nimi "Tie 555"
                                  :tr-numero 555
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
@@ -87,8 +88,7 @@
                                  :muotoarvo "asd"
                                  :sideainetyyppi 1
                                  :pitoisuus 54
-                                 :lisaaineet "asd"
-                                 :poistettu true}]
+                                 :lisaaineet "asd"}]
 
                     :alustatoimet [{:tr-alkuosa 2
                                     :tr-alkuetaisyys 3
