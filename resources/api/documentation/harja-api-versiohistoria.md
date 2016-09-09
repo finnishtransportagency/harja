@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.2.7</b>
+<b>Nykyinen versio: 0.2.8</b>
 <b>Julkaistu: 1.9.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.8. Julkaistu: 7.9.2016:
+    - Urakan ylläpitokohteiden haku palauttaa jatkossa myös aikataulutiedot.
 - Versionumero: 0.2.7. Julkaistu: 1.9.2016:
     - Haettaessa tietolajin kuvaus Harjasta ei enää palauteta sellaisia ominaisuuksia, joilla ei ole järjestysnumeroa.
 - Versionumero: 0.2.6. Julkaistu: 11.8.2016:
