@@ -8,38 +8,39 @@ INSERT INTO yllapitokohde
 (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi,
  aikataulu_paallystys_alku, aikataulu_paallystys_loppu, aikataulu_tiemerkinta_alku, aikataulu_tiemerkinta_loppu,
  aikataulu_kohde_valmis, aikataulu_muokkaaja, aikataulu_muokattu, valmis_tiemerkintaan, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
- tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista)
+ tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista,
+ suorittava_tiemerkintaurakka)
 VALUES
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
     'L03', 'Leppäjärven ramppi', 400, 100, 4543.95, 0,
     '2016-05-19 06:00:00+02', '2016-05-21 16:00:00+02', null, null,
                                                               null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), '2016-05-21 16:00:00+02', 'paallyste' :: yllapitokohdetyyppi, 'paallystys'::yllapitokohdetyotyyppi, 1233534,
-                                                              18652, 1, 5190, 1, 3312, 1, 1),
+                                                              18652, 1, 5190, 1, 3312, 1, 1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018')),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
     308, 'Tie 833', 9000, 200, 565, 100,
     '2016-05-21 06:00:00+02', null, null, null,
                                           null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, 54523243,
-                                          833, 2, 334, 4, 3042, 1 ,1),
+                                          833, 2, 334, 4, 3042, 1 ,1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018')),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
     'L010', 'Nakkilan ramppi', 500, 3457, 5, 6,
     '2016-05-26 06:00:00+02', null, null, null,
                                           null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, 265257,
-                                          8484, 1, 2728, 1, 5254, 1 ,1 ),
+                                          8484, 1, 2728, 1, 5254, 1 ,1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018')),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
     310, 'Oulaisten ohitusramppi', 500, 3457, 5, 6,
     '2016-06-02 06:00:00+02', null, null, null,
                                           null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, 456896958,
-                                          19521, 10, 5, 10, 15, 1, 1),
+                                          19521, 10, 5, 10, 15, 1, 1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018')),
   ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen päällystysurakka'),
     (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka') AND paasopimus IS null),
     666, 'Kuusamontien testi', 500, 3457, 5, 6,
     '2016-06-02 06:00:00+02', null, null, null,
                                           null, (SELECT id FROM kayttaja where kayttajanimi = 'jvh'), NOW(), null, 'paallyste' :: yllapitokohdetyyppi,'paallystys'::yllapitokohdetyotyyppi, 456896959,
-                                          20, 1, 1, 5, 15, 1 ,1);
+                                          20, 1, 1, 5, 15, 1 ,1, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'));
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista,  sijainti) VALUES ((SELECT id FROM yllapitokohde WHERE nimi ='Oulaisten ohitusramppi'), 'Laivaniemi 1', 19521, 10, 5, 10, 15, 1, 1, ST_GeomFromText('MULTILINESTRING((426888 7212758,427081 7212739),(434777 7215499,436899 7217174,438212 7219910,438676 7220554,440102 7221432,441584 7222729,442255 7223162,443128 7223398,443750 7223713,448682 7225293,451886 7226708,456379 7228018,459945 7229222,461039 7229509))'));
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti) VALUES ((SELECT id FROM yllapitokohde WHERE nimi ='Nakkilan ramppi'), 'Laivaniemi 3', 8484, 1, 2728, 1, 5254, 1, 1, ST_GeomFromText('LINESTRING(420852.939900323 7223514.49386093,420804.9806 7223518.3268,420747.5075 7223522.9287,420698.0565 7223526.6629,420610.8429 7223534.1198,420565.0569 7223537.7396,420471.1844 7223545.1734,420401.3421 7223550.7871,420348.0056 7223555.8095,420343.7581 7223556.2037,420339.2283 7223556.6623,420290.4384 7223562.4226,420248.5176 7223568.9529,420209.5639 7223575.7583,420178.7836 7223582.3631,420119.6745 7223597.171,420080.1538 7223608.031,420042.4889 7223619.6825,420001.3513 7223634.176,419981.7348 7223641.1357,419964.0443 7223647.4266,419923.946 7223662.1923,419913.9275 7223666.0331,419879.3142 7223679.3057,419837.1784 7223694.9873,419777.7328 7223717.269,419733.8377 7223733.6355,419691.4888 7223749.8115,419648.1416 7223766.3138,419630.5679 7223772.7714,419600.5249 7223783.8113,419523.7039 7223812.5137,419490.4187 7223824.7077,419457.258 7223837.1418,419427.4026 7223848.3835,419398.1679 7223860.1506,419395.6671 7223861.0975,419363.4962 7223872.571,419331.8643 7223883.0022,419308.1498 7223889.947,419283.4419 7223897.3867,419264.3161 7223902.599,419246.7864 7223906.2921,419227.5803 7223910.2734,419196.3605 7223916.4523,419169.8045 7223920.2043,419138.5455 7223924.6466,419125.9899 7223926.0176,419117.2918 7223926.8525,419109.7079 7223927.5642,419071.828 7223931.0852,419017.9526 7223935.6787,419015.8562 7223935.8485,418945.8311 7223942.1935,418847.1024 7223950.5784,418757.0754 7223958.5226,418631.6055 7223969.5737,418630.655 7223969.6559,418556.1714 7223975.8337,418489.9334 7223982.1787,418432.0987 7223986.9855,418391.036526719 7223990.45389087)'));

@@ -157,8 +157,8 @@
       (is (= (get aikataulutiedot 4) (get vanhat-aikataulutiedot 4))))))
 
 (deftest aikataulun-kirjaaminen-tiemerkintaurakan-kohteelle-toimii
-  (let [urakka (hae-muhoksen-paallystysurakan-id) ;; TODO VALITSE TIEMERKINTÄURAKKA
-        kohde (hae-yllapitokohde-jolla-paallystysilmoitusta)
+  (let [urakka (hae-oulun-tiemerkintaurakan-id)
+        kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
         vanhat-aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
                                                  valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
                                                  aikataulu_tiemerkinta_loppu FROM yllapitokohde

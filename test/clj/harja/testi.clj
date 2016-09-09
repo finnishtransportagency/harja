@@ -269,6 +269,11 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                    FROM   urakka
                    WHERE  nimi = 'Muhoksen päällystysurakka'"))))
 
+(defn hae-oulun-tiemerkintaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
+
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -309,6 +314,10 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE urakka != " urakka-id ";"))))
+
+(defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE suorittava_tiemerkintaurakka != " tiemerkintaurakka-id ";"))))
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
