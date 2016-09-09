@@ -23,6 +23,12 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
 
+(defn tyot-tyyppi-avain->string [json avainpolku]
+  (-> json
+      (assoc-in avainpolku
+                (when-let [tyot (some-> json (get-in avainpolku))]
+                  (map #(assoc % :tyyppi (name (:tyyppi %))) tyot)))))
+
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -62,7 +68,6 @@
   (let [paallystysilmoitus (into []
                                  (comp (map konv/alaviiva->rakenne)
                                        (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                       (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                                        (map #(konv/string-poluista->keyword
                                               %
                                               [[:taloudellinen-osa :paatos]
@@ -77,6 +82,7 @@
                                     :id))
         _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                           (:ilmoitustiedot paallystysilmoitus))
+        paallystysilmoitus (tyot-tyyppi-string->avain paallystysilmoitus [:ilmoitustiedot :tyot])
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus (liita-paallystysilmoitukseen-kohdeosan-tiedot paallystysilmoitus)
@@ -142,7 +148,9 @@
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
-        ilmoitustiedot (poista-ilmoitustiedoista-tieosoitteet ilmoitustiedot)
+        ilmoitustiedot (-> ilmoitustiedot
+                           (poista-ilmoitustiedoista-tieosoitteet)
+                           (tyot-tyyppi-avain->string [:tyot]))
         _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                         ilmoitustiedot)
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
@@ -218,7 +226,9 @@
         (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
                             (:tyot ilmoitustiedot))
               tila (paattele-ilmoituksen-tila paallystysilmoitus)
-              ilmoitustiedot (poista-ilmoitustiedoista-tieosoitteet ilmoitustiedot)
+              ilmoitustiedot (-> ilmoitustiedot
+                                 (poista-ilmoitustiedoista-tieosoitteet)
+                                 (tyot-tyyppi-avain->string [:tyot]))
               _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                                 ilmoitustiedot)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]

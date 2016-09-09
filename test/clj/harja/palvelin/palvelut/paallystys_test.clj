@@ -163,8 +163,8 @@
   ;; On kiva jos testaamme näkymää ja meidän testidata menee validoinnista läpi
   (let [ilmoitustiedot (q "SELECT ilmoitustiedot FROM paallystysilmoitus")]
     (doseq [[ilmoitusosa] ilmoitustiedot]
-      (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                      (konv/jsonb->clojuremap ilmoitusosa)))))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                       (konv/jsonb->clojuremap ilmoitusosa))))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
