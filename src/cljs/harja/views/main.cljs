@@ -218,6 +218,6 @@
             (if (nil? kayttaja)
               [ladataan]
               (if (ei-kayttooikeutta? kayttaja)
-                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))
