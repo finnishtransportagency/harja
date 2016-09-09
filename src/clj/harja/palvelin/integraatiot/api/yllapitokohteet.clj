@@ -17,7 +17,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -61,30 +62,30 @@
 (defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
-        db
-        {:paallystys_alku (:paallystys-alku aikataulu)
-         :paallystys_loppu (:paallystys-loppu aikataulu)
-         :kohde_valmis (:kohde-valmis aikataulu)
-         :valmis_tiemerkintaan (:valmis-tiemerkintaan aikataulu)
-         :muokkaaja (:id kayttaja)
-         :id kohde-id})
+      db
+      {:paallystys_alku (json/pvm-string->java-sql-date (:paallystys-alku aikataulu))
+       :paallystys_loppu (json/pvm-string->java-sql-date (:paallystys-loppu aikataulu))
+       :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
+       :valmis_tiemerkintaan (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+       :muokkaaja (:id kayttaja)
+       :id kohde-id})
       (if kohteella-paallystysilmoitus?
         (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
               db
-              {:aloituspvm (:aloituspvm aikataulu)
-               :valmispvm_paallystys (:valmispvm_paallystys aikataulu)
-               :valmispvm_kohde (:valmispvm_kohde aikataulu)
-               :takuupvm (:takuupvm aikataulu)
+              {:aloituspvm (get-in aikataulu [:paallystysilmoitus :aloituspvm])
+               :valmispvm_paallystys (get-in aikataulu [:paallystysilmoitus :valmispvm-paallystys])
+               :valmispvm_kohde (get-in aikataulu [:paallystysilmoitus :valmispvm-kohde])
+               :takuupvm (get-in aikataulu [:paallystysilmoitus :takuupvm])
                :muokkaaja (:id kayttaja)
                :kohde_id kohde-id})
             {})
         {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten sen tietoja ei päivitetä."})))
 
-(defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id data]
+(defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
     db
-    {:tiemerkinta_alku (:tiemerkinta-alku data)
-     :tiemerkinta_loppu (:tiemerkinta-loppu data)
+    {:tiemerkinta_alku (:tiemerkinta-alku aikataulu)
+     :tiemerkinta_loppu (:tiemerkinta-loppu aikataulu)
      :muokkaaja (:id kayttaja)
      :id kohde-id})
   {})
