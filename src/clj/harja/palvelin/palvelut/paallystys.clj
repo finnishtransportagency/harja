@@ -30,6 +30,19 @@
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
+(defn- liita-paallystysilmoitukseen-kohdeosan-tiedot [paallystysilmoitus]
+  (-> paallystysilmoitus
+      (assoc-in [:ilmoitustiedot :osoitteet]
+                (->> paallystysilmoitus
+                     :kohdeosat
+                     (map (fn [kohdeosa]
+                            ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
+                            (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
+                                   nil)))
+                     (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
+                     vec))
+      (dissoc :kohdeosat)))
+
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
@@ -60,18 +73,7 @@
                           (:ilmoitustiedot paallystysilmoitus))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-        paallystysilmoitus
-        (-> paallystysilmoitus
-            (assoc-in [:ilmoitustiedot :osoitteet]
-                      (->> paallystysilmoitus
-                           :kohdeosat
-                           (map (fn [kohdeosa]
-                                  ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
-                                  (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                         nil)))
-                           (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
-                           vec))
-            (dissoc :kohdeosat))
+        paallystysilmoitus (liita-paallystysilmoitukseen-kohdeosan-tiedot paallystysilmoitus)
 
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
@@ -119,6 +121,8 @@
         (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
                            (:tyot ilmoitustiedot))
               tila (paattele-ilmoituksen-tila paallystysilmoitus)
+              _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                                ilmoitustiedot)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
           (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
           (log/debug "Asetetaan ilmoituksen tilaksi " tila)
@@ -146,6 +150,8 @@
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                        ilmoitustiedot)
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (log/debug "POT muutoshinta: " muutoshinta)
