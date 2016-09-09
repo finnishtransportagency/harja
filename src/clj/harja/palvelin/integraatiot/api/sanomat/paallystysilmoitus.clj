@@ -51,7 +51,7 @@
            :yksikko (:yksikko tyo)
            :yksikkohinta (:yksikkohinta tyo)
            :tilattu-maara (:tilattu-maara tyo)
-           :toteutunut-maara (:tilattu-maara tyo)})
+           :toteutunut-maara (:toteutunut-maara tyo)})
         (:tyot paallystysilmoitus)))
 
 (defn rakenna [paallystysilmoitus]
