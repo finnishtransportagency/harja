@@ -124,6 +124,7 @@
                                          kayttaja portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
 
+    (log/debug "Urakka: " urakka " kohde: " kohde)
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))))

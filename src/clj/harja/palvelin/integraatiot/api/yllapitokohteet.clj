@@ -72,10 +72,13 @@
       (if kohteella-paallystysilmoitus?
         (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
               db
-              {:aloituspvm (get-in aikataulu [:paallystysilmoitus :aloituspvm])
-               :valmispvm_paallystys (get-in aikataulu [:paallystysilmoitus :valmispvm-paallystys])
-               :valmispvm_kohde (get-in aikataulu [:paallystysilmoitus :valmispvm-kohde])
-               :takuupvm (get-in aikataulu [:paallystysilmoitus :takuupvm])
+              {:aloituspvm (json/pvm-string->java-sql-date
+                             (get-in aikataulu [:paallystysilmoitus :aloituspvm]))
+               :valmispvm_paallystys (json/pvm-string->java-sql-date
+                                       (get-in aikataulu [:paallystysilmoitus :valmispvm-paallystys]))
+               :valmispvm_kohde (json/pvm-string->java-sql-date
+                                  (get-in aikataulu [:paallystysilmoitus :valmispvm-kohde]))
+               :takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
                :muokkaaja (:id kayttaja)
                :kohde_id kohde-id})
             {})
@@ -84,8 +87,8 @@
 (defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
     db
-    {:tiemerkinta_alku (:tiemerkinta-alku aikataulu)
-     :tiemerkinta_loppu (:tiemerkinta-loppu aikataulu)
+    {:tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-alku aikataulu))
+     :tiemerkinta_loppu (json/pvm-string->java-sql-date (:tiemerkinta-loppu aikataulu))
      :muokkaaja (:id kayttaja)
      :id kohde-id})
   {})
