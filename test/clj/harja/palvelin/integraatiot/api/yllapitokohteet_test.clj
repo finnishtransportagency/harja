@@ -36,17 +36,76 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
-;; TODO Oma testi uusi + päivitys
-(deftest paallystysilmoituksen-kirjaaminen-toimii
+(deftest uuden-paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-leppajarven-ramppi)
+        kohde (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
-    (log/debug "POT VASTAUS: " (pr-str vastaus))
+
+    ;; Tarkistetana, että tiedot tallentuivat oikein
+    (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
+                                             takuupvm, valmispvm_paallystys, muutoshinta
+                                             FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
+          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
+      ;; Tiedot ovat skeeman mukaiset
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          ilmoitustiedot))
+
+      ;; Tiedot vastaavat API:n kautta tullutta payloadia
+      (is (match ilmoitustiedot
+                 {:tyot [{:tyo "työtehtävä"
+                          :tyyppi "tasaukset"
+                          :yksikko "kpl"
+                          :yksikkohinta 55.4
+                          :tilattu-maara 1.2
+                          :toteutunut-maara 1.2}],
+                  :osoitteet [{:kohdeosa-id _
+                               :edellinen-paallystetyyppi nil
+                               :lisaaineet "lisäaineet"
+                               :leveys 1.2
+                               :kokonaismassamaara 12.3
+                               :sideainetyyppi 1
+                               :muotoarvo "testi"
+                               :esiintyma "testi"
+                               :pitoisuus 1.2
+                               :pinta-ala 2.2
+                               :massamenekki 22
+                               :kuulamylly 4
+                               :raekoko 12
+                               :tyomenetelma 72
+                               :rc% 54
+                               :paallystetyyppi 11
+                               :km-arvo "testi"}],
+                  :alustatoimet [{:verkkotyyppi 1
+                                  :tr-alkuosa 1
+                                  :tr-loppuetaisyys 15
+                                  :verkon-tarkoitus 5
+                                  :kasittelymenetelma 1
+                                  :tr-loppuosa 5
+                                  :tr-alkuetaisyys 1
+                                  :tekninen-toimenpide 1
+                                  :paksuus 1.2
+                                  :verkon-sijainti 1}]}
+                 true))
+      (is (some? (get paallystysilmoitus 1)))
+      (is (some? (get paallystysilmoitus 2)))
+      (is (some? (get paallystysilmoitus 3)))
+      (is (some? (get paallystysilmoitus 4)))
+      (is (some? (get paallystysilmoitus 5))))))
+
+(deftest paallystysilmoituksen-paivittaminen-toimii
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
+                                         kayttaja portti
+                                         (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
+
+    (is (= 200 (:status vastaus)))
+    (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
     ;; Tarkistetana, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,

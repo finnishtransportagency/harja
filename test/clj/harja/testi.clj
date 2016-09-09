@@ -315,10 +315,17 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
-(defn hae-yllapitokohde-leppajarven-ramppi []
+(defn hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
-                   nimi = 'Leppäjärven ramppi'"))))
+                   tr_numero = 20
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   tr_numero = 20
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
