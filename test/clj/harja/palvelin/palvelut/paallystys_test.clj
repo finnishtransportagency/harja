@@ -185,30 +185,32 @@
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
-                :osoitteet [{:kohdeosa-id 18
-                             :nimi "Tie 666"
-                             :tr-numero 666
-                             :tr-alkuosa 2
-                             :tr-alkuetaisyys 3
-                             :tr-loppuosa 4
-                             :tr-loppuetaisyys 5
-                             :tr-ajorata 1
-                             :tr-kaista 1
-                             :paallystetyyppi 1
-                             :raekoko 1
-                             :kokonaismassamaara 2
-                             :rc% 3
-                             :tyomenetelma 12
-                             :leveys 5
-                             :massamenekki 7
-                             :pinta-ala 8
-                             :edellinen-paallystetyyppi 1
+                :osoitteet [{:edellinen-paallystetyyppi 1
                              :esiintyma "asd"
                              :km-arvo "asd"
+                             :kohdeosa-id 18
+                             :kokonaismassamaara 2
+                             :leveys 5
+                             :lisaaineet "asd"
+                             :massamenekki 7
                              :muotoarvo "asd"
-                             :sideainetyyppi 1
+                             :nimi "Tie 666"
+                             :paallystetyyppi 1
+                             :pinta-ala 8
                              :pitoisuus 54
-                             :lisaaineet "asd"}]
+                             :raekoko 1
+                             :rc% 3
+                             :sideainetyyppi 1
+                             :toimenpide nil
+                             :tr-ajorata 1
+                             :tr-alkuetaisyys 3
+                             :tr-alkuosa 2
+                             :tr-kaista 1
+                             :tr-loppuetaisyys 5
+                             :tr-loppuosa 4
+                             :tr-numero 666
+                             :tunnus nil
+                             :tyomenetelma 12}]
                 :tyot [{:tilattu-maara 100
                         :toteutunut-maara 200
                         :tyo "AB 16/100 LTA"
