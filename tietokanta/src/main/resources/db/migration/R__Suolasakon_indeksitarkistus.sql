@@ -28,7 +28,7 @@ BEGIN
 
   -- Indeksi ei käytössä palauta summa ja korotettuna samana
   IF indeksinimi IS NULL THEN
-    RETURN (summa, summa, 0);
+    RETURN (summa, summa, 0 :: NUMERIC);
   END IF;
 
   IF perusluku IS NULL
