@@ -43,10 +43,10 @@ WHERE
   ) AND
 
   -- Tarkista ilmoituksen tilat
-  (:kuittaamattomat IS TRUE AND i.tila = 'kuittaamaton' :: ilmoituksen_tila) AND
-  (:vastaanotetut IS TRUE OR i.tila = 'vastaanotettu' :: ilmoituksen_tila) AND
-  (:aloitetut IS TRUE OR i.tila = 'aloitettu' :: ilmoituksen_tila) AND
-  (:lopetetut IS TRUE OR i.tila = 'lopetettu' :: ilmoituksen_tila) AND
+  ((:kuittaamattomat IS TRUE AND i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
+   (:vastaanotetut IS TRUE AND i.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
+   (:aloitetut IS TRUE AND i.tila = 'aloitettu' :: ilmoituksen_tila) OR
+   (:lopetetut IS TRUE AND i.tila = 'lopetettu' :: ilmoituksen_tila)) AND
 
   -- Tarkasta ilmoituksen tyypit
   (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
