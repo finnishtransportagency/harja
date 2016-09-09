@@ -190,12 +190,44 @@
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= (:muutoshinta paallystysilmoitus-kannassa) muutoshinta))
-        ;; Toimenpiteen tiedot on tallennettu oikein
-        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kokonaismassamaara :rc% :tyomenetelma
-                                  :leveys :massamenekki :pinta-ala :edellinen-paallystetyyppi]]
-          ;; Toimenpiteen tiedot on tallennettu oikein
-          (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
-                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
+        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+               {:tyot [{:tyo "AB 16/100 LTA"
+                        :tyyppi :ajoradan-paallyste
+                        :yksikko "km"
+                        :yksikkohinta 5
+                        :tilattu-maara 100
+                        :toteutunut-maara 200}]
+                :osoitteet [{:kohdeosa-id 18
+                             :tr-kaista 1
+                             :tr-ajorata 1
+                             :tr-loppuosa 4
+                             :tunnus nil
+                             :tr-alkuosa 2
+                             :tr-loppuetaisyys 5
+                             :nimi "Tie 666"
+                             :tr-alkuetaisyys 3
+                             :tr-numero 666
+                             :toimenpide nil} {:kohdeosa-id 2
+                                               :tr-kaista 1
+                                               :tr-ajorata 1
+                                               :tr-loppuosa 1
+                                               :tunnus nil
+                                               :tr-alkuosa 1
+                                               :tr-loppuetaisyys 5254
+                                               :nimi "Laivaniemi 3"
+                                               :tr-alkuetaisyys 2728
+                                               :tr-numero 8484
+                                               :toimenpide nil}]
+                :alustatoimet [{:verkkotyyppi 1
+                                :verkon-tarkoitus 1
+                                :kasittelymenetelma 1
+                                :tr-loppuosa 4
+                                :tr-alkuosa 2
+                                :tekninen-toimenpide 1
+                                :tr-loppuetaisyys 5
+                                :tr-alkuetaisyys 3
+                                :paksuus 1234
+                                :verkon-sijainti 1}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
