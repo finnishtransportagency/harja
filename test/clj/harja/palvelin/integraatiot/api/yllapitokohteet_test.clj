@@ -11,17 +11,18 @@
             [harja.domain.skeema :as skeema]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
 
-(def kayttaja "skanska")
+(def kayttaja-paallystys "skanska")
+(def kayttaja-tiemerkinta "tiemies")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
-    kayttaja
+    kayttaja-paallystys
     :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet) [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest tarkista-yllapitokohteiden-haku
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet"] kayttaja portti)
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet"] kayttaja-paallystys portti)
         data (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= 5 (count (:yllapitokohteet data))))))
@@ -32,7 +33,7 @@
     (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-tuntemattomalle-urakalle
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja portti)]
+  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/123467890/yllapitokohteet" urakka] kayttaja-paallystys portti)]
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
@@ -40,7 +41,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
-                                         kayttaja portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
 
     (is (= 200 (:status vastaus)))
@@ -101,7 +102,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
-                                         kayttaja portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
 
     (is (= 200 (:status vastaus)))
@@ -170,7 +171,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
-                                         kayttaja portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
     (is (= 500 (:status vastaus)))))
 
@@ -178,7 +179,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
-                                         kayttaja portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
@@ -188,7 +189,7 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
-                                         kayttaja portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
 
     (is (= 200 (:status vastaus)))
@@ -203,7 +204,7 @@
                                                  aikataulu_tiemerkinta_loppu FROM yllapitokohde
                                                  WHERE id = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
-                                         kayttaja portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
@@ -229,7 +230,7 @@
                                                  aikataulu_tiemerkinta_loppu FROM yllapitokohde
                                                  WHERE id = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
-                                         kayttaja portti
+                                         kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
@@ -260,6 +261,6 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-joka-ei-kuulu-urakkaan urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
-                                         kayttaja portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
     (is (= 500 (:status vastaus)))))
