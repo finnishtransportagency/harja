@@ -34,14 +34,14 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
+;; TODO Oma testi uusi + päivitys
 (deftest paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
 
-    (log/debug "Vastaus: " (pr-str vastaus))
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
@@ -50,6 +50,7 @@
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
                                              takuupvm, valmispvm_paallystys, muutoshinta
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
+          _ (log/debug "POT Vastaus: " (pr-str paallystysilmoitus))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
       (is (match ilmoitustiedot ;; Tiedot vastaavat API:n kautta tullutta payloadia
                  {:tyot [{:tyo "työtehtävä"
@@ -89,7 +90,8 @@
       (is (some? (get paallystysilmoitus 1)))
       (is (some? (get paallystysilmoitus 2)))
       (is (some? (get paallystysilmoitus 3)))
-      (is (some? (get paallystysilmoitus 4))))))
+      (is (some? (get paallystysilmoitus 4)))
+      (is (some? (get paallystysilmoitus 5))))))
 
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -109,7 +111,7 @@
 
 (deftest aikataulun-kirjaaminen-ilmoituksettomalle-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
@@ -119,19 +121,18 @@
 
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-jolla-paallystysilmoitusta)
+        kohde (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
 
-    (log/debug "Urakka: " urakka " kohde: " kohde)
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))))
 
 (deftest aikataulun-kirjaaminen-paallystysurakan-kohteelle-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vanhat-aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
                                                  valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
                                                  aikataulu_tiemerkinta_loppu FROM yllapitokohde
@@ -148,7 +149,6 @@
                                                  aikataulu_tiemerkinta_loppu FROM yllapitokohde
                                                  WHERE id = " kohde)))]
       ;; Uudet päällystyksen pvm:t tallentuivat oikein
-      ;; TODO Tarkat pvm-tarkistukset!
       (is (some? (get aikataulutiedot 0)))
       (is (some? (get aikataulutiedot 1)))
       (is (some? (get aikataulutiedot 2)))
@@ -166,7 +166,6 @@
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
-
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
@@ -180,13 +179,12 @@
       (is (= (get aikataulutiedot 1) (get vanhat-aikataulutiedot 1)))
       (is (= (get aikataulutiedot 2) (get vanhat-aikataulutiedot 2)))
       ;; Valittu tiemerkintäurakka on valittu suorittamaan kyseinen ylläpitokohde, joten pvm:t päivittyvät:
-      ;; TODO Tarkat pvm-tarkistukset!
       (is (some? (get aikataulutiedot 3)))
       (is (some? (get aikataulutiedot 4))))))
 
 (deftest aikataulun-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
                                          +kayttaja-tero+ portti
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]

@@ -303,13 +303,17 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null)"))))
 
-(defn hae-yllapitokohde-ilman-paallystysilmoitusta []
+(defn hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
-(defn hae-yllapitokohde-jolla-paallystysilmoitusta []
+(defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
