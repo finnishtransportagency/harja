@@ -167,7 +167,7 @@ FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
-WHERE i.id = :id;
+WHERE i.id = :id AND urakka IN (:urakat);
 
 -- name: hae-ilmoitukset-idlla
 SELECT

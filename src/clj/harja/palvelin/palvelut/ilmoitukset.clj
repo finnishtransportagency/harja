@@ -112,7 +112,7 @@
         tyypit (mapv name tyypit)
         selite-annettu? (boolean (and selite (first selite)))
         selite (if selite-annettu? (name (first selite)) "")
-        tilat (apply hash-set tilat)
+        tilat (into #{} tilat)
         debug-viesti (str "Haetaan ilmoituksia: "
                           (viesti urakat "urakoista" "ilman urakoita")
                           (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
@@ -178,9 +178,11 @@
     ilmoitukset))
 
 (defn hae-ilmoitus [db user id]
-  (first (into []
-               ilmoitus-xf
-               (q/hae-ilmoitus db {:id id}))))
+  (let [kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)]
+    (first (into []
+                 ilmoitus-xf
+                 (q/hae-ilmoitus db {:id id
+                                     :urakat kayttajan-urakat})))))
 
 (defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))

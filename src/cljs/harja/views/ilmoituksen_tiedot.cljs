@@ -66,11 +66,10 @@
                                        (:id @nav/valittu-urakka))
 
          (if (:ilmoitusid ilmoitus)
-
            [:button.nappi-ensisijainen
-           {:class "uusi-kuittaus-nappi"
-            :on-click #(e! (v/->AvaaUusiKuittaus))}
-           (ikonit/livicon-plus) " Uusi kuittaus"]
+            {:class "uusi-kuittaus-nappi"
+             :on-click #(e! (v/->AvaaUusiKuittaus))}
+            (ikonit/livicon-plus) " Uusi kuittaus"]
            [yleiset/vihje-elementti
             [:span "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia"]])))
 
