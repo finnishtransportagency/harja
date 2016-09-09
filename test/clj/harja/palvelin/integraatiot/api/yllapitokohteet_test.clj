@@ -116,17 +116,7 @@
                                          (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
-    (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
-
-    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_tiemerkinta_loppu,
-                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
-                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
-                                                 WHERE id = " kohde)))]
-      (is (some? (get aikataulutiedot 0)))
-      (is (some? (get aikataulutiedot 1)))
-      (is (some? (get aikataulutiedot 2)))
-      (is (some? (get aikataulutiedot 3)))
-      (is (some? (get aikataulutiedot 4))))))
+    (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))))
 
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -137,15 +127,60 @@
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
-    (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
+    (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))))
 
-    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_tiemerkinta_loppu,
+(deftest aikataulun-kirjaaminen-paallystysurakan-kohteelle-toimii
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
+        vanhat-aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
+                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
+                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
+                                                 WHERE id = " kohde)))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
+                                         kayttaja portti
+                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+    (is (= 200 (:status vastaus)))
+    (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
+    (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
+
+    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
                                                  valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
                                                  aikataulu_tiemerkinta_loppu FROM yllapitokohde
                                                  WHERE id = " kohde)))]
+      ;; Uudet päällystyksen pvm:t tallentuivat oikein
+      ;; TODO Tarkat pvm-tarkistukset!
       (is (some? (get aikataulutiedot 0)))
       (is (some? (get aikataulutiedot 1)))
       (is (some? (get aikataulutiedot 2)))
+      ;; Tiemerkinnän tiedot eivät päivity, koska kyseessä ei ole tiemerkintäurakka
+      (is (= (get aikataulutiedot 3) (get vanhat-aikataulutiedot 3)))
+      (is (= (get aikataulutiedot 4) (get vanhat-aikataulutiedot 4))))))
+
+(deftest aikataulun-kirjaaminen-tiemerkintaurakan-kohteelle-toimii
+  (let [urakka (hae-muhoksen-paallystysurakan-id) ;; TODO VALITSE TIEMERKINTÄURAKKA
+        kohde (hae-yllapitokohde-jolla-paallystysilmoitusta)
+        vanhat-aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
+                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
+                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
+                                                 WHERE id = " kohde)))
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu"]
+                                         kayttaja portti
+                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+
+    (is (= 200 (:status vastaus)))
+    (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
+    (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
+
+    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
+                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
+                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
+                                                 WHERE id = " kohde)))]
+      ; Päällystyksen tiedot eivät tallennu, koska päivitetään tiemerkintäurakkaa
+      (is (= (get aikataulutiedot 0) (get vanhat-aikataulutiedot 0)))
+      (is (= (get aikataulutiedot 1) (get vanhat-aikataulutiedot 1)))
+      (is (= (get aikataulutiedot 2) (get vanhat-aikataulutiedot 2)))
+      ;; Valittu tiemerkintäurakka on valittu suorittamaan kyseinen ylläpitokohde, joten pvm:t päivittyvät:
+      ;; TODO Tarkat pvm-tarkistukset!
       (is (some? (get aikataulutiedot 3)))
       (is (some? (get aikataulutiedot 4))))))
 
