@@ -52,37 +52,50 @@
          :id
          kohde-id)))
 
-(defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id
+(defn- luo-paallystysilmoitus [db kayttaja kohde-id
+                               {:keys [perustiedot] :as paallystysilmoitus}
+                               ilmoitustiedot]
+  (log/debug "Luodaan uusi päällystysilmoitus")
+  (q-paallystys/luo-paallystysilmoitus<!
+    db
+    {:paallystyskohde kohde-id
+     :tila "aloitettu"
+     :ilmoitustiedot ilmoitustiedot
+     :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
+     :valmispvm_paallystys (json/aika-string->java-sql-date
+                             (:valmispvm-paallystys perustiedot))
+     :valmispvm_kohde (json/aika-string->java-sql-date
+                        (:valmispvm-kohde perustiedot))
+     :takuupvm (json/aika-string->java-sql-date
+                 (:takuupvm perustiedot))
+     :muutoshinta nil ; TODO Laske muutoshinta.
+     :kayttaja (:id kayttaja)}))
+
+(defn- paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
+                                   {:keys [perustiedot] :as paallystysilmoitus}
+                                   ilmoitustiedot]
+  (log/debug "Päivitetään vanha päällystysilmoitus")
+  (q-paallystys/paivita-api-paallystysilmoitus<!
+    db
+    {:ilmoitustiedot ilmoitustiedot
+     :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
+     :valmispvm_paallystys (json/aika-string->java-sql-date
+                             (:valmispvm-paallystys perustiedot))
+     :valmispvm_kohde (json/aika-string->java-sql-date
+                        (:valmispvm-kohde perustiedot))
+     :takuupvm (json/aika-string->java-sql-date
+                 (:takuupvm perustiedot))
+     :muutoshinta nil ; TODO Laske muutoshinta.
+     :muokkaaja (:id kayttaja)
+     :id kohde-id
+     :urakka urakka-id}))
+
+(defn luo-tai-paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
                                           {:keys [perustiedot] :as paallystysilmoitus}]
   (let [ilmoitustiedot (paallystysilmoitussanoma/rakenna paallystysilmoitus)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
-                             (q-paallystys/paivita-paallystysilmoitus<!
-                               db
-                               {:ilmoitustiedot ilmoitustiedot
-                                :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
-                                :valmispvm_paallystys (json/aika-string->java-sql-date
-                                                        (:valmispvm-paallystys perustiedot))
-                                :valmispvm_kohde (json/aika-string->java-sql-date
-                                                   (:valmispvm-kohde perustiedot))
-                                :takuupvm (json/aika-string->java-sql-date
-                                            (:takuupvm perustiedot))
-                                ;; TODO ja muutoshinta myös?
-                                :muokkaaja (:id kayttaja)
-                                :id kohde-id})
-                             (q-paallystys/luo-paallystysilmoitus<!
-                               db
-                               {:paallystyskohde kohde-id
-                                :tila "aloitettu"
-                                :ilmoitustiedot ilmoitustiedot
-                                :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
-                                :valmispvm_paallystys (json/aika-string->java-sql-date
-                                                        (:valmispvm-paallystys perustiedot))
-                                :valmispvm_kohde (json/aika-string->java-sql-date
-                                                   (:valmispvm-kohde perustiedot))
-                                :takuupvm (json/aika-string->java-sql-date
-                                            (:takuupvm perustiedot))
-                                :muutoshinta nil ;; TODO Pitää varmaan laskea muutoshinta jos taloudellista osiota täytelty?
-                                :kayttaja (:id kayttaja)}))]
+                             (paivita-paallystysilmoitus db kayttaja urakka-id kohde-id paallystysilmoitus ilmoitustiedot)
+                             (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus ilmoitustiedot))]
     (str (:id paallystysilmoitus))))
 
 (defn pura-paallystysilmoitus [data]
@@ -99,14 +112,14 @@
         kohteen-tienumero (:tr-numero kohde)]
     (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
 
-(defn tallenna-paallystysilmoitus [db kayttaja kohde paallystysilmoitus]
+(defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus]
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (:alikohteet paallystysilmoitus)]
     (paivita-kohde db (:id kohde) kohteen-sijainti)
     (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
-      (luo-tai-paivita-paallystysilmoitus db kayttaja (:id kohde) paallystysilmoitus))))
+      (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus))))
 
 
 (defn kirjaa-paallystysilmoitus [db kayttaja urakka-id kohde-id data]
@@ -115,5 +128,5 @@
     (let [paallystysilmoitus (pura-paallystysilmoitus data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           _ (validoi-paallystysilmoitus db urakka-id kohde paallystysilmoitus)
-          id (tallenna-paallystysilmoitus db kayttaja kohde paallystysilmoitus)]
+          id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde paallystysilmoitus)]
       id)))
