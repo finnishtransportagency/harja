@@ -14,7 +14,8 @@
             [clojure.string :as str]
             [schema.core :as s :include-macros true]
             [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom])
+            [harja.ui.dom :as dom]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.makrot :refer [fnc]]))
 
@@ -648,62 +649,64 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
-              muokkauspaneeli (fn [nayta-otsikko?]
-                                [:div.panel-heading
-                                 (if-not muokataan
-                                   [:span.pull-right.muokkaustoiminnot
-                                    (when (and tallenna
-                                               (not (nil? tiedot)))
-                                      [:div (when (and (= :ei-mahdollinen tallenna)
-                                                       tallennus-ei-mahdollinen-tooltip)
-                                              {:title (tallennus-ei-mahdollinen-tooltip)})
-                                       [:button.nappi-ensisijainen
-                                        {:disabled (or (= :ei-mahdollinen tallenna)
-                                                       @gridia-muokataan?)
-                                         :on-click #(do (.preventDefault %)
-                                                        (aloita-muokkaus! tiedot))}
-                                        [:span.grid-muokkaa
-                                         [y/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]])]
-                                   [:span.pull-right.muokkaustoiminnot
-                                    [:button.nappi-toissijainen
-                                     {:disabled (empty? @historia)
-                                      :on-click #(do (.stopPropagation %)
-                                                     (.preventDefault %)
-                                                     (peru!))}
-                                     [y/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
+              muokkauspaneeli
+              (fn [nayta-otsikko?]
+                [:div.panel-heading
+                 (if-not muokataan
+                   [:span.pull-right.muokkaustoiminnot
+                    (when (and tallenna
+                               (not (nil? tiedot)))
+                      (let [tallenna-nappi [:button.nappi-ensisijainen
+                                            {:disabled (or (= :ei-mahdollinen tallenna)
+                                                           @gridia-muokataan?)
+                                             :on-click #(do (.preventDefault %)
+                                                            (aloita-muokkaus! tiedot))}
+                                            [:span.grid-muokkaa
+                                             [y/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
+                        (if (and (= :ei-mahdollinen tallenna)
+                                 tallennus-ei-mahdollinen-tooltip)
+                          [yleiset/tooltip {} tallenna-nappi tallennus-ei-mahdollinen-tooltip]
+                          tallenna-nappi)))]
+                   [:span.pull-right.muokkaustoiminnot
+                    [:button.nappi-toissijainen
+                     {:disabled (empty? @historia)
+                      :on-click #(do (.stopPropagation %)
+                                     (.preventDefault %)
+                                     (peru!))}
+                     [y/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
 
-                                    (when-not (= false voi-lisata?)
-                                      [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
-                                                                                             (lisaa-rivi! ohjaus {}))}
-                                       [y/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
+                    (when-not (= false voi-lisata?)
+                      [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
+                                                                             (lisaa-rivi! ohjaus {}))}
+                       [y/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
 
-                                    (when-not muokkaa-aina
-                                      [:button.nappi-myonteinen.grid-tallenna
-                                       {:disabled (or (not (empty? @virheet))
-                                                      @tallennus-kaynnissa)
-                                        :on-click #(when-not @tallennus-kaynnissa
-                                                    (let [kaikki-rivit (mapv second @muokatut)
-                                                          tallennettavat
-                                                          (if tallenna-vain-muokatut
-                                                            (do (log "TALLENNA VAIN MUOKATUT")
-                                                                (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
-                                                            kaikki-rivit)]
-                                                      (do (.preventDefault %)
-                                                          (reset! tallennus-kaynnissa true)
-                                                          (go (if (<! (tallenna tallennettavat)))
-                                                              (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
-                                       [y/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
+                    (when-not muokkaa-aina
+                      [:button.nappi-myonteinen.grid-tallenna
+                       {:disabled (or (not (empty? @virheet))
+                                      @tallennus-kaynnissa)
+                        :on-click #(when-not @tallennus-kaynnissa
+                                     (let [kaikki-rivit (mapv second @muokatut)
+                                           tallennettavat
+                                           (if tallenna-vain-muokatut
+                                             (do (log "TALLENNA VAIN MUOKATUT")
+                                                 (filter (fn [rivi] (not (:koskematon rivi))) kaikki-rivit))
+                                             kaikki-rivit)]
+                                       (do (.preventDefault %)
+                                           (reset! tallennus-kaynnissa true)
+                                           (go (if (<! (tallenna tallennettavat)))
+                                               (nollaa-muokkaustiedot!)))))} ;; kutsu tallenna-fn: määrittele paluuarvo?
+                       [y/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])
 
-                                    (when-not muokkaa-aina
-                                      [:button.nappi-kielteinen.grid-peru
-                                       {:on-click #(do
-                                                    (.preventDefault %)
-                                                    (nollaa-muokkaustiedot!)
-                                                    (when peruuta (peruuta))
-                                                    nil)}
-                                       [y/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
-                                 (when nayta-otsikko? [:h6.panel-title otsikko])])
+                    (when-not muokkaa-aina
+                      [:button.nappi-kielteinen.grid-peru
+                       {:on-click #(do
+                                     (.preventDefault %)
+                                     (nollaa-muokkaustiedot!)
+                                     (when peruuta (peruuta))
+                                     nil)}
+                       [y/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
+                 (when nayta-otsikko? [:h6.panel-title otsikko])])
               thead (fn []
                       [:thead
                        (when-let [rivi-ennen (:rivi-ennen opts)]
