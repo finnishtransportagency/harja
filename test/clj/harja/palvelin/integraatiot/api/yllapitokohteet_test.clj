@@ -49,7 +49,7 @@
 
     ;; Tarkistetana, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
-                                             muutoshinta, takuupvm, valmispvm_paallystys
+                                             takuupvm, valmispvm_paallystys, muutoshinta
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
       (is (match ilmoitustiedot ;; Tiedot vastaavat API:n kautta tullutta payloadia
@@ -87,8 +87,10 @@
                                   :paksuus 1.2
                                   :verkon-sijainti 1}]}
                  true))
-      ;; TODO Tarkista pvm:t
-      (log/debug "POT: " (pr-str paallystysilmoitus)))))
+      (is (some? (get paallystysilmoitus 1)))
+      (is (some? (get paallystysilmoitus 2)))
+      (is (some? (get paallystysilmoitus 3)))
+      (is (some? (get paallystysilmoitus 4))))))
 
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -116,9 +118,15 @@
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
 
-    ;; TODO Tarkista arvot kannasta
-
-    ))
+    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_tiemerkinta_loppu,
+                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
+                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
+                                                 WHERE id = " kohde)))]
+      (is (some? (get aikataulutiedot 0)))
+      (is (some? (get aikataulutiedot 1)))
+      (is (some? (get aikataulutiedot 2)))
+      (is (some? (get aikataulutiedot 3)))
+      (is (some? (get aikataulutiedot 4))))))
 
 (deftest aikataulun-kirjaaminen-toimii-kohteelle-jolla-ilmoitus
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -131,9 +139,15 @@
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
 
-    ;; TODO Tarkista arvot kannasta
-
-    ))
+    (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_tiemerkinta_loppu,
+                                                 valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
+                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
+                                                 WHERE id = " kohde)))]
+      (is (some? (get aikataulutiedot 0)))
+      (is (some? (get aikataulutiedot 1)))
+      (is (some? (get aikataulutiedot 2)))
+      (is (some? (get aikataulutiedot 3)))
+      (is (some? (get aikataulutiedot 4))))))
 
 (deftest aikataulun-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
