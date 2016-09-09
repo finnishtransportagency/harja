@@ -197,7 +197,7 @@
                 (when indeksi-kaytossa?
                   [" Sanktioiden indeksitarkistukset " " Ei indeksitarkistuksia "
                    :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot])
-                (when talvisuolasakko-kaytossa?
+                (when (and indeksi-kaytossa? talvisuolasakko-kaytossa?)
                   [" Talvisuolasakon indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
                    :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
                 (when indeksi-kaytossa?
