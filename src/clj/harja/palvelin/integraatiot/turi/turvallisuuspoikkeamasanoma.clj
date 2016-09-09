@@ -100,7 +100,10 @@
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
+          [[:sampohankenimi (:urakka-nimi data)]]
+          [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
+          [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
            [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]

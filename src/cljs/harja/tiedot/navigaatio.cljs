@@ -278,9 +278,7 @@
       (into []
             (comp (filter #(= v-ur-tyyppi (:tyyppi %)))
                   (filter #(or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %)))))
-                  (filter #(if (= "urakoitsija" (get-in @istunto/kayttaja [:organisaatio :tyyppi]))
-                            (oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)
-                            true)))
+                  (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
             urakkalista))))
 
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
