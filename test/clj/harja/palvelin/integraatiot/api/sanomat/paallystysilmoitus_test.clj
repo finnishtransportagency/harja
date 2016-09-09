@@ -2,7 +2,10 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitus]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.skeema :as skeema]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
 
 (deftest tarkista-paallystysiloituksen-rakentaminen
   (let [paallystysilmoitus {:yllapitokohde
@@ -100,4 +103,5 @@
                                :tyyppi "jyrsinnat"
                                :yksikko "kpl"
                                :yksikkohinta 55.4}]}]
-    (is (= odotettu-data ilmoitusdata))))
+    (is (= odotettu-data ilmoitusdata))
+    (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitusdata))))
