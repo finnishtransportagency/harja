@@ -6,7 +6,6 @@
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.domain.ilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.palvelin.raportointi :refer :all]
             [harja.palvelin.raportointi.raportit.ilmoitus :as ilmoitusraportti]
@@ -47,7 +46,7 @@
                        db +kayttaja-jvh+ nil nil nil nil
                        +ilmoitustilat+ +ilmoitustyypit+
                        [alkupvm loppupvm] "" nil)
-          ristisuon-ilmoitus (first (filter #(= (:paikankuvaus %) "Voimakas lumipyry nelostiellä Ristisuon kohdalla ja tiet auraamatta.")
+          ristisuon-ilmoitus (first (filter #(= (:ilmoitusid %) 12610)
                                       ilmoitukset))]
       (is (= (pvm/pvm (:ilmoitettu ristisuon-ilmoitus)) "26.01.2015"))
       (is (not (empty? ilmoitukset)))
