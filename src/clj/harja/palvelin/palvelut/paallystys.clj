@@ -288,13 +288,12 @@
                                             (= (:tr-numero %) (:tr-numero osoite))
                                             (= (:tr-alkuosa %) (:tr-alkuosa osoite))
                                             (= (:tr-alkuetaisyys %) (:tr-alkuetaisyys osoite))
-                                            (= (:tr-loppupsa %) (:tr-loppuosa osoite))
+                                            (= (:tr-loppuosa %) (:tr-loppuosa osoite))
                                             (= (:tr-loppuetaisyys %) (:tr-loppuetaisyys osoite)))
                                           paivitetyt-kohdeosat))]
                             ;; Jos osoitteelle ei ole kohdeosaa, se on poistettu
                             (when vastaava-kohdeosa
-                              (merge osoite
-                                     vastaava-kohdeosa))))
+                              (assoc osoite :kohdeosa-id (:id vastaava-kohdeosa)))))
                         (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))))
 
 (defn tallenna-paallystysilmoitus
