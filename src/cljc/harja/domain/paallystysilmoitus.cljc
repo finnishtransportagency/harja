@@ -220,7 +220,7 @@
   (apply s/enum (map :koodi +paallystystyon-tyypit+)))
 
 (defn paallystystyontyyppi-avain-nimella [koodi]
-  (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
+  (:koodi (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
 
 (def paallystysilmoitus-osoitteet
   [;; Linkki ylläpitokohdeosaan
