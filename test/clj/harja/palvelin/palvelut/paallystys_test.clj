@@ -249,8 +249,22 @@
                                 :verkkotyyppi 1
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
-                :osoitteet [{:kohdeosa-id 18
+                :osoitteet [{:edellinen-paallystetyyppi 1
+                             :esiintyma "asd"
+                             :km-arvo "asd"
+                             :kohdeosa-id 18
+                             :kokonaismassamaara 2
+                             :leveys 5
+                             :lisaaineet "asd"
+                             :massamenekki 7
+                             :muotoarvo "asd"
                              :nimi "Tie 666"
+                             :paallystetyyppi 1
+                             :pinta-ala 8
+                             :pitoisuus 54
+                             :raekoko 1
+                             :rc% 3
+                             :sideainetyyppi 1
                              :toimenpide nil
                              :tr-ajorata 1
                              :tr-alkuetaisyys 3
@@ -259,7 +273,8 @@
                              :tr-loppuetaisyys 5
                              :tr-loppuosa 4
                              :tr-numero 666
-                             :tunnus nil}]
+                             :tunnus nil
+                             :tyomenetelma 12}]
                 :tyot [{:tilattu-maara 100
                         :toteutunut-maara 200
                         :tyo "AB 16/100 LTA"
