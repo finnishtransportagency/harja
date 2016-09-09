@@ -108,8 +108,6 @@
                             :yksikko "km"
                             :yksikkohinta 5}]}})
 
-(log/debug "Päällystyskohde id jolla on ilmoitus: " paallystyskohde-id-jolla-on-ilmoitus)
-
 (deftest skeemavalidointi-toimii
   (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
