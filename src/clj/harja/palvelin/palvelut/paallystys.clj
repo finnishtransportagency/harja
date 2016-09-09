@@ -33,8 +33,7 @@
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
-   Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohteet-taulusta ja liitetään mukaan ilmoitukseen.
-   Jos kohdeosalle löytyy myös toimenpidetiedot päällystysilmoituksesta, myös ne liitetään mukaan.
+   Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohdeosa-taulusta ja liitetään mukaan ilmoitukseen.
 
    Huomaa, että vaikka päällystysilmoitusta ei olisi tehty, tämä kysely palauttaa joka tapauksessa
    kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi."
@@ -57,7 +56,8 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
-        _ (log/debug "Kohdeosat: " (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          (:ilmoitustiedot paallystysilmoitus))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
         paallystysilmoitus

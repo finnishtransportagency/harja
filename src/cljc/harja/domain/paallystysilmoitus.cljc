@@ -214,17 +214,8 @@
   (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
 
 (def paallystysilmoitus-osoitteet
-  [{(s/optional-key :nimi) (s/maybe s/Str)
-    (s/optional-key :tunnus) (s/maybe s/Str)
-    :tr-numero s/Int
-    (s/optional-key :tr-ajorata) (s/maybe +ajorata+)
-    (s/optional-key :tr-kaista) (s/maybe +kaista+)
-    :tr-alkuosa s/Int
-    :tr-alkuetaisyys s/Int
-    :tr-loppuosa s/Int
-    :tr-loppuetaisyys s/Int
-    (s/optional-key :toimenpide) (s/maybe s/Str)
-    (s/optional-key :kohdeosa-id) (s/maybe s/Int)
+  [;; Linkki ylläpitokohdeosaan
+   {:kohdeosa-id s/Int
 
     ; Osoitteelle tehdyt toimenpiteet
     (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
