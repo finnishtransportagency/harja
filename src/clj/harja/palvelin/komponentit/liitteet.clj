@@ -3,7 +3,7 @@
             [com.stuartsierra.component :as component]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [harja.tietoturva.liitteet :as t-liitteet]
+            [harja.domain.liitteet :as t-liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:import (java.io InputStream ByteArrayOutputStream)
            (org.postgresql.largeobject LargeObjectManager)

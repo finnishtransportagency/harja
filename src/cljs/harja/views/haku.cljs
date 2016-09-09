@@ -12,11 +12,11 @@
             [harja.tiedot.urakat :as urakat]
             [harja.atom :refer-macros [reaction<!]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.tiedot.istunto :as istunto])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
-
 
 (def hakutermi (atom ""))
 
@@ -144,9 +144,10 @@
        [:div.form-group.haku
         [suodatettu-lista {:format :hakusanat
                            :haku :hakusanat
-                           :term (r/wrap @hakutermi (fn [uusi-termi]
-                                                      (reset! hakutermi
-                                                              (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
+                           :term (r/wrap @hakutermi
+                                         (fn [uusi-termi]
+                                           (reset! hakutermi
+                                                   (str/triml (str/replace uusi-termi #"\s{2,}" " ")))))
                            :ryhmittely :tyyppi
                            :ryhman-otsikko #(case %
                                              :urakka "Urakat"
@@ -156,8 +157,9 @@
                            :on-select #(valitse-hakutulos %)
                            :aputeksti "Hae Harjasta"
                            :tunniste #((juxt :tyyppi :id) %)
-                           :vinkki #(if (liikaa-osumia? @hakutulokset)
-                                     "Paljon osumia, tarkenna hakua..."
-                                     (when (= [] hakutulokset)
-                                       (str "Ei tuloksia haulla " @hakutermi)))}
+                           :vinkki #(when-not (empty? @hakutermi)
+                                     (if (liikaa-osumia? @hakutulokset)
+                                       "Paljon osumia, tarkenna hakua..."
+                                       (when (= [] @hakutulokset)
+                                         (str "Ei tuloksia haulla " @hakutermi))))}
          @hakutulokset]]])))

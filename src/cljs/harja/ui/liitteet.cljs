@@ -6,7 +6,7 @@
             [harja.ui.modal :as modal]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [harja.tietoturva.liitteet :as t-liitteet]
+            [harja.domain.liitteet :as t-liitteet]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.yleiset :as yleiset]
             [harja.fmt :as fmt])
