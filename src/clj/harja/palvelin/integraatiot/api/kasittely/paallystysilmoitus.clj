@@ -54,13 +54,13 @@
 
 (defn- luo-paallystysilmoitus [db kayttaja kohde-id
                                {:keys [perustiedot] :as paallystysilmoitus}
-                               ilmoitustiedot]
+                               ilmoitustiedot-json]
   (log/debug "Luodaan uusi päällystysilmoitus")
   (q-paallystys/luo-paallystysilmoitus<!
     db
     {:paallystyskohde kohde-id
      :tila "aloitettu"
-     :ilmoitustiedot ilmoitustiedot
+     :ilmoitustiedot ilmoitustiedot-json
      :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
      :valmispvm_paallystys (json/aika-string->java-sql-date
                              (:valmispvm-paallystys perustiedot))
@@ -68,16 +68,17 @@
                         (:valmispvm-kohde perustiedot))
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
-     :muutoshinta nil ; TODO Laske muutoshinta.
+     :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                    (:tyot paallystysilmoitus))
      :kayttaja (:id kayttaja)}))
 
 (defn- paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
                                    {:keys [perustiedot] :as paallystysilmoitus}
-                                   ilmoitustiedot]
+                                   ilmoitustiedot-json]
   (log/debug "Päivitetään vanha päällystysilmoitus")
   (q-paallystys/paivita-api-paallystysilmoitus<!
     db
-    {:ilmoitustiedot ilmoitustiedot
+    {:ilmoitustiedot ilmoitustiedot-json
      :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
      :valmispvm_paallystys (json/aika-string->java-sql-date
                              (:valmispvm-paallystys perustiedot))
@@ -85,17 +86,18 @@
                         (:valmispvm-kohde perustiedot))
      :takuupvm (json/aika-string->java-sql-date
                  (:takuupvm perustiedot))
-     :muutoshinta nil ; TODO Laske muutoshinta.
+     :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                    (:tyot paallystysilmoitus))
      :muokkaaja (:id kayttaja)
      :id kohde-id
      :urakka urakka-id}))
 
 (defn luo-tai-paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
                                           {:keys [perustiedot] :as paallystysilmoitus}]
-  (let [ilmoitustiedot (paallystysilmoitussanoma/rakenna paallystysilmoitus)
+  (let [ilmoitustiedot-json (paallystysilmoitussanoma/rakenna paallystysilmoitus)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
-                             (paivita-paallystysilmoitus db kayttaja urakka-id kohde-id paallystysilmoitus ilmoitustiedot)
-                             (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus ilmoitustiedot))]
+                             (paivita-paallystysilmoitus db kayttaja urakka-id kohde-id paallystysilmoitus ilmoitustiedot-json)
+                             (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus ilmoitustiedot-json))]
     (str (:id paallystysilmoitus))))
 
 (defn pura-paallystysilmoitus [data]
