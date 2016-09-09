@@ -114,39 +114,25 @@
     :default
     "aloitettu"))
 
-(defn- paivita-paallystysilmoituksen-perustiedot
-  [db user urakka-id sopimus-id
-   {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
-           valmispvm-paallystys takuupvm
-           tekninen-osa taloudellinen-osa] :as paallystysilmoitus}]
-  (if (oikeudet/voi-kirjoittaa?
-        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-        urakka-id
-        user)
-    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
-        (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
-                           (:tyot ilmoitustiedot))
-              tila (paattele-ilmoituksen-tila paallystysilmoitus)
-              _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                                ilmoitustiedot)
-              encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-          (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
-          (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-          (log/debug "POT muutoshinta: " muutoshinta)
-          (q/paivita-paallystysilmoitus<!
-            db
-            {:tila tila
-             :ilmoitustiedot encoodattu-ilmoitustiedot
-             :aloituspvm (konv/sql-date aloituspvm)
-             :valmispvm_kohde (konv/sql-date valmispvm-kohde)
-             :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
-             :takuupvm (konv/sql-date takuupvm)
-             :muutoshinta muutoshinta
-             :muokkaaja (:id user)
-             :id paallystyskohde-id
-             :urakka urakka-id}))
-        id)
-    (log/debug "Ei oikeutta päivittää perustietoja.")))
+(defn- poista-ilmoitustiedoista-tieosoitteet
+  "Poistaa päällystysilmoituksen ilmoitustiedoista sellaiset tiedot, jotka tallennetaan
+   ylläpitokohdeosa-tauluun."
+  [ilmoitustiedot]
+  (let [paivitetyt-osoitteet (mapv
+                               (fn [osoite]
+                                 (-> osoite
+                                     (dissoc :tr-kaista
+                                             :tr-ajorata
+                                             :tr-loppuosa
+                                             :tunnus
+                                             :tr-alkuosa
+                                             :tr-loppuetaisyys
+                                             :nimi
+                                             :tr-alkuetaisyys
+                                             :tr-numero
+                                             :toimenpide)))
+                               (:osoitteet ilmoitustiedot))]
+    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
 
 (defn- luo-paallystysilmoitus [db user urakka-id sopimus-id
                                {:keys [paallystyskohde-id ilmoitustiedot aloituspvm
@@ -156,6 +142,7 @@
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
+        ilmoitustiedot (poista-ilmoitustiedoista-tieosoitteet ilmoitustiedot)
         _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
                         ilmoitustiedot)
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
@@ -218,6 +205,41 @@
             :urakka urakka-id}))
       (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
 
+(defn- paivita-paallystysilmoituksen-perustiedot
+  [db user urakka-id sopimus-id
+   {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
+           valmispvm-paallystys takuupvm
+           tekninen-osa taloudellinen-osa] :as paallystysilmoitus}]
+  (if (oikeudet/voi-kirjoittaa?
+        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+        urakka-id
+        user)
+    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
+        (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                            (:tyot ilmoitustiedot))
+              tila (paattele-ilmoituksen-tila paallystysilmoitus)
+              ilmoitustiedot (poista-ilmoitustiedoista-tieosoitteet ilmoitustiedot)
+              _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                                ilmoitustiedot)
+              encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
+          (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
+          (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+          (log/debug "POT muutoshinta: " muutoshinta)
+          (q/paivita-paallystysilmoitus<!
+            db
+            {:tila tila
+             :ilmoitustiedot encoodattu-ilmoitustiedot
+             :aloituspvm (konv/sql-date aloituspvm)
+             :valmispvm_kohde (konv/sql-date valmispvm-kohde)
+             :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
+             :takuupvm (konv/sql-date takuupvm)
+             :muutoshinta muutoshinta
+             :muokkaaja (:id user)
+             :id paallystyskohde-id
+             :urakka urakka-id}))
+        id)
+    (log/debug "Ei oikeutta päivittää perustietoja.")))
+
 (defn- paivita-paallystysilmoitus [db user urakka-id sopimus-id
                                    uusi-paallystysilmoitus paallystysilmoitus-kannassa]
   ;; Ilmoituksen kaikki tiedot lähetetään aina tallennettavaksi, vaikka käyttäjällä olisi oikeus
@@ -257,8 +279,6 @@
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                    (:ilmoitustiedot paallystysilmoitus))
 
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat

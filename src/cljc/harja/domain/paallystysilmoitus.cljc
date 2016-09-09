@@ -235,8 +235,7 @@
     (s/optional-key :muotoarvo) (s/maybe s/Str)
     (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
     (s/optional-key :pitoisuus) (s/maybe s/Num)
-    (s/optional-key :lisaaineet) (s/maybe s/Str)
-    (s/optional-key :poistettu) s/Bool}])
+    (s/optional-key :lisaaineet) (s/maybe s/Str)}])
 
 (def paallystysilmoitus-alustatoimet
   [{:tr-alkuosa s/Int
@@ -248,8 +247,7 @@
     :verkkotyyppi +verkkotyyppi+
     :verkon-tarkoitus +verkon-tarkoitus+
     :verkon-sijainti +verkon-sijainti+
-    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)
-    (s/optional-key :poistettu) s/Bool}])
+    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)}])
 
 (def paallystysilmoitus-tyot
   [{:tyyppi +paallystystyon-tyyppi+
@@ -257,9 +255,9 @@
     :tilattu-maara s/Num
     :toteutunut-maara s/Num
     :yksikko s/Str
-    :yksikkohinta s/Num
-    (s/optional-key :poistettu) s/Bool}])
+    :yksikkohinta s/Num}])
 
+;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet paallystysilmoitus-osoitteet
