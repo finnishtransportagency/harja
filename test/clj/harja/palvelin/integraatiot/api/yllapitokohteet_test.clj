@@ -36,18 +36,17 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
-;; TODO Älä validoi tieverkkoa?
 ;; TODO Oma testi uusi + päivitys
 (deftest paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
-        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        kohde (hae-yllapitokohde-leppajarven-ramppi)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/paallystysilmoitus"]
                                          kayttaja portti
                                          (slurp "test/resurssit/api/paallystysilmoituksen_kirjaus.json"))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
-
+    (log/debug "POT VASTAUS: " (pr-str vastaus))
 
     ;; Tarkistetana, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
