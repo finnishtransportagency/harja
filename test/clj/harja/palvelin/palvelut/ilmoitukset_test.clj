@@ -169,16 +169,6 @@
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-toimenpidepyynto)))
     (is (false? (ilmoitukset/ilmoitus-myohassa? myohastynyt-tiedoitus)))))
 
-(deftest ilmoituksen-tila
- (let [kuittaamaton-ilmoitus {:kuittaukset []}
-       vastaanotettu-ilmoitus {:kuittaukset [{:kuittaustyyppi :vastaanotto}]}
-       aloitettu-ilmoitus {:kuittaukset [{:kuittaustyyppi :aloitus}]}
-       lopetettu-ilmoitus {:kuittaukset [{:kuittaustyyppi :lopetus}]}]
-   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila kuittaamaton-ilmoitus)) :kuittaamaton))
-   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila vastaanotettu-ilmoitus)) :vastaanotto))
-   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila aloitettu-ilmoitus)) :aloitus))
-   (is (= (:tila (ilmoitukset-domain/lisaa-ilmoituksen-tila lopetettu-ilmoitus)) :lopetus))))
-
 (deftest aloituskuittausta-ei-annettu-alle-tunnissa
   (let [ilmoitus1 {:ilmoitettu (c/to-sql-time (t/now)) :kuittaukset [{:kuitattu       (c/to-sql-time (t/plus (t/now) (t/minutes 80)))
                                                                       :kuittaustyyppi :aloitus}]}
