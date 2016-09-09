@@ -84,16 +84,16 @@
                                     :rc% 54,
                                     :paallystetyyppi 11,
                                     :km-arvo "testi"}],
-                       :alustatoimet [{:verkkotyyppi 1,
-                                       :aosa 1,
-                                       :let 15,
-                                       :verkon-tarkoitus 2,
-                                       :kasittelymenetelma 1,
-                                       :losa 5,
-                                       :aet 1,
-                                       :tekninen-toimenpide 1,
-                                       :paksuus 1.2,
-                                       :verkon-sijainti 1}],
+                       :alustatoimet [{:kasittelymenetelma 1
+                                       :paksuus 1.2
+                                       :tekninen-toimenpide 1
+                                       :tr-alkuetaisyys 1
+                                       :tr-alkuosa 1
+                                       :tr-loppuetaisyys 15
+                                       :tr-loppuosa 5
+                                       :verkkotyyppi 1
+                                       :verkon-sijainti 1
+                                       :verkon-tarkoitus 2}],
                        :tyot [{:tilattu-maara 1.2
                                :toteutunut-maara 1.2
                                :tyo "työtehtävä"
