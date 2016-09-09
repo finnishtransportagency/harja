@@ -86,10 +86,10 @@
         "tyo": {
           "tyyppi": "Tasaukset",
           "tyotehtava": "työtehtävä",
-          "tilattu-maara": 1.2,
-          "toteutunut-maara": 1.2,
+          "tilattu-maara": 1,
+          "toteutunut-maara": 2,
           "yksikko": "kpl",
-          "yksikkohinta": 55.4
+          "yksikkohinta": 3
         }
       }
     ]

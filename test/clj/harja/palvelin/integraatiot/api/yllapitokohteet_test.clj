@@ -60,9 +60,9 @@
                  {:tyot [{:tyo "työtehtävä"
                           :tyyppi "tasaukset"
                           :yksikko "kpl"
-                          :yksikkohinta 55.4
-                          :tilattu-maara 1.2
-                          :toteutunut-maara 1.2}],
+                          :yksikkohinta 3
+                          :tilattu-maara 1
+                          :toteutunut-maara 2}],
                   :osoitteet [{:kohdeosa-id _
                                :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
@@ -95,7 +95,7 @@
       (is (some? (get paallystysilmoitus 2)))
       (is (some? (get paallystysilmoitus 3)))
       (is (some? (get paallystysilmoitus 4)))
-      (is (some? (get paallystysilmoitus 5))))))
+      (is (== (get paallystysilmoitus 5) 3)))))
 
 (deftest paallystysilmoituksen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
@@ -121,9 +121,9 @@
                  {:tyot [{:tyo "työtehtävä"
                           :tyyppi "tasaukset"
                           :yksikko "kpl"
-                          :yksikkohinta 55.4
-                          :tilattu-maara 1.2
-                          :toteutunut-maara 1.2}],
+                          :yksikkohinta 3
+                          :tilattu-maara 1
+                          :toteutunut-maara 2}],
                   :osoitteet [{:kohdeosa-id _
                                :edellinen-paallystetyyppi nil
                                :lisaaineet "lisäaineet"
@@ -156,7 +156,7 @@
       (is (some? (get paallystysilmoitus 2)))
       (is (some? (get paallystysilmoitus 3)))
       (is (some? (get paallystysilmoitus 4)))
-      (is (some? (get paallystysilmoitus 5))))))
+      (is (== (get paallystysilmoitus 5) 3)))))
 
 (deftest paallystysilmoituksen-kirjaaminen-ei-toimi-ilman-oikeuksia
   (let [urakka (hae-muhoksen-paallystysurakan-id)
