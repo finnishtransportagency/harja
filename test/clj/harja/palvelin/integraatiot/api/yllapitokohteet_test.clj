@@ -34,7 +34,6 @@
     (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-urakka"))))
 
-;; TODO Feikkaa tieverkon tsekkaus.
 (deftest paallystysilmoituksen-kirjaaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-yllapitokohde-ilman-paallystysilmoitusta)
