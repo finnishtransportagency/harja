@@ -7,7 +7,9 @@
             [cheshire.core :as cheshire]
             [clojure.core.match :refer [match]]
             [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.skeema :as skeema]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
 
 (def kayttaja "skanska")
 
@@ -51,9 +53,13 @@
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
                                              takuupvm, valmispvm_paallystys, muutoshinta
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
-          _ (log/debug "POT Vastaus: " (pr-str paallystysilmoitus))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
-      (is (match ilmoitustiedot ;; Tiedot vastaavat API:n kautta tullutta payloadia
+      ;; Tiedot ovat skeeman mukaiset
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          ilmoitustiedot))
+
+      ;; Tiedot vastaavat API:n kautta tullutta payloadia
+      (is (match ilmoitustiedot
                  {:tyot [{:tyo "työtehtävä"
                           :tyyppi "tasaukset"
                           :yksikko "kpl"
