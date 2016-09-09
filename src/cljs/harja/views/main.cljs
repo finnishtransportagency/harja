@@ -218,6 +218,8 @@
             (if (nil? kayttaja)
               [ladataan]
               (if (ei-kayttooikeutta? kayttaja)
-                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+                [:div.ei-kayttooikeutta-wrap
+                 [:img#harja-brand-icon {:src      "images/harja_logo_soft.svg"}]
+                 [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))
