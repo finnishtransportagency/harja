@@ -55,6 +55,17 @@ WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-urakkaan-liittyvat-yllapitokohteet
+-- Hakee urakkaan suoraan kuuluvat ylläpitokohteet sekä ne, joihin on merkitty suorittajaksi kyseinen urakka
+SELECT
+  ypk.id,
+FROM yllapitokohde ypk
+WHERE
+  (ypk.urakka = :urakka
+   OR ypk.suorittava_tiemerkintaurakka = :urakka)
+  AND ypk.poistettu IS NOT TRUE;
+
+
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
