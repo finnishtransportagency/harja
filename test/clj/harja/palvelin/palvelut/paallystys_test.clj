@@ -160,6 +160,7 @@
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :sopimus-id sopimus-id
                                                                    :paallystysilmoitus paallystysilmoitus})
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             muutoshinta (ffirst (q (str "SELECT muutoshinta FROM paallystysilmoitus WHERE paallystyskohde = (SELECT id FROM yllapitokohde WHERE id =" paallystyskohde-id ");")))
