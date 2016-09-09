@@ -200,11 +200,11 @@
 
 (def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
-  [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste }
-   {:nimi "Pienaluetyöt" :koodi :pienaluetyot }
-   {:nimi "Tasaukset" :koodi :tasaukset }
-   {:nimi "Jyrsinnät" :koodi :jyrsinnat }
-   {:nimi "Muut" :koodi :muut }])
+  [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste}
+   {:nimi "Pienaluetyöt" :koodi :pienaluetyot}
+   {:nimi "Tasaukset" :koodi :tasaukset}
+   {:nimi "Jyrsinnät" :koodi :jyrsinnat}
+   {:nimi "Muut" :koodi :muut}])
 
 (def +paallystystyon-tyyppi+
   "Päällystystyön valinta avaimella"
