@@ -5,11 +5,13 @@
             [harja.kyselyt.urakat :as q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-q]
             [harja.geo :refer [muunna-pg-tulokset]]
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [clojure.java.jdbc :as jdbc]))
 
 (def ^{:const true} oletus-toleranssi 50)
 
@@ -245,8 +247,11 @@
     (throw (SecurityException. "Vain tilaaja voi poistaa indeksin käytöstä")))
 
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
-  (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
-  :ok)
+  (jdbc/with-db-transaction [db db]
+    (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
+    (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
+                                                                              {:urakka urakka-id})
+    :ok))
 
 
 (defrecord Urakat []
