@@ -28,7 +28,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [yllapitokohteet (into []
                                 (map konv/alaviiva->rakenne)
-                                (q-yllapitokohteet/hae-urakan-yllapitokohteet-alikohteineen db {:urakka urakka-id}))
+                                (q-yllapitokohteet/hae-urakan-yllapitokohteet db {:urakka urakka-id}))
           yllapitokohteet (konv/sarakkeet-vektoriin
                             yllapitokohteet
                             {:kohdeosa :alikohteet}
