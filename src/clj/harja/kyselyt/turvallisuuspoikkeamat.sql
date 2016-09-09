@@ -202,6 +202,10 @@ SELECT
   t.aiheutuneet_seuraukset              AS seuraukset,
 
   u.sampoid                             AS "urakka-sampoid",
+  u.nimi                                AS "urakka-nimi",
+
+  h.nimi                                AS "hanke-nimi",
+  h.alueurakkanro                       AS "alueurakkanro",
 
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
@@ -235,6 +239,9 @@ SELECT
 FROM turvallisuuspoikkeama t
   LEFT JOIN urakka u
     ON t.urakka = u.id
+
+  LEFT JOIN hanke h
+    ON u.hanke = h.id
 
   LEFT JOIN korjaavatoimenpide k
     ON t.id = k.turvallisuuspoikkeama
@@ -475,7 +482,7 @@ VALUES
     :turvallisuuskoordinaattori_etunimi,
     :turvallisuuskoordinaattori_sukunimi,
     :ilmoittaja_etunimi,
-   :ilmoittaja_sukunimi,
+    :ilmoittaja_sukunimi,
    :ulkoinen_id,
    :ilmoitukset_lahetetty,
    :tapahtuman_otsikko,
@@ -520,4 +527,6 @@ WHERE (:kayttajanimi IS NULL OR lower(kayttajanimi) LIKE (CONCAT(lower(:kayttaja
       AND jarjestelma IS FALSE;
 
 -- name: hae-turvallisuuspoikkeaman-urakka
-SELECT urakka FROM turvallisuuspoikkeama WHERE id = :id;
+SELECT urakka
+FROM turvallisuuspoikkeama
+WHERE id = :id;
