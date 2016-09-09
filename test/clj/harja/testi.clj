@@ -317,7 +317,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 (defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE suorittava_tiemerkintaurakka != " tiemerkintaurakka-id ";"))))
+                   WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
