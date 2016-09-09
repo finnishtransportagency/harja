@@ -25,11 +25,15 @@ SELECT
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
 
   it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
-  it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi
+  it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
+
+  hy.id                                                              AS hallintayksikko_id,
+  hy.nimi                                                            AS hallintayksikko_nimi
 
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
+  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE
   -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
   (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
