@@ -35,7 +35,9 @@
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
             [harja.palvelin.raportointi.raportit.indeksitarkistus]
             [harja.domain.oikeudet :as oikeudet]
-            [new-reliquary.core :as nr]))
+            [new-reliquary.core :as nr]
+            [hiccup.core :refer [html]]
+            [harja.transit :as t]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -95,6 +97,22 @@
          (finally
            (swap! lkm# dec))))))
 
+(defn raportoinnissa-ruuhkaa-sivu [params]
+  {:status 200
+   :headers {"Content-Type" "text/html; charset=UTF-8"}
+   :body (html
+          [:html
+           [:head
+            [:title "Raportoinnissa ruuhkaa"]
+            [:script {:type "text/javascript"}
+             "setTimeout(function() { window.location = '"
+             (str "pdf?_=raportointi&parametrit="
+                  (java.net.URLEncoder/encode (t/clj->transit params)))
+             "'; }, 5000);"]]
+           [:body
+            [:div "Raportoinnissa on nyt ruuhkaa. Yritetään kohta uudelleen. "
+             "Sivu latautuu automaattisesti uudelleen hetken kuluttua."]]])})
+
 (defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle
   (start [{db :db
@@ -108,7 +126,9 @@
      pdf-vienti :raportointi
      (fn [kayttaja params]
        (let [raportti (suorita-raportti this kayttaja params)]
-         (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti)))))
+         (if (= :raportoinnissa-ruuhkaa raportti)
+           (raportoinnissa-ruuhkaa-sivu params)
+           (pdf/muodosta-pdf (liita-suorituskontekstin-kuvaus db params raportti))))))
 
     (when excel-vienti
       (excel-vienti/rekisteroi-excel-kasittelija!
