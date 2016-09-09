@@ -38,7 +38,13 @@
                      (map (fn [kohdeosa]
                             ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
                             (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                   nil)))
+                                   (some
+                                     (fn [paallystystoimenpide]
+                                       (when (= (:id kohdeosa)
+                                                (:kohdeosa-id paallystystoimenpide))
+                                         paallystystoimenpide))
+                                     (get-in paallystysilmoitus
+                                             [:ilmoitustiedot :osoitteet])))))
                      (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
                      vec))
       (dissoc :kohdeosat)))
