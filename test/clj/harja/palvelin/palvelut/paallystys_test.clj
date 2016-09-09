@@ -138,11 +138,11 @@
                                            "Huonoa dataa, jota ei saa päästää kantaan."))
           maara-ennen-pyyntoa
           (ffirst
-           (q
-            (str "SELECT count(*) FROM paallystysilmoitus"
-                 " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
-                 " AND urakka = " urakka-id
-                 " AND sopimus = " sopimus-id ";")))]
+            (q
+              (str "SELECT count(*) FROM paallystysilmoitus"
+                   " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
+                   " AND urakka = " urakka-id
+                   " AND sopimus = " sopimus-id ";")))]
 
       (is (thrown? RuntimeException
                    (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -152,11 +152,11 @@
                                                    :paallystysilmoitus paallystysilmoitus})))
       (let [maara-pyynnon-jalkeen
             (ffirst
-             (q
-              (str "SELECT count(*) FROM paallystysilmoitus"
-                   " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
-                   " AND urakka = " urakka-id
-                   " AND sopimus = " sopimus-id ";")))]
+              (q
+                (str "SELECT count(*) FROM paallystysilmoitus"
+                     " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
+                     " AND urakka = " urakka-id
+                     " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
 (deftest testidata-on-validia
@@ -164,7 +164,7 @@
   (let [ilmoitustiedot (q "SELECT ilmoitustiedot FROM paallystysilmoitus")]
     (doseq [[ilmoitusosa] ilmoitustiedot]
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                       (konv/jsonb->clojuremap ilmoitusosa))))))
+                          (konv/jsonb->clojuremap ilmoitusosa))))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
@@ -207,17 +207,18 @@
                              :nimi "Tie 666"
                              :tr-alkuetaisyys 3
                              :tr-numero 666
-                             :toimenpide nil} {:kohdeosa-id 2
-                                               :tr-kaista 1
-                                               :tr-ajorata 1
-                                               :tr-loppuosa 1
-                                               :tunnus nil
-                                               :tr-alkuosa 1
-                                               :tr-loppuetaisyys 5254
-                                               :nimi "Laivaniemi 3"
-                                               :tr-alkuetaisyys 2728
-                                               :tr-numero 8484
-                                               :toimenpide nil}]
+                             :toimenpide nil}
+                            {:kohdeosa-id 2
+                             :tr-kaista 1
+                             :tr-ajorata 1
+                             :tr-loppuosa 1
+                             :tunnus nil
+                             :tr-alkuosa 1
+                             :tr-loppuetaisyys 5254
+                             :nimi "Laivaniemi 3"
+                             :tr-alkuetaisyys 2728
+                             :tr-numero 8484
+                             :toimenpide nil}]
                 :alustatoimet [{:verkkotyyppi 1
                                 :verkon-tarkoitus 1
                                 :kasittelymenetelma 1
@@ -264,7 +265,7 @@
         (is (some #(= (:nimi %) "Tie 666")
                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
         (is (not (some #(= (:nimi %) "Tie 555")
-                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
+                       (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
         (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kokonaismassamaara :rc% :tyomenetelma
                                   :leveys :massamenekki :pinta-ala :edellinen-paallystetyyppi]]
           ;; Toimenpiteen tiedot on tallennettu oikein
