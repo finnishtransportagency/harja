@@ -58,7 +58,7 @@ WHERE
 -- name: hae-urakkaan-liittyvat-yllapitokohteet
 -- Hakee urakkaan suoraan kuuluvat ylläpitokohteet sekä ne, joihin on merkitty suorittajaksi kyseinen urakka
 SELECT
-  ypk.id,
+  ypk.id
 FROM yllapitokohde ypk
 WHERE
   (ypk.urakka = :urakka

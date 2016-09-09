@@ -58,23 +58,23 @@
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id id})))))
 
-(defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id data]
+(defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
         db
-        {:paallystys_alku (:paallystys-alku data)
-         :paallystys_loppu (:paallystys-loppu data)
-         :kohde_valmis (:kohde-valmis data)
-         :valmis_tiemerkintaan (:valmis-tiemerkintaan data)
+        {:paallystys_alku (:paallystys-alku aikataulu)
+         :paallystys_loppu (:paallystys-loppu aikataulu)
+         :kohde_valmis (:kohde-valmis aikataulu)
+         :valmis_tiemerkintaan (:valmis-tiemerkintaan aikataulu)
          :muokkaaja (:id kayttaja)
          :id kohde-id})
       (if kohteella-paallystysilmoitus?
         (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
               db
-              {:aloituspvm (:aloituspvm data)
-               :valmispvm_paallystys (:valmispvm_paallystys data)
-               :valmispvm_kohde (:valmispvm_kohde data)
-               :takuupvm (:takuupvm data)
+              {:aloituspvm (:aloituspvm aikataulu)
+               :valmispvm_paallystys (:valmispvm_paallystys aikataulu)
+               :valmispvm_kohde (:valmispvm_kohde aikataulu)
+               :takuupvm (:takuupvm aikataulu)
                :muokkaaja (:id kayttaja)
                :kohde_id kohde-id})
             {})
