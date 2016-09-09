@@ -11,7 +11,7 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [livi-pudotusvalikko vihje] :as yleiset]
             [harja.tiedot.raportit :as raportit]
-            [cljs.core.async :refer [<! >! chan]]
+            [cljs.core.async :refer [<! >! chan timeout]]
             [harja.views.kartta :as kartta]
             [harja.domain.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.valinnat :as valinnat]
@@ -435,6 +435,40 @@
           :on-click #(aseta-parametrit! id)}
          ikoni " " teksti]])]))
 
+(defn- suorita-raportti! [suorituksen-parametrit]
+  (go
+    (log "SUORITA-RAPORTTI! " (pr-str suorituksen-parametrit))
+    (reset! raportit/suoritettu-raportti :ladataan)
+    (let [[konteksti nimi arvot-nyt v-ur v-hal] suorituksen-parametrit
+          raportti (<! (case konteksti
+                         "koko maa"
+                         (raportit/suorita-raportti-koko-maa nimi arvot-nyt)
+                         "hallintayksikko"
+                         (raportit/suorita-raportti-hallintayksikko v-hal nimi arvot-nyt)
+                         "urakka"
+                         (raportit/suorita-raportti-urakka v-ur nimi arvot-nyt)))]
+      (log "[RAPORTTI] Raportin suoritus valmis")
+      (cond
+        (not= @raportit/suoritettu-raportti :ladataan)
+        (do (log "[RAPORTTI] Poistuttu latausnäkymästä, hylätään suoritettu raportti.")
+            raportti)
+
+        (not= @raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+        (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä viimeksi pyysi, hylätään raportti")
+            raportti)
+
+        (k/virhe? raportti)
+        (do
+          (viesti/nayta! "Raportin suoritus epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
+          (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)
+          (reset! raportit/suoritettu-raportti nil)
+          raportti)
+
+        :default
+        (do (reset! raportit/suoritettu-raportti raportti)
+            (when-not (= :raportoinnissa-ruuhkaa raportti)
+              (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))))
+
 (defn raportin-parametrit [raporttityyppi konteksti v-ur v-hal]
   (let [parametrit (sort-by parametrin-sort-avain
                             (filter #(let [k (:konteksti %)]
@@ -514,40 +548,9 @@
                                            (:nimi raporttityyppi)
                                            arvot-nyt
                                            (:id v-ur)
-                                           (:id v-hal)]
-                   _ (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                   raportti (<! (case konteksti
-                                  "koko maa"
-                                  (raportit/suorita-raportti-koko-maa (:nimi raporttityyppi)
-                                                                      arvot-nyt)
-                                  "hallintayksikko"
-                                  (raportit/suorita-raportti-hallintayksikko (:id v-hal)
-                                                                             (:nimi raporttityyppi)
-                                                                             arvot-nyt)
-                                  "urakka"
-                                  (raportit/suorita-raportti-urakka (:id v-ur)
-                                                                    (:nimi raporttityyppi)
-                                                           arvot-nyt)))]
-               (log "[RAPORTTI] Raportin suoritus valmis")
-               (cond
-                 (not= @raportit/suoritettu-raportti :ladataan)
-                 (do (log "[RAPORTTI] Poistuttu latausnäkymästä, hylätään suoritettu raportti.")
-                     raportti)
-
-                 (not= @raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
-                 (do (log "[RAPORTTI] Suoritettu raportti oli muu kuin mitä käyttäjä viimeksi pyysi, hylätään raportti")
-                     raportti)
-
-                 (k/virhe? raportti)
-                 (do
-                   (viesti/nayta! "Raportin suoritus epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
-                   (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)
-                   (reset! raportit/suoritettu-raportti nil)
-                     raportti)
-
-                 :default
-                 (do (reset! raportit/suoritettu-raportti raportti)
-                     (reset! raportit/suorituksessa-olevan-raportin-parametrit nil)))))
+                                           (:id v-hal)]]
+               (reset! raportit/suorituksessa-olevan-raportin-parametrit suorituksen-parametrit)
+               (<! (suorita-raportti! suorituksen-parametrit))))
            {:ikoni [ikonit/list]
             :disabled (not voi-suorittaa?)}])]]]]))
 
@@ -636,15 +639,39 @@
       [:span
        [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
 
+(defn raporteissa-ruuhkaa []
+  (let [yrita-uudelleen? (atom true)
+        odota-sekuntia (atom nil)]
+
+    (go (loop [sekunnit 5]
+          (if (zero? sekunnit)
+            (when @yrita-uudelleen?
+              (<! (suorita-raportti! @raportit/suorituksessa-olevan-raportin-parametrit)))
+            (do (reset! odota-sekuntia sekunnit)
+                (<! (timeout 1000))
+                (recur (dec sekunnit))))))
+
+    (komp/luo
+     (komp/ulos #(reset! yrita-uudelleen? false))
+     (fn []
+       [:div "Raportin suoritus epäonnistui, palvelussa on ruuhkaa."
+        [:div.yrita-uudestaan "Yritetaan uudestaan "
+         [:span.yrita-uudestaan-sekunnit @odota-sekuntia]
+         " sekunnin kuluttua."]]))))
+
 (defn raporttivalinnat-ja-raportti []
   (let [r @raportit/suoritettu-raportti]
     [:span
      [raporttivalinnat]
-     (cond (= :ladataan r)
-           [yleiset/ajax-loader "Raporttia suoritetaan..."]
+     (cond
+       (= :ladataan r)
+       [yleiset/ajax-loader "Raporttia suoritetaan..."]
 
-           (not (nil? r))
-           [nayta-raportti @valittu-raporttityyppi r])]))
+       (= :raportoinnissa-ruuhkaa r)
+       [raporteissa-ruuhkaa]
+
+       (not (nil? r))
+       [nayta-raportti @valittu-raporttityyppi r])]))
 
 (defn raportit []
   (komp/luo
