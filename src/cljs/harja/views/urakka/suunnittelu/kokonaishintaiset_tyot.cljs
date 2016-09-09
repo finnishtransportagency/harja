@@ -236,6 +236,9 @@
               :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                           #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?)
                           :ei-mahdollinen)
+              :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
+                                                 :kirjoitus
+                                                 oikeudet/urakat-suunnittelu-kokonaishintaisettyot)
               :tallenna-vain-muokatut false
               :peruuta #(reset! tuleville? false)
               :tunniste #((juxt :vuosi :kuukausi) %)
