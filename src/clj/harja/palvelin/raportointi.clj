@@ -84,7 +84,18 @@
                 (conj t ["Urakoita käynnissä" (count (urakat-q/hae-kaynnissa-olevat-urakat db))])
                 t))))
 
-(defrecord Raportointi [raportit]
+(defmacro max-n-samaan-aikaan [n lkm-atomi tulos-jos-ruuhkaa & body]
+  `(let [n# ~n
+         lkm# ~lkm-atomi]
+     (if (>= @lkm# n#)
+       ~tulos-jos-ruuhkaa
+       (try
+         (swap! lkm# inc)
+         ~@body
+         (finally
+           (swap! lkm# dec))))))
+
+(defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle
   (start [{db :db
            pdf-vienti :pdf-vienti
@@ -129,30 +140,32 @@
                       db-replica :db-replica
                       :as this} kayttaja {:keys [nimi konteksti parametrit]
                                           :as suorituksen-tiedot}]
-    (nr/with-newrelic-transaction
-      "Raportin suoritus"
-      (str nimi)
-      #(when-let [suoritettava-raportti (hae-raportti this nimi)]
-         (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
-                                    kayttaja (when (= "urakka" konteksti)
-                                  (:urakka-id suorituksen-tiedot)))
-         (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
-                    " parametreilla " parametrit)
-         (binding [*raportin-suoritus* this]
-           ((:suorita suoritettava-raportti)
-            (if (or (nil? db-replica)
-                    (tarvitsee-write-tietokannan nimi))
-              db
-              db-replica)
-            kayttaja
-            (condp = konteksti
-              "urakka" (assoc parametrit
-                              :urakka-id (:urakka-id suorituksen-tiedot))
-              "hallintayksikko" (assoc parametrit
-                                       :hallintayksikko-id
-                                       (:hallintayksikko-id suorituksen-tiedot))
-              "koko maa" parametrit)))))))
+    (max-n-samaan-aikaan
+     5 ajossa-olevien-raporttien-lkm :raportoinnissa-ruuhkaa
+     (nr/with-newrelic-transaction
+       "Raportin suoritus"
+       (str nimi)
+       #(when-let [suoritettava-raportti (hae-raportti this nimi)]
+          (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
+                                     kayttaja (when (= "urakka" konteksti)
+                                                (:urakka-id suorituksen-tiedot)))
+          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
+                     " parametreilla " parametrit)
+          (binding [*raportin-suoritus* this]
+            ((:suorita suoritettava-raportti)
+             (if (or (nil? db-replica)
+                     (tarvitsee-write-tietokannan nimi))
+               db
+               db-replica)
+             kayttaja
+             (condp = konteksti
+               "urakka" (assoc parametrit
+                               :urakka-id (:urakka-id suorituksen-tiedot))
+               "hallintayksikko" (assoc parametrit
+                                        :hallintayksikko-id
+                                        (:hallintayksikko-id suorituksen-tiedot))
+               "koko maa" parametrit))))))))
 
 
 (defn luo-raportointi []
-  (->Raportointi (atom nil)))
+  (->Raportointi (atom nil) (atom 0)))
