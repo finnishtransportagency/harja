@@ -1,42 +1,53 @@
 import React from 'react';
 import App from './App.jsx';
+import request from 'superagent';
 
 export default React.createClass({
-  _onChange() {
-    //this.setState(TodoStore.getAll());
-  },
-
   getInitialState() {
-    //return TodoStore.getAll();
-    return null;
+    return {
+      careNotices: [],
+      maintenanceNotices: [],
+      faqNotices: []
+    };
   },
 
   componentDidMount() {
-    //TodoStore.addChangeListener(this._onChange);
+    setTimeout(() => { this.getNotices('care.json', 'careNotices'); }, 500);
+    setTimeout(() => { this.getNotices('maintenance.json', 'maintenanceNotices'); }, 3000);
+    setTimeout(() => { this.getNotices('faq.json', 'faqNotices'); }, 5000);
+    /*
+    this.getNotices('care.json', 'careNotices');
+    this.getNotices('maintenance.json', 'maintenanceNotices');
+    this.getNotices('faq.json', 'faqNotices');
+    */
   },
 
-  componentWillUnmount() {
-    //TodoStore.removeChangeListener(this._onChange);
-  },
+  getNotices(file, type) {
+    const url = '../data/' + file;
+    request.get(url)
+      .set('Accept', 'application/json')
+      .end((err, response) => {
+        if (err) return console.error(err);
 
-  handleAddTask(e) {
-    let title = prompt('Enter task title:');
-    if (title) {
-      ActionCreator.addItem(title);
-    }
-  },
+        const latestId = this.state[type].length
+        const notices = response.body.map((notice, index) => {
+          notice.id = latestId + index;
+          notice.type = type
+          return notice;
+        });
 
-  handleClear(e) {
-    ActionCreator.clearList();
+        this.setState({
+          [type]: response.body,
+        });
+      });
   },
 
   render() {
-
     return (
       <App
-        onAddTask={this.handleAddTask}
-        onClear={this.handleClear}
-        />
+          careNotices={this.state.careNotices}
+          maintenanceNotices={this.state.maintenanceNotices}
+          faqNotices={this.state.faqNotices}/>
     );
   }
 });
