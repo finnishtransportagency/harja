@@ -279,8 +279,8 @@
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
 
-  Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne päivitetään
-  yllapitokohdeosa-tauluun. Tästä syystä kohdeosien tiedot poistetaan ilmoituksesta ennen tallennusta."
+  Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne tallennetaan
+  yllapitokohdeosa-tauluun."
   [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
   (log/debug "Tallennetaan päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
