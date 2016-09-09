@@ -47,11 +47,12 @@
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
 
+    ;; Tarkistetana, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
                                              muutoshinta, takuupvm, valmispvm_paallystys
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
           ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))]
-      (is (match ilmoitustiedot
+      (is (match ilmoitustiedot ;; Tiedot vastaavat API:n kautta tullutta payloadia
                  {:tyot [{:tyo "työtehtävä"
                           :tyyppi "tasaukset"
                           :yksikko "kpl"

@@ -7,7 +7,9 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [harja.domain.skeema :as skeema]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -156,6 +158,13 @@
                    " AND urakka = " urakka-id
                    " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
+
+(deftest testidata-on-validia
+  ;; On kiva jos testaamme näkymää ja meidän testidata menee validoinnista läpi
+  (let [ilmoitustiedot (q "SELECT ilmoitustiedot FROM paallystysilmoitus")]
+    (doseq [[ilmoitusosa] ilmoitustiedot]
+      (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                      (konv/jsonb->clojuremap ilmoitusosa)))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
