@@ -200,15 +200,15 @@
 
 (def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
-  [{:avain :ajoradan-paallyste :nimi "Ajoradan päällyste"}
-   {:avain :pienaluetyot :nimi "Pienaluetyöt"}
-   {:avain :tasaukset :nimi "Tasaukset"}
-   {:avain :jyrsinnat :nimi "Jyrsinnät"}
-   {:avain :muut :nimi "Muut"}])
+  [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste }
+   {:nimi "Pienaluetyöt" :koodi :pienaluetyot }
+   {:nimi "Tasaukset" :koodi :tasaukset }
+   {:nimi "Jyrsinnät" :koodi :jyrsinnat }
+   {:nimi "Muut" :koodi :muut }])
 
 (def +paallystystyon-tyyppi+
   "Päällystystyön valinta avaimella"
-  (apply s/enum (map :avain +paallystystyon-tyypit+)))
+  (apply s/enum (map :koodi +paallystystyon-tyypit+)))
 
 (defn paallystystyontyyppi-avain-nimella [koodi]
   (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
