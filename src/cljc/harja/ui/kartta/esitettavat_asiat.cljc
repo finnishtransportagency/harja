@@ -201,7 +201,7 @@
 (defn ilmoituksen-tooltip [ilmoitus]
   (str (ilmoitukset/ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
        " ("
-       (str/lower-case (ilmoitukset/kuittaustyypin-selite (:tila ilmoitus)))
+       (str/lower-case (ilmoitukset/tilan-selite (:tila ilmoitus)))
        ")"))
 
 
@@ -212,7 +212,7 @@
       :nimi (ilmoituksen-tooltip ilmoitus)
       :selite {:teksti (str (ilmoitukset/ilmoitustyypin-lyhenne ilmoitustyyppi)
                             " ("
-                            (str/lower-case (ilmoitukset/kuittaustyypin-selite tila))
+                            (str/lower-case (ilmoitukset/tilan-selite tila))
                             ")")
                :img    ikoni}
       :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))

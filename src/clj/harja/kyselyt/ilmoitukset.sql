@@ -3,6 +3,112 @@ SELECT
   i.id,
   i.urakka,
   u.nimi as urakkanimi,
+  i.ilmoitusid,
+  i.ilmoitettu,
+  i.valitetty,
+  i.yhteydenottopyynto,
+  i.otsikko,
+  i.ilmoitustyyppi,
+  i.selitteet,
+  i.urakkatyyppi,
+  i.tila,
+
+  i.sijainti,
+  i.tr_numero,
+  i.tr_alkuosa,
+  i.tr_loppuosa,
+  i.tr_alkuetaisyys,
+  i.tr_loppuetaisyys,
+
+  it.id                                                              AS kuittaus_id,
+  it.kuitattu                                                        AS kuittaus_kuitattu,
+  it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
+
+  it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
+
+  hy.id                                                              AS hallintayksikko_id,
+  hy.nimi                                                            AS hallintayksikko_nimi
+
+FROM ilmoitus i
+  LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
+  LEFT JOIN urakka u ON i.urakka = u.id
+  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+WHERE
+  -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
+  (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
+
+  -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
+  (
+    (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
+    (:loppu_annettu IS FALSE AND i.ilmoitettu  >= :alku) OR
+    (:alku_annettu IS FALSE AND i.ilmoitettu  <= :loppu) OR
+    (i.ilmoitettu  BETWEEN :alku AND :loppu)
+  ) AND
+
+  -- Tarkista ilmoituksen tilat
+  ((:kuittaamattomat IS TRUE AND i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
+   (:vastaanotetut IS TRUE AND i.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
+   (:aloitetut IS TRUE AND i.tila = 'aloitettu' :: ilmoituksen_tila) OR
+   (:lopetetut IS TRUE AND i.tila = 'lopetettu' :: ilmoituksen_tila)) AND
+
+  -- Tarkasta ilmoituksen tyypit
+  (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
+
+  -- Tarkasta vapaatekstihakuehto
+  (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.paikankuvaus LIKE :teksti OR i.lisatieto LIKE :teksti)) AND
+
+  -- Tarkasta selitehakuehto
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite])) AND
+
+  -- Rajaa tienumerolla
+  (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
+
+  -- Rajaa ilmoittajan nimellä
+  (:ilmoittaja-nimi::TEXT IS NULL OR
+   CONCAT(i.ilmoittaja_etunimi,' ',i.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
+
+  -- Rajaa ilmoittajan puhelinnumerolla
+  (:ilmoittaja-puhelin::TEXT IS NULL OR
+   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
+
+ORDER BY i.ilmoitettu DESC, it.kuitattu DESC
+LIMIT 501;
+
+-- name: hae-ilmoitukset-ilmoitusidlla
+SELECT
+  ilmoitusid,
+  ilmoitettu,
+  tila,
+  yhteydenottopyynto,
+  paikankuvaus,
+  lisatieto,
+  otsikko,
+  ilmoitustyyppi,
+  selitteet,
+  sijainti,
+  tr_numero,
+  tr_alkuosa,
+  tr_loppuosa,
+  tr_alkuetaisyys,
+  tr_loppuetaisyys,
+  ilmoittaja_etunimi,
+  ilmoittaja_sukunimi,
+  ilmoittaja_tyopuhelin,
+  ilmoittaja_matkapuhelin,
+  ilmoittaja_sahkoposti,
+  lahettaja_etunimi,
+  lahettaja_sukunimi,
+  lahettaja_puhelinnumero,
+  lahettaja_sahkoposti
+FROM ilmoitus
+WHERE ilmoitusid IN (:ilmoitusidt);
+
+-- name: hae-ilmoitus
+SELECT
+  i.id,
+  i.urakka,
+  u.nimi as urakkanimi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi,
   i.ilmoitusid,
@@ -12,10 +118,10 @@ SELECT
   i.otsikko,
   i.paikankuvaus,
   i.lisatieto,
-  -- selitteet
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
+  i.tila,
 
   i.sijainti,
   i.tr_numero,
@@ -61,67 +167,7 @@ FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
-WHERE
-  -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
-  (i.urakka IS NULL OR i.urakka IN (:urakat)) AND
-
-  -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
-  (
-    (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-    (:loppu_annettu IS FALSE AND i.ilmoitettu :: DATE >= :alku) OR
-    (:alku_annettu IS FALSE AND i.ilmoitettu :: DATE <= :loppu) OR
-    (i.ilmoitettu :: DATE BETWEEN :alku AND :loppu)
-  ) AND
-
-  -- Tarkasta ilmoituksen tyypit
-  (:tyypit_annettu IS FALSE OR i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
-
-  -- Tarkasta vapaatekstihakuehto
-  (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.paikankuvaus LIKE :teksti OR i.lisatieto LIKE :teksti)) AND
-
-  -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite])) AND
-
-  -- Rajaa tienumerolla
-  (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
-
-  -- Rajaa ilmoittajan nimellä
-  (:ilmoittaja-nimi::TEXT IS NULL OR
-   CONCAT(i.ilmoittaja_etunimi,' ',i.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
-
-  -- Rajaa ilmoittajan puhelinnumerolla
-  (:ilmoittaja-puhelin::TEXT IS NULL OR
-   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
-
-ORDER BY i.ilmoitettu ASC, it.kuitattu ASC;
-
--- name: hae-ilmoitukset-ilmoitusidlla
-SELECT
-  ilmoitusid,
-  ilmoitettu,
-  yhteydenottopyynto,
-  paikankuvaus,
-  lisatieto,
-  otsikko,
-  ilmoitustyyppi,
-  selitteet,
-  sijainti,
-  tr_numero,
-  tr_alkuosa,
-  tr_loppuosa,
-  tr_alkuetaisyys,
-  tr_loppuetaisyys,
-  ilmoittaja_etunimi,
-  ilmoittaja_sukunimi,
-  ilmoittaja_tyopuhelin,
-  ilmoittaja_matkapuhelin,
-  ilmoittaja_sahkoposti,
-  lahettaja_etunimi,
-  lahettaja_sukunimi,
-  lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
-FROM ilmoitus
-WHERE ilmoitusid IN (:ilmoitusidt);
+WHERE i.id = :id AND urakka IN (:urakat);
 
 -- name: hae-ilmoitukset-idlla
 SELECT
