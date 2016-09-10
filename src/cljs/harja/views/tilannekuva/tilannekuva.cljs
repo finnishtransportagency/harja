@@ -44,15 +44,7 @@
                                                         (reset! tiedot/valittu-tila
                                                                 (if (false? @on-off-tila)
                                                                   :nykytilanne
-                                                                  :historiakuva))
-                                                        (reset! tiedot/suodattimet
-                                                                (if (= :nykytilanne @tiedot/valittu-tila)
-                                                                  (assoc-in @tiedot/suodattimet
-                                                                            [:ilmoitukset :tilat]
-                                                                            tiedot/ilmoitusten-tilat-nykytilanteessa)
-                                                                  (assoc-in @tiedot/suodattimet
-                                                                            [:ilmoitukset :tilat]
-                                                                            tiedot/ilmoitusten-tilat-historiakuvassa))))}]])))
+                                                                  :historiakuva)))}]])))
 
 (defn nykytilanteen-aikavalinnat []
   [:div#tk-nykytilanteen-aikavalit
