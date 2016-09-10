@@ -593,3 +593,15 @@ jatkon."
         komponentti
 
         [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]))))
+
+(defn wrap-if
+  "If condition is truthy, return container-component with
+  the containee placed inside it otherwise return containee.
+  Container-component must be a vector that has a value :%
+  in it. The :% value is replaced with the containee."
+  [condition container-component containee]
+  (if condition
+    (mapv #(if (= :% %)
+             containee
+             %) container-component)
+    containee))
