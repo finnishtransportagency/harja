@@ -20,9 +20,18 @@
             [harja.ui.viesti :as viesti]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [cljs.core.async :refer [<!]]
-            [harja.tiedot.ilmoitukset.viestit :as v])
+            [harja.tiedot.ilmoitukset.viestit :as v]
+            [harja.ui.protokollat :as protokollat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+
+(def fraasihaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (let [teksti (.toLowerCase teksti)]
+        (go (into []
+                  (filter #(not= -1 (.indexOf (.toLowerCase %) teksti)))
+                  apurit/+kuittauksen-vakiofraasit+))))))
 
 (defn esta-lahetys? [kuittaus]
   (or (:tallennus-kaynnissa? kuittaus)
@@ -125,19 +134,26 @@
     [:div.ilmoitukset-kuittaa-monta
      [lomake/lomake
       {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
-       :palstoja 2
+       :palstoja 3
        :otsikko "Kuittaa monta ilmoitusta"}
-      [{:otsikko "Kuittaustyyppi"
-        :pakollinen? true
-        :tyyppi :valinta
-        :valinnat apurit/kuittaustyypit
-        :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
-        :nimi :tyyppi}
+      [
+       (lomake/rivi
+        {:otsikko "Kuittaustyyppi"
+         :pakollinen? true
+         :tyyppi :valinta
+         :valinnat apurit/kuittaustyypit
+         :valinta-nayta #(or (apurit/kuittaustyypin-selite %) "- Valitse kuittaustyyppi -")
+         :nimi :tyyppi}
 
-       {:otsikko "Vapaateksti"
-        :tyyppi :text
-        :koko [80 :auto]
-        :nimi :vapaateksti}]
+        {:otsikko "Vakiofraasi"
+         :tyyppi :haku
+         :hae-kun-yli-n-merkkia 0
+         :lahde fraasihaku}
+
+        {:otsikko "Vapaateksti"
+         :tyyppi :text
+         :koko [80 :auto]
+         :nimi :vapaateksti})]
 
       data]
      [napit/tallenna
