@@ -15,7 +15,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.tiedot.ilmoitukset.viestit :as v]))
+            [harja.tiedot.ilmoitukset.viestit :as v]
+            [harja.loki :refer [log]]))
 
 (defn selitelista [{:keys [selitteet] :as ilmoitus}]
   (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]
@@ -63,10 +64,14 @@
        [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
        (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
                                        (:id @nav/valittu-urakka))
-         [:button.nappi-ensisijainen
-          {:class    "uusi-kuittaus-nappi"
-           :on-click #(e! (v/->AvaaUusiKuittaus))}
-          (ikonit/livicon-plus) " Uusi kuittaus"]))
+
+         (if (:ilmoitusid ilmoitus)
+           [:button.nappi-ensisijainen
+            {:class "uusi-kuittaus-nappi"
+             :on-click #(e! (v/->AvaaUusiKuittaus))}
+            (ikonit/livicon-plus) " Uusi kuittaus"]
+           [yleiset/vihje-elementti
+            [:span "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia"]])))
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div
