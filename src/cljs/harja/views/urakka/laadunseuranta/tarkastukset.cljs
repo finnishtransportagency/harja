@@ -94,11 +94,18 @@
        [valinnat/tienumero tarkastukset/tienumero]
 
 
-       (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
-                                       (:id @nav/valittu-urakka))
-         [napit/uusi "Uusi tarkastus"
-          #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
-          {:luokka "alle-marginia"}])
+       (let [oikeus? (oikeudet/voi-kirjoittaa?
+                      oikeudet/urakat-laadunseuranta-tarkastukset
+                      (:id @nav/valittu-urakka))]
+         (yleiset/wrap-if
+          (not oikeus?)
+          [yleiset/tooltip {} :%
+           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                           oikeudet/urakat-laadunseuranta-tarkastukset)]
+          [napit/uusi "Uusi tarkastus"
+           #(reset! tarkastukset/valittu-tarkastus (uusi-tarkastus))
+           {:disabled (not oikeus?)
+            :luokka "alle-marginia"}]))
 
        [grid/grid
         {:otsikko "Tarkastukset"
