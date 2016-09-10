@@ -568,8 +568,7 @@ jatkon."
              rect (aget (.getClientRects n) 0)
              parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
          (reset! x
-                 (+ ;(.-left rect)
-                    (/ (.-width rect) -2)
+                 (+ (/ (.-width rect) -2)
                     (/ (.-width parent-rect) 2)))))
      (fn [auki? sisalto]
        [:div.tooltip.bottom {:class (when auki? "in")
