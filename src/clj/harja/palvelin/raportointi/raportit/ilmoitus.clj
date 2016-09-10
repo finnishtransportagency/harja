@@ -20,10 +20,8 @@
                                     :urakka urakka-id
                                     :urakoitsija urakoitsija
                                     :urakkatyyppi urakkatyyppi
-                                    :tilat +ilmoitustilat+
                                     :tyypit +ilmoitustyypit+
-                                    :kuittaustyypit #{:kuittaamaton :vastaanotto :aloitus
-                                                      :lopetus :muutos :vastaus}
+                                    :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                                     :aikavali [alkupvm loppupvm]
                                     :hakuehto hakuehto
                                     :selite selite}))
