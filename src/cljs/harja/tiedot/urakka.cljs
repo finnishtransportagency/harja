@@ -366,3 +366,8 @@
 (defn lukitse-urakan-yha-sidonta! [urakka-id]
   (when (= @nav/valittu-urakka-id urakka-id)
     (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc-in [:yhatiedot :sidonta-lukittu?] true)))
+
+(defn indeksi-kaytossa?
+  "Onko valitussa urakassa indeksi käytössä?"
+  []
+  (some? (:indeksi @nav/valittu-urakka)))

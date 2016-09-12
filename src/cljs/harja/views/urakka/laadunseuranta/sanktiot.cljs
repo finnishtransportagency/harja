@@ -129,11 +129,13 @@
           :pakollinen? true
           :yksikko "€"
           :validoi [[:ei-tyhja "Anna summa"]]}
-         {:otsikko "Indeksi" :nimi :indeksi :leveys 2
-          :tyyppi :valinta
-          :valinnat ["MAKU 2005" "MAKU 2010"]
-          :valinta-nayta #(or % "Ei sidota indeksiin")
-          :palstoja 1}
+
+         (when (urakka/indeksi-kaytossa?)
+           {:otsikko "Indeksi" :nimi :indeksi :leveys 2
+            :tyyppi :valinta
+            :valinnat ["MAKU 2005" "MAKU 2010"]
+            :valinta-nayta #(or % "Ei sidota indeksiin")
+            :palstoja 1})
 
          (when-not yllapito?
            {:otsikko "Laji" :tyyppi :valinta

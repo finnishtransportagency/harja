@@ -25,7 +25,8 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -37,7 +38,8 @@
             sopimus-id (first (:sopimus muokattu))
             tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
             tyyppi (name (:tyyppi muokattu))
-            indeksi (if (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
+            indeksi (if (or (not (urakka/indeksi-kaytossa?))
+                            (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu)))
                       nil
                       (:indeksin_nimi muokattu))
             rahasumma (if (= (:maksaja muokattu) :urakoitsija)
@@ -241,23 +243,26 @@
             :tyyppi      :positiivinen-numero
             :validoi     [[:ei-tyhja "Anna rahamäärä"]]
             :palstoja 1}
-           {:otsikko     "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
-            :pakollinen? true
-            ;; hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan
-            :muokattava? #(not (and
-                                 (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                                 (= :hoito (:tyyppi ur))))
-            :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
-            :fmt         #(if (nil? %)
-                           yleiset/+valitse-indeksi+
-                           (str %))
-            :palstoja 1
-            :vihje       (when (and
-                                 (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                                 (= :hoito (:tyyppi ur)))
-                           "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan automaattisesti laskutusyhteenvedossa.
-                   Käytettävä indeksi määräytyy urakan kilpailuttamisajankohdan perusteella.")
-            }
+
+           (when (urakka/indeksi-kaytossa?)
+             {:otsikko     "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
+              :pakollinen? true
+              ;; hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan
+              :muokattava? #(not (and
+                                  (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+                                  (= :hoito (:tyyppi ur))))
+              :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
+              :fmt         #(if (nil? %)
+                              yleiset/+valitse-indeksi+
+                              (str %))
+              :palstoja 1
+              :vihje       (when (and
+                                  (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+                                  (= :hoito (:tyyppi ur)))
+                             (str "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan"
+                                  " automaattisesti laskutusyhteenvedossa. Käytettävä indeksi"
+                                  " määräytyy urakan kilpailuttamisajankohdan perusteella."))})
+
            ;; asiakastyytyväisyysbonuksen voi maksaa vain tilaaja
            {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
             :muokattava?   #(not= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))

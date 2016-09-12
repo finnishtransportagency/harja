@@ -46,7 +46,6 @@ BEGIN
   THEN
     RAISE NOTICE 'Urakalle % ei ole lämpötiloja hoitokaudelle % - %', urakka_id, hk_alkupvm, hk_loppupvm;
     RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, vertailu;
-    RETURN NULL;
   END IF;
 
   RAISE NOTICE 'maksukuukausi: %', ss.maksukuukausi;
@@ -74,7 +73,9 @@ BEGIN
 
   -- Tarkistetaan lämpötilakorjaus sallittuun suolamäärään
   lampotilapoikkeama := lampotilat.keskilampotila - vertailu;
-  IF lampotilapoikkeama >= 4.0 THEN
+  IF lampotilapoikkeama IS NULL THEN
+    sallittu_suolankaytto := NULL;
+  ELSIF lampotilapoikkeama >= 4.0 THEN
     RAISE NOTICE 'Lämpötilapoikkeama % >= 4 astetta, 30%% korotus sallittuun suolankäyttöön', lampotilapoikkeama;
     sallittu_suolankaytto := 1.30 * sallittu_suolankaytto;
   ELSIF lampotilapoikkeama >= 3.0 THEN
