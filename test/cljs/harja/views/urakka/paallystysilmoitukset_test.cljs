@@ -167,7 +167,7 @@
        (<! (paivita))
 
        (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
-              (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
+              (some-> (sel1ph :#kohdeosien-pituus-yht) .-innerText)))
 
 
        ;; Tallennus nappi enabled
@@ -203,9 +203,5 @@
        (<! (tarkista-kopioidun-rivin-virhe lomake))
 
        (click :#tallenna-paallystysilmoitus)
-
-       ;; Tarkistetaan, että lähetettävät ilmoitustiedot ovat scheman mukaiset
-       (is (s/validate pot/+paallystysilmoitus+
-                       (:ilmoitustiedot (:paallystysilmoitus (<! tallennus)))))
 
        (done)))))
