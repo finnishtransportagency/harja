@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-yllapidon-aikataulu');
+=======
 CREATE TYPE ilmoituksen_tila AS ENUM ('kuittaamaton', 'vastaanotettu', 'aloitettu', 'lopetettu');
 
 ALTER TABLE ilmoitus
@@ -61,3 +64,4 @@ EXECUTE PROCEDURE aseta_ilmoituksen_tila();
 
 
 
+>>>>>>> develop

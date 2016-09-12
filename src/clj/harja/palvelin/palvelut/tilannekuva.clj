@@ -42,7 +42,7 @@
         s))
 
 (defn- hae-ilmoitukset
-  [db user {:keys [toleranssi] {:keys [tyypit tilat]} :ilmoitukset :as tiedot} urakat]
+  [db user {:keys [toleranssi] {:keys [tyypit]} :ilmoitukset :as tiedot} urakat]
   (when-not (empty? urakat)
     (let [haettavat (haettavat tyypit)]
      (when-not (empty? haettavat)
@@ -50,30 +50,30 @@
          #(assoc % :uusinkuittaus
                    (when-not (empty? (:kuittaukset %))
                      (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-         (konv/sarakkeet-vektoriin
-           (into []
-                 (comp
-                   (geo/muunna-pg-tulokset :sijainti)
-                   (map konv/alaviiva->rakenne)
-                   (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
-                   (filter #(tilat (:tila %)))
-                   (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-                   (map #(konv/array->vec % :selitteet))
-                   (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                   (map #(assoc-in
-                          %
-                          [:kuittaus :kuittaustyyppi]
-                          (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                   (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                   (map #(assoc-in % [:ilmoittaja :tyyppi]
-                                   (keyword (get-in % [:ilmoittaja :tyyppi])))))
-                 (q/hae-ilmoitukset db
-                                    toleranssi
-                                    (konv/sql-date (:alku tiedot))
-                                    (konv/sql-date (:loppu tiedot))
-                                    urakat
-                                    (mapv name haettavat)))
-           {:kuittaus :kuittaukset}))))))
+         (let [ilmoitukset (konv/sarakkeet-vektoriin
+                 (into []
+                       (comp
+                         (geo/muunna-pg-tulokset :sijainti)
+                         (map konv/alaviiva->rakenne)
+                         (map #(konv/string->keyword % :tila))
+                         (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+                         (map #(konv/array->vec % :selitteet))
+                         (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                         (map #(assoc-in
+                                %
+                                [:kuittaus :kuittaustyyppi]
+                                (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                         (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                         (map #(assoc-in % [:ilmoittaja :tyyppi]
+                                         (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                       (q/hae-ilmoitukset db
+                                          toleranssi
+                                          (konv/sql-date (:alku tiedot))
+                                          (konv/sql-date (:loppu tiedot))
+                                          urakat
+                                          (mapv name haettavat)))
+                 {:kuittaus :kuittaukset})]
+           ilmoitukset))))))
 
 (defn- hae-paallystystyot
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne?]} urakat]

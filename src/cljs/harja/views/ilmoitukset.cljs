@@ -9,7 +9,8 @@
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite kuittaustyypin-lyhenne]]
+              kuittaustyypin-selite kuittaustyypin-lyhenne
+              tilan-selite] :as domain]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -140,11 +141,11 @@
 
     (lomake/ryhma
       {:rivi? true}
-      {:nimi :kuittaustyypit
+      {:nimi :tilat
        :otsikko "Tila"
        :tyyppi :checkbox-group
-       :vaihtoehdot tiedot/kuittaustyyppi-filtterit
-       :vaihtoehto-nayta kuittaustyypin-selite}
+       :vaihtoehdot tiedot/tila-filtterit
+       :vaihtoehto-nayta tilan-selite}
       {:nimi :tyypit
        :otsikko "Tyyppi"
        :tyyppi :checkbox-group
@@ -183,7 +184,8 @@
                                     (e! (v/->YhdistaValinnat uusi))))
     (fn [e! {valinnat-nyt :valinnat
              kuittaa-monta :kuittaa-monta
-             haetut-ilmoitukset :ilmoitukset :as ilmoitukset}]
+             haetut-ilmoitukset :ilmoitukset
+             ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
       (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
             valitse-ilmoitus! (when kuittaa-monta-nyt
                                 #(e! (v/->ValitseKuitattavaIlmoitus %)))]
@@ -191,6 +193,10 @@
 
          [ilmoitusten-hakuehdot e! valinnat-nyt]
          [:div
+          [kentat/tee-kentta {:tyyppi :checkbox
+                              :teksti "Äänimerkki uusista ilmoituksista"}
+           tiedot/aanimerkki-uusista-ilmoituksista?]
+
           [pollauksen-merkki]
           [yhdeydenottopyynnot-lihavoitu]
           [virkaapupyynnot-korostettu]
@@ -206,9 +212,12 @@
            {:tyhja (if haetut-ilmoitukset
                      "Ei löytyneitä tietoja"
                      [ajax-loader "Haetaan ilmoutuksia"])
-            :rivi-klikattu (or valitse-ilmoitus!
-                               #(e! (v/->ValitseIlmoitus %)))
-            :piilota-toiminnot true}
+            :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
+                             (or valitse-ilmoitus!
+                                #(e! (v/->ValitseIlmoitus %))))
+            :piilota-toiminnot true
+            :max-rivimaara 500
+            :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
 
            [(when kuittaa-monta-nyt
               {:otsikko " "
@@ -225,7 +234,7 @@
             {:otsikko "Ilmoitettu" :nimi :ilmoitettu
              :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
             {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-             :hae #(ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
+             :hae #(domain/ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
              :leveys 2}
             {:otsikko "Sijainti" :nimi :tierekisteri
              :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
@@ -240,14 +249,11 @@
              :komponentti kuittauslista
              :leveys 6}
 
-            {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(kuittaustyypin-selite (:tila %))}]
+            {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
            (mapv #(if (:yhteydenottopyynto %)
                    (assoc % :lihavoi true)
                    %)
-                 haetut-ilmoitukset)]
-          [kentat/tee-kentta {:tyyppi :checkbox
-                              :teksti "Äänimerkki uusista ilmoituksista"}
-           tiedot/aanimerkki-uusista-ilmoituksista?]]]))))
+                 haetut-ilmoitukset)]]]))))
 
 (defn- ilmoitukset* [e! ilmoitukset]
   (komp/luo

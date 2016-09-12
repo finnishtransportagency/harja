@@ -24,34 +24,35 @@
 
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
-  (reaction
-    {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-     :urakka (:id @nav/valittu-urakka)
-     :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
-     :urakoitsija (:id @nav/valittu-urakoitsija)
-     :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
-     :hoitokausi @u/valittu-hoitokausi
-     :aikavali (or @u/valittu-hoitokausi [nil nil])}))
+         (reaction
+           {:hallintayksikko (:id @nav/valittu-hallintayksikko)
+            :urakka (:id @nav/valittu-urakka)
+            :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
+            :urakoitsija (:id @nav/valittu-urakoitsija)
+            :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
+            :hoitokausi @u/valittu-hoitokausi
+            :aikavali [(pvm/paivaa-sitten 7) (pvm/nyt)]}))
+
 
 (def ^{:const true}
-kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
+tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 
 (defonce ilmoitukset
-  (atom {:ilmoitusnakymassa? false
-         :valittu-ilmoitus nil
-         :uusi-kuittaus-auki? false
-         :ilmoitushaku-id nil ;; ilmoitushaun timeout
-         :notifioi-uudet? false ;; vain taustalla tehty haku notifioi uudet ilmoitukset (ja jos käyttäjä hyväksyy)
-         :ilmoitukset nil ;; haetut ilmoitukset
-         :valinnat {:tyypit +ilmoitustyypit+
-                    :kuittaustyypit (into #{} kuittaustyyppi-filtterit)
-                    :hakuehto ""
-                    :selite [nil ""]
-                    :vain-myohassa? false
-                    :aloituskuittauksen-ajankohta :kaikki}
-         :kuittaa-monta nil}))
+         (atom {:ilmoitusnakymassa? false
+                :valittu-ilmoitus nil
+                :uusi-kuittaus-auki? false
+                :ilmoitushaku-id nil ;; ilmoitushaun timeout
+                :notifioi-uudet? false ;; vain taustalla tehty haku notifioi uudet ilmoitukset (ja jos käyttäjä hyväksyy)
+                :ilmoitukset nil ;; haetut ilmoitukset
+                :valinnat {:tyypit +ilmoitustyypit+
+                           :tilat (into #{} tila-filtterit)
+                           :hakuehto ""
+                           :selite [nil ""]
+                           :vain-myohassa? false
+                           :aloituskuittauksen-ajankohta :kaikki}
+                :kuittaa-monta nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
   (reverse (sort-by
@@ -138,7 +139,6 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat notifioi-uudet? :notifioi-uudet? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
-      ;(log "[ILMO] Haetaan uudet ilmoitukset")
       (go
         (tulos!
           {:ilmoitukset (<! (k/post! :hae-ilmoitukset
@@ -146,8 +146,8 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
                                          ;; jos tyyppiä/tilaa ei valittu, ota kaikki
                                          (update :tyypit
                                                  #(if (empty? %) +ilmoitustyypit+ %))
-                                         (update :kuittaustyypit
-                                                 #(if (empty? %) (into #{} kuittaustyyppi-filtterit) %)))))
+                                         (update :tilat
+                                                 #(if (empty? %) (into #{} tila-filtterit) %)))))
            :notifioi-uudet? notifioi-uudet?})))
     app)
 
@@ -176,8 +176,15 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
            true)))
 
   v/ValitseIlmoitus
-  (process-event [{ilm :ilmoitus} app]
-    (assoc app :valittu-ilmoitus ilm))
+  (process-event [{ilmoitus :ilmoitus} app]
+    (let [tulos (t/send-async! v/->IlmoituksenTiedot)]
+      (go
+        (tulos (<! (k/post! :hae-ilmoitus (:id ilmoitus))))))
+    (assoc app :ilmoituksen-haku-kaynnissa? true))
+
+  v/IlmoituksenTiedot
+  (process-event [{ilmoitus :ilmoitus} app]
+    (assoc app :valittu-ilmoitus ilmoitus :ilmoituksen-haku-kaynnissa? false))
 
   v/PoistaIlmoitusValinta
   (process-event [_ app]
@@ -253,14 +260,14 @@ kuittaustyyppi-filtterit [:kuittaamaton :vastaanotto :aloitus :lopetus])
 (defonce karttataso-ilmoitukset (atom false))
 
 (defonce ilmoitukset-kartalla
-  (reaction
-    (let [{:keys [ilmoitukset valittu-ilmoitus]} @ilmoitukset]
-      (when @karttataso-ilmoitukset
-        (kartalla-esitettavaan-muotoon
-          (map
-            #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
-            ilmoitukset)
-          valittu-ilmoitus)))))
+         (reaction
+           (let [{:keys [ilmoitukset valittu-ilmoitus]} @ilmoitukset]
+             (when @karttataso-ilmoitukset
+               (kartalla-esitettavaan-muotoon
+                 (map
+                   #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
+                   ilmoitukset)
+                 valittu-ilmoitus)))))
 
 
 ;; Kartan popupit käyttää näitä funktioita
