@@ -46,6 +46,7 @@
                                      db {:ilmoitus ilmoitus-id
                                          :ilmoitusid (:ilmoitus-id ilmoitus)
                                          :kuitattu (c/to-date (t/now))
+                                         :vakiofraasi nil
                                          :vapaateksti nil
                                          :kuittaustyyppi "vastaanotto"
                                          :kuittaaja_henkilo_etunimi nil
