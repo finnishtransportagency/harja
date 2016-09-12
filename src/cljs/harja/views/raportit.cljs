@@ -655,7 +655,7 @@
      (komp/ulos #(reset! yrita-uudelleen? false))
      (fn []
        [:div "Raportin suoritus epäonnistui, palvelussa on ruuhkaa."
-        [:div.yrita-uudestaan "Yritetaan uudestaan "
+        [:div.yrita-uudestaan "Yritetään uudestaan "
          [:span.yrita-uudestaan-sekunnit @odota-sekuntia]
          " sekunnin kuluttua."]]))))
 
