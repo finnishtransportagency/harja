@@ -179,10 +179,13 @@
 
 (defn hae-ilmoitus [db user id]
   (let [kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)]
-    (first (into []
-                 ilmoitus-xf
-                 (q/hae-ilmoitus db {:id id
-                                     :urakat kayttajan-urakat})))))
+    (first
+     (konv/sarakkeet-vektoriin
+      (into []
+            ilmoitus-xf
+            (q/hae-ilmoitus db {:id id
+                                :urakat kayttajan-urakat}))
+      {:kuittaus :kuittaukset}))))
 
 (defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
