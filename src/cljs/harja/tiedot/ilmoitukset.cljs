@@ -30,8 +30,7 @@
             :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
             :urakoitsija (:id @nav/valittu-urakoitsija)
             :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
-            :hoitokausi @u/valittu-hoitokausi
-            :aikavali [(pvm/paivaa-sitten 7) (pvm/nyt)]}))
+            :hoitokausi @u/valittu-hoitokausi}))
 
 
 (def ^{:const true}
@@ -134,7 +133,11 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
     (hae
-      (update-in app [:valinnat] merge valinnat)))
+      ;; Kun näkymään tullaan ensimmäistä kertaa, aseta oletus aikaväliksi nykypäivästä 7 päivää taaksepäin
+      (let [valinnat (if (get-in app [:valinnat :aikavali])
+                       valinnat
+                       (assoc valinnat :aikavali [(pvm/paivaa-sitten 7) (pvm/nyt)]))]
+        (update-in app [:valinnat] merge valinnat))))
 
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat notifioi-uudet? :notifioi-uudet? :as app}]
