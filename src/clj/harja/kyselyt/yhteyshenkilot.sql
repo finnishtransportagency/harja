@@ -315,3 +315,13 @@ FROM yhteyshenkilo y
   LEFT JOIN organisaatio o ON o.id = y.organisaatio
 WHERE
   y.id = :id;
+
+-- name: hae-kaynissa-olevien-urakoiden-paivystykset
+SELECT
+  u.id as urakka,
+  nimi,
+  alku as paivystys_alku,
+  loppu as paivystys_loppu
+FROM urakka u
+  LEFT JOIN paivystys p ON p.urakka = u.id
+WHERE u.loppupvm >= NOW();
