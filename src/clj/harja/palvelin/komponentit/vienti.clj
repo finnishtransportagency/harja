@@ -8,6 +8,16 @@
 ;; Luetaan se ja otetaan "parametrit" niminen muuttuja ja
 ;; muunnetaan se transit+json muodosta Clojure dataksi
 
+(defn lue-get-parametrit
+  "Lukee transit objektin GET parametrista."
+  [request]
+  (some-> request
+          :params
+          (get "parametrit")
+          .getBytes
+          (ByteArrayInputStream.)
+          t/lue-transit))
+
 (defn lue-body-parametrit
   "Lukee transit objektin request bodyn, joka on form enkoodattu, parametrit kentästä."
   [body]

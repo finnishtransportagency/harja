@@ -17,7 +17,8 @@
 
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -285,8 +286,16 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   [ur]
   [:div
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
-   [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
-    {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}]
+   (let [oikeus? (oikeudet/voi-kirjoittaa?
+                  oikeudet/urakat-toteumat-materiaalit
+                  (:id @nav/valittu-urakka))]
+     (yleiset/wrap-if
+      (not oikeus?)
+      [yleiset/tooltip {} :%
+       (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                       oikeudet/urakat-toteumat-materiaalit)]
+      [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
+       {:disabled (not oikeus?)}]))
 
    [grid/grid
     {:otsikko "Materiaalien käyttö"

@@ -195,3 +195,12 @@
 
 (defn kayttajan-urakat [{urakkaroolit :urakkaroolit}]
   (into #{} (keys urakkaroolit)))
+
+(defn oikeuden-puute-kuvaus [oikeustyyppi oikeus]
+  (str "Käyttäjärooleissasi ei ole "
+       (case oikeustyyppi
+         :kirjoitus "kirjoitusoikeutta"
+         :luku "lukuoikeutta"
+         (str "\"" oikeustyyppi "\" oikeutta"))
+       ": "
+       (:kuvaus oikeus)))
