@@ -103,9 +103,17 @@
   []
   [:div
    (tee-valinnat)
-   [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
-                                        (tiedot/uusi-kokonaishintainen-toteuma))
-    {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka)))}]
+   (let [oikeus? (oikeudet/voi-kirjoittaa?
+                  oikeudet/urakat-toteumat-kokonaishintaisettyot
+                  (:id @nav/valittu-urakka))]
+     (yleiset/wrap-if
+      (not oikeus?)
+      [yleiset/tooltip {} :%
+       (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                       oikeudet/urakat-toteumat-kokonaishintaisettyot)]
+      [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
+                                           (tiedot/uusi-kokonaishintainen-toteuma))
+       {:disabled (not oikeus?)}]))
    (tee-taulukko)
    [yleiset/vihje "Näet työn kartalla klikkaamalla riviä."]])
 

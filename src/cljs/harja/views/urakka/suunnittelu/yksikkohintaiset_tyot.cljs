@@ -167,7 +167,7 @@
       (fn [ur]
         [:div.yksikkohintaiset-tyot
          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut ur]
-         
+
 
          [grid/grid
           {:otsikko "Urakkasopimuksen mukaiset yksikköhinnat"
@@ -175,6 +175,9 @@
            :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
                        #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-yks-hint-tyot %)
                        :ei-mahdollinen)
+           :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
+                                              :kirjoitus
+                                              oikeudet/urakat-suunnittelu-yksikkohintaisettyot)
            :peruuta #(reset! tuleville? false)
            :tunniste :tehtava
            :voi-lisata? false

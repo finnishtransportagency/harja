@@ -139,28 +139,28 @@
 
 (def +sideainetyypit+
   "Sideainetyypit"
-  [{:nimi "1" :koodi 1}
-   {:nimi "2" :koodi 2}
-   {:nimi "3" :koodi 3}
-   {:nimi "4" :koodi 4}
-   {:nimi "5" :koodi 5}
-   {:nimi "6" :koodi 6}
-   {:nimi "7" :koodi 7}
-   {:nimi "8" :koodi 8}
-   {:nimi "9" :koodi 9}
-   {:nimi "10" :koodi 10}
-   {:nimi "11" :koodi 11}
-   {:nimi "12" :koodi 12}
-   {:nimi "13" :koodi 13}
-   {:nimi "14" :koodi 14}
-   {:nimi "15" :koodi 15}
-   {:nimi "16" :koodi 16}
-   {:nimi "17" :koodi 17}
-   {:nimi "18" :koodi 18}
-   {:nimi "19" :koodi 19}
-   {:nimi "20" :koodi 20}
-   {:nimi "21" :koodi 21}
-   {:nimi "22" :koodi 22}])
+  [{:nimi "20/30" :koodi 1}
+   {:nimi "35/50" :koodi 2}
+   {:nimi "50/70" :koodi 3}
+   {:nimi "70/100" :koodi 4}
+   {:nimi "100/150" :koodi 5}
+   {:nimi "160/220" :koodi 6}
+   {:nimi "250/330" :koodi 7}
+   {:nimi "330/430" :koodi 8}
+   {:nimi "500/650" :koodi 9}
+   {:nimi "650/900" :koodi 10}
+   {:nimi "V1500" :koodi 11}
+   {:nimi "V3000" :koodi 12}
+   {:nimi "KB65" :koodi 13}
+   {:nimi "KB75" :koodi 14}
+   {:nimi "KB85" :koodi 15}
+   {:nimi "BL5" :koodi 16}
+   {:nimi "BL2K" :koodi 17}
+   {:nimi "BL2 Bio" :koodi 18}
+   {:nimi "BE-L" :koodi 19}
+   {:nimi "BE-SIP" :koodi 20}
+   {:nimi "BE-SOP" :koodi 21}
+   {:nimi "BE-PAB" :koodi 22}])
 
 (def +sideainetyyppi+
   "Sideainetyypin valinta koodilla"
