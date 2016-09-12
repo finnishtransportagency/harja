@@ -75,7 +75,8 @@
                                                query-params :params
                                                :as req}]
   (let [tyyppi (keyword (get query-params "_"))
-        params (vienti/lue-body-parametrit body)
+        params (or (vienti/lue-get-parametrit req)
+                   (vienti/lue-body-parametrit body))
         kasittelija (get kasittelijat tyyppi)]
     (log/debug "PARAMS: " params)
     (if-not kasittelija
@@ -84,15 +85,19 @@
       (try
         (log/debug "Luodaan " tyyppi " PDF käyttäjälle " (:kayttajanimi kayttaja)
                    " parametreilla " params)
-        {:status  200
-         :headers {"Content-Type" "application/pdf"} ;; content-disposition!
-         :body    (piped-input-stream
-                    (fn [out]
-                      (try
-                        (let [pdf (kasittelija kayttaja params)]
-                          (hiccup->pdf fop-factory pdf out))
-                        (catch Throwable t
-                          (log/warn t "Poikkeus piped-input-streamissä hiccup->PDF")))))}
+        (let [pdf (kasittelija kayttaja params)]
+          (if (map? pdf)
+            ;; Käsittelijä palautti ring vastauksen, annetaan se läpi as is
+            pdf
+            ;; Käsittelijä palautti hiccupia, generoidaan siitä PDF
+            {:status  200
+             :headers {"Content-Type" "application/pdf"} ;; content-disposition!
+             :body    (piped-input-stream
+                       (fn [out]
+                         (try
+                           (hiccup->pdf fop-factory pdf out)
+                           (catch Throwable t
+                             (log/warn t "Poikkeus piped-input-streamissä hiccup->PDF")))))}))
         (catch Exception e
           (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja)
           {:status 500
