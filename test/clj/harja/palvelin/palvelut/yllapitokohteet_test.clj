@@ -39,23 +39,23 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(def yllapitokohde-testidata {:kohdenumero              999
-                                :nimi                     "Testiramppi4564ddf"
-                                :sopimuksen_mukaiset_tyot 400
-                                :lisatyo                  false
-                                :bitumi_indeksi           123
-                                :kaasuindeksi             123})
+(def yllapitokohde-testidata {:kohdenumero 999
+                              :nimi "Testiramppi4564ddf"
+                              :sopimuksen_mukaiset_tyot 400
+                              :lisatyo false
+                              :bitumi_indeksi 123
+                              :kaasuindeksi 123})
 
-(def yllapitokohdeosa-testidata {:nimi               "Testiosa123456"
-                                   :tr_numero          1234
-                                   :tr_alkuosa         3
-                                   :tr_alkuetaisyys    1
-                                   :tr_loppuosa        123
-                                   :tr_loppuetaisyys   1
-                                   :sijainti {:type :multiline :lines [{:type :line :points [[1 2] [3 4]]}]}
-                                   :kvl                4
-                                   :nykyinen_paallyste 2
-                                   :toimenpide         "Ei tehdä mitään"})
+(def yllapitokohdeosa-testidata {:nimi "Testiosa123456"
+                                 :tr_numero 1234
+                                 :tr_alkuosa 3
+                                 :tr_alkuetaisyys 1
+                                 :tr_loppuosa 123
+                                 :tr_loppuetaisyys 1
+                                 :sijainti {:type :multiline :lines [{:type :line :points [[1 2] [3 4]]}]}
+                                 :kvl 4
+                                 :nykyinen_paallyste 2
+                                 :toimenpide "Ei tehdä mitään"})
 
 (def yllapitokohde-id-jolla-on-paallystysilmoitus (ffirst (q (str "
                                                            SELECT yllapitokohde.id as paallystyskohde_id
@@ -96,6 +96,37 @@
       (is (not (nil? kohteet-kannassa)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
+
+(deftest ala-poista-paallystyskohdetta-jolla-ilmoitus
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        maara-ennen-testia (ffirst (q
+                                       (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+        nykyiset-kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :urakan-yllapitokohteet +kayttaja-jvh+
+                                         {:urakka-id  @muhoksen-paallystysurakan-id
+                                          :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
+        kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id nykyiset-kohteet))
+        paivitetyt-kohteet (map
+                             (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
+                                           (assoc kohde :poistettu true)
+                                           kohde))
+                                  nykyiset-kohteet)]
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :sopimus-id sopimus-id
+                                                              :kohteet paivitetyt-kohteet})
+    (let [maara-testin-jalkeen (ffirst (q
+                                         (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+          kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :urakan-yllapitokohteet
+                                           +kayttaja-jvh+ {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id})]
+      (is (= maara-ennen-testia maara-testin-jalkeen))
+      (is (= kohteet-kannassa nykyiset-kohteet)))))
 
 (deftest tallenna-paallystyskohdeosa-kantaan
   (let [yllapitokohde-id yllapitokohde-id-jolla-on-paallystysilmoitus]

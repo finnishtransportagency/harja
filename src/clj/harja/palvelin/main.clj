@@ -10,6 +10,7 @@
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+    [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -125,9 +126,12 @@
       :excel-vienti (component/using
                       (excel-vienti/luo-excel-vienti)
                       [:http-palvelin])
+
+      :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
+
       :liitteiden-hallinta (component/using
-                             (harja.palvelin.komponentit.liitteet/->Liitteet)
-                             [:db])
+                            (harja.palvelin.komponentit.liitteet/->Liitteet)
+                            [:db :virustarkistus])
 
       ;; Integraatioloki
       :integraatioloki
@@ -271,7 +275,7 @@
                    [:http-palvelin :sampo :db])
 
       :liitteet (component/using
-                  (liitteet/->Liitteet)
+                 (liitteet/->Liitteet)
                   [:http-palvelin :liitteiden-hallinta])
 
       :laadunseuranta (component/using

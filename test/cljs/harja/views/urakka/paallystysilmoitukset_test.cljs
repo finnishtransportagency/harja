@@ -204,8 +204,4 @@
 
        (click :#tallenna-paallystysilmoitus)
 
-       ;; Tarkistetaan, että lähetettävät ilmoitustiedot ovat scheman mukaiset
-       (is (s/validate pot/+paallystysilmoitus+
-                       (:ilmoitustiedot (:paallystysilmoitus (<! tallennus)))))
-
        (done)))))

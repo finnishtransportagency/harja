@@ -2,6 +2,7 @@
 -- Hakee urakan kaikki yllapitokohteet sekä niiden päällystysilmoitukset ja alikohteet
 SELECT
   ypk.id,
+  ypk.urakka,
   ypk.sopimus,
   ypk.kohdenumero,
   ypk.nimi,
@@ -53,6 +54,17 @@ FROM yllapitokohde ypk
 WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
+
+-- name: hae-urakkaan-liittyvat-yllapitokohteet
+-- Hakee urakkaan suoraan kuuluvat ylläpitokohteet sekä ne, joihin on merkitty suorittajaksi kyseinen urakka
+SELECT
+  ypk.id
+FROM yllapitokohde ypk
+WHERE
+  (ypk.urakka = :urakka
+   OR ypk.suorittava_tiemerkintaurakka = :urakka)
+  AND ypk.poistettu IS NOT TRUE;
+
 
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
@@ -351,11 +363,11 @@ WHERE id = :id
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id
               FROM paallystysilmoitus
-              WHERE paallystyskohde = :yllapitokohde) AS sisaltaa_paallystysilmoituksen;
+              WHERE paallystyskohde = :yllapitokohde);
 -- name: yllapitokohteella-paikkausilmoitus
 SELECT EXISTS(SELECT id
               FROM paikkausilmoitus
-              WHERE paikkauskohde = :yllapitokohde) AS sisaltaa_paikkausilmoituksen;
+              WHERE paikkauskohde = :yllapitokohde);
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
@@ -444,13 +456,46 @@ SELECT exists(SELECT id
               WHERE urakka = :urakka AND id = :kohde);
 
 -- name: paivita-yllapitokohteen-sijainti!
--- Päivittää ylläpitokohteen
+-- Päivittää ylläpitokohteen sijainnin
 UPDATE yllapitokohde
 SET
   tr_alkuosa       = :tr_alkuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuosa      = :tr_loppuosa,
   tr_loppuetaisyys = :tr_loppuetaisyys
+WHERE id = :id;
+
+-- name: paivita-yllapitokohteen-paallystysaikataulu!
+-- Päivittää ylläpitokohteen aikataulutiedot
+UPDATE yllapitokohde
+SET
+  aikataulu_paallystys_alku = :paallystys_alku,
+  aikataulu_paallystys_loppu = :paallystys_loppu,
+  aikataulu_kohde_valmis = :kohde_valmis,
+  valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  aikataulu_muokattu = NOW(),
+  aikataulu_muokkaaja = :muokkaaja
+WHERE id = :id;
+
+-- name: paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
+-- Päivittää päällystysilmoituksen aikataulutiedot
+UPDATE paallystysilmoitus
+SET
+  aloituspvm = :aloituspvm,
+  valmispvm_paallystys = :valmispvm_paallystys,
+  valmispvm_kohde = :valmispvm_kohde,
+  takuupvm = :takuupvm
+WHERE paallystyskohde = :kohde_id
+AND poistettu IS NOT TRUE;
+
+-- name: paivita-yllapitokohteen-tiemerkintaaikataulu!
+-- Päivittää ylläpitokohteen aikataulutiedot
+UPDATE yllapitokohde
+SET
+  aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
+  aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
+  aikataulu_muokattu = NOW(),
+  aikataulu_muokkaaja = :muokkaaja
 WHERE id = :id;
 
 -- name: poista-yllapitokohteen-kohdeosat!

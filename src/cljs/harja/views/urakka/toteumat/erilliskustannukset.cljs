@@ -293,11 +293,19 @@
     (komp/luo
       (komp/lippu toteumat/erilliskustannukset-nakymassa?)
       (fn []
-        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
+        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
+              oikeus? (oikeudet/voi-kirjoittaa?
+                       oikeudet/urakat-toteumat-erilliskustannukset
+                       (:id @nav/valittu-urakka))]
           [:div.erilliskustannusten-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
-            {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka)))}]
+           (yleiset/wrap-if
+            (not oikeus?)
+            [yleiset/tooltip {} :%
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                             oikeudet/urakat-toteumat-erilliskustannukset)]
+            [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
+             {:disabled (not oikeus?)}])
 
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")

@@ -59,10 +59,15 @@
          [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"
-                    :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-suola (:id @nav/valittu-urakka))
+                    :tallenna (if (oikeudet/voi-kirjoittaa?
+                                   oikeudet/urakat-toteumat-suola
+                                   (:id @nav/valittu-urakka))
                                 #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id ur) sopimus-id %))]
                                        (paivita! toteumat)))
                                 :ei-mahdollinen)
+                    :tallennus-ei-mahdollinen-tooltip
+                    (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                                    oikeudet/urakat-toteumat-suola)
                     :tyhja (if (nil? @toteumat)
                              [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                              "Ei suolatoteumia valitulle aikavälille")

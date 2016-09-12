@@ -22,7 +22,8 @@
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -183,10 +184,16 @@
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]
-     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                     (:id @nav/valittu-urakka))
-       [napit/uusi "Lisää sanktio"
-        #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio))])
+     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                             (:id @nav/valittu-urakka))]
+       (yleiset/wrap-if
+        (not oikeus?)
+        [yleiset/tooltip {} :%
+         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                         oikeudet/urakat-laadunseuranta-sanktiot)]
+        [napit/uusi "Lisää sanktio"
+         #(reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio))
+         {:disabled (not oikeus?)}]))
 
      [grid/grid
       {:otsikko "Sanktiot"

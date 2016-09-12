@@ -1,7 +1,10 @@
 (ns harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus
   (:require [cheshire.core :as cheshire]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.paallystysilmoitus :as paallystysilmoitus]))
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus]
+            [harja.domain.skeema :as skeema]
+            [taoensso.timbre :as log]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
 
 (defn rakenna-alikohteet [paallystysilmoitus]
   (mapv (fn [alikohde]
@@ -29,10 +32,10 @@
   (mapv
     (fn [alustatoimi]
       (let [sijainti (:sijainti alustatoimi)]
-        {:aosa (:aosa sijainti)
-         :aet (:aet sijainti)
-         :losa (:losa sijainti)
-         :let (:let sijainti)
+        {:tr-alkuosa (:aosa sijainti)
+         :tr-alkuetaisyys (:aet sijainti)
+         :tr-loppuosa (:losa sijainti)
+         :tr-loppuetaisyys (:let sijainti)
          :paksuus (:paksuus alustatoimi)
          :verkkotyyppi (paallystysilmoitus/verkkotyyppi-koodi-nimella (:verkkotyyppi alustatoimi))
          :verkon-sijainti (paallystysilmoitus/verkon-sijainti-koodi-nimella (:verkon-sijainti alustatoimi))
@@ -48,11 +51,14 @@
            :yksikko (:yksikko tyo)
            :yksikkohinta (:yksikkohinta tyo)
            :tilattu-maara (:tilattu-maara tyo)
-           :toteutunut-maara (:tilattu-maara tyo)})
+           :toteutunut-maara (:toteutunut-maara tyo)})
         (:tyot paallystysilmoitus)))
 
 (defn rakenna [paallystysilmoitus]
   (let [data {:osoitteet (rakenna-alikohteet paallystysilmoitus)
               :alustatoimet (rakenna-alustatoimet paallystysilmoitus)
-              :tyot (rakenna-tyot paallystysilmoitus)}]
-    (cheshire/encode data)))
+              :tyot (rakenna-tyot paallystysilmoitus)}
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          data)
+        encoodattu-ilmoitustiedot (cheshire/encode data)]
+    encoodattu-ilmoitustiedot))

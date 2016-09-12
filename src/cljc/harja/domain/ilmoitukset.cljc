@@ -11,6 +11,12 @@
 (def kuittaustyypit
   [:vastaanotto :aloitus :lopetus :muutos :vastaus])
 
+(def tilan-selite
+  {:kuittaamaton "Kuittamaton"
+   :vastaanotettu "Vastaanotettu"
+   :aloitettu "Aloitettu"
+   :lopetettu "Lopetettu"})
+
 (def kuittaustyypin-selite
   {:kuittaamaton "Kuittaamaton"
    :vastaanotto "Vastaanotettu"
@@ -202,17 +208,3 @@
 (def +ilmoitustilat+ #{:suljetut :avoimet})
 
 
-(defn lisaa-ilmoituksen-tila
-  "Ottaa ilmoituksen, jolla on tieto siitä, millaisia kuittauksia se sisältää.
-  Asettaa ilmoituksen tilan viimeisimmän kuittauksen perusteella."
-  [ilmoitus]
-  (let [kuittaukset (vec (sort-by :kuitattu (:kuittaukset ilmoitus)))]
-    (reduce (fn [ilmoitus {tyyppi :kuittaustyyppi :as k}]
-              (case tyyppi
-                :lopetus (assoc ilmoitus :tila :lopetus)
-                :aloitus (assoc ilmoitus :tila :aloitus)
-                :vastaanotto (assoc ilmoitus :tila :vastaanotto)
-                ilmoitus))
-            (assoc ilmoitus :tila :kuittaamaton
-                   :kuittaukset kuittaukset)
-            kuittaukset)))
