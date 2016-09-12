@@ -14,6 +14,9 @@
 ;; Valitsee ilmoituksen tarkasteltavaksi
 (defrecord ValitseIlmoitus [ilmoitus])
 
+;; Palvelimelta palautuneet ilmoituksen tiedot
+(defrecord IlmoituksenTiedot [ilmoitus])
+
 (defrecord PoistaIlmoitusValinta [])
 
 ;; kuittaukset

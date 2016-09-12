@@ -1,5 +1,8 @@
 (ns harja.palvelin.integraatiot.api.sanomat.yllapitokohdesanomat
-  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]))
+  (:require [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.tiemerkinta :as tiemerkinta]
+            [clj-time.coerce :as c]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]))
 
 (defn rakenna-sijainti [kohde]
   {:numero (:tr-numero kohde)
@@ -17,7 +20,7 @@
               :sijainti (rakenna-sijainti alikohde)
               :toimenpide (:toimenpide alikohde)}})
 
-(defn rakenna-kohde [kohde]
+(defn rakenna-kohde [{:keys [paallystysilmoitus] :as kohde}]
   {:tunniste {:id (:id kohde)}
    :sopimus {:id (:sopimus kohde)}
    :kohdenumero (:kohdenumero kohde)
@@ -28,7 +31,21 @@
    :yllapitoluokka (:yllapitoluokka kohde)
    :keskimaarainen-vuorokausiliikenne (:keskimaarainen-vuorokausiliikenne kohde)
    :nykyinen-paallyste (paallystys-ja-paikkaus/hae-apin-paallyste-koodilla (:nykyinen-paallyste kohde))
-   :alikohteet (mapv (fn [alikohde] (rakenna-alikohde alikohde)) (:alikohteet kohde))})
+   :alikohteet (mapv (fn [alikohde] (rakenna-alikohde alikohde)) (:alikohteet kohde))
+   :aikataulu {:paallystys-alku (:paallystys-alku kohde)
+               :paallystys-loppu (:paallystys-loppu kohde)
+               :valmis-tiemerkintaan (:valmis-tiemerkintaan kohde)
+               :tiemerkinnan-oltava-valmis (-> (:valmis-tiemerkintaan kohde)
+                                               (c/from-sql-time)
+                                               (tiemerkinta/tiemerkinta-oltava-valmis)
+                                               (c/to-sql-time))
+               :tiemerkinta-alku (:tiemerkinta-alku kohde)
+               :tiemerkinta-loppu (:paallystys-loppu kohde)
+               :kohde-valmis (:kohde-valmis kohde)
+               :paallystysilmoitus {:aloituspvm (:aloituspvm paallystysilmoitus)
+                                    :valmispvm-paallystys (:valmispvm-paallystys paallystysilmoitus)
+                                    :valmispvm-kohde (:valmispvm-kohde paallystysilmoitus)
+                                    :takuupvm (:takuupvm paallystysilmoitus)}}})
 
 (defn rakenna-kohteet [yllapitokohteet]
   {:yllapitokohteet

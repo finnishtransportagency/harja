@@ -32,7 +32,7 @@ on nil."
               [rooli nil]
 
               (and (not (ryhmanimet ryhma)) linkki (str/ends-with? ryhma (str "_" nimi)))
-              [rooli (first (str/split ryhma #"_"))]))
+              [rooli (str/trim (first (str/split ryhma #"_")))]))
           roolit)))
 
 (defn- yleisroolit [roolit-ja-linkit]

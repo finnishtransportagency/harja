@@ -6,6 +6,30 @@
                 <xs:element name="tapahtumantiedot">
                     <xs:complexType>
                         <xs:sequence>
+                            <xs:element name="sampohankenimi" minOccurs="1" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmoitusta koskevan hankkeen nimi Liikenneviraston Sampo-järjestelmässä.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="300"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="sampourakkanimi" minOccurs="1" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmoitusta koskevan urakan nimi Liikenneviraston Sampo-järjestelmässä.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="300"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
                             <xs:element name="sampourakkaid" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -14,7 +38,19 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="40"/>
+                                        <xs:maxLength value="32"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="alueurakkanro" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmoitusta koskevan urakan alueurakkanumero.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="16"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
