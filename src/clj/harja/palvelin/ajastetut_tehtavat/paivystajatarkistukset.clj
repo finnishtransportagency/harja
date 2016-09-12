@@ -21,7 +21,7 @@
                                                (pvm/valissa? pvm
                                                              paivystys-alku
                                                              paivystys-loppu
-                                                             false))]
+                                                             true))]
             (some?
               (some #(paivystys-annettuna-paivana?
                       pvm
