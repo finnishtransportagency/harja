@@ -340,6 +340,7 @@ SELECT
   ilmoitus                         AS ilmoitus,
   ilmoitusid                       AS ilmoitusid,
   kuitattu                         AS kuitattu,
+  vakiofraasi                      AS vakiofraasi,
   vapaateksti                      AS vapaateksti,
   kuittaustyyppi                   AS kuittaustyyppi,
   kuittaaja_henkilo_etunimi        AS kuittaaja_etunimi,
