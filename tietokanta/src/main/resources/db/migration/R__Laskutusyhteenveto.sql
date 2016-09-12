@@ -851,6 +851,7 @@ BEGIN
 
     RAISE NOTICE 'suolasakko_kaytossa: %', suolasakko_kaytossa;
     RAISE NOTICE 'lampotila_puuttuu: %', lampotila_puuttuu;
+    RAISE NOTICE 'indeksilaskennan perusluku: %', perusluku;
 
     RAISE NOTICE '***** Käsitelly loppui toimenpiteelle: %  *****
 

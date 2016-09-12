@@ -59,10 +59,10 @@ DECLARE
   vertailuluku NUMERIC;
 
 BEGIN
-  -- Kerroin on ko. indeksin arvo ko. kuukautena ja vuonna
+  -- Perusluku puuttuu  -tapaus voi tulla lask.yht.vedossa kun urakka ei käytä indeksiä
   IF perusluku IS NULL THEN
     RAISE NOTICE 'Kuukauden indeksikorotusta ei voitu laskea koska peruslukua ei ole';
-    RETURN (summa, NULL :: NUMERIC, NULL :: NUMERIC);
+    RETURN (summa, summa, 0 :: NUMERIC);
   END IF;
 
   -- jos maksu on päätetty olla sitomatta indeksiin, palautetaan (summa, summa, 0)
