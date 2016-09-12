@@ -110,10 +110,12 @@
    {:class "kuittaus-viesti"}
    (capitalize (name (:kuittaustyyppi kuittaus)))
    [:span
+
     ^{:key "kuitattu"}
     [yleiset/tietoja {}
      "Kuitattu: " (pvm/pvm-aika-sek (:kuitattu kuittaus))
-     "Lisätiedot: " (:vapaateksti kuittaus)]
+     "Vakiofraasi: " (:vakiofraasi kuittaus)
+     "Vapaateksti: " (:vapaateksti kuittaus)]
     [:br]
     ^{:key "kuittaaja"}
     [yleiset/tietoja {}
