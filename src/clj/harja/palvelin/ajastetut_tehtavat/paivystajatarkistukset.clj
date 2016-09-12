@@ -14,7 +14,7 @@
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (ajastettu-tehtava/ajasta-paivittain
     [5 0 0]
-    (fn []
+    (fn [_]
       (tarkista-paivan-urakoiden-paivystykset (t/now)))))
 
 (defrecord PaivystajaTarkastukset []
