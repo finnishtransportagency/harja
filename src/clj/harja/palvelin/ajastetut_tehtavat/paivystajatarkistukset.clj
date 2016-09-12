@@ -16,10 +16,22 @@
   (let [urakoiden-paivystykset (into []
                                      (map konv/alaviiva->rakenne)
                                      (yhteyshenkilot-q/hae-kaynissa-olevien-urakoiden-paivystykset db))
-        urakoiden-paivystykset (konv/sarakkeet-vektoriin
+        urakat (distinct (map #(dissoc % :paivystys) urakoiden-paivystykset))
+        ;; sarakkeet-vektoriin ei palauta urakoita, joilla ei ole päivystyksiä.
+        ;; Siksi lisätään kaikille urakoille erikseen päivystystiedot
+        paivystykset (konv/sarakkeet-vektoriin
                                  urakoiden-paivystykset
                                  {:paivystys :paivystykset}
-                                 :id)]
+                                 :id)
+        urakoiden-paivystykset (mapv
+                                 (fn [urakka]
+                                   (if-let [urakan-paivystykset
+                                             (first
+                                               (filter #(= (:urakka %) (:urakka urakka))
+                                                       paivystykset))]
+                                     (assoc urakka :paivystykset (:paivystykset urakan-paivystykset))
+                                     urakka))
+                                 urakat)]
     urakoiden-paivystykset))
 
 (defn- paivystajien-tarkistustehtava [db pvm]
