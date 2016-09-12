@@ -67,33 +67,33 @@
                               :rc-prosentti 54,
                               :paallystetyyppi "avoin asfaltti"}]}
         ilmoitusdata (clojure.walk/keywordize-keys (cheshire/decode (paallystysilmoitus/rakenna paallystysilmoitus)))
-        odotettu-data {:osoitteet [{:kohdeosa-id 36,
-                                    :edellinen-paallystetyyppi 22,
-                                    :lisaaineet "lisäaineet",
-                                    :leveys 1.2,
-                                    :kokonaismassamaara 12.3,
-                                    :sideainetyyppi 1,
-                                    :muotoarvo "testi",
-                                    :esiintyma "testi",
-                                    :pitoisuus 1.2,
-                                    :pinta-ala 2.2,
-                                    :massamenekki 22,
-                                    :kuulamylly 4,
-                                    :raekoko 12,
-                                    :tyomenetelma 72,
-                                    :rc% 54,
-                                    :paallystetyyppi 11,
-                                    :km-arvo "testi"}],
-                       :alustatoimet [{:verkkotyyppi 1,
-                                       :aosa 1,
-                                       :let 15,
-                                       :verkon-tarkoitus 2,
-                                       :kasittelymenetelma 1,
-                                       :losa 5,
-                                       :aet 1,
-                                       :tekninen-toimenpide 1,
-                                       :paksuus 1.2,
-                                       :verkon-sijainti 1}],
+        odotettu-data {:alustatoimet [{:kasittelymenetelma 1
+                                       :paksuus 1.2
+                                       :tekninen-toimenpide 1
+                                       :tr-alkuetaisyys 1
+                                       :tr-alkuosa 1
+                                       :tr-loppuetaisyys 15
+                                       :tr-loppuosa 5
+                                       :verkkotyyppi 1
+                                       :verkon-sijainti 1
+                                       :verkon-tarkoitus 2}]
+                       :osoitteet [{:edellinen-paallystetyyppi 22
+                                    :esiintyma "testi"
+                                    :km-arvo "testi"
+                                    :kohdeosa-id 36
+                                    :kokonaismassamaara 12.3
+                                    :kuulamylly 4
+                                    :leveys 1.2
+                                    :lisaaineet "lisäaineet"
+                                    :massamenekki 22
+                                    :muotoarvo "testi"
+                                    :paallystetyyppi 11
+                                    :pinta-ala 2.2
+                                    :pitoisuus 1.2
+                                    :raekoko 12
+                                    :rc% 54
+                                    :sideainetyyppi 1
+                                    :tyomenetelma 72}]
                        :tyot [{:tilattu-maara 1.2
                                :toteutunut-maara 1.2
                                :tyo "työtehtävä"
