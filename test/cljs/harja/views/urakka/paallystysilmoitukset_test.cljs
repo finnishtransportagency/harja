@@ -167,7 +167,7 @@
        (<! (paivita))
 
        (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
-              (some-> (sel1ph :#kohdeosien-pituus-yht) .-innerText)))
+              (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
 
 
        ;; Tallennus nappi enabled
