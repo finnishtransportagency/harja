@@ -4,12 +4,18 @@
             [chime :refer [chime-at]]
             [com.stuartsierra.component :as component]
             [clj-time.periodic :refer [periodic-seq]]
-            [clj-time.core :as time]
-            [clj-time.coerce :as coerce]
-            [clojure.java.io :as io]))
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [clj-time.core :as t]))
+
+(defn tarkista-paivan-urakoiden-paivystykset [pvm]
+  (log/debug "Tarkistetaan urakkakohtaisesti, onko annetulle päivälle " (pr-str pvm) " olemassa päivystys."))
 
 (defn tee-paivystajien-tarkistustehtava [this]
-  (log/debug "Ajastetaan päivystäjien tarkistus"))
+  (log/debug "Ajastetaan päivystäjien tarkistus")
+  (ajastettu-tehtava/ajasta-paivittain
+    [5 0 0]
+    (fn []
+      (tarkista-paivan-urakoiden-paivystykset (t/now)))))
 
 (defrecord PaivystajaTarkastukset []
   component/Lifecycle
