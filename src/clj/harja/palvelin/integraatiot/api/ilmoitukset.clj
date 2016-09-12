@@ -43,6 +43,7 @@
                id
                ilmoitusid
                (aika-string->java-sql-date (:aika ilmoitustoimenpide))
+               nil ;; ei vakiofraasia
                (:vapaateksti ilmoitustoimenpide)
                (:tyyppi ilmoitustoimenpide)
                (get-in ilmoittaja [:henkilo :etunimi])
