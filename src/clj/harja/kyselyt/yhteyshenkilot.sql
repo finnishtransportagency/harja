@@ -320,6 +320,7 @@ WHERE
 SELECT
   u.id as urakka,
   nimi,
+  p.id as paivystys_id,
   alku as paivystys_alku,
   loppu as paivystys_loppu
 FROM urakka u

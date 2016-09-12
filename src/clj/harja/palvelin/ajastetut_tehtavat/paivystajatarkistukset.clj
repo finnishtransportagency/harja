@@ -12,7 +12,7 @@
 (defn- tarkista-paivan-urakoiden-paivystykset [urakoiden-paivystykset pvm]
   (log/debug "Tarkistetaan urakkakohtaisesti, onko annetulle päivälle " (pr-str pvm) " olemassa päivystys."))
 
-(defn- hae-urakoiden-paivystykset [db]
+(defn hae-urakoiden-paivystykset [db]
   (let [urakoiden-paivystykset (into []
                                      (map konv/alaviiva->rakenne)
                                      (yhteyshenkilot-q/hae-kaynissa-olevien-urakoiden-paivystykset db))
