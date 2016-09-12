@@ -52,7 +52,7 @@
            :muokattava? (constantly false)
            :tyyppi :valinta :valinnat materiaalikoodit :valinta-nayta #(or (:nimi %) "- materiaali -")
            :validoi [[:ei-tyhja "Valitse materiaali"]]}
-          {:otsikko "Maksimi\u00ADmäärä" :nimi :maara :leveys "30%"
+          {:otsikko "Suunniteltu määrä" :nimi :maara :leveys "30%"
            :muokattava? (constantly true)
            :tyyppi :positiivinen-numero :tasaa :oikea}
           {:otsikko "Yks\u00ADikkö" :nimi :yksikko :hae (comp :yksikko :materiaali) :leveys "10%"
