@@ -56,8 +56,7 @@
                  "Peruuta"
                  #(e! (v/->SuljeUusiKuittaus))
                  {:luokka "pull-right"}]]}
-    [(lomake/ryhma {:otsikko    "Kuittaus"
-                    :leveys-col 3}
+    [(lomake/ryhma {:otsikko    "Kuittaus"}
                    {:nimi          :tyyppi
                     :otsikko       "Tyyppi"
                     :pakollinen?   true
@@ -65,12 +64,17 @@
                     :valinnat      apurit/kuittaustyypit
                     :valinta-nayta #(if %
                                       (apurit/kuittaustyypin-selite %)
-                                      "- Valitse kuittaustyyppi -")
-                    :leveys-col    3}
+                                      "- Valitse kuittaustyyppi -")}
+                   {:nimi :vakiofraasi
+                    :otsikko "Vakiofraasi"
+                    :tyyppi :haku
+                    :lahde fraasihaku
+                    :hae-kun-yli-n-merkkia 0}
+
                    {:nimi        :vapaateksti
                     :otsikko     "Vapaateksti"
-                    :tyyppi      :text
-                    :leveys-col  3})
+                    :tyyppi      :text})
+
      (lomake/ryhma {:otsikko    "Käsittelijä"
                     :leveys-col 3}
                    {:nimi       :kasittelija-etunimi
