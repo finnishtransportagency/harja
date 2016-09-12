@@ -269,6 +269,11 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                    FROM   urakka
                    WHERE  nimi = 'Muhoksen päällystysurakka'"))))
 
+(defn hae-oulun-tiemerkintaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
+
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -298,6 +303,49 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null)"))))
 
+(defn hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Leppäjärven ramppi'
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Kuusamontien testi'
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   tr_numero = 20
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   tr_numero = 20
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE urakka != " urakka-id ";"))))
+
+(defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)

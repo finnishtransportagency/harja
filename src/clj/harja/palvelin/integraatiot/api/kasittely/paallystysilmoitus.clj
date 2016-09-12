@@ -5,10 +5,14 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+            [taoensso.timbre :as log]
             [harja.kyselyt.paallystys :as q-paallystys]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitussanoma]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [harja.domain.skeema :as skeema])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn paivita-alikohteet [db kohde alikohteet]
@@ -48,25 +52,52 @@
          :id
          kohde-id)))
 
-(defn luo-tai-paivita-paallystysilmoitus [db kayttaja kohde-id paallystysilmoitus]
-  (let [ilmoitustiedot (paallystysilmoitussanoma/rakenna paallystysilmoitus)
+(defn- luo-paallystysilmoitus [db kayttaja kohde-id
+                               {:keys [perustiedot] :as paallystysilmoitus}
+                               ilmoitustiedot-json]
+  (log/debug "Luodaan uusi päällystysilmoitus")
+  (q-paallystys/luo-paallystysilmoitus<!
+    db
+    {:paallystyskohde kohde-id
+     :tila "aloitettu"
+     :ilmoitustiedot ilmoitustiedot-json
+     :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
+     :valmispvm_paallystys (json/aika-string->java-sql-date
+                             (:valmispvm-paallystys perustiedot))
+     :valmispvm_kohde (json/aika-string->java-sql-date
+                        (:valmispvm-kohde perustiedot))
+     :takuupvm (json/aika-string->java-sql-date
+                 (:takuupvm perustiedot))
+     :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                    (:tyot paallystysilmoitus))
+     :kayttaja (:id kayttaja)}))
+
+(defn- paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
+                                   {:keys [perustiedot] :as paallystysilmoitus}
+                                   ilmoitustiedot-json]
+  (log/debug "Päivitetään vanha päällystysilmoitus")
+  (q-paallystys/paivita-api-paallystysilmoitus<!
+    db
+    {:ilmoitustiedot ilmoitustiedot-json
+     :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
+     :valmispvm_paallystys (json/aika-string->java-sql-date
+                             (:valmispvm-paallystys perustiedot))
+     :valmispvm_kohde (json/aika-string->java-sql-date
+                        (:valmispvm-kohde perustiedot))
+     :takuupvm (json/aika-string->java-sql-date
+                 (:takuupvm perustiedot))
+     :muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                    (:tyot paallystysilmoitus))
+     :muokkaaja (:id kayttaja)
+     :id kohde-id
+     :urakka urakka-id}))
+
+(defn luo-tai-paivita-paallystysilmoitus [db kayttaja urakka-id kohde-id
+                                          {:keys [perustiedot] :as paallystysilmoitus}]
+  (let [ilmoitustiedot-json (paallystysilmoitussanoma/rakenna paallystysilmoitus)
         paallystysilmoitus (if (q-paallystys/onko-paallystysilmoitus-olemassa-kohteelle? db {:id kohde-id})
-                             (q-paallystys/paivita-paallystysilmoituksen-ilmoitustiedot<!
-                               db
-                               {:ilmoitustiedot ilmoitustiedot
-                                :muokkaaja (:id kayttaja)
-                                :id kohde-id})
-                             (q-paallystys/luo-paallystysilmoitus<!
-                               db
-                               {:paallystyskohde kohde-id
-                                :tila "aloitettu"
-                                :ilmoitustiedot ilmoitustiedot
-                                :aloituspvm nil
-                                :valmispvm_kohde nil
-                                :valmispvm_paallystys nil
-                                :takuupvm nil
-                                :muutoshinta nil
-                                :kayttaja (:id kayttaja)}))]
+                             (paivita-paallystysilmoitus db kayttaja urakka-id kohde-id paallystysilmoitus ilmoitustiedot-json)
+                             (luo-paallystysilmoitus db kayttaja kohde-id paallystysilmoitus ilmoitustiedot-json))]
     (str (:id paallystysilmoitus))))
 
 (defn pura-paallystysilmoitus [data]
@@ -83,14 +114,14 @@
         kohteen-tienumero (:tr-numero kohde)]
     (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
 
-(defn tallenna-paallystysilmoitus [db kayttaja kohde paallystysilmoitus]
+(defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus]
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
         alikohteet (:alikohteet paallystysilmoitus)]
     (paivita-kohde db (:id kohde) kohteen-sijainti)
     (let [paivitetyt-alikohteet (paivita-alikohteet db kohde alikohteet)
           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
-      (luo-tai-paivita-paallystysilmoitus db kayttaja (:id kohde) paallystysilmoitus))))
+      (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus))))
 
 
 (defn kirjaa-paallystysilmoitus [db kayttaja urakka-id kohde-id data]
@@ -99,5 +130,5 @@
     (let [paallystysilmoitus (pura-paallystysilmoitus data)
           kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
           _ (validoi-paallystysilmoitus db urakka-id kohde paallystysilmoitus)
-          id (tallenna-paallystysilmoitus db kayttaja kohde paallystysilmoitus)]
+          id (tallenna-paallystysilmoitus db kayttaja urakka-id kohde paallystysilmoitus)]
       id)))

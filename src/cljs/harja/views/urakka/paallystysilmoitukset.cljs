@@ -506,9 +506,9 @@
       [{:otsikko "Päällyste\u00ADtyön tyyppi"
         :nimi :tyyppi
         :tyyppi :valinta
-        :valinta-arvo :avain
+        :valinta-arvo :koodi
         :valinta-nayta #(if % (:nimi %) "- Valitse työ -")
-        :valinnat pot/+paallystystyon-tyypit+
+        :valinnat pot/+paallystystyon-tyypit-lomakkeella+
         :leveys "30%" :validoi [[:ei-tyhja "Tieto puuttuu"]]}
        {:otsikko "Työ" :nimi :tyo :tyyppi :string :leveys "30%" :pituus-max 256
         :validoi [[:ei-tyhja "Tieto puuttuu"]]}

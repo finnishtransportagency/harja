@@ -23,6 +23,12 @@
                 (when-let [tyot (some-> json (get-in avainpolku))]
                   (map #(assoc % :tyyppi (keyword (:tyyppi %))) tyot)))))
 
+(defn tyot-tyyppi-avain->string [json avainpolku]
+  (-> json
+      (assoc-in avainpolku
+                (when-let [tyot (some-> json (get-in avainpolku))]
+                  (map #(assoc % :tyyppi (name (:tyyppi %))) tyot)))))
+
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -30,11 +36,29 @@
     (log/debug "Päällystysilmoitukset saatu: " (count vastaus) "kpl")
     vastaus))
 
+(defn- lisaa-paallystysilmoitukseen-kohdeosien-tiedot [paallystysilmoitus]
+  (-> paallystysilmoitus
+      (assoc-in [:ilmoitustiedot :osoitteet]
+                (->> paallystysilmoitus
+                     :kohdeosat
+                     (map (fn [kohdeosa]
+                            ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
+                            (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
+                                   (some
+                                     (fn [paallystystoimenpide]
+                                       (when (= (:id kohdeosa)
+                                                (:kohdeosa-id paallystystoimenpide))
+                                         paallystystoimenpide))
+                                     (get-in paallystysilmoitus
+                                             [:ilmoitustiedot :osoitteet])))))
+                     (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
+                     vec))
+      (dissoc :kohdeosat)))
+
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
   "Hakee päällystysilmoituksen ja kohteen tiedot.
 
-   Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohteet-taulusta ja liitetään mukaan ilmoitukseen.
-   Jos kohdeosalle löytyy myös toimenpidetiedot päällystysilmoituksesta, myös ne liitetään mukaan.
+   Päällystysilmoituksen kohdeosien tiedot haetaan yllapitokohdeosa-taulusta ja liitetään mukaan ilmoitukseen.
 
    Huomaa, että vaikka päällystysilmoitusta ei olisi tehty, tämä kysely palauttaa joka tapauksessa
    kohteen tiedot ja esitäytetyn ilmoituksen, jossa kohdeosat on syötetty valmiiksi."
@@ -44,7 +68,6 @@
   (let [paallystysilmoitus (into []
                                  (comp (map konv/alaviiva->rakenne)
                                        (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                       (map #(tyot-tyyppi-string->avain % [:ilmoitustiedot :tyot]))
                                        (map #(konv/string-poluista->keyword
                                               %
                                               [[:taloudellinen-osa :paatos]
@@ -57,26 +80,13 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
+        _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
+            (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                            ilmoitustiedot))
+        paallystysilmoitus (tyot-tyyppi-string->avain paallystysilmoitus [:ilmoitustiedot :tyot])
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-        paallystysilmoitus
-        (-> paallystysilmoitus
-            (assoc-in [:ilmoitustiedot :osoitteet]
-                      (->> paallystysilmoitus
-                           :kohdeosat
-                           (map (fn [kohdeosa]
-                                  ;; Lisää kohdeosan tietoihin päällystystoimenpiteen tiedot
-                                  (merge (clojure.set/rename-keys kohdeosa {:id :kohdeosa-id})
-                                         (some
-                                          (fn [paallystystoimenpide]
-                                            (when (= (:id kohdeosa)
-                                                     (:kohdeosa-id paallystystoimenpide))
-                                              paallystystoimenpide))
-                                          (get-in paallystysilmoitus
-                                                  [:ilmoitustiedot :osoitteet])))))
-                           (sort-by tierekisteri-domain/tiekohteiden-jarjestys)
-                           vec))
-            (dissoc :kohdeosat))
+        paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-tiedot paallystysilmoitus)
 
         kokonaishinta (reduce + (keep paallystysilmoitus [:sopimuksen-mukaiset-tyot
                                                           :arvonvahennykset
@@ -111,37 +121,25 @@
     :default
     "aloitettu"))
 
-(defn- paivita-paallystysilmoituksen-perustiedot
-  [db user urakka-id sopimus-id
-   {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
-           valmispvm-paallystys takuupvm
-           tekninen-osa taloudellinen-osa] :as paallystysilmoitus}]
-  (if (oikeudet/voi-kirjoittaa?
-        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-        urakka-id
-        user)
-    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
-        (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
-                           (:tyot ilmoitustiedot))
-              tila (paattele-ilmoituksen-tila paallystysilmoitus)
-              encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
-          (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
-          (log/debug "Asetetaan ilmoituksen tilaksi " tila)
-          (log/debug "POT muutoshinta: " muutoshinta)
-          (q/paivita-paallystysilmoitus<!
-            db
-            {:tila tila
-             :ilmoitustiedot encoodattu-ilmoitustiedot
-             :aloituspvm (konv/sql-date aloituspvm)
-             :valmispvm_kohde (konv/sql-date valmispvm-kohde)
-             :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
-             :takuupvm (konv/sql-date takuupvm)
-             :muutoshinta muutoshinta
-             :muokkaaja (:id user)
-             :id paallystyskohde-id
-             :urakka urakka-id}))
-        id)
-    (log/debug "Ei oikeutta päivittää perustietoja.")))
+(defn- poista-ilmoitustiedoista-tieosoitteet
+  "Poistaa päällystysilmoituksen ilmoitustiedoista sellaiset tiedot, jotka tallennetaan
+   ylläpitokohdeosa-tauluun."
+  [ilmoitustiedot]
+  (let [paivitetyt-osoitteet (mapv
+                               (fn [osoite]
+                                 (-> osoite
+                                     (dissoc :tr-kaista
+                                             :tr-ajorata
+                                             :tr-loppuosa
+                                             :tunnus
+                                             :tr-alkuosa
+                                             :tr-loppuetaisyys
+                                             :nimi
+                                             :tr-alkuetaisyys
+                                             :tr-numero
+                                             :toimenpide)))
+                               (:osoitteet ilmoitustiedot))]
+    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
 
 (defn- luo-paallystysilmoitus [db user urakka-id sopimus-id
                                {:keys [paallystyskohde-id ilmoitustiedot aloituspvm
@@ -151,6 +149,11 @@
   (log/debug "Luodaan uusi päällystysilmoitus.")
   (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan (:tyot ilmoitustiedot))
         tila (if (and valmispvm-kohde valmispvm-paallystys) "valmis" "aloitettu")
+        ilmoitustiedot (-> ilmoitustiedot
+                           (poista-ilmoitustiedoista-tieosoitteet)
+                           (tyot-tyyppi-avain->string [:tyot]))
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          ilmoitustiedot)
         encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
     (log/debug "Asetetaan ilmoituksen tilaksi " tila)
     (log/debug "POT muutoshinta: " muutoshinta)
@@ -200,16 +203,53 @@
                                  urakka-id user)
       (do (log/debug "Päivitetään päällystysilmoituksen asiatarkastus: " asiatarkastus)
           (q/paivita-paallystysilmoituksen-asiatarkastus<!
-           db
-           {:asiatarkastus_pvm (konv/sql-date tarkastusaika)
-            :asiatarkastus_tarkastaja tarkastaja
-            :asiatarkastus_tekninen_osa tekninen-osa
-            :asiatarkastus_taloudellinen_osa taloudellinen-osa
-            :asiatarkastus_lisatiedot lisatiedot
-            :muokkaaja (:id user)
-            :id paallystyskohde-id
-            :urakka urakka-id}))
+            db
+            {:asiatarkastus_pvm (konv/sql-date tarkastusaika)
+             :asiatarkastus_tarkastaja tarkastaja
+             :asiatarkastus_tekninen_osa tekninen-osa
+             :asiatarkastus_taloudellinen_osa taloudellinen-osa
+             :asiatarkastus_lisatiedot lisatiedot
+             :muokkaaja (:id user)
+             :id paallystyskohde-id
+             :urakka urakka-id}))
       (log/debug "Ei oikeutta päivittää asiatarkastusta."))))
+
+(defn- paivita-paallystysilmoituksen-perustiedot
+  [db user urakka-id sopimus-id
+   {:keys [id paallystyskohde-id ilmoitustiedot aloituspvm valmispvm-kohde
+           valmispvm-paallystys takuupvm
+           tekninen-osa taloudellinen-osa] :as paallystysilmoitus}]
+  (if (oikeudet/voi-kirjoittaa?
+        oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+        urakka-id
+        user)
+    (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
+        (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
+                            (:tyot ilmoitustiedot))
+              tila (paattele-ilmoituksen-tila paallystysilmoitus)
+              ilmoitustiedot (-> ilmoitustiedot
+                                 (poista-ilmoitustiedoista-tieosoitteet)
+                                 (tyot-tyyppi-avain->string [:tyot]))
+              _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                                ilmoitustiedot)
+              encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
+          (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))
+          (log/debug "Asetetaan ilmoituksen tilaksi " tila)
+          (log/debug "POT muutoshinta: " muutoshinta)
+          (q/paivita-paallystysilmoitus<!
+            db
+            {:tila tila
+             :ilmoitustiedot encoodattu-ilmoitustiedot
+             :aloituspvm (konv/sql-date aloituspvm)
+             :valmispvm_kohde (konv/sql-date valmispvm-kohde)
+             :valmispvm_paallystys (konv/sql-date valmispvm-paallystys)
+             :takuupvm (konv/sql-date takuupvm)
+             :muutoshinta muutoshinta
+             :muokkaaja (:id user)
+             :id paallystyskohde-id
+             :urakka urakka-id}))
+        id)
+    (log/debug "Ei oikeutta päivittää perustietoja.")))
 
 (defn- paivita-paallystysilmoitus [db user urakka-id sopimus-id
                                    uusi-paallystysilmoitus paallystysilmoitus-kannassa]
@@ -236,11 +276,32 @@
       (q/liita-kommentti<! db {:paallystysilmoitus paallystysilmoitus-id
                                :kommentti (:id kommentti)}))))
 
+(defn- lisaa-paallystysilmoitukseen-kohdeosien-idt [paallystysilmoitus paivitetyt-kohdeosat]
+  (assert (not (empty? paivitetyt-kohdeosat)) "Ei voida liittää päällystysilmoitukseen tyhjiä kohdeosia")
+  (-> paallystysilmoitus
+      (assoc-in [:ilmoitustiedot :osoitteet]
+                (into []
+                      (keep
+                        (fn [osoite]
+                          (let [vastaava-kohdeosa
+                                (first
+                                  (filter #(and
+                                            (= (:tr-numero %) (:tr-numero osoite))
+                                            (= (:tr-alkuosa %) (:tr-alkuosa osoite))
+                                            (= (:tr-alkuetaisyys %) (:tr-alkuetaisyys osoite))
+                                            (= (:tr-loppuosa %) (:tr-loppuosa osoite))
+                                            (= (:tr-loppuetaisyys %) (:tr-loppuetaisyys osoite)))
+                                          paivitetyt-kohdeosat))]
+                            ;; Jos osoitteelle ei ole kohdeosaa, se on poistettu
+                            (when vastaava-kohdeosa
+                              (assoc osoite :kohdeosa-id (:id vastaava-kohdeosa)))))
+                        (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))))
+
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
 
-  Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne päivitetään
-  yllapitokohdeosa-tauluun. Tästä syystä kohdeosien tiedot poistetaan ilmoituksesta ennen tallennusta."
+  Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne tallennetaan
+  yllapitokohdeosa-tauluun."
   [db user {:keys [urakka-id sopimus-id paallystysilmoitus]}]
   (log/debug "Tallennetaan päällystysilmoitus: " paallystysilmoitus
              ". Urakka-id " urakka-id
@@ -250,18 +311,16 @@
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
-                    (:ilmoitustiedot paallystysilmoitus))
-
     (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
-          kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
-                     db user {:urakka-id urakka-id :sopimus-id sopimus-id
-                              :yllapitokohde-id paallystyskohde-id
-                              :osat (map #(assoc % :id (:kohdeosa-id %))
-                                         (->> paallystysilmoitus
-                                              :ilmoitustiedot
-                                              :osoitteet
-                                              (filter (comp not :poistettu))))})
+          paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
+                                 db user {:urakka-id urakka-id :sopimus-id sopimus-id
+                                          :yllapitokohde-id paallystyskohde-id
+                                          :osat (map #(assoc % :id (:kohdeosa-id %))
+                                                     (->> paallystysilmoitus
+                                                          :ilmoitustiedot
+                                                          :osoitteet
+                                                          (filter (comp not :poistettu))))})
+          paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
           paallystysilmoitus-kannassa
           (first (into []
                        (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
@@ -271,8 +330,8 @@
                                                                    [:paatos :tekninen-osa]
                                                                    [:tila]])))
                        (q/hae-paallystysilmoitus-paallystyskohteella
-                        db
-                        {:paallystyskohde paallystyskohde-id})))]
+                         db
+                         {:paallystyskohde paallystyskohde-id})))]
       (let [paallystysilmoitus-id
             (if paallystysilmoitus-kannassa
               (paivita-paallystysilmoitus db user urakka-id sopimus-id paallystysilmoitus
