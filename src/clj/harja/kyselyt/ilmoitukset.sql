@@ -328,6 +328,9 @@ UPDATE ilmoitustoimenpide
 SET tila = 'virhe'
 WHERE id = :id;
 
+-- name: onko-ilmoitukselle-vastaanottokuittausta
+SELECT id FROM ilmoitustoimenpide WHERE ilmoitus=:ilmoitusid AND kuittaustyyppi='vastaanotto';
+
 -- name: luo-ilmoitustoimenpide<!
 INSERT INTO ilmoitustoimenpide
 (ilmoitus,

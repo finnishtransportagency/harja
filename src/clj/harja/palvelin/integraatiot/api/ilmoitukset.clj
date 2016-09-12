@@ -37,28 +37,51 @@
         ilmoittaja (:ilmoittaja ilmoitustoimenpide)
         kasittelija (:kasittelija ilmoitustoimenpide)
         _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
-        ilmoitustoimenpide-id
-        (:id (ilmoitukset/luo-ilmoitustoimenpide<!
-               db
-               id
-               ilmoitusid
-               (aika-string->java-sql-date (:aika ilmoitustoimenpide))
-               (:vapaateksti ilmoitustoimenpide)
-               (:tyyppi ilmoitustoimenpide)
-               (get-in ilmoittaja [:henkilo :etunimi])
-               (get-in ilmoittaja [:henkilo :sukunimi])
-               (get-in ilmoittaja [:henkilo :matkapuhelin])
-               (get-in ilmoittaja [:henkilo :tyopuhelin])
-               (get-in ilmoittaja [:henkilo :sahkoposti])
-               (get-in ilmoittaja [:organisaatio :nimi])
-               (get-in ilmoittaja [:organisaatio :ytunnus])
-               (get-in kasittelija [:henkilo :etunimi])
-               (get-in kasittelija [:henkilo :sukunimi])
-               (get-in kasittelija [:henkilo :matkapuhelin])
-               (get-in kasittelija [:henkilo :tyopuhelin])
-               (get-in kasittelija [:henkilo :sahkoposti])
-               (get-in kasittelija [:organisaatio :nimi])
-               (get-in kasittelija [:organisaatio :ytunnus])))]
+        ilmoitustoimenpide-id (:id (ilmoitukset/luo-ilmoitustoimenpide<!
+                                    db
+                                    id
+                                    ilmoitusid
+                                    (aika-string->java-sql-date (:aika ilmoitustoimenpide))
+                                    (:vapaateksti ilmoitustoimenpide)
+                                    (:tyyppi ilmoitustoimenpide)
+                                    (get-in ilmoittaja [:henkilo :etunimi])
+                                    (get-in ilmoittaja [:henkilo :sukunimi])
+                                    (get-in ilmoittaja [:henkilo :matkapuhelin])
+                                    (get-in ilmoittaja [:henkilo :tyopuhelin])
+                                    (get-in ilmoittaja [:henkilo :sahkoposti])
+                                    (get-in ilmoittaja [:organisaatio :nimi])
+                                    (get-in ilmoittaja [:organisaatio :ytunnus])
+                                    (get-in kasittelija [:henkilo :etunimi])
+                                    (get-in kasittelija [:henkilo :sukunimi])
+                                    (get-in kasittelija [:henkilo :matkapuhelin])
+                                    (get-in kasittelija [:henkilo :tyopuhelin])
+                                    (get-in kasittelija [:henkilo :sahkoposti])
+                                    (get-in kasittelija [:organisaatio :nimi])
+                                    (get-in kasittelija [:organisaatio :ytunnus])))]
+    (when (and (= (:tyyppi ilmoitustoimenpide) :aloitus)
+               (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
+      (let [id (:id (ilmoitukset/luo-ilmoitustoimenpide<!
+                     db
+                     id
+                     ilmoitusid
+                     (aika-string->java-sql-date (:aika ilmoitustoimenpide))
+                     "vastaanotettu"
+                     :vastaanotto
+                     (get-in ilmoittaja [:henkilo :etunimi])
+                     (get-in ilmoittaja [:henkilo :sukunimi])
+                     (get-in ilmoittaja [:henkilo :matkapuhelin])
+                     (get-in ilmoittaja [:henkilo :tyopuhelin])
+                     (get-in ilmoittaja [:henkilo :sahkoposti])
+                     (get-in ilmoittaja [:organisaatio :nimi])
+                     (get-in ilmoittaja [:organisaatio :ytunnus])
+                     (get-in kasittelija [:henkilo :etunimi])
+                     (get-in kasittelija [:henkilo :sukunimi])
+                     (get-in kasittelija [:henkilo :matkapuhelin])
+                     (get-in kasittelija [:henkilo :tyopuhelin])
+                     (get-in kasittelija [:henkilo :sahkoposti])
+                     (get-in kasittelija [:organisaatio :nimi])
+                     (get-in kasittelija [:organisaatio :ytunnus])))]
+        (tloik/laheta-ilmoitustoimenpide tloik id)))
     (tloik/laheta-ilmoitustoimenpide tloik ilmoitustoimenpide-id)
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
