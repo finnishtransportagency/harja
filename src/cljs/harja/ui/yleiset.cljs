@@ -568,12 +568,12 @@ jatkon."
              rect (aget (.getClientRects n) 0)
              parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
          (reset! x
-                 (+ (.-left rect)
-                    (/ (.-width rect) -2)
+                 (+ (/ (.-width rect) -2)
                     (/ (.-width parent-rect) 2)))))
      (fn [auki? sisalto]
        [:div.tooltip.bottom {:class (when auki? "in")
                              :style {:position "absolute"
+                                     :min-width 150
                                      :left (when-let [x @x]
                                              x)}}
         [:div.tooltip-arrow]
@@ -585,10 +585,22 @@ jatkon."
         leveys (atom 0)]
     (komp/luo
      (fn [opts komponentti tooltipin-sisalto]
-       [:span
-        [:div.inline-block
-         {:on-mouse-enter #(reset! tooltip-nakyy? true)
-          :on-mouse-leave #(reset! tooltip-nakyy? false)}
-         komponentti
+       [:div.inline-block
+        {:style {:position "relative"}               ;:div.inline-block
+         :on-mouse-enter #(reset! tooltip-nakyy? true)
+         :on-mouse-leave #(reset! tooltip-nakyy? false)}
+        komponentti
 
-         [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]]))))
+        [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]))))
+
+(defn wrap-if
+  "If condition is truthy, return container-component with
+  the containee placed inside it otherwise return containee.
+  Container-component must be a vector that has a value :%
+  in it. The :% value is replaced with the containee."
+  [condition container-component containee]
+  (if condition
+    (mapv #(if (= :% %)
+             containee
+             %) container-component)
+    containee))

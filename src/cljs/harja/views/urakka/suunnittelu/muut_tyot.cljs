@@ -64,6 +64,9 @@
                            #(tallenna-tyot
                              % u/muutoshintaiset-tyot)
                            :ei-mahdollinen)
+               :tallennus-ei-mahdollinen-tooltip
+               (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                               oikeudet/urakat-suunnittelu-muutos-ja-lisatyot)
                :ohjaus g
                :muutos #(reset! jo-valitut-tehtavat (into #{} (map (fn [rivi]
                                                                      (:tehtava rivi))
@@ -93,4 +96,3 @@
              [vihje "Ei tehtäviä valitulla toimenpiteellä tässä urakassa" "col-xs-12"])
 
            [vihje yleiset/+tehtavien-hinta-vaihtoehtoinen+ "col-xs-12"]])))))
-
