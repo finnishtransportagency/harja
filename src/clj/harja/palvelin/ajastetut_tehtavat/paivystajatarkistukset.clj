@@ -11,7 +11,7 @@
             [harja.kyselyt.konversio :as konv]
             [clj-time.coerce :as c]))
 
-(defn urakat-ilman-paivytysta
+(defn urakat-ilman-paivystysta
   "Palauttaa urakat, joille ei ole päivystystä kyseisenä päivänä"
   [urakoiden-paivystykset pvm]
   (log/debug "Tarkistetaan urakkakohtaisesti, onko annetulle päivälle " (pr-str pvm) " olemassa päivystys.")
@@ -62,7 +62,7 @@
 
 (defn- paivystajien-tarkistustehtava [db nykyhetki]
   (let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)]
-    (urakat-ilman-paivytysta urakoiden-paivystykset nykyhetki)))
+    (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)))
 
 (defn tee-paivystajien-tarkistustehtava [{:keys [db] :as this}]
   (log/debug "Ajastetaan päivystäjien tarkistus")

@@ -53,7 +53,13 @@
 
 (deftest urakat-ilman-paivystysta-toimii
   ;; Testidatassa ei yhdelläkään urakalla päivystystä annettuna aikana, eli palautuu sama data takaisin
-  (is (= (paivystajatarkistukset/urakat-ilman-paivytysta
+  (is (= (paivystajatarkistukset/urakat-ilman-paivystysta
            testipaivystykset
            (t/local-date 2010 10 1))
-         testipaivystykset)))
+         testipaivystykset))
+
+  ;; Oulun alueurakka 2014-2019 sisältää päivystyksen annettuna aikana, joten se ei palaudu
+  (is (= (paivystajatarkistukset/urakat-ilman-paivystysta
+           testipaivystykset
+           (t/local-date 2016 10 1))
+         (rest testipaivystykset))))
