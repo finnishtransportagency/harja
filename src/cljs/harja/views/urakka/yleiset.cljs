@@ -126,14 +126,15 @@
       (fn [urakka-id]
         (let [kayttajat @kayttajat]
           [grid/grid
-           {:otsikko "Urakkaan liitetyt käyttäjät"
+           {:otsikko "Käyttövaltuushallinnassa urakkaan liitetyt käyttäjät"
             :tunniste :kayttajatunnus
             :tyhja (cond
                      (nil? kayttajat)
-                     [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
+                     [yleiset/ajax-loader
+                      "Haetaan käyttövaltuushallinnassa urakkaan liitettyjä käyttäjiä"]
 
                      (k/virhe? kayttajat)
-                     "Virhe haettaessa käyttäjiä FIM-palvelusta."
+                     "Virhe haettaessa käyttäjiä käyttövaltuushallinnan FIM-palvelusta."
 
                      :default
                      "Ei urakkaan liitettyjä käyttäjiä.")}
