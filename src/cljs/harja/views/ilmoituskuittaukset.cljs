@@ -148,7 +148,8 @@
         {:otsikko "Vakiofraasi"
          :tyyppi :haku
          :hae-kun-yli-n-merkkia 0
-         :lahde fraasihaku}
+         :lahde fraasihaku
+         :nimi :vakiofraasi}
 
         {:otsikko "Vapaateksti"
          :tyyppi :text
