@@ -55,6 +55,7 @@
          ilmoitus
          ilmoitusid
          (pvm/nyt)
+         nil ;; ei vakiofraasia
          vapaateksti
          toimenpide
          (:etunimi paivystaja)
@@ -71,4 +72,3 @@
          nil
          nil
          nil)))
-
