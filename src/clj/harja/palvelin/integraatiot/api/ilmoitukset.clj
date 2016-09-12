@@ -40,26 +40,26 @@
         ilmoitustoimenpide-id
         (:id (ilmoitukset/luo-ilmoitustoimenpide<!
                db
-               id
-               ilmoitusid
-               (aika-string->java-sql-date (:aika ilmoitustoimenpide))
-               nil ;; ei vakiofraasia
-               (:vapaateksti ilmoitustoimenpide)
-               (:tyyppi ilmoitustoimenpide)
-               (get-in ilmoittaja [:henkilo :etunimi])
-               (get-in ilmoittaja [:henkilo :sukunimi])
-               (get-in ilmoittaja [:henkilo :matkapuhelin])
-               (get-in ilmoittaja [:henkilo :tyopuhelin])
-               (get-in ilmoittaja [:henkilo :sahkoposti])
-               (get-in ilmoittaja [:organisaatio :nimi])
-               (get-in ilmoittaja [:organisaatio :ytunnus])
-               (get-in kasittelija [:henkilo :etunimi])
-               (get-in kasittelija [:henkilo :sukunimi])
-               (get-in kasittelija [:henkilo :matkapuhelin])
-               (get-in kasittelija [:henkilo :tyopuhelin])
-               (get-in kasittelija [:henkilo :sahkoposti])
-               (get-in kasittelija [:organisaatio :nimi])
-               (get-in kasittelija [:organisaatio :ytunnus])))]
+               {:ilmoitus id
+                :ilmoitusid ilmoitusid
+                :kuitattu (aika-string->java-sql-date (:aika ilmoitustoimenpide))
+                :vakiofraasi nil
+                :vapaateksti (:vapaateksti ilmoitustoimenpide)
+                :kuittaustyyppi (:tyyppi ilmoitustoimenpide)
+                :kuittaaja_henkilo_etunimi (get-in ilmoittaja [:henkilo :etunimi])
+                :kuittaaja_henkilo_sukunimi (get-in ilmoittaja [:henkilo :sukunimi])
+                :kuittaaja_henkilo_matkapuhelin (get-in ilmoittaja [:henkilo :matkapuhelin])
+                :kuittaaja_henkilo_tyopuhelin (get-in ilmoittaja [:henkilo :tyopuhelin])
+                :kuittaaja_henkilo_sahkoposti (get-in ilmoittaja [:henkilo :sahkoposti])
+                :kuittaaja_organisaatio_nimi (get-in ilmoittaja [:organisaatio :nimi])
+                :kuittaaja_organisaatio_ytunnus (get-in ilmoittaja [:organisaatio :ytunnus])
+                :kasittelija_henkilo_etunimi (get-in kasittelija [:henkilo :etunimi])
+                :kasittelija_henkilo_sukunimi (get-in kasittelija [:henkilo :sukunimi])
+                :kasittelija_henkilo_matkapuhelin (get-in kasittelija [:henkilo :matkapuhelin])
+                :kasittelija_henkilo_tyopuhelin (get-in kasittelija [:henkilo :tyopuhelin])
+                :kasittelija_henkilo_sahkoposti (get-in kasittelija [:henkilo :sahkoposti])
+                :kasittelija_organisaatio_nimi (get-in kasittelija [:organisaatio :nimi])
+                :kasittelija_organisaatio_ytunnus (get-in kasittelija [:organisaatio :ytunnus])}))]
     (tloik/laheta-ilmoitustoimenpide tloik ilmoitustoimenpide-id)
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
