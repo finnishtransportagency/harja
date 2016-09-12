@@ -13,9 +13,12 @@
             [harja.kyselyt.suljetut-tieosuudet :as q-suljetut-tieosuudet]
             [harja.kyselyt.tieverkko :as q-tieverkko]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus])
+            [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.postgresql.util PSQLException)))
 
@@ -35,20 +38,92 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
+(defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
+  (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-liittyvat-yllapitokohteet db {:urakka urakka-id})]
+    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
+      (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
+
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
                      kayttaja))
-  (let [urakka-id (Integer/parseInt urakka-id)]
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (jdbc/with-db-transaction
       [db db]
-      (let [kohde-id (Integer/parseInt kohde-id)
-            id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
+      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
+      (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
         (tee-kirjausvastauksen-body
           {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
            :id id})))))
+
+(defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
+  (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
+    (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
+      db
+      {:paallystys_alku (json/pvm-string->java-sql-date (:paallystys-alku aikataulu))
+       :paallystys_loppu (json/pvm-string->java-sql-date (:paallystys-loppu aikataulu))
+       :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
+       :valmis_tiemerkintaan (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+       :muokkaaja (:id kayttaja)
+       :id kohde-id})
+      (if kohteella-paallystysilmoitus?
+        (do (q-yllapitokohteet/paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
+              db
+              {:aloituspvm (json/pvm-string->java-sql-date
+                             (get-in aikataulu [:paallystysilmoitus :aloituspvm]))
+               :valmispvm_paallystys (json/pvm-string->java-sql-date
+                                       (get-in aikataulu [:paallystysilmoitus :valmispvm-paallystys]))
+               :valmispvm_kohde (json/pvm-string->java-sql-date
+                                  (get-in aikataulu [:paallystysilmoitus :valmispvm-kohde]))
+               :takuupvm (json/pvm-string->java-sql-date (get-in aikataulu [:paallystysilmoitus :takuupvm]))
+               :muokkaaja (:id kayttaja)
+               :kohde_id kohde-id})
+            {})
+        {:varoitukset "Kohteella ei ole päällystysilmoitusta, joten sen tietoja ei päivitetä."})))
+
+(defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
+  (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
+    db
+    {:tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-alku aikataulu))
+     :tiemerkinta_loppu (json/pvm-string->java-sql-date (:tiemerkinta-loppu aikataulu))
+     :muokkaaja (:id kayttaja)
+     :id kohde-id})
+  {})
+
+(defn- paivita-yllapitokohteen-aikataulu
+  "Päivittää ylläpitokohteen aikataulutiedot.
+   Palauttaa mapin mahdollisista varoituksista"
+  [db kayttaja urakka-id kohde-id data]
+  (let [urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
+    (log/debug "Kirjataan aikataulu urakalle: " urakan-tyyppi)
+    (case (keyword urakan-tyyppi)
+      :paallystys
+      (paivita-paallystyksen-aikataulu db kayttaja kohde-id data)
+      :tiemerkinta
+      (paivita-tiemerkinnan-aikataulu db kayttaja kohde-id data)
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+viallinen-kutsu+
+                          :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
+                                       urakan-tyyppi)}]}))))
+
+(defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
+  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) aikataulu käyttäjän: %s toimesta"
+                     urakka-id
+                     kohde-id
+                     kayttaja))
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (jdbc/with-db-transaction
+      [db db]
+      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
+      (let [paivitys-vastaus (paivita-yllapitokohteen-aikataulu db kayttaja urakka-id kohde-id data)]
+        (tee-kirjausvastauksen-body
+          (merge {:ilmoitukset (str "Aikataulu kirjattu onnistuneesti.")}
+                 paivitys-vastaus))))))
 
 (defn hae-tr-osoite [db alkukoordinaatit loppukoordinaatit]
   (try
@@ -127,18 +202,25 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db] (hae-yllapitokohteet db parametit kayttaja))}
    {:palvelu :kirjaa-paallystysilmoitus
+    ;; FIXME Lisää mahdollisuus ottaa vastaan / päivittää POT-lomakkeen perusosan päivämäärät
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
+   {:palvelu :kirjaa-yllapidon-aikataulu
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/yllapidon-aikataulun-kirjaus
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-aikataulu db kayttaja parametrit data))}
    {:palvelu :kirjaa-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}
-   {:palvelu :kirjaa-suljettu-tieosuus
+   {:palvelu :poista-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-poisto

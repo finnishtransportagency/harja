@@ -411,15 +411,21 @@
     (komp/luo
       (fn []
         (reset! muut-tyot/haetut-muut-tyot @tyorivit)
-        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
+        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
+              oikeus? (oikeudet/voi-kirjoittaa?
+                       oikeudet/urakat-toteumat-muutos-ja-lisatyot
+                       (:id @nav/valittu-urakka))]
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [napit/uusi "Lisää toteuma" #(reset! muut-tyot/valittu-toteuma
-                                                {:alkanut (pvm/nyt)
-                                                 :paattynyt (pvm/nyt)})
-            {:disabled (not (oikeudet/voi-kirjoittaa?
-                             oikeudet/urakat-toteumat-muutos-ja-lisatyot
-                             (:id @nav/valittu-urakka)))}]
+           (yleiset/wrap-if
+            (not oikeus?)
+            [yleiset/tooltip {} :%
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                             oikeudet/urakat-toteumat-muutos-ja-lisatyot)]
+            [napit/uusi "Lisää toteuma" #(reset! muut-tyot/valittu-toteuma
+                                                 {:alkanut (pvm/nyt)
+                                                  :paattynyt (pvm/nyt)})
+             {:disabled (not oikeus?)}])
 
            [grid/grid
             {:otsikko       (str "Toteutuneet muutos-, lisä- ja äkilliset hoitotyöt sekä vahinkojen korjaukset")

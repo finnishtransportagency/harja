@@ -47,7 +47,7 @@
       :tyhja (if (nil? @urakan-valitavoitteet-atom)
                [y/ajax-loader "Välitavoitteita haetaan..."]
                "Ei välitavoitteita")
-      :tallenna (when voi-muokata?
+      :tallenna (if voi-muokata?
                   #(go (reset! tallennus-kaynnissa? true)
                        (go
                          (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
@@ -55,7 +55,10 @@
                              (viesti/nayta! "Tallentaminen epäonnistui"
                                             :warning viesti/viestin-nayttoaika-lyhyt)
                              (reset! kaikki-valitavoitteet-atom vastaus)))
-                         (reset! tallennus-kaynnissa? false))))}
+                         (reset! tallennus-kaynnissa? false)))
+                  :ei-mahdollinen)
+      :tallennus-ei-mahdollinen-tooltip
+      (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
      [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
@@ -88,7 +91,7 @@
        :tyhja (if (nil? @valtakunnalliset-valitavoitteet-atom)
                 [y/ajax-loader "Välitavoitteita haetaan..."]
                 "Ei välitavoitteita")
-       :tallenna (when voi-muokata?
+       :tallenna (if voi-muokata?
                    #(go (reset! tallennus-kaynnissa? true)
                         (go
                           (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
@@ -96,7 +99,11 @@
                               (viesti/nayta! "Tallentaminen epäonnistui"
                                              :warning viesti/viestin-nayttoaika-lyhyt)
                               (reset! kaikki-valitavoitteet-atom vastaus)))
-                          (reset! tallennus-kaynnissa? false))))
+                          (reset! tallennus-kaynnissa? false)))
+                   :ei-mahdollinen)
+       :tallennus-ei-mahdollinen-tooltip
+       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)
+
        :voi-lisata? false
        :voi-poistaa? (constantly false)}
 

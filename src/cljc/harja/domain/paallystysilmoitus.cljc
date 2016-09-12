@@ -139,28 +139,28 @@
 
 (def +sideainetyypit+
   "Sideainetyypit"
-  [{:nimi "1" :koodi 1}
-   {:nimi "2" :koodi 2}
-   {:nimi "3" :koodi 3}
-   {:nimi "4" :koodi 4}
-   {:nimi "5" :koodi 5}
-   {:nimi "6" :koodi 6}
-   {:nimi "7" :koodi 7}
-   {:nimi "8" :koodi 8}
-   {:nimi "9" :koodi 9}
-   {:nimi "10" :koodi 10}
-   {:nimi "11" :koodi 11}
-   {:nimi "12" :koodi 12}
-   {:nimi "13" :koodi 13}
-   {:nimi "14" :koodi 14}
-   {:nimi "15" :koodi 15}
-   {:nimi "16" :koodi 16}
-   {:nimi "17" :koodi 17}
-   {:nimi "18" :koodi 18}
-   {:nimi "19" :koodi 19}
-   {:nimi "20" :koodi 20}
-   {:nimi "21" :koodi 21}
-   {:nimi "22" :koodi 22}])
+  [{:nimi "20/30" :koodi 1}
+   {:nimi "35/50" :koodi 2}
+   {:nimi "50/70" :koodi 3}
+   {:nimi "70/100" :koodi 4}
+   {:nimi "100/150" :koodi 5}
+   {:nimi "160/220" :koodi 6}
+   {:nimi "250/330" :koodi 7}
+   {:nimi "330/430" :koodi 8}
+   {:nimi "500/650" :koodi 9}
+   {:nimi "650/900" :koodi 10}
+   {:nimi "V1500" :koodi 11}
+   {:nimi "V3000" :koodi 12}
+   {:nimi "KB65" :koodi 13}
+   {:nimi "KB75" :koodi 14}
+   {:nimi "KB85" :koodi 15}
+   {:nimi "BL5" :koodi 16}
+   {:nimi "BL2K" :koodi 17}
+   {:nimi "BL2 Bio" :koodi 18}
+   {:nimi "BE-L" :koodi 19}
+   {:nimi "BE-SIP" :koodi 20}
+   {:nimi "BE-SOP" :koodi 21}
+   {:nimi "BE-PAB" :koodi 22}])
 
 (def +sideainetyyppi+
   "Sideainetyypin valinta koodilla"
@@ -198,33 +198,33 @@
 (defn verkon-sijainti-koodi-nimella [koodi]
   (:koodi (first (filter #(= koodi (:nimi %)) +verkon-sijainnit+))))
 
+;; Frontissa koodi on avain, kantaan menevässä datassa string
+(def +paallystystyon-tyypit-lomakkeella+
+  "Päällystystyön tyypit"
+  [{:nimi "Ajoradan päällyste" :koodi :ajoradan-paallyste}
+   {:nimi "Pienaluetyöt" :koodi :pienaluetyot}
+   {:nimi "Tasaukset" :koodi :tasaukset}
+   {:nimi "Jyrsinnät" :koodi :jyrsinnat}
+   {:nimi "Muut" :koodi :muut}])
+
 (def +paallystystyon-tyypit+
   "Päällystystyön tyypit"
-  [{:avain :ajoradan-paallyste :nimi "Ajoradan päällyste"}
-   {:avain :pienaluetyot :nimi "Pienaluetyöt"}
-   {:avain :tasaukset :nimi "Tasaukset"}
-   {:avain :jyrsinnat :nimi "Jyrsinnät"}
-   {:avain :muut :nimi "Muut"}])
+  [{:nimi "Ajoradan päällyste" :koodi "ajoradan-paallyste"}
+   {:nimi "Pienaluetyöt" :koodi "pienaluetyot"}
+   {:nimi "Tasaukset" :koodi "tasaukset"}
+   {:nimi "Jyrsinnät" :koodi "jyrsinnat"}
+   {:nimi "Muut" :koodi "muut"}])
 
 (def +paallystystyon-tyyppi+
   "Päällystystyön valinta avaimella"
-  (apply s/enum (map :avain +paallystystyon-tyypit+)))
+  (apply s/enum (map :koodi +paallystystyon-tyypit+)))
 
 (defn paallystystyontyyppi-avain-nimella [koodi]
-  (:avain (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
+  (:koodi (first (filter #(= koodi (:nimi %)) +paallystystyon-tyypit+))))
 
 (def paallystysilmoitus-osoitteet
-  [{(s/optional-key :nimi) (s/maybe s/Str)
-    (s/optional-key :tunnus) (s/maybe s/Str)
-    :tr-numero s/Int
-    (s/optional-key :tr-ajorata) (s/maybe +ajorata+)
-    (s/optional-key :tr-kaista) (s/maybe +kaista+)
-    :tr-alkuosa s/Int
-    :tr-alkuetaisyys s/Int
-    :tr-loppuosa s/Int
-    :tr-loppuetaisyys s/Int
-    (s/optional-key :toimenpide) (s/maybe s/Str)
-    (s/optional-key :kohdeosa-id) (s/maybe s/Int)
+  [;; Linkki ylläpitokohdeosaan
+   {:kohdeosa-id s/Int
 
     ; Osoitteelle tehdyt toimenpiteet
     (s/optional-key :paallystetyyppi) (s/maybe paallystys-ja-paikkaus/+paallystetyyppi+)
@@ -244,8 +244,7 @@
     (s/optional-key :muotoarvo) (s/maybe s/Str)
     (s/optional-key :sideainetyyppi) (s/maybe +sideainetyyppi+)
     (s/optional-key :pitoisuus) (s/maybe s/Num)
-    (s/optional-key :lisaaineet) (s/maybe s/Str)
-    (s/optional-key :poistettu) s/Bool}])
+    (s/optional-key :lisaaineet) (s/maybe s/Str)}])
 
 (def paallystysilmoitus-alustatoimet
   [{:tr-alkuosa s/Int
@@ -257,8 +256,7 @@
     :verkkotyyppi +verkkotyyppi+
     :verkon-tarkoitus +verkon-tarkoitus+
     :verkon-sijainti +verkon-sijainti+
-    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)
-    (s/optional-key :poistettu) s/Bool}])
+    (s/optional-key :tekninen-toimenpide) (s/maybe +tekninen-toimenpide+)}])
 
 (def paallystysilmoitus-tyot
   [{:tyyppi +paallystystyon-tyyppi+
@@ -266,9 +264,9 @@
     :tilattu-maara s/Num
     :toteutunut-maara s/Num
     :yksikko s/Str
-    :yksikkohinta s/Num
-    (s/optional-key :poistettu) s/Bool}])
+    :yksikkohinta s/Num}])
 
+;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+
   {;; Toteutuneet osoitteet. Esitäytetään kohdeluettelon kohdeosilla, mutta voi muokata käsin.
    :osoitteet paallystysilmoitus-osoitteet
