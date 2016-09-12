@@ -30,8 +30,8 @@
     (when (and (not= kohteen-urakka urakka-id)
                (not= kohteen-suorittava-tiemerkintaurakka urakka-id))
       (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde " ei kuulu valittuun urakkaan "
-                                     urakka-id " vaan urakkaan " kohteen-urakka
-                                     ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
+                                      urakka-id " vaan urakkaan " kohteen-urakka
+                                      ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
@@ -50,26 +50,26 @@
                                                          :sopimus sopimus-id
                                                          :yllapitokohde (:id %)})))))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
-                                                          :sopimus sopimus-id}))
+                                                                     :sopimus sopimus-id}))
           osien-pituudet-tielle
           (fmap
-           (fn [osat]
-             ;; Hakee tieverkosta osien pituudet tielle
-             (let [tie (:tr-numero (first osat))
-                   osat (into #{}
-                              (comp (mapcat (juxt :tr-alkuosa :tr-loppuosa))
-                                    (remove nil?))
-                              osat)
-                   min-osa (reduce min 1 osat)
-                   max-osa (reduce max 1 osat)]
-               (into {}
-                     (map (juxt :osa :pituus))
-                     (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
-           (group-by :tr-numero vastaus))
+            (fn [osat]
+              ;; Hakee tieverkosta osien pituudet tielle
+              (let [tie (:tr-numero (first osat))
+                    osat (into #{}
+                               (comp (mapcat (juxt :tr-alkuosa :tr-loppuosa))
+                                     (remove nil?))
+                               osat)
+                    min-osa (reduce min 1 osat)
+                    max-osa (reduce max 1 osat)]
+                (into {}
+                      (map (juxt :osa :pituus))
+                      (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
+            (group-by :tr-numero vastaus))
 
           vastaus (mapv #(assoc %
-                                :pituus
-                                (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
+                          :pituus
+                          (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
                         vastaus)]
 
       (log/debug "Ylläpitokohteet saatu: " (count vastaus) " kpl")
@@ -329,7 +329,7 @@
     (let [hae-osat #(hae-urakan-yllapitokohdeosat c user
                                                   {:urakka-id urakka-id
                                                    :sopimus-id sopimus-id
-                                               :yllapitokohde-id yllapitokohde-id})
+                                                   :yllapitokohde-id yllapitokohde-id})
           vanhat-osa-idt (into #{}
                                (map :id)
                                (hae-osat))

@@ -35,8 +35,9 @@
 
 (defn- urakan-tiedot [urakka]
   (-> urakka
-      (assoc :vaylamuoto "tie")
-      (dissoc :takuu)))
+      (select-keys #{:id :nimi :tyyppi :alkupvm :loppupvm
+                     :takuu_loppupvm :alueurakkanumero :urakoitsija})
+      (assoc :vaylamuoto "tie")))
 
 (defn muodosta-vastaus-urakan-haulle [db id urakka]
   {:urakka

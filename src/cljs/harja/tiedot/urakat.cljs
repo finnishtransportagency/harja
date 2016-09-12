@@ -26,3 +26,6 @@
               (>! ch (into [] urakka-xf res))
               (close! ch)))
         ch))))
+
+(defn poista-indeksi-kaytosta! [ur]
+  (k/post! :poista-indeksi-kaytosta {:urakka-id (:id ur)}))

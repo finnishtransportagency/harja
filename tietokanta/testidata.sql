@@ -115,7 +115,7 @@ SELECT paivita_pohjavesialueet();
 \i testidata/laskutusyhteenveto_vantaa.sql
 \i testidata/laskutusyhteenveto_espoo.sql
 
--- Tieverkkoon tie 20
+-- Tieverkko
 \i testidata/tierekisteri.sql
 
 

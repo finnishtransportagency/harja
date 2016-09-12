@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 0.2.8
+version: 0.2.9
 baseUri: https://harja/api/{version}
 protocols: [HTTPS]
 mediaType: application/json
@@ -36,6 +36,7 @@ schemas:
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - yllapitokohteiden-haku-response: !include schemas/urakan-yllapitokohteet-response.schema.json
  - paallystysilmoituksen-kirjaus-request: !include schemas/paallystysilmoituksen-kirjaus-request.schema.json
+ - aikataulun-kirjaus-request: !include schemas/aikataulun-kirjaus-request.schema.json
  - suljetun-tieosuuden-kirjaus-request: !include schemas/suljetun-tieosuuden-kirjaus-request.schema.json
  - suljetun-tieosuuden-poisto-request: !include schemas/suljetun-tieosuuden-poisto-request.schema.json
 
@@ -507,6 +508,30 @@ documentation:
                    application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
+          /aikataulu:
+             post:
+               is: [secured]
+               description: Aikataulutietojen kirjaus päällystys- ja tiemerkintäurakoille. Päällystyksen ja kohteen valmistumisen aikataulutiedot voidaan kirjata vain siihen urakkaan, johon ylläpitokohde kuuluu. Tiemerkinnän aikataulu voidaan päivittää siihen urakkaan, joka on merkitty kohteelle suorittajaksi. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
+               body:
+                 application/json:
+                   example: !include examples/aikataulun-kirjaus-request.json
+                   schema: aikataulun-kirjaus-request
+               responses:
+                 200:
+                   body:
+                     application/json:
+                      example: !include examples/onnistunut-kirjaus-response.json
+                      schema: kirjaus-response
+                 500:
+                   body:
+                     application/json:
+                       example: !include examples/virhe-response.json
+                       schema: virhe-response
+                 400:
+                   body:
+                    application/json:
+                      example: !include examples/virhe-response.json
+                      schema: virhe-response
           /suljettu-tieosuus:
             post:
               is: [secured]

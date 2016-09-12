@@ -2,7 +2,10 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitus]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.skeema :as skeema]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
 
 (deftest tarkista-paallystysiloituksen-rakentaminen
   (let [paallystysilmoitus {:yllapitokohde
@@ -16,7 +19,7 @@
                                  {:esiintyma "testi",
                                   :km-arvo "testi",
                                   :muotoarvo "testi",
-                                  :sideainetyyppi "1",
+                                  :sideainetyyppi "20/30",
                                   :pitoisuus 1.2,
                                   :lisa-aineet "lisäaineet"}}],
                                :tunnus "A",
@@ -54,7 +57,7 @@
                                 {:esiintyma "testi",
                                  :km-arvo "testi",
                                  :muotoarvo "testi",
-                                 :sideainetyyppi "1",
+                                 :sideainetyyppi "20/30",
                                  :pitoisuus 1.2,
                                  :lisa-aineet "lisäaineet"}}],
                               :tunnus "A",
@@ -84,20 +87,21 @@
                                     :rc% 54,
                                     :paallystetyyppi 11,
                                     :km-arvo "testi"}],
-                       :alustatoimet [{:verkkotyyppi 1,
-                                       :aosa 1,
-                                       :let 15,
-                                       :verkon-tarkoitus 2,
-                                       :kasittelymenetelma 1,
-                                       :losa 5,
-                                       :aet 1,
-                                       :tekninen-toimenpide 1,
-                                       :paksuus 1.2,
-                                       :verkon-sijainti 1}],
+                       :alustatoimet [{:kasittelymenetelma 1
+                                       :paksuus 1.2
+                                       :tekninen-toimenpide 1
+                                       :tr-alkuetaisyys 1
+                                       :tr-alkuosa 1
+                                       :tr-loppuetaisyys 15
+                                       :tr-loppuosa 5
+                                       :verkkotyyppi 1
+                                       :verkon-sijainti 1
+                                       :verkon-tarkoitus 2}],
                        :tyot [{:tilattu-maara 1.2
                                :toteutunut-maara 1.2
                                :tyo "työtehtävä"
                                :tyyppi "jyrsinnat"
                                :yksikko "kpl"
                                :yksikkohinta 55.4}]}]
-    (is (= odotettu-data ilmoitusdata))))
+    (is (= odotettu-data ilmoitusdata))
+    (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitusdata))))

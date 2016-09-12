@@ -20,7 +20,8 @@
             [harja.views.kartta :as kartta]
             [harja.fmt :as fmt]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
@@ -158,14 +159,15 @@
                              (if (nil? %) yleiset/+valitse-kuukausi+ (second %)))
             :valinnat [[5 "Toukokuu"] [6 "Kesäkuu"] [7 "Heinäkuu"]
                        [8 "Elokuu"] [9 "Syyskuu"]]}
-           {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
-            :muokattava? (constantly saa-muokata?)
-            :valinta-nayta #(if (not saa-muokata?)
-                             ""
-                             (if (nil? %) "Ei indeksiä" (str %)))
-            :valinnat (conj @i/indeksien-nimet nil)
+           (when (urakka/indeksi-kaytossa?)
+             {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
+              :muokattava? (constantly saa-muokata?)
+              :valinta-nayta #(if (not saa-muokata?)
+                                ""
+                                (if (nil? %) "Ei indeksiä" (str %)))
+              :valinnat (conj @i/indeksien-nimet nil)
 
-            :palstoja 1}
+              :palstoja 1})
 
            (when-not (empty? pohjavesialueet)
              {:otsikko "Pohjavesialueiden käyttörajat"

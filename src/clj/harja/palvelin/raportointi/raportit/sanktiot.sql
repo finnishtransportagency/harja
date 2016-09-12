@@ -4,7 +4,7 @@ SELECT
   s.id,
   sakkoryhma,
   maara AS summa,
-  indeksi,
+  s.indeksi,
   suorasanktio,
   st.id          AS sanktiotyyppi_id,
   st.nimi        AS sanktiotyyppi_nimi,
@@ -18,8 +18,8 @@ SELECT
   o.nimi         AS hallintayksikko_nimi,
   o.elynumero    AS hallintayksikko_elynumero,
   (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2,
-  CASE WHEN indeksi IS NOT NULL THEN
-    kuukauden_indeksikorotus(lp.aika::DATE, indeksi, maara, u.id) - maara
+  CASE WHEN s.indeksi IS NOT NULL THEN
+    kuukauden_indeksikorotus(lp.aika::DATE, s.indeksi, maara, u.id) - maara
   END AS indeksikorotus
 FROM sanktio s
   JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id

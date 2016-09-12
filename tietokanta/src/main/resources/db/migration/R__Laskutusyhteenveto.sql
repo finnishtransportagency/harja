@@ -4,7 +4,6 @@ CREATE OR REPLACE FUNCTION laskutusyhteenveto(
   RETURNS SETOF laskutusyhteenveto_rivi AS $$
 DECLARE
   t                                      RECORD;
-  urakan_alkuvuosi INTEGER;
   ind VARCHAR; -- hoitourakassa käytettävä indeksi
   perusluku NUMERIC; -- urakan indeksilaskennan perusluku (urakkasopimusta edeltävän vuoden joulukuusta 3kk ka)
 
@@ -142,16 +141,8 @@ BEGIN
 
   cache := ARRAY[]::laskutusyhteenveto_rivi[];
 
-  -- Päätellään indeksilaskennan perustiedot
-  SELECT INTO urakan_alkuvuosi EXTRACT(year from alkupvm) FROM urakka WHERE id = ur;
-
-  IF urakan_alkuvuosi < 2017 THEN
-    ind := 'MAKU 2005';
-  ELSE
-    ind := 'MAKU 2010';
-  END IF;
-
-  perusluku := hoitourakan_indeksilaskennan_perusluku(ur, ind);
+  perusluku := hoitourakan_indeksilaskennan_perusluku(ur);
+  SELECT indeksi FROM urakka WHERE id = ur INTO ind;
 
   -- Loopataan urakan toimenpideinstanssien läpi
   FOR t IN SELECT
@@ -860,6 +851,7 @@ BEGIN
 
     RAISE NOTICE 'suolasakko_kaytossa: %', suolasakko_kaytossa;
     RAISE NOTICE 'lampotila_puuttuu: %', lampotila_puuttuu;
+    RAISE NOTICE 'indeksilaskennan perusluku: %', perusluku;
 
     RAISE NOTICE '***** Käsitelly loppui toimenpiteelle: %  *****
 

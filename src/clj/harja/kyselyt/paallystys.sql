@@ -124,6 +124,24 @@ WHERE paallystyskohde = :id
                               FROM yllapitokohde
                               WHERE urakka = :urakka);
 
+-- name: paivita-api-paallystysilmoitus<!
+-- Päivittää päällystysilmoituksen API:n kautta tulleet tiedot
+UPDATE paallystysilmoitus
+SET
+  ilmoitustiedot       = :ilmoitustiedot :: JSONB,
+  aloituspvm           = :aloituspvm,
+  valmispvm_kohde      = :valmispvm_kohde,
+  valmispvm_paallystys = :valmispvm_paallystys,
+  takuupvm             = :takuupvm,
+  muutoshinta          = :muutoshinta,
+  muokattu             = NOW(),
+  muokkaaja            = :muokkaaja,
+  poistettu            = FALSE
+WHERE paallystyskohde = :id
+      AND paallystyskohde IN (SELECT id
+                              FROM yllapitokohde
+                              WHERE urakka = :urakka);
+
 -- name: paivita-paallystysilmoituksen-kasittelytiedot<!
 -- Päivittää päällystysilmoituksen käsittelytiedot
 UPDATE paallystysilmoitus
@@ -205,12 +223,3 @@ INSERT INTO paallystysilmoitus_kommentti (paallystysilmoitus, kommentti) VALUES 
 SELECT exists(SELECT *
               FROM paallystysilmoitus
               WHERE paallystyskohde = :id);
-
--- name: paivita-paallystysilmoituksen-ilmoitustiedot<!
--- Päivittää päällystysilmoituksen ilmoitustiedot
-UPDATE paallystysilmoitus
-SET
-  ilmoitustiedot       = :ilmoitustiedot :: JSONB,
-  muokattu             = NOW(),
-  muokkaaja            = :muokkaaja
-WHERE paallystyskohde = :id;
