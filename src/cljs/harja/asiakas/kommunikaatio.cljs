@@ -140,9 +140,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                 413 (do
                       (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                       (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
-                500 (do
-                      (log "Liitelähetys epäonnistui: "  (pr-str  (.-responseText request)))
-                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "tiedostotyyppi ei ole sallittu"}))
+                500 (let [txt (.-responseText request)]
+                      (log "Liitelähetys epäonnistui: "  txt)
+                      (put! ch {:error :liitteen-lahetys-epaonnistui
+                                :viesti (if (= txt "Virus havaittu")
+                                          txt
+                                          "tiedostotyyppi ei ole sallittu")}))
                 (do
                   (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                   (put! ch {:error :liitteen-lahetys-epaonnistui})))
