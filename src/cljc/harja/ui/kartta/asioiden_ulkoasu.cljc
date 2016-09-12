@@ -291,18 +291,18 @@
   (sijainti-ikoni
     (case tila
      :kuittaamaton (:ilmoitus-kaynnissa ikonien-varit)
-     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
-     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
-     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+     :vastaanotettu (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitettu (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetettu (:ilmoitus-lopetettu ikonien-varit))
     (:kysely ikonien-varit)))
 
 (defn toimenpidepyynnon-ikoni [tila]
   (sijainti-ikoni
     (case tila
      :kuittaamaton (:ilmoitus-auki ikonien-varit)
-     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
-     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
-     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+     :vastaanotettu (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitettu (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetettu (:ilmoitus-lopetettu ikonien-varit))
     (:toimenpidepyynto ikonien-varit)))
 
 
@@ -310,9 +310,9 @@
   (sijainti-ikoni
     (case tila
      :kuittaamaton (:ilmoitus-auki ikonien-varit)
-     :vastaanotto (:ilmoitus-kaynnissa ikonien-varit)
-     :aloitus (:ilmoitus-kaynnissa ikonien-varit)
-     :lopetus (:ilmoitus-lopetettu ikonien-varit))
+     :vastaanotettu (:ilmoitus-kaynnissa ikonien-varit)
+     :aloitettu (:ilmoitus-kaynnissa ikonien-varit)
+     :lopetettu (:ilmoitus-lopetettu ikonien-varit))
     (:tiedoitus ikonien-varit)))
 
 (defn ilmoituksen-ikoni [{:keys [ilmoitustyyppi tila] :as ilmoitus}]
