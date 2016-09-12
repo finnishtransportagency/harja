@@ -5,13 +5,33 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot-q]
             [clj-time.periodic :refer [periodic-seq]]
+            [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
             [clj-time.coerce :as c]))
 
-(defn- tarkista-paivan-urakoiden-paivystykset [urakoiden-paivystykset pvm]
-  (log/debug "Tarkistetaan urakkakohtaisesti, onko annetulle päivälle " (pr-str pvm) " olemassa päivystys."))
+(defn urakat-ilman-paivytysta
+  "Palauttaa urakat, joille ei ole päivystystä kyseisenä päivänä"
+  [urakoiden-paivystykset pvm]
+  (log/debug "Tarkistetaan urakkakohtaisesti, onko annetulle päivälle " (pr-str pvm) " olemassa päivystys.")
+  (let [urakalla-paivystys-annettuna-paivana?
+        (fn [paivystykset pvm]
+          (let [paivystys-annettuna-paivana? (fn [pvm paivystys-alku paivystys-loppu]
+                                               (pvm/valissa? pvm
+                                                             paivystys-alku
+                                                             paivystys-loppu
+                                                             false))]
+            (some?
+              (some #(paivystys-annettuna-paivana?
+                      pvm
+                      (:alku %)
+                      (:loppu %))
+                    paivystykset))))]
+
+    (filter
+      #(not (urakalla-paivystys-annettuna-paivana? (:paivystykset %) pvm))
+      urakoiden-paivystykset)))
 
 (defn hae-urakoiden-paivystykset
   "Hakee urakoiden päivystystiedot. Palauttaa vain sellaiset urakat jotka ovat olleet
@@ -42,7 +62,7 @@
 
 (defn- paivystajien-tarkistustehtava [db nykyhetki]
   (let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)]
-    (tarkista-paivan-urakoiden-paivystykset urakoiden-paivystykset nykyhetki)))
+    (urakat-ilman-paivytysta urakoiden-paivystykset nykyhetki)))
 
 (defn tee-paivystajien-tarkistustehtava [{:keys [db] :as this}]
   (log/debug "Ajastetaan päivystäjien tarkistus")
