@@ -325,4 +325,4 @@ SELECT
   loppu as paivystys_loppu
 FROM urakka u
   LEFT JOIN paivystys p ON p.urakka = u.id
-WHERE u.loppupvm >= NOW();
+WHERE u.loppupvm >= :pvm;
