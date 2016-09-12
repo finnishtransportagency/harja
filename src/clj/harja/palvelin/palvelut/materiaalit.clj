@@ -31,7 +31,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))
+              (map #(assoc % :maara (some-> % :maara double)))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
         (q/hae-urakassa-kaytetyt-materiaalit db (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt) sopimus)))
 
