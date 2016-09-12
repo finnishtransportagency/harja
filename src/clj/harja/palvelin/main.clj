@@ -88,6 +88,7 @@
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
 
     ;; Ajastetut tehtävät
+    [harja.palvelin.ajastetut-tehtavat.paivystajatarkistukset :as paivystajatarkistukset]
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
      :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
@@ -195,6 +196,12 @@
                       :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
+
+      ;; Tarkastustehtävät
+
+      :paivystajatarkistukset (component/using
+                                (paivystajatarkistukset/->PaivystajaTarkastukset)
+                                [:http-palvelin :db])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
