@@ -11,7 +11,8 @@
             [harja.kyselyt.konversio :as konv]
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [clojure.string :as str]))
 
 (defn viesti-puuttuvasta-paivystyksesta [urakka-nimi pvm]
   (format "Urakalla %s ei ole Harjassa päivystystietoa tälle päivälle %s"
@@ -23,9 +24,16 @@
   )
 
 (defn hae-ilmoituksen-saajat [fim sampo-id]
-  (let [henkilot (fim/hae-urakan-kayttajat fim sampo-id)]
-    (log/debug "Henkilöt: " (pr-str henkilot))
-    henkilot))
+  (let [urakan-kayttajat (fim/hae-urakan-kayttajat fim sampo-id)
+        ilmoituksen-saajat (filter
+                             (fn [kayttaja]
+                               (let [roolit (:roolit kayttaja)]
+                                 ;; Tarkka match roolit-excelin roolin nimestä
+                                 (some #(or (= (str/lower-case %) "ELY urakanvalvoja")
+                                            (= (str/lower-case %) "Urakan vastuuhenkilö"))
+                                       roolit)))
+                             urakan-kayttajat)]
+    ilmoituksen-saajat))
 
 (defn- ilmoita-paivystyksettomasta-urakasta [urakka fim]
   (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampo-id urakka))]
