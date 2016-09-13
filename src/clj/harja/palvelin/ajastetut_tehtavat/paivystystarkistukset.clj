@@ -10,7 +10,13 @@
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
             [clj-time.coerce :as c]
-            [harja.palvelin.komponentit.fim :as fim]))
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.fmt :as fmt]))
+
+(defn viesti-puuttuvasta-paivystyksesta [urakka-nimi pvm]
+  (format "Urakalla %s ei ole Harjassa päivystystietoa tälle päivälle %s"
+          urakka-nimi
+          (fmt/pvm (c/to-date pvm))))
 
 (defn- laheta-ilmoitus-henkiloille [henkilot]
   ;; TODO
