@@ -30,6 +30,4 @@
    :vaarakorkeusasema (inline-svg "resources/public/img/tyovirheet/vaara-korkeus-24.svg")
    :pintaharva (inline-svg "resources/public/img/tyovirheet/harva-pinta-24.svg")
    :pintakuivatuspuute (inline-svg "resources/public/img/tyovirheet/pintakuivatus-puute-24.svg")
-   :kaivojenkorkeusasema (inline-svg "resources/public/img/tyovirheet/kaivon-korkeus-24.svg")}
-  ;;(map (juxt first #(inline (str "resources/public/img/tyovirheet/" (second %) "-24.svg"))))
-  )
+   :kaivojenkorkeusasema (inline-svg "resources/public/img/tyovirheet/kaivon-korkeus-24.svg")})
