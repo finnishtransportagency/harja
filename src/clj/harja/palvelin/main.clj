@@ -200,7 +200,7 @@
       ;; Tarkastustehtävät
 
       :paivystystarkistukset (component/using
-                               (paivystystarkistukset/->Paivystystarkastukset)
+                               (paivystystarkistukset/->Paivystystarkistukset)
                                [:http-palvelin :db :fim])
 
       ;; Frontille tarjottavat palvelut
