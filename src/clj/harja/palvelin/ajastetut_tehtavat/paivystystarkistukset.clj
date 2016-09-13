@@ -12,16 +12,21 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.fmt :as fmt]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
 
 (defn viesti-puuttuvasta-paivystyksesta [urakka-nimi pvm]
   (format "Urakalla %s ei ole Harjassa päivystystietoa tälle päivälle %s"
           urakka-nimi
           (fmt/pvm (c/to-date pvm))))
 
-(defn- laheta-ilmoitus-henkiloille [henkilot]
-  ;; TODO
-  )
+(defn- laheta-ilmoitus-henkiloille [email urakka-nimi henkilot pvm]
+  (doseq [henkilo henkilot]
+    (sahkoposti/laheta-viesti! email
+                               (sahkoposti/vastausosoite email)
+                               (:sahkoposti henkilo)
+                               "Urakalle ei ole päivystystä"
+                               (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm))))
 
 (defn hae-ilmoituksen-saajat [fim sampo-id]
   (let [urakan-kayttajat (fim/hae-urakan-kayttajat fim sampo-id)
@@ -35,15 +40,15 @@
                              urakan-kayttajat)]
     ilmoituksen-saajat))
 
-(defn- ilmoita-paivystyksettomasta-urakasta [urakka fim]
+(defn- ilmoita-paivystyksettomasta-urakasta [urakka fim email pvm]
   (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampo-id urakka))]
     (if-not (empty? ilmoituksen-saajat)
-      (laheta-ilmoitus-henkiloille ilmoituksen-saajat)
+      (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm)
       (log/warn (format "Urakalla %s ei ole päivystystä tänään eikä asiasta voitu ilmoittaa kenellekään." (:nimi urakka))))))
 
-(defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta fim]
+(defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta fim email pvm]
   (doseq [urakka urakat-ilman-paivystysta]
-    (ilmoita-paivystyksettomasta-urakasta urakka fim)))
+    (ilmoita-paivystyksettomasta-urakasta urakka fim email pvm)))
 
 (defn urakat-ilman-paivystysta
   "Palauttaa urakat, joille ei ole päivystystä kyseisenä päivänä"
@@ -94,17 +99,17 @@
                                  urakat)]
     urakoiden-paivystykset))
 
-(defn- paivystyksien-tarkistustehtava [db fim nykyhetki]
+(defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
   (let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)]
-    (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim)))
+    (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
 
-(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim] :as this}]
+(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim email] :as this}]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (ajastettu-tehtava/ajasta-paivittain
     [5 0 0]
     (fn [_]
-      (paivystyksien-tarkistustehtava db fim (t/now)))))
+      (paivystyksien-tarkistustehtava db fim email (t/now)))))
 
 (defrecord Paivystystarkistukset []
   component/Lifecycle
