@@ -30,59 +30,45 @@
 (defn tee-onnistunut-ilmoitustoimenpidevastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Ilmoitustoimenpide kirjattu onnistuneesti"}))
 
-(defn kirjaa-ilmoitustoimenpide [db tloik parametrit data]
+(defn luo-ilmoitustoimenpide [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi vapaateksti]
+  (:id (ilmoitukset/luo-ilmoitustoimenpide<!
+         db
+         {:ilmoitus id
+          :ilmoitusid ilmoitusid
+          :kuitattu (aika-string->java-sql-date (:aika ilmoitustoimenpide))
+          :vakiofraasi nil
+          :vapaateksti vapaateksti
+          :kuittaustyyppi kuittaustyyppi
+          :kuittaaja_henkilo_etunimi (get-in ilmoittaja [:henkilo :etunimi])
+          :kuittaaja_henkilo_sukunimi (get-in ilmoittaja [:henkilo :sukunimi])
+          :kuittaaja_henkilo_matkapuhelin (get-in ilmoittaja [:henkilo :matkapuhelin])
+          :kuittaaja_henkilo_tyopuhelin (get-in ilmoittaja [:henkilo :tyopuhelin])
+          :kuittaaja_henkilo_sahkoposti (get-in ilmoittaja [:henkilo :sahkoposti])
+          :kuittaaja_organisaatio_nimi (get-in ilmoittaja [:organisaatio :nimi])
+          :kuittaaja_organisaatio_ytunnus (get-in ilmoittaja [:organisaatio :ytunnus])
+          :kasittelija_henkilo_etunimi (get-in kasittelija [:henkilo :etunimi])
+          :kasittelija_henkilo_sukunimi (get-in kasittelija [:henkilo :sukunimi])
+          :kasittelija_henkilo_matkapuhelin (get-in kasittelija [:henkilo :matkapuhelin])
+          :kasittelija_henkilo_tyopuhelin (get-in kasittelija [:henkilo :tyopuhelin])
+          :kasittelija_henkilo_sahkoposti (get-in kasittelija [:henkilo :sahkoposti])
+          :kasittelija_organisaatio_nimi (get-in kasittelija [:organisaatio :nimi])
+          :kasittelija_organisaatio_ytunnus (get-in kasittelija [:organisaatio :ytunnus])})))
+
+(defn kirjaa-ilmoitustoimenpide [db tloik parametrit
+                                 {{:keys [tyyppi vapaateksti ilmoittaja kasittelija] :as ilmoitustoimenpide}
+                                  :ilmoitustoimenpide}]
   (let [ilmoitusid (Integer/parseInt (:id parametrit))
         id (hae-ilmoituksen-id db ilmoitusid)
-        ilmoitustoimenpide (:ilmoitustoimenpide data)
-        ilmoittaja (:ilmoittaja ilmoitustoimenpide)
-        kasittelija (:kasittelija ilmoitustoimenpide)
         _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
-        ilmoitustoimenpide-id (:id (ilmoitukset/luo-ilmoitustoimenpide<!
-                                    db
-                                    id
-                                    ilmoitusid
-                                    (aika-string->java-sql-date (:aika ilmoitustoimenpide))
-                                    (:vapaateksti ilmoitustoimenpide)
-                                    (:tyyppi ilmoitustoimenpide)
-                                    (get-in ilmoittaja [:henkilo :etunimi])
-                                    (get-in ilmoittaja [:henkilo :sukunimi])
-                                    (get-in ilmoittaja [:henkilo :matkapuhelin])
-                                    (get-in ilmoittaja [:henkilo :tyopuhelin])
-                                    (get-in ilmoittaja [:henkilo :sahkoposti])
-                                    (get-in ilmoittaja [:organisaatio :nimi])
-                                    (get-in ilmoittaja [:organisaatio :ytunnus])
-                                    (get-in kasittelija [:henkilo :etunimi])
-                                    (get-in kasittelija [:henkilo :sukunimi])
-                                    (get-in kasittelija [:henkilo :matkapuhelin])
-                                    (get-in kasittelija [:henkilo :tyopuhelin])
-                                    (get-in kasittelija [:henkilo :sahkoposti])
-                                    (get-in kasittelija [:organisaatio :nimi])
-                                    (get-in kasittelija [:organisaatio :ytunnus])))]
+        kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija
+                                            tyyppi
+                                            vapaateksti)]
     (when (and (= (:tyyppi ilmoitustoimenpide) :aloitus)
                (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
-      (let [id (:id (ilmoitukset/luo-ilmoitustoimenpide<!
-                     db
-                     id
-                     ilmoitusid
-                     (aika-string->java-sql-date (:aika ilmoitustoimenpide))
-                     "vastaanotettu"
-                     :vastaanotto
-                     (get-in ilmoittaja [:henkilo :etunimi])
-                     (get-in ilmoittaja [:henkilo :sukunimi])
-                     (get-in ilmoittaja [:henkilo :matkapuhelin])
-                     (get-in ilmoittaja [:henkilo :tyopuhelin])
-                     (get-in ilmoittaja [:henkilo :sahkoposti])
-                     (get-in ilmoittaja [:organisaatio :nimi])
-                     (get-in ilmoittaja [:organisaatio :ytunnus])
-                     (get-in kasittelija [:henkilo :etunimi])
-                     (get-in kasittelija [:henkilo :sukunimi])
-                     (get-in kasittelija [:henkilo :matkapuhelin])
-                     (get-in kasittelija [:henkilo :tyopuhelin])
-                     (get-in kasittelija [:henkilo :sahkoposti])
-                     (get-in kasittelija [:organisaatio :nimi])
-                     (get-in kasittelija [:organisaatio :ytunnus])))]
-        (tloik/laheta-ilmoitustoimenpide tloik id)))
-    (tloik/laheta-ilmoitustoimenpide tloik ilmoitustoimenpide-id)
+      (let [aloitus-kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija
+                                                        :vastaanotto "Vastaanotettu")]
+        (tloik/laheta-ilmoitustoimenpide tloik aloitus-kuittaus-id)))
+    (tloik/laheta-ilmoitustoimenpide tloik kuittaus-id)
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
 (defn ilmoituslahettaja [integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?]
