@@ -142,14 +142,14 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                          ilmoitus-id
                          vapaateksti
                          kuittaustyyppi
-                         paivystaja))
-            ilmoitustoimenpide-id (tallenna (kuittaustyyppi->enum kuittaustyyppi) kommentti)]
-
+                         paivystaja))]
         (when (and (= kuittaustyyppi :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
           (let [aloitus-kuittaus-id (tallenna :vastaanotto "Vastaanotettu")]
             (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
-        (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
+        (let [ilmoitustoimenpide-id (tallenna (kuittaustyyppi->enum kuittaustyyppi) kommentti)]
+          (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
+
         (assoc +onnistunut-viesti+
           :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
                              :urakka-id (:urakka ilmoitus)

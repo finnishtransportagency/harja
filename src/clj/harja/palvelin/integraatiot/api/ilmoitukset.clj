@@ -59,18 +59,17 @@
                                   :ilmoitustoimenpide}]
   (let [ilmoitusid (Integer/parseInt (:id parametrit))
         id (hae-ilmoituksen-id db ilmoitusid)
-        _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))
-        kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija
-                                            tyyppi
-                                            vapaateksti)]
+        _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))]
 
-    (when (and (= tyyppi :aloitus)
-               (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
+    (when (and (= tyyppi :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
       (let [aloitus-kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija
                                                         :vastaanotto "Vastaanotettu")]
         (tloik/laheta-ilmoitustoimenpide tloik aloitus-kuittaus-id)))
 
-    (tloik/laheta-ilmoitustoimenpide tloik kuittaus-id)
+    (let [kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija tyyppi
+                                              vapaateksti)]
+      (tloik/laheta-ilmoitustoimenpide tloik kuittaus-id))
+
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
 
 (defn ilmoituslahettaja [integraatioloki tapahtumat kanava tapahtuma-id sulje-lahetyksen-jalkeen?]

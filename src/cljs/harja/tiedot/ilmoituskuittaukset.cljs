@@ -11,11 +11,6 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce uusi-kuittaus (atom nil))
-
-(defn laheta-uusi-kuittaus [kuittaus]
-  (k/post! :tallenna-ilmoitustoimenpide kuittaus nil true))
-
 (defn uusi-kuittaus-ilmoitukselle [ilmoitus]
   (let [kayttaja @istunto/kayttaja
         organisaatio (:organisaatio kayttaja)]
@@ -35,11 +30,3 @@
            (into []
                  (map #(merge (uusi-kuittaus-ilmoitukselle %) kuittaus))
                  ilmoitukset)))
-
-(defn alusta-uusi-kuittaus [valittu-ilmoitus]
-  (if (nil? valittu-ilmoitus)
-    (reset! uusi-kuittaus nil)
-    (let [kayttaja @istunto/kayttaja
-          organisaatio (:organisaatio kayttaja)]
-      (reset! uusi-kuittaus
-              (uusi-kuittaus-ilmoitukselle @valittu-ilmoitus)))))

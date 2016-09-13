@@ -86,14 +86,15 @@
                        ilmoitusid
                        toimenpide
                        vapaateksti
-                       paivystaja))
-          ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
+                       paivystaja))]
 
       (when (and (= toimenpide :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
         (let [aloitus-kuittaus-id (tallenna :vastaanotto "Vastaanotettu")]
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
-      (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
+      (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
+        (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
+
       +onnistunut-viesti+)
 
     (catch [:type :viestinumero-tai-toimenpide-puuttuu] {}
