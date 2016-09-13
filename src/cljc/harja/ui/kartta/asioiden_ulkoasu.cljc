@@ -8,8 +8,6 @@
 (def +zindex+ 4)
 (def +normaali-leveys+ 6)
 (def +valitun-leveys+ 8)
-(def +ok-tarkastus-leveys-valittu+ 4)
-(def +ok-tarkastus-leveys+ 2)
 (def +normaali-vari+ "black")
 (def +valitun-vari+ "blue")
 
@@ -100,15 +98,15 @@
    :kt-valmis                  "vihrea"
 
    ;; Pienemmät ikonit (pinnit)
-   :laatupoikkeama "tummansininen"
-   :laatupoikkeama-tilaaja "tummansininen"
-   :laatupoikkeama-konsultti "tummansininen"
-   :laatupoikkeama-urakoitsija "sininen"
+   :laatupoikkeama "violetti"
+   :laatupoikkeama-tilaaja "violetti"
+   :laatupoikkeama-konsultti "violetti"
+   :laatupoikkeama-urakoitsija "magenta"
    :tarkastus "punainen"
    :tarkastus-tilaaja "punainen"
    :tarkastus-konsultti "punainen"
    :tarkastus-urakoitsija "punainen"
-   :varustetoteuma "violetti"
+   :varustetoteuma "tummansininen"
    :yllapito "pinkki"})
 
 (def viivojen-varit
@@ -118,15 +116,15 @@
    :yllapito-pohja puhtaat/musta
    :yllapito-katkoviiva puhtaat/tummanharmaa
 
-   :laatupoikkeama puhtaat/tummansininen
-   :laatupoikkeama-tilaaja puhtaat/tummansininen
-   :laatupoikkeama-konsultti puhtaat/tummansininen
-   :laatupoikkeama-urakoitsija puhtaat/sininen
+   :laatupoikkeama puhtaat/violetti
+   :laatupoikkeama-tilaaja puhtaat/violetti
+   :laatupoikkeama-konsultti puhtaat/violetti
+   :laatupoikkeama-urakoitsija puhtaat/magenta
 
-   :ok-tarkastus puhtaat/musta
-   :ok-tarkastus-tilaaja puhtaat/musta
-   :ok-tarkastus-konsultti puhtaat/musta
-   :ok-tarkastus-urakoitsija puhtaat/musta
+   :ok-tarkastus puhtaat/sininen
+   :ok-tarkastus-tilaaja puhtaat/sininen
+   :ok-tarkastus-konsultti puhtaat/sininen
+   :ok-tarkastus-urakoitsija puhtaat/sininen
    :ei-ok-tarkastus puhtaat/punainen
    :ei-ok-tarkastus-tilaaja puhtaat/punainen
    :ei-ok-tarkastus-konsultti puhtaat/punainen
@@ -260,13 +258,12 @@
                              (:tarkastus ikonien-varit)))
     (and valittu? ok?) (pinni-ikoni (:tarkastus ikonien-varit)))) ;; Ei näytetä ok-tarkastuksia jos ei ole valittu
 
-(defn tarkastuksen-reitti [valittu? ok? tekija]
+(defn tarkastuksen-reitti [ok? tekija]
   (if ok? {:color (case tekija
                     :tilaaja (:ok-tarkastus-tilaaja viivojen-varit)
                     :konsultti (:ok-tarkastus-konsultti viivojen-varit)
                     :urakoitsija (:ok-tarkastus-urakoitsija viivojen-varit)
-                    (:ok-tarkastus viivojen-varit))
-           :width (if valittu? +ok-tarkastus-leveys-valittu+ +ok-tarkastus-leveys+)}
+                    (:ok-tarkastus viivojen-varit))}
           {:color (case tekija
                     :tilaaja (:ei-ok-tarkastus-tilaaja viivojen-varit)
                     :konsultti (:ei-ok-tarkastus-konsultti viivojen-varit)
