@@ -64,7 +64,6 @@
                                             tyyppi
                                             vapaateksti)]
 
-    ;; Jos tehdään suorilta aloituskuittaus, tehdään samalla vastaanottokuittaus, jos sitä ei ole jo tehty
     (when (and (= tyyppi :aloitus)
                (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
       (let [aloitus-kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija

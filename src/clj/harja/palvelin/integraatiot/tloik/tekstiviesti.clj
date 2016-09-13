@@ -76,9 +76,9 @@
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
-    (let [{:keys [toimenpide vapaateksti]} (parsi-tekstiviesti viesti)
-          {:keys [ilmoitus ilmoitusid]} (hae-paivystajatekstiviesti db (:viestinumero data) puhelinnumero)
-          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db (:yhteyshenkilo paivystajatekstiviesti)))
+    (let [{:keys [toimenpide vapaateksti viestinumero]} (parsi-tekstiviesti viesti)
+          {:keys [ilmoitus ilmoitusid yhteyshenkilo]} (hae-paivystajatekstiviesti db viestinumero puhelinnumero)
+          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db yhteyshenkilo ))
           tallenna (fn [toimenpide vapaateksti]
                      (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
                        db
@@ -89,7 +89,7 @@
                        paivystaja))
           ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
 
-      (when (and (= tyyppi :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
+      (when (and (= toimenpide :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
         (let [aloitus-kuittaus-id (tallenna :vastaanotto "Vastaanotettu")]
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 

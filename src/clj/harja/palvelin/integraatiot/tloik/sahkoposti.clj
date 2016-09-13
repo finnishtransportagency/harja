@@ -135,14 +135,25 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
         ilmoitus (:id (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id)))]
     (if-not paivystaja
       +ilmoitustoimenpiteen-tallennus-epaonnistui+
-      (let [ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
-                                   db ilmoitus ilmoitus-id kommentti
-                                   (kuittaustyyppi->enum kuittaustyyppi) paivystaja)]
+      (let [tallenna (fn [kuittaustyyppi vapaateksti]
+                       (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+                         db
+                         ilmoitus
+                         ilmoitus-id
+                         vapaateksti
+                         kuittaustyyppi
+                         paivystaja))
+            ilmoitustoimenpide-id (tallenna (kuittaustyyppi->enum kuittaustyyppi) kommentti)]
+
+        (when (and (= kuittaustyyppi :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
+          (let [aloitus-kuittaus-id (tallenna :vastaanotto "Vastaanotettu")]
+            (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
+
         (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
         (assoc +onnistunut-viesti+
-               :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
-                                  :urakka-id (:urakka ilmoitus)
-                                  :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
+          :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
+                             :urakka-id (:urakka ilmoitus)
+                             :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
 
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
