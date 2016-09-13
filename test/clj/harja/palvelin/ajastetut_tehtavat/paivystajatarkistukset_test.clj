@@ -1,15 +1,37 @@
 (ns harja.palvelin.ajastetut-tehtavat.paivystajatarkistukset-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystajatarkistukset]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [clj-time.core :as t]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.fim :as fim])
   (:use org.httpkit.fake))
 
 (def +testi-fim-+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root
+    #'jarjestelma
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
+          :fim (component/using
+                 (fim/->FIM +testi-fim-+)
+                 [:db :integraatioloki])))))
+
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+
+(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (def testipaivystykset
   [{:urakka 4,
@@ -89,6 +111,8 @@
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
     (with-fake-http
-      [(str +testi-fim-+ vastaus-xml]
-      (let [vastaus (paivystajatarkistukset/hae-ilmoituksen-saajat fim "1242141-OULU2")]
-        is (= vastaus testi-fim-vastaus))))) )
+      [+testi-fim-+ vastaus-xml]
+      (let [vastaus (paivystajatarkistukset/hae-ilmoituksen-saajat
+                      (:fim jarjestelma)
+                      "1242141-OULU2")]
+        (is (= vastaus testi-fim-vastaus))))))
