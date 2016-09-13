@@ -46,7 +46,7 @@
     :sukunimi "Esimerkki",
     :sahkoposti "erkki.esimerkki@example.com",
     :puhelin "",
-    :roolit [],
+    :roolit ["ELY urakanvalvoja"],
     :organisaatio "ELY"}
     {:tunniste nil,
      :kayttajatunnus "A000002",
@@ -54,7 +54,7 @@
      :sukunimi "Esimerkki",
      :sahkoposti "eero.esimerkki@example.com",
      :puhelin "0400123456789",
-     :roolit [],
+     :roolit ["ELY urakanvalvoja"],
      :organisaatio "ELY"}])
 
 (deftest urakoiden-paivystajien-haku-toimii
