@@ -138,6 +138,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                    (reset! data v)
                                                    (reset! teksti ((or nayta str) v))
                                                    (reset! tulokset nil)))))}]
+         (when (zero? hae-kun-yli-n-merkkia)
+           [:button.nappi-hakualasveto
+            {:on-click #(go (reset! tulokset (<! (hae lahde "")))
+                            (reset! valittu-idx nil))}
+            [:span.livicon-chevron-down]])
+
          [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
                                               :style (avautumissuunta-ja-korkeus-tyylit
                                                        @max-korkeus @avautumissuunta)}

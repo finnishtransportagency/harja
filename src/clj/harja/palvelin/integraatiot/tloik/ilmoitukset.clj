@@ -43,25 +43,26 @@
 (defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
   (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")
   (let [ilmoitustoimenpide-id (:id (ilmoitukset-q/luo-ilmoitustoimenpide<!
-                                     db {:ilmoitus ilmoitus-id
-                                         :ilmoitusid (:ilmoitus-id ilmoitus)
-                                         :kuitattu (c/to-date (t/now))
-                                         :vapaateksti nil
-                                         :kuittaustyyppi "vastaanotto"
-                                         :kuittaaja_henkilo_etunimi nil
-                                         :kuittaaja_henkilo_sukunimi nil
-                                         :kuittaaja_henkilo_matkapuhelin nil
-                                         :kuittaaja_henkilo_tyopuhelin nil
-                                         :kuittaaja_henkilo_sahkoposti nil
-                                         :kuittaaja_organisaatio_nimi nil
-                                         :kuittaaja_organisaatio_ytunnus nil
-                                         :kasittelija_henkilo_etunimi nil
-                                         :kasittelija_henkilo_sukunimi nil
-                                         :kasittelija_henkilo_matkapuhelin nil
-                                         :kasittelija_henkilo_tyopuhelin nil
-                                         :kasittelija_henkilo_sahkoposti nil
-                                         :kasittelija_organisaatio_nimi nil
-                                         :kasittelija_organisaatio_ytunnus nil}))]
+                                    db {:ilmoitus ilmoitus-id
+                                        :ilmoitusid (:ilmoitus-id ilmoitus)
+                                        :kuitattu (c/to-date (t/now))
+                                        :vakiofraasi nil
+                                        :vapaateksti nil
+                                        :kuittaustyyppi "vastaanotto"
+                                        :kuittaaja_henkilo_etunimi nil
+                                        :kuittaaja_henkilo_sukunimi nil
+                                        :kuittaaja_henkilo_matkapuhelin nil
+                                        :kuittaaja_henkilo_tyopuhelin nil
+                                        :kuittaaja_henkilo_sahkoposti nil
+                                        :kuittaaja_organisaatio_nimi nil
+                                        :kuittaaja_organisaatio_ytunnus nil
+                                        :kasittelija_henkilo_etunimi nil
+                                        :kasittelija_henkilo_sukunimi nil
+                                        :kasittelija_henkilo_matkapuhelin nil
+                                        :kasittelija_henkilo_tyopuhelin nil
+                                        :kasittelija_henkilo_sahkoposti nil
+                                        :kasittelija_organisaatio_nimi nil
+                                        :kasittelija_organisaatio_ytunnus nil}))]
     (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)))
 
 (defn- laheta-ilmoitus-paivystajille [db ilmoitus paivystajat urakka-id ilmoitusasetukset]
