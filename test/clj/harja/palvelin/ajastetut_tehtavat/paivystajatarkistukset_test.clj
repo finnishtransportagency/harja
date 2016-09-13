@@ -68,7 +68,7 @@
          (rest testipaivystykset))))
 
 (deftest ilmoituksien-saajien-haku-toimii
-  (let [vastaus-xml (slurp (io/resource "xsd/esimerkki/jostain.xml"))]
+  (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
     (with-fake-http
       [(str +testi-fim-+ vastaus-xml]
       (let [vastausdata (paivystajatarkistukset/hae-ilmoituksen-saajat fim "1242141-OULU2")]
