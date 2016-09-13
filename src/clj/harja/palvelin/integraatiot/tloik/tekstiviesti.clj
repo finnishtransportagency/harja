@@ -10,7 +10,8 @@
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.fmt :as fmt]
-            [harja.domain.ilmoitukset :as ilm])
+            [harja.domain.ilmoitukset :as ilm]
+            [harja.kyselyt.ilmoitukset :as ilmoitukset])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +ilmoitusviesti+
@@ -75,16 +76,22 @@
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
-    (let [data (parsi-tekstiviesti viesti)
-          paivystajatekstiviesti (hae-paivystajatekstiviesti db (:viestinumero data) puhelinnumero)
+    (let [{:keys [toimenpide vapaateksti]} (parsi-tekstiviesti viesti)
+          {:keys [ilmoitus ilmoitusid]} (hae-paivystajatekstiviesti db (:viestinumero data) puhelinnumero)
           paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db (:yhteyshenkilo paivystajatekstiviesti)))
-          ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
-                                  db
-                                  (:ilmoitus paivystajatekstiviesti)
-                                  (:ilmoitusid paivystajatekstiviesti)
-                                  (:vapaateksti data)
-                                  (:toimenpide data)
-                                  paivystaja)]
+          tallenna (fn [toimenpide vapaateksti]
+                     (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+                       db
+                       ilmoitus
+                       ilmoitusid
+                       toimenpide
+                       vapaateksti
+                       paivystaja))
+          ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
+
+      (when (and (= tyyppi :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
+        (let [aloitus-kuittaus-id (tallenna :vastaanotto "Vastaanotettu")]
+          (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
       (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
       +onnistunut-viesti+)
