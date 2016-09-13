@@ -61,7 +61,7 @@
    {:urakka 9, :nimi "Porintien päällystysurakka"}
    {:urakka 7, :nimi "YHA-paikkausurakka"}])
 
-(def testi-fim-vastaus
+(def ilmoituksien-saajat
   [{:tunniste nil,
     :kayttajatunnus "A000001",
     :etunimi "Erkki",
@@ -107,7 +107,6 @@
            (t/local-date 2016 10 1))
          (rest testipaivystykset))))
 
-;; TODO Korjaa tämä
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
     (with-fake-http
@@ -115,4 +114,4 @@
       (let [vastaus (paivystajatarkistukset/hae-ilmoituksen-saajat
                       (:fim jarjestelma)
                       "1242141-OULU2")]
-        (is (= vastaus testi-fim-vastaus))))))
+        (is (= vastaus ilmoituksien-saajat))))))

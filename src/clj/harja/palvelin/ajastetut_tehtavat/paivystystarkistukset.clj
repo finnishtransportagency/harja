@@ -34,8 +34,8 @@
                              (fn [kayttaja]
                                (let [roolit (:roolit kayttaja)]
                                  ;; Tarkka match roolit-excelin roolin nimestä
-                                 (some #(or (= (str/lower-case %) "ELY urakanvalvoja")
-                                            (= (str/lower-case %) "Urakan vastuuhenkilö"))
+                                 (some #(or (= (str/lower-case %) "ely urakanvalvoja")
+                                            (= (str/lower-case %) "urakan vastuuhenkilö"))
                                        roolit)))
                              urakan-kayttajat)]
     ilmoituksen-saajat))
