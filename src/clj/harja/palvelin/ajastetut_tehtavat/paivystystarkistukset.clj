@@ -16,13 +16,13 @@
   ;; TODO
   )
 
-(defn hae-ilmoituksen-saajat [sampo-id fim]
-  (let [henkilot (fim/hae-urakan-kayttajat sampo-id fim)]
+(defn hae-ilmoituksen-saajat [fim sampo-id]
+  (let [henkilot (fim/hae-urakan-kayttajat fim sampo-id)]
     (log/debug "Henkilöt: " (pr-str henkilot))
     henkilot))
 
 (defn- ilmoita-paivystyksettomasta-urakasta [urakka fim]
-  (let [ilmoituksen-saajat (hae-ilmoituksen-saajat (:sampo-id urakka) fim)]
+  (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampo-id urakka))]
     (if-not (empty? ilmoituksen-saajat)
       (laheta-ilmoitus-henkiloille ilmoituksen-saajat)
       (log/warn (format "Urakalla %s ei ole päivystystä tänään eikä asiasta voitu ilmoittaa kenellekään." (:nimi urakka))))))
