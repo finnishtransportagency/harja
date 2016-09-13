@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
-            [harja.palvelin.ajastetut-tehtavat.paivystajatarkistukset :as paivystajatarkistukset]
+            [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystajatarkistukset]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [clj-time.core :as t])
@@ -63,3 +63,7 @@
            testipaivystykset
            (t/local-date 2016 10 1))
          (rest testipaivystykset))))
+
+(deftest ilmoituksien-saajien-haku-toimii
+  ;; TODO Testi testi, tee oikea
+  (is (= [] (paivystajatarkistukset/hae-ilmoituksen-saajat fim))))

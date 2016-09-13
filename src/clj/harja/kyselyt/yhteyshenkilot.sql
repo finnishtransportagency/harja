@@ -318,7 +318,8 @@ WHERE
 
 -- name: hae-kaynissa-olevien-urakoiden-paivystykset
 SELECT
-  u.id as urakka,
+  u.id as "urakka-id",
+  u.sampoid as "sampo-id",
   nimi,
   p.id as paivystys_id,
   alku as paivystys_alku,

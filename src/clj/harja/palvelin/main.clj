@@ -88,7 +88,7 @@
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
 
     ;; Ajastetut tehtävät
-    [harja.palvelin.ajastetut-tehtavat.paivystajatarkistukset :as paivystajatarkistukset]
+    [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
      :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
@@ -199,9 +199,9 @@
 
       ;; Tarkastustehtävät
 
-      :paivystajatarkistukset (component/using
-                                (paivystajatarkistukset/->PaivystajaTarkastukset)
-                                [:http-palvelin :db])
+      :paivystystarkistukset (component/using
+                               (paivystystarkistukset/->Paivystystarkastukset)
+                               [:http-palvelin :db :fim])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
