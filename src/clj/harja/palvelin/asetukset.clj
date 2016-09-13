@@ -86,11 +86,15 @@
                                            (s/optional-key :ely-alueiden-alk-osoite)                   s/Str
                                            (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str}
 
-   (s/optional-key :yha)                  {:url            s/Str}
+   (s/optional-key :yha)                  {:url            s/Str
+                                           :kayttajatunnus s/Str
+                                           :salasana       s/Str}
 
    (s/optional-key :labyrintti)           {:url            s/Str
                                            :kayttajatunnus s/Str
-                                           :salasana       s/Str}})
+                                           :salasana       s/Str}
+
+   (s/optional-key :virustarkistus)       {:url            s/Str}})
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"

@@ -211,13 +211,17 @@
 
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"
-  [json avain]
-  (-> json
-      (assoc avain
-             (some-> json
-                     avain
-                     .getValue
-                     (cheshire/decode true)))))
+  ([json]
+   (some-> json
+           .getValue
+           (cheshire/decode true)))
+  ([json avain]
+   (-> json
+       (assoc avain
+              (some-> json
+                      avain
+                      .getValue
+                      (cheshire/decode true))))))
 
 
 (extend-protocol jdbc/ISQLValue

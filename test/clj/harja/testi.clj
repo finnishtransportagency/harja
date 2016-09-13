@@ -269,6 +269,11 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                    FROM   urakka
                    WHERE  nimi = 'Muhoksen päällystysurakka'"))))
 
+(defn hae-oulun-tiemerkintaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
+
 (defn hae-muhoksen-paikkausurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -298,6 +303,49 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null)"))))
 
+(defn hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')\n
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
+
+(defn hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Leppäjärven ramppi'
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   nimi = 'Kuusamontien testi'
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   tr_numero = 20
+                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-tielta-20-jolla-ei-paallystysilmoitusta []
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE
+                   tr_numero = 20
+                   AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
+
+(defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE urakka != " urakka-id ";"))))
+
+(defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
+  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
+                   WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -461,9 +509,31 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
      (alter-var-root #'jarjestelma component/stop)))
 
 (defn =marginaalissa?
-  "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan tulosten vertailussa."
-  [eka toka marginaali]
-  (< (Math/abs (double (- eka toka))) marginaali))
+  "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan
+  tulosten vertailussa. Oletusmarginaali on 0.05"
+  ([eka toka] (=marginaalissa? eka toka 0.05))
+  ([eka toka marginaali]
+   (< (Math/abs (double (- eka toka))) marginaali)))
+
+(defn tarkista-map-arvot
+  "Tarkistaa, että mäpissä on oikeat arvot. Numeroita vertaillaan =marginaalissa? avulla, muita
+  = avulla. Tarkistaa myös, että kaikki arvot ovat olemassa. Odotetussa mäpissa saa olla
+  ylimääräisiä avaimia."
+  [odotetut saadut]
+  (doseq [k (keys odotetut)
+          :let [odotettu-arvo (get odotetut k)
+                saatu-arvo (get saadut k ::ei-olemassa)]]
+    (if (= saatu-arvo ::ei-olemassa)
+      (is false (str "Odotetussa mäpissä ei arvoa avaimelle: " k
+                     ", odotettiin arvoa: " odotettu-arvo))
+
+      (if (and (number? odotettu-arvo) (number? saatu-arvo))
+        (is (=marginaalissa? odotettu-arvo saatu-arvo)
+            (str "Saatu arvo avaimelle " k " ei marginaalissa, odotettu: "
+                 odotettu-arvo ", saatu: " saatu-arvo))
+        (is (= odotettu-arvo saatu-arvo)
+            (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo
+                 ", saatu: " saatu-arvo))))))
 
 (def suomen-aikavyohyke (t/time-zone-for-id "EET"))
 

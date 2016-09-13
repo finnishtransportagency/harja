@@ -17,7 +17,8 @@
 
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -285,8 +286,16 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   [ur]
   [:div
    [valinnat/urakan-sopimus-ja-hoitokausi ur]
-   [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
-    {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka)))}]
+   (let [oikeus? (oikeudet/voi-kirjoittaa?
+                  oikeudet/urakat-toteumat-materiaalit
+                  (:id @nav/valittu-urakka))]
+     (yleiset/wrap-if
+      (not oikeus?)
+      [yleiset/tooltip {} :%
+       (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                       oikeudet/urakat-toteumat-materiaalit)]
+      [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
+       {:disabled (not oikeus?)}]))
 
    [grid/grid
     {:otsikko "Materiaalien käyttö"
@@ -306,21 +315,21 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
      }
 
     ;; sarakkeet
-    [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-     {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys "50%"}
-     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys "10%"}
-     {:otsikko "Maksimi\u00ADmäärä" :nimi :sovittu_maara :hae :maara :leveys "20%" :tasaa :oikea}
-     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys "20%" :tasaa :oikea}
+    [{:tyyppi :vetolaatikon-tila :leveys 1}
+     {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys 10}
+     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys 2}
+     {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys 4 :tasaa :oikea}
+     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys 4 :tasaa :oikea}
      {:otsikko "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti :tasaa :oikea
-      :muokattava? (constantly false) :leveys "20%"
+      :muokattava? (constantly false) :leveys 4
       :komponentti
-      (fn [rivi]
-        (let [erotus (-
-                       (if (:maara rivi) (:maara rivi) 0)
-                       (:kokonaismaara rivi))]
-          (if (>= erotus 0)
-            [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
-            [:span.materiaalierotus.materiaalierotus-negatiivinen erotus])))}]
+      (fn [{:keys [maara kokonaismaara]}]
+        (if-not maara
+          [:span]
+          (let [erotus (- maara kokonaismaara)]
+            (if (>= erotus 0)
+              [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
+              [:span.materiaalierotus.materiaalierotus-negatiivinen erotus]))))}]
 
     (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])
 

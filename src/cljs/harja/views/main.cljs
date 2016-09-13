@@ -4,7 +4,6 @@
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
-            [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
@@ -172,7 +171,11 @@
    ;; se asemoidaan mountin jälkeen
    ^{:key "kartta-container"}
    [:div#kartta-container {:style {:position "absolute"
-                                   :top (- korkeus)}}
+                                   :top (- korkeus)
+                                   ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
+                                   :overflow (if @nav/kartta-nakyvissa?
+                                               "hidden"
+                                               "visible")}}
     [kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []
@@ -215,6 +218,8 @@
             (if (nil? kayttaja)
               [ladataan]
               (if (ei-kayttooikeutta? kayttaja)
-                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+                [:div.ei-kayttooikeutta-wrap
+                 [:img#harja-brand-icon {:src      "images/harja_logo_soft.svg"}]
+                 [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))

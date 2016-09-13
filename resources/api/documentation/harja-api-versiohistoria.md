@@ -1,7 +1,15 @@
-<b>Nykyinen versio: 0.2.4</b>
-<b>Julkaistu: 27.7.2016</b>
+<b>Nykyinen versio: 0.2.9</b>
+<b>Julkaistu: 9.9.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.2.9. Julkaistu: 9.9.2016:
+    - Lisätty uusi palvelu ylläpidon päällystys-/tiemerkintäurakoiden aikataulutietojen päivittämiselle. Päällystyksen ja kohteen valmistumisen aikataulutiedot voidaan kirjata vain siihen urakkaan, johon ylläpitokohde kuuluu. Tiemerkinnän aikataulu voidaan päivittää siihen urakkaan, joka on merkitty kohteelle suorittajaksi. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
+    - Lisätty päällystysilmoituksen kirjaukseen aikataulutietojen vastaanotto.
+    - Lisätty laskenta päällystysilmoituksen muutoshinnalle.
+- Versionumero: 0.2.8. Julkaistu: 7.9.2016:
+    - Urakan ylläpitokohteiden haku palauttaa jatkossa myös aikataulutiedot.
+- Versionumero: 0.2.7. Julkaistu: 1.9.2016:
+    - Haettaessa tietolajin kuvaus Harjasta ei enää palauteta sellaisia ominaisuuksia, joilla ei ole järjestysnumeroa.
 - Versionumero: 0.2.6. Julkaistu: 11.8.2016:
     - Työkoneiden reaaliaikaseurantaan on lisätty uudet tehtävät ylläpidon ajoneuvoja varten: asfaltointi (pääasfaltointilaite), tiemerkintä, kuumennus (kuumennus-/remix-laitteet), sekoitus tai stabilointi (sekoitus- ja stabilointijyrsimet), turvalaite (TMA-laitteet)
 - Versionumero: 0.2.5. Julkaistu 8.8.2016:

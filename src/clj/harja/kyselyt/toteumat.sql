@@ -463,7 +463,8 @@ WHERE reittipiste = :id;
 -- name: hae-toteuman-reittipisteet-idlla
 SELECT *
 FROM reittipiste
-WHERE toteuma = :id;
+WHERE toteuma = :id
+ORDER BY aika ASC;
 
 -- name: paivita-varustetoteuman-tr-osoite!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
@@ -647,8 +648,9 @@ SELECT
   rp.sijainti AS sijainti
 FROM reittipiste rp
 WHERE
-  rp.toteuma = :toteuma_id;
-
+  rp.toteuma = :toteuma_id
+ORDER BY rp.aika ASC;
+  
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
   tr_numero,

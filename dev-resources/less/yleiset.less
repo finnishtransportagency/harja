@@ -13,13 +13,13 @@ div.tietorivi {
   border-bottom: solid 1px lightGray;
 
   & .nappi-ensisijainen {
-    height: calc(@input-korkeus * 0.85);
+    height: @input-korkeus-matalampi;
     padding-top: 3px;
     padding-bottom: 3px;
   }
 
   & .nappi-alasveto {
-    height: calc(@input-korkeus * 0.85);
+    height: @input-korkeus-matalampi;
 
     > .livicon-chevron-down {
       height: 4px;
@@ -101,9 +101,9 @@ button > .ajax-loader {
 
 .korosta {
   -webkit-animation-name: rivin-korostusanimaatio; /* Chrome, Safari, Opera */
-  -webkit-animation-duration: 4s; /* Chrome, Safari, Opera */
+  -webkit-animation-duration: 12s; /* Chrome, Safari, Opera */
   animation-name: rivin-korostusanimaatio;
-  animation-duration: 4s;
+  animation-duration: 12s;
 }
 
 .korostettu div.haku-lista-item-nimi {

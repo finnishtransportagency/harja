@@ -29,6 +29,7 @@
          (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti)
          (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti))
        (catch Exception poikkeus
+         (log/error poikkeus "Virhe JMS lähetyksessä jonoon: " jono)
          (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti))))))
 
 (defn jonolahettaja [lokittaja sonja jono]

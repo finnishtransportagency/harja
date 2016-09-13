@@ -16,7 +16,8 @@
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -41,8 +42,15 @@
 
      [urakka-valinnat/aikavali]
 
-     (when @laatupoikkeamat/voi-kirjata?
-       [napit/uusi "Uusi laatupoikkeama" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)])
+     (let [oikeus? @laatupoikkeamat/voi-kirjata?]
+       (yleiset/wrap-if
+        (not oikeus?)
+        [yleiset/tooltip {} :%
+         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                         oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
+        [napit/uusi "Uusi laatupoikkeama"
+         #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
+         {:disabled (not oikeus?)}]))
 
      [grid/grid
       {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %))

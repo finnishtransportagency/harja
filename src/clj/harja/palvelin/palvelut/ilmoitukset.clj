@@ -17,14 +17,15 @@
 
 (def ilmoitus-xf
   (comp
-   (harja.geo/muunna-pg-tulokset :sijainti)
-   (map konv/alaviiva->rakenne)
-   (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
-   (map #(konv/array->vec % :selitteet))
-   (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-   (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-   (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-   (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi]))))))
+    (harja.geo/muunna-pg-tulokset :sijainti)
+    (map konv/alaviiva->rakenne)
+    (map #(konv/string->keyword % :tila))
+    (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
+    (map #(konv/array->vec % :selitteet))
+    (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+    (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+    (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+    (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi]))))))
 
 (defn hakuehto-annettu? [p]
   (cond
@@ -105,12 +106,13 @@
         aikavali-loppu (when (second aikavali)
                          (konv/sql-date (second aikavali)))
         urakat (urakat/kayttajan-urakka-idt-aikavalilta
-                db user oikeudet/ilmoitukset-ilmoitukset
-                urakka urakoitsija urakkatyyppi hallintayksikko
-                (first aikavali) (second aikavali))
+                 db user oikeudet/ilmoitukset-ilmoitukset
+                 urakka urakoitsija urakkatyyppi hallintayksikko
+                 (first aikavali) (second aikavali))
         tyypit (mapv name tyypit)
         selite-annettu? (boolean (and selite (first selite)))
         selite (if selite-annettu? (name (first selite)) "")
+        tilat (into #{} tilat)
         debug-viesti (str "Haetaan ilmoituksia: "
                           (viesti urakat "urakoista" "ilman urakoita")
                           (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
@@ -129,36 +131,37 @@
         _ (log/debug debug-viesti)
         ilmoitukset
         (when-not (empty? urakat)
-          (into []
-                (comp (map ilmoitukset-domain/lisaa-ilmoituksen-tila)
-                      (filter #(kuittaustyypit (:tila %))))
-                (konv/sarakkeet-vektoriin
-                 (into []
-                       ilmoitus-xf
-                       (q/hae-ilmoitukset db
-                                          {:urakat urakat
-                                           :alku_annettu  (hakuehto-annettu? aikavali-alku)
-                                           :loppu_annettu (hakuehto-annettu? aikavali-loppu)
-                                           :alku aikavali-alku
-                                           :loppu aikavali-loppu
-                                           :tyypit_annettu (hakuehto-annettu? tyypit)
-                                           :tyypit tyypit
-                                           :teksti_annettu (hakuehto-annettu? hakuehto)
-                                           :teksti (str "%" hakuehto "%")
-                                           :selite_annettu selite-annettu?
-                                           :selite selite
-                                           :tr-numero tr-numero
-                                           :ilmoittaja-nimi (when ilmoittaja-nimi
-                                                              (str "%" ilmoittaja-nimi "%"))
-                                           :ilmoittaja-puhelin (when ilmoittaja-puhelin
-                                                                 (str "%" ilmoittaja-puhelin "%"))}))
-                 {:kuittaus :kuittaukset})))
+          (konv/sarakkeet-vektoriin
+            (into []
+                  ilmoitus-xf
+                  (q/hae-ilmoitukset db
+                                     {:urakat urakat
+                                      :alku_annettu (hakuehto-annettu? aikavali-alku)
+                                      :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                      :kuittaamattomat (contains? tilat :kuittaamaton)
+                                      :vastaanotetut (contains? tilat :vastaanotettu)
+                                      :aloitetut (contains? tilat :aloitettu)
+                                      :lopetetut (contains? tilat :lopetettu)
+                                      :alku aikavali-alku
+                                      :loppu aikavali-loppu
+                                      :tyypit_annettu (hakuehto-annettu? tyypit)
+                                      :tyypit tyypit
+                                      :teksti_annettu (hakuehto-annettu? hakuehto)
+                                      :teksti (str "%" hakuehto "%")
+                                      :selite_annettu selite-annettu?
+                                      :selite selite
+                                      :tr-numero tr-numero
+                                      :ilmoittaja-nimi (when ilmoittaja-nimi
+                                                         (str "%" ilmoittaja-nimi "%"))
+                                      :ilmoittaja-puhelin (when ilmoittaja-puhelin
+                                                            (str "%" ilmoittaja-puhelin "%"))}))
+            {:kuittaus :kuittaukset}))
         ilmoitukset (mapv
                       #(-> %
                            (assoc :uusinkuittaus
                                   (when-not (empty? (:kuittaukset %))
                                     (:kuitattu (last (sort-by :kuitattu (:kuittaukset %))))))
-                                  (lisaa-tieto-myohastymisesta))
+                           (lisaa-tieto-myohastymisesta))
                       ilmoitukset)
         ilmoitukset (if vain-myohassa?
                       (suodata-myohastyneet ilmoitukset)
@@ -174,29 +177,41 @@
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
     ilmoitukset))
 
+(defn hae-ilmoitus [db user id]
+  (let [kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)]
+    (first
+      (konv/sarakkeet-vektoriin
+        (into []
+              ilmoitus-xf
+              (q/hae-ilmoitus db {:id id
+                                  :urakat kayttajan-urakat}))
+        {:kuittaus :kuittaukset}))))
+
 (defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
-  (let [toimenpide (q/luo-ilmoitustoimenpide<!
-                     db
-                     (:ilmoituksen-id ilmoitustoimenpide)
-                     (:ulkoinen-ilmoitusid ilmoitustoimenpide)
-                     (harja.pvm/nyt)
-                     (:vapaateksti ilmoitustoimenpide)
-                     (name (:tyyppi ilmoitustoimenpide))
-                     (:ilmoittaja-etunimi ilmoitustoimenpide)
-                     (:ilmoittaja-sukunimi ilmoitustoimenpide)
-                     (:ilmoittaja-tyopuhelin ilmoitustoimenpide)
-                     (:ilmoittaja-matkapuhelin ilmoitustoimenpide)
-                     (:ilmoittaja-sahkoposti ilmoitustoimenpide)
-                     (:ilmoittaja-organisaatio ilmoitustoimenpide)
-                     (:ilmoittaja-ytunnus ilmoitustoimenpide)
-                     (:kasittelija-etunimi ilmoitustoimenpide)
-                     (:kasittelija-sukunimi ilmoitustoimenpide)
-                     (:kasittelija-tyopuhelin ilmoitustoimenpide)
-                     (:kasittelija-matkapuhelin ilmoitustoimenpide)
-                     (:kasittelija-sahkoposti ilmoitustoimenpide)
-                     (:kasittelija-organisaatio ilmoitustoimenpide)
-                     (:kasittelija-ytunnus ilmoitustoimenpide))]
+  (let [toimenpide (jdbc/with-db-transaction [db db]
+                     (q/luo-ilmoitustoimenpide<!
+                       db
+                       {:ilmoitus (:ilmoituksen-id ilmoitustoimenpide)
+                        :ilmoitusid (:ulkoinen-ilmoitusid ilmoitustoimenpide)
+                        :kuitattu (harja.pvm/nyt)
+                        :vakiofraasi (:vakiofraasi ilmoitustoimenpide)
+                        :vapaateksti (:vapaateksti ilmoitustoimenpide)
+                        :kuittaustyyppi (name (:tyyppi ilmoitustoimenpide))
+                        :kuittaaja_henkilo_etunimi (:ilmoittaja-etunimi ilmoitustoimenpide)
+                        :kuittaaja_henkilo_sukunimi (:ilmoittaja-sukunimi ilmoitustoimenpide)
+                        :kuittaaja_henkilo_matkapuhelin (:ilmoittaja-matkapuhelin ilmoitustoimenpide)
+                        :kuittaaja_henkilo_tyopuhelin (:ilmoittaja-tyopuhelin ilmoitustoimenpide)
+                        :kuittaaja_henkilo_sahkoposti (:ilmoittaja-sahkoposti ilmoitustoimenpide)
+                        :kuittaaja_organisaatio_nimi (:ilmoittaja-organisaatio ilmoitustoimenpide)
+                        :kuittaaja_organisaatio_ytunnus (:ilmoittaja-ytunnus ilmoitustoimenpide)
+                        :kasittelija_henkilo_etunimi (:kasittelija-etunimi ilmoitustoimenpide)
+                        :kasittelija_henkilo_sukunimi (:kasittelija-sukunimi ilmoitustoimenpide)
+                        :kasittelija_henkilo_matkapuhelin (:kasittelija-matkapuhelin ilmoitustoimenpide)
+                        :kasittelija_henkilo_tyopuhelin (:kasittelija-tyopuhelin ilmoitustoimenpide)
+                        :kasittelija_henkilo_sahkoposti (:kasittelija-sahkoposti ilmoitustoimenpide)
+                        :kasittelija_organisaatio_nimi (:kasittelija-organisaatio ilmoitustoimenpide)
+                        :kasittelija_organisaatio_ytunnus (:kasittelija-ytunnus ilmoitustoimenpide)}))]
     (tloik/laheta-ilmoitustoimenpide tloik (:id toimenpide))
     (-> toimenpide
         (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
@@ -226,29 +241,27 @@
   (let [id-vektori (if (vector? id) id [id])
         kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)
         tiedot (q/hae-ilmoitukset-idlla db id-vektori)
-        tulos (mapv
-               ilmoitukset-domain/lisaa-ilmoituksen-tila
-               (konv/sarakkeet-vektoriin
+        tulos (konv/sarakkeet-vektoriin
                 (into []
                       (comp
-                       (filter #(or (nil? (:urakka %)) (kayttajan-urakat (:urakka %))))
-                       (harja.geo/muunna-pg-tulokset :sijainti)
-                       (map konv/alaviiva->rakenne)
-                       (map #(konv/array->vec % :selitteet))
-                       (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
-                       (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
-                       (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
-                       (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
+                        (filter #(or (nil? (:urakka %)) (kayttajan-urakat (:urakka %))))
+                        (harja.geo/muunna-pg-tulokset :sijainti)
+                        (map konv/alaviiva->rakenne)
+                        (map #(konv/string->keyword % :tila))
+                        (map #(konv/array->vec % :selitteet))
+                        (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
+                        (map #(assoc-in % [:kuittaus :kuittaustyyppi] (keyword (get-in % [:kuittaus :kuittaustyyppi]))))
+                        (map #(assoc % :ilmoitustyyppi (keyword (:ilmoitustyyppi %))))
+                        (map #(assoc-in % [:ilmoittaja :tyyppi] (keyword (get-in % [:ilmoittaja :tyyppi])))))
                       tiedot)
-                {:kuittaus :kuittaukset}))]
+                {:kuittaus :kuittaukset})]
     (log/debug "Löydettiin tiedot " (count tulos) " ilmoitukselle.")
     tulos))
 
 (defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
-  (jdbc/with-db-transaction [db db]
-    (doseq [ilmoitustoimenpide ilmoitustoimenpiteet]
-      (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))
-    :ok))
+  (vec
+    (for [ilmoitustoimenpide ilmoitustoimenpiteet]
+      (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
@@ -259,6 +272,9 @@
     (julkaise-palvelu http :hae-ilmoitukset
                       (fn [user tiedot]
                         (hae-ilmoitukset db user tiedot)))
+    (julkaise-palvelu http :hae-ilmoitus
+                      (fn [user tiedot]
+                        (hae-ilmoitus db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpide
                       (fn [user tiedot]
                         (tallenna-ilmoitustoimenpide db tloik user tiedot)))

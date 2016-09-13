@@ -331,6 +331,7 @@
 
 (defn kuvaile-paivien-maara
   "Ottaa päivien määrää kuvaavan numeron, ja kuvailee sen tekstinä.
+  - Jos päiviä on 0, palauttaa tyhjän stringin
   - Jos päiviä on alle 7, näytetään päivien määrä
   - Jos päiviä on alle kuukausi, näytetään määrä viikkoina (pyöristettynä alimpaan)
   - Jos päiviä on alle vuosi, näytetään määrä kuukausina (pyöristettynä alimpaan)

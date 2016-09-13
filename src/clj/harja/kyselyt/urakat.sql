@@ -54,6 +54,7 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
+  u.indeksi,
   hal.id                      AS hallintayksikko_id,
   hal.nimi                    AS hallintayksikko_nimi,
   hal.lyhenne                 AS hallintayksikko_lyhenne,
@@ -205,6 +206,7 @@ SELECT
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
+  u.indeksi,
   u.takuu_loppupvm,
   h.alueurakkanro AS alueurakkanumero,
   urk.nimi        AS urakoitsija_nimi,
@@ -268,14 +270,17 @@ WHERE hanke_sampoid = :hanke_sampo_id;
 
 -- name: luo-urakka<!
 -- Luo uuden urakan.
-INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko)
-VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko);
+INSERT INTO urakka (nimi, alkupvm, loppupvm, hanke_sampoid, sampoid, tyyppi, hallintayksikko,
+                    sopimustyyppi)
+VALUES (:nimi, :alkupvm, :loppupvm, :hanke_sampoid, :sampoid, :urakkatyyppi :: urakkatyyppi, :hallintayksikko,
+        :sopimustyyppi::sopimustyyppi);
 
 -- name: paivita-urakka!
 -- Paivittaa urakan
 UPDATE urakka
 SET nimi = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm, hanke_sampoid = :hanke_sampoid,
-  tyyppi = :urakkatyyppi :: urakkatyyppi, hallintayksikko = :hallintayksikko
+  tyyppi = :urakkatyyppi :: urakkatyyppi, hallintayksikko = :hallintayksikko,
+  sopimustyyppi = :sopimustyyppi::sopimustyyppi
 WHERE id = :id;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
@@ -487,4 +492,9 @@ FROM urakka where sampoid = :sampoid;
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
    SET takuu_loppupvm = :loppupvm
+ WHERE id = :urakka
+
+-- name: aseta-urakan-indeksi!
+UPDATE urakka
+   SET indeksi = :indeksi
  WHERE id = :urakka

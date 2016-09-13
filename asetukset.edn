@@ -27,14 +27,14 @@
                         ;;           :huone-id 1396730
                         ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
 
-                        :email {:taso          :error
-                                :palvelin      "solita-service-1.solita.fi"
+                        ;; :email {:taso          :error
+                        ;;         :palvelin      "solita-service-1.solita.fi"
 
-                                ;; Lisää nimesi vektoriin, jos haluat spämmiä
-                                :vastaanottaja [;;"tatu.tarvainen@solita.fi"
-                                                ;;"jarno.vayrynen@solita.fi"
-                                                ;;"mikko.ronkkomaki@solita.fi"
-                                                ]}
+                        ;;         ;; Lisää nimesi vektoriin, jos haluat spämmiä
+                        ;;         :vastaanottaja [;;"tatu.tarvainen@solita.fi"
+                        ;;                         ;;"jarno.vayrynen@solita.fi"
+                        ;;                         ;;"mikko.ronkkomaki@solita.fi"
+                        ;;                         ]}
                         }
 
  :sonja
@@ -106,11 +106,15 @@
                         :ely-alueiden-alk-tuontikohde              "./shp/ELYt/ULKOISET_Elyt_infra.shz"
                         }
 
- :yha                  {:url                                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"}
+ :yha                  {:url                                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
+                        :kayttajatunnus                            "restusr"
+                        :salasana                                  #=(slurp "../.harja/yha-salasana")}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti           {:url            "http://localhost:28080/sendsms"
                         :kayttajatunnus "solita-2"
                         :salasana       #=(slurp "../.harja/labyrintti-salasana")}
 
+ ;; ClamAV REST palvelun osoite
+ :virustarkistus {:url "http://localhost:8080/scan"}
  }

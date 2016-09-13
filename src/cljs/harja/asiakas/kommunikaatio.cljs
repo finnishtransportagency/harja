@@ -140,9 +140,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                 413 (do
                       (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                       (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
-                500 (do
-                      (log "Liitelähetys epäonnistui: "  (pr-str  (.-responseText request)))
-                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "tiedostotyyppi ei ole sallittu"}))
+                500 (let [txt (.-responseText request)]
+                      (log "Liitelähetys epäonnistui: "  txt)
+                      (put! ch {:error :liitteen-lahetys-epaonnistui
+                                :viesti (if (= txt "Virus havaittu")
+                                          txt
+                                          "tiedostotyyppi ei ole sallittu")}))
                 (do
                   (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                   (put! ch {:error :liitteen-lahetys-epaonnistui})))
@@ -230,14 +233,14 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                  pingauskanava ([vastaus] (when (= vastaus :pong)
                                             (kasittele-onnistunut-pingaus)))
                  sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
-               (recur))))
+               (recur)))))
 
-  (defn url-parametri
-    "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
-    [clj-data]
-    (-> clj-data
-        transit/clj->transit
-        gstr/urlEncode)))
+(defn url-parametri
+  "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
+  [clj-data]
+  (-> clj-data
+      transit/clj->transit
+      gstr/urlEncode))
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
   (->
@@ -253,4 +256,5 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (or (gstr/startsWith host "10.10.")
         (#{"localhost" "localhost:3000" "localhost:8000"
            "harja-test.solitaservices.fi"
+           "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
            "testiextranet.liikennevirasto.fi"} host))))

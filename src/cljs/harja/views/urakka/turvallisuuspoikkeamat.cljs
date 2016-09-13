@@ -17,7 +17,8 @@
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -261,7 +262,10 @@
                           :pakollinen? true
                           :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
-                          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)})
+                          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
+                          :vihje       (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
+                                            "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
+                                            "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
            {:otsikko "Tierekisteriosoite"
             :nimi :tr
             :pakollinen? true
@@ -410,8 +414,14 @@
   (let [urakka @nav/valittu-urakka]
     [:div.sanktiot
      [urakka-valinnat/urakan-hoitokausi urakka]
-     [napit/uusi "Lisää turvallisuuspoikkeama" #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
-      {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka)))}]
+     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka))]
+       (yleiset/wrap-if
+        (not oikeus?)
+        [yleiset/tooltip {} :%
+         (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
+        [napit/uusi "Lisää turvallisuuspoikkeama"
+         #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
+         {:disabled (not oikeus?)}]))
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"

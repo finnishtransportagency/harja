@@ -14,7 +14,9 @@
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.tiedot.ilmoitukset.viestit :as v]
+            [harja.loki :refer [log]]))
 
 (defn selitelista [{:keys [selitteet] :as ilmoitus}]
   (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]
@@ -24,7 +26,7 @@
         [ikonit/livicon-warning-sign] "Virka-apupyyntö"])
      (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
 
-(defn ilmoitus [ilmoitus]
+(defn ilmoitus [e! ilmoitus]
   [:div
    [bs/panel {}
     (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
@@ -58,16 +60,18 @@
    [:div.kuittaukset
     [:h3 "Kuittaukset"]
     [:div
-     (if @tiedot/uusi-kuittaus-auki?
-       [kuittaukset/uusi-kuittaus-lomake]
+     (if-let [uusi-kuittaus (:uusi-kuittaus ilmoitus)]
+       [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
        (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
                                        (:id @nav/valittu-urakka))
-         [:button.nappi-ensisijainen
-          {:class    "uusi-kuittaus-nappi"
-           :on-click #(do
-                       (tiedot/avaa-uusi-kuittaus!)
-                       (.preventDefault %))}
-          (ikonit/livicon-plus) " Uusi kuittaus"]))
+
+         (if (:ilmoitusid ilmoitus)
+           [:button.nappi-ensisijainen
+            {:class "uusi-kuittaus-nappi"
+             :on-click #(e! (v/->AvaaUusiKuittaus))}
+            (ikonit/livicon-plus) " Uusi kuittaus"]
+           [yleiset/vihje-elementti
+            [:span "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia"]])))
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div

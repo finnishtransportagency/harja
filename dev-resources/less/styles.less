@@ -21,7 +21,12 @@
   width: @leveys;
   .livi-alasveto(@valintakontrollin-leveys);
 }
-
+.ei-kayttooikeutta-wrap {
+  margin: 5px 10px;
+}
+.ei-kayttooikeutta {
+  margin-top: 10px;
+}
 #footer {
   background-color: @harjan-taustavari;
   clear: both;
@@ -118,8 +123,9 @@ div.valilehti {
   width: 90px;
 }
 #testiharja {
-  color: black;
+  color: @vaara;
   font-size: .8 * @fontin-koko-leipateksti;
+  font-weight: bold;
   position: absolute;
   top: 3px;
   left: 48px;

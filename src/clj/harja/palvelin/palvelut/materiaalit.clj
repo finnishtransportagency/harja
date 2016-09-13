@@ -8,7 +8,8 @@
             [taoensso.timbre :as log]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.materiaalit :as materiaalit]))
 
 (defn hae-materiaalikoodit [db]
   (into []
@@ -30,7 +31,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (comp (map konv/alaviiva->rakenne)
-              (map #(assoc % :maara (if (:maara %) (double (:maara %)) 0)))
+              (map #(assoc % :maara (some-> % :maara double)))
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
         (q/hae-urakassa-kaytetyt-materiaalit db (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt) sopimus)))
 
@@ -244,7 +245,9 @@
               (toteumat/paivita-toteuma-materiaali!
                db (:id (:materiaali toteuma))
                (:maara toteuma) (:id user)
-               (:tmid toteuma) urakka-id))))))
+               (:tmid toteuma) urakka-id)))))
+      (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                             :alkupvm (:alkanut toteuma)}))
     true))
 
 (defrecord Materiaalit []

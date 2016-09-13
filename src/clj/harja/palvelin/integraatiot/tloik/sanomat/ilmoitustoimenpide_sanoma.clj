@@ -23,20 +23,24 @@
      [:nimi (:organisaatio data)]
      [:ytunnus (:ytunnus data)]]))
 
-(defn muodosta-viesti [data viesti-id]
+(defn muodosta-viesti [{:keys [ilmoitusid kuittaustyyppi kuitattu vakiofraasi vapaateksti
+                               kasittelija kuittaaja]} viesti-id]
   [:harja:toimenpide
    {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
    [:viestiId viesti-id]
-   [:ilmoitusId (:ilmoitusid data)]
-   [:tyyppi (:kuittaustyyppi data)]
-   [:aika (formatoi-paivamaara (:kuitattu data))]
-   [:vapaateksti (:vapaateksti data)]
+   [:ilmoitusId ilmoitusid]
+   [:tyyppi kuittaustyyppi]
+   [:aika (formatoi-paivamaara kuitattu)]
+   [:vapaateksti
+    (str (when vakiofraasi
+           (str vakiofraasi " "))
+         vapaateksti)]
    [:kasittelija
-    (muodosta-henkilo (:kasittelija data))
-    (muodosta-organisaatio (:kasittelija data))]
+    (muodosta-henkilo kasittelija)
+    (muodosta-organisaatio kasittelija)]
    [:ilmoittaja
-    (muodosta-henkilo (:kuittaaja data))
-    (muodosta-organisaatio (:kuittaaja data))]])
+    (muodosta-henkilo kuittaaja)
+    (muodosta-organisaatio kuittaaja)]])
 
 (defn muodosta [data viesti-id]
   (let [sisalto (muodosta-viesti data viesti-id)

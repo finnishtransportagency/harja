@@ -36,33 +36,33 @@
         (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
                          korrelaatio-id tapahtuma-id false virhe)))))
 
-(defn hae-urakka [db ilmoitus]
-  (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db (:urakkatyyppi ilmoitus)
-                                                                        (:sijainti ilmoitus)))]
+(defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
+  (when-let [urakka-id (first (urakkapalvelu/hae-urakka-idt-sijainnilla db urakkatyyppi sijainti))]
     (first (urakat/hae-urakka db urakka-id))))
 
 (defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
   (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")
   (let [ilmoitustoimenpide-id (:id (ilmoitukset-q/luo-ilmoitustoimenpide<!
-                                     db {:ilmoitus ilmoitus-id
-                                         :ilmoitusid (:ilmoitus-id ilmoitus)
-                                         :kuitattu (c/to-date (t/now))
-                                         :vapaateksti nil
-                                         :kuittaustyyppi "vastaanotto"
-                                         :kuittaaja_henkilo_etunimi nil
-                                         :kuittaaja_henkilo_sukunimi nil
-                                         :kuittaaja_henkilo_matkapuhelin nil
-                                         :kuittaaja_henkilo_tyopuhelin nil
-                                         :kuittaaja_henkilo_sahkoposti nil
-                                         :kuittaaja_organisaatio_nimi nil
-                                         :kuittaaja_organisaatio_ytunnus nil
-                                         :kasittelija_henkilo_etunimi nil
-                                         :kasittelija_henkilo_sukunimi nil
-                                         :kasittelija_henkilo_matkapuhelin nil
-                                         :kasittelija_henkilo_tyopuhelin nil
-                                         :kasittelija_henkilo_sahkoposti nil
-                                         :kasittelija_organisaatio_nimi nil
-                                         :kasittelija_organisaatio_ytunnus nil}))]
+                                    db {:ilmoitus ilmoitus-id
+                                        :ilmoitusid (:ilmoitus-id ilmoitus)
+                                        :kuitattu (c/to-date (t/now))
+                                        :vakiofraasi nil
+                                        :vapaateksti nil
+                                        :kuittaustyyppi "vastaanotto"
+                                        :kuittaaja_henkilo_etunimi nil
+                                        :kuittaaja_henkilo_sukunimi nil
+                                        :kuittaaja_henkilo_matkapuhelin nil
+                                        :kuittaaja_henkilo_tyopuhelin nil
+                                        :kuittaaja_henkilo_sahkoposti nil
+                                        :kuittaaja_organisaatio_nimi nil
+                                        :kuittaaja_organisaatio_ytunnus nil
+                                        :kasittelija_henkilo_etunimi nil
+                                        :kasittelija_henkilo_sukunimi nil
+                                        :kasittelija_henkilo_matkapuhelin nil
+                                        :kasittelija_henkilo_tyopuhelin nil
+                                        :kasittelija_henkilo_sahkoposti nil
+                                        :kasittelija_organisaatio_nimi nil
+                                        :kasittelija_organisaatio_ytunnus nil}))]
     (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)))
 
 (defn- laheta-ilmoitus-paivystajille [db ilmoitus paivystajat urakka-id ilmoitusasetukset]
@@ -83,12 +83,15 @@
                                            paivystajat nil)
         ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)
-        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db ilmoitus)]
-
+        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db ilmoitus)
+        tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
       (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-      (laheta-ilmoitus-paivystajille db ilmoitus paivystajat urakka-id ilmoitusasetukset))
+      (laheta-ilmoitus-paivystajille db
+                                     (assoc ilmoitus :sijainti
+                                                     (merge (:sijainti ilmoitus) tieosoite))
+                                     paivystajat urakka-id ilmoitusasetukset))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 

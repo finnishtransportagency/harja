@@ -11,6 +11,12 @@
 (def kuittaustyypit
   [:vastaanotto :aloitus :lopetus :muutos :vastaus])
 
+(def tilan-selite
+  {:kuittaamaton "Kuittamaton"
+   :vastaanotettu "Vastaanotettu"
+   :aloitettu "Aloitettu"
+   :lopetettu "Lopetettu"})
+
 (def kuittaustyypin-selite
   {:kuittaamaton "Kuittaamaton"
    :vastaanotto "Vastaanotettu"
@@ -201,18 +207,59 @@
 
 (def +ilmoitustilat+ #{:suljetut :avoimet})
 
-
-(defn lisaa-ilmoituksen-tila
-  "Ottaa ilmoituksen, jolla on tieto siitä, millaisia kuittauksia se sisältää.
-  Asettaa ilmoituksen tilan viimeisimmän kuittauksen perusteella."
-  [ilmoitus]
-  (let [kuittaukset (vec (sort-by :kuitattu (:kuittaukset ilmoitus)))]
-    (reduce (fn [ilmoitus {tyyppi :kuittaustyyppi :as k}]
-              (case tyyppi
-                :lopetus (assoc ilmoitus :tila :lopetus)
-                :aloitus (assoc ilmoitus :tila :aloitus)
-                :vastaanotto (assoc ilmoitus :tila :vastaanotto)
-                ilmoitus))
-            (assoc ilmoitus :tila :kuittaamaton
-                   :kuittaukset kuittaukset)
-            kuittaukset)))
+(def +kuittauksen-vakiofraasit+
+  ["Ajoratamerkinnät tehdään"
+   "Aurataan"
+   "Ei toimenpidetarvetta"
+   "Ennakkosuolataan"
+   "Kiirepäivän TUR-kuittaus"
+   "Linjahiekoitetaan"
+   "Lumivallit madalletaan"
+   "Pinta tasataan"
+   "Pistehiekoitetaan"
+   "Polanne poistetaan"
+   "Selvitetään toimenpidetarv"
+   "Sohjo poistetaan"
+   "Soitetaan tienkäyttäjälle"
+   "Sulamisvesi torjutaan"
+   "Suolataan"
+   "Tarkastetaan ja tehdään tarvittavat toimenpiteet"
+   "Tilanne ohi"
+   "Toimenpiteet alkamassa"
+   "Toimenpiteet  käynnissä"
+   "Toimenpiteet päättyneet"
+   "Viesti vastaanotettu"
+   "Välitetty proj.vastaavalle"
+   "Merkit korjataan"
+   "Merkit puhdistetaan "
+   "Merkit uusitaan"
+   "Merkki poistetaan"
+   "ohjauslaite puhdistetaan"
+   "Reunapaalut korjataan"
+   "Reunapaalut pestään"
+   "merkki asennetaan "
+   "Hiekoitushiekka poistetaan"
+   "Roska-astiat tyhjennetään"
+   "Roskat poistetaan"
+   "Töherrykset poistetaan"
+   "Jäätyneet rummut aukaistaan"
+   "Kaiteet korjataan"
+   "Päällystetyn tien reuna täytetään"
+   "Päällyste paikataan"
+   "Reunakivet korjataan"
+   "Riista-aidat korjataan"
+   "Routaheitto tasataan"
+   "Rummut uusitaan"
+   "Runkokelirikkokohde korjataa"
+   "Sillat pestään"
+   "Tien reunapalteet poistetaan"
+   "Tie ojitetaan (sivuojat jne)"
+   "Pöly sidotaan"
+   "Soratien pinta tasataan"
+   "Niitetään"
+   "Vesakko raivataan"
+   "Hoidetaan liikennöitäväksi"
+   "Kaatuneet puut raivataan"
+   "Liikenteenohjaus järjestetään"
+   "Onnettomuuden raivaus tehdään"
+   "Tulvavaurio korjataan"])
