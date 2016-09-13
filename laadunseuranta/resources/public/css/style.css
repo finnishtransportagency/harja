@@ -247,10 +247,23 @@ button {
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
+
 }
 
-.pikavalintapainike span {
+.pikavalintaikoni svg {
+    width: 48px;
+    height: 48px;
+    fill: white;
+    position: relative;
+    top: 5px;
+}
+
+
+.pikavalintaotsikko {
     margin-right: 10px;
+    margin-left: 10px;
+    position: relative;
+    top: -10px;
 }
 
 .painike-aktiivinen {
