@@ -48,14 +48,14 @@
     :puhelin "",
     :roolit ["ELY urakanvalvoja"],
     :organisaatio "ELY"}
-    {:tunniste nil,
-     :kayttajatunnus "A000002",
-     :etunimi "Eero",
-     :sukunimi "Esimerkki",
-     :sahkoposti "eero.esimerkki@example.com",
-     :puhelin "0400123456789",
-     :roolit ["ELY urakanvalvoja"],
-     :organisaatio "ELY"}])
+   {:tunniste nil,
+    :kayttajatunnus "A000002",
+    :etunimi "Eero",
+    :sukunimi "Esimerkki",
+    :sahkoposti "eero.esimerkki@example.com",
+    :puhelin "0400123456789",
+    :roolit ["Urakan vastuuhenkilö"],
+    :organisaatio "ELY"}])
 
 (deftest urakoiden-paivystajien-haku-toimii
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
@@ -65,8 +65,8 @@
 
     ;; Oulun alueurakka 2014-2019 löytyy 3 päivystystä
     (is (= (count (:paivystykset (first (filter
-                                        #(= (:nimi %) "Oulun alueurakka 2014-2019")
-                                        urakoiden-paivystykset))))
+                                          #(= (:nimi %) "Oulun alueurakka 2014-2019")
+                                          urakoiden-paivystykset))))
            3))
 
     ;; Kaikki testidatan käynnissä olleet urakat löytyi
@@ -86,9 +86,9 @@
          (rest testipaivystykset))))
 
 ;; TODO Korjaa tämä
-#_(deftest ilmoituksien-saajien-haku-toimii
+(deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
     (with-fake-http
       [(str +testi-fim-+ vastaus-xml]
-      (let [vastausdata (paivystajatarkistukset/hae-ilmoituksen-saajat fim "1242141-OULU2")]
-        (log/debug "Vastuas: " (pr-str vastausdata)))))))
+      (let [vastaus (paivystajatarkistukset/hae-ilmoituksen-saajat fim "1242141-OULU2")]
+        is (= vastaus testi-fim-vastaus))))) )
