@@ -239,13 +239,12 @@
                          :tyypit (map name (haettavat tarkastukset))})))
 
 (defn- hae-suljetut-tieosuudet
-  [db user {:keys [yllapito alue urakkatyyppi]} urakat]
+  [db user {:keys [yllapito alue]} urakat]
   (when (tk/valittu? yllapito tk/suljetut-tiet)
     (vec (map (comp #(konv/array->vec % :kaistat)
                     #(konv/array->vec % :ajoradat))
               (q/hae-suljetut-tieosuudet db {:urakat (when-not (every? nil? urakat) urakat)
-                                             :urakatannettu (and (= :hoito urakkatyyppi)
-                                                                 (not (every? nil? urakat)))
+                                             :urakatannettu (not (every? nil? urakat))
                                              :x1 (:xmin alue)
                                              :y1 (:ymin alue)
                                              :x2 (:xmax alue)
@@ -311,7 +310,7 @@
    db user (if (:nykytilanne? tiedot)
              oikeudet/tilannekuva-nykytilanne
              oikeudet/tilannekuva-historia)
-   nil (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+   nil (:urakoitsija tiedot) nil
    nil (:alku tiedot) (:loppu tiedot)))
 
 (defn hae-tilannekuvaan

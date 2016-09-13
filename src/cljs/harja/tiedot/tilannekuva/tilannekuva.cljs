@@ -141,7 +141,6 @@ hakutiheys-historiakuva 1200000)
 (defn kasaa-parametrit [tila nakyva-alue suodattimet]
   (merge
     {:urakat (apply clojure.set/union (map val (tk/valitut-suodattimet (:alueet suodattimet))))
-     :urakkatyyppi (:arvo @nav/urakkatyyppi)
      :nykytilanne? (= :nykytilanne tila)
      :alue nakyva-alue}
     (tk/valitut-suodattimet (dissoc suodattimet :alueet))))
@@ -216,10 +215,9 @@ hakutiheys-historiakuva 1200000)
         #_(log "Koko maa valittu! :)")
         false))))
 
-(defn- hae-aluesuodattimet [tila urakoitsija urakkatyyppi]
+(defn- hae-aluesuodattimet [tila urakoitsija]
   (go (let [tulos (<! (k/post! :hae-urakat-tilannekuvaan (aikaparametrilla
                                                            {:urakoitsija (:id urakoitsija)
-                                                            :urakkatyyppi (:arvo urakkatyyppi)
                                                             :nykytilanne? (= :nykytilanne tila)})))]
         (into {}
               (map
@@ -282,7 +280,7 @@ hakutiheys-historiakuva 1200000)
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
               (go (when nakymassa?
-                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/urakkatyyppi))
+                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija))
                           yhdistetyt (yhdista-aluesuodattimet (:alueet @suodattimet) tulos)]
                       (swap! suodattimet assoc :alueet yhdistetyt)
                       tulos)))))
