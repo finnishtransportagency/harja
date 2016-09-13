@@ -201,7 +201,7 @@
 
       :paivystystarkistukset (component/using
                                (paivystystarkistukset/->Paivystystarkistukset)
-                               [:http-palvelin :db :fim])
+                               [:http-palvelin :db :fim :sonja-sahkoposti])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using

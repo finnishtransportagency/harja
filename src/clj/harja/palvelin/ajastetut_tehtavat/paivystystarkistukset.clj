@@ -104,12 +104,12 @@
         urakat-ilman-paivystysta (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
 
-(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim email] :as this}]
+(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim sonja-sahkoposti] :as this}]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (ajastettu-tehtava/ajasta-paivittain
     [5 0 0]
     (fn [_]
-      (paivystyksien-tarkistustehtava db fim email (t/now)))))
+      (paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/now)))))
 
 (defrecord Paivystystarkistukset []
   component/Lifecycle
