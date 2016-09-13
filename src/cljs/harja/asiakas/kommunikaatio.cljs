@@ -233,14 +233,14 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                  pingauskanava ([vastaus] (when (= vastaus :pong)
                                             (kasittele-onnistunut-pingaus)))
                  sallittu-viive ([_] (kasittele-yhteyskatkos nil)))
-               (recur))))
+               (recur)))))
 
-  (defn url-parametri
-    "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
-    [clj-data]
-    (-> clj-data
-        transit/clj->transit
-        gstr/urlEncode)))
+(defn url-parametri
+  "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
+  [clj-data]
+  (-> clj-data
+      transit/clj->transit
+      gstr/urlEncode))
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
   (->
