@@ -25,7 +25,9 @@
     (sahkoposti/laheta-viesti! email
                                (sahkoposti/vastausosoite email)
                                (:sahkoposti henkilo)
-                               "Urakalle ei ole päivystystä"
+                               (format "Puuttuva päivystys %s %s"
+                                       urakka-nimi
+                                       (fmt/pvm (c/to-date pvm)))
                                (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm))))
 
 (defn hae-ilmoituksen-saajat [fim sampo-id]
@@ -44,7 +46,8 @@
   (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampo-id urakka))]
     (if-not (empty? ilmoituksen-saajat)
       (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm)
-      (log/warn (format "Urakalla %s ei ole päivystystä tänään eikä asiasta voitu ilmoittaa kenellekään." (:nimi urakka))))))
+      (log/warn (format "Urakalla %s ei ole päivystystä tänään eikä asiasta voitu ilmoittaa kenellekään."
+                        (:nimi urakka))))))
 
 (defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta fim email pvm]
   (doseq [urakka urakat-ilman-paivystysta]
