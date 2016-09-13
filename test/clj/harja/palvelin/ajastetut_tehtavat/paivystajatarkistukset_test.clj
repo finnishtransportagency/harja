@@ -5,8 +5,11 @@
             [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystajatarkistukset]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [clojure.java.io :as io])
   (:use org.httpkit.fake))
+
+(def +testi-fim-+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
 
 (def testipaivystykset
   [{:urakka 4,
@@ -65,5 +68,8 @@
          (rest testipaivystykset))))
 
 (deftest ilmoituksien-saajien-haku-toimii
-  ;; TODO Testi testi, tee oikea
-  (is (= [] (paivystajatarkistukset/hae-ilmoituksen-saajat fim))))
+  (let [vastaus-xml (slurp (io/resource "xsd/esimerkki/jostain.xml"))]
+    (with-fake-http
+      [(str +testi-fim-+ vastaus-xml]
+      (let [vastausdata (paivystajatarkistukset/hae-ilmoituksen-saajat fim "1242141-OULU2")]
+        (log/debug "Vastuas: " (pr-str vastausdata)))))))
