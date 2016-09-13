@@ -48,11 +48,3 @@
     (mapv (fn [yhteyshenkilo] (do
                                 (is (string? (:etunimi yhteyshenkilo)))
                                 (is (string? (:sukunimi yhteyshenkilo))))) vastaus)))
-
-;; Tämä ei Sähke myötä enää toimi, koska päivystäjät haetaan FIMistä
-#_(deftest urakan-kayttajien-haku-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-kayttajat +kayttaja-jvh+ 1)]
-
-    (is (not (nil? vastaus)))
-    (is (>= (count vastaus) 1))))
