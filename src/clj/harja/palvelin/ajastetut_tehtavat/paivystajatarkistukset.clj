@@ -11,6 +11,24 @@
             [harja.kyselyt.konversio :as konv]
             [clj-time.coerce :as c]))
 
+(defn- laheta-ilmoitus-henkiloille [henkilot]
+  ;; TODO
+  )
+
+(defn- hae-ilmoituksen-saajat []
+  ;; TODO
+  )
+
+(defn- ilmoita-paivystyksettomasta-urakasta [urakka]
+  (let [ilmoituksen-saajat (hae-ilmoituksen-saajat)]
+    (if-not (empty? ilmoituksen-saajat)
+      (laheta-ilmoitus-henkiloille ilmoituksen-saajat)
+      (log/warn (format "Urakalla %s ei ole päivystystä tänään eikä asiasta voitu ilmoittaa kenellekään." (:nimi urakka))))))
+
+(defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta]
+  (doseq [urakka urakat-ilman-paivystysta]
+    (ilmoita-paivystyksettomasta-urakasta urakka)))
+
 (defn urakat-ilman-paivystysta
   "Palauttaa urakat, joille ei ole päivystystä kyseisenä päivänä"
   [urakoiden-paivystykset pvm]
@@ -61,8 +79,9 @@
     urakoiden-paivystykset))
 
 (defn- paivystajien-tarkistustehtava [db nykyhetki]
-  (let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)]
-    (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)))
+  (let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)
+        urakat-ilman-paivystysta (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)]
+    (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta)))
 
 (defn tee-paivystajien-tarkistustehtava [{:keys [db] :as this}]
   (log/debug "Ajastetaan päivystäjien tarkistus")
