@@ -27,6 +27,7 @@
           (comp
             (filter (fn [{:keys [urakka_id]}]
                       (oikeudet/voi-lukea? oikeus urakka_id user)))
+            (map #(assoc % :tyyppi (keyword (:tyyppi %))))
             (map konv/alaviiva->rakenne))
 
           (let [alku (or alku (pvm/nyt))
