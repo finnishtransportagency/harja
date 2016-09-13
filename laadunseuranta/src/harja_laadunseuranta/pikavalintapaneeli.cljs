@@ -25,14 +25,18 @@
                   (on-click)))}
    otsikko])
 
-(defn toggle-painike [otsikko havainnot avain & {:keys [on-click]
+(defn toggle-painike [otsikko havainnot avain & {:keys [on-click ikoni]
                                                  :or {on-click #()}}]
   [:nav.pikavalintapainike
    {:class (when (avain @havainnot) "painike-aktiivinen")
     :on-click (fn [_]
                 (swap! havainnot #(update % avain not))
                 (on-click))}
-   otsikko])
+   (cond (string? ikoni)
+         [:img.pikavalintaikoni {:src ikoni}]
+         (vector? ikoni)
+         [:span.pikavalintaikoni ikoni])
+   [:span.pikavalintaotsikko otsikko]])
 
 (defn kertapainike [otsikko toiminto-fn]
   [:nav.pikavalintapainike {:on-click toiminto-fn} otsikko])
@@ -53,7 +57,7 @@
    [avattu-nuoli]
    [kitkamittaustiedot keskiarvo-atom]
    [kitkamittaus/kitkamittauskomponentti (fn [mittaus]
-                                           (swap! keskiarvo-atom #(conj % mittaus)) 
+                                           (swap! keskiarvo-atom #(conj % mittaus))
                                            (kitkamittaus-kirjattu mittaus))]])
 
 (defn- turn-off [m key]
@@ -158,12 +162,12 @@
          [kertapainike "Tukossa" #(kirjaa :rumpu-tukossa)]
          [kertapainike "Liettynyt" #(kirjaa :rumpu-liettynyt)]
          [kertapainike "Rikki" #(kirjaa :rumpu-rikki)]]
-        
+
         :kaiteet-kiveykset
         [:div.sidepanel-box
          [kertapainike "Kaidevaurio" #(kirjaa :kaidevaurio)]
          [kertapainike "Kiveysvaurio" #(kirjaa :kiveysvaurio)]]
-        
+
         [:div.sidepanel-box
          [kertapainike "Liikennemerkit" #(alivalikkoon :liikennemerkit)]
          [kertapainike "Reunapaalut" #(alivalikkoon :reunapaalut)]
@@ -203,30 +207,43 @@
          [kertapainike "Puhdistamatta" #(kirjaa :silta-puhdistamatta)]
          [kertapainike "Vaurioita" #(kirjaa :siltavaurioita)]
          [kertapainike "Saumoissa puutteita" #(kirjaa :siltasaumoissa-puutteita)]]
-        
+
         [:div.sidepanel-box
          [kertapainike "Sorapientareet" #(alivalikkoon :sorapientareet)]
          [kertapainike "Ojat" #(alivalikkoon :ojat)]
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
 (defn- paallystys [alivalikot havainnot]
-  [:div.painikelaatikko
-   [:div.painikerivi
-    [toggle-painike "Saumavirhe" havainnot :saumavirhe]
-    [toggle-painike "Lajittuma" havainnot :lajittuma]
-    [toggle-painike "Epätasaisuus" havainnot :epatasaisuus]
-    [toggle-painike "Halkeamat" havainnot :halkeamat]]
-   [:div.painikerivi
-    [toggle-painike "Vesilammikot" havainnot :vesilammikot]
-    [toggle-painike "Epätasaiset reunat" havainnot :epatasaisetreunat]
-    [toggle-painike "Jyrän jälkiä" havainnot :jyranjalkia]
-    [toggle-painike "Sideaineläikkiä" havainnot :sideainelaikkia]]
-   [:div.painikerivi
-    [toggle-painike "Väärä korkeusasema" havainnot :vaarakorkeusasema]
-    [toggle-painike "Pinta harva" havainnot :pintaharva]
-    [toggle-painike "Pintakuivatus puutteellinen" havainnot :pintakuivatuspuute]
-    [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema]]
-   [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]])
+  (let [ikoni #(kuvat/paallystys-tyovirheet %)]
+    [:div.painikelaatikko
+     [:div.painikerivi
+      [toggle-painike "Saumavirhe" havainnot :saumavirhe
+       :ikoni (ikoni :saumavirhe)]
+      [toggle-painike "Lajittuma" havainnot :lajittuma
+       :ikoni (ikoni :lajittuma)]
+      [toggle-painike "Epätasaisuus" havainnot :epatasaisuus
+       :ikoni (ikoni :epatasaisuus)]
+      [toggle-painike "Halkeamat" havainnot :halkeamat
+       :ikoni (ikoni :halkeamat)]]
+     [:div.painikerivi
+      [toggle-painike "Vesilammikot" havainnot :vesilammikot
+       :ikoni (ikoni :vesilammikot)]
+      [toggle-painike "Epätasaiset reunat" havainnot :epatasaisetreunat
+       :ikoni (ikoni :epatasaisetreunat)]
+      [toggle-painike "Jyrän jälkiä" havainnot :jyranjalkia
+       :ikoni (ikoni :jyranjalkia)]
+      [toggle-painike "Sideaineläikkiä" havainnot :sideainelaikkia
+       :ikoni (ikoni :sideainelaikkia)]]
+     [:div.painikerivi
+      [toggle-painike "Väärä korkeusasema" havainnot :vaarakorkeusasema
+       :ikoni (ikoni :vaarakorkeusasema)]
+      [toggle-painike "Pinta harva" havainnot :pintaharva
+       :ikoni (ikoni :pintaharva)]
+      [toggle-painike "Pintakuivatus puutteellinen" havainnot :pintakuivatuspuute
+       :ikoni (ikoni :pintakuivatuspuute)]
+      [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema
+       :ikoni (ikoni :kaivojenkorkeusasema)]]
+     [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]]))
 
 
 (defn- tiemerkinta [alivalikot]
@@ -245,7 +262,7 @@
 
            (:lumista @alivalikot)
            [lumisuus-paalla alivalikot lumisuus-kirjattu lumimaara-atom]
- 
+
            (:tasauspuute @alivalikot)
            [tasauspuute-paalla alivalikot tasaisuus-kirjattu tasaisuus-atom]
 
@@ -280,7 +297,7 @@
 
            (:muut @alivalikot)
            [muut alivalikot kertakirjaus-kirjattu]
-           
+
            :default
            [:div.sidepanel-box
             ;; soratietarkastus kytketty pois päältä
@@ -314,7 +331,7 @@
    [:nav.pikavalintapainike {:on-click #(on-click false)}
     [:i.livicon-upload " "]
     "Lisää havainto"]])
- 
+
 (def testihavainnot (atom {:liukasta false}))
 
 (defcard kesatarkastuspaneeli
