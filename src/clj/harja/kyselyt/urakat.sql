@@ -2,7 +2,7 @@
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  u.tyyppi AS urakka_tyyppi,
+  u.tyyppi AS tyyppi,
   o.id AS hallintayksikko_id,
   o.nimi AS hallintayksikko_nimi
 FROM urakka u
@@ -221,7 +221,7 @@ WHERE u.id = :id;
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  u.tyyppi AS urakka_tyyppi,
+  u.tyyppi AS tyyppi,
   hy.id AS hallintayksikko_id,
   hy.nimi AS hallintayksikko_nimi
 FROM urakka u

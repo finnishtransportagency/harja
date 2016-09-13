@@ -17,7 +17,7 @@
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
-  Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  Mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   ([db user oikeus]
    (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
@@ -61,7 +61,7 @@
                  (when urakkatyyppi (name urakkatyyppi))
                  hallintayksikot)))))
      {:urakka :urakat}
-     (comp :id :hallintayksikko))))
+     (juxt :tyyppi (comp :id :hallintayksikko)))))
 
 (defn kayttajan-urakka-idt-aikavalilta
   ([db user oikeus]
