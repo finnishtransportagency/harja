@@ -137,7 +137,7 @@
      (if skeema
        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi virheet/+tyhja-vastaus+
-                           :viesti "Tyhja vastaus vaikka skeema annettu"}]})
+                           :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
        {:status status}))))
 
 (defn kasittele-invalidi-json [virheet resurssi]
