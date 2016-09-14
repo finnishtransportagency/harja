@@ -286,3 +286,16 @@
               (fn [tyo]
                 (* (- (:toteutunut-maara tyo) (:tilattu-maara tyo)) (:yksikkohinta tyo)))
               (filter #(not= true (:poistettu %)) tyot))))
+
+(defn paattele-ilmoituksen-tila
+  [{:keys [tekninen-osa taloudellinen-osa valmispvm-kohde valmispvm-paallystys]}]
+  (cond
+    (and (= (:paatos tekninen-osa) :hyvaksytty)
+         (= (:paatos taloudellinen-osa) :hyvaksytty))
+    "lukittu"
+
+    (and valmispvm-kohde valmispvm-paallystys)
+    "valmis"
+
+    :default
+    "aloitettu"))
