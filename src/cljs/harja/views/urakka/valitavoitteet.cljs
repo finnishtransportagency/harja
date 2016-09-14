@@ -110,7 +110,8 @@
       [{:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite" :leveys 25
         :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
-       {:otsikko "Väli\u00ADtavoite ura\u00ADkassa" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
+       {:otsikko "U\u00ADrak\u00ADka\u00ADkoh\u00ADtai\u00ADset tar\u00ADken\u00ADnuk\u00ADset"
+        :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
        {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
         :nimi :valtakunnallinen-takaraja :hae #(cond
                                                 (:valtakunnallinen-takaraja %)
