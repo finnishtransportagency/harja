@@ -421,23 +421,12 @@
         ]
     [ed-vuosi ed-kk]))
 
-#?(:clj (defn to-joda [dt]
-          (if (instance? java.util.Date dt)
-            (tc/from-date dt)
-            dt))
-   :cljs (defn to-joda [dt]
-           dt))
-
-#?(:clj (defn to-date [joda]
-          (tc/to-date joda)))
-
 (defn
   kuukauden-aikavali
   "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
 kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   [dt]
-  (let [dt (to-joda dt)
-        alku (aikana (t/first-day-of-the-month dt)
+  (let [alku (aikana (t/first-day-of-the-month dt)
                      0 0 0 0)
         loppu (aikana (t/last-day-of-the-month dt)
                       23 59 59 999)]
