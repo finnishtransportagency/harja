@@ -462,8 +462,8 @@ SELECT
   u.alue          AS urakka_alue,
   alueurakka.alue AS alueurakka_alue
 FROM urakka u
-  JOIN hanke ON u.hanke = hanke.id
-  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+  LEFT JOIN hanke ON u.hanke = hanke.id
+  LEFT JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id = :id;
 
 -- name: hae-urakoiden-geometriat
@@ -472,8 +472,8 @@ SELECT
   u.id AS urakka_id,
   ST_Simplify(alueurakka.alue, :toleranssi) AS alueurakka_alue
 FROM urakka u
-  JOIN hanke ON u.hanke = hanke.id
-  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+  LEFT JOIN hanke ON u.hanke = hanke.id
+  LEFT JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id IN (:idt);
 
 -- name: hae-urakan-sampo-id
