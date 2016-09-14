@@ -203,7 +203,6 @@
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
     :kasittely-fn (fn [parametit _ kayttaja db] (hae-yllapitokohteet db parametit kayttaja))}
    {:palvelu :kirjaa-paallystysilmoitus
-    ;; FIXME Lisää mahdollisuus ottaa vastaan / päivittää POT-lomakkeen perusosan päivämäärät
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
