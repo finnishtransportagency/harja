@@ -47,8 +47,6 @@
       (julkaise-palvelu :hae-urakan-kayttajat
                         (fn [user urakka-id]
                           (hae-urakan-kayttajat (:db this) (:fim this) user urakka-id))))
-
-
     this)
 
   (stop [this]
