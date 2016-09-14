@@ -164,15 +164,34 @@
                           "Pohjois-Pohjanmaa ja Kainuu"
                           "Lappi"])
 
+(def urakkatyypin-otsikot {:hoito "Hoito"
+                           :paallystys "Päällystys"
+                           :valaistus "Valaistus"
+                           :paikkaus "Paikkaus"
+                           :tiemerkinta "Tiemerkintä"})
+
+(defn- tyypin-aluesuodattimet [tyyppi]
+  (komp/luo
+    (fn [tyyppi]
+      [asetuskokoelma
+       (urakkatyypin-otsikot tyyppi)
+       {:salli-piilotus? true}
+       [:div.tk-suodatinryhmat
+        (doall
+          (for [alue tilannekuvan-alueet]
+            ^{:key (str tyyppi"-aluesuodatin-alueelle-"alue)}
+            [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil]))]])))
+
 (defn- aluesuodattimet []
   (komp/luo
     (fn []
       (let [onko-alueita? (some
-                            (fn [[_ suodattimet]]
-                              (not (empty? suodattimet)))
+                            (fn [[_ hy-ja-urakat]]
+                              (some not-empty (vals hy-ja-urakat)))
                             (:alueet @tiedot/suodattimet))
             ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
-                                             (nil? @tiedot/uudet-aluesuodattimet))]
+                                             (nil? @tiedot/uudet-aluesuodattimet))
+            tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))]
         [asetuskokoelma
          (cond
            ensimmainen-haku-kaynnissa? "Haetaan alueita"
@@ -183,9 +202,9 @@
            [yleiset/ajax-loader]
            [:div.tk-suodatinryhmat
             (doall
-             (for [alue tilannekuvan-alueet]
-               ^{:key alue}
-               [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
+              (for [urakkatyyppi tyypit-joissa-alueita]
+                ^{:key (str "aluesuodattimet-tyypille-" urakkatyyppi)}
+                [tyypin-aluesuodattimet urakkatyyppi]))])]))))
 
 (defn- aikasuodattimet []
   [asetuskokoelma
