@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 0.2.9</b>
-<b>Julkaistu: 9.9.2016</b>
+<b>Nykyinen versio: 0.3.0</b>
+<b>Julkaistu: 14.9.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.3.0. Julkaistu: 14.9.2016:
+    - Päivietty aikataulun skeemaan uudet termit: alku -> aloitettu, loppu -> valmis.
 - Versionumero: 0.2.9. Julkaistu: 9.9.2016:
     - Lisätty uusi palvelu ylläpidon päällystys-/tiemerkintäurakoiden aikataulutietojen päivittämiselle. Päällystyksen ja kohteen valmistumisen aikataulutiedot voidaan kirjata vain siihen urakkaan, johon ylläpitokohde kuuluu. Tiemerkinnän aikataulu voidaan päivittää siihen urakkaan, joka on merkitty kohteelle suorittajaksi. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
     - Lisätty päällystysilmoituksen kirjaukseen aikataulutietojen vastaanotto.
