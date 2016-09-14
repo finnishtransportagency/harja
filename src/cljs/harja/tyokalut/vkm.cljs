@@ -34,12 +34,14 @@
   [uri parametrit]
   (let [kutsu-id (vkm-kutsu-id)
         callback (str "vkm_tulos_" kutsu-id)
+        kutsu-url (str (vkm-base-url) uri
+                       (map->parametrit
+                        (assoc parametrit
+                               :callback callback)))
+        _ (log "TEHDÄÄN VKM KUTSU: " kutsu-url)
         s (doto (.createElement js/document "script")
             (.setAttribute "type" "text/javascript")
-            (.setAttribute "src" (str (vkm-base-url) uri
-                                      (map->parametrit
-                                        (assoc parametrit
-                                          :callback callback)))))
+            (.setAttribute "src" kutsu-url))
         ch (chan)
         tulos #(do (put! ch (js->clj %))
                    (close! ch)
