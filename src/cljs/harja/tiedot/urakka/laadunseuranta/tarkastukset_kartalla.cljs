@@ -31,4 +31,4 @@
         @tiedot-urakka/valittu-urakka-kaynnissa?
         @nav/valittu-urakka-id @tiedot-urakka/valittu-hoitokauden-kuukausi
         @tarkastukset/valittu-aikavali
-        @tarkastukset/tienumero @tarkastukset/tarkastustyyppi false))))
+        @tarkastukset/tienumero @tarkastukset/tarkastustyyppi @tarkastukset/vain-laadunalitukset?))))

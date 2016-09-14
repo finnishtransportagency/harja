@@ -38,7 +38,8 @@
             [harja.atom :as atom]
             [harja.tyokalut.vkm :as vkm]
 
-            [harja.ui.debug :refer [debug]])
+            [harja.ui.debug :refer [debug]]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -592,7 +593,8 @@
           [sopimus-id _] @u/valittu-sopimusnumero
           vastaus (<! (paallystys/hae-paallystysilmoitus-paallystyskohteella urakka-id paallystyskohteen-id))]
       (log "Päällystysilmoitus kohteelle " paallystyskohteen-id " => " (pr-str vastaus))
-      (if-not (k/virhe? vastaus)
+      (if (k/virhe? vastaus)
+        (viesti/nayta! "Päällystysilmoituksen haku epäonnistui." :warning viesti/viestin-nayttoaika-lyhyt)
         (reset! paallystys/paallystysilmoitus-lomakedata
                 (assoc vastaus
                   :kirjoitusoikeus?

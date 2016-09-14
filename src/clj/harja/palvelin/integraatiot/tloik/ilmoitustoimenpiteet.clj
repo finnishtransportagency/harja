@@ -52,23 +52,23 @@
 (defn tallenna-ilmoitustoimenpide [db ilmoitus ilmoitusid vapaateksti toimenpide paivystaja]
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
-         ilmoitus
-         ilmoitusid
-         (pvm/nyt)
-         vapaateksti
-         toimenpide
-         (:etunimi paivystaja)
-         (:sukunimi paivystaja)
-         (:tyopuhelin paivystaja)
-         (:matkapuhelin paivystaja)
-         (:sahkoposti paivystaja)
-         (:nimi paivystaja)
-         (:ytunnus paivystaja)
-         nil
-         nil
-         nil
-         nil
-         nil
-         nil
-         nil)))
-
+         {:ilmoitus ilmoitus
+          :ilmoitusid ilmoitusid
+          :kuitattu (pvm/nyt)
+          :vakiofraasi nil
+          :vapaateksti vapaateksti
+          :kuittaustyyppi toimenpide
+          :kuittaaja_henkilo_etunimi (:etunimi paivystaja)
+          :kuittaaja_henkilo_sukunimi (:sukunimi paivystaja)
+          :kuittaaja_henkilo_tyopuhelin (:tyopuhelin paivystaja)
+          :kuittaaja_henkilo_matkapuhelin (:matkapuhelin paivystaja)
+          :kuittaaja_henkilo_sahkoposti (:sahkoposti paivystaja)
+          :kuittaaja_organisaatio_nimi (:nimi paivystaja)
+          :kuittaaja_organisaatio_ytunnus (:ytunnus paivystaja)
+          :kasittelija_henkilo_etunimi nil
+          :kasittelija_henkilo_sukunimi nil
+          :kasittelija_henkilo_matkapuhelin nil
+          :kasittelija_henkilo_tyopuhelin nil
+          :kasittelija_henkilo_sahkoposti nil
+          :kasittelija_organisaatio_nimi nil
+          :kasittelija_organisaatio_ytunnus nil})))

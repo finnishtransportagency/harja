@@ -26,7 +26,10 @@
             [harja.fmt :as fmt]
             [harja.ui.ikonit :as ikonit]
             [reagent.core :as r]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.domain.roolit :as roolit]
+            [harja.ui.napit :as napit]
+            [harja.tiedot.urakat :as urakat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -123,14 +126,15 @@
       (fn [urakka-id]
         (let [kayttajat @kayttajat]
           [grid/grid
-           {:otsikko "Urakkaan liitetyt käyttäjät"
+           {:otsikko "Käyttövaltuushallinnassa urakkaan liitetyt käyttäjät"
             :tunniste :kayttajatunnus
             :tyhja (cond
                      (nil? kayttajat)
-                     [yleiset/ajax-loader "Haetaan urakkaan liitettyjä käyttäjiä"]
+                     [yleiset/ajax-loader
+                      "Haetaan käyttövaltuushallinnassa urakkaan liitettyjä käyttäjiä"]
 
                      (k/virhe? kayttajat)
-                     "Virhe haettaessa käyttäjiä FIM-palvelusta."
+                     "Virhe haettaessa käyttäjiä käyttövaltuushallinnan FIM-palvelusta."
 
                      :default
                      "Ei urakkaan liitettyjä käyttäjiä.")}
@@ -244,15 +248,105 @@
               (pvm/pvm p)
               "Ei asetettu")])]))))
 
+(defn- yllapitourakan-sopimustyyppi [ur]
+  (when-not (= :hoito (:tyyppi ur))
+    (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+          sopimustyyppi (:sopimustyyppi ur)]
+      [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                    :valinta sopimustyyppi
+                                    :format-fn #(if %
+                                                  (str/capitalize (name %))
+                                                  "Ei sopimustyyppiä")
+                                    :valitse-fn #(tallenna-sopimustyyppi ur %)
+                                    :disabled (not kirjoitusoikeus?)}
+       sopimus/+sopimustyypit+])))
+
+(defn yha-tiedot [ur]
+  {:yha-tuontioikeus?  (yhatiedot/yha-tuontioikeus? ur)
+   :paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
+                                       (= (:tyyppi ur) :paikkaus))
+   :paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
+   :sidonta-lukittu? (get-in ur [:yhatiedot :sidonta-lukittu?])
+   :sidonta-lukittu-vihje "Urakan sidontaa ei voi enää muuttaa, sillä sen tietoja on muutettu."})
+
+(defn- yha-sidonta [ur {:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?
+                               yha-tuontioikeus?
+                               sidonta-lukittu? sidonta-lukittu-vihje]}]
+  (cond
+    (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) (not paallystys-tai-paikkausurakka-sidottu?))
+    [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
+    (and paallystys-tai-paikkausurakka? yha-tuontioikeus? (not paallystys-tai-paikkausurakka-sidottu?))
+    [:span (when sidonta-lukittu? {:title sidonta-lukittu-vihje})
+     [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
+                                  :disabled sidonta-lukittu?}
+      "Sido YHA-urakkaan"]]
+    (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) paallystys-tai-paikkausurakka-sidottu?)
+    [:span "Sidottu YHA-urakkaan. Vain urakanvalvoja voi muuttaa sidontaa."]
+    (and paallystys-tai-paikkausurakka? yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
+    [:span (when sidonta-lukittu? {:title sidonta-lukittu-vihje})
+     [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
+                                  :disabled sidonta-lukittu?}
+      "Vaihda sidottu urakka"]]
+    :default nil))
+
+(defn- yllapidon-urakkatyypin-vaihto [ur {:keys [paallystys-tai-paikkausurakka? sidonta-lukittu?
+                                                 yha-tuontioikeus?]}]
+  (when paallystys-tai-paikkausurakka?
+    [:span {:title (cond sidonta-lukittu?
+                         "Urakan sidonta on lukittu, urakkatyyppiä ei voi enää muuttaa."
+                         (not yha-tuontioikeus?)
+                         "Vain urakanvalvoja voi muuttaa urakan tyyppiä"
+                         :default nil)}
+     [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
+                                   :valinta (:tyyppi ur)
+                                   :format-fn #(navigaatio/nayta-urakkatyyppi %)
+                                   :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
+                                   ;; todo: Urakkatyypin vaihto on toiseseksi estetty,
+                                   ;; sillä paikkausurakoiden toteutus on kesken.
+                                   :disabled (constantly true)
+                                   #_(or (not yha-tuontioikeus?)
+                                         sidonta-lukittu?)}
+      [:paallystys :paikkaus]]]))
+
+(defn- urakan-indeksi [ur]
+  (let [auki? (atom false)]
+    (fn [ur]
+      [:span
+       (or (:indeksi ur)
+           "Ei käytössä")
+       (when (and (:indeksi ur)
+                  (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
+         [:span
+          [:span.klikattava {:on-click #(swap! auki? not)}
+           " "
+           (ikonit/livicon-wrench)
+           " "]
+          (when @auki?
+            [napit/yleinen "Poista indeksi käytöstä"
+             (fn []
+               (modal/nayta! {}
+                             [:div
+                              [:b "Haluatko poistaa indeksin käytön tässä urakassa?"]
+                              [yleiset/tietoja {}
+                               "Urakka: " (:nimi ur)
+                               "Nykyinen indeksi: " (:indeksi ur)]
+                              [:div
+                               [:br]
+                               [napit/palvelinkutsu-nappi "Poista indeksi käytöstä"
+                                #(urakat/poista-indeksi-kaytosta! ur)
+                                {:luokka "nappi-kielteinen"
+                                 :kun-onnistuu #(do (nav/paivita-urakan-tiedot! (:id ur)
+                                                                                assoc :indeksi nil)
+                                                    (modal/piilota!)
+                                                    (reset! auki? false))}]
+                               [napit/yleinen "Peruuta" #(do (modal/piilota!)
+                                                             (reset! auki? false))
+                                {:luokka "nappi-toissijainen pull-right"}]]]))
+             {:luokka "nappi-kielteinen btn-xs"}])])])))
 (defn yleiset-tiedot [ur]
-  (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-        sopimustyyppi (:sopimustyyppi ur)
-        yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
-        paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
-                                           (= (:tyyppi ur) :paikkaus))
-        paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
-        sidonta-lukittu? (get-in ur [:yhatiedot :sidonta-lukittu?])
-        sidonta-lukittu-vihje "Urakan sidontaa ei voi enää muuttaa, sillä sen tietoja on muutettu."]
+  (let [{:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?]
+         :as yha-tiedot} (yha-tiedot ur)]
     [bs/panel {}
      "Yleiset tiedot"
      [yleiset/tietoja {}
@@ -267,23 +361,7 @@
       "YHA:n vuodet:"
       (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)
         (str/join ", " (get-in ur [:yhatiedot :vuodet])))
-      "YHA-sidonta:"
-      (cond
-        (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) (not paallystys-tai-paikkausurakka-sidottu?))
-        [:span.bold "Urakanvalvojan täytyy sitoa urakka YHA-urakkaan"]
-        (and paallystys-tai-paikkausurakka? yha-tuontioikeus? (not paallystys-tai-paikkausurakka-sidottu?))
-        [:span (when sidonta-lukittu? {:title sidonta-lukittu-vihje})
-         [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                      :disabled sidonta-lukittu?}
-          "Sido YHA-urakkaan"]]
-        (and paallystys-tai-paikkausurakka? (not yha-tuontioikeus?) paallystys-tai-paikkausurakka-sidottu?)
-        [:span "Sidottu YHA-urakkaan. Vain urakanvalvoja voi muuttaa sidontaa."]
-        (and paallystys-tai-paikkausurakka? yha-tuontioikeus? paallystys-tai-paikkausurakka-sidottu?)
-        [:span (when sidonta-lukittu? {:title sidonta-lukittu-vihje})
-         [:button.nappi-ensisijainen {:on-click #(yha/nayta-tuontidialogi ur)
-                                      :disabled sidonta-lukittu?}
-          "Vaihda sidottu urakka"]]
-        :default nil)
+      "YHA-sidonta:" (yha-sidonta ur yha-tiedot)
       "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
       "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
       "Takuu päättyy:" (when paallystys-tai-paikkausurakka?
@@ -292,32 +370,13 @@
       "Urakoitsija:" (:nimi (:urakoitsija ur))
       ;; valaistus, tiemerkintä --> palvelusopimus
       ;; päällystys --> kokonaisurakka
-      "Sopimustyyppi: "
-      (when-not (= :hoito (:tyyppi ur))
-        [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
-                                      :valinta sopimustyyppi
-                                      :format-fn #(if %
-                                                   (str/capitalize (name %))
-                                                   "Ei sopimustyyppiä")
-                                      :valitse-fn #(tallenna-sopimustyyppi ur %)
-                                      :disabled (not kirjoitusoikeus?)}
-         sopimus/+sopimustyypit+])
+      "Sopimustyyppi: " (yllapitourakan-sopimustyyppi ur)
+
       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
-      (when paallystys-tai-paikkausurakka?
-        [:span {:title (cond sidonta-lukittu?
-                             "Urakan sidonta on lukittu, urakkatyyppiä ei voi enää muuttaa."
-                             (not yha-tuontioikeus?)
-                             "Vain urakanvalvoja voi muuttaa urakan tyyppiä"
-                             :default nil)}
-         [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
-                                       :valinta (:tyyppi ur)
-                                       :format-fn #(navigaatio/nayta-urakkatyyppi %)
-                                       :valitse-fn #(vahvista-urakkatyypin-vaihtaminen ur %)
-                                       ;; todo: Urakkatyypin vaihto on toiseseksi estetty, sillä paikkausurakoiden toteutus on kesken.
-                                       :disabled (constantly true)
-                                       #_(or (not yha-tuontioikeus?)
-                                             sidonta-lukittu?)}
-          [:paallystys :paikkaus]]])]]))
+      (yllapidon-urakkatyypin-vaihto ur yha-tiedot)
+
+      "Indeksi: " [urakan-indeksi ur]
+      ]]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)

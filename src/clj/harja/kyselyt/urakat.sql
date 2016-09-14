@@ -54,6 +54,7 @@ SELECT
   u.loppupvm,
   u.tyyppi,
   u.sopimustyyppi,
+  u.indeksi,
   hal.id                      AS hallintayksikko_id,
   hal.nimi                    AS hallintayksikko_nimi,
   hal.lyhenne                 AS hallintayksikko_lyhenne,
@@ -205,6 +206,7 @@ SELECT
   u.tyyppi,
   u.alkupvm,
   u.loppupvm,
+  u.indeksi,
   u.takuu_loppupvm,
   h.alueurakkanro AS alueurakkanumero,
   urk.nimi        AS urakoitsija_nimi,
@@ -490,4 +492,9 @@ FROM urakka where sampoid = :sampoid;
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
    SET takuu_loppupvm = :loppupvm
+ WHERE id = :urakka
+
+-- name: aseta-urakan-indeksi!
+UPDATE urakka
+   SET indeksi = :indeksi
  WHERE id = :urakka

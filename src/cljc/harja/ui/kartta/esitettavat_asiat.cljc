@@ -252,8 +252,7 @@
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
                (:tekija tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (valittu-fn? tarkastus) (:ok? tarkastus)
-                                           (:tekija tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus) (:tekija tarkastus))
         selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
         selite (if ikoni
                  (assoc selite-teksti :img ikoni)

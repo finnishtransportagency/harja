@@ -56,10 +56,13 @@
       (sahkoposti/rekisteroi-kuuntelija!
         sonja-sahkoposti
         (fn [viesti]
-          (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
-            (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
-                                       (:lahettaja viesti)
-                                       (:otsikko vastaus) (:sisalto vastaus))))))))
+          (try
+            (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
+              (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
+                                         (:lahettaja viesti)
+                                         (:otsikko vastaus) (:sisalto vastaus)))
+            (catch Throwable t
+              (log/error t "VIRHE T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))

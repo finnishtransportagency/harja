@@ -315,21 +315,21 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
      }
 
     ;; sarakkeet
-    [{:tyyppi :vetolaatikon-tila :leveys "5%"}
-     {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys "50%"}
-     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys "10%"}
-     {:otsikko "Maksimi\u00ADmäärä" :nimi :sovittu_maara :hae :maara :leveys "20%" :tasaa :oikea}
-     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys "20%" :tasaa :oikea}
+    [{:tyyppi :vetolaatikon-tila :leveys 1}
+     {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys 10}
+     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys 2}
+     {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys 4 :tasaa :oikea}
+     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys 4 :tasaa :oikea}
      {:otsikko "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti :tasaa :oikea
-      :muokattava? (constantly false) :leveys "20%"
+      :muokattava? (constantly false) :leveys 4
       :komponentti
-      (fn [rivi]
-        (let [erotus (-
-                       (if (:maara rivi) (:maara rivi) 0)
-                       (:kokonaismaara rivi))]
-          (if (>= erotus 0)
-            [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
-            [:span.materiaalierotus.materiaalierotus-negatiivinen erotus])))}]
+      (fn [{:keys [maara kokonaismaara]}]
+        (if-not maara
+          [:span]
+          (let [erotus (- maara kokonaismaara)]
+            (if (>= erotus 0)
+              [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
+              [:span.materiaalierotus.materiaalierotus-negatiivinen erotus]))))}]
 
     (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])
 

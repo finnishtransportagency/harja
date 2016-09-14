@@ -24,7 +24,8 @@
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -152,11 +153,12 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :validoi [[:ei-tyhja "Anna sakon summa euroina"]]
           :muokattava? :sakko?}
 
-         {:otsikko "Indeksi" :nimi :indeksi :leveys 1.5
-          :tyyppi :valinta
-          :valinnat ["MAKU 2005" "MAKU 2010"]               ;; FIXME: haetaanko indeksit tiedoista?
-          :valinta-nayta #(or % "Ei sidota indeksiin")
-          :palstoja 1}]
+         (when (urakka/indeksi-kaytossa?)
+           {:otsikko "Indeksi" :nimi :indeksi :leveys 1.5
+            :tyyppi :valinta
+            :valinnat ["MAKU 2005" "MAKU 2010"]               ;; FIXME: haetaanko indeksit tiedoista?
+            :valinta-nayta #(or % "Ei sidota indeksiin")
+            :palstoja 1})]
 
         sanktiot-atom]])))
 

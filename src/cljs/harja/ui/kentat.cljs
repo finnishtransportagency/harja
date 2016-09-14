@@ -138,6 +138,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                    (reset! data v)
                                                    (reset! teksti ((or nayta str) v))
                                                    (reset! tulokset nil)))))}]
+         (when (zero? hae-kun-yli-n-merkkia)
+           [:button.nappi-hakualasveto
+            {:on-click #(go (reset! tulokset (<! (hae lahde "")))
+                            (reset! valittu-idx nil))}
+            [:span.livicon-chevron-down]])
+
          [:ul.hakukentan-lista.dropdown-menu {:role  "menu"
                                               :style (avautumissuunta-ja-korkeus-tyylit
                                                        @max-korkeus @avautumissuunta)}
@@ -382,9 +388,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                              [:div.radio
                               [:label
                                [:input {:type      "radio" :checked (= valittu vaihtoehto)
-                                        on-change* #(let [valittu? (-> % .-target .-checked)]
-                                                       (if valittu?
-                                                         (reset! data vaihtoehto)))}]
+                                        :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                      (if valittu?
+                                                        (reset! data vaihtoehto)))}]
                                (vaihtoehto-nayta vaihtoehto)]]))]
        (if nayta-rivina?
          [:table.boolean-group

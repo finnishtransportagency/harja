@@ -92,7 +92,9 @@
 
    (s/optional-key :labyrintti)           {:url            s/Str
                                            :kayttajatunnus s/Str
-                                           :salasana       s/Str}})
+                                           :salasana       s/Str}
+
+   (s/optional-key :virustarkistus)       {:url            s/Str}})
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
