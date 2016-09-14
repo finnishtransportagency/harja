@@ -27,14 +27,14 @@
   (str/join
    "\n"
    (for [{:keys [taulu inherits ehto]} taulut]
-     (str "CREATE TABLE " taulu " ( CHECK( " ehto ") ) INHERITS (" inherits ")"))))
+     (str "CREATE TABLE " taulu " ( CHECK( " ehto ") ) INHERITS (" inherits ");"))))
 
 (defn luo-indeksimaaritykset [taulut kentta uniikki?]
   (str/join
    "\n"
    (map #(str "CREATE " (when uniikki? "UNIQUE ")
               "INDEX " (:taulu %) "_" kentta "_idx"
-              " ON " (:taulu %) " (" kentta ")")
+              " ON " (:taulu %) " (" kentta ");")
         taulut)))
 
 (defn luo-insert-trigger [taulut arvo-nimi arvo-tyyppi]
@@ -43,7 +43,7 @@
          "DECLARE\n"
          "  " arvo-nimi " " arvo-tyyppi ";\n"
          "BEGIN\n"
-         "  " arvo-nimi " := NEW." arvo-nimi "\n"
+         "  " arvo-nimi " := NEW." arvo-nimi ";\n"
          (str/join
           "\n"
           (map-indexed
@@ -52,7 +52,7 @@
                     "  IF "
                     "  ELSIF ")
                   ehto " THEN \n"
-                  "    INSERT INTO " taulu " VALUES (NEW.*)"))
+                  "    INSERT INTO " taulu " VALUES (NEW.*);"))
            taulut))
          "  ELSE\n"
          "    RAISE EXCEPTION 'Taululle " taulu " ei löydy insert ehtoa, korjaa " taulu "_insert() sproc!';\n"
@@ -63,7 +63,7 @@
 
          "CREATE TRIGGER tg_" taulu "_insert\n"
          "BEFORE INSERT ON " taulu "\n"
-         "FOR EACH ROW EXECUTE PROCEDURE " taulu "_insert()\n";
+         "FOR EACH ROW EXECUTE PROCEDURE " taulu "_insert();\n";
 
          )
     ))
@@ -81,4 +81,4 @@
 
      )))
 
-;(spit "tark_part.sql" (luo-tarkastus-partitiot))
+(spit "tark_part.sql" (luo-tarkastus-partitiot))
