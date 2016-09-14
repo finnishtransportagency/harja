@@ -132,19 +132,19 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 
 (defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id ilmoitus-id kuittaustyyppi kommentti]}]
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
-        ilmoitus (:id (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id)))]
+        ilmoitus (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
     (if-not paivystaja
       +ilmoitustoimenpiteen-tallennus-epaonnistui+
       (let [tallenna (fn [kuittaustyyppi vapaateksti]
                        (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
                          db
-                         ilmoitus
+                         (:id ilmoitus)
                          ilmoitus-id
                          vapaateksti
                          kuittaustyyppi
                          paivystaja))]
-        (when (and (= kuittaustyyppi :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
-          (let [aloitus-kuittaus-id (tallenna :vastaanotto "Vastaanotettu")]
+        (when (and (= kuittaustyyppi :aloitettu) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
+          (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
             (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
         (let [ilmoitustoimenpide-id (tallenna (kuittaustyyppi->enum kuittaustyyppi) kommentti)]

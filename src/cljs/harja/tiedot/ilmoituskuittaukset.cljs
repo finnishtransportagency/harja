@@ -14,21 +14,19 @@
 (defn uusi-kuittaus-ilmoitukselle [ilmoitus]
   (let [kayttaja @istunto/kayttaja
         organisaatio (:organisaatio kayttaja)]
-    {:ilmoituksen-id          (:id ilmoitus)
-     :ulkoinen-ilmoitusid     (:ilmoitusid ilmoitus)
-     :tyyppi                  :vastaanotto
-     :ilmoittaja-etunimi      (:etunimi kayttaja)
-     :ilmoittaja-sukunimi     (:sukunimi kayttaja)
+    {:ilmoituksen-id (:id ilmoitus)
+     :ulkoinen-ilmoitusid (:ilmoitusid ilmoitus)
+     :tyyppi :vastaanotto
+     :ilmoittaja-etunimi (:etunimi kayttaja)
+     :ilmoittaja-sukunimi (:sukunimi kayttaja)
      :ilmoittaja-matkapuhelin (:puhelin kayttaja)
-     :ilmoittaja-tyopuhelin   (:puhelin kayttaja)
-     :ilmoittaja-sahkoposti   (:sahkoposti kayttaja)
+     :ilmoittaja-tyopuhelin (:puhelin kayttaja)
+     :ilmoittaja-sahkoposti (:sahkoposti kayttaja)
      :ilmoittaja-organisaatio (:nimi organisaatio)
-     :ilmoittaja-ytunnus      (:ytunnus organisaatio)}))
+     :ilmoittaja-ytunnus (:ytunnus organisaatio)}))
 
 (defn laheta-kuittaukset! [ilmoitukset kuittaus]
   (k/post! :tallenna-ilmoitustoimenpiteet
-           (let [kuittaukset(into []
-                       (map #(merge (uusi-kuittaus-ilmoitukselle %) kuittaus))
-                       ilmoitukset)]
-             (log "---> kuittaukset " kuittaukset)
-             kuittaukset)))
+           (into []
+                 (map #(merge (uusi-kuittaus-ilmoitukselle %) kuittaus))
+                 ilmoitukset)))
