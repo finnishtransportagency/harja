@@ -94,7 +94,10 @@
                                            :kayttajatunnus s/Str
                                            :salasana       s/Str}
 
-   (s/optional-key :virustarkistus)       {:url            s/Str}})
+   (s/optional-key :virustarkistus)       {:url            s/Str}
+
+   (s/optional-key :paivystystarkistus)   {:paivittainen-aika [s/Num]}
+   })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
