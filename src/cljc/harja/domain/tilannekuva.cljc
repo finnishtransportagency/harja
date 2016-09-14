@@ -175,12 +175,25 @@ suodattimien id numeroilla."
   (and valitut-set
        (valitut-set (:id suodatin))))
 
+(defn- valitut-kentat* [taulukko suodattimet]
+  (loop [t taulukko
+         [[avain arvo] & loput] (seq suodattimet)]
+    (cond
+      (nil? avain)
+      t
+
+      (and (map? arvo) (every? suodatin? (keys arvo)))
+      (recur (concat t (keep (fn [[suodatin valittu?]] (when valittu? suodatin)) (seq arvo))) loput)
+
+      (map? arvo)
+      (recur (valitut-kentat* t arvo) loput)
+
+      :else
+      (recur t loput))))
+
 (defn valitut-kentat [valinnat]
   "Valitsee joukosta suodattimia valitut, ja palauttaa itse suodattimet listassa."
-  (let [valitut-suodattimet (apply clojure.set/union (map val (valitut-suodattimet valinnat)))
-        kentat (filter #(valitut-suodattimet (:id %))
-                       (mapcat (fn [[_ suodatin-map]] (map key suodatin-map)) valinnat))]
-    kentat))
+  (valitut-kentat* [] valinnat))
 
 (defn yllapidon-reaaliaikaseurattava? [id]
   (yllapidon-reaaliaikaseurattavat id))
