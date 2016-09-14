@@ -83,9 +83,12 @@
      @urakan-valitavoitteet-atom]))
 
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
-  (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
-        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
-        voi-tehda-tarkennuksen voi-merkita-valmiiksi?] ;; Toistaiseksi oletetaan nämä oikeudet samaksi
+  (let [voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
+        voi-tehda-tarkennuksen voi-merkita-valmiiksi? ;; Toistaiseksi oletetaan nämä oikeudet samaksi
+        ;; Mitään taulukon kenttää ei voi muokata ilman oikeutta merkitä valmiiksi tai tehdä tarkennuksia
+        voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
+                          (or voi-merkita-valmiiksi?
+                              voi-tehda-tarkennuksen))]
     [:div
      [grid/grid
       {:otsikko "Valtakunnalliset välitavoitteet"
