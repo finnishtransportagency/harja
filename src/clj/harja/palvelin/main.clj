@@ -200,7 +200,7 @@
       ;; Tarkastustehtävät
 
       :paivystystarkistukset (component/using
-                               (paivystystarkistukset/->Paivystystarkistukset)
+                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
                                [:http-palvelin :db :fim :sonja-sahkoposti])
 
       ;; Frontille tarjottavat palvelut

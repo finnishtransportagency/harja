@@ -50,9 +50,9 @@
   (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampo-id urakka))]
     (if-not (empty? ilmoituksen-saajat)
       (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm)
-      ;; TODO "tänään" -> huomenna, yhteyshenkilöä ei löydy FIMistä.
-      (log/warn (format "Urakalla %s ei ole päivystystä tänään eikä asiasta voitu ilmoittaa kenellekään."
-                        (:nimi urakka))))))
+      (log/warn (format "Urakalla %s ei ole päivystystä %s ja urakalle ei löydy FIM:stä henkiöä, jolle tehdä ilmoitus."
+                        (:nimi urakka)
+                        pvm)))))
 
 (defn- ilmoita-paivystyksettomista-urakoista [urakat-ilman-paivystysta fim email pvm]
   (doseq [urakka urakat-ilman-paivystysta]
@@ -121,19 +121,19 @@
         urakat-ilman-paivystysta (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
 
-(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim sonja-sahkoposti] :as this}]
+(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim sonja-sahkoposti] :as this} paivittainen-aika]
   (log/debug "Ajastetaan päivystäjien tarkistus")
-  (ajastettu-tehtava/ajasta-paivittain
-    [5 0 0] ;; TODO Ota asetuksista tämä. HUOM. Kysy mikolta CI-putkeen. Jos aikaa ei ole, ei tehdä mitään.
-    (fn [_]
-      ;; TODO Passaa huominen (ja tarkista lähtevä viesti)
-      (paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/now)))))
+  (when paivittainen-aika
+    (ajastettu-tehtava/ajasta-paivittain
+     paivittainen-aika
+     (fn [_]
+       (paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1)))))))
 
-(defrecord Paivystystarkistukset []
+(defrecord Paivystystarkistukset [asetukset]
   component/Lifecycle
   (start [this]
     (assoc this
-      :paivystyksien-tarkistus (tee-paivystyksien-tarkistustehtava this)))
+      :paivystyksien-tarkistus (tee-paivystyksien-tarkistustehtava this (:paivittainen-aika asetukset))))
   (stop [this]
     (doseq [tehtava [:paivystyksien-tarkistus]
             :let [lopeta-fn (get this tehtava)]]
