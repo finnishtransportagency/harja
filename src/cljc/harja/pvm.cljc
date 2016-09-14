@@ -178,8 +178,9 @@
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
-  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä. Mahdollisuus verrata ilman kellonaikaa,
-  joka on oletuksena true."
+  "Tarkistaa, onko annettu pvm alkupvm:n ja loppupvm:n välissä.
+  Palauttaa true myös silloin jos pvm on sama kuin alku- tai loppupvm.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([pvm alkupvm loppupvm] (valissa? pvm alkupvm loppupvm true))
   ([pvm alkupvm loppupvm ilman-kellonaikaa?]
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
