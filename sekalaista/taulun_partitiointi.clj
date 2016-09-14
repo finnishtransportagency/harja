@@ -33,7 +33,7 @@
   (str/join
    "\n"
    (map #(str "CREATE " (when uniikki? "UNIQUE ")
-              "INDEX " (:taulu %) "_" kentta "_idx"
+              "INDEX " (:taulu %) "_" (str/replace kentta #"," "_") "_idx"
               " ON " (:taulu %) " (" kentta ");")
         taulut)))
 
@@ -76,6 +76,7 @@
      "\n\n-- Luo indeksit osille\n"
      (luo-indeksimaaritykset partitiot "id" true) "\n"
      (luo-indeksimaaritykset partitiot "urakka" false)
+     (luo-indeksimaaritykset partitiot "ulkoinen_id,luoja" true)
      "\n\n-- Luo insert trigger\n"
      (luo-insert-trigger partitiot "aika" "date")
 
