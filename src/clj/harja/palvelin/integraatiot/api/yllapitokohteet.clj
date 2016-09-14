@@ -41,23 +41,24 @@
 (defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
   (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-liittyvat-yllapitokohteet db {:urakka urakka-id})]
     (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
-      (throw (SecurityException. "Ylläpitokohde ei kuulu väitettyyn urakkaan.")))))
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylläpitokohde ei kuulu urakkaan"}]}))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
-                     kayttaja))
-  (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (jdbc/with-db-transaction
-      [db db]
-      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
-      (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
-        (tee-kirjausvastauksen-body
-          {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-           :id id})))))
+                     kayttaja)
+             (let [urakka-id (Integer/parseInt urakka-id)
+                   kohde-id (Integer/parseInt kohde-id)]
+               (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+               (jdbc/with-db-transaction
+                 [db db]
+                 (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
+                 (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
+                   (tee-kirjausvastauksen-body
+                     {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+                      :id id}))))))
 
 (defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
