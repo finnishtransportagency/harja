@@ -233,7 +233,7 @@ button {
 
 .pikavalintapainike {
     width: 215px;
-    font-size: 18px;
+    font-size: 17px;
     background-color: rgb(16,125,209);
     height: 50px;
     line-height: 50px;
@@ -254,8 +254,10 @@ button {
     width: 48px;
     height: 48px;
     fill: white;
+    margin: 5px;
     position: relative;
-    top: 5px;
+    top: -15px;
+    vertical-align: middle;
 }
 
 
@@ -892,12 +894,12 @@ button:disabled {
 }
 
 .painikelaatikko > .painikerivi {
-    height: 100px;
+    height: 70px;
 }
 
 .painikerivi > .pikavalintapainike {
     float: left;
-    width: 22.5%;
+    width: 30.5%;
     height: 100%;
     background-color: rgb(9,79,192);
     border: 1px solid black;
@@ -907,8 +909,8 @@ button:disabled {
     mergin-right: 3%;
     color: white;
     padding-top: 20px;
-    font-size: 20px;
-    text-align: center;
+    font-size: 18px;
+    text-align: left;
     line-height: 20px;
 }
 

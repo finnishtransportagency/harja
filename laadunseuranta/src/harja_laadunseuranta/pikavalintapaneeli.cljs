@@ -222,34 +222,35 @@
       [toggle-painike "Lajittuma" havainnot :lajittuma
        :ikoni (ikoni :lajittuma)]
       [toggle-painike "Epätasaisuus" havainnot :epatasaisuus
-       :ikoni (ikoni :epatasaisuus)]
-      [toggle-painike "Halkeamat" havainnot :halkeamat
-       :ikoni (ikoni :halkeamat)]]
+       :ikoni (ikoni :epatasaisuus)]]
      [:div.painikerivi
+      [toggle-painike "Halkeamat" havainnot :halkeamat
+       :ikoni (ikoni :halkeamat)]
       [toggle-painike "Vesilammikot" havainnot :vesilammikot
        :ikoni (ikoni :vesilammikot)]
       [toggle-painike "Epätasaiset reunat" havainnot :epatasaisetreunat
-       :ikoni (ikoni :epatasaisetreunat)]
+       :ikoni (ikoni :epatasaisetreunat)]]
+     [:div.painikerivi
       [toggle-painike "Jyrän jälkiä" havainnot :jyranjalkia
        :ikoni (ikoni :jyranjalkia)]
       [toggle-painike "Sideaineläikkiä" havainnot :sideainelaikkia
-       :ikoni (ikoni :sideainelaikkia)]]
-     [:div.painikerivi
+       :ikoni (ikoni :sideainelaikkia)]
       [toggle-painike "Väärä korkeusasema" havainnot :vaarakorkeusasema
-       :ikoni (ikoni :vaarakorkeusasema)]
+       :ikoni (ikoni :vaarakorkeusasema)]]
+     [:div.painikerivi
       [toggle-painike "Pinta harva" havainnot :pintaharva
        :ikoni (ikoni :pintaharva)]
       [toggle-painike "Pintakuivatus puutteellinen" havainnot :pintakuivatuspuute
        :ikoni (ikoni :pintakuivatuspuute)]
       [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema
        :ikoni (ikoni :kaivojenkorkeusasema)]]
-     [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Peruuta"]]))
+     [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]]))
 
 
 (defn- tiemerkinta [alivalikot]
   [:div.painikelaatikko
    [:div "1"]
-   [:div.peruuta {:on-click #(turn-off alivalikot :tiemerkinta)} "Peruuta"]])
+   [:div.peruuta {:on-click #(turn-off alivalikot :tiemerkinta)} "Sulje"]])
 
 (defn pikavalintapaneeli [tr-osoite moodi havainnot alivalikot kitkamittaus-kirjattu kertakirjaus-kirjattu yleishavainto-kirjattu
                           lumisuus-kirjattu tasaisuus-kirjattu soratiehavainto-kirjattu keskiarvo-atom lumimaara-atom
