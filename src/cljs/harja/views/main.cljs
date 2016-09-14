@@ -4,7 +4,6 @@
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.komponentti :as komp]
-            [harja.ui.listings :refer [suodatettu-lista]]
             [harja.ui.yleiset :refer [linkki staattinen-linkki-uuteen-ikkunaan ajax-loader livi-pudotusvalikko]]
             [harja.ui.dom :as dom]
             [harja.ui.modal :as modal]
@@ -219,6 +218,8 @@
             (if (nil? kayttaja)
               [ladataan]
               (if (ei-kayttooikeutta? kayttaja)
-                [:div.ei-kayttooikeutta "Ei Harja käyttöoikeutta. Ota yhteys pääkäyttäjään."]
+                [:div.ei-kayttooikeutta-wrap
+                 [:img#harja-brand-icon {:src      "images/harja_logo_soft.svg"}]
+                 [:div.ei-kayttooikeutta "Ei käyttöoikeutta Harjaan. Ota yhteys organisaatiosi käyttövaltuusvastaavaan."]]
                 [paasisalto sivu korkeus]))))
         [ladataan]))))

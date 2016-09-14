@@ -9,7 +9,8 @@
               ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite kuittaustyypin-lyhenne]]
+              kuittaustyypin-selite kuittaustyypin-lyhenne
+              tilan-selite] :as domain]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -28,6 +29,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
+            [harja.ui.notifikaatiot :as notifikaatiot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat])
@@ -139,11 +141,11 @@
 
     (lomake/ryhma
       {:rivi? true}
-      {:nimi :kuittaustyypit
+      {:nimi :tilat
        :otsikko "Tila"
        :tyyppi :checkbox-group
-       :vaihtoehdot tiedot/kuittaustyyppi-filtterit
-       :vaihtoehto-nayta kuittaustyypin-selite}
+       :vaihtoehdot tiedot/tila-filtterit
+       :vaihtoehto-nayta tilan-selite}
       {:nimi :tyypit
        :otsikko "Tyyppi"
        :tyyppi :checkbox-group
@@ -182,7 +184,8 @@
                                     (e! (v/->YhdistaValinnat uusi))))
     (fn [e! {valinnat-nyt :valinnat
              kuittaa-monta :kuittaa-monta
-             haetut-ilmoitukset :ilmoitukset :as ilmoitukset}]
+             haetut-ilmoitukset :ilmoitukset
+             ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
       (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
             valitse-ilmoitus! (when kuittaa-monta-nyt
                                 #(e! (v/->ValitseKuitattavaIlmoitus %)))]
@@ -190,6 +193,10 @@
 
          [ilmoitusten-hakuehdot e! valinnat-nyt]
          [:div
+          [kentat/tee-kentta {:tyyppi :checkbox
+                              :teksti "Äänimerkki uusista ilmoituksista"}
+           tiedot/aanimerkki-uusista-ilmoituksista?]
+
           [pollauksen-merkki]
           [yhdeydenottopyynnot-lihavoitu]
           [virkaapupyynnot-korostettu]
@@ -205,9 +212,12 @@
            {:tyhja (if haetut-ilmoitukset
                      "Ei löytyneitä tietoja"
                      [ajax-loader "Haetaan ilmoutuksia"])
-            :rivi-klikattu (or valitse-ilmoitus!
-                               #(e! (v/->ValitseIlmoitus %)))
-            :piilota-toiminnot true}
+            :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
+                             (or valitse-ilmoitus!
+                                #(e! (v/->ValitseIlmoitus %))))
+            :piilota-toiminnot true
+            :max-rivimaara 500
+            :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
 
            [(when kuittaa-monta-nyt
               {:otsikko " "
@@ -224,7 +234,7 @@
             {:otsikko "Ilmoitettu" :nimi :ilmoitettu
              :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
             {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-             :hae #(ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
+             :hae #(domain/ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
              :leveys 2}
             {:otsikko "Sijainti" :nimi :tierekisteri
              :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
@@ -239,17 +249,15 @@
              :komponentti kuittauslista
              :leveys 6}
 
-            {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(kuittaustyypin-selite (:tila %))}]
+            {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
            (mapv #(if (:yhteydenottopyynto %)
                    (assoc % :lihavoi true)
                    %)
-                 haetut-ilmoitukset)]
-          [kentat/tee-kentta {:tyyppi :checkbox
-                              :teksti "Äänimerkki uusista ilmoituksista"}
-           tiedot/aanimerkki-uusista-ilmoituksista?]]]))))
+                 haetut-ilmoitukset)]]]))))
 
 (defn- ilmoitukset* [e! ilmoitukset]
   (komp/luo
+    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
@@ -260,12 +268,12 @@
 
 (defn ilmoitukset []
   (komp/luo
+    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
     (komp/sisaan-ulos #(do
                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                         (nav/vaihda-kartan-koko! :M))
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (komp/lippu tiedot/karttataso-ilmoitukset)
-    ;;(komp/ulos (kartta/kuuntele-valittua! tiedot/valittu-ilmoitus))
 
     (fn []
       [tuck tiedot/ilmoitukset ilmoitukset*])))

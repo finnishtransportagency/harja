@@ -199,6 +199,7 @@
 (defn aja-virhekasittelyn-kanssa [resurssi ajo]
   (try+
     (ajo)
+    ;; Tunnetut poikkeustilanteet, virhetiedot voidaan julkaista
     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
       (kasittele-invalidi-json virheet resurssi))
     (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}

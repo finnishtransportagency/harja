@@ -12,13 +12,20 @@
     },
     "lahetysaika": "2016-01-30T12:00:00Z"
   },
+
   "paallystysilmoitus": {
+    "perustiedot": {
+      "aloituspvm": "2015-01-10T12:00:00Z",
+      "valmispvm-paallystys": "2015-01-12T12:00:00Z",
+      "valmispvm-kohde": "2015-01-16T12:00:00Z",
+      "takuupvm": "2015-02-15T12:00:00Z"
+    },
     "yllapitokohde": {
       "sijainti": {
-        "aosa": 20,
+        "aosa": 1,
         "aet": 1,
         "losa": 5,
-        "let": 15
+        "let": 16
       },
       "alikohteet": [
         {
@@ -26,10 +33,10 @@
             "nimi": "1. testialikohde",
             "tunnus": "A",
             "sijainti": {
-              "aosa": 20,
+              "aosa": 1,
               "aet": 1,
               "losa": 5,
-              "let": 15
+              "let": 16
             },
             "paallystetyyppi": "avoin asfaltti",
             "raekoko": 12,
@@ -46,7 +53,7 @@
                   "esiintyma": "testi",
                   "km-arvo": "testi",
                   "muotoarvo": "testi",
-                  "sideainetyyppi": "1",
+                  "sideainetyyppi": "20/30",
                   "pitoisuus": 1.2,
                   "lisa-aineet": "lisäaineet"
                 }
@@ -60,7 +67,7 @@
       {
         "alustatoimenpide": {
           "sijainti": {
-            "aosa": 20,
+            "aosa": 1,
             "aet": 1,
             "losa": 5,
             "let": 15
@@ -68,7 +75,7 @@
           "kasittelymenetelma": "Massanvaihto",
           "paksuus": 1.2,
           "verkkotyyppi": "Teräsverkko",
-          "verkon-tarkoitus": "Muiden routavaurioiden ehkäisy",
+          "verkon-tarkoitus": "Moniongelmaisen tukeminen",
           "verkon-sijainti": "Päällysteessä",
           "tekninen-toimenpide": "Rakentaminen"
         }
@@ -77,7 +84,7 @@
     "tyot": [
       {
         "tyo": {
-          "tyyppi": "Ajoradan päällyste",
+          "tyyppi": "Tasaukset",
           "tyotehtava": "työtehtävä",
           "tilattu-maara": 1.2,
           "toteutunut-maara": 1.2,

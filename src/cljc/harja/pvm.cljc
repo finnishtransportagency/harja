@@ -178,8 +178,9 @@
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
-  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä. Mahdollisuus verrata ilman kellonaikaa,
-  joka on oletuksena true."
+  "Tarkistaa, onko annettu pvm alkupvm:n ja loppupvm:n välissä.
+  Palauttaa true myös silloin jos pvm on sama kuin alku- tai loppupvm.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([pvm alkupvm loppupvm] (valissa? pvm alkupvm loppupvm true))
   ([pvm alkupvm loppupvm ilman-kellonaikaa?]
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
@@ -677,3 +678,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
     (mapv t/year pvmt)))
+
+
+#?(:cljs
+   (defn paivaa-sitten [paivaa]
+     (-> paivaa t/days t/ago)))

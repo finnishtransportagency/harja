@@ -7,7 +7,9 @@
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
+            [harja.domain.skeema :as skeema]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -63,7 +65,8 @@
                                  :sideainetyyppi 1
                                  :pitoisuus 54
                                  :lisaaineet "asd"}
-                                {:nimi "Tie 555"
+                                {:poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
+                                 :nimi "Tie 555"
                                  :tr-numero 555
                                  :tr-alkuosa 2
                                  :tr-alkuetaisyys 3
@@ -85,8 +88,7 @@
                                  :muotoarvo "asd"
                                  :sideainetyyppi 1
                                  :pitoisuus 54
-                                 :lisaaineet "asd"
-                                 :poistettu true}]
+                                 :lisaaineet "asd"}]
 
                     :alustatoimet [{:tr-alkuosa 2
                                     :tr-alkuetaisyys 3
@@ -106,27 +108,8 @@
                             :yksikko "km"
                             :yksikkohinta 5}]}})
 
-(def paallystyskohde-id-jolla-ei-ilmoitusta
-  (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id"
-                  " FROM yllapitokohde"
-                  " FULL OUTER JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
-                  " WHERE paallystysilmoitus.id IS NULL"
-                  " AND urakka = " (hae-muhoksen-paallystysurakan-id)
-                  " AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
-
-(log/debug "Päällystyskohde id ilman ilmoitusta: " paallystyskohde-id-jolla-ei-ilmoitusta)
-
-(def paallystyskohde-id-jolla-on-ilmoitus
-  (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id "
-                  "FROM yllapitokohde "
-                  "JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
-                  " WHERE urakka = " (hae-muhoksen-paallystysurakan-id)
-                  " AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
-
-(log/debug "Päällystyskohde id jolla on ilmoitus: " paallystyskohde-id-jolla-on-ilmoitus)
-
 (deftest skeemavalidointi-toimii
-  (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
+  (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
     (let [urakka-id @muhoksen-paallystysurakan-id
@@ -136,11 +119,11 @@
                                            "Huonoa dataa, jota ei saa päästää kantaan."))
           maara-ennen-pyyntoa
           (ffirst
-           (q
-            (str "SELECT count(*) FROM paallystysilmoitus"
-                 " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
-                 " AND urakka = " urakka-id
-                 " AND sopimus = " sopimus-id ";")))]
+            (q
+              (str "SELECT count(*) FROM paallystysilmoitus"
+                   " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
+                   " AND urakka = " urakka-id
+                   " AND sopimus = " sopimus-id ";")))]
 
       (is (thrown? RuntimeException
                    (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -150,15 +133,22 @@
                                                    :paallystysilmoitus paallystysilmoitus})))
       (let [maara-pyynnon-jalkeen
             (ffirst
-             (q
-              (str "SELECT count(*) FROM paallystysilmoitus"
-                   " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
-                   " AND urakka = " urakka-id
-                   " AND sopimus = " sopimus-id ";")))]
+              (q
+                (str "SELECT count(*) FROM paallystysilmoitus"
+                     " LEFT JOIN yllapitokohde ON yllapitokohde.id = paallystysilmoitus.paallystyskohde"
+                     " AND urakka = " urakka-id
+                     " AND sopimus = " sopimus-id ";")))]
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
+(deftest testidata-on-validia
+  ;; On kiva jos testaamme näkymää ja meidän testidata menee validoinnista läpi
+  (let [ilmoitustiedot (q "SELECT ilmoitustiedot FROM paallystysilmoitus")]
+    (doseq [[ilmoitusosa] ilmoitustiedot]
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+                          (konv/jsonb->clojuremap ilmoitusosa))))))
+
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
-  (let [paallystyskohde-id paallystyskohde-id-jolla-ei-ilmoitusta]
+  (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
     (is (not (nil? paallystyskohde-id)))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [urakka-id @muhoksen-paallystysurakan-id
@@ -168,6 +158,7 @@
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :sopimus-id sopimus-id
                                                                    :paallystysilmoitus paallystysilmoitus})
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             muutoshinta (ffirst (q (str "SELECT muutoshinta FROM paallystysilmoitus WHERE paallystyskohde = (SELECT id FROM yllapitokohde WHERE id =" paallystyskohde-id ");")))
@@ -181,17 +172,54 @@
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen) "Tallennuksen jälkeen päällystysilmoituksien määrä")
         (is (= (:tila paallystysilmoitus-kannassa) :valmis))
         (is (= (:muutoshinta paallystysilmoitus-kannassa) muutoshinta))
-        ;; Toimenpiteen tiedot on tallennettu oikein
-        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kokonaismassamaara :rc% :tyomenetelma
-                                  :leveys :massamenekki :pinta-ala :edellinen-paallystetyyppi]]
-          ;; Toimenpiteen tiedot on tallennettu oikein
-          (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
-                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
+        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+               {:alustatoimet [{:kasittelymenetelma 1
+                                :paksuus 1234
+                                :tekninen-toimenpide 1
+                                :tr-alkuetaisyys 3
+                                :tr-alkuosa 2
+                                :tr-loppuetaisyys 5
+                                :tr-loppuosa 4
+                                :verkkotyyppi 1
+                                :verkon-sijainti 1
+                                :verkon-tarkoitus 1}]
+                :osoitteet [{:edellinen-paallystetyyppi 1
+                             :esiintyma "asd"
+                             :km-arvo "asd"
+                             :kohdeosa-id 18
+                             :kokonaismassamaara 2
+                             :leveys 5
+                             :lisaaineet "asd"
+                             :massamenekki 7
+                             :muotoarvo "asd"
+                             :nimi "Tie 666"
+                             :paallystetyyppi 1
+                             :pinta-ala 8
+                             :pitoisuus 54
+                             :raekoko 1
+                             :rc% 3
+                             :sideainetyyppi 1
+                             :toimenpide nil
+                             :tr-ajorata 1
+                             :tr-alkuetaisyys 3
+                             :tr-alkuosa 2
+                             :tr-kaista 1
+                             :tr-loppuetaisyys 5
+                             :tr-loppuosa 4
+                             :tr-numero 666
+                             :tunnus nil
+                             :tyomenetelma 12}]
+                :tyot [{:tilattu-maara 100
+                        :toteutunut-maara 200
+                        :tyo "AB 16/100 LTA"
+                        :tyyppi :ajoradan-paallyste
+                        :yksikko "km"
+                        :yksikkohinta 5}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
 
 (deftest paivita-paallystysilmoitukselle-paatostiedot
-  (let [paallystyskohde-id paallystyskohde-id-jolla-on-ilmoitus]
+  (let [paallystyskohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
     (is (not (nil? paallystyskohde-id)))
 
     (let [urakka-id @muhoksen-paallystysurakan-id
@@ -223,12 +251,50 @@
         (is (some #(= (:nimi %) "Tie 666")
                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
         (is (not (some #(= (:nimi %) "Tie 555")
-                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
-        (let [toimenpide-avaimet [:paallystetyyppi :raekoko :kokonaismassamaara :rc% :tyomenetelma
-                                  :leveys :massamenekki :pinta-ala :edellinen-paallystetyyppi]]
-          ;; Toimenpiteen tiedot on tallennettu oikein
-          (is (= (select-keys (:ilmoitustiedot paallystysilmoitus-kannassa) toimenpide-avaimet)
-                 (select-keys (:ilmoitustiedot paallystysilmoitus) toimenpide-avaimet))))
+                       (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
+        (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+               {:alustatoimet [{:kasittelymenetelma 1
+                                :paksuus 1234
+                                :tekninen-toimenpide 1
+                                :tr-alkuetaisyys 3
+                                :tr-alkuosa 2
+                                :tr-loppuetaisyys 5
+                                :tr-loppuosa 4
+                                :verkkotyyppi 1
+                                :verkon-sijainti 1
+                                :verkon-tarkoitus 1}]
+                :osoitteet [{:edellinen-paallystetyyppi 1
+                             :esiintyma "asd"
+                             :km-arvo "asd"
+                             :kohdeosa-id 18
+                             :kokonaismassamaara 2
+                             :leveys 5
+                             :lisaaineet "asd"
+                             :massamenekki 7
+                             :muotoarvo "asd"
+                             :nimi "Tie 666"
+                             :paallystetyyppi 1
+                             :pinta-ala 8
+                             :pitoisuus 54
+                             :raekoko 1
+                             :rc% 3
+                             :sideainetyyppi 1
+                             :toimenpide nil
+                             :tr-ajorata 1
+                             :tr-alkuetaisyys 3
+                             :tr-alkuosa 2
+                             :tr-kaista 1
+                             :tr-loppuetaisyys 5
+                             :tr-loppuosa 4
+                             :tr-numero 666
+                             :tunnus nil
+                             :tyomenetelma 12}]
+                :tyot [{:tilattu-maara 100
+                        :toteutunut-maara 200
+                        :tyo "AB 16/100 LTA"
+                        :tyyppi :ajoradan-paallyste
+                        :yksikko "km"
+                        :yksikkohinta 5}]}))
 
         ; Lukittu, ei voi enää päivittää
         (log/debug "Tarkistetaan, ettei voi muokata lukittua ilmoitusta.")
@@ -245,9 +311,8 @@
                       perustelu_tekninen_osa = NULL
                   WHERE paallystyskohde =" paallystyskohde-id ";"))))))
 
-
 (deftest lisaa-kohdeosa
-  (let [paallystyskohde-id paallystyskohde-id-jolla-on-ilmoitus]
+  (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
     (let [urakka-id @muhoksen-paallystysurakan-id
@@ -300,7 +365,7 @@
         (is (= (inc kohteita-ennen-lisaysta) (kohteita)) "Kohteita on nyt 1 enemmän")))))
 
 (deftest ala-paivita-paallystysilmoitukselle-paatostiedot-jos-ei-oikeuksia
-  (let [paallystyskohde-id paallystyskohde-id-jolla-on-ilmoitus]
+  (let [paallystyskohde-id (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
     (let [urakka-id @muhoksen-paallystysurakan-id

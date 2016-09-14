@@ -66,6 +66,9 @@
   (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus
                      json-esimerkit/+paallystysilmoituksen-kirjaus+)))
 
+  (is (nil? (validoi json-skeemat/yllapidon-aikataulun-kirjaus
+                     json-esimerkit/+yllapidon-aikataulun-kirjaus+)))
+
   (is (nil? (validoi json-skeemat/suljetun-tieosuuden-kirjaus
                      json-esimerkit/+suljetun-tieosuuden-kirjaus+)))
   (is (nil? (validoi json-skeemat/suljetun-tieosuuden-poisto

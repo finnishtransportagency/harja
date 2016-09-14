@@ -7,8 +7,6 @@
       [harja.domain.laadunseuranta.tarkastukset :as tarkastukset]
       [harja.domain.ilmoitukset :as ilmoitukset]
       [harja.geo :as geo]
-      [harja.ui.kartta.varit.puhtaat :as puhtaat]
-
       [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]))
 
 #?(:clj (defn log [& things]
@@ -203,7 +201,7 @@
 (defn ilmoituksen-tooltip [ilmoitus]
   (str (ilmoitukset/ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
        " ("
-       (str/lower-case (ilmoitukset/kuittaustyypin-selite (:tila ilmoitus)))
+       (str/lower-case (ilmoitukset/tilan-selite (:tila ilmoitus)))
        ")"))
 
 
@@ -214,7 +212,7 @@
       :nimi (ilmoituksen-tooltip ilmoitus)
       :selite {:teksti (str (ilmoitukset/ilmoitustyypin-lyhenne ilmoitustyyppi)
                             " ("
-                            (str/lower-case (ilmoitukset/kuittaustyypin-selite tila))
+                            (str/lower-case (ilmoitukset/tilan-selite tila))
                             ")")
                :img    ikoni}
       :alue (maarittele-feature ilmoitus (valittu-fn? ilmoitus) ikoni))))
@@ -248,14 +246,13 @@
 
 (def tarkastus-selitteet
   #{{:teksti "Tarkastus (ok)" :vari (:ok-tarkastus ulkoasu/viivojen-varit)}
-    {:teksti "Tarkastus (havaintoja)" :vari (:ei-ok-tarkastus ulkoasu/viivojen-varit)}})
+    {:teksti "Laadun\u00ADalitus" :vari (:ei-ok-tarkastus ulkoasu/viivojen-varit)}})
 
 (defmethod asia-kartalle :tarkastus [tarkastus valittu-fn?]
   (let [ikoni (ulkoasu/tarkastuksen-ikoni
                (valittu-fn? tarkastus) (:ok? tarkastus) (reitillinen-asia? tarkastus)
                (:tekija tarkastus))
-        viiva (ulkoasu/tarkastuksen-reitti (valittu-fn? tarkastus) (:ok? tarkastus)
-                                           (:tekija tarkastus))
+        viiva (ulkoasu/tarkastuksen-reitti (:ok? tarkastus) (:tekija tarkastus))
         selite-teksti {:teksti (otsikko-tekijalla "Tarkastus" tarkastus)}
         selite (if ikoni
                  (assoc selite-teksti :img ikoni)

@@ -8,11 +8,6 @@
 
 (def sahkoposti "harjapalaute@solita.fi")
 
-(def url (atom nil))
-(defonce aseta-url
-  (t/kuuntele! :url-muuttui #(reset! url (:url %))))
-
-
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
   "Palautetta HARJAsta")
@@ -25,21 +20,21 @@
 (def virhe-otsikko
   "HARJA räsähti")
 
-(defn tekniset-tiedot [kayttaja url selain]
+(defn tekniset-tiedot [kayttaja url user-agent]
   (let [enc #(.encodeURIComponent js/window %)]
     (str "\n---\n"
          "Sijainti Harjassa: " (enc url) "\n"
-         "Selain: " (enc selain) "\n"
+         "User agent: " (enc user-agent) "\n"
          "Käyttäjä: " (enc (pr-str kayttaja)))))
 
-(defn virhe-body [virheviesti kayttaja url selain]
+(defn virhe-body [virheviesti kayttaja url user-agent]
   (str
    "\n---\n"
    "Kirjoita ylle, mitä olit tekemässä, kun virhe tuli vastaan. Kuvakaappaukset ovat meille myös "
    "hyvä apu. Ethän pyyhi alla olevia virheen teknisiä tietoja pois."
    "\n---\nTekniset tiedot:\n"
    virheviesti
-   (tekniset-tiedot kayttaja url selain)))
+   (tekniset-tiedot kayttaja url user-agent)))
 
 (defn- mailto []
   (str "mailto:" sahkoposti))
@@ -69,7 +64,7 @@
               (body (str palaute-body
                          (tekniset-tiedot
                            @istunto/kayttaja
-                           @url
+                           (-> js/window .-location .-href)
                            (-> js/window .-navigator .-userAgent)))))}
    [:span (ikonit/livicon-kommentti) " Palautetta!"]])
 
@@ -79,7 +74,7 @@
               (subject virhe-otsikko "?")
               (body (virhe-body virhe
                                 @istunto/kayttaja
-                                @url
+                                (-> js/window .-location .-href)
                                 (-> js/window .-navigator .-userAgent))))
     :on-click #(.stopPropagation %)}
    [:span

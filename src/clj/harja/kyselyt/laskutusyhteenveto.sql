@@ -22,3 +22,7 @@ DELETE FROM laskutusyhteenveto_cache
  WHERE (:urakka::INTEGER IS NULL OR urakka = :urakka) AND
        alkupvm >= :alkupvm::date AND
        loppupvm <= :loppupvm::date
+
+-- name: poista-urakan-kaikki-muistetut-laskutusyhteenvedot!
+-- Poistaa kaikki urakan muistetut laskutusyhteenvedot.
+DELETE FROM laskutusyhteenveto_cache WHERE urakka = :urakka

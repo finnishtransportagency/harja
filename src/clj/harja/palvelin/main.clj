@@ -10,6 +10,7 @@
     [harja.palvelin.komponentit.sonja :as sonja]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+    [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -87,6 +88,7 @@
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
 
     ;; Ajastetut tehtävät
+    [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
      :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
@@ -125,9 +127,12 @@
       :excel-vienti (component/using
                       (excel-vienti/luo-excel-vienti)
                       [:http-palvelin])
+
+      :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
+
       :liitteiden-hallinta (component/using
-                             (harja.palvelin.komponentit.liitteet/->Liitteet)
-                             [:db])
+                            (harja.palvelin.komponentit.liitteet/->Liitteet)
+                            [:db :virustarkistus])
 
       ;; Integraatioloki
       :integraatioloki
@@ -191,6 +196,12 @@
                       :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
+
+      ;; Tarkastustehtävät
+
+      :paivystystarkistukset (component/using
+                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
+                               [:http-palvelin :db :fim :sonja-sahkoposti])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
@@ -271,7 +282,7 @@
                    [:http-palvelin :sampo :db])
 
       :liitteet (component/using
-                  (liitteet/->Liitteet)
+                 (liitteet/->Liitteet)
                   [:http-palvelin :liitteiden-hallinta])
 
       :laadunseuranta (component/using

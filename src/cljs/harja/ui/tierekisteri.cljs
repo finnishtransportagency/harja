@@ -184,7 +184,7 @@
                         :enter-painettu
                         valinta-hyvaksytty)
        (fn [_]                                             ;; suljetaan kun-peruttu ja kun-valittu yli
-         [:div.tr-valitsin-teksti.form-control
+         [:div.tr-valitsin-teksti
           [:div (ikonit/livicon-info-sign) (case @tila
                                              :ei-valittu " Valitse alkupiste kartalta"
                                              :alku-valittu " Valitse loppupiste kartalta"

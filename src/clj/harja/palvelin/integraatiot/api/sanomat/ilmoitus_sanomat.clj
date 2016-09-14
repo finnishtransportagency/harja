@@ -46,6 +46,7 @@
 
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
+                 (dissoc :tila)
                  rakenna-selitteet
                  (rakenna-henkilo :ilmoittaja)
                  (rakenna-henkilo :lahettaja)

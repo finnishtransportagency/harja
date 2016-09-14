@@ -14,7 +14,9 @@
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<! reaction-writable]]
             [cljs-time.core :as t]
-            [taoensso.truss :as truss :refer-macros [have]])
+            [taoensso.truss :as truss :refer-macros [have]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -30,9 +32,10 @@
   (reset! valittu-sopimusnumero sn))
 
 (defonce urakan-toimenpideinstanssit
-         (reaction<! [ur (:id @nav/valittu-urakka)]
-                     (when ur
-                       (urakan-toimenpiteet/hae-urakan-toimenpiteet ur))))
+         (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+                     (when (and urakka-id
+                                (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                       (urakan-toimenpiteet/hae-urakan-toimenpiteet urakka-id))))
 
 (defonce valittu-toimenpideinstanssi (reaction-writable (first @urakan-toimenpideinstanssit)))
 
@@ -240,20 +243,22 @@
 
 
 (defonce urakan-toimenpiteet-ja-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
                ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
                _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
-              (when ur
-                (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat ur))))
+              (when (and urakka-id
+                         (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat urakka-id))))
 
 (defonce urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
                ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
                _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
-              (when ur
-                (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat ur))))
+              (when (and urakka-id
+                         (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                (urakan-toimenpiteet/hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat urakka-id))))
 
 (defonce valittu-kokonaishintainen-tehtava (atom nil))
 
@@ -271,12 +276,13 @@
                        (sort-by :nimi tehtavat)))))
 
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
-  (reaction<! [ur (:id @nav/valittu-urakka)
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
                ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
                _ @toimenpidekoodit/koodit]
               {:nil-kun-haku-kaynnissa? true}
-              (when ur
-                (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat ur))))
+              (when (and urakka-id
+                         (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
+                (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat urakka-id))))
 
 (defonce valittu-yksikkohintainen-tehtava (atom nil))
 
@@ -360,3 +366,8 @@
 (defn lukitse-urakan-yha-sidonta! [urakka-id]
   (when (= @nav/valittu-urakka-id urakka-id)
     (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc-in [:yhatiedot :sidonta-lukittu?] true)))
+
+(defn indeksi-kaytossa?
+  "Onko valitussa urakassa indeksi käytössä?"
+  []
+  (some? (:indeksi @nav/valittu-urakka)))

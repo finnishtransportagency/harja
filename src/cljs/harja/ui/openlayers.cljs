@@ -156,6 +156,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                          (concat ["_" (name lahde)]
                                  parametri-nimet-ja-arvot)))
 
+(defn sama-kuvataso? [vanha uusi]
+  (kuvataso/sama? vanha uusi))
+
 (defn keskipiste
   "Laskee geometrian keskipisteen extent perusteella"
   [geometria]

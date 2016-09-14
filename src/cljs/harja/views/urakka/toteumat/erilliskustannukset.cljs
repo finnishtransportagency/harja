@@ -24,7 +24,9 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka :as urakka])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -36,7 +38,8 @@
             sopimus-id (first (:sopimus muokattu))
             tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
             tyyppi (name (:tyyppi muokattu))
-            indeksi (if (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu))
+            indeksi (if (or (not (urakka/indeksi-kaytossa?))
+                            (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu)))
                       nil
                       (:indeksin_nimi muokattu))
             rahasumma (if (= (:maksaja muokattu) :urakoitsija)
@@ -68,14 +71,16 @@
     :muu "Muu"
     +valitse-tyyppi+))
 
-;; "tilaajan_maa-aines" -tyyppisiä erilliskustannuksia otetaan vastaan Aura-konversiossa
-;; mutta ei anneta enää syöttää Harjaan käyttöliittymän kautta. -Anne L. palaverissa 2015-06-02"
-(def +erilliskustannustyypit+
-  [:asiakastyytyvaisyysbonus :muu])
+(defn luo-kustannustyypit [urakkatyyppi kayttaja]
+  ;; Ei sallita urakoitsijan antaa itselleen asiakastyytyväisyysbonuksia
+  (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
+            (not= :asiakastyytyvaisyysbonus %)
+            true)
+          (case urakkatyyppi
+            :hoito [:asiakastyytyvaisyysbonus :muu]
 
-(defn luo-kustannustyypit [urakkatyyppi]
-  ;; jätetään funktio tähän, jos jatkossa halutaan urakkatyypin perusteella antaa eri vaihtoehtoja
-  +erilliskustannustyypit+)
+            :default
+            [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
@@ -215,7 +220,7 @@
             :pakollinen?   true
             :tyyppi        :valinta
             :valinta-nayta #(if (nil? %) +valitse-tyyppi+ (erilliskustannustyypin-teksti %))
-            :valinnat      (luo-kustannustyypit (:tyyppi ur))
+            :valinnat      (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja)
             :fmt           #(erilliskustannustyypin-teksti %)
             :validoi       [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1
@@ -238,23 +243,26 @@
             :tyyppi      :positiivinen-numero
             :validoi     [[:ei-tyhja "Anna rahamäärä"]]
             :palstoja 1}
-           {:otsikko     "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
-            :pakollinen? true
-            ;; hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan
-            :muokattava? #(not (and
-                                 (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                                 (= :hoito (:tyyppi ur))))
-            :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
-            :fmt         #(if (nil? %)
-                           yleiset/+valitse-indeksi+
-                           (str %))
-            :palstoja 1
-            :vihje       (when (and
-                                 (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                                 (= :hoito (:tyyppi ur)))
-                           "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan automaattisesti laskutusyhteenvedossa.
-                   Käytettävä indeksi määräytyy urakan kilpailuttamisajankohdan perusteella.")
-            }
+
+           (when (urakka/indeksi-kaytossa?)
+             {:otsikko     "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
+              :pakollinen? true
+              ;; hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan
+              :muokattava? #(not (and
+                                  (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+                                  (= :hoito (:tyyppi ur))))
+              :valinnat    (conj @i/indeksien-nimet yleiset/+ei-sidota-indeksiin+)
+              :fmt         #(if (nil? %)
+                              yleiset/+valitse-indeksi+
+                              (str %))
+              :palstoja 1
+              :vihje       (when (and
+                                  (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+                                  (= :hoito (:tyyppi ur)))
+                             (str "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan"
+                                  " automaattisesti laskutusyhteenvedossa. Käytettävä indeksi"
+                                  " määräytyy urakan kilpailuttamisajankohdan perusteella."))})
+
            ;; asiakastyytyväisyysbonuksen voi maksaa vain tilaaja
            {:otsikko       "Maksaja" :nimi :maksaja :tyyppi :valinta
             :muokattava?   #(not= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
@@ -285,11 +293,19 @@
     (komp/luo
       (komp/lippu toteumat/erilliskustannukset-nakymassa?)
       (fn []
-        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)]
+        (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
+              oikeus? (oikeudet/voi-kirjoittaa?
+                       oikeudet/urakat-toteumat-erilliskustannukset
+                       (:id @nav/valittu-urakka))]
           [:div.erilliskustannusten-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
-           [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
-            {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka)))}]
+           (yleiset/wrap-if
+            (not oikeus?)
+            [yleiset/tooltip {} :%
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                             oikeudet/urakat-toteumat-erilliskustannukset)]
+            [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
+             {:disabled (not oikeus?)}])
 
            [grid/grid
             {:otsikko       (str "Erilliskustannukset ")

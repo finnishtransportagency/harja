@@ -26,7 +26,8 @@
             [harja.ui.napit :as napit]
             [cljs-time.core :as t]
             [reagent.core :as r]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -255,6 +256,7 @@
            {:otsikko "Tehtävät" :nimi :tehtavat :pakollinen? true
             :uusi-rivi? true :palstoja 2
             :tyyppi :komponentti
+            :vihje "Voit syöttää toteumia tehtäville, joille on syötetty hinta yksikköhintaisten töiden suunnitteluosiossa."
             :komponentti (fn [_]
                            [tehtavat-ja-maarat lomake-tehtavat jarjestelman-lisaama-toteuma? tehtavat-virheet])}
 
@@ -354,14 +356,24 @@
        [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide @nav/valittu-urakka]
        [valinnat/urakan-yksikkohintainen-tehtava+kaikki]
 
-       [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
-                                            (yksikkohintaiset-tyot/uusi-yksikkohintainen-toteuma))
-        {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-yksikkohintaisettyot (:id @nav/valittu-urakka)))}]
+       (let [oikeus? (oikeudet/voi-kirjoittaa?
+                      oikeudet/urakat-toteumat-yksikkohintaisettyot
+                      (:id @nav/valittu-urakka))]
+         (yleiset/wrap-if
+          (not oikeus?)
+          [yleiset/tooltip {} :%
+           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                           oikeudet/urakat-toteumat-yksikkohintaisettyot)]
+          [napit/uusi "Lisää toteuma" #(reset! yksikkohintaiset-tyot/valittu-yksikkohintainen-toteuma
+                                               (yksikkohintaiset-tyot/uusi-yksikkohintainen-toteuma))
+           {:disabled (not oikeus?)}]))
 
        [grid/grid
         {:otsikko (str "Yksikköhintaisten töiden toteumat")
          :tunniste :tpk_id
-         :tyhja (if (nil? @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain) [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."] "Ei yksikköhintaisten töiden toteumia")
+         :tyhja (if (nil? @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain)
+                  [ajax-loader "Haetaan yksikköhintaisten töiden toteumia..."]
+                  "Ei yksikköhintaisten töiden toteumia")
          :luokat ["toteumat-paasisalto"]
          :vetolaatikot (into {} (map (juxt :tpk_id (fn [rivi] [yksiloidyt-tehtavat rivi yksikkohintaiset-tyot/yks-hint-tehtavien-summat]))
                                      @yksikkohintaiset-tyot/yks-hint-tyot-tehtavittain))}
