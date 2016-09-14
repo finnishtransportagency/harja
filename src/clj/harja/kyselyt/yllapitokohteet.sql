@@ -110,7 +110,7 @@ FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id AND pi.poistettu IS NOT TRUE
 WHERE
-  ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka
+  (ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakkaan-liittyvat-yllapitokohteet
