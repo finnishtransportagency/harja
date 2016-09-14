@@ -701,4 +701,4 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn suomen-aikavyohykkeessa
      "Antaa joda daten suomen aikavyöhykkeellä"
      [joda-time]
-     (.withZone joda-time suomen-aikavyohyke)))
+     (t/from-time-zone joda-time suomen-aikavyohyke)))
