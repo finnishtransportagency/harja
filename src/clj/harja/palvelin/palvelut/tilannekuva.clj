@@ -298,6 +298,11 @@
   (tulosta-tulos! "suljettua tieosuutta"
                   (hae-suljetut-tieosuudet db user tiedot urakat)))
 
+(defmethod hae-osio :tarkastukset [db user tiedot urakat _]
+  ;; Tarkastukset piirretään karttakuvana, mutta annetaan multimetodin olla
+  ;; jotta ei logata erroria koko ajan.
+  )
+
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try
     (hae-osio db user tiedot urakat osio)
