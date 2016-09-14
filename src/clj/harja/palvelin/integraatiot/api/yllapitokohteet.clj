@@ -48,17 +48,17 @@
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
                      kohde-id
-                     kayttaja)
-             (let [urakka-id (Integer/parseInt urakka-id)
-                   kohde-id (Integer/parseInt kohde-id)]
-               (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-               (jdbc/with-db-transaction
-                 [db db]
-                 (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
-                 (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
-                   (tee-kirjausvastauksen-body
-                     {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-                      :id id}))))))
+                     kayttaja))
+  (let [urakka-id (Integer/parseInt urakka-id)
+        kohde-id (Integer/parseInt kohde-id)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (jdbc/with-db-transaction
+      [db db]
+      (vaadi-kohde-kuuluu-urakkaan db urakka-id kohde-id)
+      (let [id (ilmoitus/kirjaa-paallystysilmoitus db kayttaja urakka-id kohde-id data)]
+        (tee-kirjausvastauksen-body
+          {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
+           :id id})))))
 
 (defn- paivita-paallystyksen-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
