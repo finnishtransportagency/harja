@@ -379,7 +379,10 @@
                              [:http-palvelin :db :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
-      :laskutusyhteenvetojen-muodostus (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
+      :laskutusyhteenvetojen-muodostus
+      (component/using
+       (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
+       [:db])
 
       :status (component/using
                (status/luo-status)
