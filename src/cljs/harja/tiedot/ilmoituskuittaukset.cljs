@@ -27,6 +27,8 @@
 
 (defn laheta-kuittaukset! [ilmoitukset kuittaus]
   (k/post! :tallenna-ilmoitustoimenpiteet
-           (into []
-                 (map #(merge (uusi-kuittaus-ilmoitukselle %) kuittaus))
-                 ilmoitukset)))
+           (let [kuittaukset(into []
+                       (map #(merge (uusi-kuittaus-ilmoitukselle %) kuittaus))
+                       ilmoitukset)]
+             (log "---> kuittaukset " kuittaukset)
+             kuittaukset)))

@@ -16,8 +16,7 @@
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-            [harja.tyokalut.json-validointi :as json])
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-ilmoituksen-id [db ilmoitusid]
@@ -61,9 +60,9 @@
         id (hae-ilmoituksen-id db ilmoitusid)
         _ (log/debug (format "Kirjataan toimenpide ilmoitukselle, jonka id on: %s ja ilmoitusid on: %s" id ilmoitusid))]
 
-    (when (and (= tyyppi :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
+    (when (and (= tyyppi "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
       (let [aloitus-kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija
-                                                        :vastaanotto "Vastaanotettu")]
+                                                        "vastaanotto" "Vastaanotettu")]
         (tloik/laheta-ilmoitustoimenpide tloik aloitus-kuittaus-id)))
 
     (let [kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija tyyppi

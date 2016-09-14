@@ -233,7 +233,7 @@
                                       :kasittelija_henkilo_tyopuhelin kasittelija-tyopuhelin
                                       :kasittelija_henkilo_sahkoposti kasittelija-sahkoposti
                                       :kasittelija_organisaatio_nimi kasittelija-organisaatio
-                                      :kasittelija_organisaatio_ytunnus kasittelija-ytunnus}))
+                                      :kasittelija_organisaatio_ytunnus kasittelija-ytunnus}))]
 
                       (-> toimenpide
                           (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
