@@ -197,6 +197,22 @@
     :ely-alueiden-shapefile
     elyjen-tuonti/vie-elyt-kantaan))
 
+(defn tee-valaistusurakoiden-alk-paivitystehtava [this asetukset]
+  (maarittele-alk-paivitystehtava
+    "valaistusurakat"
+    :valaistusurakoiden-alk-osoite
+    :valaistusurakoiden-alk-tuontikohde
+    :valaistusurakoiden-shapefile
+    valaistusurakoiden-tuonti/vie-urakat-kantaan))
+
+(defn tee-valaistusurakoiden-paikallinen-paivitystehtava [this asetukset]
+  (maarittele-paikallinen-paivitystehtava
+    "valaistusurakat"
+    :valaistusurakoiden-alk-osoite
+    :valaistusurakoiden-alk-tuontikohde
+    :valaistusurakoiden-shapefile
+    valaistusurakoiden-tuonti/vie-urakat-kantaan))
+
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
@@ -214,7 +230,10 @@
       :urakoiden-hakutehtava (tee-urakoiden-alk-paivitystehtava this asetukset)
       :urakoiden-paivitystehtava (tee-urakoiden-paikallinen-paivitystehtava this asetukset)
       :elyjen-hakutehtava (tee-elyjen-alk-paivitystehtava this asetukset)
-      :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset)))
+      :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset)
+      :valaistusurakoiden-hakutehtava (tee-valaistusurakoiden-alk-paivitystehtava this asetukset)
+      :valaistusurakoiden-paivitystehtava (tee-valaistusurakoiden-paikallinen-paivitystehtava this asetukset)))
+
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
                      :tieverkon-paivitystehtava
