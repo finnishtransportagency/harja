@@ -16,7 +16,9 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
 
 (defn viesti-puuttuvasta-paivystyksesta [urakka-nimi pvm]
-  (format "Urakalla %s ei ole Harjassa päivystystietoa tälle päivälle %s"
+  (format "Urakalla %s ei ole Harjassa päivystystietoa päivämäärälle %s.
+           Käy tarkistamassa urakan päivystäjätiedot Harjassa.
+           Päivystäjätietoja tarvitaan tieliikennekeskusilmoitusten välittämiseen."
           urakka-nimi
           (fmt/pvm (c/to-date pvm))))
 
@@ -25,7 +27,7 @@
     (sahkoposti/laheta-viesti! email
                                (sahkoposti/vastausosoite email)
                                (:sahkoposti henkilo)
-                               (format "Puuttuva päivystys %s %s"
+                               (format "Harja: puuttuvat päivystykset urakassa %s (%s)"
                                        urakka-nimi
                                        (fmt/pvm (c/to-date pvm)))
                                (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm))))
@@ -46,6 +48,7 @@
   (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampo-id urakka))]
     (if-not (empty? ilmoituksen-saajat)
       (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm)
+      ;; TODO "tänään" -> huomenna, yhteyshenkilöä ei löydy FIMistä.
       (log/warn (format "Urakalla %s ei ole päivystystä tänään eikä asiasta voitu ilmoittaa kenellekään."
                         (:nimi urakka))))))
 
@@ -57,6 +60,8 @@
   "Palauttaa urakat, joille ei ole päivystystä kyseisenä päivänä"
   [urakoiden-paivystykset pvm]
   (log/debug "Tarkistetaan urakkakohtaisesti, onko annetulle päivälle " (pr-str pvm) " olemassa päivystys.")
+  ;; PENDING Mahdollisesti olisi hyvä tarkistaa esim. niin että joka tunnille on päivystys.
+  ;; Nyt ei tule varoitusta jos päivystys ei täytä koko ajanjaksoa. Mietitään tämä myöhemmin.
   (let [urakalla-paivystys-annettuna-paivana?
         (fn [paivystykset pvm]
           (let [paivystys-annettuna-paivana? (fn [pvm paivystys-alku paivystys-loppu]
@@ -110,8 +115,9 @@
 (defn tee-paivystyksien-tarkistustehtava [{:keys [db fim sonja-sahkoposti] :as this}]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (ajastettu-tehtava/ajasta-paivittain
-    [5 0 0]
+    [5 0 0] ;; TODO Ota asetuksista tämä. HUOM. Kysy mikolta CI-putkeen
     (fn [_]
+      ;; TODO Passaa huominen (ja tarkista lähtevä viesti)
       (paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/now)))))
 
 (defrecord Paivystystarkistukset []
