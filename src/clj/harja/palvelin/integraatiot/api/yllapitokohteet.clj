@@ -42,7 +42,8 @@
   (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-liittyvat-yllapitokohteet db {:urakka urakka-id})]
     (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
       (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti "Ylläpitokohde ei kuulu urakkaan"}]}))))
+               :virheet [{:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
+                          :viesti "Ylläpitokohde ei kuulu urakkaan"}]}))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
