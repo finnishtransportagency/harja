@@ -16,9 +16,11 @@
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
 
 (defn viesti-puuttuvasta-paivystyksesta [urakka-nimi pvm]
-  (format "Urakalla %s ei ole Harjassa päivystystietoa päivämäärälle %s.
-           Käy tarkistamassa urakan päivystäjätiedot Harjassa.
-           Päivystäjätietoja tarvitaan tieliikennekeskusilmoitusten välittämiseen."
+  (format "Urakalta: %s puuttuu päivystystiedot Harjassa päivämäärälle: %s.\n
+           Käy tarkistamassa urakan päivystäjätiedot Harjassa.\n
+           Päivystäjätietoja tarvitaan tieliikennekeskusilmoitusten välittämiseen. \n\n
+           Ystävällisin terveisin,\n
+           Harja-järjestelmä"
           urakka-nimi
           (fmt/pvm (c/to-date pvm))))
 
@@ -27,7 +29,7 @@
     (sahkoposti/laheta-viesti! email
                                (sahkoposti/vastausosoite email)
                                (:sahkoposti henkilo)
-                               (format "Harja: puuttuvat päivystykset urakassa %s (%s)"
+                               (format "Harja: Urakalta %s puuttuu päivystystiedot päivämäärälle %s"
                                        urakka-nimi
                                        (fmt/pvm (c/to-date pvm)))
                                (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm))))
