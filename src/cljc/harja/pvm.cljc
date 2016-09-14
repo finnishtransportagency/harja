@@ -22,7 +22,8 @@
   #?(:cljs (:import (goog.date DateTime))
      :clj
      (:import (java.util Calendar Date)
-              (java.text SimpleDateFormat))))
+              (java.text SimpleDateFormat)
+              (org.joda.time DateTimeZone))))
 
 
 #?(:cljs
@@ -692,3 +693,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 #?(:cljs
    (defn paivaa-sitten [paivaa]
      (-> paivaa t/days t/ago)))
+
+#?(:clj
+   (def suomen-aikavyohyke (DateTimeZone/forID "Europe/Helsinki")))
+
+#?(:clj
+   (defn suomen-aikavyohykkeessa
+     "Antaa joda daten suomen aikavyöhykkeellä"
+     [joda-time]
+     (.withZone joda-time suomen-aikavyohyke)))
