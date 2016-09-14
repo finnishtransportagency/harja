@@ -84,12 +84,12 @@
                        db
                        ilmoitus
                        ilmoitusid
-                       toimenpide
                        vapaateksti
+                       toimenpide
                        paivystaja))]
 
-      (when (and (= toimenpide :aloitus) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
-        (let [aloitus-kuittaus-id (tallenna :vastaanotto "Vastaanotettu")]
+      (when (and (= toimenpide "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
+        (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
       (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
