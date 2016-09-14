@@ -341,8 +341,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE urakka != " urakka-id
-                   "AND suorittava_tiemerkintaurakka != " urakka-id ";"))))
+                   WHERE urakka != " urakka-id ";"))))
 
 (defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
