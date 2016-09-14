@@ -25,6 +25,7 @@
         viimeinen-paiva (t/day (t/last-day-of-the-month vuosi (inc kk)))
         alku (pvm/luo-pvm vuosi kk 1)
         loppu (pvm/luo-pvm vuosi kk viimeinen-paiva)]
+    (log/info "Muodostetaan laskutusyhteenvedot valmiiksi")
     (doseq [{:keys [id nimi]} (q/hae-urakat-joille-laskutusyhteenveto-voidaan-tehda
                                db {:alku alku :loppu loppu})]
       (log/info "Muodostetaan laskutusyhteenveto valmiiksi urakalle: " nimi)
@@ -36,19 +37,23 @@
             (log/error t "Virhe muodostettaessa laskutusyhteenvetoa, urakka: " id ", aikavali "
                        alku " -- " loppu)))))))
 
-(defn- ajasta []
-  (let [now (t/now)]
+(defn- ajasta [db]
+  (let [aika (t/plus (t/now) (t/days 1))
+        ensimmainen (pvm/suomen-aikavyohykkeessa
+                     (t/date-time (t/year aika) (t/month aika) (t/day aika)
+                                  4 30))]
+    (log/info "Ajastetaan laskutusyhteenvetojen muodostus päivittäin, ensimmäinen: " ensimmainen)
     (chime/chime-at (time-periodic/periodic-seq
-                     (pvm/suomen-aikavyohykkeessa
-                      (t/date-time (t/year now) (t/month now) (t/day now)
-                                   4 30))
-                     (t/days 1)))))
+                     ensimmainen
+                     (t/days 1))
+                    (fn [_]
+                      (muodosta-laskutusyhteenvedot db)))))
 
 (defrecord LaskutusyhteenvetojenMuodostus []
   component/Lifecycle
-  (start [this]
+  (start [{db :db :as this}]
     (assoc this ::laskutusyhteenvetojen-ajastus
-           (ajasta)))
+           (ajasta db)))
   (stop [{poista ::laskutusyhteenvetojen-ajastus :as this}]
     (poista)
     (dissoc this ::laskutusyhteenvetojen-ajastus)))
