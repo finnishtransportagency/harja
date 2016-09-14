@@ -82,9 +82,22 @@
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      @urakan-valitavoitteet-atom]))
 
-(defn ainakin-yksi-takaraja-muutettu-urakkaan [rivit]
-  (some #(and (:valtakunnallinen-takaraja %)
-             (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
+(defn ainakin-yksi-tavoite-muutettu-urakkaan [rivit]
+  (some #(or
+          ;; Kertaluontoinen takaraja poikkeaa
+          (and (:valtakunnallinen-takaraja %)
+               (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
+
+          ;; Toistuva takaraja poikkeaa
+          (and (:valtakunnallinen-takarajan-toistopaiva %)
+               (:valtakunnallinen-takarajan-toistokuukausi %)
+               (or (not= (:valtakunnallinen-takarajan-toistopaiva %)
+                         (t/day (:takaraja %)))
+                   (not= (:valtakunnallinen-takarajan-toistokuukausi %)
+                         (t/month (:takaraja %)))))
+
+          ;; Välitavoitteen nimi poikkeaa
+          (not= (:valtakunnallinen-nimi %) (:nimi %)))
         rivit))
 
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
@@ -116,7 +129,11 @@
         :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
        {:otsikko "U\u00ADrak\u00ADka\u00ADkoh\u00ADtai\u00ADset tar\u00ADken\u00ADnuk\u00ADset"
-        :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
+        :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128
+        :fmt (fn [_ rivi]
+               (if-not (= (:valtakunnallinen-nimi rivi) (:nimi rivi))
+                 [:span.grid-solu-varoitus (:nimi rivi)]
+                 [:span (:nimi rivi)]))}
        {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
         :nimi :valtakunnallinen-takaraja :hae #(cond
                                                 (:valtakunnallinen-takaraja %)
@@ -138,10 +155,21 @@
         :nimi
         :takaraja
         :fmt (fn [_ rivi]
-               (if (and (:valtakunnallinen-takaraja rivi)
-                        (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
-                 [:span.grid-solu-varoitus (pvm/pvm-opt (:takaraja rivi))]
-                 [:span (pvm/pvm-opt (:takaraja rivi))]))
+               (let [poikkeava [:span.grid-solu-varoitus (pvm/pvm-opt (:takaraja rivi))]]
+                 (cond (and (:valtakunnallinen-takaraja rivi)
+                            (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
+                       poikkeava
+
+                       (and (:valtakunnallinen-takarajan-toistopaiva rivi)
+                            (:valtakunnallinen-takarajan-toistokuukausi rivi)
+                            (or (not= (:valtakunnallinen-takarajan-toistopaiva rivi)
+                                   (t/day (:takaraja rivi)))
+                                (not= (:valtakunnallinen-takarajan-toistokuukausi rivi)
+                                      (t/month (:takaraja rivi)))))
+                       poikkeava
+
+                       :default
+                       [:span (pvm/pvm-opt (:takaraja rivi))])))
         :tyyppi :pvm}
        {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
@@ -159,9 +187,9 @@
         :nimi :merkitsija :hae (fn [rivi]
                                  (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
       @valtakunnalliset-valitavoitteet-atom]
-     (when (ainakin-yksi-takaraja-muutettu-urakkaan @valtakunnalliset-valitavoitteet-atom)
+     (when (ainakin-yksi-tavoite-muutettu-urakkaan @valtakunnalliset-valitavoitteet-atom)
        [yleiset/vihje-elementti [:span
-                                 [:span "Valtakunnallisesta takarajasta poikkeavat urakkakohtaiset takarajat värjätty "]
+                                 [:span "Urakkakohtaisten tarkennukset värjätty "]
                                  [:span.grid-solu-varoitus "punaisella"]
                                  [:span "."]]])
      [yleiset/vihje (str "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. "
