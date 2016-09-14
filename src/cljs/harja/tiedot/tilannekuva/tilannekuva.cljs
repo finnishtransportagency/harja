@@ -24,7 +24,7 @@
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
     :const true}
-  urakan-nimen-pituus 39)
+  urakan-nimen-pituus 30)
 
 (def ^{:doc "Aika joka odotetaan ennen uusien tietojen hakemista, kun
  parametrit muuttuvat"
