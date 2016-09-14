@@ -104,7 +104,14 @@
                                                        paivystykset))]
                                      (assoc urakka :paivystykset (:paivystykset urakan-paivystykset))
                                      urakka))
-                                 urakat)]
+                                 urakat)
+        urakoiden-paivystykset (map (fn [u]
+                                      (assoc u :paivystykset
+                                               (map #(assoc %
+                                                      :alku (c/from-sql-time (:alku %))
+                                                      :loppu (c/from-sql-time (:loppu %)))
+                                                    (:paivystykset u))))
+                                    urakoiden-paivystykset)]
     urakoiden-paivystykset))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
