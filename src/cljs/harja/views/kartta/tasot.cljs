@@ -2,6 +2,7 @@
   "Määrittelee kartan näkyvät tasot. Tämä kerää kaikkien yksittäisten tasojen
   päällä/pois flägit ja osaa asettaa ne."
   (:require [reagent.core :refer [atom]]
+            [cljs.core.async :refer [<!]]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
@@ -26,8 +27,12 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
-            [harja.ui.kartta.varit.puhtaat :as varit])
-  (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
+            [harja.ui.kartta.varit.puhtaat :as varit]
+            [harja.tyokalut.vkm :as vkm]
+            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
+  (:require-macros [reagent.ratom :refer [reaction] :as ratom]
+                   [cljs.core.async.macros :refer [go]]))
 
 ;; Kaikki näytettävät karttatasot
 (def +karttatasot+
@@ -96,7 +101,7 @@
              ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
              (#{:tilannekuva} sivu)
              nil
-             
+
              ;; Ilmoituksissa ei haluta näyttää navigointiin
              ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
              ;; valittu, voidaan näyttää sen rajat.
@@ -262,3 +267,20 @@
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
   (log "Karttataso pois: " (pr-str nimi))
   (reset! (tasojen-nakyvyys-atomit nimi) false))
+
+(defn ^:export piirra-tr-osoite [tie alkuosa alkuet loppuosa loppuet]
+  (go
+    (let [tulos
+          (<! (vkm/tieosoite {:numero tie
+                              :alkuosa alkuosa
+                              :alkuetaisyys alkuet
+                              :loppuosa loppuosa
+                              :loppuetaisyys loppuet}))]
+      (nayta-geometria! :vkm-tr-osoite
+                        {:alue (maarittele-feature
+                                {:type :line
+                                 :points (get-in tulos ["lines" "lines" 0 "paths" 0])
+                                 }
+                                false
+                                asioiden-ulkoasu/tr-ikoni
+                                asioiden-ulkoasu/tr-viiva)}))))
