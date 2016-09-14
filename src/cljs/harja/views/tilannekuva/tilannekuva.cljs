@@ -19,7 +19,8 @@
             [harja.ui.on-off-valinta :as on-off]
             [harja.domain.tilannekuva :as tk]
             [harja.ui.modal :as modal]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.tilannekuva :as domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
@@ -173,14 +174,16 @@
 (defn- tyypin-aluesuodattimet [tyyppi]
   (komp/luo
     (fn [tyyppi]
-      [asetuskokoelma
-       (urakkatyypin-otsikot tyyppi)
-       {:salli-piilotus? true}
-       [:div.tk-suodatinryhmat
-        (doall
-          (for [alue tilannekuvan-alueet]
-            ^{:key (str tyyppi"-aluesuodatin-alueelle-"alue)}
-            [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil]))]])))
+      (let [valittujen-lkm (count (domain/valitut-kentat (get-in @tiedot/suodattimet [:alueet tyyppi])))
+            kokonaismaara (reduce + (map #(count (get-in @tiedot/suodattimet [:alueet tyyppi %])) tilannekuvan-alueet))]
+        [asetuskokoelma
+         (str (urakkatyypin-otsikot tyyppi) " (" valittujen-lkm "/"kokonaismaara")")
+         {:salli-piilotus? true}
+         [:div.tk-suodatinryhmat
+          (doall
+            (for [alue tilannekuvan-alueet]
+              ^{:key (str tyyppi "-aluesuodatin-alueelle-" alue)}
+              [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil]))]]))))
 
 (defn- aluesuodattimet []
   (komp/luo
