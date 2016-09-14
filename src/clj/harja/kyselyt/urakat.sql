@@ -506,7 +506,7 @@ DELETE FROM valaistusurakka;
 SELECT
   alueurakkanro,
   alue
-FROM alueurakka
+FROM valaistusurakka
 WHERE alueurakkanro = :alueurakkanro;
 
 -- name: luo-valaistusurakka<!
@@ -514,6 +514,6 @@ INSERT INTO valaistusurakka (alueurakkanro, alue)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
 
 -- name: paivita-valaistusurakka!
-UPDATE valaistusrakka
-SET alueurakkanro = :alueurakkanro,
-    alue          = ST_GeomFromText(:alue) :: GEOMETRY;
+UPDATE valaistusurakka
+SET alue = ST_GeomFromText(:alue) :: GEOMETRY
+WHERE alueurakkanro = :alueurakkanro;
