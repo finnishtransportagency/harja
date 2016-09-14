@@ -41,7 +41,9 @@
          (str/split roolit #","))))
 
 (defn- kuvaa-roolit [henkilot urakan-sampo-id]
-  (map #(update-in % [:roolit] roolien-kuvaukset urakan-sampo-id) henkilot))
+  (map
+    #(update-in % [:roolit] roolien-kuvaukset urakan-sampo-id)
+    henkilot))
 
 (defn lue-fim-vastaus
   "Lukee FIM REST vastaus annetusta XML zipperistä. Palauttaa sekvenssin urakan käyttäjiä."

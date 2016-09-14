@@ -388,9 +388,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                              [:div.radio
                               [:label
                                [:input {:type      "radio" :checked (= valittu vaihtoehto)
-                                        on-change* #(let [valittu? (-> % .-target .-checked)]
-                                                       (if valittu?
-                                                         (reset! data vaihtoehto)))}]
+                                        :on-change #(let [valittu? (-> % .-target .-checked)]
+                                                      (if valittu?
+                                                        (reset! data vaihtoehto)))}]
                                (vaihtoehto-nayta vaihtoehto)]]))]
        (if nayta-rivina?
          [:table.boolean-group
