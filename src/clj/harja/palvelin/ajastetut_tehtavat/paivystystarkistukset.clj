@@ -115,7 +115,7 @@
 (defn tee-paivystyksien-tarkistustehtava [{:keys [db fim sonja-sahkoposti] :as this}]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (ajastettu-tehtava/ajasta-paivittain
-    [5 0 0] ;; TODO Ota asetuksista tämä. HUOM. Kysy mikolta CI-putkeen
+    [5 0 0] ;; TODO Ota asetuksista tämä. HUOM. Kysy mikolta CI-putkeen. Jos aikaa ei ole, ei tehdä mitään.
     (fn [_]
       ;; TODO Passaa huominen (ja tarkista lähtevä viesti)
       (paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/now)))))
