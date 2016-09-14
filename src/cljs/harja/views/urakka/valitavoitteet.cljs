@@ -82,6 +82,11 @@
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      @urakan-valitavoitteet-atom]))
 
+(defn ainakin-yksi-takaraja-muutettu-urakkaan [rivit]
+  (some #(and (:valtakunnallinen-takaraja %)
+             (not= (:takaraja %) (:valtakunnallinen-takaraja %)))
+        rivit))
+
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
@@ -128,7 +133,16 @@
                                                 "Ei takarajaa")
         :tyyppi :pvm
         :muokattava? (constantly false)}
-       {:otsikko "Taka\u00ADraja ura\u00ADkassa" :leveys 20 :nimi :takaraja :fmt pvm/pvm-opt :tyyppi :pvm}
+       {:otsikko "Taka\u00ADraja ura\u00ADkassa"
+        :leveys 20
+        :nimi
+        :takaraja
+        :fmt (fn [_ rivi]
+               (if (and (:valtakunnallinen-takaraja rivi)
+                        (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
+                 [:span.grid-solu-varoitus (pvm/pvm-opt (:takaraja rivi))]
+                 [:span (pvm/pvm-opt (:takaraja rivi))]))
+        :tyyppi :pvm}
        {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
        {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
@@ -145,6 +159,11 @@
         :nimi :merkitsija :hae (fn [rivi]
                                  (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
       @valtakunnalliset-valitavoitteet-atom]
+     (when (ainakin-yksi-takaraja-muutettu-urakkaan @valtakunnalliset-valitavoitteet-atom)
+       [yleiset/vihje-elementti [:span
+                                 [:span "Valtakunnallisesta takarajasta poikkeavat urakkakohtaiset takarajat värjätty "]
+                                 [:span.grid-solu-varoitus "punaisella"]
+                                 [:span "."]]])
      [yleiset/vihje (str "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia. "
                          (when voi-muokata?
                            "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))]]))
