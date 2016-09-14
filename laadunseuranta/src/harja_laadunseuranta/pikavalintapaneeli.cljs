@@ -244,13 +244,13 @@
        :ikoni (ikoni :pintakuivatuspuute)]
       [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema
        :ikoni (ikoni :kaivojenkorkeusasema)]]
-     [:div.peruuta {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]]))
+     [:div.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]]))
 
 
 (defn- tiemerkinta [alivalikot]
   [:div.painikelaatikko
    [:div "1"]
-   [:div.peruuta {:on-click #(turn-off alivalikot :tiemerkinta)} "Sulje"]])
+   [:div.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :tiemerkinta)} "Sulje"]])
 
 (defn pikavalintapaneeli [tr-osoite moodi havainnot alivalikot kitkamittaus-kirjattu kertakirjaus-kirjattu yleishavainto-kirjattu
                           lumisuus-kirjattu tasaisuus-kirjattu soratiehavainto-kirjattu keskiarvo-atom lumimaara-atom
@@ -318,7 +318,8 @@
            :default
            [:div.sidepanel-box
             [on-painike "Päällystys" alivalikot :paallystys]
-            [on-painike "Tiemerkintä" alivalikot :tiemerkinta]])]))
+            ;[on-painike "Tiemerkintä" alivalikot :tiemerkinta]
+            ])]))
 
 (defn lisaa-havainto [aktiivinen on-click on-press]
   [:div.sidepanel-box
@@ -330,7 +331,7 @@
       "Lopeta väli"
       "Aloita väli")]
    [:nav.pikavalintapainike {:on-click #(on-click false)}
-    [:i.livicon-upload " "]
+    [:i.livicon-pen " "]
     "Lisää havainto"]])
 
 (def testihavainnot (atom {:liukasta false}))

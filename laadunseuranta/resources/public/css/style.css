@@ -234,13 +234,14 @@ button {
 .pikavalintapainike {
     width: 215px;
     font-size: 17px;
-    background-color: rgb(16,125,209);
+    background-color: #0066cc;
     height: 50px;
     line-height: 50px;
-    text-align: center;
+    text-align: left;
     margin-left: 14px;
     margin-bottom: 10px;
     margin-top: 10px;
+    padding-left: 10px;
     box-sizing: border-box;
     cursor: default;
     color: white;
@@ -260,12 +261,13 @@ button {
     vertical-align: middle;
 }
 
-
-.pikavalintaotsikko {
-    margin-right: 10px;
-    margin-left: 10px;
-    position: relative;
+.pikavalintaikoni + .pikavalintaotsikko {
+    margin-left: 1px;
+    margin-right: 1px;
     top: -10px;
+}
+.pikavalintaotsikko {
+    position: relative;
 }
 
 .painike-aktiivinen {
@@ -389,25 +391,22 @@ button {
     font-size: 18px;
 }
 
-.tarkastusajon-luonti-dialog ul {
-    list-style-type: none;
+.tarkastusajon-luonti-dialog-wrap {
     padding-left: 15px;
     padding-right: 10px;
 }
 
-.tarkastusajon-luonti-dialog li {
-    background-color: blue;
+.tarkastusajon-luonti-dialog button {
     height: 50px;
     margin-bottom: 10px;
     width: 100%;
-    color: white;
     line-height: 50px;
     text-align: center;
     font-size: 18px;
 }
 
 .tarkastusajon-luonti-dialog nav {
-    text-align: center;
+    text-align: left;
 }
 
 .tarkastusajon-luonti-dialog nav.disabled {
@@ -609,7 +608,7 @@ button {
     font-size: 35px;
     margin: 2px;
     color: white;
-    background-color: rgb(16,125,209);
+    background-color: #0066cc;
     border: none;
     outline: none;
 }
@@ -875,7 +874,11 @@ button:disabled {
 .virhe {
     color: red;
 }
-
+.odotusspinneri {
+    left: -10px;
+    position: relative;
+    top: 7px;
+}
 .peruutuspainike {
     background-color: transparent;
     color: rgb(9,79,192);
@@ -884,9 +887,9 @@ button:disabled {
 
 .painikelaatikko {
     position: fixed;
-    top: 15%;
-    left: 12%;
-    width: 75%;
+    top: 70px;
+    left: 0;
+    width: 100%;
     height: 470px;
     z-index: 10000;
     overflow: hidden;
@@ -909,7 +912,7 @@ button:disabled {
     mergin-right: 3%;
     color: white;
     padding-top: 20px;
-    font-size: 18px;
+    font-size: 16px;
     text-align: left;
     line-height: 20px;
 }
@@ -920,13 +923,32 @@ button:disabled {
 }
 
 .painikelaatikko > .peruuta {
-    background-color: gray;
-    color: white;
-    width: 50%;
-    height: 80px;
+    width: 30.5%;
+    height: 70px;
     float: left;
     text-align: center;
     margin-top: 20px;
-    margin-left: 25%;
-    line-height: 80px;
+    margin-left: 2%;
+    line-height: 70px;
+    font-size: 18px;
+}
+.nappi-ensisijainen {
+    border: 1px solid transparent;
+    color: #ffffff;
+    background-color: #0066cc;
+    border-color: #0066cc;
+    font-weight: normal;
+}
+.nappi-toissijainen {
+    border: 1px solid transparent;
+    color: #0066cc;
+    background-color: #ffffff;
+    border-color: #0066cc;
+}
+.nappi-kielteinen {
+    border: 1px solid transparent;
+    color: #ffffff;
+    background-color: #dd0000;
+    border-color: #dd0000;
+    font-weight: normal;
 }
