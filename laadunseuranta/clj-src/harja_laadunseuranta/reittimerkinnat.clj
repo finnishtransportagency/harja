@@ -111,7 +111,7 @@
         :body [koordinaatit s/Any]
         :summary "Hakee tierekisteriosoitteen annetulle pisteelle"
         :return {:ok (s/maybe schemas/TROsoite)}
-        (respond (log/debug "Haetaan tierekisteriosoite pisteelle " koordinaatit "kayttaja " (:kayttajanimi kayttaja))
+        (respond (log/debug "Haetaan tierekisteriosoite pisteelle " koordinaatit)
                  (let [{:keys [lat lon treshold]} koordinaatit]
                    (hae-tr-osoite lat lon treshold))))
 
