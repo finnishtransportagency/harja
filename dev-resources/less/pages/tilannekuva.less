@@ -53,9 +53,17 @@
 // Checkbox-ryhmät
 
 .tk-checkbox-ryhma {
-  border: 1px solid @harmaa3;
+  border-width: 1px 1px 0 1px;
+  border-style: solid;
+  border-color: @harmaa6;
   background-color: @harmaa10;
-  margin-bottom: 2px;
+}
+
+.tk-checkbox-ryhma:last-child{
+  border-width: 1px 1px 1px 1px;
+  border-style: solid;
+  border-color: @harmaa6;
+  background-color: @harmaa10;
 }
 
 .tk-checkbox-ryhma-otsikko {
