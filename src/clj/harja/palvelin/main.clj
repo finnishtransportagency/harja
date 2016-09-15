@@ -92,6 +92,7 @@
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
      :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
+    [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
@@ -383,6 +384,12 @@
       :api-yllapitokohteet (component/using
                             (api-yllapitokohteet/->Yllapitokohteet)
                              [:http-palvelin :db :integraatioloki])
+
+      ;; Ajastettu laskutusyhteenvetojen muodostus
+      :laskutusyhteenvetojen-muodostus
+      (component/using
+       (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
+       [:db])
 
       :status (component/using
                (status/luo-status)
