@@ -39,6 +39,7 @@
                                  (mapv #(assoc % :vastuuhenkilo
                                                  (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
                                        (:korjaavattoimenpiteet turpo)))
+                    (assoc turpo :liitteet (into [] (q/hae-turvallisuuspoikkeaman-liitteet db turvallisuuspoikkeama-id)))
                     (update-in turpo [:kommentit]
                                (fn [kommentit]
                                  (sort-by :aika (map #(if (nil? (:id (:liite %)))
