@@ -352,11 +352,12 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                            (vaihtoehto-nayta v)]]))]
        (if nayta-rivina?
          [:table.boolean-group
-          [:tr
+          [:tbody
+           [:tr
            (map-indexed (fn [i cb]
                           ^{:key i}
                           [:td cb])
-                        checkboxit)]]
+                        checkboxit)]]]
          checkboxit))]))
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
@@ -373,8 +374,9 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                       teksti]]]
        (if nayta-rivina?
          [:table.boolean-group
-          [:tr
-           [:td checkbox]]]
+          [:tbody
+           [:tr
+            [:td checkbox]]]]
          checkbox))]))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
