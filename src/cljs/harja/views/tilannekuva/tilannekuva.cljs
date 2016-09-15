@@ -138,18 +138,18 @@
                          suodattimet-atom
                          (conj ryhma-polku elementti)]))])]))))))
 
-(defn- asetuskokoelma [otsikko {:keys [salli-piilotus? luokka] :as optiot} sisalto]
+(defn- asetuskokoelma [otsikko {:keys [salli-piilotus? luokka oletuksena-auki?] :as optiot} sisalto]
   (let [auki? (atom true)]
-    (fn [otsikko {:keys [salli-piilotus? luokka] :as optiot} sisalto]
+    (fn [otsikko {:keys [salli-piilotus? luokka oletuksena-auki?] :as optiot} sisalto]
       [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
        (when salli-piilotus?
-         [:div {:class (str
-                        "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
-                        (when-not @auki? "chevron-rotate-down"))
-               :on-click #(swap! auki? not)}
-         (if @auki?
-           (ikonit/livicon-chevron-down)
-           (ikonit/livicon-chevron-right))])
+         [:div {:class    (str
+                            "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
+                            (when-not @auki? "chevron-rotate-down"))
+                :on-click #(swap! auki? not)}
+          (if @auki?
+            (ikonit/livicon-chevron-down)
+            (ikonit/livicon-chevron-right))])
        [:div {:class (str "tk-otsikko " (when salli-piilotus?
                                           "tk-otsikko-sisenna"))}
         otsikko]
@@ -180,12 +180,13 @@
         [asetuskokoelma
          (str (urakkatyypin-otsikot tyyppi) " (" valittujen-lkm "/"kokonaismaara")")
          {:salli-piilotus? true
-          :luokka "taustavari-taso2"}
+          :oletuksena-auki? false
+          :luokka "taustavari-taso2 ylaraja"}
          [:div.tk-suodatinryhmat
           (doall
             (for [alue tilannekuvan-alueet]
               ^{:key (str tyyppi "-aluesuodatin-alueelle-" alue)}
-              [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil {:luokka "taustavari-taso3"
+              [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil {:luokka "taustavari-taso3 ylaraja"
                                                                                          :sisallon-luokka "taustavari-taso4"}]))]]))))
 
 (defn- aluesuodattimet []
@@ -204,7 +205,8 @@
            onko-alueita? "Näytä alueilta"
            :else "Ei näytettäviä alueita")
          {:salli-piilotus? true
-          :luokka "taustavari-taso1"}
+          :oletuksena-auki? true
+          :luokka "taustavari-taso1 eroa-huipulla ylaraja"}
         (if ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
            [:div.tk-suodatinryhmat
@@ -216,38 +218,37 @@
 (defn- aikasuodattimet []
   [asetuskokoelma
    (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
-                         " (max. yksi vuosi):"))
+                              " (max. yksi vuosi):"))
    {:salli-piilotus? false
-    :luokka "taustavari-taso1"}
+    :luokka          "taustavari-taso2 yla-ja-alaraja"}
    [:div
     (when (= :nykytilanne @tiedot/valittu-tila)
       [nykytilanteen-aikavalinnat])
     (when (= :historiakuva @tiedot/valittu-tila)
       [historiankuvan-aikavalinnat])
-    (when (= :nykytilanne @tiedot/valittu-tila)
-      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                                 :sisallon-luokka "taustavari-taso3"}])
-    (when (= :nykytilanne @tiedot/valittu-tila)
-      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                   :sisallon-luokka "taustavari-taso3"}])
-    [:div.tk-suodatinryhmat
+    [:div {:class "tk-suodatinryhmat"}
+     (when (= :nykytilanne @tiedot/valittu-tila)
+       [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
+                                                                                                                  :sisallon-luokka "taustavari-taso4"}])
+     (when (= :nykytilanne @tiedot/valittu-tila)
+       [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
+                                                                                                    :sisallon-luokka "taustavari-taso4"}])
      (when (= :historiakuva @tiedot/valittu-tila)
-       [:div.tk-suodatinryhmat
-        ^{:key "ilmoitukset"} ; Avainta ei ehkä tarvittaisi tässä, mutta jostain syystä Reagent luulee näitä muuten samoiksi
-        [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                                   :sisallon-luokka "taustavari-taso3"}]
-        ^{:key "yllapito"}
-        [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                     :sisallon-luokka "taustavari-taso3"}]])
-     [:div.tk-suodatinryhmat
-      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                      :sisallon-luokka "taustavari-taso3"}]
-      [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                    :sisallon-luokka "taustavari-taso3"}]
-      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                                 :sisallon-luokka "taustavari-taso3"}]
-      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma {:luokka "taustavari-taso2"
-                                                                                                           :sisallon-luokka "taustavari-taso3"}]]]
+       ^{:key "ilmoitukset"}                               ; Avainta ei ehkä tarvittaisi tässä, mutta jostain syystä Reagent luulee näitä muuten samoiksi
+       [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
+                                                                                                                  :sisallon-luokka "taustavari-taso4"}])
+     (when (= :historiakuva @tiedot/valittu-tila)
+       ^{:key "yllapito"}
+       [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
+                                                                                                    :sisallon-luokka "taustavari-taso4"}])
+     [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
+                                                                                                     :sisallon-luokka "taustavari-taso4"}]
+     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
+                                                                                                   :sisallon-luokka "taustavari-taso4"}]
+     [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
+                                                                                                                :sisallon-luokka "taustavari-taso4"}]
+     [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 yla-ja-alaraja"
+                                                                                                          :sisallon-luokka "taustavari-taso4"}]]
     [:div.tk-yksittaiset-suodattimet
      [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
       tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
