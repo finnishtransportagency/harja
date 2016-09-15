@@ -512,8 +512,3 @@ WHERE alueurakkanro = :alueurakkanro;
 -- name: luo-valaistusurakka<!
 INSERT INTO valaistusurakka (alueurakkanro, alue)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
-
--- name: paivita-valaistusurakka!
-UPDATE valaistusurakka
-SET alue = ST_GeomFromText(:alue) :: GEOMETRY
-WHERE alueurakkanro = :alueurakkanro;

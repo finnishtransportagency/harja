@@ -1,4 +1,5 @@
 CREATE TABLE valaistusurakka (
-  alueurakkanro varchar(16) primary key,
+  id serial PRIMARY KEY,
+  alueurakkanro varchar(16),
   alue geometry
 );
