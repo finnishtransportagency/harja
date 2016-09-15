@@ -1,4 +1,4 @@
--- Näit ei enää haluta nähdä
+-- Näitä ei enää haluta nähdä
 DELETE FROM yhteyshenkilo
 WHERE id IN (SELECT y.id
              FROM yhteyshenkilo y
