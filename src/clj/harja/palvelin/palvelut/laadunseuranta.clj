@@ -146,7 +146,7 @@
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
-    (let [osapuoli (roolit/osapuoli user urakka)
+    (let [osapuoli (roolit/osapuoli user)
           laatupoikkeama (assoc laatupoikkeama
                                 ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                                 :selvitys-pyydetty (and (not= :urakoitsija osapuoli)
