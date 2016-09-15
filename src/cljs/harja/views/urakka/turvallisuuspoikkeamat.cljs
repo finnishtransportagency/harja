@@ -246,7 +246,8 @@
             :palstoja 1}
            {:otsikko "Tapahtunut" :pakollinen? true
             :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-            :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
+            :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                      [:ei-tulevaisuudessa "Päivämäärä ei voi olla tulevaisuudessa"]]
             :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
            (lomake/ryhma {:rivi? true}
                          {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
