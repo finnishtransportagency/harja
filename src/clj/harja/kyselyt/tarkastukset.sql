@@ -134,6 +134,12 @@ VALUES (:lahde::lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys
                  :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
         :havainnot, :laadunalitus, :yllapitokohde);
 
+-- name: luodun-tarkastuksen-id
+-- single?: true
+-- Koska tarkastuksen luonti ohjataan triggerillä eri tauluun, ei luo-tarkastus<! palauta oikein
+-- id kenttää. Tällä haetaan viimeksi luodun arvo.
+SELECT currval('tarkastus_id_seq');
+
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot
 UPDATE tarkastus
