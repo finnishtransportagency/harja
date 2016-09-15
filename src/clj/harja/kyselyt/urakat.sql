@@ -502,12 +502,10 @@ UPDATE urakka
 -- name: tuhoa-valaistusurakkadata!
 DELETE FROM valaistusurakka;
 
--- name: hae-valaistusurakka-alueurakkanumerolla
-SELECT
-  alueurakkanro,
-  alue
+-- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
+SELECT alueurakka
 FROM valaistusurakka
-WHERE alueurakkanro = :alueurakkanro;
+WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-valaistusurakka<!
 INSERT INTO valaistusurakka (alueurakkanro, alue)
