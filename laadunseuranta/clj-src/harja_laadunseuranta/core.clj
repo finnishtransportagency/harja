@@ -3,7 +3,7 @@
             [gelfino.timbre :as gt]
             [org.httpkit.server :as server]
             [compojure.api.sweet :refer :all]
-            [ring.util.http-response :refer :all]            
+            [ring.util.http-response :refer :all]
             [ring.util.response :refer [redirect]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
@@ -126,7 +126,7 @@
 (defapi laadunseuranta-api
   {:format {:formats [:transit-json]}
    :exceptions {:handlers {::ex/default utils/poikkeuskasittelija}}}
-  
+
   (POST "/reittimerkinta" []
         :body [kirjaukset schemas/Havaintokirjaukset]
         :summary "Tallentaa reittimerkinnat"
@@ -143,7 +143,7 @@
         (respond (log/debug "Päätetään tarkastusajo " tarkastusajo)
                  (paata-tarkastusajo! tarkastusajo kayttaja)
                  "Tarkastusajo päätetty"))
-  
+
   (POST "/uusi-tarkastusajo" []
         :body [tiedot s/Any]
         :kayttaja kayttaja
@@ -159,7 +159,7 @@
         (respond (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
                  (let [{:keys [lat lon treshold]} koordinaatit]
                    (hae-tr-tiedot lat lon treshold))))
-  
+
   (GET "/hae-kayttajatiedot" []
        :summary "Hakee käyttäjän tiedot"
        :kayttaja kayttaja
@@ -204,6 +204,7 @@
 
 (defn start-server []
   (alusta-logitus)
+  (log/info "Harja-laadunseuranta käynnistyy")
   (server/run-server #'app (:http-palvelin @c/config)))
 
 (defn -main []

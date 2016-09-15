@@ -57,26 +57,6 @@
                           :kayttaja (:id kayttaja)}
                          {:connection @db}))
 
-(defn reittimerkinnat-tarkastuksiksi
-  "Käy annetut reittimerkinnät läpi ja muodostaa niistä loogiset tarkastukset, jotka näkyvät käyttäjille.
-  Uusi tarkastus alkaa jos jokin seuraavista täyttyy:
-  1. Tie ja tieosa ovat samat kuin edellisellä pisteellä\n2. Etäisyys kasvaa / laskee & suunta pysyy samana (ei olla käännytty ympäri)\n3. Havaintoa ei ole tai se pysyy samana kuin edellisellä pisteellä."
-  [reittimerkinnat]
-  (let [merkinnat (q/hae-tarkastusajon-reittimerkinnat (:id tarkastusajo))]
-
-    )
-  )
-
-(defn tallenna-tarkastukset [tarkastukset kayttaja]
-  ;; TODO
-  )
-
-(defn- paata-tarkastusajo! [tarkastusajo kayttaja]
-  (merkitse-ajo-paattyneeksi tarkastusajo kayttaja)
-  (let [merkinnat (q/hae-tarkastusajon-reittimerkinnat (:id tarkastusajo))
-        tarkastukset (reittimerkinnat-tarkastuksiksi merkinnat)]
-    (tallenna-tarkastukset tarkastukset kayttaja)))
-
 (defn- tarkastustyypiksi [tyyppi]
   (condp = tyyppi
     :kelitarkastus 1
