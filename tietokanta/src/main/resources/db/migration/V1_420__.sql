@@ -1,5 +1,11 @@
 CREATE TABLE valaistusurakka (
-  id serial PRIMARY KEY,
-  alueurakkanro varchar(16),
-  alue geometry
+  id            SERIAL PRIMARY KEY,
+  alueurakkanro VARCHAR(16),
+  alue          GEOMETRY
 );
+
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('ptj', 'valaistusurakat-haku');
+
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('ptj', 'valaistusurakat-muutospaivamaaran-haku');
