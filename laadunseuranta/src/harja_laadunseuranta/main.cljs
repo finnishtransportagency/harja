@@ -37,6 +37,7 @@
   (reset! s/tallennustilaa-muutetaan false))
 
 (defn- paata-ajo []
+  (reset! s/havainnot {})
   (go-loop []
     (if (<! (comms/paata-ajo! @s/tarkastusajo))
       (s/tarkastusajo-seis!)
