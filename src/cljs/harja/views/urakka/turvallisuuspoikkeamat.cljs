@@ -283,7 +283,8 @@
             :pakollinen? true
             :validoi [[:ei-tyhja "Valitse tila"]
                       [:ei-avoimia-korjaavia-toimenpiteitä
-                       "Voidaan sulkea vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
+                       "Voidaan merkitä suljetuksi tai käsitellyksi
+                       vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
             :tyyppi :valinta
             :valinta-nayta #(or (turpodomain/kuvaa-turpon-tila %)
                                 "- valitse -")

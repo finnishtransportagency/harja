@@ -98,7 +98,7 @@
     viesti))
 
 (defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
-  (when (and (= data :suljettu)
+  (when (and (or (= data :suljettu) (= data :kasitelty))
              (not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet lomake))))
     viesti))
 
