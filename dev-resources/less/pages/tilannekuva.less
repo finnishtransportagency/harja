@@ -1,6 +1,6 @@
 .haitari-tilannekuva {
   .haitari-sisalto {
-    background-color: @harmaa8;
+    background-color: @valkoinen;
   }
 
   .haitari-sisalto.haitari-auki {
@@ -23,6 +23,22 @@
 
 .taustavari-taso4 {
   background-color: @harmaa15;
+}
+
+.eroa-huipulla {
+  margin-top: 5px;
+}
+
+.ylaraja {
+  border-width: 1px 0 0 0;
+  border-style: solid;
+  border-color: @harmaa5;
+}
+
+.yla-ja-alaraja {
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-color: @harmaa5;
 }
 
 #tk-tilan-vaihto {
@@ -53,8 +69,8 @@
     padding: 2px;
     display: inline-block;
   }
-
   margin-bottom: 10px;
+  padding-left: 5px;
 }
 
 #tk-historiakuvan-aikavalit {
@@ -69,17 +85,6 @@
 // Checkbox-ryhmät
 
 .tk-checkbox-ryhma {
-  border-width: 1px 1px 0 1px;
-  border-style: solid;
-  border-color: @harmaa6;
-  //background-color: @harmaa15;
-}
-
-.tk-checkbox-ryhma:last-child{
-  border-width: 1px 1px 1px 1px;
-  border-style: solid;
-  border-color: @harmaa6;
-  //background-color: @harmaa15;
 }
 
 .tk-checkbox-ryhma-otsikko {
@@ -121,20 +126,18 @@
 
 // Luokka elementille, jossa on otsikko ja useita suodatinryhmiä
 .tk-asetuskokoelma {
-  margin-top: 8px;
-  padding: 5px;
-  border: 1px solid @harmaa5;
-  //background-color: @harmaa15;
+  padding: 5px 0 0 0;
   position: relative;
 }
 
 .tk-yksittaiset-suodattimet {
-  margin-top: 5px;
+  margin: 5px 0 0 5px;
 }
 
 .tk-otsikko {
   padding-top: 2px;
-  padding-bottom: 5px;
+  padding-bottom: 2px;
+  padding-left: 5px;
 }
 
 .tk-otsikko-sisenna {
