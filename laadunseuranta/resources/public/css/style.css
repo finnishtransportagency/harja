@@ -915,9 +915,19 @@ button:disabled {
     font-size: 16px;
     text-align: left;
     line-height: 20px;
+    position: relative;
 }
 
-
+.pikavalintapainike > .rec {
+    background-color: red;
+    border-left: red solid 3px;
+    float: right;
+    font-weight: bold;
+    right: 7px;
+    position: absolute;
+    top: 28px;
+    z-index: 100;
+}
 .painike-aktiivinen,
 .painikelaatikko .painike-aktiivinen {
     border: 2px solid black;

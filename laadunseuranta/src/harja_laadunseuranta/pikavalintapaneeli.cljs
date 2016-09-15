@@ -36,7 +36,9 @@
          [:img.pikavalintaikoni {:src ikoni}]
          (vector? ikoni)
          [:span.pikavalintaikoni ikoni])
-   [:span.pikavalintaotsikko otsikko]])
+   [:span.pikavalintaotsikko otsikko]
+   (when (avain @havainnot)
+         [:span.rec "REC"])])
 
 (defn kertapainike [otsikko toiminto-fn]
   [:nav.pikavalintapainike {:on-click toiminto-fn} otsikko])
@@ -247,11 +249,9 @@
       [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema
        :ikoni (ikoni :kaivojenkorkeusasema)]]
      [:div
-      [:button.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]
       [:span.tyhja-nappi]
-      (if tallennuksia-kaynnissa?
-            [:span.tallennus-kaynnissa "Tallennus käynnissä..."]
-            [:span.aloita-tyovirhe "Aloita painamalla nappi pohjaan"])]]))
+      [:span.tyhja-nappi]
+      [:button.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]]]))
 
 
 (defn- tiemerkinta [alivalikot]
