@@ -133,7 +133,8 @@
      [arviokomponentti/arviokomponentti kiinteys]]
     [:div.polyavyysarvio
      [:span "Pölyävyys"]
-     [arviokomponentti/arviokomponentti polyavyys]]]])
+     [arviokomponentti/arviokomponentti polyavyys]]]
+   [:div.keskenerainen "Koekäytössä"]])
 
 (defn- liikenneymparisto [alivalikot kertakirjaus-kirjattu]
   (let [submenu (atom nil)
@@ -308,7 +309,7 @@
            :default
            [:div.sidepanel-box
             ;; soratietarkastus kytketty pois päältä
-            #_[toggle-painike "Soratie alkaa" alivalikot :soratie :on-click #(swap! havainnot assoc :soratie true)]
+            [toggle-painike "Soratie alkaa" alivalikot :soratie :on-click #(swap! havainnot assoc :soratie true)]
             [on-painike "Liikenneympäristö" alivalikot :liikenneymparisto]
             [on-painike "Viherhoito" alivalikot :viherhoito]
             [on-painike "Muut" alivalikot :muut]])]
@@ -334,8 +335,8 @@
                                          on-press)
                              :class (when aktiivinen "painike-aktiivinen")}
     (if aktiivinen
-      "Lopeta väli"
-      "Aloita väli")]
+      "Lopeta havaintoväli"
+      "Aloita havaintoväli")]
    [:nav.pikavalintapainike {:on-click #(on-click false)}
     [:i.livicon-pen " "]
     "Lisää havainto"]])

@@ -917,8 +917,8 @@ button:disabled {
     line-height: 20px;
 }
 
-.painikelaatikko .painike-aktiivinen {
-    border: 3px solid black;
+.painike-aktiivinen {
+    border: 2px solid black;
     border-radius: 5px;
     background-color: red;
     color: white;
@@ -968,4 +968,9 @@ button:disabled {
     background-color: #dd0000;
     border-color: #dd0000;
     font-weight: normal;
+}
+
+.keskenerainen {
+    color: red;
+    margin-left: 8px;
 }
