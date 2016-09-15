@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.yha.urakoiden-hakuvastaussanoma-test
+(ns harja.palvelin.integraatiot.yha.kohteen-lahetyssanoma-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.tyokalut.xml :as xml]
