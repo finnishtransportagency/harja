@@ -241,7 +241,8 @@
             :tyyppi :string
             :pituus-max 1024
             :pakollinen? true
-            :validoi [[:ei-tyhja "Valitse tila"]]
+            :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                      [:ei-tulevaisuudessa "Päivämäärä ei voi olla tulevaisuudessa"]]
             :palstoja 1}
            {:otsikko "Tapahtunut" :pakollinen? true
             :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
