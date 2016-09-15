@@ -214,7 +214,8 @@
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
 (defn- paallystys [alivalikot havainnot]
-  (let [ikoni #(kuvat/paallystys-tyovirheet %)]
+  (let [ikoni #(kuvat/paallystys-tyovirheet %)
+        tallennuksia-kaynnissa? (some #(= true (val %)) @havainnot)]
     [:div.painikelaatikko
      [:div.painikerivi
       [toggle-painike "Saumavirhe" havainnot :saumavirhe
@@ -244,7 +245,12 @@
        :ikoni (ikoni :pintakuivatuspuute)]
       [toggle-painike "Kaivojen korkeusasema" havainnot :kaivojenkorkeusasema
        :ikoni (ikoni :kaivojenkorkeusasema)]]
-     [:div.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]]))
+     [:div
+      [:button.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]
+      [:span.tyhja-nappi]
+      (if tallennuksia-kaynnissa?
+            [:span.tallennus-kaynnissa "Tallennus käynnissä..."]
+            [:span.aloita-tyovirhe "Aloita painamalla nappi pohjaan"])]]))
 
 
 (defn- tiemerkinta [alivalikot]
