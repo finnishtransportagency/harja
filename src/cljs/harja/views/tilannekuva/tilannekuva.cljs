@@ -101,8 +101,9 @@
                                    (= otsikko @kokoelma-atom))))]
          (when-not (empty? ryhman-elementtien-avaimet)
            [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
-            [:div.tk-checkbox-ryhma-otsikko.klikattava
-             {:on-click (fn [_]
+            [:div
+             {:class    (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
+              :on-click (fn [_]
                           (if kokoelma-atom
                             ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
                             (if (= otsikko @kokoelma-atom)
