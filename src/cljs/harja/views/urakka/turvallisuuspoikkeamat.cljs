@@ -241,8 +241,7 @@
             :tyyppi :string
             :pituus-max 1024
             :pakollinen? true
-            :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
-                      [:ei-tulevaisuudessa "Päivämäärä ei voi olla tulevaisuudessa"]]
+            :validoi [[:ei-tyhja "Valitse tila"]]
             :palstoja 1}
            {:otsikko "Tapahtunut" :pakollinen? true
             :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
@@ -264,10 +263,13 @@
                           :pakollinen? true
                           :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
                           :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
-                          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
-                          :vihje       (str "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma. \n"
-                                            "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma. \n"
-                                            "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen.")})
+                          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)})
+           [:div {:style {:padding "8px" :padding-top 0}}
+            [yleiset/vihje-elementti
+             [:span
+              [:span "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma."]
+              [:div "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma."]
+              [:div "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen."]]]]
            {:otsikko "Tierekisteriosoite"
             :nimi :tr
             :pakollinen? true
@@ -418,12 +420,12 @@
      [urakka-valinnat/urakan-hoitokausi urakka]
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka))]
        (yleiset/wrap-if
-        (not oikeus?)
-        [yleiset/tooltip {} :%
-         (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
-        [napit/uusi "Lisää turvallisuuspoikkeama"
-         #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
-         {:disabled (not oikeus?)}]))
+         (not oikeus?)
+         [yleiset/tooltip {} :%
+          (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
+         [napit/uusi "Lisää turvallisuuspoikkeama"
+          #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
+          {:disabled (not oikeus?)}]))
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"

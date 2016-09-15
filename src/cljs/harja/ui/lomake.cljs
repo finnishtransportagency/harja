@@ -254,16 +254,19 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
              :let [muokattava? (and voi-muokata?
                                     (or (nil? muokattava?)
                                         (muokattava? data)))]]
-         ^{:key nimi}
-         [kentta (assoc s
-                   :col-luokka col-luokka
-                   :focus (= nimi nykyinen-fokus)
-                   :on-focus #(aseta-fokus! nimi))
-          data atom-fn muokattava? muokkaa
-          (get muokatut nimi)
-          (get virheet nimi)
-          (get varoitukset nimi)
-          (get huomautukset nimi)]))]))
+         (if (map? s)
+           ^{:key nimi}
+           [kentta (assoc s
+                    :col-luokka col-luokka
+                    :focus (= nimi nykyinen-fokus)
+                    :on-focus #(aseta-fokus! nimi))
+           data atom-fn muokattava? muokkaa
+           (get muokatut nimi)
+           (get virheet nimi)
+           (get varoitukset nimi)
+           (get huomautukset nimi)]
+           ^{:key (hash s)}
+           [:div.row.lomakerivi s])))]))
 
 (defn validoi [tiedot skeema]
   (let [kaikki-skeemat (pura-ryhmat skeema)
