@@ -352,9 +352,4 @@ SELECT st.geometria AS "geometria",
 FROM suljettu_tieosuus st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
-      AND ((NOT :urakatannettu) OR (SELECT bool_or(ST_Intersects(au.alue,st.geometria))
-                                   FROM urakka u
-                             INNER JOIN hanke h ON h.id=u.hanke
-                             INNER JOIN alueurakka au ON au.alueurakkanro = h.alueurakkanro
-	                          WHERE u.id IN (:urakat)))
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
