@@ -121,10 +121,13 @@
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio toimenpideinstanssi] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
+  (log/debug "LAJI ON: " (pr-str laji))
   (if (or (nil? id) (neg? id))
     (let [uusi-sanktio (sanktiot/luo-sanktio<!
                         db (konv/sql-timestamp perintapvm)
-                        (name laji) (:id tyyppi)
+                        (when laji
+                          (name laji))
+                        (:id tyyppi)
                         toimenpideinstanssi
                          urakka
                          summa indeksi laatupoikkeama (or suorasanktio false))]
@@ -146,7 +149,7 @@
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka)
   (jdbc/with-db-transaction [c db]
-    (let [osapuoli (roolit/osapuoli user urakka)
+    (let [osapuoli (roolit/osapuoli user)
           laatupoikkeama (assoc laatupoikkeama
                                 ;; Jos osapuoli ei ole urakoitsija, voidaan asettaa selvitys-pyydetty päälle
                                 :selvitys-pyydetty (and (not= :urakoitsija osapuoli)

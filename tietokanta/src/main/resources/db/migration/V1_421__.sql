@@ -1,3 +1,16 @@
+<<<<<<< HEAD
+CREATE TABLE valaistusurakka (
+  id            SERIAL PRIMARY KEY,
+  alueurakkanro VARCHAR(16),
+  alue          GEOMETRY
+);
+
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('ptj', 'valaistusurakat-haku');
+
+INSERT INTO integraatio (jarjestelma, nimi)
+VALUES ('ptj', 'valaistusurakat-muutospaivamaaran-haku');
+=======
 -- Partitioi tarkastustaulu
 
 -- Päivitetään foreign keyt
@@ -191,3 +204,4 @@ FOR EACH ROW EXECUTE PROCEDURE tarkastus_insert();
 
 -- Kopioidaan data takaisin
 INSERT INTO tarkastus SELECT * FROM tarkastus_temp;
+>>>>>>> develop
