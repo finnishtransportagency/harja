@@ -56,10 +56,10 @@
         data (turi/hae-turvallisuuspoikkeama
                (:liitteiden-hallinta jarjestelma)
                (:db jarjestelma)
-               id)
-        xml (sanoma/muodosta data)]
-    (log/debug "Aloitetaan sanoman validointi: " (pr-str xml))
-    (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")))
+               id)]
+    (is (= (count (:liitteet data)) 1))
+    (let [xml (sanoma/muodosta data)]
+      (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen"))))
 
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
   ;; Yksittäisen sanoman testaus helpottamaan debuggausta.
