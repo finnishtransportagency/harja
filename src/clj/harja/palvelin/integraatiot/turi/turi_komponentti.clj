@@ -23,7 +23,10 @@
   (let [liitteet (:liitteet turvallisuuspoikkeama)]
     (mapv
       (fn [liite]
-        (assoc liite :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite))))
+        (assoc liite
+          :data
+          (:data
+            (liitteet/lataa-liite liitteiden-hallinta (:id liite)))))
       liitteet)))
 
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]

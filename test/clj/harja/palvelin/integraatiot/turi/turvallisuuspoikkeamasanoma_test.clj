@@ -62,6 +62,9 @@
     (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")))
 
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
+  ;; Yksittäisen sanoman testaus helpottamaan debuggausta.
+  ;; Sanomien muodostuksen testaus kaikille testidatan turpoille
+  ;; kattaa tämän.
   (let [id (first (flatten (q "SELECT id FROM turvallisuuspoikkeama")))]
     (testaa-turpon-sanoman-muodostus id)))
 
