@@ -13,9 +13,6 @@
 
 (defn tarkastusajon-luontidialogi [valittu-fn peruutettu-fn]
   (let [aloitettu (atom false)
-        aloita-tarkastus (fn [tarkastustyyppi]
-                           (s/valitse-urakka nil)
-                           (valittu tarkastustyyppi))
         valittu (fn [tyyppi]
                   (reset! aloitettu true)
                   (valittu-fn tyyppi))
@@ -33,8 +30,8 @@
           [:div.tarkastusajon-luonti-dialog
            [:p "Valitse tarkastusajon tyyppi"]
            [:div
-            [:nav.pikavalintapainike {:on-click #(aloita-tarkastus :kelitarkastus)} "Talvihoito"]
-            [:nav.pikavalintapainike {:on-click #(aloita-tarkastus :soratietarkastus)} "Kesähoito"]
+            [:nav.pikavalintapainike {:on-click #(valittu :kelitarkastus)} "Talvihoito"]
+            [:nav.pikavalintapainike {:on-click #(valittu :soratietarkastus)} "Kesähoito"]
             [:nav.pikavalintapainike {:on-click #(do
                                                   (go (let [urakat (:ok (<! (comms/hae-urakkatyypin-urakat "paallystys")))]
                                                         (reset! urakkatyypin-urakat urakat)

@@ -37,6 +37,7 @@
   (reset! s/tallennustilaa-muutetaan false))
 
 (defn- resetoi-tarkastuksen-tiedot []
+  (s/valitse-urakka nil)
   (reset! s/havainnot {}))
 
 (defn- paata-ajo []
