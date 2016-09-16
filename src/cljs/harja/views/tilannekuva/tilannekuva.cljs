@@ -193,23 +193,22 @@
 (defn- tyypin-aluesuodattimet [tyyppi]
   (komp/luo
     (fn [tyyppi]
-      (let [valittujen-lkm (count (domain/valitut-kentat (get-in @tiedot/suodattimet [:alueet tyyppi])))
-            kokonaismaara (reduce + (map #(count (get-in @tiedot/suodattimet [:alueet tyyppi %])) tilannekuvan-alueet))]
-        [asetuskokoelma
-         (str (urakkatyypin-otsikot tyyppi) " (" valittujen-lkm "/"kokonaismaara")")
-         {:salli-piilotus? true
-          :auki-atomi? (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
-          :luokka "taustavari-taso2 ylaraja"
-          :otsikon-luokka "fontti-taso2"}
-         [:div.tk-suodatinryhmat
-          (doall
-            (for [alue tilannekuvan-alueet]
-              ^{:key (str tyyppi "-aluesuodatin-alueelle-" alue)}
-              [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil {:luokka "taustavari-taso3 ylaraja"
-                                                                                         :sisallon-luokka "taustavari-taso4"
-                                                                                         :otsikon-luokka "fontti-taso3"
-                                                                                         :nayta-lkm? true
-                                                                                         :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi alue]) false)}]))]]))))
+      [asetuskokoelma
+       (urakkatyypin-otsikot tyyppi)
+       ;; TODO: poista kuollut koodi kunhan todetaan kumpi on parempi
+       {:salli-piilotus? true
+        :auki-atomi?     (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
+        :luokka          "taustavari-taso2 ylaraja"
+        :otsikon-luokka  "fontti-taso2"}
+       [:div.tk-suodatinryhmat
+        (doall
+          (for [alue tilannekuvan-alueet]
+            ^{:key (str tyyppi "-aluesuodatin-alueelle-" alue)}
+            [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil {:luokka          "taustavari-taso3 ylaraja"
+                                                                                       :sisallon-luokka "taustavari-taso4"
+                                                                                       :otsikon-luokka  "fontti-taso3"
+                                                                                       :nayta-lkm?      true
+                                                                                       :auki-atomi?     (paneelin-tila-atomi! (str [:alueet tyyppi alue]) false)}]))]])))
 
 (defn- aluesuodattimet []
   (komp/luo
