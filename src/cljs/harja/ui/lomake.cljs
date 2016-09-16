@@ -168,9 +168,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         (harja.ui.ikonit/livicon-info-sign)
         [:span (str " " (first vihjeet))]
         (map-indexed
-         (fn [i vihje]
-           ^{:key i}
-           [:div.vihjeen-lisarivi (str "  " vihje)])
+          (fn [i vihje]
+            ^{:key i}
+            [:div.vihjeen-lisarivi (str "  " vihje)])
           (rest vihjeet))]])))
 
 (defn yleinen-huomautus
