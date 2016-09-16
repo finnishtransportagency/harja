@@ -21,7 +21,7 @@
           [:nav.pikavalintapainike {:on-click #(valittu :soratietarkastus)} "Kesätarkastus"]
           [:nav.pikavalintapainike {:on-click #(valittu :yllapitotarkastus)} "Ylläpito"]]
          [:nav.pikavalintapainike.peruutuspainike {:on-click #(peruutettu-fn)}
-          [:span.livicon-delete] "Peruuta"]]))))
+           "Peruuta"]]))))
 
 (defn tarkastusajon-paattamisdialogi [paattamattomia kylla-fn ei-fn]
   (let [kylla-klikattu (atom false)]
@@ -33,24 +33,24 @@
                       :height "32px"}]]]
         [:div.tarkastusajon-luonti-dialog
          [:p "Päätetäänkö tarkastusajo?"]
-         [:ul
-          [:li {:on-click #(when (= 0 @paattamattomia)
+         [:div.tarkastusajon-luonti-dialog-wrap
+          [:button.nappi-ensisijainen {:on-click #(when (= 0 @paattamattomia)
                              (reset! kylla-klikattu true)
                              (kylla-fn))}
            (if (> @paattamattomia 0)
              [:div
-              [:img {:src kuvat/+spinner+
+              [:img.odotusspinneri {:src kuvat/+spinner+
                      :height "32px"}]
               "Odota..."]
              "Kyllä")]
-          [:li {:on-click #(ei-fn)} "Ei"]]]))))
+          [:button.nappi-toissijainen {:on-click #(ei-fn)} "Ei"]]]))))
 
 (defn tarkastusajon-jatkamisdialogi [jatka-fn pakota-lopetus-fn]
   [:div.tarkastusajon-luonti-dialog
    [:p "Jatketaanko tarkastusajoa?"]
    [:div
     [:nav.pikavalintapainike {:on-click #(jatka-fn)} "Jatka"]
-    [:nav.pikavalintapainike {:on-click #(pakota-lopetus-fn)} "Pakota lopetus"]]])
+    [:nav.pikavalintapainike.nappi-kielteinen {:on-click #(pakota-lopetus-fn)} "Pakota lopetus"]]])
 
 (defcard luontidialogi-card
   (reagent/as-element [tarkastusajon-luontidialogi #() #()]))
