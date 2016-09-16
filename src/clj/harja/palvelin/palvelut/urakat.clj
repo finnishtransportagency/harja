@@ -114,11 +114,12 @@
        aluekokonaisuudet))))
 
 (defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
+  ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 5 metrin thesholdilla
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y))]
     (if (and (empty? urakka-idt)
-             (not= "hoito" urakkatyyppi))
+             (not= "hoito" urakkatyyppi 5))
         ;; Jos ei löytynyt urakoita eri tyypillä, kokeillaan hoido urakoita
-      (map :id (q/hae-urakka-sijainnilla db "hoito" x y))
+      (map :id (q/hae-urakka-sijainnilla db "hoito" x y 5))
       urakka-idt)))
 
 (def urakka-xf

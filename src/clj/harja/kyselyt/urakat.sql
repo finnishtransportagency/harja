@@ -431,12 +431,26 @@ SELECT EXISTS(
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 SELECT u.id
-FROM urakoiden_alueet ua
-  JOIN urakka u ON ua.id = u.id
-WHERE ua.tyyppi = :urakkatyyppi :: urakkatyyppi
-      AND (st_contains(ua.alue, ST_MakePoint(:x, :y)))
+FROM urakka u
+  LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (u.alkupvm IS NULL OR u.alkupvm <= current_timestamp)
       AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp)
+      AND
+      ((:urakkatyyppi = 'hoito' AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+       OR
+       (:urakkatyyppi = 'valaistus' AND
+        exists(SELECT id
+               FROM valaistusurakka vu
+               WHERE vu.alueurakkanro = u.alueurakkanro AND
+                     st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
+       OR
+       ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+        exists(SELECT id
+               FROM paallystyspalvelusopimus pps
+               WHERE pps.alueurakkanro = u.alueurakkanro AND
+                     st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
+
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
