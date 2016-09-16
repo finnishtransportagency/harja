@@ -140,9 +140,9 @@ hakutiheys-historiakuva 1200000)
 
 (defn kasaa-parametrit [tila nakyva-alue suodattimet]
   (merge
-    {:urakat (apply clojure.set/union (map val (tk/valitut-suodattimet (:alueet suodattimet))))
+    {:urakat       (tk/valittujen-suodattimien-idt (:alueet suodattimet))
      :nykytilanne? (= :nykytilanne tila)
-     :alue nakyva-alue}
+     :alue         nakyva-alue}
     (tk/valitut-suodattimet (dissoc suodattimet :alueet))))
 
 (defn aikaparametrilla [parametrit]

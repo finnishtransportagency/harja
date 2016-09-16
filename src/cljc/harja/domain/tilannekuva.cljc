@@ -195,5 +195,9 @@ suodattimien id numeroilla."
   "Valitsee joukosta suodattimia valitut, ja palauttaa itse suodattimet listassa."
   (valitut-kentat* [] valinnat))
 
+(defn valittujen-suodattimien-idt [valinnat]
+  (let [valitut-kentat (valitut-kentat valinnat)]
+    (into #{} (map :id valitut-kentat))))
+
 (defn yllapidon-reaaliaikaseurattava? [id]
   (yllapidon-reaaliaikaseurattavat id))
