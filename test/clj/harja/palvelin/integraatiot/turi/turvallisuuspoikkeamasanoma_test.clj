@@ -64,7 +64,8 @@
                           "<?xml version="))
     (let [xml (sanoma/muodosta data)]
       (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen"))
-    (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE id = " liite-id ";"))
+    (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE liite = " liite-id ";"))
+    (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
     (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
 
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
