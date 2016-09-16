@@ -174,15 +174,7 @@
       (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
             haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
         (when (not (empty? haettavat-toimenpiteet))
-          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
-                valitun-alueen-geometria
-                (if urakka-id
-                  (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
-                    (or (:urakka_alue urakan-aluetiedot)
-                        (:alueurakka_alue urakan-aluetiedot)))
-                  (when hallintayksikko
-                    (:alue (first (hal-q/hae-hallintayksikon-geometria
-                                    db hallintayksikko)))))]
+          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)]
             (into {}
                   (comp
                     (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
