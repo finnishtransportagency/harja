@@ -195,7 +195,6 @@
                   (q/hae-tyokoneet db
                                    (:xmin alue) (:ymin alue)
                                    (:xmax alue) (:ymax alue)
-                                   valitun-alueen-geometria
                                    urakat
                                    tpi-haku-str))))))))
 
