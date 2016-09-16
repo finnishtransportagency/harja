@@ -11,7 +11,7 @@
     (if geometria
      (let [alueurakkanro (str alueurakkanro)
            geometria (.toString geometria)]
-       (u/luo-valaistusurakka<! db alueurakkanro geometria))
+       (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria))
      (log/warn (format "Palvelusopimusta (alueurakkanro: %s ei voida tuoda geometriaa, sillä se on tyhjä" alueurakkanro)))
     (log/warn "Geometriaa ei voida tuoda ilman alueurakkanumeroa")))
 
@@ -20,7 +20,7 @@
     (do
       (log/debug (str "Tuodaan päällystyksen palvelusopimukset kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
-        (u/tuhoa-valaistusurakkadata! db)
+        (u/tuhoa-paallystyspalvelusopimusdata! db)
         (let [urakat (shapefile/tuo shapefile)]
           (doseq [urakka urakat]
             (tuo-urakka db (:ualue urakka) (:the_geom urakka)))))
