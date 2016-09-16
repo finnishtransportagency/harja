@@ -99,3 +99,10 @@ SELECT tierekisteriosoitteelle_viiva AS geom
 				     CAST(:tr_alkuetaisyys AS INTEGER),
 				     CAST(:tr_loppuosa AS INTEGER),
 				     CAST(:tr_loppuetaisyys AS INTEGER));
+
+-- name: hae-urakkatyypin-urakat
+-- Hakee urakkatyypin urakat käsivalintaa varten. Mahdollistetaan usealla tyypillä haku,
+-- esim. paallystys ja tiemerkinta yhtaikaa
+SELECT id, sampoid, nimi, alkupvm, loppupvm, tyyppi
+  FROM urakka
+ WHERE tyyppi in (:tyyppi::urakkatyyppi);

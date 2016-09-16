@@ -21,6 +21,7 @@
 (def +tr-tietojen-haku-url+ (str "/" (prefix) "laadunseuranta/api/hae-tr-tiedot"))
 (def +kayttajatiedot-url+ (str "/" (prefix) "laadunseuranta/api/hae-kayttajatiedot"))
 (def +liitteen-tallennus-url+ (str "/" (prefix) "laadunseuranta/tallenna-liite"))
+(def +urakkatyypin-urakat-url+ (str "/" (prefix) "laadunseuranta/api/urakkatyypin-urakat"))
 
 (def +persistoitavien-max-maara+ 500)
 

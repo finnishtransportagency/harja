@@ -93,7 +93,8 @@
   (condp = tyyppi
     :kelitarkastus 1
     :soratietarkastus 2
-    :yllapitotarkastus 3
+    :paallystys 3
+    :tiemerkinta 4
     0))
 
 (defn- luo-uusi-tarkastusajo! [tiedot kayttaja]
@@ -122,6 +123,11 @@
     {:talvihoitoluokka (:hoitoluokka_pisteelle (first talvihoitoluokka))
      :soratiehoitoluokka (:hoitoluokka_pisteelle (first soratiehoitoluokka))
      :tr-osoite (hae-tr-osoite lat lon treshold)}))
+
+(defn- hae-urakkatyypin-urakat [urakkatyyppi]
+  (let [urakat (q/hae-urakkatyypin-urakat {:tyyppi urakkatyyppi}
+                                           {:connection @db})]
+    urakat))
 
 (defapi laadunseuranta-api
   {:format {:formats [:transit-json]}
@@ -159,6 +165,14 @@
         (respond (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
                  (let [{:keys [lat lon treshold]} koordinaatit]
                    (hae-tr-tiedot lat lon treshold))))
+
+  (POST "/urakkatyypin-urakat" []
+        :body [urakkatyyppi s/Str]
+        :kayttaja kayttaja
+        :summary "Hakee urakkatyypin urakat"
+        :return {:ok s/Any}
+        (respond (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
+                 (hae-urakkatyypin-urakat urakkatyyppi)))
 
   (GET "/hae-kayttajatiedot" []
        :summary "Hakee käyttäjän tiedot"

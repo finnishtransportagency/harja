@@ -36,8 +36,11 @@
   (reset! s/tallennus-kaynnissa true)
   (reset! s/tallennustilaa-muutetaan false))
 
+(defn- resetoi-tarkastuksen-tiedot []
+  (reset! s/havainnot {}))
+
 (defn- paata-ajo []
-  (reset! s/havainnot {})
+  (resetoi-tarkastuksen-tiedot)
   (go-loop []
     (if (<! (comms/paata-ajo! @s/tarkastusajo))
       (s/tarkastusajo-seis!)
@@ -170,7 +173,8 @@
                                         :tallennus-kaynnissa s/tallennus-kaynnissa
                                         :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
                                         :keskita-ajoneuvoon s/keskita-ajoneuvoon
-                                        :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)}]
+                                        :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
+                                        :valittu-urakka s/valittu-urakka}]
         
        [kartta/karttakomponentti
         {:wmts-url asetukset/+wmts-url+

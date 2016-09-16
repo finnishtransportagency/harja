@@ -42,6 +42,9 @@
               :format :transit})
     c))
 
+(defn hae-urakkatyypin-urakat [urakkatyyppi]
+  (post! asetukset/+urakkatyypin-urakat-url+ urakkatyyppi))
+
 (defn paata-ajo! [tarkastusajo-id]
   (post! asetukset/+paatos-url+ {:tarkastusajo {:id tarkastusajo-id}}))
 
