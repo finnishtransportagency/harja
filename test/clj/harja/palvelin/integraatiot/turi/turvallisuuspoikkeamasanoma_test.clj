@@ -51,7 +51,6 @@
                       nil
                       "harja-ui")
         liite-id (:id luotu-liite)
-        _ (log/debug "id: " (pr-str id) " liite-id: " (pr-str liite-id))
         _ (u (str "INSERT INTO
                    turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
                   VALUES (" id "," liite-id ");"))
