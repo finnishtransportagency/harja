@@ -11,7 +11,8 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.string :as str])
   (:import (java.io File)
            (org.apache.commons.io IOUtils)))
 
@@ -50,6 +51,7 @@
                       nil
                       "harja-ui")
         liite-id (:id luotu-liite)
+        _ (log/debug "id: " (pr-str id) " liite-id: " (pr-str liite-id))
         _ (u (str "INSERT INTO
                    turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
                   VALUES (" id "," liite-id ");"))
@@ -57,9 +59,14 @@
                (:liitteiden-hallinta jarjestelma)
                (:db jarjestelma)
                id)]
+    ;; Data, josta sanoma muodostetaan, sisältää liitteet oikein
     (is (= (count (:liitteet data)) 1))
+    (is (str/starts-with? (slurp (:data (first (:liitteet data))))
+                          "<?xml version="))
     (let [xml (sanoma/muodosta data)]
-      (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen"))))
+      (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen"))
+    (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE id = " liite-id ";"))
+    (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
 
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
   ;; Yksittäisen sanoman testaus helpottamaan debuggausta.
