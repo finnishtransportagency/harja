@@ -102,11 +102,11 @@
 
 (defn- valtakunnalliset-valitavoitteet [urakka kaikki-valitavoitteet-atom valtakunnalliset-valitavoitteet-atom]
   (let [voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
-        voi-tehda-tarkennuksen voi-merkita-valmiiksi? ;; Toistaiseksi oletetaan nämä oikeudet samaksi
+        voi-tehda-tarkennuksen? voi-merkita-valmiiksi? ; Toistaiseksi oletetaan nämä oikeudet samaksi
         ;; Mitään taulukon kenttää ei voi muokata ilman oikeutta merkitä valmiiksi tai tehdä tarkennuksia
         voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
                           (or voi-merkita-valmiiksi?
-                              voi-tehda-tarkennuksen))]
+                              voi-tehda-tarkennuksen?))]
     [:div
      [grid/grid
       {:otsikko "Valtakunnalliset välitavoitteet"
@@ -138,7 +138,7 @@
                (if-not (= (:valtakunnallinen-nimi rivi) (:nimi rivi))
                  [:span.grid-solu-varoitus (:nimi rivi)]
                  [:span (:nimi rivi)]))
-        :muokattava? (constantly voi-tehda-tarkennuksen)}
+        :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
         :nimi :valtakunnallinen-takaraja :hae #(cond
                                                 (:valtakunnallinen-takaraja %)
@@ -176,7 +176,7 @@
                        :default
                        [:span (pvm/pvm-opt (:takaraja rivi))])))
         :tyyppi :pvm
-        :muokattava? (constantly voi-tehda-tarkennuksen)}
+        :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
         :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
        {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
