@@ -10,8 +10,10 @@
             [clj-time.core :as t]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.virustarkistus :as virustarkistus])
-  (:import (java.io File)))
+            [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+            [clojure.java.io :as io])
+  (:import (java.io File)
+           (org.apache.commons.io IOUtils)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root
@@ -34,32 +36,30 @@
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (defn testaa-turpon-sanoman-muodostus [id]
-  (let [testiliite-polku (str "/tmp/harja_" (hash (t/now)) ".txt")
-        testiliite-tiedosto (do
-                              (.createNewFile (File. testiliite-polku))
-                              (spit testiliite-polku "testi")
-                              (File. testiliite-polku))
-        liite (liitteet/luo-liite
-                (:liitteiden-hallinta jarjestelma)
-                1
-                (hae-oulun-alueurakan-2014-2019-id)
-                "seppo.txt"
-                "text/plain"
-                100
-                testiliite-tiedosto
-                "Muhkea liite!"
-                "harja-api")
+  (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
+        tiedosto "test/resurssit/sampo/maksuera_ack.xml"
+        tiedoston-sisalto (IOUtils/toByteArray (io/input-stream tiedosto))
+        luotu-liite (liitteet/luo-liite
+                      liitteiden-hallinta
+                      nil
+                      (hae-oulun-alueurakan-2014-2019-id)
+                      "maksuera_ack.xml"
+                      "text/xml"
+                      581
+                      tiedoston-sisalto
+                      nil
+                      "harja-ui")
+        liite-id (:id luotu-liite)
         _ (u (str "INSERT INTO
                    turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
-                  VALUES (" id "," (:id liite) ");"))
+                  VALUES (" id "," liite-id ");"))
         data (turi/hae-turvallisuuspoikkeama
                (:liitteiden-hallinta jarjestelma)
                (:db jarjestelma)
                id)
         xml (sanoma/muodosta data)]
     (log/debug "Aloitetaan sanoman validointi: " (pr-str xml))
-    (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
-    (.delete testiliite-tiedosto)))
+    (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")))
 
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
   (let [id (first (flatten (q "SELECT id FROM turvallisuuspoikkeama")))]
