@@ -88,9 +88,11 @@
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
 
     ;; Ajastetut tehtävät
+    [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
      :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
+    [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
@@ -195,6 +197,12 @@
                       :db :db
                       :pdf-vienti :pdf-vienti
                       :excel-vienti :excel-vienti})
+
+      ;; Tarkastustehtävät
+
+      :paivystystarkistukset (component/using
+                               (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
+                               [:http-palvelin :db :fim :sonja-sahkoposti])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
@@ -376,6 +384,12 @@
       :api-yllapitokohteet (component/using
                             (api-yllapitokohteet/->Yllapitokohteet)
                              [:http-palvelin :db :integraatioloki])
+
+      ;; Ajastettu laskutusyhteenvetojen muodostus
+      :laskutusyhteenvetojen-muodostus
+      (component/using
+       (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
+       [:db])
 
       :status (component/using
                (status/luo-status)

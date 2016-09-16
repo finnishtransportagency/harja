@@ -8,11 +8,6 @@
 
 (def sahkoposti "harjapalaute@solita.fi")
 
-(def url (atom nil))
-(defonce aseta-url
-  (t/kuuntele! :url-muuttui #(reset! url (:url %))))
-
-
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
   "Palautetta HARJAsta")
@@ -69,7 +64,7 @@
               (body (str palaute-body
                          (tekniset-tiedot
                            @istunto/kayttaja
-                           @url
+                           (-> js/window .-location .-href)
                            (-> js/window .-navigator .-userAgent)))))}
    [:span (ikonit/livicon-kommentti) " Palautetta!"]])
 
@@ -79,7 +74,7 @@
               (subject virhe-otsikko "?")
               (body (virhe-body virhe
                                 @istunto/kayttaja
-                                @url
+                                (-> js/window .-location .-href)
                                 (-> js/window .-navigator .-userAgent))))
     :on-click #(.stopPropagation %)}
    [:span

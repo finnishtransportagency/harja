@@ -18,7 +18,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.liitteet :as liitteet])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -324,6 +325,15 @@
             :disabloi vaaralliset-aineet-disablointi-fn
             :nayta-rivina? true
             :vaihtoehdot #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}}
+           {:otsikko "Liitteet" :nimi :liitteet
+            :palstoja 2
+            :tyyppi :komponentti
+            :komponentti
+            (fn [_]
+              [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
+               {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
+                                         #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
+                :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"}])}
            (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
                           :uusi-rivi? true}
                          {:otsikko "Etunimi"
