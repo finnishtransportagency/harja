@@ -168,9 +168,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         (harja.ui.ikonit/livicon-info-sign)
         [:span (str " " (first vihjeet))]
         (map-indexed
-         (fn [i vihje]
-           ^{:key i}
-           [:div.vihjeen-lisarivi (str "  " vihje)])
+          (fn [i vihje]
+            ^{:key i}
+            [:div.vihjeen-lisarivi (str "  " vihje)])
           (rest vihjeet))]])))
 
 (defn yleinen-huomautus
@@ -254,19 +254,16 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
              :let [muokattava? (and voi-muokata?
                                     (or (nil? muokattava?)
                                         (muokattava? data)))]]
-         (if (map? s)
-           ^{:key nimi}
-           [kentta (assoc s
-                    :col-luokka col-luokka
-                    :focus (= nimi nykyinen-fokus)
-                    :on-focus #(aseta-fokus! nimi))
-           data atom-fn muokattava? muokkaa
-           (get muokatut nimi)
-           (get virheet nimi)
-           (get varoitukset nimi)
-           (get huomautukset nimi)]
-           ^{:key (hash s)}
-           [:div.row.lomakerivi s])))]))
+         ^{:key nimi}
+         [kentta (assoc s
+                   :col-luokka col-luokka
+                   :focus (= nimi nykyinen-fokus)
+                   :on-focus #(aseta-fokus! nimi))
+          data atom-fn muokattava? muokkaa
+          (get muokatut nimi)
+          (get virheet nimi)
+          (get varoitukset nimi)
+          (get huomautukset nimi)]))]))
 
 (defn validoi [tiedot skeema]
   (let [kaikki-skeemat (pura-ryhmat skeema)
