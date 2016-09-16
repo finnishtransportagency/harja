@@ -33,37 +33,40 @@
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
+(defn testaa-turpon-sanoman-muodostus [id]
+  (let [testiliite-polku (str "/tmp/harja_" (hash (t/now)) ".txt")
+        testiliite-tiedosto (do
+                              (.createNewFile (File. testiliite-polku))
+                              (spit testiliite-polku "testi")
+                              (File. testiliite-polku))
+        liite (liitteet/luo-liite
+                (:liitteiden-hallinta jarjestelma)
+                1
+                (hae-oulun-alueurakan-2014-2019-id)
+                "seppo.txt"
+                "text/plain"
+                100
+                testiliite-tiedosto
+                "Muhkea liite!"
+                "harja-api")
+        _ (u (str "INSERT INTO
+                   turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
+                  VALUES (" id "," (:id liite) ");"))
+        data (turi/hae-turvallisuuspoikkeama
+               (:liitteiden-hallinta jarjestelma)
+               (:db jarjestelma)
+               id)
+        xml (sanoma/muodosta data)]
+    (log/debug "Aloitetaan sanoman validointi: " (pr-str xml))
+    (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
+    (.delete testiliite-tiedosto)))
 
-(deftest tarkista-sanoman-muodostus
+(deftest sanoman-muodostus-toimii-yhdelle-turpolle
+  (let [id (first (flatten (q "SELECT id FROM turvallisuuspoikkeama")))]
+    (testaa-turpon-sanoman-muodostus id)))
+
+(deftest sanomien-muodostus-toimii-kaikille-turpoille
   (let [turpo-idt (sort (flatten (q "SELECT id FROM turvallisuuspoikkeama")))]
     (log/debug "Validoidaan turpo-idt: " (pr-str turpo-idt))
     (doseq [id turpo-idt]
-      (log/debug "Validoidaan id:" id)
-      (let [liitteet (luo-liitteidenhallinta)
-            db (luo-testitietokanta)
-            testiliite-polku (str "/tmp/harja_" (hash (t/now)) ".txt")
-            testiliite-tiedosto (do
-                                  (.createNewFile (File. testiliite-polku))
-                                  (spit testiliite-polku "testi")
-                                  (File. testiliite-polku))
-            liite (liitteet/luo-liite
-                    (:liitteiden-hallinta jarjestelma)
-                    1
-                    (hae-oulun-alueurakan-2014-2019-id)
-                    "seppo.txt"
-                    "text/plain"
-                    100
-                    testiliite-tiedosto
-                    "Muhkea liite!"
-                    "harja-api")
-            ;_ (u (str "INSERT INTO
-            ;       turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
-            ;      VALUES (" id "," (:id liite) ");"))
-            data (turi/hae-turvallisuuspoikkeama
-                   liitteet
-                   db
-                   id)
-            xml (sanoma/muodosta data)]
-        (log/debug "Data on: " (pr-str xml))
-        (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
-        (.delete testiliite-tiedosto)))))
+      (testaa-turpon-sanoman-muodostus id))))
