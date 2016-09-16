@@ -103,12 +103,15 @@
                                      (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
                                        :ei-valittu
                                        :osittain-valittu)))]
-     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom {:keys [luokka sisallon-luokka otsikon-luokka] :as optiot}]
+     (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom {:keys [luokka sisallon-luokka otsikon-luokka
+                                                                     nayta-lkm?] :as optiot}]
        (let [ryhman-elementtien-avaimet (or (get-in tk/tehtavien-jarjestys ryhma-polku)
                                             (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
              auki? (fn [] (or @oma-auki-tila
                               (and kokoelma-atom
-                                   (= otsikko @kokoelma-atom))))]
+                                   (= otsikko @kokoelma-atom))))
+             valittujen-lkm (count (filter true? (vals (get-in @suodattimet-atom ryhma-polku))))
+             kokonais-lkm (count (vals (get-in @suodattimet-atom ryhma-polku)))]
          (when-not (empty? ryhman-elementtien-avaimet)
            [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
             [:div
@@ -128,7 +131,7 @@
               (if (auki?)
                 (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
              [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
-              [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
+              [checkbox/checkbox ryhmanjohtaja-tila-atom (str otsikko (when nayta-lkm? (str " (" valittujen-lkm "/" kokonais-lkm ")")))
                {:otsikon-luokka otsikon-luokka
                 :on-change (fn [uusi-tila]
                              ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
@@ -205,6 +208,7 @@
               [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] nil {:luokka "taustavari-taso3 ylaraja"
                                                                                          :sisallon-luokka "taustavari-taso4"
                                                                                          :otsikon-luokka "fontti-taso3"
+                                                                                         :nayta-lkm? true
                                                                                          :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi alue]) false)}]))]]))))
 
 (defn- aluesuodattimet []
@@ -235,45 +239,38 @@
                 [tyypin-aluesuodattimet urakkatyyppi]))])]))))
 
 (defn- aikasuodattimet []
-  [asetuskokoelma
-   (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
-                              " (max. yksi vuosi):"))
-   {:salli-piilotus? false
-    :luokka          "taustavari-taso0"}
-   [:div
-    (when (= :nykytilanne @tiedot/valittu-tila)
-      [nykytilanteen-aikavalinnat])
-    (when (= :historiakuva @tiedot/valittu-tila)
-      [historiankuvan-aikavalinnat])
-    [:div.tk-yksittaiset-suodattimet.fontti-taso3
-     [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
-      tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
-      auki-oleva-checkbox-ryhma]]
-    [:div {:class "tk-suodatinryhmat"}
-     [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
-                                                                                                                :otsikon-luokka  "fontti-taso3"
-                                                                                                                :sisallon-luokka "taustavari-taso4"
-                                                                                                                :auki-atomi?     (paneelin-tila-atomi! (str [:ilmoitukset :tyypit]) false)}]
-     [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
-                                                                                                  :otsikon-luokka  "fontti-taso3"
-                                                                                                  :sisallon-luokka "taustavari-taso4"
-                                                                                                  :auki-atomi?     (paneelin-tila-atomi! (str [:yllapito]) false)}]
-     [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
-                                                                                                     :otsikon-luokka "fontti-taso3"
-                                                                                                     :sisallon-luokka "taustavari-taso4"
-                                                                                                     :auki-atomi? (paneelin-tila-atomi! (str [:talvi]) false)}]
-     [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
-                                                                                                   :otsikon-luokka "fontti-taso3"
-                                                                                                   :sisallon-luokka "taustavari-taso4"
-                                                                                                   :auki-atomi? (paneelin-tila-atomi! (str [:kesa]) false)}]
-     [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 ylaraja"
-                                                                                                                :otsikon-luokka "fontti-taso3"
-                                                                                                                :sisallon-luokka "taustavari-taso4"
-                                                                                                                :auki-atomi? (paneelin-tila-atomi! (str [:laatupoikkeamat]) false)}]
-     [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma {:luokka          "taustavari-taso3 yla-ja-alaraja"
-                                                                                                          :otsikon-luokka "fontti-taso3"
-                                                                                                          :sisallon-luokka "taustavari-taso4"
-                                                                                                          :auki-atomi? (paneelin-tila-atomi! (str [:tarkastukset]) false)}]]]])
+  (let [yleiset-asetukset {:luokka          "taustavari-taso3 ylaraja"
+                           :otsikon-luokka  "fontti-taso3"
+                           :sisallon-luokka "taustavari-taso4"
+                           :nayta-lkm? false}]
+    [asetuskokoelma
+    (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
+                               " (max. yksi vuosi):"))
+    {:salli-piilotus? false
+     :luokka          "taustavari-taso0"}
+    [:div
+     (when (= :nykytilanne @tiedot/valittu-tila)
+       [nykytilanteen-aikavalinnat])
+     (when (= :historiakuva @tiedot/valittu-tila)
+       [historiankuvan-aikavalinnat])
+     [:div.tk-yksittaiset-suodattimet.fontti-taso3
+      [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
+       tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
+       auki-oleva-checkbox-ryhma]]
+     [:div {:class "tk-suodatinryhmat"}
+      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:ilmoitukset :tyypit]) false)})]
+      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:yllapito]) false)})]
+      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:talvi]) false)})]
+      [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:kesa]) false)})]
+      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:laatupoikkeamat]) false)})]
+      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:tarkastukset]) false)
+                                 :luokka "taustavari-taso3 yla-ja-alaraja"})]]]]))
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]
