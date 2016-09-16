@@ -207,9 +207,9 @@
             tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))]
         [asetuskokoelma
          (cond
-           ensimmainen-haku-kaynnissa? "Haetaan alueita"
-           onko-alueita? "Näytä alueilta"
-           :else "Ei näytettäviä alueita")
+           ensimmainen-haku-kaynnissa? "Haetaan urakoita"
+           onko-alueita? "Hae urakoista"
+           :else "Ei näytettäviä urakoita")
          {:salli-piilotus? true
           :oletuksena-auki? true
           :luokka "taustavari-taso1 eroa-huipulla ylaraja"
