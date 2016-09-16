@@ -215,13 +215,13 @@
     :valaistusurakoiden-shapefile
     valaistusurakoiden-tuonti/vie-urakat-kantaan))
 
-(def tee-valaistusurakoiden-alk-paivitystehtava
+(def tee-paallystyspalvelusopimusten-alk-paivitystehtava
   (maarittele-alk-paivitystehtava
-    "valaistusurakat"
-    :valaistusurakoiden-alk-osoite
-    :valaistusurakoiden-alk-tuontikohde
-    :valaistusurakoiden-shapefile
-    valaistusurakoiden-tuonti/vie-urakat-kantaan))
+    "paallystyspalvelusopimukset"
+    :paallystyspalvelusopimusten-alk-osoite
+    :paallystyspalvelusopimusten-alk-tuontikohde
+    :paallystyspalvelusopimusten-shapefile
+    paallystyspalvelusopimusten-tuonti/vie-urakat-kantaan))
 
 (def tee-paallystyspalvelusopimusten-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
@@ -251,8 +251,8 @@
       :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset)
       :valaistusurakoiden-hakutehtava (tee-valaistusurakoiden-alk-paivitystehtava this asetukset)
       :valaistusurakoiden-paivitystehtava (tee-valaistusurakoiden-paikallinen-paivitystehtava this asetukset)
-      :paallystyspalvelusopimusten-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset)
-      :paallystyspalvelusopimusten-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset)))
+      :paallystyspalvelusopimusten-hakutehtava (tee-paallystyspalvelusopimusten-alk-paivitystehtava this asetukset)
+      :paallystyspalvelusopimusten-paivitystehtava (tee-paallystyspalvelusopimusten-paikallinen-paivitystehtava this asetukset)))
 
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
