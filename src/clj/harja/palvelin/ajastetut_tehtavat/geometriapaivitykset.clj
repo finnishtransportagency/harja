@@ -16,7 +16,8 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.talvihoidon-hoitoluokat :as talvihoidon-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.alueurakat :as urakoiden-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.elyt :as elyjen-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.valaistusurakat :as valaistusurakoiden-tuonti])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.valaistusurakat :as valaistusurakoiden-tuonti]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
            (java.sql Timestamp)))
@@ -214,6 +215,22 @@
     :valaistusurakoiden-shapefile
     valaistusurakoiden-tuonti/vie-urakat-kantaan))
 
+(def tee-valaistusurakoiden-alk-paivitystehtava
+  (maarittele-alk-paivitystehtava
+    "valaistusurakat"
+    :valaistusurakoiden-alk-osoite
+    :valaistusurakoiden-alk-tuontikohde
+    :valaistusurakoiden-shapefile
+    valaistusurakoiden-tuonti/vie-urakat-kantaan))
+
+(def tee-paallystyspalvelusopimusten-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "paallystyspalvelusopimukset"
+    :paallystyspalvelusopimusten-alk-osoite
+    :paallystyspalvelusopimusten-alk-tuontikohde
+    :paallystyspalvelusopimusten-shapefile
+    paallystyspalvelusopimusten-tuonti/vie-urakat-kantaan))
+
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
@@ -233,7 +250,9 @@
       :elyjen-hakutehtava (tee-elyjen-alk-paivitystehtava this asetukset)
       :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset)
       :valaistusurakoiden-hakutehtava (tee-valaistusurakoiden-alk-paivitystehtava this asetukset)
-      :valaistusurakoiden-paivitystehtava (tee-valaistusurakoiden-paikallinen-paivitystehtava this asetukset)))
+      :valaistusurakoiden-paivitystehtava (tee-valaistusurakoiden-paikallinen-paivitystehtava this asetukset)
+      :paallystyspalvelusopimusten-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset)
+      :paallystyspalvelusopimusten-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset)))
 
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
