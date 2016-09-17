@@ -52,9 +52,9 @@
   (update-in acc [:lets] into [user `(:kayttaja ~'+compojure-api-request+)]))
 
 (defn poikkeuskasittelija [^Exception e data req]
-  (log/error "Virhe " (.getMessage e))
+  (log/error e "Virhe " (.getMessage e))
   (when-let [next-ex (.getNextException e)]
-    (log/error "-- Sisempi virhe " (.getMessage next-ex)))
+    (log/error next-ex "-- Sisempi virhe " (.getMessage next-ex)))
   (internal-server-error {:error (.getMessage e)}))
 
 (defn select-non-nil-keys [c keys]
