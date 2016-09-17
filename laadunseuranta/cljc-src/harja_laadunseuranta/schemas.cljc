@@ -82,4 +82,5 @@
    :aet s/Int})
 
 (def TarkastuksenPaattaminen
-  {:tarkastusajo {:id s/Int}})
+  {:urakka (s/maybe s/Int)
+   :tarkastusajo {:id s/Int}})
