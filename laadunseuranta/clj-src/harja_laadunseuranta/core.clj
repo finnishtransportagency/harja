@@ -18,7 +18,8 @@
             [compojure.route :as route]
             [compojure.api.exception :as ex]
             [clojure.java.io :as io]
-            [clojure.data.codec.base64 :as b64])
+            [clojure.data.codec.base64 :as b64]
+            [com.stuartsierra.component :as component])
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
@@ -195,22 +196,18 @@
   (route/resources "/" {:root "public/laadunseuranta"})
   (route/not-found "Page not found"))
 
-(defonce server (atom nil))
-
-(defn stop-server []
-  (when-not (nil? @server)
-    (@server :timeout 2000)
-    (reset! server nil)))
-
-(defn- alusta-logitus []
-  (when-let [gelf (:gelf @c/config)]
-    (log/merge-config! {:appenders {:gelf (assoc gt/gelf-appender :min-level (:taso gelf))}
-                        :shared-appender-config {:gelf {:host (:palvelin gelf)}}})))
 
 (defn start-server []
-  (alusta-logitus)
   (log/info "Harja-laadunseuranta käynnistyy")
-  (reset! server (server/run-server #'app (:http-palvelin @c/config))))
+  (server/run-server #'app (:http-palvelin @c/config)))
 
-(defn -main []
-  (start-server))
+(defrecord Laadunseuranta [asetukset]
+  component/Lifecycle
+  (start [{db :db :as this}]
+    (c/aseta-config! asetukset)
+    (tietokanta/aseta-tietokanta! db)
+    (assoc this ::sulje-palvelin (start-server)))
+
+  (stop [{sulje ::sulje-palvelin :as this}]
+    (sulje)
+    (dissoc this ::sulje-palvelin)))

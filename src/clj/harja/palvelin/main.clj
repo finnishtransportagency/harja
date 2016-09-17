@@ -94,13 +94,18 @@
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
 
+
+    ;; Harja mobiili Laadunseuranta
+    [harja-laadunseuranta.core :as harja-laadunseuranta]
+
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
      :refer [lue-asetukset konfiguroi-lokitus validoi-asetukset]])
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi
+                laadunseuranta]} asetukset]
     (konfiguroi-lokitus asetukset)
     (try
       (validoi-asetukset asetukset)
@@ -393,7 +398,12 @@
 
       :status (component/using
                (status/luo-status)
-               [:http-palvelin :db :db-replica :sonja]))))
+               [:http-palvelin :db :db-replica :sonja])
+
+      :harja-laadunseuranta
+      (component/using
+       (harja-laadunseuranta/->Laadunseuranta laadunseuranta)
+       [:db]))))
 
 (defonce harja-jarjestelma nil)
 
