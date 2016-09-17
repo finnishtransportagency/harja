@@ -84,7 +84,8 @@
           merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
           tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
                            (tarkastukset/lisaa-tarkastuksille-urakka-id urakka-id))]
-      (tarkastukset/tallenna-tarkastukset! tarkastukset kayttaja)
+      (log/debug "Tallennetaan tarkastus urakkaan " urakka-id)
+      (tarkastukset/tallenna-tarkastukset! tx tarkastukset kayttaja)
       (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))))
 
 (defn- tarkastustyypiksi [tyyppi]

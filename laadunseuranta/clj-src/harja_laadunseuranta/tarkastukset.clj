@@ -264,10 +264,9 @@
                                     {:tarkastus tarkastus-id
                                      :liite (:liite tarkastus)}))))
 
-(defn tallenna-tarkastukset! [tarkastukset kayttaja]
+(defn tallenna-tarkastukset! [db tarkastukset kayttaja]
   (let [kaikki-tarkastukset (reduce conj
                                     (:pistemaiset-tarkastukset tarkastukset)
                                     (:reitilliset-tarkastukset tarkastukset))]
     (doseq [tarkastus kaikki-tarkastukset]
-     (tallenna-tarkastus! @db tarkastus
-                          kayttaja))))
+     (tallenna-tarkastus! db tarkastus kayttaja))))
