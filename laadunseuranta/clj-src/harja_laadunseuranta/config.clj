@@ -3,4 +3,7 @@
 
 (def +asetustiedosto+ "laadunseuranta/laadunseuranta_asetukset.edn")
 
-(def config (delay (edn/read-string (slurp +asetustiedosto+))))
+(def config (atom nil))
+
+(defn aseta-config! [c]
+  (reset! config c))
