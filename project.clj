@@ -127,7 +127,7 @@
                  [compojure "1.5.0"]
                  [metosin/compojure-api "1.0.1"]
                  [org.clojure/data.codec "0.1.0"]
-
+                 [devcards "0.2.1-4" :exclusions [cljsjs/react]]
 
                  ]
 
@@ -206,6 +206,59 @@
                                :libs ["src/js/kuvataso.js"]
                                :closure-output-charset "US-ASCII"
                                }}
+
+               ;; Laadunseurannan buildit
+               {:id "laadunseuranta-dev"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
+                               "laadunseuranta/test-src/cljs"]
+
+                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
+
+                :compiler {:main harja-laadunseuranta.dev-core
+                           :asset-path "js/compiled/out"
+                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
+                           :output-dir "resources/public/laadunseuranta/js/compiled/out"
+                           :source-map-timestamp true}}
+
+               {:id "laadunseuranta-devcards"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+
+                :figwheel {:devcards true
+                                        ;:nrepl-port 7889
+                                        ;:server-port 3450
+                           }
+
+                :compiler {:main harja-laadunseuranta.devcards-core
+                           :asset-path "js/compiled/devcards_out"
+                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_devcards.js"
+                           :output-dir "resources/public/laadunseuranta/js/compiled/devcards_out"
+                           :source-map-timestamp true}}
+
+               {:id "laadunseuranta-test"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
+                               "laadunseuranta/test-src/cljs"]
+
+                :compiler {:main harja-laadunseuranta.test-main
+                           ;;:asset-path "laadunseuranta/js/out"
+                           :output-to "resources/private/laadunseuranta/js/unit-test.js"
+                           ;;:output-dir "resources/private/laadunseuranta/js/out"
+                           :source-map-timestamp true}}
+
+               ;; This next build is an compressed minified build for
+               ;; production. You can build this with:
+               ;; lein cljsbuild once min
+               {:id "laadunseuranta-min"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+                :jar true
+                :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
+                           :closure-extra-annotations #{"api" "observable"}
+                           :main harja-laadunseuranta.prod-core
+                           :optimizations :advanced
+                           :language-in  :ecmascript5
+                           :language-out :ecmascript5
+                           :externs ["laadunseuranta/externs.js"]
+                           :parallel-build true
+                           :pretty-print false}}
 
                ]}
 
