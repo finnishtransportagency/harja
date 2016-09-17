@@ -3,33 +3,33 @@
                :cljs [schema.core :as s :include-macros true])))
 
 (defn validi-lumisuus? [arvo]
-  (<= 0 arvo 100))
+  (and (number? arvo) (<= 0 arvo 100)))
 
 (defn validi-tasaisuus? [arvo]
-  (<= 0 arvo 100))
+  (and (number? arvo) (<= 0 arvo 100)))
 
 (defn validi-kiinteys? [arvo]
-  (<= 1 arvo 5))
+  (and (number? arvo) (<= 1 arvo 5)))
 
 (defn validi-polyavyys? [arvo]
-  (<= 1 arvo 5))
+  (and (number? arvo) (<= 1 arvo 5)))
 
 (defn validi-kitka? [arvo]
-  (<= 0 arvo 1))
+  (and (number? arvo) (<= 0 arvo 1)))
 
 (defn validi-sivukaltevuus? [arvo]
-  (<= 0 arvo 100))
+  (and (number? arvo) (<= 0 arvo 100)))
 
 (defn validi-sijainti? [arvo]
   (and (= 2 (count arvo))
        (every? #(= 2 (count %)) arvo)))
 
-(def Lumisuus (s/both s/Num (s/pred validi-lumisuus?)))
-(def Tasaisuus (s/both s/Num (s/pred validi-tasaisuus?)))
-(def Kitka (s/both s/Num (s/pred validi-kitka?)))
-(def Kiinteys (s/both s/Num (s/pred validi-kiinteys?)))
-(def Polyavyys (s/both s/Num (s/pred validi-polyavyys?)))
-(def Sivukaltevuus (s/both s/Num (s/pred validi-sivukaltevuus?)))
+(def Lumisuus (s/pred validi-lumisuus?))
+(def Tasaisuus (s/pred validi-tasaisuus?))
+(def Kitka (s/pred validi-kitka?))
+(def Kiinteys (s/pred validi-kiinteys?))
+(def Polyavyys (s/pred validi-polyavyys?))
+(def Sivukaltevuus (s/pred validi-sivukaltevuus?))
 
 (def Sijainti {:lon s/Num
                :lat s/Num})
