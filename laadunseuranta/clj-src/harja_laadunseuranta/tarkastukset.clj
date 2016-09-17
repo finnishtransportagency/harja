@@ -241,27 +241,28 @@
 
 (defn- tallenna-tarkastus! [tarkastus kayttaja]
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
-        geometria (:geom (first (q/tr-osoitteelle-viiva tarkastus {:connection @db})))
+        geometria (:geom (first (q/tr-osoitteelle-viiva @db
+                                                        tarkastus )))
         tarkastus (assoc tarkastus :sijainti geometria)
-        tarkastus-id (:id (q/luo-uusi-tarkastus<! (merge tarkastus
-                                                         {:luoja (:id kayttaja)})
-                                                  {:connection @db}))]
+        tarkastus-id (:id (q/luo-uusi-tarkastus<! @db
+                                                  (merge tarkastus
+                                                         {:luoja (:id kayttaja)})))]
     (doseq [vakiohavainto-id (:vakiohavainnot tarkastus)]
-      (q/luo-uusi-tarkastuksen-vakiohavainto<! {:tarkastus tarkastus-id
-                                                :vakiohavainto vakiohavainto-id}
-                                               {:connection @db}))
+      (q/luo-uusi-tarkastuksen-vakiohavainto<! @db
+                                               {:tarkastus tarkastus-id
+                                                :vakiohavainto vakiohavainto-id}))
     (when (:talvihoitomittaus tarkastus)
-      (q/luo-uusi-talvihoitomittaus<! (merge (:talvihoitomittaus tarkastus)
-                                             {:tarkastus tarkastus-id})
-                                      {:connection @db}))
+      (q/luo-uusi-talvihoitomittaus<! @db
+                                      (merge (:talvihoitomittaus tarkastus)
+                                             {:tarkastus tarkastus-id})))
     (when (:soratiemittaus tarkastus)
-      (q/luo-uusi-soratiemittaus<! (merge (:soratiemittaus tarkastus)
-                                          {:tarkastus tarkastus-id})
-                                   {:connection @db}))
+      (q/luo-uusi-soratiemittaus<! @db
+                                   (merge (:soratiemittaus tarkastus)
+                                          {:tarkastus tarkastus-id})))
     (when (:liite tarkastus)
-      (q/luo-uusi-tarkastus-liite<! {:tarkastus tarkastus-id
-                                     :liite (:liite tarkastus)}
-                                    {:connection @db}))))
+      (q/luo-uusi-tarkastus-liite<! @db
+                                    {:tarkastus tarkastus-id
+                                     :liite (:liite tarkastus)}))))
 
 (defn tallenna-tarkastukset! [tarkastukset kayttaja]
   (let [kaikki-tarkastukset (reduce conj

@@ -1,5 +1,5 @@
 (ns harja-laadunseuranta.kyselyt
-  (:require [yesql.core :refer [defqueries]]
+  (:require [jeesql.core :refer [defqueries]]
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [taoensso.timbre :as log]))
 
@@ -7,7 +7,7 @@
 
 (def db tietokanta/db)
 
-(def jatkuvat-vakiohavainto-idt (delay (into #{} (map :id (hae-jatkuvat-vakiohavainto-idt nil {:connection @db})))))
+(def jatkuvat-vakiohavainto-idt (delay (into #{} (map :id (hae-jatkuvat-vakiohavainto-idt nil @db)))))
 
 (defn jatkuvat-havainnot [havainnot]
   (filterv @jatkuvat-vakiohavainto-idt havainnot))
@@ -31,15 +31,15 @@
 
 (defn hae-vakiohavaintojen-kuvaukset [db]
   (into {} (mapv (fn [r] [(keyword (:avain r)) (:nimi r)])
-                 (hae-pistemaiset-vakiohavainnot {} {:connection db}))))
+                 (hae-pistemaiset-vakiohavainnot db))))
 
 (defn hae-vakiohavaintoavaimet [db]
   (into {} (mapv (fn [r] [(keyword (:avain r)) (:id r)])
-                 (hae-vakiohavaintojen-avaimet {} {:connection db}))))
+                 (hae-vakiohavaintojen-avaimet db))))
 
 (defn hae-vakiohavaintoidt [db]
   (into {} (mapv (fn [r] [(:id r) (keyword (:avain r))])
-                 (hae-vakiohavaintojen-avaimet {} {:connection db}))))
+                 (hae-vakiohavaintojen-avaimet db))))
 
 
 (def vakiohavainto-idt (delay (try

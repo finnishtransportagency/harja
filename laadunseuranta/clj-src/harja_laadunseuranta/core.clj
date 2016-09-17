@@ -25,44 +25,41 @@
 (def db tietokanta/db)
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
-  (q/tallenna-reittimerkinta! {:id (:id merkinta)
-                               :tarkastusajo (:tarkastusajo merkinta)
-                               :aikaleima (:aikaleima merkinta)
-                               :x (:lon (:sijainti merkinta))
-                               :y (:lat (:sijainti merkinta))
-                               :lampotila (get-in merkinta [:mittaukset :lampotila])
-                               :lumisuus (get-in merkinta [:mittaukset :lumisuus])
-                               :tasaisuus (get-in merkinta [:mittaukset :tasaisuus])
-                               :kitkamittaus (get-in merkinta [:mittaukset :kitkamittaus])
-                               :kiinteys (get-in merkinta [:mittaukset :kiinteys])
-                               :polyavyys (get-in merkinta [:mittaukset :polyavyys])
-                               :sivukaltevuus (get-in merkinta [:mittaukset :sivukaltevuus])
-                               :havainnot (mapv vakiohavainto-idt (:havainnot merkinta))
-                               :kuvaus (get-in merkinta [:kuvaus])
-                               :laadunalitus (get-in merkinta [:laadunalitus])
-                               :kuva (get-in merkinta [:kuva])}
-                              {:connection tx}))
+  (q/tallenna-reittimerkinta! tx {:id            (:id merkinta)
+                                  :tarkastusajo  (:tarkastusajo merkinta)
+                                  :aikaleima     (:aikaleima merkinta)
+                                  :x             (:lon (:sijainti merkinta))
+                                  :y             (:lat (:sijainti merkinta))
+                                  :lampotila     (get-in merkinta [:mittaukset :lampotila])
+                                  :lumisuus      (get-in merkinta [:mittaukset :lumisuus])
+                                  :tasaisuus     (get-in merkinta [:mittaukset :tasaisuus])
+                                  :kitkamittaus  (get-in merkinta [:mittaukset :kitkamittaus])
+                                  :kiinteys      (get-in merkinta [:mittaukset :kiinteys])
+                                  :polyavyys     (get-in merkinta [:mittaukset :polyavyys])
+                                  :sivukaltevuus (get-in merkinta [:mittaukset :sivukaltevuus])
+                                  :havainnot     (mapv vakiohavainto-idt (:havainnot merkinta))
+                                  :kuvaus        (get-in merkinta [:kuvaus])
+                                  :laadunalitus  (get-in merkinta [:laadunalitus])
+                                  :kuva          (get-in merkinta [:kuva])}))
 
 (defn- tallenna-kuva! [tx {:keys [data mime-type]} kayttaja-id]
   (let [decoded-data (b64/decode (.getBytes data "UTF-8"))
         oid (tietokanta/tallenna-lob (io/input-stream decoded-data))]
-    (:id (q/tallenna-kuva<! {:lahde "harja-ls-mobiili"
-                             :tyyppi mime-type
-                             :koko (count decoded-data)
-                             :pikkukuva (tietokanta/tee-thumbnail decoded-data)
-                             :oid oid
-                             :luoja kayttaja-id}
-                            {:connection tx}))))
+    (:id (q/tallenna-kuva<! tx {:lahde "harja-ls-mobiili"
+                                :tyyppi mime-type
+                                :koko (count decoded-data)
+                                :pikkukuva (tietokanta/tee-thumbnail decoded-data)
+                                :oid oid
+                                :luoja kayttaja-id}))))
 
 (defn- tallenna-multipart-kuva! [tx {:keys [tempfile content-type size]} kayttaja-id]
   (let [oid (tietokanta/tallenna-lob (io/input-stream tempfile))]
-    (:id (q/tallenna-kuva<! {:lahde "harja-ls-mobiili"
-                             :tyyppi content-type
-                             :koko size
-                             :pikkukuva (tietokanta/tee-thumbnail tempfile)
-                             :oid oid
-                             :luoja kayttaja-id}
-                            {:connection tx}))))
+    (:id (q/tallenna-kuva<! tx {:lahde "harja-ls-mobiili"
+                                :tyyppi content-type
+                                :koko size
+                                :pikkukuva (tietokanta/tee-thumbnail tempfile)
+                                :oid oid
+                                :luoja kayttaja-id}))))
 
 (defn- tallenna-merkinnat! [kirjaukset kayttaja-id]
   (jdbc/with-db-transaction [tx @db]
@@ -71,18 +68,15 @@
         (tallenna-merkinta! tx vakiohavainto-idt merkinta)))))
 
 (defn merkitse-ajo-paattyneeksi! [tx tarkastusajo-id kayttaja]
-  (q/paata-tarkastusajo! {:id tarkastusajo-id
-                          :kayttaja (:id kayttaja)}
-                         {:connection tx}))
+  (q/paata-tarkastusajo! tx {:id tarkastusajo-id
+                             :kayttaja (:id kayttaja)}))
 
 (defn- paata-tarkastusajo! [tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx @db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
-          urakka-id (:id (first (q/paattele-urakka {:tarkastusajo tarkastusajo-id}
-                                                   {:connection tx})))
-          merkinnat (q/hae-reitin-merkinnat {:tarkastusajo tarkastusajo-id
-                                             :treshold 100}
-                                            {:connection tx})
+          urakka-id (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id})))
+          merkinnat (q/hae-reitin-merkinnat tx {:tarkastusajo tarkastusajo-id
+                                                :treshold 100})
           merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
           tarkastukset (-> (tarkastukset/reittimerkinnat-tarkastuksiksi merkinnat-tr-osoitteilla)
                            (tarkastukset/lisaa-tarkastuksille-urakka-id urakka-id))]
@@ -98,17 +92,15 @@
     0))
 
 (defn- luo-uusi-tarkastusajo! [tiedot kayttaja]
-  (q/luo-uusi-tarkastusajo<! {:ulkoinen_id 0
-                              :kayttaja (:id kayttaja)
-                              :tyyppi (tarkastustyypiksi (-> tiedot :tyyppi))}
-                             {:connection @db}))
+  (q/luo-uusi-tarkastusajo<! @db {:ulkoinen_id 0
+                                  :kayttaja (:id kayttaja)
+                                  :tyyppi (tarkastustyypiksi (-> tiedot :tyyppi))}))
 
 (defn- hae-tr-osoite [lat lon treshold]
   (try
-    (first (q/hae-tr-osoite {:y lat
-                             :x lon
-                             :treshold treshold}
-                            {:connection @db}))
+    (first (q/hae-tr-osoite @db {:y lat
+                                 :x lon
+                                 :treshold treshold}))
     (catch Exception e
       nil)))
 
@@ -116,18 +108,17 @@
   (let [pos {:y lat
              :x lon
              :treshold treshold}
-        talvihoitoluokka (q/hae-pisteen-hoitoluokka (assoc pos :tietolaji "talvihoito")
-                                                    {:connection @db})
-        soratiehoitoluokka (q/hae-pisteen-hoitoluokka (assoc pos :tietolaji "soratie")
-                                                      {:connection @db})]
+        talvihoitoluokka (q/hae-pisteen-hoitoluokka @db (assoc pos :tietolaji "talvihoito")
+                                                    )
+        soratiehoitoluokka (q/hae-pisteen-hoitoluokka @db (assoc pos :tietolaji "soratie")
+                                                      )]
     {:talvihoitoluokka (:hoitoluokka_pisteelle (first talvihoitoluokka))
      :soratiehoitoluokka (:hoitoluokka_pisteelle (first soratiehoitoluokka))
      :tr-osoite (hae-tr-osoite lat lon treshold)}))
 
 (defn- hae-urakkatyypin-urakat [urakkatyyppi kayttaja]
   (println "hae ur tyyypin urakat, kayttaja " kayttaja)
-  (let [urakat (q/hae-urakkatyypin-urakat {:tyyppi urakkatyyppi}
-                                           {:connection @db})]
+  (let [urakat (q/hae-urakkatyypin-urakat @db {:tyyppi urakkatyyppi})]
     urakat))
 
 (defapi laadunseuranta-api
@@ -185,8 +176,7 @@
                  :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset @db)})))
 
 (defn- lataa-kayttaja [kayttajanimi]
-  (first (q/hae-kayttajatiedot {:kayttajanimi kayttajanimi}
-                               {:connection @db})))
+  (first (q/hae-kayttajatiedot @db {:kayttajanimi kayttajanimi})))
 
 (defn- tallenna-liite [req]
   (jdbc/with-db-transaction [tx @db]
@@ -202,7 +192,7 @@
   (middleware [(partial utils/wrap-kayttajatarkistus lataa-kayttaja)
                wrap-multipart-params]
               (POST "/tallenna-liite" req tallenna-liite))
-  (route/resources "/")
+  (route/resources "/" {:root "public/laadunseuranta"})
   (route/not-found "Page not found"))
 
 (defonce server (atom nil))
@@ -220,7 +210,7 @@
 (defn start-server []
   (alusta-logitus)
   (log/info "Harja-laadunseuranta käynnistyy")
-  (server/run-server #'app (:http-palvelin @c/config)))
+  (reset! server (server/run-server #'app (:http-palvelin @c/config))))
 
 (defn -main []
   (start-server))

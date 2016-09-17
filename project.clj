@@ -122,6 +122,13 @@
 
                  ;; Tuck UI apuri
                  [webjure/tuck "0.2.1"]
+
+                 ;; Laadunseurantatyökalua varten
+                 [compojure "1.5.0"]
+                 [metosin/compojure-api "1.0.1"]
+                 [org.clojure/data.codec "0.1.0"]
+
+
                  ]
 
 
@@ -212,7 +219,7 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc"]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src"]
   :test-paths ["test/clj"]
   :aot :all
   :main harja.palvelin.main
