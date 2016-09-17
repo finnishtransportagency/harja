@@ -17,16 +17,18 @@
                            :aosa 4
                            :aet 3000})
           kuva (atom nil)]
-      (with-component [ylapalkki/ylapalkkikomponentti {:tiedot-nakyvissa (atom false)
-                                                       :hoitoluokka (atom "Ia")
-                                                       :soratiehoitoluokka (atom "5")
-                                                       :tr-osoite tr-osoite
-                                                       :kiinteistorajat (atom false)
-                                                       :ortokuva (atom false)
-                                                       :tallennus-kaynnissa (atom false)
-                                                       :tallennustilaa-muutetaan kuva
-                                                       :keskita-ajoneuvoon (atom false)
-                                                       :disabloi-kaynnistys? (atom false)}]
+      (with-component [ylapalkki/ylapalkkikomponentti
+                       {:tiedot-nakyvissa (atom false)
+                        :hoitoluokka (atom "Ia")
+                        :soratiehoitoluokka (atom "5")
+                        :tr-osoite tr-osoite
+                        :kiinteistorajat (atom false)
+                        :ortokuva (atom false)
+                        :tallennus-kaynnissa (atom false)
+                        :tallennustilaa-muutetaan kuva
+                        :keskita-ajoneuvoon (atom false)
+                        :disabloi-kaynnistys? (atom false)
+                        :valittu-urakka (atom {:nimi "Foo" :id 666})}]
         (let [palkki-div (sel1 [:div.tr-osoite])
               hoitoluokka-div (sel1 [:div.soratiehoitoluokka])
               talvihoitoluokka-div (sel1 [:div.talvihoitoluokka])]
