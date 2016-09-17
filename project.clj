@@ -301,7 +301,11 @@
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
   :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
-            "testit"             ["do" "clean," "deps," "test," "doo" "phantom" "test" "once"]
+            "testit"             ["do" "clean,"
+                                  "deps,"
+                                  "test,"
+                                  "doo" "phantom" "test" "once,"
+                                  "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt"                ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
