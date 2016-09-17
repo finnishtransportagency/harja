@@ -177,9 +177,6 @@
                  :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
                  :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset @db)})))
 
-(defn- lataa-kayttaja [kayttajanimi]
-  (first (q/hae-kayttajatiedot @db {:kayttajanimi kayttajanimi})))
-
 (defn- tallenna-liite [req]
   (jdbc/with-db-transaction [tx @db]
     (let [id (tallenna-multipart-kuva! tx (get-in req [:multipart-params "liite"]) (get-in req [:kayttaja :id]))]
