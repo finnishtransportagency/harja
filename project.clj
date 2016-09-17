@@ -279,7 +279,7 @@
 
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src"]
-  :test-paths ["test/clj"]
+  :test-paths ["test/clj" "laadunseuranta/test-src/clj"]
   :aot :all
   :main harja.palvelin.main
   :auto-clean false                                         ;; for uberjar
