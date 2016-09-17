@@ -38,7 +38,7 @@
                                              (:loppuosa korjattu-osoite)
                                              (:loppuetaisyys korjattu-osoite))]
     (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
-    (mapv geo/pg->clj (mapv :tierekisteriosoitteelle_viiva geom))))
+    [(geo/pg->clj geom)]))
 
 (defn hae-tr-piste
   "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"

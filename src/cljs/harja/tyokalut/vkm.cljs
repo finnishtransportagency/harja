@@ -43,7 +43,9 @@
             (.setAttribute "type" "text/javascript")
             (.setAttribute "src" kutsu-url))
         ch (chan)
-        tulos #(do (put! ch (js->clj %))
+        tulos #(do
+                 (log "VKM VASTAUS: " %)
+                 (put! ch (js->clj %))
                    (close! ch)
                    (.removeChild (.-head js/document) s)
                    (aset js/window callback nil))]

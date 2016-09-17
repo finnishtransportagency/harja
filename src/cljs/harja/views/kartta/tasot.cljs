@@ -275,12 +275,18 @@
                               :alkuosa alkuosa
                               :alkuetaisyys alkuet
                               :loppuosa loppuosa
-                              :loppuetaisyys loppuet}))]
-      (nayta-geometria! :vkm-tr-osoite
-                        {:alue (maarittele-feature
-                                {:type :line
-                                 :points (get-in tulos ["lines" "lines" 0 "paths" 0])
-                                 }
-                                false
-                                asioiden-ulkoasu/tr-ikoni
-                                asioiden-ulkoasu/tr-viiva)}))))
+                              :loppuetaisyys loppuet}))
+          polut (get-in tulos ["lines" "lines"])]
+      (log "POLKUJA " (count polut))
+      (doseq [ajr (range (count polut))]
+        (nayta-geometria! (keyword (str "vkm-tr-osoite-" ajr))
+                          {:alue (maarittele-feature
+                                  {:type :line
+                                   :points (get-in polut [ajr "paths" 0])}
+                                  false
+                                  asioiden-ulkoasu/tr-ikoni
+                                  asioiden-ulkoasu/tr-viiva)})))))
+
+(defn ^:export poista-tr-osoite []
+  (doseq [i (range 10)]
+    (poista-geometria! (keyword (str "vkm-tr-osoite-" i)))))

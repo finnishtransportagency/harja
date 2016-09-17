@@ -9,6 +9,8 @@
 (defn vie-tieverkko-entry [db tv]
   ;; todo: Onko ok, jos rivejä missä tätä tietoa ei ole ei tuoda?
   (when (:osoite3 tv)
+    (when (= 110 (:tie tv))
+      (println "TIE110: " tv))
     (k/vie-tieverkkotauluun! db (:osoite3 tv) (:tie tv) (:ajorata tv) (:osa tv) (:tiepiiri tv) (:tr_pituus tv) (.toString (:the_geom tv)))))
 
 (defn vie-tieverkko-kantaan [db shapefile]
