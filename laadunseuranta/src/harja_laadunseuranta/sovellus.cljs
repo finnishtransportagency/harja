@@ -176,7 +176,7 @@
          :tarkastustyyppi nil
          :tarkastusajo nil
          :valittu-urakka nil
-         :havainnot {}))
+         :pikahavainnot {}))
 
 (defn tarkastusajo-kayntiin [sovellus tarkastustyyppi ajo-id]
   (assoc sovellus
