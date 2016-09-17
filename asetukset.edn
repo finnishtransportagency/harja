@@ -119,4 +119,8 @@
  :virustarkistus {:url "http://localhost:8080/scan"}
 
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
+
+ :laadunseuranta {:url-prefix "/laadunseurqanta"
+                  :http-palvelin {:port 3002}
+                  :feikatut-kayttajat ["K870689" "LX503638" "LX065403" "LX123123"]}
  }
