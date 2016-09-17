@@ -76,7 +76,9 @@
 (defn- paata-tarkastusajo! [tarkastusajo kayttaja]
   (jdbc/with-db-transaction [tx @db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
-          urakka-id (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id})))
+          urakka-id (or
+                     (:urakka tarkastusajo)
+                     (:id (first (q/paattele-urakka tx {:tarkastusajo tarkastusajo-id}))))
           merkinnat (q/hae-reitin-merkinnat tx {:tarkastusajo tarkastusajo-id
                                                 :treshold 100})
           merkinnat-tr-osoitteilla (tarkastukset/lisaa-reittimerkinnoille-tieosoite merkinnat)
