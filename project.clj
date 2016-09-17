@@ -242,7 +242,13 @@
                            ;;:asset-path "laadunseuranta/js/out"
                            :output-to "resources/private/laadunseuranta/js/unit-test.js"
                            ;;:output-dir "resources/private/laadunseuranta/js/out"
-                           :source-map-timestamp true}}
+                           :source-map-timestamp true
+                           :foreign-libs
+                           [{:file "resources/public/laadunseuranta/js/proj4.js"
+                             :provides ["proj4"]}
+                            {:file "resources/public/laadunseuranta/js/epsg3067.js"
+                             :provides ["epsg3067"]}]
+                           }}
 
                ;; This next build is an compressed minified build for
                ;; production. You can build this with:
@@ -318,4 +324,7 @@
              "Implementation-Version" "1.1"
              "Implementation-Vendor"  "Sun Microsystems, Inc."
              "Extension-Name"         "com.sun.media.imageio"}
+
+
+  ;;:doo {:paths {:phantom "phantomjs --local-storage-path=/tmp --local-storage-quota=1024 --offline-storage-path=/tmp --offline-storage-quota=1024"}}
   )

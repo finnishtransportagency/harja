@@ -4,7 +4,8 @@
             [dommy.core :as dommy]
             [harja-laadunseuranta.testutils :refer [sel sel1]]
             [harja-laadunseuranta.asetukset :as asetukset]
-            [harja-laadunseuranta.ylapalkki :as ylapalkki])
+            [harja-laadunseuranta.ylapalkki :as ylapalkki]
+            [cljs-react-test.utils])
   (:require-macros [harja-laadunseuranta.test-macros :refer [with-component prepare-component-tests]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 

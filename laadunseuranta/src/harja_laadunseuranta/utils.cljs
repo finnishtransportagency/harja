@@ -24,8 +24,14 @@
     @atom))
 
 (defn parsi-kaynnistysparametrit [params]
-  (let [params (clojure.string/split (subs params 1) "&")
-        keys-values (map #(clojure.string/split % "=") params)]
+  (let [params (if (str/starts-with? params "?")
+                 (subs params 1)
+                 params)
+        params (str/split params "&")
+        keys-values (keep #(let [[nimi arvo] (str/split % "=")]
+                             (when-not (str/blank? nimi)
+                               [nimi arvo]))
+                         params)]
     (into {} keys-values)))
 
 (defn- timestamp []
