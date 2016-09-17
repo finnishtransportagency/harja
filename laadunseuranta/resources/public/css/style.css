@@ -991,3 +991,24 @@ button:disabled {
 .urakkalista {
     list-style: none;
 }
+.lista {
+    border: 1px solid #0088cc;
+    column-count: 3;
+    max-height: 300px;
+    overflow-y: scroll;
+    padding: 0;
+}
+.lista-item {
+    list-style: none;
+}
+.lista-item :hover,
+.lista-item :focus {
+    background-color: #383838;
+    color: white;
+}
+.lista-item-nimi {
+    background-color: #ffffff;
+    border-color: #afafaf;
+    color: #0066cc;
+    padding: 3px 6px;
+}

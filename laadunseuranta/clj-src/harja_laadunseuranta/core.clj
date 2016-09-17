@@ -124,7 +124,8 @@
      :soratiehoitoluokka (:hoitoluokka_pisteelle (first soratiehoitoluokka))
      :tr-osoite (hae-tr-osoite lat lon treshold)}))
 
-(defn- hae-urakkatyypin-urakat [urakkatyyppi]
+(defn- hae-urakkatyypin-urakat [urakkatyyppi kayttaja]
+  (println "hae ur tyyypin urakat, kayttaja " kayttaja)
   (let [urakat (q/hae-urakkatyypin-urakat {:tyyppi urakkatyyppi}
                                            {:connection @db})]
     urakat))
@@ -172,7 +173,7 @@
         :summary "Hakee urakkatyypin urakat"
         :return {:ok s/Any}
         (respond (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
-                 (hae-urakkatyypin-urakat urakkatyyppi)))
+                 (hae-urakkatyypin-urakat urakkatyyppi kayttaja)))
 
   (GET "/hae-kayttajatiedot" []
        :summary "Hakee käyttäjän tiedot"
