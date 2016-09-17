@@ -36,15 +36,12 @@
   (reset! s/tallennus-kaynnissa true)
   (reset! s/tallennustilaa-muutetaan false))
 
-(defn- resetoi-tarkastuksen-tiedot []
-  (s/valitse-urakka nil)
-  (reset! s/havainnot {}))
 
 (defn- paata-ajo []
-  (resetoi-tarkastuksen-tiedot)
   (go-loop []
     (if (<! (comms/paata-ajo! @s/tarkastusajo @s/valittu-urakka))
       (s/tarkastusajo-seis!)
+
       ;; yritä uudelleen kunnes onnistuu, spinneri pyörii
       (do (<! (timeout 1000))
           (recur)))))

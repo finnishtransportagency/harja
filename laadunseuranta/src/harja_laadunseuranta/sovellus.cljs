@@ -174,7 +174,9 @@
          :tallennus-kaynnissa false
          :tallennustilaa-muutetaan false
          :tarkastustyyppi nil
-         :tarkastusajo nil))
+         :tarkastusajo nil
+         :valittu-urakka nil
+         :havainnot {}))
 
 (defn tarkastusajo-kayntiin [sovellus tarkastustyyppi ajo-id]
   (assoc sovellus
