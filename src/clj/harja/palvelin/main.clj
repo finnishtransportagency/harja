@@ -403,7 +403,7 @@
       :harja-laadunseuranta
       (component/using
        (harja-laadunseuranta/->Laadunseuranta laadunseuranta)
-       [:db]))))
+       [:db :todennus]))))
 
 (defonce harja-jarjestelma nil)
 

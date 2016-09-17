@@ -3,6 +3,7 @@
             [gelfino.timbre :as gt]
             [org.httpkit.server :as server]
             [compojure.api.sweet :refer :all]
+            [compojure.api.core :as compojure-api]
             [ring.util.http-response :refer :all]
             [ring.util.response :refer [redirect]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
@@ -186,27 +187,30 @@
        :headers {"Content-Type" "text/plain"}
        :body (str id)})))
 
-(defroutes app
-  (GET "/" [] (redirect (utils/polku "/index.html")))
-  (middleware [(partial utils/wrap-kayttajatarkistus lataa-kayttaja)]
-              (context "/api" [] laadunseuranta-api))
-  (middleware [(partial utils/wrap-kayttajatarkistus lataa-kayttaja)
-               wrap-multipart-params]
-              (POST "/tallenna-liite" req tallenna-liite))
-  (route/resources "/" {:root "public/laadunseuranta"})
-  (route/not-found "Page not found"))
+(defn luo-routet [todennus]
+  (compojure-api/routes
+   (GET "/" [] (redirect (utils/polku "/index.html")))
+   (middleware [(partial utils/wrap-kayttajatarkistus todennus)]
+               (context "/api" [] laadunseuranta-api))
+   (middleware [(partial utils/wrap-kayttajatarkistus todennus)
+                wrap-multipart-params]
+               (POST "/tallenna-liite" req tallenna-liite))
+   (route/resources "/" {:root "public/laadunseuranta"})
+   (route/not-found "Page not found")))
 
 
-(defn start-server []
+(defn start-server [todennus]
   (log/info "Harja-laadunseuranta käynnistyy")
-  (server/run-server #'app (:http-palvelin @c/config)))
+  (server/run-server (luo-routet todennus) (:http-palvelin @c/config)))
 
 (defrecord Laadunseuranta [asetukset]
   component/Lifecycle
-  (start [{db :db :as this}]
+  (start [{db :db
+           todennus :todennus
+           :as this}]
     (c/aseta-config! asetukset)
     (tietokanta/aseta-tietokanta! db)
-    (assoc this ::sulje-palvelin (start-server)))
+    (assoc this ::sulje-palvelin (start-server todennus)))
 
   (stop [{sulje ::sulje-palvelin :as this}]
     (sulje)

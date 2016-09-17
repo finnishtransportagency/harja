@@ -3,7 +3,10 @@
             [ring.util.http-response :refer :all]
             [compojure.api.meta :as meta]
             [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+
+            [harja.palvelin.komponentit.todennus :as todennus]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn- kayttajaheaderi [req]
   (get-in req [:headers "oam_remote_user"]))
@@ -30,16 +33,14 @@
 (defn feikattu-kayttaja? [kayttajanimi]
   (contains? (set (:feikatut-kayttajat @c/config)) kayttajanimi))
 
-(defn wrap-kayttajatarkistus [lataa-kayttaja handler]
+(defn wrap-kayttajatarkistus [todennus handler]
   (fn [req]
-    (if-let [kayttajanimi (kayttajaheaderi req)]
-      (if-let [kayttaja (lataa-kayttaja kayttajanimi)]
-        (if (or (feikattu-kayttaja? kayttajanimi)
-                (some #(on-ryhma? (ryhmat req) %) vaaditut-ryhmat))
-          (handler (assoc req :kayttaja kayttaja))
-          (unauthorized "VIRHE: Ei käyttöoikeutta"))
-        (unauthorized "VIRHE: Käyttäjää ei löydy"))
-      (unauthorized "Access denied!"))))
+    (let [{kayttaja :kayttaja :as req} (todennus/todenna-pyynto todennus req)]
+      (if (oikeudet/voi-kirjoittaa? oikeudet/laadunseuranta-kirjaus nil kayttaja)
+        (handler req)
+        {:status 403
+         :headers {"Content-Type" "text/plain; charset=UTF-8"}
+         :body "Ei käyttöoikeutta. Ota yhteyttä organisaatiosi Sähke-käyttövaltuusvastaavaan."}))))
 
 (defn polku [s]
   (str (:url-prefix @c/config) s))
