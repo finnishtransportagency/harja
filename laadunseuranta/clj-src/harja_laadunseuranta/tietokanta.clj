@@ -4,27 +4,15 @@
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource)
            (java.io InputStream ByteArrayOutputStream)
            (org.postgresql.largeobject LargeObjectManager)
-           (com.mchange.v2.c3p0 C3P0ProxyConnection)           
+           (com.mchange.v2.c3p0 C3P0ProxyConnection)
            (net.coobird.thumbnailator Thumbnailator)
            (net.coobird.thumbnailator.tasks UnsupportedFormatException)
            (java.util Properties)))
 
-(defn- luo-tietokanta
-  [{:keys [palvelin portti tietokanta kayttaja salasana yhteyspoolin-koko]}]
-  (System/setProperties
-   (doto (new Properties (System/getProperties))
-     (.put "com.mchange.v2.log.MLog", "com.mchange.v2.log.FallbackMLog")
-     (.put "com.mchange.v2.log.FallbackMLog.DEFAULT_CUTOFF_LEVEL", "SEVERE")))
-  (doto (ComboPooledDataSource.)
-    (.setDriverClass "org.postgresql.Driver")
-    (.setJdbcUrl (str "jdbc:postgresql://" palvelin ":" portti "/" tietokanta))
-    (.setUser kayttaja)
-    (.setPassword salasana)
-    (.setMaxPoolSize (or yhteyspoolin-koko 16))
-    (.setMaxIdleTimeExcessConnections (* 30 60))
-    (.setMaxIdleTime (* 3 60 60))))
+(def db (atom nil))
 
-(def db (delay {:datasource (luo-tietokanta (:tietokanta @c/config))}))
+(defn aseta-tietokanta! [ds]
+  (reset! db ds))
 
 (def get-large-object-api (->> (Class/forName "org.postgresql.PGConnection")
                                .getMethods
