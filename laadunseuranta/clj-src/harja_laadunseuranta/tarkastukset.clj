@@ -239,28 +239,28 @@
            :tr_loppuetaisyys (:let koko-tarkastuksen-tr-osoite)
            :lahde "harja-ls-mobiili")))
 
-(defn- tallenna-tarkastus! [tarkastus kayttaja]
+(defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
-        geometria (:geom (first (q/tr-osoitteelle-viiva @db
+        geometria (:geom (first (q/tr-osoitteelle-viiva db
                                                         tarkastus )))
         tarkastus (assoc tarkastus :sijainti geometria)
-        tarkastus-id (:id (q/luo-uusi-tarkastus<! @db
+        tarkastus-id (:id (q/luo-uusi-tarkastus<! db
                                                   (merge tarkastus
                                                          {:luoja (:id kayttaja)})))]
     (doseq [vakiohavainto-id (:vakiohavainnot tarkastus)]
-      (q/luo-uusi-tarkastuksen-vakiohavainto<! @db
+      (q/luo-uusi-tarkastuksen-vakiohavainto<! db
                                                {:tarkastus tarkastus-id
                                                 :vakiohavainto vakiohavainto-id}))
     (when (:talvihoitomittaus tarkastus)
-      (q/luo-uusi-talvihoitomittaus<! @db
+      (q/luo-uusi-talvihoitomittaus<! db
                                       (merge (:talvihoitomittaus tarkastus)
                                              {:tarkastus tarkastus-id})))
     (when (:soratiemittaus tarkastus)
-      (q/luo-uusi-soratiemittaus<! @db
+      (q/luo-uusi-soratiemittaus<! db
                                    (merge (:soratiemittaus tarkastus)
                                           {:tarkastus tarkastus-id})))
     (when (:liite tarkastus)
-      (q/luo-uusi-tarkastus-liite<! @db
+      (q/luo-uusi-tarkastus-liite<! db
                                     {:tarkastus tarkastus-id
                                      :liite (:liite tarkastus)}))))
 
@@ -269,5 +269,5 @@
                                     (:pistemaiset-tarkastukset tarkastukset)
                                     (:reitilliset-tarkastukset tarkastukset))]
     (doseq [tarkastus kaikki-tarkastukset]
-     (tallenna-tarkastus! tarkastus
+     (tallenna-tarkastus! @db tarkastus
                           kayttaja))))
