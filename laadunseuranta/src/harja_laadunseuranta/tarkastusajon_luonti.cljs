@@ -20,8 +20,9 @@
     (fn [_ _]
       (if @urakkavalitsimen-urakkatyyppi
         (let [cb #(do
-                   (s/valitse-urakka %)
-                   (valittu @urakkavalitsimen-urakkatyyppi)
+                   (s/valitse-urakka! %)
+                   (when-not (nil? %)
+                     (valittu @urakkavalitsimen-urakkatyyppi))
                    (reset! urakkavalitsimen-urakkatyyppi nil))]
           [urakkavalitsin/urakkavalitsin @urakkatyypin-urakat urakkavalitsimen-urakkatyyppi cb])
         (if @aloitettu

@@ -13,16 +13,19 @@
      [:h3 "Valitse urakka"]
      (if (empty? urakkatyypin-urakat)
        [:span "Ei urakoita saatavilla urakkatyypille " urakkatyyppi]
-       [:ul.lista
+       [:div
         (map-indexed
-          (fn [i urakka]
+          (fn [i urakat]
             ^{:key i}
-            [:li.lista-item.klikattava
-             {:on-click #(valitse-fn urakka)}
-             (:nimi urakka)])
-          urakkatyypin-urakat)])
+            [:div.painikerivi
+             (for [u urakat]
+               ^{:key (:id u)}
+               [:button.pikavalintapainike {:on-click #(valitse-fn u)}
+                (:nimi u)])])
+          (partition-all 3 urakkatyypin-urakat))])
      [:div
       [:span.tyhja-nappi]
       [:span.tyhja-nappi]
-      [:button.peruuta.nappi-toissijainen #(valitse-fn nil) "Peruuta"]]]))
+      [:button.peruuta.nappi-toissijainen {:on-click #(valitse-fn nil)}
+       "Peruuta"]]]))
 

@@ -193,7 +193,7 @@
 (defn tarkastusajo-seis! []
   (swap! sovellus tarkastusajo-seis))
 
-(defn valitse-urakka [urakka]
+(defn valitse-urakka! [urakka]
   (reset! valittu-urakka urakka))
 
 (def beta-kayttajat #{"A018983" "K870689"})
