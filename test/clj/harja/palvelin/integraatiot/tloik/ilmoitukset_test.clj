@@ -147,3 +147,13 @@
         (poista-ilmoitus)))
     (catch IllegalArgumentException e
       (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
+
+
+(deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
+  "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
+  (tuo-valaistusilmoitus)
+
+  (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+         (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
+  (poista-valaistusilmoitus))
