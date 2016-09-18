@@ -300,7 +300,15 @@
              :css-dirs ["resources/public/laadunseuranta/css"]}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
+  :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
+                                   ;; Harjan fronttibuildi ja LESS
+                                   "cljsbuild" "once" "prod,"
+                                   "less" "once,"
+
+                                   ;; Harja mobiili laadunseuranta fronttibuildi
+                                   "cljsbuild" "once" "laadunseuranta-min,"
+
+                                   "uberjar," "doc"]
             "testit"             ["do" "clean,"
                                   "deps,"
                                   "test,"
