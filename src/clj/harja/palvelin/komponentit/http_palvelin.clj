@@ -164,41 +164,42 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
-  [f]
-  (fn [req]
-    (let [cookies (:cookies req)
-          headers (:headers req)]
-      (if (and (not (nil? (headers "x-csrf-token")))
-               (= (index/laske-mac (headers "x-csrf-token"))
-                  (:value (cookies "anti-csrf-token"))))
-        (f req)
-        {:status  403
-         :headers {"Content-Type" "text/html"}
-         :body    "Access denied"}))))
+  [f anti-csrf-kaytossa?]
+  (fn [{:keys [cookies headers uri] :as req}]
+    (if (or (not (anti-csrf-kaytossa? req))
+             (and (not (nil? (headers "x-csrf-token")))
+                  (= (index/laske-mac (headers "x-csrf-token"))
+                     (:value (cookies "anti-csrf-token")))))
+      (f req)
+      {:status  403
+       :headers {"Content-Type" "text/html"}
+       :body    "Access denied"})))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
 
+(defn- anti-csrf-kaytossa? [req]
+  ;; ls- sisältävät palvelukutsut (mobiili laadunseuranta), ei käytä anti csrf tokenia
+  (not (str/includes? (:uri req) "ls-")))
+
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle
   (start [this]
     (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (let [todennus (:todennus this)
-          resurssit (if kehitysmoodi
-                      (route/files "" {:root "dev-resources"})
-                      (route/resources ""))]
+          resurssit (route/resources "")]
       (swap! lopetus-fn
              (constantly
                (http/run-server
                  (cookies/wrap-cookies
-                   (fn [req]
-                     (try+
+                  (fn [req]
+                    (try+
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              uikasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                               (wrap-anti-forgery))]
+                                               (wrap-anti-forgery anti-csrf-kaytossa?))]
 
                          (or (reitita req (mapv :fn ei-todennettavat))
                              (reitita (todennus/todenna-pyynto todennus req)
