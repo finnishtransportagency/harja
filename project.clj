@@ -26,6 +26,9 @@
 
                  [com.narkisr/gelfino-client "0.7.0"]
 
+                 ;; JSON encode/decode
+                 [cheshire "5.6.1"]
+
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
                  [compojure "1.4.0"]
