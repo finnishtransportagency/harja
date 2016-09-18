@@ -31,7 +31,7 @@
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
-                 [compojure "1.4.0"]
+                 [compojure "1.5.0"]
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
@@ -127,8 +127,6 @@
                  [webjure/tuck "0.2.1"]
 
                  ;; Laadunseurantatyökalua varten
-                 [compojure "1.5.0"]
-                 [metosin/compojure-api "1.0.1"]
                  [org.clojure/data.codec "0.1.0"]
                  [devcards "0.2.1-4" :exclusions [cljsjs/react]]
 
@@ -212,8 +210,7 @@
 
                ;; Laadunseurannan buildit
                {:id "laadunseuranta-dev"
-                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
-                               "laadunseuranta/test-src/cljs"]
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
                 :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
 

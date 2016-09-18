@@ -1,9 +1,7 @@
 (ns harja-laadunseuranta.core
   (:require [taoensso.timbre :as log]
-            [gelfino.timbre :as gt]
-            [org.httpkit.server :as server]
-            [compojure.api.sweet :refer :all]
-            [compojure.api.core :as compojure-api]
+            [compojure.core :refer [GET]]
+            [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [ring.util.http-response :refer :all]
             [ring.util.response :refer [redirect]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
@@ -17,10 +15,10 @@
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc]
             [compojure.route :as route]
-            [compojure.api.exception :as ex]
             [clojure.java.io :as io]
             [clojure.data.codec.base64 :as b64]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [clojure.walk :as walk])
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
@@ -126,59 +124,75 @@
   (let [urakat (q/hae-urakkatyypin-urakat @db {:tyyppi urakkatyyppi})]
     urakat))
 
-(defapi laadunseuranta-api
-  {:format {:formats [:transit-json]}
-   :exceptions {:handlers {::ex/default utils/poikkeuskasittelija}}}
+(defn- muunna-havainnot [{kirjaukset :kirjaukset :as tiedot}]
+  (println "tiedot: " tiedot)
+  (if kirjaukset
+    (assoc tiedot :kirjaukset
+           (mapv (fn [kirjaus]
+                   (if-let [havainnot (:havainnot kirjaus)]
+                     (assoc kirjaus :havainnot (mapv keyword havainnot))
+                     kirjaus)) kirjaukset))
+    tiedot))
 
-  (POST "/reittimerkinta" []
-        :body [kirjaukset schemas/Havaintokirjaukset]
-        :summary "Tallentaa reittimerkinnat"
-        :kayttaja kayttaja
-        :return {:ok s/Str}
-        (respond (tallenna-merkinnat! kirjaukset (:id kayttaja))
-                 "Reittimerkinta tallennettu"))
+(defn tarkista-skeema [skeema-sisaan skeema-ulos kasittelija]
+  (fn [user tiedot]
+    (let [tiedot (->> tiedot
+                      walk/keywordize-keys
+                      muunna-havainnot
+                      (s/validate skeema-sisaan))]
+      (->> {:ok (kasittelija user tiedot)}
+           (s/validate skeema-ulos)))))
 
-  (POST "/paata-tarkastusajo" []
-        :body [tarkastusajo schemas/TarkastuksenPaattaminen]
-        :kayttaja kayttaja
-        :summary "Päättää tarkastusajon"
-        :return {:ok s/Str}
-        (respond (log/debug "Päätetään tarkastusajo " tarkastusajo)
-                 (paata-tarkastusajo! tarkastusajo kayttaja)
-                 "Tarkastusajo päätetty"))
+(defn- laadunseuranta-api [http]
+  (http-palvelin/julkaise-palvelut
+   http
 
-  (POST "/uusi-tarkastusajo" []
-        :body [tiedot s/Any]
-        :kayttaja kayttaja
-        :summary "Luo uuden tarkastusajon"
-        :return {:ok s/Any}
-        (respond (log/debug "Luodaan uusi tarkastusajo " tiedot)
-                 (luo-uusi-tarkastusajo! tiedot kayttaja)))
+   :ls-reittimerkinta
+   (tarkista-skeema
+    schemas/Havaintokirjaukset {:ok s/Str}
+    (fn [user kirjaukset]
+      (tallenna-merkinnat! (:id user) kirjaukset)
+      "Reittimerkinta tallennettu"))
 
-  (POST "/hae-tr-tiedot" []
-        :body [koordinaatit s/Any]
-        :summary "Hakee tierekisterin tiedot annetulle pisteelle"
-        :return {:ok s/Any}
-        (respond (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
-                 (let [{:keys [lat lon treshold]} koordinaatit]
-                   (hae-tr-tiedot lat lon treshold))))
 
-  (POST "/urakkatyypin-urakat" []
-        :body [urakkatyyppi s/Str]
-        :kayttaja kayttaja
-        :summary "Hakee urakkatyypin urakat"
-        :return {:ok s/Any}
-        (respond (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
-                 (hae-urakkatyypin-urakat urakkatyyppi kayttaja)))
+   :ls-paata-tarkastusajo
+   (tarkista-skeema
+    schemas/TarkastuksenPaattaminen
+    {:ok s/Str}
+    (fn [user tarkastusajo]
+      (log/debug "Päätetään tarkastusajo " tarkastusajo)
+      (paata-tarkastusajo! tarkastusajo user)
+      "Tarkastusajo päätetty"))
 
-  (GET "/hae-kayttajatiedot" []
-       :summary "Hakee käyttäjän tiedot"
-       :kayttaja kayttaja
-       :return {:ok s/Any}
-       (respond (log/debug "Käyttäjän tietojen haku")
-                {:kayttajanimi (:kayttajanimi kayttaja)
-                 :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-                 :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset @db)})))
+   :ls-uusi-tarkastusajo
+   (tarkista-skeema
+    s/Any {:ok s/Any}
+    (fn [user tiedot]
+      (log/debug "Luodaan uusi tarkastusajo " tiedot)
+      (luo-uusi-tarkastusajo! tiedot user)))
+
+   :ls-hae-tr-tiedot
+   (tarkista-skeema
+    s/Any {:ok s/Any}
+    (fn [user koordinaatit]
+      (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
+      (let [{:keys [lat lon treshold]} koordinaatit]
+        (hae-tr-tiedot lat lon treshold))))
+
+   :ls-urakkatyypin-urakat
+   (tarkista-skeema
+    s/Str {:ok s/Any}
+    (fn [kayttaja urakkatyyppi]
+      (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
+      (hae-urakkatyypin-urakat urakkatyyppi kayttaja)))
+
+   :ls-hae-kayttajatiedot
+   (fn [kayttaja]
+     (log/debug "Käyttäjän tietojen haku")
+     {:ok {:kayttajanimi (:kayttajanimi kayttaja)
+           :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
+           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset @db)}})))
+
 
 (defn- tallenna-liite [req]
   (jdbc/with-db-transaction [tx @db]
@@ -187,31 +201,30 @@
        :headers {"Content-Type" "text/plain"}
        :body (str id)})))
 
-(defn luo-routet [todennus]
-  (compojure-api/routes
-   (GET "/" [] (redirect (utils/polku "/index.html")))
-   (middleware [(partial utils/wrap-kayttajatarkistus todennus)]
-               (context "/api" [] laadunseuranta-api))
-   (middleware [(partial utils/wrap-kayttajatarkistus todennus)
-                wrap-multipart-params]
-               (POST "/tallenna-liite" req tallenna-liite))
-   (route/resources "/" {:root "public/laadunseuranta"})
-   (route/not-found "Page not found")))
+(defn luo-routet [http]
+  (http-palvelin/julkaise-reitti
+   http :ls-juuri
+   (GET "/laadunseuranta" [] (redirect (utils/polku "/index.html"))))
+  (http-palvelin/julkaise-palvelu
+   http :ls-tallenna-liite
+   (wrap-multipart-params
+    (fn [req]
+      (tallenna-liite req)))
+   {:ring-kasittelija? true})
+  (laadunseuranta-api http))
 
-
-(defn start-server [todennus]
-  (log/info "Harja-laadunseuranta käynnistyy")
-  (server/run-server (luo-routet todennus) (:http-palvelin @c/config)))
 
 (defrecord Laadunseuranta [asetukset]
   component/Lifecycle
   (start [{db :db
-           todennus :todennus
+           http :http-palvelin
            :as this}]
     (c/aseta-config! asetukset)
     (tietokanta/aseta-tietokanta! db)
-    (assoc this ::sulje-palvelin (start-server todennus)))
+    (log/info "Harja laadunseuranta käynnistyy")
+    (luo-routet http)
+    this)
 
-  (stop [{sulje ::sulje-palvelin :as this}]
-    (sulje)
-    (dissoc this ::sulje-palvelin)))
+  (stop [this]
+    ;; FIXME: poista routet
+    this))
