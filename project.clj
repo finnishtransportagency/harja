@@ -322,7 +322,9 @@
 
             "selainrepl"          ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
-            "tuotanto-notest"     ["do" "compile," "cljsbuild" "once" "prod,"
+            "tuotanto-notest"     ["do" "compile,"
+                                   "cljsbuild" "once" "prod,"
+                                   "cljsbuild" "once" "laadunseuranta-min,"
                                    "less" "once," "uberjar"]
             }
 
