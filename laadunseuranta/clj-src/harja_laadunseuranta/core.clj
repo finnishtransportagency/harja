@@ -17,7 +17,8 @@
             [clojure.java.io :as io]
             [clojure.data.codec.base64 :as b64]
             [com.stuartsierra.component :as component]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [harja.domain.oikeudet :as oikeudet])
   (:import (org.postgis PGgeometry))
   (:gen-class))
 
@@ -133,8 +134,9 @@
                      kirjaus)) kirjaukset))
     tiedot))
 
-(defn tarkista-skeema [skeema-sisaan skeema-ulos kasittelija]
+(defn kasittele-api-kutsu [skeema-sisaan skeema-ulos kasittelija]
   (fn [user tiedot]
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/laadunseuranta-kirjaus user)
     (let [tiedot (->> tiedot
                       walk/keywordize-keys
                       muunna-havainnot
@@ -147,7 +149,7 @@
    http
 
    :ls-reittimerkinta
-   (tarkista-skeema
+   (kasittele-api-kutsu
     schemas/Havaintokirjaukset {:ok s/Str}
     (fn [user kirjaukset]
       (tallenna-merkinnat! (:id user) kirjaukset)
@@ -155,7 +157,7 @@
 
 
    :ls-paata-tarkastusajo
-   (tarkista-skeema
+   (kasittele-api-kutsu
     schemas/TarkastuksenPaattaminen
     {:ok s/Str}
     (fn [user tarkastusajo]
@@ -164,14 +166,14 @@
       "Tarkastusajo päätetty"))
 
    :ls-uusi-tarkastusajo
-   (tarkista-skeema
+   (kasittele-api-kutsu
     s/Any {:ok s/Any}
     (fn [user tiedot]
       (log/debug "Luodaan uusi tarkastusajo " tiedot)
       (luo-uusi-tarkastusajo! tiedot user)))
 
    :ls-hae-tr-tiedot
-   (tarkista-skeema
+   (kasittele-api-kutsu
     s/Any {:ok s/Any}
     (fn [user koordinaatit]
       (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
@@ -179,7 +181,7 @@
         (hae-tr-tiedot lat lon treshold))))
 
    :ls-urakkatyypin-urakat
-   (tarkista-skeema
+   (kasittele-api-kutsu
     s/Str {:ok s/Any}
     (fn [kayttaja urakkatyyppi]
       (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
