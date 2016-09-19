@@ -39,19 +39,9 @@
                                   :laadunalitus  (get-in merkinta [:laadunalitus])
                                   :kuva          (get-in merkinta [:kuva])}))
 
-(defn- tallenna-kuva! [tx {:keys [data mime-type]} kayttaja-id]
-  (let [decoded-data (b64/decode (.getBytes data "UTF-8"))
-        oid (tietokanta/tallenna-lob (io/input-stream decoded-data))]
-    (:id (q/tallenna-kuva<! tx {:lahde "harja-ls-mobiili"
-                                :tyyppi mime-type
-                                :koko (count decoded-data)
-                                :pikkukuva (tietokanta/tee-thumbnail decoded-data)
-                                :oid oid
-                                :luoja kayttaja-id}))))
-
-(defn- tallenna-multipart-kuva! [tx {:keys [tempfile content-type size]} kayttaja-id]
-  (let [oid (tietokanta/tallenna-lob tx (io/input-stream tempfile))]
-    (:id (q/tallenna-kuva<! tx {:lahde "harja-ls-mobiili"
+(defn- tallenna-multipart-kuva! [db {:keys [tempfile content-type size]} kayttaja-id]
+  (let [oid (tietokanta/tallenna-lob db (io/input-stream tempfile))]
+    (:id (q/tallenna-kuva<! db {:lahde "harja-ls-mobiili"
                                 :tyyppi content-type
                                 :koko size
                                 :pikkukuva (tietokanta/tee-thumbnail tempfile)
@@ -120,7 +110,6 @@
     urakat))
 
 (defn- muunna-havainnot [{kirjaukset :kirjaukset :as tiedot}]
-  (println "tiedot: " tiedot)
   (if kirjaukset
     (assoc tiedot :kirjaukset
            (mapv (fn [kirjaus]
@@ -187,26 +176,33 @@
      (log/debug "Käyttäjän tietojen haku")
      {:ok {:kayttajanimi (:kayttajanimi kayttaja)
            :nimi (str (:etunimi kayttaja) " " (:sukunimi kayttaja))
-           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset @db)}})))
+           :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset db)}})))
 
 
 (defn- tallenna-liite [db req]
-  (jdbc/with-db-transaction [tx db]
-    (let [id (tallenna-multipart-kuva! tx (get-in req [:multipart-params "liite"]) (get-in req [:kayttaja :id]))]
-      {:status 200
-       :headers {"Content-Type" "text/plain"}
-       :body (str id)})))
+  (let [id (tallenna-multipart-kuva! db (get-in req [:multipart-params "liite"]) (get-in req [:kayttaja :id]))]
+    {:status 200
+     :headers {"Content-Type" "text/plain"}
+     :body (str id)}))
+
+(defn ohjaa-index-html []
+  (redirect "/laadunseuranta/index.html"))
 
 (defn luo-routet [db http]
-  (http-palvelin/julkaise-reitti
-   http :ls-juuri
-   (GET "/laadunseuranta" [] (redirect "/laadunseuranta/index.html")))
+  ;; Ohjaa /laadunseuranta(/) index.html sivulle
+  (http-palvelin/julkaise-reitti http :ls-juuri-1 (GET "/laadunseuranta" [] (ohjaa-index-html)))
+  (http-palvelin/julkaise-reitti http :ls-juuri-2 (GET "/laadunseuranta/" [] (ohjaa-index-html)))
+
+  ;; Reitti liitteen tallennukseen
   (http-palvelin/julkaise-palvelu
    http :ls-tallenna-liite
    (wrap-multipart-params
     (fn [req]
+      (println "SAATIIN UPLOAD: " req)
       (tallenna-liite db req)))
    {:ring-kasittelija? true})
+
+  ;; Laadunseurannan API kutsut
   (laadunseuranta-api db http))
 
 
@@ -220,6 +216,14 @@
     (luo-routet db http)
     this)
 
-  (stop [this]
-    ;; FIXME: poista routet
+  (stop [{http :http-palvelin :as this}]
+    (http-palvelin/poista-palvelut http
+                                   :ls-juuri-1 :ls-juuri-2
+                                   :ls-tallenna-liite
+                                   :ls-reittimerkinta
+                                   :ls-paata-tarkastusajo
+                                   :ls-uusi-tarkastusajo
+                                   :ls-hae-tr-tiedot
+                                   :ls-urakkatyypin-urakat
+                                   :ls-hae-kayttajatiedot)
     this))
