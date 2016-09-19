@@ -153,7 +153,7 @@
   (mapv (fn [liite]
           [:poikkeamaliite
            [:tiedostonimi (:nimi liite)]
-           [:tiedosto (:sisalto liite)]])
+           [:tiedosto (slurp (:data liite))]])
         (:liitteet data)))
 
 (defn muodosta-viesti [data]
