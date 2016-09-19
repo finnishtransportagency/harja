@@ -19,6 +19,12 @@
                                first))
 
 
+(defn- large-object-api [c]
+  (.rawConnectionOperation c
+                           get-large-object-api
+                           C3P0ProxyConnection/RAW_CONNECTION
+                           (into-array Object [])))
+
 (defn lue-lob [db oid]
   (with-open [c (doto (.getConnection (:datasource db))
                   (.setAutoCommit false))]
