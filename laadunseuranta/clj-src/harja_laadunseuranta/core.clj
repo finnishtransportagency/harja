@@ -9,7 +9,6 @@
             [harja-laadunseuranta.tarkastukset :as tarkastukset]
             [harja-laadunseuranta.schemas :as schemas]
             [harja-laadunseuranta.utils :as utils]
-            [harja-laadunseuranta.config :as c]
             [schema.core :as s]
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc]
@@ -21,8 +20,6 @@
             [harja.domain.oikeudet :as oikeudet])
   (:import (org.postgis PGgeometry))
   (:gen-class))
-
-(def db tietokanta/db)
 
 (defn- tallenna-merkinta! [tx vakiohavainto-idt merkinta]
   (q/tallenna-reittimerkinta! tx {:id            (:id merkinta)
@@ -61,8 +58,8 @@
                                 :oid oid
                                 :luoja kayttaja-id}))))
 
-(defn- tallenna-merkinnat! [kirjaukset kayttaja-id]
-  (jdbc/with-db-transaction [tx @db]
+(defn- tallenna-merkinnat! [db kirjaukset kayttaja-id]
+  (jdbc/with-db-transaction [tx db]
     (let [vakiohavainto-idt (q/hae-vakiohavaintoavaimet tx)]
       (doseq [merkinta (:kirjaukset kirjaukset)]
         (tallenna-merkinta! tx vakiohavainto-idt merkinta)))))
@@ -71,8 +68,8 @@
   (q/paata-tarkastusajo! tx {:id tarkastusajo-id
                              :kayttaja (:id kayttaja)}))
 
-(defn- paata-tarkastusajo! [tarkastusajo kayttaja]
-  (jdbc/with-db-transaction [tx @db]
+(defn- paata-tarkastusajo! [db tarkastusajo kayttaja]
+  (jdbc/with-db-transaction [tx db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
           urakka-id (or
                      (:urakka tarkastusajo)
@@ -94,34 +91,32 @@
     :tiemerkinta 4
     0))
 
-(defn- luo-uusi-tarkastusajo! [tiedot kayttaja]
-  (q/luo-uusi-tarkastusajo<! @db {:ulkoinen_id 0
-                                  :kayttaja (:id kayttaja)
-                                  :tyyppi (tarkastustyypiksi (-> tiedot :tyyppi))}))
+(defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]
+  (q/luo-uusi-tarkastusajo<! db {:ulkoinen_id 0
+                                 :kayttaja (:id kayttaja)
+                                 :tyyppi (tarkastustyypiksi (-> tiedot :tyyppi))}))
 
-(defn- hae-tr-osoite [lat lon treshold]
+(defn- hae-tr-osoite [db lat lon treshold]
   (try
-    (first (q/hae-tr-osoite @db {:y lat
-                                 :x lon
-                                 :treshold treshold}))
+    (first (q/hae-tr-osoite db {:y lat
+                                :x lon
+                                :treshold treshold}))
     (catch Exception e
       nil)))
 
-(defn- hae-tr-tiedot [lat lon treshold]
+(defn- hae-tr-tiedot [db lat lon treshold]
   (let [pos {:y lat
              :x lon
              :treshold treshold}
-        talvihoitoluokka (q/hae-pisteen-hoitoluokka @db (assoc pos :tietolaji "talvihoito")
-                                                    )
-        soratiehoitoluokka (q/hae-pisteen-hoitoluokka @db (assoc pos :tietolaji "soratie")
-                                                      )]
+        talvihoitoluokka (q/hae-pisteen-hoitoluokka db (assoc pos :tietolaji "talvihoito"))
+        soratiehoitoluokka (q/hae-pisteen-hoitoluokka db (assoc pos :tietolaji "soratie"))]
     {:talvihoitoluokka (:hoitoluokka_pisteelle (first talvihoitoluokka))
      :soratiehoitoluokka (:hoitoluokka_pisteelle (first soratiehoitoluokka))
-     :tr-osoite (hae-tr-osoite lat lon treshold)}))
+     :tr-osoite (hae-tr-osoite db lat lon treshold)}))
 
-(defn- hae-urakkatyypin-urakat [urakkatyyppi kayttaja]
+(defn- hae-urakkatyypin-urakat [db urakkatyyppi kayttaja]
   (println "hae ur tyyypin urakat, kayttaja " kayttaja)
-  (let [urakat (q/hae-urakkatyypin-urakat @db {:tyyppi urakkatyyppi})]
+  (let [urakat (q/hae-urakkatyypin-urakat db {:tyyppi urakkatyyppi})]
     urakat))
 
 (defn- muunna-havainnot [{kirjaukset :kirjaukset :as tiedot}]
@@ -144,7 +139,7 @@
       (->> {:ok (kasittelija user tiedot)}
            (s/validate skeema-ulos)))))
 
-(defn- laadunseuranta-api [http]
+(defn- laadunseuranta-api [db http]
   (http-palvelin/julkaise-palvelut
    http
 
@@ -152,7 +147,7 @@
    (kasittele-api-kutsu
     schemas/Havaintokirjaukset {:ok s/Str}
     (fn [user kirjaukset]
-      (tallenna-merkinnat! (:id user) kirjaukset)
+      (tallenna-merkinnat! db (:id user) kirjaukset)
       "Reittimerkinta tallennettu"))
 
 
@@ -162,7 +157,7 @@
     {:ok s/Str}
     (fn [user tarkastusajo]
       (log/debug "Päätetään tarkastusajo " tarkastusajo)
-      (paata-tarkastusajo! tarkastusajo user)
+      (paata-tarkastusajo! db tarkastusajo user)
       "Tarkastusajo päätetty"))
 
    :ls-uusi-tarkastusajo
@@ -170,7 +165,7 @@
     s/Any {:ok s/Any}
     (fn [user tiedot]
       (log/debug "Luodaan uusi tarkastusajo " tiedot)
-      (luo-uusi-tarkastusajo! tiedot user)))
+      (luo-uusi-tarkastusajo! db tiedot user)))
 
    :ls-hae-tr-tiedot
    (kasittele-api-kutsu
@@ -178,7 +173,7 @@
     (fn [user koordinaatit]
       (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
       (let [{:keys [lat lon treshold]} koordinaatit]
-        (hae-tr-tiedot lat lon treshold))))
+        (hae-tr-tiedot db lat lon treshold))))
 
    :ls-urakkatyypin-urakat
    (kasittele-api-kutsu
@@ -202,17 +197,17 @@
        :headers {"Content-Type" "text/plain"}
        :body (str id)})))
 
-(defn luo-routet [http]
+(defn luo-routet [db http]
   (http-palvelin/julkaise-reitti
    http :ls-juuri
-   (GET "/laadunseuranta" [] (redirect (utils/polku "/index.html"))))
+   (GET "/laadunseuranta" [] (redirect "/laadunseuranta/index.html")))
   (http-palvelin/julkaise-palvelu
    http :ls-tallenna-liite
    (wrap-multipart-params
     (fn [req]
       (tallenna-liite req)))
    {:ring-kasittelija? true})
-  (laadunseuranta-api http))
+  (laadunseuranta-api db http))
 
 
 (defrecord Laadunseuranta [asetukset]
@@ -220,10 +215,9 @@
   (start [{db :db
            http :http-palvelin
            :as this}]
-    (c/aseta-config! asetukset)
     (tietokanta/aseta-tietokanta! db)
     (log/info "Harja laadunseuranta käynnistyy")
-    (luo-routet http)
+    (luo-routet db http)
     this)
 
   (stop [this]
