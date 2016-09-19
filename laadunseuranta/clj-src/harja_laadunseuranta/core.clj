@@ -118,15 +118,20 @@
                      kirjaus)) kirjaukset))
     tiedot))
 
-(defn kasittele-api-kutsu [skeema-sisaan skeema-ulos kasittelija]
-  (fn [user tiedot]
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/laadunseuranta-kirjaus user)
-    (let [tiedot (->> tiedot
-                      walk/keywordize-keys
-                      muunna-havainnot
-                      (s/validate skeema-sisaan))]
-      (->> {:ok (kasittelija user tiedot)}
-           (s/validate skeema-ulos)))))
+(defn kasittele-api-kutsu [skeema-sisaan ok-skeema kasittelija]
+  (let [skeema-ulos (schemas/api-vastaus ok-skeema)]
+    (fn [user tiedot]
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/laadunseuranta-kirjaus user)
+      (let [tiedot (->> tiedot
+                        walk/keywordize-keys
+                        muunna-havainnot
+                        (s/validate skeema-sisaan))
+            tulos (try {:ok (kasittelija user tiedot)}
+                       (catch Throwable t
+                         (println t "Virhe LS API-kutsussa, tiedot: " (pr-str tiedot))
+                         {:error (.getMessage t)}))]
+        (->> tulos
+             (s/validate skeema-ulos))))))
 
 (defn- laadunseuranta-api [db http]
   (http-palvelin/julkaise-palvelut
@@ -134,16 +139,15 @@
 
    :ls-reittimerkinta
    (kasittele-api-kutsu
-    schemas/Havaintokirjaukset {:ok s/Str}
+    schemas/Havaintokirjaukset s/Str
     (fn [user kirjaukset]
-      (tallenna-merkinnat! db (:id user) kirjaukset)
+      (tallenna-merkinnat! db kirjaukset (:id user))
       "Reittimerkinta tallennettu"))
 
 
    :ls-paata-tarkastusajo
    (kasittele-api-kutsu
-    schemas/TarkastuksenPaattaminen
-    {:ok s/Str}
+    schemas/TarkastuksenPaattaminen s/Str
     (fn [user tarkastusajo]
       (log/debug "Päätetään tarkastusajo " tarkastusajo)
       (paata-tarkastusajo! db tarkastusajo user)
@@ -151,14 +155,14 @@
 
    :ls-uusi-tarkastusajo
    (kasittele-api-kutsu
-    s/Any {:ok s/Any}
+    s/Any s/Any
     (fn [user tiedot]
       (log/debug "Luodaan uusi tarkastusajo " tiedot)
       (luo-uusi-tarkastusajo! db tiedot user)))
 
    :ls-hae-tr-tiedot
    (kasittele-api-kutsu
-    s/Any {:ok s/Any}
+    s/Any s/Any
     (fn [user koordinaatit]
       (log/debug "Haetaan tierekisteritietoja pisteelle " koordinaatit)
       (let [{:keys [lat lon treshold]} koordinaatit]
@@ -166,7 +170,7 @@
 
    :ls-urakkatyypin-urakat
    (kasittele-api-kutsu
-    s/Str {:ok s/Any}
+    s/Str s/Any
     (fn [kayttaja urakkatyyppi]
       (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
       (hae-urakkatyypin-urakat db urakkatyyppi kayttaja)))

@@ -84,3 +84,8 @@
 (def TarkastuksenPaattaminen
   {:urakka (s/maybe s/Int)
    :tarkastusajo {:id s/Int}})
+
+(defn api-vastaus [ok-tyyppi]
+  (s/conditional
+   #(contains? % :error) {:error s/Str}
+   :else {:ok ok-tyyppi}))
