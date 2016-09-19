@@ -103,8 +103,8 @@
     ;; Päivitä urakkakohtaista tavoitetta ja sen jälkeen valtakunnallista
     (let [random-tavoite-id-urakassa (first (first (q (str
                                                         "SELECT id FROM valitavoite
-                                                         WHERE urakka = 4
-                                                         AND valtakunnallinen_valitavoite IS NOT NULL
+                                                         WHERE urakka = " (hae-oulun-alueurakan-2014-2019-id)
+                                                         " AND valtakunnallinen_valitavoite IS NOT NULL
                                                          AND poistettu IS NOT TRUE
                                                          LIMIT 1;"))))
           _ (is (integer? random-tavoite-id-urakassa))
@@ -139,8 +139,8 @@
       ;; Poistetaan valtakunnalliset välitavoitteet (mutta ei valmiita)
       (let [random-tavoite-id-urakassa (first (first (q (str
                                                           "SELECT id FROM valitavoite
-                                                           WHERE urakka = 4
-                                                           AND valtakunnallinen_valitavoite IS NOT NULL
+                                                           WHERE urakka = " (hae-oulun-alueurakan-2014-2019-id)
+                                                           " AND valtakunnallinen_valitavoite IS NOT NULL
                                                            AND poistettu IS NOT TRUE
                                                            LIMIT 1;"))))
             _ (is (integer? random-tavoite-id-urakassa))
