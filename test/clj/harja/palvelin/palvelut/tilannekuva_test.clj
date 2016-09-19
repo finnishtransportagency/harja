@@ -135,11 +135,11 @@
         vastaus (hae-tk parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
 
-;; Päällystysurakoista ei löydy toteumia
+;; Urakkatyyppi ei vaikuta enää hakutuloksiin
 (deftest urakkatyyppi-filter-toimii
   (let [parametrit (assoc parametrit-laaja-historia :urakkatyyppi :paallystys)
         vastaus (hae-tk parametrit)]
-    (is (= (count (:toteumat vastaus)) 0))))
+    (is (= (count (:toteumat vastaus)) 3))))
 
 (deftest ala-hae-tarkastuksia
   (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :tarkastukset)
