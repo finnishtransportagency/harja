@@ -95,7 +95,8 @@
 (def korjaava-toimenpide-tila->numero
   {:avoin 0
    :siirretty 1
-   :suljettu 2})
+   :suljettu 2
+   :toteutettu 2})
 
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
@@ -104,6 +105,7 @@
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:alueurakkanro (:alueurakkanro data)]]
+          [[:harjaid (:id data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
            [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
