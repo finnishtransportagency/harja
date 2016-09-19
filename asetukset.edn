@@ -107,7 +107,7 @@
                         :valaistusurakoiden-alk-osoite            "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl167.shz"
                         :valaistusurakoiden-alk-tuontikohde       "./shp/Valaistusurakat/PTV_tl167.shz"
 
-                        :paallystyspalvelusopimusten-shapefile    "file://shp/Paallystyspalvelusopimukset/tl151.shp"
+                        :paallystyspalvelusopimusten-shapefile    "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
                         :paallystyspalvelusopimusten-alk-osoite   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl151.shz"
                         :paallystyspalvelusopimusten-alk-tuontikohde "./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
                         }
