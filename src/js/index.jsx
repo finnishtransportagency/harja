@@ -1,13 +1,13 @@
 import React from 'react';
 import { Router, Route, Link, IndexRoute, hashHistory, browserHistory } from 'react-router'
 import ReactDOM from 'react-dom';
-import AppContainer from './components/AppContainer.jsx';
+import Nav from './components/Nav.jsx';
 import Home from './components/Home.jsx';
 
 
 ReactDOM.render(
   <Router history={hashHistory}>
-    <Route path="/" component={AppContainer}>
+    <Route path="/" component={Nav}>
       <IndexRoute component={Home} />
 
     </Route>
