@@ -190,8 +190,8 @@
            :vakiohavaintojen-kuvaukset (q/hae-vakiohavaintojen-kuvaukset @db)}})))
 
 
-(defn- tallenna-liite [req]
-  (jdbc/with-db-transaction [tx @db]
+(defn- tallenna-liite [db req]
+  (jdbc/with-db-transaction [tx db]
     (let [id (tallenna-multipart-kuva! tx (get-in req [:multipart-params "liite"]) (get-in req [:kayttaja :id]))]
       {:status 200
        :headers {"Content-Type" "text/plain"}
@@ -205,7 +205,7 @@
    http :ls-tallenna-liite
    (wrap-multipart-params
     (fn [req]
-      (tallenna-liite req)))
+      (tallenna-liite db req)))
    {:ring-kasittelija? true})
   (laadunseuranta-api db http))
 
