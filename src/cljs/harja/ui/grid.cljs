@@ -316,7 +316,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                 (hae rivi)
                                 (get rivi nimi))]
               (if fmt
-                (fmt haettu-arvo rivi)
+                (fmt haettu-arvo)
                 [nayta-arvo skeema (vain-luku-atomina haettu-arvo)])))])) skeema)
    (when (and (not piilota-toiminnot?)
               tallenna) [:td.toiminnot])])
