@@ -122,6 +122,6 @@
               :salasana #=(slurp "../.harja/labyrintti-salasana")}
 
  ;; ClamAV REST palvelun osoite
- :virustarkistus {:url "http://localhost:8080/scan"} V1_422__.sql
+ :virustarkistus {:url "http://localhost:8080/scan"}
 
  :paivystystarkistus {:paivittainen-aika [12 11 00]}}
