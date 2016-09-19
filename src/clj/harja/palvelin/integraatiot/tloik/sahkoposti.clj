@@ -132,17 +132,28 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 
 (defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id ilmoitus-id kuittaustyyppi kommentti]}]
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
-        ilmoitus (:id (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id)))]
+        ilmoitus (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
     (if-not paivystaja
       +ilmoitustoimenpiteen-tallennus-epaonnistui+
-      (let [ilmoitustoimenpide-id (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
-                                   db ilmoitus ilmoitus-id kommentti
-                                   (kuittaustyyppi->enum kuittaustyyppi) paivystaja)]
-        (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)
+      (let [tallenna (fn [kuittaustyyppi vapaateksti]
+                       (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+                         db
+                         (:id ilmoitus)
+                         ilmoitus-id
+                         vapaateksti
+                         kuittaustyyppi
+                         paivystaja))]
+        (when (and (= kuittaustyyppi :aloitettu) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
+          (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
+            (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
+
+        (let [ilmoitustoimenpide-id (tallenna (kuittaustyyppi->enum kuittaustyyppi) kommentti)]
+          (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
+
         (assoc +onnistunut-viesti+
-               :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
-                                  :urakka-id (:urakka ilmoitus)
-                                  :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
+          :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
+                             :urakka-id (:urakka ilmoitus)
+                             :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
 
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
