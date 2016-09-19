@@ -1,6 +1,5 @@
 (ns harja-laadunseuranta.tietokanta
-  (:require [harja-laadunseuranta.config :as c]
-            [clojure.java.io :as io])
+  (:require [clojure.java.io :as io])
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource)
            (java.io InputStream ByteArrayOutputStream)
            (org.postgresql.largeobject LargeObjectManager)
