@@ -68,7 +68,8 @@
           xml-mappina (xml/lue xml)
           xml-liite (-> xml-mappina first :content last :content second :content)]
       (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
-      (is (= (dekoodaa-base64 (.getBytes xml-liite)) liite-datassa) "Liite on myös XML-sanomassa"))
+      (is (= (String. (dekoodaa-base64 (.getBytes xml-liite)))
+             liite-datassa) "Liite on myös XML-sanomassa"))
     (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE liite = " liite-id ";"))
     (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
     (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
