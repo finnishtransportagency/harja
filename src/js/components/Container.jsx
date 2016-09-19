@@ -1,5 +1,5 @@
 import React from 'react';
-import App from './App.jsx';
+import Home from './Home.jsx';
 import request from 'superagent';
 
 export default React.createClass({
@@ -45,7 +45,7 @@ export default React.createClass({
   render() {
     return (
       <div>
-        <App
+        <Home
             careNotices={this.state.careNotices}
             maintenanceNotices={this.state.maintenanceNotices}
             faqNotices={this.state.faqNotices}/>
