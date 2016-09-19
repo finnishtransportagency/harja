@@ -74,12 +74,6 @@
                                     (.getArray arvo))))
         ;; Tyyppi -> set
         (assoc turpo 15 (into #{} (when-let [arvo (get turpo 15)]
-                                    (.getArray arvo))))
-        ;; Vammat -> set
-        (assoc turpo 19 (into #{} (when-let [arvo (get turpo 19)]
-                                    (.getArray arvo))))
-        ;; Vahingoittuneet ruumiinosat -> set
-        (assoc turpo 20 (into #{} (when-let [arvo (get turpo 20)]
                                     (.getArray arvo))))))
 
 (defn hae-korjaavat-toimenpiteet [turpo-id]
@@ -145,8 +139,8 @@
                            "muu_tyontekija"
                            "Auraaja"
                            "Sairaalareissu"
-                           #{"luunmurtumat"}
-                           #{"selka", "vartalo"}
+                           "luunmurtumat"
+                           "selka"
                            true
                            "Veera"
                            "Veistelijä"
@@ -207,8 +201,8 @@
                              "muu_tyontekija"
                              "Auraaja"
                              "Sairaalareissu"
-                             #{"luunmurtumat"}
-                             #{"selka", "vartalo"}
+                             "luunmurtumat"
+                             "selka"
                              true
                              "Veera"
                              "Veistelijä"
