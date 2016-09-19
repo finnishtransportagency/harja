@@ -108,18 +108,6 @@
         :paallystyskohde-id paallystyskohde-id
         :kommentit kommentit))))
 
-(defn- paattele-ilmoituksen-tila
-  [{:keys [tekninen-osa taloudellinen-osa valmispvm-kohde valmispvm-paallystys]}]
-  (cond
-    (and (= (:paatos tekninen-osa) :hyvaksytty)
-         (= (:paatos taloudellinen-osa) :hyvaksytty))
-    "lukittu"
-
-    (and valmispvm-kohde valmispvm-paallystys)
-    "valmis"
-
-    :default
-    "aloitettu"))
 
 (defn- poista-ilmoitustiedoista-tieosoitteet
   "Poistaa päällystysilmoituksen ilmoitustiedoista sellaiset tiedot, jotka tallennetaan
@@ -226,7 +214,7 @@
     (do (log/debug "Päivitetään päällystysilmoituksen perustiedot")
         (let [muutoshinta (paallystysilmoitus-domain/laske-muutokset-kokonaishintaan
                             (:tyot ilmoitustiedot))
-              tila (paattele-ilmoituksen-tila paallystysilmoitus)
+              tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila paallystysilmoitus)
               ilmoitustiedot (-> ilmoitustiedot
                                  (poista-ilmoitustiedoista-tieosoitteet)
                                  (tyot-tyyppi-avain->string [:tyot]))
