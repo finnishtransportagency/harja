@@ -6,5 +6,4 @@ WHERE id IN (SELECT y.id
              WHERE rooli = 'Kunnossapitopäällikkö'
                    OR rooli = 'Sillanvalvoja'
                    OR rooli = 'Kelikeskus'
-                   OR rooli = 'Tieliikennekeskus'
-                   OR rooli = 'Sampo yhteyshenkilö');
+                   OR rooli = 'Tieliikennekeskus');
