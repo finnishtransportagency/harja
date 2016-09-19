@@ -140,19 +140,20 @@
             "grid-solu-varoitus"))
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
-        :nimi :valtakunnallinen-takaraja :hae #(cond
-                                                (:valtakunnallinen-takaraja %)
-                                                (pvm/pvm-opt (:valtakunnallinen-takaraja %))
+        :nimi :valtakunnallinen-takaraja
+        :hae #(cond
+               (:valtakunnallinen-takaraja %)
+               (pvm/pvm-opt (:valtakunnallinen-takaraja %))
 
-                                                (and (:valtakunnallinen-takarajan-toistopaiva %)
-                                                     (:valtakunnallinen-takarajan-toistokuukausi %))
-                                                (str "Vuosittain "
-                                                     (:valtakunnallinen-takarajan-toistopaiva %)
-                                                     "."
-                                                     (:valtakunnallinen-takarajan-toistokuukausi %))
+               (and (:valtakunnallinen-takarajan-toistopaiva %)
+                    (:valtakunnallinen-takarajan-toistokuukausi %))
+               (str "Vuosittain "
+                    (:valtakunnallinen-takarajan-toistopaiva %)
+                    "."
+                    (:valtakunnallinen-takarajan-toistokuukausi %))
 
-                                                :default
-                                                "Ei takarajaa")
+               :default
+               "Ei takarajaa")
         :tyyppi :pvm
         :muokattava? (constantly false)}
        {:otsikko "Taka\u00ADraja ura\u00ADkassa"
