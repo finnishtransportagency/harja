@@ -169,7 +169,7 @@
     s/Str {:ok s/Any}
     (fn [kayttaja urakkatyyppi]
       (log/debug "Haetaan urakkatyypin urakat " urakkatyyppi)
-      (hae-urakkatyypin-urakat urakkatyyppi kayttaja)))
+      (hae-urakkatyypin-urakat db urakkatyyppi kayttaja)))
 
    :ls-hae-kayttajatiedot
    (fn [kayttaja]
