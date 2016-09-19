@@ -277,6 +277,19 @@ VALUES (:turvallisuuspoikkeama, :kommentti);
 INSERT INTO turvallisuuspoikkeama_liite (turvallisuuspoikkeama, liite)
 VALUES (:turvallisuuspoikkeama, :liite);
 
+-- name: hae-turvallisuuspoikkeaman-liitteet
+-- Hakee annetun turvallisuuspoikkeaman kaikki liitteet
+SELECT
+  l.id        AS id,
+  l.tyyppi    AS tyyppi,
+  l.koko      AS koko,
+  l.nimi      AS nimi,
+  l.liite_oid AS oid
+FROM liite l
+  JOIN turvallisuuspoikkeama_liite hl ON l.id = hl.liite
+WHERE hl.turvallisuuspoikkeama = :turvallisuuspoikkeamaid
+ORDER BY l.luotu ASC;
+
 --name: paivita-korjaava-toimenpide<!
 UPDATE korjaavatoimenpide
 SET
