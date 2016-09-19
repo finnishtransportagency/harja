@@ -31,7 +31,8 @@
   (apply compojure/routing
          (if (= "/" (:uri req))
            (assoc req :uri "/index.html")
-           req) kasittelijat))
+           req)
+         (remove nil? kasittelijat)))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
@@ -189,7 +190,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
   (start [this]
     (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (let [todennus (:todennus this)
-          resurssit (route/resources "")]
+          resurssit (route/resources "")
+          dev-resurssit (when kehitysmoodi
+                          (route/files "" {:root "dev-resources"}))]
       (swap! lopetus-fn
              (constantly
                (http/run-server
@@ -201,10 +204,11 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                              uikasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                (wrap-anti-forgery anti-csrf-kaytossa?))]
 
-                         (or (reitita req (mapv :fn ei-todennettavat))
+                         (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                                resurssit dev-resurssit))
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija kehitysmoodi) resurssit)
+                                          (conj (partial index-kasittelija kehitysmoodi))
                                           (conj uikasittelija)))))
                        (catch [:virhe :todennusvirhe] _
                          {:status 403 :body "Todennusvirhe"}))))
