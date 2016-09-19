@@ -35,18 +35,13 @@
         (io/copy in out)
         (.toByteArray out)))))
 
-(defn tallenna-lob [^InputStream in]
-  (with-open [c (doto (.getConnection (:datasource @db))
-                  (.setAutoCommit false))]
-    (let [lom (large-object-api c)
-          oid (.create lom LargeObjectManager/READWRITE)]
-      (try
-        (with-open [obj (.open lom oid LargeObjectManager/WRITE)
-                    out (.getOutputStream obj)]
-          (io/copy in out)
-          oid)
-        (finally
-          (.commit c))))))
+(defn tallenna-lob [c ^InputStream in]
+  (let [lom (large-object-api c)
+        oid (.create lom LargeObjectManager/READWRITE)]
+    (with-open [obj (.open lom oid LargeObjectManager/WRITE)
+                out (.getOutputStream obj)]
+      (io/copy in out)
+      oid)))
 
 (defn tee-thumbnail [kuva]
   (try

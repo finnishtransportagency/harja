@@ -53,7 +53,7 @@
                                 :luoja kayttaja-id}))))
 
 (defn- tallenna-multipart-kuva! [tx {:keys [tempfile content-type size]} kayttaja-id]
-  (let [oid (tietokanta/tallenna-lob (io/input-stream tempfile))]
+  (let [oid (tietokanta/tallenna-lob tx (io/input-stream tempfile))]
     (:id (q/tallenna-kuva<! tx {:lahde "harja-ls-mobiili"
                                 :tyyppi content-type
                                 :koko size
