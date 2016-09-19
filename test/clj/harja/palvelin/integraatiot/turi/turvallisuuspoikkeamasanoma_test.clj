@@ -8,6 +8,7 @@
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [clj-time.core :as t]
+            [harja.tyokalut.xml :as xml]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
@@ -57,13 +58,16 @@
         data (turi/hae-turvallisuuspoikkeama
                (:liitteiden-hallinta jarjestelma)
                (:db jarjestelma)
-               id)]
+               id)
+        liite-datassa (slurp (:data (first (:liitteet data))))]
     ;; Data, josta sanoma muodostetaan, sisältää liitteet oikein
     (is (= (count (:liitteet data)) 1))
-    (is (str/starts-with? (slurp (:data (first (:liitteet data))))
-                          "<?xml version="))
-    (let [xml (sanoma/muodosta data)]
-      (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen"))
+    (is (str/starts-with? liite-datassa "<?xml version=") "Liite löytyy datasta")
+    (let [xml (sanoma/muodosta data)
+          xml-mappina (xml/lue xml)
+          xml-liitteet (-> xml-mappina first :content last :content second :content)]
+      (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
+      (is (= (slurp xml-liitteet) liite-datassa) "Liite on myös XML-sanomassa"))
     (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE liite = " liite-id ";"))
     (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
     (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
