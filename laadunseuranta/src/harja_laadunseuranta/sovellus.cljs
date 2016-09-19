@@ -37,7 +37,7 @@
                            :aosa 1
                            :aet 1}
                :talvihoitoluokka 2}
-   :pikahavainnot {:liukasta false}
+   :pikahavainnot {}
    :keskita-ajoneuvoon false
    :virheet []
    :ilmoitukset []

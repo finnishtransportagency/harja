@@ -34,20 +34,36 @@
                                       :luoja (:id user)})))
 
 (defn- merkitse-valitavoite-valmiiksi! [db user
-                                       {:keys [urakka-id id valmispvm valmis-kommentti] :as tiedot}]
+                                        {:keys [urakka-id id valmispvm valmis-kommentti] :as tiedot}]
   (q/merkitse-valmiiksi! db
                          (when valmispvm
-                              (konv/sql-date valmispvm))
+                           (konv/sql-date valmispvm))
                          (when valmispvm
                            valmis-kommentti)
                          (:id user) urakka-id id))
 
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
-  (doseq [{:keys [id takaraja nimi] :as valitavoite} (filter #(and (> (:id %) 0)
-                                                                   (not (:poistettu %))) valitavoitteet)]
-    (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
-    (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
-      (merkitse-valitavoite-valmiiksi! db user valitavoite))))
+  (let [valitavoitteet (filter (comp not :valtakunnallinen-id) valitavoitteet)]
+    (doseq [{:keys [id takaraja nimi] :as valitavoite}
+            (filter #(and (> (:id %) 0)
+                          (not (:poistettu %)))
+                    valitavoitteet)]
+      (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
+      (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
+        (merkitse-valitavoite-valmiiksi! db user valitavoite)))))
+
+(defn- paivita-urakan-valtakunnalliset-valitavoitteet! [db user valitavoitteet urakka-id]
+  (let [valitavoitteet (filter :valtakunnallinen-id valitavoitteet)]
+    (doseq [{:keys [id takaraja nimi] :as valitavoite}
+            (filter #(and (> (:id %) 0)
+                          (not (:poistettu %)))
+                    valitavoitteet)]
+
+      ;; Urakkakohtaisten muutosten tekemiseen vaaditaan "valmis" oikeus, kuten myös valmiiksi merkitsemiseen.
+      (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
+        (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id))
+      (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
+        (merkitse-valitavoite-valmiiksi! db user valitavoite)))))
 
 (defn tallenna-urakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
@@ -56,4 +72,5 @@
     (poista-poistetut-urakan-valitavoitteet db user valitavoitteet urakka-id)
     (luo-uudet-urakan-valitavoitteet db user valitavoitteet urakka-id)
     (paivita-urakan-valitavoitteet! db user valitavoitteet urakka-id)
+    (paivita-urakan-valtakunnalliset-valitavoitteet! db user valitavoitteet urakka-id)
     (hae-urakan-valitavoitteet db user urakka-id)))

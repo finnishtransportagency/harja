@@ -498,3 +498,15 @@ UPDATE urakka
 UPDATE urakka
    SET indeksi = :indeksi
  WHERE id = :urakka
+
+-- name: tuhoa-valaistusurakkadata!
+DELETE FROM valaistusurakka;
+
+-- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
+SELECT alueurakka
+FROM valaistusurakka
+WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
+
+-- name: luo-valaistusurakka<!
+INSERT INTO valaistusurakka (alueurakkanro, alue)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY);

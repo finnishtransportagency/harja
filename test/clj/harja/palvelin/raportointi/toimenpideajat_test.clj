@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.toimenpidekilometrit-test
+(ns harja.palvelin.raportointi.toimenpideajat-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]

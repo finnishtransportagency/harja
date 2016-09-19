@@ -24,6 +24,9 @@
                        "ely_urakanvalvoja"
                        "ely_laadunvalvoja"})
 
+(defn on-ryhma? [ryhmat vaadittu-ryhma]
+  (some #(str/ends-with? % vaadittu-ryhma) ryhmat))
+
 (defn feikattu-kayttaja? [kayttajanimi]
   (contains? (set (:feikatut-kayttajat @c/config)) kayttajanimi))
 
@@ -32,7 +35,7 @@
     (if-let [kayttajanimi (kayttajaheaderi req)]
       (if-let [kayttaja (lataa-kayttaja kayttajanimi)]
         (if (or (feikattu-kayttaja? kayttajanimi)
-                (some (ryhmat req) vaaditut-ryhmat))
+                (some #(on-ryhma? (ryhmat req) %) vaaditut-ryhmat))
           (handler (assoc req :kayttaja kayttaja))
           (unauthorized "VIRHE: Ei käyttöoikeutta"))
         (unauthorized "VIRHE: Käyttäjää ei löydy"))
@@ -51,7 +54,7 @@
 (defn poikkeuskasittelija [^Exception e data req]
   (log/error "Virhe " (.getMessage e))
   (when-let [next-ex (.getNextException e)]
-    (log/error "-- Sisempi virhe " (.getMessage next-ex)))  
+    (log/error "-- Sisempi virhe " (.getMessage next-ex)))
   (internal-server-error {:error (.getMessage e)}))
 
 (defn select-non-nil-keys [c keys]

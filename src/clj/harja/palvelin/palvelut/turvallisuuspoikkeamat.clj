@@ -39,6 +39,7 @@
                                  (mapv #(assoc % :vastuuhenkilo
                                                  (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
                                        (:korjaavattoimenpiteet turpo)))
+                    (assoc turpo :liitteet (into [] (q/hae-turvallisuuspoikkeaman-liitteet db turvallisuuspoikkeama-id)))
                     (update-in turpo [:kommentit]
                                (fn [kommentit]
                                  (sort-by :aika (map #(if (nil? (:id (:liite %)))
@@ -172,10 +173,16 @@
                                                (:id user))]
       (q/liita-kommentti<! db tp-id (:id kommentti)))))
 
+(defn tallenna-turvallisuuspoikkeaman-liite [db turvallisuuspoikkeama]
+  (when-let [uusi-liite (:uusi-liite turvallisuuspoikkeama)]
+    (log/info "UUSI LIITE: " uusi-liite)
+    (q/liita-liite<! db (:id turvallisuuspoikkeama) (:id uusi-liite))))
+
 (defn tallenna-turvallisuuspoikkeama-kantaan [db user tp korjaavattoimenpiteet uusi-kommentti urakka]
   (jdbc/with-db-transaction [db db]
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db user tp)]
       (tallenna-turvallisuuspoikkeaman-kommentti db user uusi-kommentti (:urakka tp) tp-id)
+      (tallenna-turvallisuuspoikkeaman-liite db tp)
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
       tp-id)))
 

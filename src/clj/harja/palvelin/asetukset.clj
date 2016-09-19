@@ -84,7 +84,10 @@
                                            (s/optional-key :urakoiden-alk-tuontikohde)                 s/Str
                                            (s/optional-key :ely-alueiden-shapefile)                    s/Str
                                            (s/optional-key :ely-alueiden-alk-osoite)                   s/Str
-                                           (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str}
+                                           (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str
+                                           (s/optional-key :valaistusurakoiden-shapefile)              s/Str
+                                           (s/optional-key :valaistusurakoiden-alk-osoite)             s/Str
+                                           (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str}
 
    (s/optional-key :yha)                  {:url            s/Str
                                            :kayttajatunnus s/Str
@@ -94,7 +97,10 @@
                                            :kayttajatunnus s/Str
                                            :salasana       s/Str}
 
-   (s/optional-key :virustarkistus)       {:url            s/Str}})
+   (s/optional-key :virustarkistus)       {:url            s/Str}
+
+   (s/optional-key :paivystystarkistus)   {:paivittainen-aika [s/Num]}
+   })
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
