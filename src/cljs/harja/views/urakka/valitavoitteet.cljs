@@ -162,20 +162,16 @@
         :solun-luokka
         (fn [_ rivi]
           (let [poikkeava "grid-solu-varoitus"]
-            (cond (and (:valtakunnallinen-takaraja rivi)
-                       (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
-                  poikkeava
-
-                  (and (:valtakunnallinen-takarajan-toistopaiva rivi)
-                       (:valtakunnallinen-takarajan-toistokuukausi rivi)
-                       (or (not= (:valtakunnallinen-takarajan-toistopaiva rivi)
-                                 (t/day (:takaraja rivi)))
-                           (not= (:valtakunnallinen-takarajan-toistokuukausi rivi)
-                                 (t/month (:takaraja rivi)))))
-                  poikkeava
-
-                  :default
-                  nil)))
+            (when (or
+                    (and (:valtakunnallinen-takaraja rivi)
+                         (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
+                    (and (:valtakunnallinen-takarajan-toistopaiva rivi)
+                         (:valtakunnallinen-takarajan-toistokuukausi rivi)
+                         (or (not= (:valtakunnallinen-takarajan-toistopaiva rivi)
+                                   (t/day (:takaraja rivi)))
+                             (not= (:valtakunnallinen-takarajan-toistokuukausi rivi)
+                                   (t/month (:takaraja rivi))))))
+                    poikkeava)))
         :tyyppi :pvm
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
