@@ -154,7 +154,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :muokattava? :sakko?}
 
          (when (urakka/indeksi-kaytossa?)
-           {:otsikko "Indeksi" :nimi :indeksi :leveys 1.5
+           {:otsikko "Indeksi"
+            :nimi :indeksi
+            :leveys 1.5
             :tyyppi :valinta
             :valinnat ["MAKU 2005" "MAKU 2010"]               ;; FIXME: haetaanko indeksit tiedoista?
             :valinta-nayta #(or % "Ei sidota indeksiin")
