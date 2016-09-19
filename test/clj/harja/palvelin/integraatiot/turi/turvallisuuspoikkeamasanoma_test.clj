@@ -66,7 +66,7 @@
     (is (str/starts-with? liite-datassa "<?xml version=") "Liite löytyy datasta")
     (let [xml (sanoma/muodosta data)
           xml-mappina (xml/lue xml)
-          xml-liite (-> xml-mappina first :content last :content second :content)]
+          xml-liite (-> xml-mappina first :content last :content second :content first)]
       (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
       (is (= (String. (dekoodaa-base64 (.getBytes xml-liite)))
              liite-datassa) "Liite on myös XML-sanomassa"))
