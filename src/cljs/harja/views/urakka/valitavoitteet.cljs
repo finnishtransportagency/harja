@@ -134,10 +134,10 @@
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
        {:otsikko "U\u00ADrak\u00ADka\u00ADkoh\u00ADtai\u00ADset tar\u00ADken\u00ADnuk\u00ADset"
         :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128
-        :fmt (fn [_ rivi]
-               (if-not (= (:valtakunnallinen-nimi rivi) (:nimi rivi))
-                 [:span.grid-solu-varoitus (:nimi rivi)]
-                 [:span (:nimi rivi)]))
+        :solun-luokka
+        (fn [_ rivi]
+          (when-not (= (:valtakunnallinen-nimi rivi) (:nimi rivi))
+            "grid-solu-varoitus"))
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Valta\u00ADkunnal\u00ADlinen taka\u00ADraja" :leveys 20
         :nimi :valtakunnallinen-takaraja :hae #(cond
@@ -157,24 +157,25 @@
         :muokattava? (constantly false)}
        {:otsikko "Taka\u00ADraja ura\u00ADkassa"
         :leveys 20
-        :nimi
-        :takaraja
-        :fmt (fn [_ rivi]
-               (let [poikkeava [:span.grid-solu-varoitus (pvm/pvm-opt (:takaraja rivi))]]
-                 (cond (and (:valtakunnallinen-takaraja rivi)
-                            (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
-                       poikkeava
+        :nimi :takaraja
+        :fmt pvm/pvm-opt
+        :solun-luokka
+        (fn [_ rivi]
+          (let [poikkeava "grid-solu-varoitus"]
+            (cond (and (:valtakunnallinen-takaraja rivi)
+                       (not= (:takaraja rivi) (:valtakunnallinen-takaraja rivi)))
+                  poikkeava
 
-                       (and (:valtakunnallinen-takarajan-toistopaiva rivi)
-                            (:valtakunnallinen-takarajan-toistokuukausi rivi)
-                            (or (not= (:valtakunnallinen-takarajan-toistopaiva rivi)
-                                      (t/day (:takaraja rivi)))
-                                (not= (:valtakunnallinen-takarajan-toistokuukausi rivi)
-                                      (t/month (:takaraja rivi)))))
-                       poikkeava
+                  (and (:valtakunnallinen-takarajan-toistopaiva rivi)
+                       (:valtakunnallinen-takarajan-toistokuukausi rivi)
+                       (or (not= (:valtakunnallinen-takarajan-toistopaiva rivi)
+                                 (t/day (:takaraja rivi)))
+                           (not= (:valtakunnallinen-takarajan-toistokuukausi rivi)
+                                 (t/month (:takaraja rivi)))))
+                  poikkeava
 
-                       :default
-                       [:span (pvm/pvm-opt (:takaraja rivi))])))
+                  :default
+                  nil)))
         :tyyppi :pvm
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)

@@ -2,6 +2,7 @@
   "Yleisiä apureita erityyppisen datan formatointiin."
   (:require [harja.pvm :as pvm]
     #?(:cljs [goog.i18n.currencyCodeMap])
+    #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [goog.i18n.NumberFormatSymbols])
     #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
     #?(:cljs [goog.i18n.NumberFormat])
@@ -30,6 +31,7 @@
        ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
        ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
        ;; vasta IE11 versiosta lähtien.
+       (log "FORMATOINPA " (pr-str eur))
        (str (.format euro-number-format eur) " \u20AC")
 
        :clj
