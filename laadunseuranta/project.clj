@@ -51,7 +51,8 @@
   :main harja-laadunseuranta.core
 
   :repl-options {:init-ns harja-laadunseuranta.core
-                 :init (start-server)}
+                 :init (start-server)
+                 :port 52510}
   
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
 

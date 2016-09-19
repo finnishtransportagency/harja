@@ -193,8 +193,8 @@
                                          (tallenna-fn @model))
                             :disabled (not (empty? @virheita))}
           [:span.livicon-save] "Tallenna"]
-         [:button.peruuta {:on-click #(peruuta-fn)}
-          [:span.livicon-delete] "Peruuta"]]]])))
+         [:button.nappi-toissijainen {:on-click #(peruuta-fn)}
+           "Peruuta"]]]])))
 
 (def test-model (atom {:kayttajanimi "Jalmari Järjestelmävastuuhenkilö"
                        :tr-osoite {:tie 20 :aosa 3 :aet 3746}
