@@ -172,6 +172,10 @@
     (str (fmt/leikkaa-merkkijono 30 otsikko) "...")
     otsikko))
 
+(defn ilmoitustyypin-selite [ilmoitustyyppi]
+  (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
+    [:div {:class tyyppi} tyyppi ]))
+
 (defn ilmoitusten-paanakyma
   [e! ilmoitukset]
 
@@ -234,7 +238,8 @@
             {:otsikko "Ilmoitettu" :nimi :ilmoitettu
              :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
             {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-             :hae #(domain/ilmoitustyypin-lyhenne (:ilmoitustyyppi %))
+             :tyyppi :komponentti
+             :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
              :leveys 2}
             {:otsikko "Sijainti" :nimi :tierekisteri
              :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
