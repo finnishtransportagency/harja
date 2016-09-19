@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import NoticeList from './NoticeList.jsx';
 import Notice from './Notice.jsx';
+import Nav from './Nav.jsx';
 import {Button, Colors} from 'react-foundation';
 import pubsub from 'pubsub-js';
 
@@ -12,8 +13,13 @@ export default React.createClass({
   },
 
   componentWillMount() {
+    /*
     this.pubsub_token = pubsub.subscribe('noticeSelected', (action, notice) => {
       this.setState({ selection: notice });
+    });
+    */
+    this.pubsub_token = pubsub.subscribe('mainNavigation', (action, link) => {
+      console.log(action + " / " + link);
     });
   },
 
@@ -43,6 +49,7 @@ export default React.createClass({
 
     return (
       <div>
+        <Nav />
         <h1>Harja Info</h1>
           {mainEl}
           {singleNoticeEl}
