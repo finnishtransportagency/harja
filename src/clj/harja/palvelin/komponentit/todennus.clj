@@ -190,15 +190,12 @@ headerit palautetaan normaalisti."
                   oam-tiedot))
          oam-tiedot)))
 
-
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
   (todenna-pyynto [this req] "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
 req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
 (def todennusvirhe {:virhe :todennusvirhe})
-
-
 
 (defrecord HttpTodennus [oikeudet]
   component/Lifecycle
