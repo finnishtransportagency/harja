@@ -44,10 +44,13 @@ export default React.createClass({
 
   render() {
     return (
-      <App
-          careNotices={this.state.careNotices}
-          maintenanceNotices={this.state.maintenanceNotices}
-          faqNotices={this.state.faqNotices}/>
+      <div>
+        <App
+            careNotices={this.state.careNotices}
+            maintenanceNotices={this.state.maintenanceNotices}
+            faqNotices={this.state.faqNotices}/>
+          {this.props.children}
+      </div>
     );
   }
 });
