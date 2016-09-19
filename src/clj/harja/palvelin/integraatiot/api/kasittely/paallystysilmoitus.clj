@@ -59,7 +59,7 @@
   (q-paallystys/luo-paallystysilmoitus<!
     db
     {:paallystyskohde kohde-id
-     :tila "aloitettu"
+     :tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila perustiedot)
      :ilmoitustiedot ilmoitustiedot-json
      :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
      :valmispvm_paallystys (json/aika-string->java-sql-date
@@ -76,9 +76,10 @@
                                    {:keys [perustiedot] :as paallystysilmoitus}
                                    ilmoitustiedot-json]
   (log/debug "Päivitetään vanha päällystysilmoitus")
-  (q-paallystys/paivita-api-paallystysilmoitus<!
+  (q-paallystys/paivita-paallystysilmoitus<!
     db
-    {:ilmoitustiedot ilmoitustiedot-json
+    {:tila (paallystysilmoitus-domain/paattele-ilmoituksen-tila perustiedot)
+     :ilmoitustiedot ilmoitustiedot-json
      :aloituspvm (json/aika-string->java-sql-date (:aloituspvm perustiedot))
      :valmispvm_paallystys (json/aika-string->java-sql-date
                              (:valmispvm-paallystys perustiedot))
