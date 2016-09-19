@@ -153,7 +153,7 @@
   "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
   (tuo-valaistusilmoitus)
 
-  (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
-         (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+  (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2018';"))
+         (first (q "select urakka from ilmoitus where ilmoitusid = 987654321;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))
