@@ -21,9 +21,12 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defonce valittu-sopimusnumero (let [val (atom nil)]
-                                 (run! (reset! val (first (:sopimukset @nav/valittu-urakka))))
-                                 val))
+(defonce valittu-sopimusnumero
+  (reaction-writable
+   (let [{:keys [sopimukset paasopimus]} @nav/valittu-urakka]
+     (if paasopimus
+       [paasopimus (get sopimukset paasopimus)]
+       (first sopimukset)))))
 
 (defonce urakan-yks-hint-tyot (atom nil))
 (defonce urakan-kok-hint-tyot (atom nil))
