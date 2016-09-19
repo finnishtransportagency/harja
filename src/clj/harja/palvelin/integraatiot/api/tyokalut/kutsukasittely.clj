@@ -117,8 +117,9 @@
   (tee-virhevastaus 403 virheet))
 
 (defn tee-vastaus
-  "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok). Payload on Clojure dataa, joka
-  muunnetaan JSON-dataksi. Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
+  "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
+  Payload on Clojure dataa, joka muunnetaan JSON-dataksi.
+  Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
   palautetaan status 500 (sisäinen käsittelyvirhe)."
   ([skeema payload] (tee-vastaus 200 skeema payload))
   ([status skeema payload]
@@ -137,7 +138,7 @@
      (if skeema
        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi virheet/+tyhja-vastaus+
-                           :viesti "Tyhja vastaus vaikka skeema annettu"}]})
+                           :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
        {:status status}))))
 
 (defn kasittele-invalidi-json [virheet resurssi]
