@@ -187,54 +187,88 @@
                                   :urakat kayttajan-urakat}))
         {:kuittaus :kuittaukset}))))
 
-(defn tallenna-ilmoitustoimenpide [db tloik _ ilmoitustoimenpide]
+(defn tallenna-ilmoitustoimenpide [db tloik _
+                                   {:keys [ilmoituksen-id
+                                           ulkoinen-ilmoitusid
+                                           tyyppi
+                                           vapaateksti
+                                           vakiofraasi
+                                           ilmoittaja-etunimi
+                                           ilmoittaja-sukunimi
+                                           ilmoittaja-matkapuhelin
+                                           ilmoittaja-tyopuhelin
+                                           ilmoittaja-sahkoposti
+                                           ilmoittaja-organisaatio
+                                           ilmoittaja-ytunnus
+                                           kasittelija-etunimi
+                                           kasittelija-sukunimi
+                                           kasittelija-matkapuhelin
+                                           kasittelija-tyopuhelin
+                                           kasittelija-sahkoposti
+                                           kasittelija-organisaatio
+                                           kasittelija-ytunnus]
+                                    :as ilmoitustoimenpide}]
   (log/debug (format "Tallennetaan uusi ilmoitustoimenpide: %s" ilmoitustoimenpide))
-  (let [toimenpide (jdbc/with-db-transaction [db db]
-                     (q/luo-ilmoitustoimenpide<!
-                       db
-                       {:ilmoitus (:ilmoituksen-id ilmoitustoimenpide)
-                        :ilmoitusid (:ulkoinen-ilmoitusid ilmoitustoimenpide)
-                        :kuitattu (harja.pvm/nyt)
-                        :vakiofraasi (:vakiofraasi ilmoitustoimenpide)
-                        :vapaateksti (:vapaateksti ilmoitustoimenpide)
-                        :kuittaustyyppi (name (:tyyppi ilmoitustoimenpide))
-                        :kuittaaja_henkilo_etunimi (:ilmoittaja-etunimi ilmoitustoimenpide)
-                        :kuittaaja_henkilo_sukunimi (:ilmoittaja-sukunimi ilmoitustoimenpide)
-                        :kuittaaja_henkilo_matkapuhelin (:ilmoittaja-matkapuhelin ilmoitustoimenpide)
-                        :kuittaaja_henkilo_tyopuhelin (:ilmoittaja-tyopuhelin ilmoitustoimenpide)
-                        :kuittaaja_henkilo_sahkoposti (:ilmoittaja-sahkoposti ilmoitustoimenpide)
-                        :kuittaaja_organisaatio_nimi (:ilmoittaja-organisaatio ilmoitustoimenpide)
-                        :kuittaaja_organisaatio_ytunnus (:ilmoittaja-ytunnus ilmoitustoimenpide)
-                        :kasittelija_henkilo_etunimi (:kasittelija-etunimi ilmoitustoimenpide)
-                        :kasittelija_henkilo_sukunimi (:kasittelija-sukunimi ilmoitustoimenpide)
-                        :kasittelija_henkilo_matkapuhelin (:kasittelija-matkapuhelin ilmoitustoimenpide)
-                        :kasittelija_henkilo_tyopuhelin (:kasittelija-tyopuhelin ilmoitustoimenpide)
-                        :kasittelija_henkilo_sahkoposti (:kasittelija-sahkoposti ilmoitustoimenpide)
-                        :kasittelija_organisaatio_nimi (:kasittelija-organisaatio ilmoitustoimenpide)
-                        :kasittelija_organisaatio_ytunnus (:kasittelija-ytunnus ilmoitustoimenpide)}))]
-    (tloik/laheta-ilmoitustoimenpide tloik (:id toimenpide))
-    (-> toimenpide
-        (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
-        (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi toimenpide))
-        (assoc-in [:kuittaaja :matkapuhelin] (:kuittaaja_henkilo_matkapuhelin toimenpide))
-        (assoc-in [:kuittaaja :tyopuhelin] (:kuittaaja_henkilo_tyopuhelin toimenpide))
-        (assoc-in [:kuittaaja :sahkoposti] (:kuittaaja_henkilo_sahkoposti toimenpide))
-        (assoc-in [:kuittaaja :organisaatio] (:kuittaaja_organisaatio_nimi toimenpide))
-        (assoc-in [:kuittaaja :ytunnus] (:kuittaaja_organisaatio_ytunnus toimenpide))
-        (assoc-in [:ilmoittaja :etunimi] (:ilmoittaja_henkilo_etunimi toimenpide))
-        (assoc-in [:ilmoittaja :sukunimi] (:ilmoittaja_henkilo_sukunimi toimenpide))
-        (assoc-in [:ilmoittaja :matkapuhelin] (:ilmoittaja_henkilo_matkapuhelin toimenpide))
-        (assoc-in [:ilmoittaja :tyopuhelin] (:ilmoittaja_henkilo_tyopuhelin toimenpide))
-        (assoc-in [:ilmoittaja :sahkoposti] (:ilmoittaja_henkilo_sahkoposti toimenpide))
-        (assoc-in [:ilmoittaja :organisaatio] (:ilmoittaja_organisaatio_nimi toimenpide))
-        (assoc-in [:ilmoittaja :ytunnus] (:ilmoittaja_organisaatio_ytunnus toimenpide))
-        (assoc-in [:kasittelija :etunimi] (:kasittelija_henkilo_etunimi toimenpide))
-        (assoc-in [:kasittelija :sukunimi] (:kasittelija_henkilo_sukunimi toimenpide))
-        (assoc-in [:kasittelija :matkapuhelin] (:kasittelija_henkilo_matkapuhelin toimenpide))
-        (assoc-in [:kasittelija :tyopuhelin] (:kasittelija_henkilo_tyopuhelin toimenpide))
-        (assoc-in [:kasittelija :sahkoposti] (:kasittelija_henkilo_sahkoposti toimenpide))
-        (assoc-in [:kasittelija :organisaatio] (:kasittelija_organisaatio_nimi toimenpide))
-        (assoc-in [:kasittelija :ytunnus] (:kasittelija_organisaatio_ytunnus toimenpide)))))
+  (let [tallenna (fn [tyyppi vapaateksti vakiofraasi]
+                   (let
+                     [toimenpide (jdbc/with-db-transaction [db db]
+                                   (q/luo-ilmoitustoimenpide<!
+                                     db
+                                     {:ilmoitus ilmoituksen-id
+                                      :ilmoitusid ulkoinen-ilmoitusid
+                                      :kuitattu (harja.pvm/nyt)
+                                      :vakiofraasi vakiofraasi
+                                      :vapaateksti vapaateksti
+                                      :kuittaustyyppi tyyppi
+                                      :kuittaaja_henkilo_etunimi ilmoittaja-etunimi
+                                      :kuittaaja_henkilo_sukunimi ilmoittaja-sukunimi
+                                      :kuittaaja_henkilo_matkapuhelin ilmoittaja-matkapuhelin
+                                      :kuittaaja_henkilo_tyopuhelin ilmoittaja-tyopuhelin
+                                      :kuittaaja_henkilo_sahkoposti ilmoittaja-sahkoposti
+                                      :kuittaaja_organisaatio_nimi ilmoittaja-organisaatio
+                                      :kuittaaja_organisaatio_ytunnus ilmoittaja-ytunnus
+                                      :kasittelija_henkilo_etunimi kasittelija-etunimi
+                                      :kasittelija_henkilo_sukunimi kasittelija-sukunimi
+                                      :kasittelija_henkilo_matkapuhelin kasittelija-matkapuhelin
+                                      :kasittelija_henkilo_tyopuhelin kasittelija-tyopuhelin
+                                      :kasittelija_henkilo_sahkoposti kasittelija-sahkoposti
+                                      :kasittelija_organisaatio_nimi kasittelija-organisaatio
+                                      :kasittelija_organisaatio_ytunnus kasittelija-ytunnus}))]
+
+                      (-> toimenpide
+                          (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
+                          (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi toimenpide))
+                          (assoc-in [:kuittaaja :matkapuhelin] (:kuittaaja_henkilo_matkapuhelin toimenpide))
+                          (assoc-in [:kuittaaja :tyopuhelin] (:kuittaaja_henkilo_tyopuhelin toimenpide))
+                          (assoc-in [:kuittaaja :sahkoposti] (:kuittaaja_henkilo_sahkoposti toimenpide))
+                          (assoc-in [:kuittaaja :organisaatio] (:kuittaaja_organisaatio_nimi toimenpide))
+                          (assoc-in [:kuittaaja :ytunnus] (:kuittaaja_organisaatio_ytunnus toimenpide))
+                          (assoc-in [:ilmoittaja :etunimi] (:ilmoittaja_henkilo_etunimi toimenpide))
+                          (assoc-in [:ilmoittaja :sukunimi] (:ilmoittaja_henkilo_sukunimi toimenpide))
+                          (assoc-in [:ilmoittaja :matkapuhelin] (:ilmoittaja_henkilo_matkapuhelin toimenpide))
+                          (assoc-in [:ilmoittaja :tyopuhelin] (:ilmoittaja_henkilo_tyopuhelin toimenpide))
+                          (assoc-in [:ilmoittaja :sahkoposti] (:ilmoittaja_henkilo_sahkoposti toimenpide))
+                          (assoc-in [:ilmoittaja :organisaatio] (:ilmoittaja_organisaatio_nimi toimenpide))
+                          (assoc-in [:ilmoittaja :ytunnus] (:ilmoittaja_organisaatio_ytunnus toimenpide))
+                          (assoc-in [:kasittelija :etunimi] (:kasittelija_henkilo_etunimi toimenpide))
+                          (assoc-in [:kasittelija :sukunimi] (:kasittelija_henkilo_sukunimi toimenpide))
+                          (assoc-in [:kasittelija :matkapuhelin] (:kasittelija_henkilo_matkapuhelin toimenpide))
+                          (assoc-in [:kasittelija :tyopuhelin] (:kasittelija_henkilo_tyopuhelin toimenpide))
+                          (assoc-in [:kasittelija :sahkoposti] (:kasittelija_henkilo_sahkoposti toimenpide))
+                          (assoc-in [:kasittelija :organisaatio] (:kasittelija_organisaatio_nimi toimenpide))
+                          (assoc-in [:kasittelija :ytunnus] (:kasittelija_organisaatio_ytunnus toimenpide)))))
+
+        ilmoitustoimenpiteet [(when (and (= tyyppi :aloitus)
+                                         (not (q/ilmoitukselle-olemassa-vastaanottokuittaus? db ulkoinen-ilmoitusid)))
+                                (let [aloitus-kuittaus (tallenna "vastaanotto" "Vastaanotettu" nil)]
+                                  (tloik/laheta-ilmoitustoimenpide tloik (:id aloitus-kuittaus))
+                                  aloitus-kuittaus))
+
+                              (let [kuittaus (tallenna (name tyyppi) vapaateksti vakiofraasi)]
+                                (tloik/laheta-ilmoitustoimenpide tloik (:id kuittaus))
+                                kuittaus)]]
+
+    (vec (remove nil? ilmoitustoimenpiteet))))
 
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
   (log/debug "Haetaan päivitetyt tiedot ilmoituksille " (pr-str id))
@@ -275,9 +309,6 @@
     (julkaise-palvelu http :hae-ilmoitus
                       (fn [user tiedot]
                         (hae-ilmoitus db user tiedot)))
-    (julkaise-palvelu http :tallenna-ilmoitustoimenpide
-                      (fn [user tiedot]
-                        (tallenna-ilmoitustoimenpide db tloik user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoitustoimenpiteet
                       (fn [user ilmoitustoimenpiteet]
                         (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet)))
@@ -289,7 +320,6 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-ilmoitukset
-                     :tallenna-ilmoitustoimenpide
                      :tallenna-ilmoitustoimenpiteet
                      :hae-ilmoituksia-idlla)
     this))

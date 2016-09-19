@@ -99,6 +99,30 @@
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
 ; FIXME Siivoa tallennettu data
 
+(deftest tallenna-laatupoikkeama
+  (let [laatupoikkeama {:yllapitokohde nil
+                        :sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :tr {:alkuosa 1
+                             :numero 1
+                             :alkuetaisyys 1
+                             :loppuetaisyys 2
+                             :loppuosa 2}
+                        :urakka (hae-oulun-alueurakan-2014-2019-id)
+                        :sanktiot nil
+                        :tekija :tilaaja
+                        :kohde "Kohde"}]
+
+    (testing "Laatupoikkeaman tallennus"
+      (let [vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama
+                                         +kayttaja-jvh+
+                                         laatupoikkeama)
+            id (:id vastaus)]
+
+        (is (number? id) "Tallennus palauttaa uuden id:n")))))
+
 (deftest hae-laatupoikkeaman-tiedot
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

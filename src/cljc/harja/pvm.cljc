@@ -22,7 +22,8 @@
   #?(:cljs (:import (goog.date DateTime))
      :clj
      (:import (java.util Calendar Date)
-              (java.text SimpleDateFormat))))
+              (java.text SimpleDateFormat)
+              (org.joda.time DateTimeZone))))
 
 
 #?(:cljs
@@ -178,8 +179,9 @@
          (= (t/month eka) (t/month toka)))))
 
 (defn valissa?
-  "Tarkistaa onko annettu pvm alkupvm:n ja loppupvm:n välissä. Mahdollisuus verrata ilman kellonaikaa,
-  joka on oletuksena true."
+  "Tarkistaa, onko annettu pvm alkupvm:n ja loppupvm:n välissä.
+  Palauttaa true myös silloin jos pvm on sama kuin alku- tai loppupvm.
+  Mahdollisuus verrata ilman kellonaikaa, joka on oletuksena true."
   ([pvm alkupvm loppupvm] (valissa? pvm alkupvm loppupvm true))
   ([pvm alkupvm loppupvm ilman-kellonaikaa?]
    (and (sama-tai-jalkeen? pvm alkupvm ilman-kellonaikaa?)
@@ -419,7 +421,6 @@
                 (dec kk))
         ]
     [ed-vuosi ed-kk]))
-
 
 (defn
   kuukauden-aikavali
@@ -682,3 +683,12 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 #?(:cljs
    (defn paivaa-sitten [paivaa]
      (-> paivaa t/days t/ago)))
+
+#?(:clj
+   (def suomen-aikavyohyke (DateTimeZone/forID "Europe/Helsinki")))
+
+#?(:clj
+   (defn suomen-aikavyohykkeessa
+     "Antaa joda daten suomen aikavyöhykkeellä"
+     [joda-time]
+     (t/from-time-zone joda-time suomen-aikavyohyke)))

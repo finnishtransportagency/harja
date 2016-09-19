@@ -23,7 +23,7 @@
     [this pistetyyppi asetukset])
 
   (lisaa-tietoja
-    [this & tiedot]))
+    [this tiedot]))
 
 (defrecord IntegraatioTapahtumaKonteksti [tapahtuma-id lokittaja ulkoinen-id lisatiedot]
   Integraatiotapahtuma
@@ -38,7 +38,7 @@
     ;; todo: toteuta!
     )
 
-  (lisaa-tietoja [_ & tiedot]
+  (lisaa-tietoja [_ tiedot]
     (swap! lisatiedot conj (str/join " " tiedot))))
 
 (defn tee-tapahtuma

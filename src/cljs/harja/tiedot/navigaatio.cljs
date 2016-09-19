@@ -340,3 +340,4 @@
                      (apply funktio urakka args)
                      urakka))
                  urakat))))
+

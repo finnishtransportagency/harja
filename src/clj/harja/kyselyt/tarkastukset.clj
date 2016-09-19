@@ -22,13 +22,14 @@
     (if (nil? id)
       (do
         (log/debug "Luodaan uusi tarkastus")
-        (:id (luo-tarkastus<! db
-                              "harja-ui"
-                              urakka-id (konv/sql-timestamp aika)
-                              (:numero tr) (:alkuosa tr) (:alkuetaisyys tr)
-                              (:loppuosa tr) (:loppuetaisyys tr)
-                              sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id
-                              havainnot laadunalitus yllapitokohde)))
+        (luo-tarkastus<! db
+                         "harja-ui"
+                         urakka-id (konv/sql-timestamp aika)
+                         (:numero tr) (:alkuosa tr) (:alkuetaisyys tr)
+                         (:loppuosa tr) (:loppuetaisyys tr)
+                         sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id
+                         havainnot laadunalitus yllapitokohde)
+        (luodun-tarkastuksen-id db))
 
       (do (log/debug (format "Päivitetään tarkastus id: %s " id))
           (paivita-tarkastus! db

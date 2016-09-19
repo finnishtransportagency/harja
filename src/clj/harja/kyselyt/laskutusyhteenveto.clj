@@ -1,6 +1,5 @@
 (ns harja.kyselyt.laskutusyhteenveto
-  (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]))
+  (:require [jeesql.core :refer [defqueries]]))
 
 (defqueries "harja/kyselyt/laskutusyhteenveto.sql"
   {:positional? true})
