@@ -31,15 +31,15 @@ module.exports = {
     debug: gutil.env.type === 'dev'
   },
   html: {
-    src: 'src/index.html',
+    src: src + '/index.html',
     dest: dest
   },
-  data: {
-    src: ['src/data/*.json'],
-    dest: dest
+  images: {
+    src: src + '/styles/images/*',
+    dest: dest + '/styles/images',
   },
   watch: {
-    src: 'src/**/*.*',
+    src: src + '/**/*.*',
     tasks: ['build']
   }
 };
