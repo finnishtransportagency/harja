@@ -7,16 +7,14 @@
             [harja.palvelin.integraatiot.turi.turvallisuuspoikkeamasanoma :as sanoma]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
-            [clj-time.core :as t]
             [harja.tyokalut.xml :as xml]
             [com.stuartsierra.component :as component]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
-            [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import (java.io File)
-           (org.apache.commons.io IOUtils)))
+            [harja.kyselyt.kommentit :as kommentit]
+            [clojure.data.zip.xml :as z])
+  (:import (org.apache.commons.io IOUtils)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root
@@ -36,20 +34,23 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+
+(defn pura-liite [liite]
+  (String. (dekoodaa-base64 (.getBytes liite))))
 
 (defn testaa-turpon-sanoman-muodostus [id]
   (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
-        suora-liitetiedosto "test/resurssit/sampo/maksuera_ack.xml"
-        kommentin-liitetiedosto "test/resurssit/sampo/maksuera_nack.xml"
-        suoran-liitetiedoston-sisalto (IOUtils/toByteArray (io/input-stream suora-liitetiedosto))
-        kommentin-liitetiedoston-sisalto (IOUtils/toByteArray (io/input-stream kommentin-liitetiedosto))
+        suora-liitetiedosto "suora liite"
+        kommentin-liitetiedosto "kommentin liite"
+        suoran-liitetiedoston-sisalto (IOUtils/toByteArray suora-liitetiedosto)
+        kommentin-liitetiedoston-sisalto (IOUtils/toByteArray kommentin-liitetiedosto)
         suora-liite-id (:id (liitteet/luo-liite
                               liitteiden-hallinta
                               nil
                               (hae-oulun-alueurakan-2014-2019-id)
-                              "maksuera_ack.xml"
-                              "text/xml"
+                              "testi.txt"
+                              "text/plain"
                               581
                               suoran-liitetiedoston-sisalto
                               nil
@@ -58,33 +59,30 @@
                                   liitteiden-hallinta
                                   nil
                                   (hae-oulun-alueurakan-2014-2019-id)
-                                  "maksuera_nack.xml"
-                                  "text/xml"
+                                  "testi.txt"
+                                  "text/plain"
                                   581
                                   kommentin-liitetiedoston-sisalto
                                   nil
                                   "harja-ui"))
-        _ (u (str "INSERT INTO
-                   turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
-                  VALUES (" id "," suora-liite-id ");"))
-        _ (u (str "INSERT INTO
-                   kommentti(kommentti,liite)
-                  VALUES ('kommentti'," kommentin-liite-id ");"))
+        kommentti-id (:id (kommentit/luo-kommentti<! (:db jarjestelma) nil "kommentti" kommentin-liite-id nil nil))
+        _ (u (format "INSERT INTO turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
+                      VALUES (%s, %s);" id suora-liite-id))
+        _ (u (format "INSERT INTO turvallisuuspoikkeama_kommentti (turvallisuuspoikkeama, kommentti)
+                      VALUES (%s, %s);" id, kommentti-id))
         data (turi/hae-turvallisuuspoikkeama
                (:liitteiden-hallinta jarjestelma)
                (:db jarjestelma)
-               id)
-        liite-datassa (slurp (:data (first (:liitteet data))))]
-    ;; Data, josta sanoma muodostetaan, sisältää liitteet oikein
-    (is (= (count (:liitteet data)) 2)) ;; Suora ja kommentin kautta linkattu
-    (is (= (count (:liitteet data)) 1))
-    (is (str/starts-with? liite-datassa "<?xml version=") "Liite löytyy datasta")
+               id)]
+    (is (= (count (:liitteet data)) 2))
     (let [xml (sanoma/muodosta data)
-          xml-mappina (xml/lue xml)
-          xml-liite (-> xml-mappina first :content last :content second :content first)]
+          xml-data (xml/lue xml)
+          liitteet (z/xml-> xml-data :poikkeamaliite :tiedosto z/text)]
       (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
-      (is (= (String. (dekoodaa-base64 (.getBytes xml-liite)))
-             liite-datassa) "Liite on myös XML-sanomassa"))
+
+      (is (= (pura-liite (first liitteet)) suora-liitetiedosto) "Suora liite on myös XML-sanomassa")
+      (is (= (pura-liite (second liitteet)) kommentin-liitetiedosto) "Kommentin liite on myös XML-sanomassa"))
+
     (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE liite = " suora-liite-id ";"))
     (u (str "DELETE FROM liite WHERE id = " suora-liite-id ";"))
     (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
