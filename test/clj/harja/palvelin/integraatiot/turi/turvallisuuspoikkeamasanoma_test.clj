@@ -8,7 +8,9 @@
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [clj-time.core :as t]
+            [harja.tyokalut.xml :as xml]
             [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
             [clojure.java.io :as io]
@@ -38,34 +40,53 @@
 
 (defn testaa-turpon-sanoman-muodostus [id]
   (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
-        tiedosto "test/resurssit/sampo/maksuera_ack.xml"
-        tiedoston-sisalto (IOUtils/toByteArray (io/input-stream tiedosto))
-        luotu-liite (liitteet/luo-liite
-                      liitteiden-hallinta
-                      nil
-                      (hae-oulun-alueurakan-2014-2019-id)
-                      "maksuera_ack.xml"
-                      "text/xml"
-                      581
-                      tiedoston-sisalto
-                      nil
-                      "harja-ui")
-        liite-id (:id luotu-liite)
+        suora-liitetiedosto "test/resurssit/sampo/maksuera_ack.xml"
+        kommentin-liitetiedosto "test/resurssit/sampo/maksuera_nack.xml"
+        suoran-liitetiedoston-sisalto (IOUtils/toByteArray (io/input-stream suora-liitetiedosto))
+        kommentin-liitetiedoston-sisalto (IOUtils/toByteArray (io/input-stream kommentin-liitetiedosto))
+        suora-liite-id (:id (liitteet/luo-liite
+                              liitteiden-hallinta
+                              nil
+                              (hae-oulun-alueurakan-2014-2019-id)
+                              "maksuera_ack.xml"
+                              "text/xml"
+                              581
+                              suoran-liitetiedoston-sisalto
+                              nil
+                              "harja-ui"))
+        kommentin-liite-id (:id (liitteet/luo-liite
+                                  liitteiden-hallinta
+                                  nil
+                                  (hae-oulun-alueurakan-2014-2019-id)
+                                  "maksuera_nack.xml"
+                                  "text/xml"
+                                  581
+                                  kommentin-liitetiedoston-sisalto
+                                  nil
+                                  "harja-ui"))
         _ (u (str "INSERT INTO
                    turvallisuuspoikkeama_liite(turvallisuuspoikkeama,liite)
-                  VALUES (" id "," liite-id ");"))
+                  VALUES (" id "," suora-liite-id ");"))
+        _ (u (str "INSERT INTO
+                   kommentti(kommentti,liite)
+                  VALUES ('kommentti'," kommentin-liite-id ");"))
         data (turi/hae-turvallisuuspoikkeama
                (:liitteiden-hallinta jarjestelma)
                (:db jarjestelma)
-               id)]
+               id)
+        liite-datassa (slurp (:data (first (:liitteet data))))]
     ;; Data, josta sanoma muodostetaan, sisältää liitteet oikein
+    (is (= (count (:liitteet data)) 2)) ;; Suora ja kommentin kautta linkattu
     (is (= (count (:liitteet data)) 1))
-    (is (str/starts-with? (slurp (:data (first (:liitteet data))))
-                          "<?xml version="))
-    (let [xml (sanoma/muodosta data)]
-      (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen"))
-    (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE liite = " liite-id ";"))
-    (u (str "DELETE FROM liite WHERE id = " liite-id ";"))
+    (is (str/starts-with? liite-datassa "<?xml version=") "Liite löytyy datasta")
+    (let [xml (sanoma/muodosta data)
+          xml-mappina (xml/lue xml)
+          xml-liite (-> xml-mappina first :content last :content second :content first)]
+      (is (xml/validi-xml? "xsd/turi/" "poikkeama-rest.xsd" xml) "Tehty sanoma on XSD-skeeman mukainen")
+      (is (= (String. (dekoodaa-base64 (.getBytes xml-liite)))
+             liite-datassa) "Liite on myös XML-sanomassa"))
+    (u (str "DELETE FROM turvallisuuspoikkeama_liite WHERE liite = " suora-liite-id ";"))
+    (u (str "DELETE FROM liite WHERE id = " suora-liite-id ";"))
     (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
 
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
