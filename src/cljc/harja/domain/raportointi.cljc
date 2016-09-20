@@ -9,8 +9,7 @@
 (defn virheen-viesti [solu] (second solu))
 
 (defn voi-nahda-laajemman-kontekstin-raportit? [kayttaja]
-  false
-  #_(roolit/tilaajan-kayttaja? kayttaja))
+  (roolit/tilaajan-kayttaja? kayttaja))
 
 #?(:cljs
    (defn nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit? []

@@ -22,6 +22,7 @@
             [clojure.string :as str]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.hoitoluokat :as hoitoluokat]
+            [harja.domain.raportointi :as raportti-domain]
             [harja.tiedot.hallintayksikot :as hy]
             [cljs-time.core :as t]
             [harja.fmt :as fmt]
@@ -34,18 +35,6 @@
 (defn- valitse-raporttityyppi! [nimi]
   (nav/aseta-valittu-valilehti! :raportit nimi))
 
-;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
-(defonce raporttityypit (atom nil))
-
-(def valittu-raporttityyppi
-  (reaction (let [raporttityypit @raporttityypit]
-              (when raporttityypit
-                (get raporttityypit @valittu-raporttityyppi-nimi)))))
-
-(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
-
-(tarkkaile! "Rapsat" raporttityypit)
-
 (defn- raportin-sort-avain
   "Raportin sort avain. Kuvauksen mukaan aakkosjärjestyksessä, paitsi työmaakokous ensin."
   [{kuvaus :kuvaus}]
@@ -53,22 +42,40 @@
     (= kuvaus "Työmaakokousraportti") ""
     :default kuvaus))
 
-(defonce mahdolliset-raporttityypit
+;; Mäppi raporttityyppejä, haetaan ensimmäisellä kerralla kun raportointiin tullaan
+(defonce raporttityypit (atom nil))
+
+(def mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko
-                  mahdolliset-kontekstit (into #{"koko maa"}
-                                               (keep identity [(when v-ur "urakka")
-                                                               (when v-hal "hallintayksikko")]))
+                  salli-laaja-konteksti? (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                  mahdolliset-kontekstit (if salli-laaja-konteksti?
+                                           (into #{"koko maa"}
+                                                 (keep identity [(when v-ur "urakka")
+                                                                 (when v-hal "hallintayksikko")]))
+
+                                           #{"urakka"})
                   urakkatyypin-raportit (filter
                                           #(= (:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
                                           (vals @raporttityypit))]
-              (sort-by raportin-sort-avain
-                       (into []
-                             (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                                   (filter #(oikeudet/voi-lukea?
-                                             (oikeudet/raporttioikeudet (:kuvaus %))
-                                             (:id v-ur))))
-                             urakkatyypin-raportit)))))
+
+              (if (and (not salli-laaja-konteksti?) (nil? v-ur))
+                nil
+
+                (sort-by raportin-sort-avain
+                         (into []
+                               (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
+                                     (filter #(oikeudet/voi-lukea?
+                                               (oikeudet/raporttioikeudet (:kuvaus %))
+                                               (:id v-ur))))
+                               urakkatyypin-raportit))))))
+
+(def valittu-raporttityyppi
+  (reaction (when-let [raporttityypit @raporttityypit]
+              (let [valittu-raportti (get raporttityypit @valittu-raporttityyppi-nimi)]
+                (when ((set @mahdolliset-raporttityypit) valittu-raportti) valittu-raportti)))))
+
+(def muistetut-parametrit (local-storage (atom {}) :raportin-muistetut-parametrit))
 
 (add-watch mahdolliset-raporttityypit :konteksti-muuttui
            (fn [_ _ old new]
@@ -571,6 +578,11 @@
      :format-fn :nimi}
     nav/+urakkatyypit+]])
 
+(defn ei-raportteja-saatavilla-viesti [urakkatyyppi]
+  (if (and (not (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)) (nil? @nav/valittu-urakka))
+    (str "Valitse hallintayksikkö ja urakka nähdäksesi raportit")
+    (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
+
 (defn raporttivalinnat []
   (komp/luo
     ;; Ei tällä hetkellä raporteissa sallita urakoitsijavalintaa
@@ -617,7 +629,7 @@
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
                           (empty? @mahdolliset-raporttityypit)
-                          [:span (str "Ei raportteja saatavilla urakkatyypissä " (str/lower-case (:nimi v-ur-tyyppi)))]
+                          [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)))]
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
