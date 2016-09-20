@@ -38,8 +38,10 @@
                                         :liite :liitteet
                                         :kommentti :kommentit}))]
     (if turvallisuuspoikkeama
-      (let [turvallisuuspoikkeama (assoc testidata :liitteet (concat (:liitteet testidata)
-                                                                   (mapv :liite (:kommentit testidata))))
+      (let [turvallisuuspoikkeama (assoc turvallisuuspoikkeama
+                                    :liitteet
+                                    (concat (:liitteet turvallisuuspoikkeama)
+                                            (mapv :liite (:kommentit turvallisuuspoikkeama))))
             liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
         (assoc turvallisuuspoikkeama
           :liitteet liitteet))
