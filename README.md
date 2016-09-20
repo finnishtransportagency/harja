@@ -112,7 +112,7 @@ Host harja-*-stg
 
 * Luo itsellesi SSH-avainpari ja pyydä tuttuja laittamaan julkinen avain palvelimelle.
 
-ssh -L7777:localhost:5432 harja-dfb1-stg
+ssh -L7777:localhost:5432 harja-db1-stg
  * Luo yhteys esim. käyttämäsi IDE:n avulla,
     * tietokanta: harja, username: flyway salasana: kysy tutuilta
 

@@ -69,7 +69,10 @@ SELECT
   yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   u.takuu_loppupvm,
-  (SELECT array_agg(concat(id, '=', sampoid))
+  (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
+                            THEN '*'
+			    ELSE '' END),
+                            id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
   ST_Simplify(au.alue, 50) AS alueurakan_alue
