@@ -89,3 +89,9 @@
 (defn hae-tr-tiedot [sijainti]
   (post! asetukset/+tr-tietojen-haku-url+ (assoc (select-keys sijainti [:lat :lon])
                                                  :treshold asetukset/+tros-haun-treshold+)))
+
+(defn hae-tiedosto [url]
+  (let [c (chan)]
+    (GET url {:handler #(put! c %)
+              :format :raw})
+    c))
