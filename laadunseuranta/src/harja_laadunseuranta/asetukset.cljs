@@ -3,7 +3,7 @@
 
 (defn- prefix []
   (if (#{"localhost:8000" "localhost:3000"
-         "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev3" "harja-dev5" "harja-dev6"
+         "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
          "harja-test.solitaservices.fi"} (.-host js/location))
     ""
     "harja/"))
