@@ -149,11 +149,15 @@
                             (gen/return osa)
                             (cond
                               (= osa aosa)
-                              (gen/choose (inc alkuet)
-                                          (dec (get osien-pituus osa)))
+                              (if (> (inc alkuet) (dec (get osien-pituus osa)))
+                                (gen/return alkuet)
+                                (gen/choose (inc alkuet)
+                                            (dec (get osien-pituus osa))))
 
                               (= osa losa)
-                              (gen/choose 1 (dec loppuet))
+                              (if (= 1 loppuet)
+                                (gen/return 1)
+                                (gen/choose 1 (dec loppuet)))
 
                               :default
                               (gen/choose 1 (get osien-pituus osa)))))))))
