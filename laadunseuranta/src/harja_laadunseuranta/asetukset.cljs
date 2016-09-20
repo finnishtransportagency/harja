@@ -2,7 +2,9 @@
   (:require [clojure.string :as s]))
 
 (defn- prefix []
-  (if (#{"localhost:8000" "localhost:3000" "harja-dev5" "80.69.173.64"} (.-host js/location))
+  (if (#{"localhost:8000" "localhost:3000"
+         "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev3" "harja-dev5" "harja-dev6"
+         "harja-test.solitaservices.fi"} (.-host js/location))
     ""
     "harja/"))
 
