@@ -321,18 +321,23 @@ table.table-striped {
     padding: 0;
 }
 
-.dropdown-menu .harja-alasvetolistaitemi > a {
-    background-color: @valkoinen;
-    border-color: @harmaa7;
-    color: @sininen4;
-    padding: 3px 6px;
-    &:hover,
-    &:focus,
-    &.focus,
-    &:active {
+.dropdown-menu .harja-alasvetolistaitemi {
+    &.bold > a {
+      font-weight: bold;
+    }
+    &> a {
+      background-color: @valkoinen;
+      border-color: @harmaa7;
+      color: @sininen4;
+      padding: 3px 6px;
+      &:hover,
+      &:focus,
+      &.focus,
+      &:active {
         background-color: @sininen5;
         color:            @valkoinen;
-    }
+      }
+  }
 }
 
 .dropdown-menu .harja-alasvetolista-ryhma:not(:last-child) {

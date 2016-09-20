@@ -20,7 +20,8 @@
                          :format-fn  second
                          :valitse-fn valitse-fn
                          :class      "suunnittelu-alasveto"
-                         }
+                         :li-luokka-fn #(when (= (first %) (:paasopimus ur))
+                                          "bold")}
     (:sopimukset ur)]])
 
 (defn urakan-hoitokausi
