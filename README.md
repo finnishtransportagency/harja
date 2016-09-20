@@ -215,3 +215,20 @@ upstream sms-kasittelija {
 5. Luo SSH-tunneli: ssh -L 28080:gw.labyrintti.com:28080 harja-app1-stg
 6. Lähetä tekstiviesti numeroon +358 50 9023530
 -> Viesti pitäisi välittyä REPL:n
+
+
+# Liikenneviraston Harja-järjestelmän laadunseurantatyökalu #
+
+Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa
+ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
+
+Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja:
+
+    lein figwheel laadunseuranta-dev
+
+Avaa selain http://localhost:8000/laadunseuranta/index.html
+
+Palvelin käynnistyy kun Harja käynnistetään.
+
+## Lisenssi
+https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt

@@ -1,6 +1,10 @@
 (ns harja-laadunseuranta.testidata
   "Testidataa yksikkötestejä varten"
-  (:require [clojure.test :as t]))
+  (:require [clojure.test :as t]
+            [harja.testi :refer [db]]
+            [harja-laadunseuranta.tietokanta :as tietokanta]))
+
+(tietokanta/aseta-tietokanta! db)
 
 (def havainto
   {:id 1

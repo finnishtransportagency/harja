@@ -56,34 +56,35 @@ button {
     left: 470px;
 }
 
-.ylapalkki .hoitoluokka {
+.ylapalkin-metatiedot {
     position: absolute;
     border-left: 1px solid rgb(40,40,40);
     top: 0;
     left: 680px;
     padding-left: 10px;
     color: white;
-    width: 100px;
+    width: 100%;
     height: 70px;
-    line-height: 50px;
+    line-height: 20px;
 }
-
-.ylapalkki .hoitoluokka .soratiehoitoluokka {
+.ylapalkin-metatiedot > div {
     display: block;
+    margin: 3px 0;
     padding-top: 0;
     width: 190px;
-    top: 0;
     font-size: 15px;
     height: 19px;
+    line-height: 20px;
 }
-
-.ylapalkki .hoitoluokka .talvihoitoluokka {
+.ylapalkin-metatiedot > .urakkanimi {
     display: block;
     padding-top: 0;
     width: 190px;
-    top: 0;
-    font-size: 15px;
-    height: 15px;
+    font-size: 10px;
+    height: 19px;
+    line-height: 10px;
+    overflow-x: hidden;
+    word-break: break-all;
 }
 
 .ylapalkki-button {
@@ -816,7 +817,9 @@ button {
     top: 0px;
     left: 00px;
 }
-
+.klikattava {
+    cursor: pointer;
+}
 /* ---------- tr-selailu ---------- */
 .tr-selailu {
     z-index: 1000;
@@ -886,16 +889,21 @@ button:disabled {
 }
 
 .painikelaatikko {
+    height: 500px;
+}
+.urakkavalitsin {
+    max-height: 500px;
+}
+.painikelaatikko,
+.urakkavalitsin {
+    background-color: white;
+    left: 0;
+    overflow: hidden;
     position: fixed;
     top: 70px;
-    left: 0;
     width: 100%;
-    height: 500px;
     z-index: 10000;
-    overflow: hidden;
-    background-color: white;
 }
-
 .painikelaatikko > .painikerivi {
     height: 70px;
 }
@@ -939,7 +947,7 @@ button:disabled {
 .peruuta {
     width: 30.5%;
     height: 70px;
-    float: left;
+    float: right;
     text-align: center;
     margin-top: 20px;
     margin-left: 2%;
@@ -985,4 +993,22 @@ button:disabled {
 .keskenerainen {
     color: red;
     margin-left: 8px;
+}
+.urakkarivi {
+
+}
+.urakka {
+    font-size: 13px;
+    background-color: #0066cc;
+    height: 50px;
+    line-height: 26px;
+    text-align: left;
+    color: white;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+.urakkavalitsin .pikavalintapainike {
+    height: 60px;
+    padding-top: 0;
 }
