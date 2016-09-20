@@ -38,7 +38,9 @@
                                         :liite :liitteet
                                         :kommentti :kommentit}))]
     (if turvallisuuspoikkeama
-      (let [liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
+      (let [turvallisuuspoikkeama (assoc testidata :liitteet (concat (:liitteet testidata)
+                                                                   (mapv :liite (:kommentit testidata))))
+            liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
         (assoc turvallisuuspoikkeama
           :liitteet liitteet))
       (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]
