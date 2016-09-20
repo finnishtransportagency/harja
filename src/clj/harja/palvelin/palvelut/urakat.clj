@@ -122,6 +122,27 @@
       (map :id (q/hae-urakka-sijainnilla db "hoito" x y 10))
       urakka-idt)))
 
+(defn- pura-sopimukset [{jdbc-array :sopimukset :as urakka}]
+  (loop [sopimukset {}
+         paasopimus nil
+         [s & ss] (when jdbc-array (seq (.getArray jdbc-array)))]
+    (if-not s
+      (assoc urakka
+             :sopimukset sopimukset
+             :paasopimus paasopimus)
+      (let [[id sampoid] (str/split s #"=")
+            paasopimus? (str/starts-with? id "*")
+            id (Long/parseLong
+                (if paasopimus?
+                  (subs id 1)
+                  id))]
+        (recur (assoc sopimukset
+                      id sampoid)
+               (if paasopimus?
+                 id
+                 paasopimus)
+               ss)))))
+
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
 
@@ -140,14 +161,12 @@
 
         (map #(assoc % :takuu {:loppupvm (:takuu_loppupvm %)}))
 
-        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja
-        ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"}
-        (map #(update-in % [:sopimukset] (fn [jdbc-array]
-                                           (if (nil? jdbc-array)
-                                             {}
-                                             (into {} (map (fn [s](let [[id sampoid] (str/split s #"=")]
-                                                                    [(Long/parseLong id) sampoid]))
-                                                           (.getArray jdbc-array)))))))
+        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "*3=8H05228/10"] ja
+        ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"
+        ;;                          :paasopimus 3}
+        ;; jossa pääsopimus on se, joka alkaa '*' merkilla
+        (map pura-sopimukset)
+
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))

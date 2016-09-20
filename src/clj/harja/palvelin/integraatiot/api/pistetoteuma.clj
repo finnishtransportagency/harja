@@ -8,7 +8,6 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
