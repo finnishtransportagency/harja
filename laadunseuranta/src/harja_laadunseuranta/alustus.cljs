@@ -12,7 +12,7 @@
 (defn alustuskomponentti [gps-tuettu idxdb-tuettu tarkastustyyppi tarkastusajo kayttaja]
   [:div.alustuskomponentticontainer
    [:div.alustuskomponentti
-    [:div.liikenneturvallisuusmuistutus "Muista aina liikenneturvallisuus tarkastuksia tehdessäsi."]
+    [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
     [:p "Tarkastetaan..."]
     [:div [checkmark (utils/tuettu-selain?)] "Selain tuettu"]
     [:div [checkmark (.-onLine js/navigator)] "Verkkoyhteys"]
