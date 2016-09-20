@@ -255,7 +255,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                        (fn [kuittaukset]
                          ;; Palvelin palauttaa vektorin kuittauksia, joihin
                          ;; olemassaolevat liitetään
-                         (into v kuittaukset))))
+                         (into (first v) kuittaukset))))
         (assoc app :kuittaa-monta nil))))
 
   v/PeruMonenKuittaus

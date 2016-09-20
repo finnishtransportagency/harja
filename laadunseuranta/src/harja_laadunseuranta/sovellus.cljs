@@ -12,6 +12,7 @@
    :sijainti {:nykyinen nil
               :edellinen nil}
    :palautettava-tarkastusajo nil
+   :valittu-urakka nil
    :tarkastusajo nil
    :tarkastustyyppi nil
    :kirjaamassa-havaintoa false
@@ -37,7 +38,7 @@
                            :aosa 1
                            :aet 1}
                :talvihoitoluokka 2}
-   :pikahavainnot {:liukasta false}
+   :pikahavainnot {}
    :keskita-ajoneuvoon false
    :virheet []
    :ilmoitukset []
@@ -89,6 +90,7 @@
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
 (def sijainti (reagent/cursor sovellus [:sijainti]))
+(def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
 (def tarkastusajo (reagent/cursor sovellus [:tarkastusajo]))
 (def tarkastustyyppi (reagent/cursor sovellus [:tarkastustyyppi]))
 
@@ -157,6 +159,10 @@
                                       (not @tarkastusajo-paattymassa)
                                       (not @kirjaamassa-havaintoa))))
 
+; näyttää urakkavalitsimen, arvoksi annettava urakkatyyppi stringinä
+; niin kuin se on Harjan kannassa, esim. paallystys
+(def nayta-urakkavalitsin (atom nil))
+
 
 (def tarkastusajo-luotava (reaction (and @tallennustilaa-muutetaan
                                          (nil? @tarkastusajo)
@@ -168,7 +174,9 @@
          :tallennus-kaynnissa false
          :tallennustilaa-muutetaan false
          :tarkastustyyppi nil
-         :tarkastusajo nil))
+         :tarkastusajo nil
+         :valittu-urakka nil
+         :pikahavainnot {}))
 
 (defn tarkastusajo-kayntiin [sovellus tarkastustyyppi ajo-id]
   (assoc sovellus
@@ -184,6 +192,9 @@
 
 (defn tarkastusajo-seis! []
   (swap! sovellus tarkastusajo-seis))
+
+(defn valitse-urakka! [urakka]
+  (reset! valittu-urakka urakka))
 
 (def beta-kayttajat #{"A018983" "K870689"})
 

@@ -288,7 +288,7 @@
   (u "delete from organisaatio where sampoid = 'TESTIORG';"))
 
 (defn hae-organisaatiot []
-  (q "select id from organisaatio where sampoid = 'TESTIORG';"))
+  (q "select id, tyyppi from organisaatio where sampoid = 'TESTIORG';"))
 
 (defn tuo-yhteyshenkilo []
   (let [yhteyshenkilot (:yhteyshenkilot (sampo-sanoma/lue-viesti +testiyhteyshenkilo-sanoma+))]

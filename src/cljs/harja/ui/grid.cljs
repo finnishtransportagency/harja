@@ -275,7 +275,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 (defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
                             vetolaatikot tallenna piilota-toiminnot? valittu-rivi
-                            mahdollista-rivin-valinta]} skeema rivi index]
+                            mahdollista-rivin-valinta]} skeema rivi index solun-luokka]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
                              " rivi-valittu"))
         :on-click #(do
@@ -290,34 +290,36 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                         (reset! valittu-rivi rivi))))}
    (map-indexed
     (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
-                   solu-klikattu
+                   solu-klikattu solun-luokka
                    pakota-rivitys? reunus]}]
-       (if (= :vetolaatikon-tila tyyppi)
-         ^{:key (str "vetolaatikontila" id)}
-         [vetolaatikon-tila ohjaus vetolaatikot id]
-         ^{:key (str i nimi)}
-         [:td {:on-click (when solu-klikattu
-                           #(do
+      (let [haettu-arvo (if hae
+                          (hae rivi)
+                          (get rivi nimi))]
+        (if (= :vetolaatikon-tila tyyppi)
+          ^{:key (str "vetolaatikontila" id)}
+          [vetolaatikon-tila ohjaus vetolaatikot id]
+          ^{:key (str i nimi)}
+          [:td {:on-click (when solu-klikattu
+                            #(do
                               (.preventDefault %)
                               (.stopPropagation %)
                               (solu-klikattu rivi)))
-               :class (y/luokat
-                        (y/tasaus-luokka tasaa)
-                        (when pakota-rivitys? "grid-pakota-rivitys")
-                        (case reunus
-                          :ei "grid-reunus-ei"
-                          :vasen "grid-reunus-vasen"
-                          :oikea "grid-reunus-oikea"
-                          nil))}
-          (if (= tyyppi :komponentti)
-            (komponentti rivi {:index      index
-                               :muokataan? false})
-            (let [haettu-arvo (if hae
-                                (hae rivi)
-                                (get rivi nimi))]
-              (if fmt
-                (fmt haettu-arvo)
-                [nayta-arvo skeema (vain-luku-atomina haettu-arvo)])))])) skeema)
+                :class (y/luokat
+                         (y/tasaus-luokka tasaa)
+                         (when pakota-rivitys? "grid-pakota-rivitys")
+                         (case reunus
+                           :ei "grid-reunus-ei"
+                           :vasen "grid-reunus-vasen"
+                           :oikea "grid-reunus-oikea"
+                           nil)
+                         (when solun-luokka
+                           (solun-luokka haettu-arvo rivi)))}
+           (if (= tyyppi :komponentti)
+             (komponentti rivi {:index index
+                                :muokataan? false})
+             (if fmt
+               (fmt haettu-arvo)
+               [nayta-arvo skeema (vain-luku-atomina haettu-arvo)]))]))) skeema)
    (when (and (not piilota-toiminnot?)
               tallenna) [:td.toiminnot])])
 
@@ -337,6 +339,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :voi-lisata?                          voiko rivin lisätä (boolean)
+  :solun-luokka                         funktio, joka palauttaa solun luokan\n
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
   :ohjaus                               gridin ohjauskahva, joka on luotu (grid-ohjaus) kutsulla
   :tasaa                                voit antaa :oikea, :keskita jos haluat tasata kentän
@@ -639,7 +642,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
        (fn []
          (nollaa-muokkaustiedot!))}
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu piilota-toiminnot?
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot mahdollista-rivin-valinta rivi-valinta-peruttu
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
+                    mahdollista-rivin-valinta rivi-valinta-peruttu
                     korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti] :as opts} skeema alkup-tiedot]
         (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
               colspan (if (or piilota-toiminnot? (nil? tallenna))
@@ -979,7 +983,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                     nayta-virheet? valiotsikot] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
-               skeema (skeema/laske-sarakkeiden-leveys skeema)
+               skeema (skeema/laske-sarakkeiden-leveys
+                        (filterv some? skeema))
                colspan (inc (count skeema))
                ohjaus (ohjaus-fn muokatut virheet skeema)
                voi-muokata? (if (nil? voi-muokata?)

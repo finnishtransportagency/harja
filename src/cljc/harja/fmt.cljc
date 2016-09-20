@@ -70,7 +70,6 @@
         (apply str (take-last (dec toka-haluttu-pituus) toka))))))
 
 (def urakan-nimen-oletuspituus 30)
-
 (defn lyhennetty-urakan-nimi
   "Lyhentää urakan nimen haluttuun pituuteen, lyhentämällä
   aluksi tiettyjä sanoja (esim urakka -> ur.), ja jos nämä eivät
@@ -78,69 +77,70 @@
   kirjaimet kahdella pisteellä .."
   ([nimi] (lyhennetty-urakan-nimi urakan-nimen-oletuspituus nimi))
   ([pituus nimi]
-    (loop [nimi nimi]
-      (if (>= pituus (count nimi))
-        nimi
+   (loop [nimi nimi]
+     (if (>= pituus (count nimi))
+       nimi
 
-        ;; Tänne voi lisätä lisää korvattavia asioita
-        ;; Päällimmäiseksi yleisemmät korjaukset,
-        ;; viimeiseksi "last resort" tyyppiset ratkaisut
-        (recur
-          (cond
-            ;; Ylimääräiset välilyönnit pois
-            (re-find #"\s\s+" nimi)
-            (str/replace nimi #"\s\s+" " ")
+       ;; Tänne voi lisätä lisää korvattavia asioita
+       ;; Päällimmäiseksi yleisemmät korjaukset,
+       ;; viimeiseksi "last resort" tyyppiset ratkaisut
+       (recur
+         (cond
+           ;; Ylimääräiset välilyönnit pois
+           (re-find #"\s\s+" nimi)
+           (str/replace nimi #"\s\s+" " ")
 
-            ;; "  - " -> "-"
-            ;; Täytyy etsiä nämä kaksi erikseen, koska
-            ;; \s*-\s* osuisi myös korjattuun "-" merkkijonoon,
-            ;; ja "\s+-\s+" osuisi vain jos molemmilla puolilla on välilyönti.
-            (or (re-find #"\s+-" nimi) (re-find #"-\s+" nimi))
-            (str/replace nimi #"\s*-\s*" "-")
+           ;; "  - " -> "-"
+           ;; Täytyy etsiä nämä kaksi erikseen, koska
+           ;; \s*-\s* osuisi myös korjattuun "-" merkkijonoon,
+           ;; ja "\s+-\s+" osuisi vain jos molemmilla puolilla on välilyönti.
+           (or (re-find #"\s+-" nimi) (re-find #"-\s+" nimi))
+           (str/replace nimi #"\s*-\s*" "-")
 
-            ;; (?i) case insensitive ei toimi str/replacessa
-            ;; cljs puolella. Olisi mahdollista käyttää vain
-            ;; clj puolella käyttäen reader conditionaleja, mutta
-            ;; samapa se on toistaa kaikki näin.
-            (re-find #"alueurakka" nimi)
-            (str/replace nimi #"alueurakka" "au")
+           ;; (?i) case insensitive ei toimi str/replacessa
+           ;; cljs puolella. Olisi mahdollista käyttää vain
+           ;; clj puolella käyttäen reader conditionaleja, mutta
+           ;; samapa se on toistaa kaikki näin.
+           (re-find #"alueurakka" nimi)
+           (str/replace nimi #"alueurakka" "au")
 
-            (re-find #"Alueurakka" nimi)
-            (str/replace nimi #"Alueurakka" "au")
+           (re-find #"Alueurakka" nimi)
+           (str/replace nimi #"Alueurakka" "au")
 
-            (re-find #"ALUEURAKKA" nimi)
-            (str/replace nimi #"ALUEURAKKA" "au")
+           (re-find #"ALUEURAKKA" nimi)
+           (str/replace nimi #"ALUEURAKKA" "au")
 
-            (re-find #"urakka" nimi)
-            (str/replace nimi #"urakka" "ur.")
+           (re-find #"urakka" nimi)
+           (str/replace nimi #"urakka" "ur.")
 
-            (re-find #"Urakka" nimi)
-            (str/replace nimi #"Urakka" "ur.")
+           (re-find #"Urakka" nimi)
+           (str/replace nimi #"Urakka" "ur.")
 
-            (re-find #"URAKKA" nimi)
-            (str/replace nimi #"URAKKA" "ur.")
+           (re-find #"URAKKA" nimi)
+           (str/replace nimi #"URAKKA" "ur.")
 
-            (re-find #"kunnossapidon" nimi)
-            (str/replace nimi #"kunnossapidon" "kunn.pid.")
+           (re-find #"kunnossapidon" nimi)
+           (str/replace nimi #"kunnossapidon" "kunn.pid.")
 
-            (re-find #"Kunnossapidon" nimi)
-            (str/replace nimi #"Kunnossapidon" "kunn.pid.")
+           (re-find #"Kunnossapidon" nimi)
+           (str/replace nimi #"Kunnossapidon" "kunn.pid.")
 
-            (re-find #"KUNNOSSAPIDON" nimi)
-            (str/replace nimi #"KUNNOSSAPIDON" "kunn.pid.")
+           (re-find #"KUNNOSSAPIDON" nimi)
+           (str/replace nimi #"KUNNOSSAPIDON" "kunn.pid.")
 
-            ;; ", " -> " "
-            (re-find #"\s*,\s*" nimi)
-            (str/replace nimi #"\s*,\s*" " ")
+           ;; ", " -> " "
+           (re-find #"\s*,\s*" nimi)
+           (str/replace nimi #"\s*,\s*" " ")
 
-            ;; Jos vieläkin liian pitkä, niin lyhennetään kun.pid. entisestään
-            (re-find #"kun.pid." nimi)
-            (str/replace nimi #"kun.pid." "kp.")
+           ;; Jos vieläkin liian pitkä, niin lyhennetään kun.pid. entisestään
+           (re-find #"kun.pid." nimi)
+           (str/replace nimi #"kun.pid." "kp.")
 
-            (re-find #"POP" nimi)
-            (str/replace nimi #"POP" "")
+           (re-find #"POP" nimi)
+           (str/replace nimi #"POP" "")
 
-            :else (lyhenna-keskelta pituus nimi)))))))
+           :else (lyhenna-keskelta pituus nimi)))))))
+
 
 (defn lyhennetty-urakan-nimi-opt
   ([nimi] (lyhennetty-urakan-nimi-opt urakan-nimen-oletuspituus nimi))

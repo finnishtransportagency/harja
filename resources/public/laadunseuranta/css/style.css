@@ -56,34 +56,35 @@ button {
     left: 470px;
 }
 
-.ylapalkki .hoitoluokka {
+.ylapalkin-metatiedot {
     position: absolute;
     border-left: 1px solid rgb(40,40,40);
     top: 0;
     left: 680px;
     padding-left: 10px;
     color: white;
-    width: 100px;
+    width: 100%;
     height: 70px;
-    line-height: 50px;
+    line-height: 20px;
 }
-
-.ylapalkki .hoitoluokka .soratiehoitoluokka {
+.ylapalkin-metatiedot > div {
     display: block;
+    margin: 3px 0;
     padding-top: 0;
     width: 190px;
-    top: 0;
     font-size: 15px;
     height: 19px;
+    line-height: 20px;
 }
-
-.ylapalkki .hoitoluokka .talvihoitoluokka {
+.ylapalkin-metatiedot > .urakkanimi {
     display: block;
     padding-top: 0;
     width: 190px;
-    top: 0;
-    font-size: 15px;
-    height: 15px;
+    font-size: 10px;
+    height: 19px;
+    line-height: 10px;
+    overflow-x: hidden;
+    word-break: break-all;
 }
 
 .ylapalkki-button {
@@ -233,24 +234,41 @@ button {
 
 .pikavalintapainike {
     width: 215px;
-    font-size: 18px;
-    background-color: rgb(16,125,209);
+    font-size: 17px;
+    background-color: #0066cc;
     height: 50px;
     line-height: 50px;
-    text-align: center;
+    text-align: left;
     margin-left: 14px;
     margin-bottom: 10px;
     margin-top: 10px;
+    padding-left: 10px;
     box-sizing: border-box;
     cursor: default;
     color: white;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
+
 }
 
-.pikavalintapainike span {
-    margin-right: 10px;
+.pikavalintaikoni svg {
+    width: 48px;
+    height: 48px;
+    fill: white;
+    margin: 5px;
+    position: relative;
+    top: -15px;
+    vertical-align: middle;
+}
+
+.pikavalintaikoni + .pikavalintaotsikko {
+    margin-left: 1px;
+    margin-right: 1px;
+    top: -10px;
+}
+.pikavalintaotsikko {
+    position: relative;
 }
 
 .painike-aktiivinen {
@@ -374,25 +392,22 @@ button {
     font-size: 18px;
 }
 
-.tarkastusajon-luonti-dialog ul {
-    list-style-type: none;
+.tarkastusajon-luonti-dialog-wrap {
     padding-left: 15px;
     padding-right: 10px;
 }
 
-.tarkastusajon-luonti-dialog li {
-    background-color: blue;
+.tarkastusajon-luonti-dialog button {
     height: 50px;
     margin-bottom: 10px;
     width: 100%;
-    color: white;
     line-height: 50px;
     text-align: center;
     font-size: 18px;
 }
 
 .tarkastusajon-luonti-dialog nav {
-    text-align: center;
+    text-align: left;
 }
 
 .tarkastusajon-luonti-dialog nav.disabled {
@@ -594,7 +609,7 @@ button {
     font-size: 35px;
     margin: 2px;
     color: white;
-    background-color: rgb(16,125,209);
+    background-color: #0066cc;
     border: none;
     outline: none;
 }
@@ -802,7 +817,9 @@ button {
     top: 0px;
     left: 00px;
 }
-
+.klikattava {
+    cursor: pointer;
+}
 /* ---------- tr-selailu ---------- */
 .tr-selailu {
     z-index: 1000;
@@ -860,7 +877,11 @@ button:disabled {
 .virhe {
     color: red;
 }
-
+.odotusspinneri {
+    left: -10px;
+    position: relative;
+    top: 7px;
+}
 .peruutuspainike {
     background-color: transparent;
     color: rgb(9,79,192);
@@ -868,23 +889,28 @@ button:disabled {
 }
 
 .painikelaatikko {
-    position: fixed;
-    top: 15%;
-    left: 12%;
-    width: 75%;
-    height: 470px;
-    z-index: 10000;
-    overflow: hidden;
-    background-color: white;
+    height: 500px;
 }
-
+.urakkavalitsin {
+    max-height: 500px;
+}
+.painikelaatikko,
+.urakkavalitsin {
+    background-color: white;
+    left: 0;
+    overflow: hidden;
+    position: fixed;
+    top: 70px;
+    width: 100%;
+    z-index: 10000;
+}
 .painikelaatikko > .painikerivi {
-    height: 100px;
+    height: 70px;
 }
 
 .painikerivi > .pikavalintapainike {
     float: left;
-    width: 22.5%;
+    width: 30.5%;
     height: 100%;
     background-color: rgb(9,79,192);
     border: 1px solid black;
@@ -894,24 +920,95 @@ button:disabled {
     mergin-right: 3%;
     color: white;
     padding-top: 20px;
-    font-size: 20px;
-    text-align: center;
+    font-size: 16px;
+    text-align: left;
     line-height: 20px;
+    position: relative;
 }
 
+.pikavalintapainike > .rec {
+    background-color: red;
+    border-left: red solid 3px;
+    float: right;
+    font-weight: bold;
+    right: 7px;
+    position: absolute;
+    top: 28px;
+    z-index: 100;
+}
+.painike-aktiivinen,
 .painikelaatikko .painike-aktiivinen {
-    background-color: yellow;
-    color: black;
+    border: 2px solid black;
+    border-radius: 5px;
+    background-color: red;
+    color: white;
 }
 
-.painikelaatikko > .peruuta {
-    background-color: gray;
-    color: white;
-    width: 50%;
-    height: 80px;
-    float: left;
+.peruuta {
+    width: 30.5%;
+    height: 70px;
+    float: right;
     text-align: center;
     margin-top: 20px;
-    margin-left: 25%;
-    line-height: 80px;
+    margin-left: 2%;
+    line-height: 70px;
+    font-size: 18px;
+}
+.aloita-tyovirhe,
+.tallennus-kaynnissa,
+.tyhja-nappi {
+    width: 30.5%;
+    height: 70px;
+    float: left;
+    text-align: left;
+    margin-top: 20px;
+    margin-left: 2%;
+    line-height: 70px;
+    font-size: 18px;
+}
+.tallennus-kaynnissa {
+    color: red;
+}
+.nappi-ensisijainen {
+    border: 1px solid transparent;
+    color: #ffffff;
+    background-color: #0066cc;
+    border-color: #0066cc;
+    font-weight: normal;
+}
+.nappi-toissijainen {
+    border: 1px solid transparent;
+    color: #0066cc;
+    background-color: #ffffff;
+    border-color: #0066cc;
+}
+.nappi-kielteinen {
+    border: 1px solid transparent;
+    color: #ffffff;
+    background-color: #dd0000;
+    border-color: #dd0000;
+    font-weight: normal;
+}
+
+.keskenerainen {
+    color: red;
+    margin-left: 8px;
+}
+.urakkarivi {
+
+}
+.urakka {
+    font-size: 13px;
+    background-color: #0066cc;
+    height: 50px;
+    line-height: 26px;
+    text-align: left;
+    color: white;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+.urakkavalitsin .pikavalintapainike {
+    height: 60px;
+    padding-top: 0;
 }

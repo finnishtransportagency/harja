@@ -92,6 +92,11 @@
     [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
      :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
+    [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
+
+
+    ;; Harja mobiili Laadunseuranta
+    [harja-laadunseuranta.core :as harja-laadunseuranta]
 
     [com.stuartsierra.component :as component]
     [harja.palvelin.asetukset
@@ -99,7 +104,8 @@
   (:gen-class))
 
 (defn luo-jarjestelma [asetukset]
-  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi]} asetukset]
+  (let [{:keys [tietokanta tietokanta-replica http-palvelin kehitysmoodi
+                laadunseuranta]} asetukset]
     (konfiguroi-lokitus asetukset)
     (try
       (validoi-asetukset asetukset)
@@ -384,9 +390,20 @@
                             (api-yllapitokohteet/->Yllapitokohteet)
                              [:http-palvelin :db :integraatioloki])
 
+      ;; Ajastettu laskutusyhteenvetojen muodostus
+      :laskutusyhteenvetojen-muodostus
+      (component/using
+       (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
+       [:db])
+
       :status (component/using
                (status/luo-status)
-               [:http-palvelin :db :db-replica :sonja]))))
+               [:http-palvelin :db :db-replica :sonja])
+
+      :harja-laadunseuranta
+      (component/using
+       (harja-laadunseuranta/->Laadunseuranta laadunseuranta)
+       [:db :http-palvelin]))))
 
 (defonce harja-jarjestelma nil)
 

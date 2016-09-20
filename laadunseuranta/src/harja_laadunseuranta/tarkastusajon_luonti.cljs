@@ -1,27 +1,45 @@
 (ns harja-laadunseuranta.tarkastusajon-luonti
   (:require [reagent.core :as reagent :refer [atom]]
+            [harja-laadunseuranta.comms :as comms]
+            [harja-laadunseuranta.urakkavalitsin :as urakkavalitsin]
             [harja-laadunseuranta.kuvat :as kuvat]
-            [harja-laadunseuranta.sovellus :as sovellus])
+            [harja-laadunseuranta.sovellus :as s])
   (:require-macros [reagent.ratom :refer [run!]]
+                   [cljs.core.async.macros :refer [go]]
                    [devcards.core :refer [defcard]]))
+
+(def urakkatyypin-urakat
+  (atom nil))
 
 (defn tarkastusajon-luontidialogi [valittu-fn peruutettu-fn]
   (let [aloitettu (atom false)
         valittu (fn [tyyppi]
                   (reset! aloitettu true)
-                  (valittu-fn tyyppi))]
+                  (valittu-fn tyyppi))
+        urakkavalitsimen-urakkatyyppi (atom nil)]
     (fn [_ _]
-      (if @aloitettu
-        [:div.tarkastusajon-luonti-dialog
-         [:p "Luodaan tarkastusajoa..."]]
-        [:div.tarkastusajon-luonti-dialog
-         [:p "Valitse tarkastusajon tyyppi"]
-         [:div
-          [:nav.pikavalintapainike {:on-click #(valittu :kelitarkastus)} "Talvitarkastus"]
-          [:nav.pikavalintapainike {:on-click #(valittu :soratietarkastus)} "Kesätarkastus"]
-          [:nav.pikavalintapainike {:on-click #(valittu :yllapitotarkastus)} "Ylläpito"]]
-         [:nav.pikavalintapainike.peruutuspainike {:on-click #(peruutettu-fn)}
-          [:span.livicon-delete] "Peruuta"]]))))
+      (if @urakkavalitsimen-urakkatyyppi
+        (let [cb #(do
+                   (s/valitse-urakka! %)
+                   (when-not (nil? %)
+                     (valittu @urakkavalitsimen-urakkatyyppi))
+                   (reset! urakkavalitsimen-urakkatyyppi nil))]
+          [urakkavalitsin/urakkavalitsin @urakkatyypin-urakat urakkavalitsimen-urakkatyyppi cb])
+        (if @aloitettu
+          [:div.tarkastusajon-luonti-dialog
+           [:p "Luodaan tarkastusajoa..."]]
+          [:div.tarkastusajon-luonti-dialog
+           [:p "Valitse tarkastusajon tyyppi"]
+           [:div
+            [:nav.pikavalintapainike {:on-click #(valittu :kelitarkastus)} "Talvihoito"]
+            [:nav.pikavalintapainike {:on-click #(valittu :soratietarkastus)} "Kesähoito"]
+            [:nav.pikavalintapainike {:on-click #(do
+                                                  (go (let [urakat (:ok (<! (comms/hae-urakkatyypin-urakat "paallystys")))]
+                                                        (reset! urakkatyypin-urakat urakat)
+                                                        (reset! urakkavalitsimen-urakkatyyppi :paallystys))))} "Päällystys"]
+            #_[:nav.pikavalintapainike {:on-click #(valittu :tiemerkinta)} "Tiemerkintä"]]
+           [:nav.pikavalintapainike.peruutuspainike {:on-click #(peruutettu-fn)}
+            "Peruuta"]])))))
 
 (defn tarkastusajon-paattamisdialogi [paattamattomia kylla-fn ei-fn]
   (let [kylla-klikattu (atom false)]
@@ -33,24 +51,24 @@
                       :height "32px"}]]]
         [:div.tarkastusajon-luonti-dialog
          [:p "Päätetäänkö tarkastusajo?"]
-         [:ul
-          [:li {:on-click #(when (= 0 @paattamattomia)
+         [:div.tarkastusajon-luonti-dialog-wrap
+          [:button.nappi-ensisijainen {:on-click #(when (= 0 @paattamattomia)
                              (reset! kylla-klikattu true)
                              (kylla-fn))}
            (if (> @paattamattomia 0)
              [:div
-              [:img {:src kuvat/+spinner+
+              [:img.odotusspinneri {:src kuvat/+spinner+
                      :height "32px"}]
               "Odota..."]
              "Kyllä")]
-          [:li {:on-click #(ei-fn)} "Ei"]]]))))
+          [:button.nappi-toissijainen {:on-click #(ei-fn)} "Ei"]]]))))
 
 (defn tarkastusajon-jatkamisdialogi [jatka-fn pakota-lopetus-fn]
   [:div.tarkastusajon-luonti-dialog
    [:p "Jatketaanko tarkastusajoa?"]
    [:div
     [:nav.pikavalintapainike {:on-click #(jatka-fn)} "Jatka"]
-    [:nav.pikavalintapainike {:on-click #(pakota-lopetus-fn)} "Pakota lopetus"]]])
+    [:nav.pikavalintapainike.nappi-kielteinen {:on-click #(pakota-lopetus-fn)} "Pakota lopetus"]]])
 
 (defcard luontidialogi-card
   (reagent/as-element [tarkastusajon-luontidialogi #() #()]))

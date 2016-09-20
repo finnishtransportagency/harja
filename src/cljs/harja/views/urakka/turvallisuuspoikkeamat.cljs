@@ -18,7 +18,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.liitteet :as liitteet])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -245,7 +246,8 @@
             :palstoja 1}
            {:otsikko "Tapahtunut" :pakollinen? true
             :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-            :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]]
+            :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                      [:ei-tulevaisuudessa "Päivämäärä ei voi olla tulevaisuudessa"]]
             :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
            (lomake/ryhma {:rivi? true}
                          {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
@@ -283,7 +285,8 @@
             :pakollinen? true
             :validoi [[:ei-tyhja "Valitse tila"]
                       [:ei-avoimia-korjaavia-toimenpiteitä
-                       "Voidaan sulkea vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
+                       "Voidaan merkitä suljetuksi tai käsitellyksi
+                       vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
             :tyyppi :valinta
             :valinta-nayta #(or (turpodomain/kuvaa-turpon-tila %)
                                 "- valitse -")
@@ -324,6 +327,15 @@
             :disabloi vaaralliset-aineet-disablointi-fn
             :nayta-rivina? true
             :vaihtoehdot #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}}
+           {:otsikko "Liitteet" :nimi :liitteet
+            :palstoja 2
+            :tyyppi :komponentti
+            :komponentti
+            (fn [_]
+              [liitteet/liitteet (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
+               {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
+                                         #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
+                :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"}])}
            (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
                           :uusi-rivi? true}
                          {:otsikko "Etunimi"
@@ -416,12 +428,12 @@
      [urakka-valinnat/urakan-hoitokausi urakka]
      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id urakka))]
        (yleiset/wrap-if
-        (not oikeus?)
-        [yleiset/tooltip {} :%
-         (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
-        [napit/uusi "Lisää turvallisuuspoikkeama"
-         #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
-         {:disabled (not oikeus?)}]))
+         (not oikeus?)
+         [yleiset/tooltip {} :%
+          (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-turvallisuus)]
+         [napit/uusi "Lisää turvallisuuspoikkeama"
+          #(reset! tiedot/valittu-turvallisuuspoikkeama +uusi-turvallisuuspoikkeama+)
+          {:disabled (not oikeus?)}]))
 
      [grid/grid
       {:otsikko "Turvallisuuspoikkeamat"

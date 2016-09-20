@@ -12,7 +12,8 @@
             [schema.core :as s :include-macros true]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
@@ -97,8 +98,12 @@
   (when (str/blank? data)
     viesti))
 
+(defmethod validoi-saanto :ei-tulevaisuudessa [_ nimi data _ _ & [viesti]]
+  (when (and data (t/after? data (t/now)))
+    viesti))
+
 (defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
-  (when (and (= data :suljettu)
+  (when (and (or (= data :suljettu) (= data :kasitelty))
              (not (every? #(= (:tila %) :toteutettu) (:korjaavattoimenpiteet lomake))))
     viesti))
 

@@ -69,7 +69,10 @@ SELECT
   yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   u.takuu_loppupvm,
-  (SELECT array_agg(concat(id, '=', sampoid))
+  (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
+                            THEN '*'
+			    ELSE '' END),
+                            id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
   ST_Simplify(au.alue, 50) AS alueurakan_alue
@@ -498,3 +501,28 @@ UPDATE urakka
 UPDATE urakka
    SET indeksi = :indeksi
  WHERE id = :urakka
+
+-- name: tuhoa-valaistusurakkadata!
+DELETE FROM valaistusurakka;
+
+-- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
+SELECT alueurakka
+FROM valaistusurakka
+WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
+
+-- name: luo-valaistusurakka<!
+INSERT INTO valaistusurakka (alueurakkanro, alue)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
+
+
+-- name: tuhoa-paallystyspalvelusopimusdata!
+DELETE FROM paallystyspalvelusopimus;
+
+-- name: hae-paallystyspalvelusopimus-alueurakkanumero-sijainnilla
+SELECT alueurakka
+FROM paallystyspalvelusopimus
+WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
+
+-- name: luo-paallystyspalvelusopimus<!
+INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY);

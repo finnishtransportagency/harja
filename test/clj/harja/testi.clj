@@ -19,15 +19,12 @@
 
 (Locale/setDefault (Locale. "fi" "FI"))
 
-
 (defn ollaanko-jenkinsissa? []
   (= "harja-jenkins.solitaservices.fi"
      (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defn travis? []
   (= "true" (System/getenv "TRAVIS")))
-
-
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä

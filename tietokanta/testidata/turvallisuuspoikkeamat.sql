@@ -1,3 +1,5 @@
+-- Oulun alueurakka 2005-2012
+
 INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, tila, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,
 sairaalavuorokaudet, luotu, luoja, sijainti, tr_numero, tr_alkuosa, tr_loppuosa, tr_alkuetaisyys, tr_loppuetaisyys, tyyppi, vahinkoluokittelu, vakavuusaste,
@@ -8,6 +10,8 @@ VALUES
 7, 1, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435847, 7216217)::GEOMETRY, 6, 6, 6, 6, 6,
 ARRAY['tyotapaturma']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'lieva'::turvallisuuspoikkeama_vakavuusaste,
 true, true);
+
+-- Oulun alueurakka 2014-2019
 
 INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, tila, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,
@@ -54,6 +58,7 @@ VALUES
                       4, 3, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), ST_MakePoint(435887, 7216237)::GEOMETRY, 6, 6, 6, 6, 6,
                             ARRAY['turvallisuushavainto']::turvallisuuspoikkeama_luokittelu[], ARRAY['henkilovahinko']::turvallisuuspoikkeama_vahinkoluokittelu[], 'vakava'::turvallisuuspoikkeama_vakavuusaste);
 
+-- Pudasjärven alueurakka 2007-2012
 
 INSERT INTO turvallisuuspoikkeama
 (lahde, vaylamuoto, urakka, tapahtunut, tila, tyontekijanammatti, kuvaus, sairauspoissaolopaivat,

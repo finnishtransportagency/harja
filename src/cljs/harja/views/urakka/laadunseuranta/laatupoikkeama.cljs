@@ -154,7 +154,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :muokattava? :sakko?}
 
          (when (urakka/indeksi-kaytossa?)
-           {:otsikko "Indeksi" :nimi :indeksi :leveys 1.5
+           {:otsikko "Indeksi"
+            :nimi :indeksi
+            :leveys 1.5
             :tyyppi :valinta
             :valinnat ["MAKU 2005" "MAKU 2010"]               ;; FIXME: haetaanko indeksit tiedoista?
             :valinta-nayta #(or % "Ei sidota indeksiin")
@@ -217,10 +219,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               yllapitokohteet (:yllapitokohteet optiot)]
           (log "laatupoikkeama" (pr-str @laatupoikkeama))
           (if (and (some #(= (:nakyma optiot) %) [:paallystys :paikkaus :tiemerkinta])
-                     (nil? yllapitokohteet))
+                   (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
             [ajax-loader "Ladataan..."]
             [:div.laatupoikkeama
-            [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
+             [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
 
             [lomake/lomake
              {:otsikko      "Laatupoikkeaman tiedot"
