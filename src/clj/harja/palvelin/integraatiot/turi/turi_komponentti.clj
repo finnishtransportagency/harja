@@ -23,7 +23,10 @@
   (let [liitteet (:liitteet turvallisuuspoikkeama)]
     (mapv
       (fn [liite]
-        (assoc liite :sisalto (liitteet/lataa-liite liitteiden-hallinta (:id liite))))
+        (assoc liite
+          :data
+          (:data
+            (liitteet/lataa-liite liitteiden-hallinta (:id liite)))))
       liitteet)))
 
 (defn hae-turvallisuuspoikkeama [liitteiden-hallinta db id]
@@ -35,7 +38,11 @@
                                         :liite :liitteet
                                         :kommentti :kommentit}))]
     (if turvallisuuspoikkeama
-      (let [liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
+      (let [turvallisuuspoikkeama (assoc turvallisuuspoikkeama
+                                    :liitteet
+                                    (concat (:liitteet turvallisuuspoikkeama)
+                                            (mapv :liite (:kommentit turvallisuuspoikkeama))))
+            liitteet (hae-liitteiden-sisallot liitteiden-hallinta turvallisuuspoikkeama)]
         (assoc turvallisuuspoikkeama
           :liitteet liitteet))
       (let [virhe (format "Id:llä %s ei löydy turvallisuuspoikkeamaa" id)]

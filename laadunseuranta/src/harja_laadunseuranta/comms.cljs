@@ -34,7 +34,7 @@
                :error-handler #(hanskaa-virhe % c)
                :handler #(put! c (js/parseInt %))})
     c))
- 
+
 (defn get! [url]
   (let [c (chan)]
     (GET url {:error-handler #(close! c)
@@ -42,8 +42,12 @@
               :format :transit})
     c))
 
-(defn paata-ajo! [tarkastusajo-id]
-  (post! asetukset/+paatos-url+ {:tarkastusajo {:id tarkastusajo-id}}))
+(defn hae-urakkatyypin-urakat [urakkatyyppi]
+  (post! asetukset/+urakkatyypin-urakat-url+ urakkatyyppi))
+
+(defn paata-ajo! [tarkastusajo-id urakka]
+  (post! asetukset/+paatos-url+ {:urakka (:id urakka)
+                                 :tarkastusajo {:id tarkastusajo-id}}))
 
 (defn luo-ajo! [tarkastustyyppi]
   (post! asetukset/+luonti-url+ {:tyyppi tarkastustyyppi}))
@@ -85,3 +89,9 @@
 (defn hae-tr-tiedot [sijainti]
   (post! asetukset/+tr-tietojen-haku-url+ (assoc (select-keys sijainti [:lat :lon])
                                                  :treshold asetukset/+tros-haun-treshold+)))
+
+(defn hae-tiedosto [url]
+  (let [c (chan)]
+    (GET url {:handler #(put! c %)
+              :format :raw})
+    c))

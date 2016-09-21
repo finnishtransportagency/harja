@@ -87,7 +87,10 @@
                                            (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str
                                            (s/optional-key :valaistusurakoiden-shapefile)              s/Str
                                            (s/optional-key :valaistusurakoiden-alk-osoite)             s/Str
-                                           (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str}
+                                           (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-shapefile)              s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-alk-osoite)             s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-alk-tuontikohde)         s/Str}
 
    (s/optional-key :yha)                  {:url            s/Str
                                            :kayttajatunnus s/Str

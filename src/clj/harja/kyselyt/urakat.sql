@@ -2,7 +2,7 @@
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  u.tyyppi AS urakka_tyyppi,
+  u.tyyppi AS tyyppi,
   o.id AS hallintayksikko_id,
   o.nimi AS hallintayksikko_nimi
 FROM urakka u
@@ -69,7 +69,10 @@ SELECT
   yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   u.takuu_loppupvm,
-  (SELECT array_agg(concat(id, '=', sampoid))
+  (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
+                            THEN '*'
+			    ELSE '' END),
+                            id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
   ST_Simplify(au.alue, 50) AS alueurakan_alue
@@ -221,7 +224,7 @@ WHERE u.id = :id;
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  u.tyyppi AS urakka_tyyppi,
+  u.tyyppi AS tyyppi,
   hy.id AS hallintayksikko_id,
   hy.nimi AS hallintayksikko_nimi
 FROM urakka u
@@ -431,12 +434,26 @@ SELECT EXISTS(
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 SELECT u.id
-FROM urakoiden_alueet ua
-  JOIN urakka u ON ua.id = u.id
-WHERE ua.tyyppi = :urakkatyyppi :: urakkatyyppi
-      AND (st_contains(ua.alue, ST_MakePoint(:x, :y)))
+FROM urakka u
+  LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
+WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
       AND (u.alkupvm IS NULL OR u.alkupvm <= current_timestamp)
       AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp)
+      AND
+      ((:urakkatyyppi = 'hoito' AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
+       OR
+       (:urakkatyyppi = 'valaistus' AND
+        exists(SELECT id
+               FROM valaistusurakka vu
+               WHERE vu.alueurakkanro = u.alueurakkanro AND
+                     st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
+       OR
+       ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
+        exists(SELECT id
+               FROM paallystyspalvelusopimus pps
+               WHERE pps.alueurakkanro = u.alueurakkanro AND
+                     st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
+
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
@@ -462,8 +479,8 @@ SELECT
   u.alue          AS urakka_alue,
   alueurakka.alue AS alueurakka_alue
 FROM urakka u
-  JOIN hanke ON u.hanke = hanke.id
-  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+  LEFT JOIN hanke ON u.hanke = hanke.id
+  LEFT JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id = :id;
 
 -- name: hae-urakoiden-geometriat
@@ -472,8 +489,8 @@ SELECT
   u.id AS urakka_id,
   ST_Simplify(alueurakka.alue, :toleranssi) AS alueurakka_alue
 FROM urakka u
-  JOIN hanke ON u.hanke = hanke.id
-  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+  LEFT JOIN hanke ON u.hanke = hanke.id
+  LEFT JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id IN (:idt);
 
 -- name: hae-urakan-sampo-id

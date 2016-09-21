@@ -56,34 +56,35 @@ button {
     left: 470px;
 }
 
-.ylapalkki .hoitoluokka {
+.ylapalkin-metatiedot {
     position: absolute;
     border-left: 1px solid rgb(40,40,40);
     top: 0;
     left: 680px;
     padding-left: 10px;
     color: white;
-    width: 100px;
+    width: 100%;
     height: 70px;
-    line-height: 50px;
+    line-height: 20px;
 }
-
-.ylapalkki .hoitoluokka .soratiehoitoluokka {
+.ylapalkin-metatiedot > div {
     display: block;
+    margin: 3px 0;
     padding-top: 0;
     width: 190px;
-    top: 0;
     font-size: 15px;
     height: 19px;
+    line-height: 20px;
 }
-
-.ylapalkki .hoitoluokka .talvihoitoluokka {
+.ylapalkin-metatiedot > .urakkanimi {
     display: block;
     padding-top: 0;
     width: 190px;
-    top: 0;
-    font-size: 15px;
-    height: 15px;
+    font-size: 10px;
+    height: 19px;
+    line-height: 10px;
+    overflow-x: hidden;
+    word-break: break-all;
 }
 
 .ylapalkki-button {
@@ -816,7 +817,9 @@ button {
     top: 0px;
     left: 00px;
 }
-
+.klikattava {
+    cursor: pointer;
+}
 /* ---------- tr-selailu ---------- */
 .tr-selailu {
     z-index: 1000;
@@ -886,16 +889,21 @@ button:disabled {
 }
 
 .painikelaatikko {
+    height: 500px;
+}
+.urakkavalitsin {
+    height: 500px;
+}
+.painikelaatikko,
+.urakkavalitsin {
+    background-color: white;
+    left: 0;
+    overflow: hidden;
     position: fixed;
     top: 70px;
-    left: 0;
     width: 100%;
-    height: 500px;
     z-index: 10000;
-    overflow: hidden;
-    background-color: white;
 }
-
 .painikelaatikko > .painikerivi {
     height: 70px;
 }
@@ -939,10 +947,11 @@ button:disabled {
 .peruuta {
     width: 30.5%;
     height: 70px;
-    float: left;
+    float: right;
     text-align: center;
     margin-top: 20px;
     margin-left: 2%;
+    margin-right: 2.5%;
     line-height: 70px;
     font-size: 18px;
 }
@@ -985,4 +994,75 @@ button:disabled {
 .keskenerainen {
     color: red;
     margin-left: 8px;
+}
+.urakkarivi {
+
+}
+.urakka {
+    font-size: 13px;
+    background-color: #0066cc;
+    height: 50px;
+    line-height: 26px;
+    text-align: left;
+    color: white;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+.urakkavalitsin .pikavalintapainike {
+    height: 60px;
+    padding-top: 0;
+}
+#testiharja {
+    background-color: white;
+    color: #dd0000;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 10px;
+    padding: 2px;
+    position: absolute;
+    top: 5px;
+    left: 66px;
+    text-decoration: none;
+}
+.liikenneturvallisuusmuistutus {
+    border: 2px solid black;
+    color: red;
+    font-weight: bold;
+    padding: 2px;
+}
+.urakkarivi {
+    height: 70px;
+}
+
+.urakkarivi > .urakkapainike {
+    width: 30.5%;
+    height: 50px;
+    background-color: rgb(9,79,192);
+    border: 1px solid black;
+    margin-top: 1%;
+    margin-bottom: 1%;
+    margin-left: 2%;
+    mergin-right: 3%;
+    color: white;
+    padding: 20px 2px 0;
+    font-size: 16px;
+    text-align: left;
+}
+.inline {
+    display: inline-block;
+}
+.urakkataulut {
+    max-height: 335px;
+    overflow-y: scroll;
+}
+.urakkataulu {
+    width: 100%;
+}
+.urakkaotsikko {
+    margin-left: 2%;
+}
+.urakoiden-valiotsikko {
+    font-weight: bold;
+    margin-left: 2%;
 }

@@ -26,9 +26,12 @@
 
                  [com.narkisr/gelfino-client "0.7.0"]
 
+                 ;; JSON encode/decode
+                 [cheshire "5.6.1"]
+
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.1.19"]
-                 [compojure "1.4.0"]
+                 [compojure "1.5.0"]
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
@@ -122,6 +125,11 @@
 
                  ;; Tuck UI apuri
                  [webjure/tuck "0.2.1"]
+
+                 ;; Laadunseurantatyökalua varten
+                 [org.clojure/data.codec "0.1.0"]
+                 [devcards "0.2.1-4" :exclusions [cljsjs/react]]
+
                  ]
 
 
@@ -200,6 +208,64 @@
                                :closure-output-charset "US-ASCII"
                                }}
 
+               ;; Laadunseurannan buildit
+               {:id "laadunseuranta-dev"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+
+                :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
+
+                :compiler {:main harja-laadunseuranta.dev-core
+                           :asset-path "js/compiled/out"
+                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
+                           :output-dir "resources/public/laadunseuranta/js/compiled/out"
+                           :source-map-timestamp true}}
+
+               {:id "laadunseuranta-devcards"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+
+                :figwheel {:devcards true
+                                        ;:nrepl-port 7889
+                                        ;:server-port 3450
+                           }
+
+                :compiler {:main harja-laadunseuranta.devcards-core
+                           :asset-path "js/compiled/devcards_out"
+                           :output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta_devcards.js"
+                           :output-dir "resources/public/laadunseuranta/js/compiled/devcards_out"
+                           :source-map-timestamp true}}
+
+               {:id "laadunseuranta-test"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"
+                               "laadunseuranta/test-src/cljs"]
+
+                :compiler {:main harja-laadunseuranta.test-main
+                           ;;:asset-path "laadunseuranta/js/out"
+                           :output-to "resources/private/laadunseuranta/js/unit-test.js"
+                           ;;:output-dir "resources/private/laadunseuranta/js/out"
+                           :source-map-timestamp true
+                           :foreign-libs
+                           [{:file "resources/public/laadunseuranta/js/proj4.js"
+                             :provides ["proj4"]}
+                            {:file "resources/public/laadunseuranta/js/epsg3067.js"
+                             :provides ["epsg3067"]}]
+                           }}
+
+               ;; This next build is an compressed minified build for
+               ;; production. You can build this with:
+               ;; lein cljsbuild once min
+               {:id "laadunseuranta-min"
+                :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
+                :jar true
+                :compiler {:output-to "resources/public/laadunseuranta/js/compiled/harja_laadunseuranta.js"
+                           :closure-extra-annotations #{"api" "observable"}
+                           :main harja-laadunseuranta.prod-core
+                           :optimizations :advanced
+                           :language-in  :ecmascript5
+                           :language-out :ecmascript5
+                           :externs ["laadunseuranta/externs.js"]
+                           :parallel-build true
+                           :pretty-print false}}
+
                ]}
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
@@ -212,8 +278,8 @@
 
 
   ;; Palvelimen buildin tietoja
-  :source-paths ["src/clj" "src/cljc"]
-  :test-paths ["test/clj"]
+  :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src"]
+  :test-paths ["test/clj" "laadunseuranta/test-src/clj"]
   :aot :all
   :main harja.palvelin.main
   :auto-clean false                                         ;; for uberjar
@@ -230,11 +296,24 @@
 
   ;; Clientin reload ja REPL
   :figwheel {:server-port 3449
-             :reload-clj-files false}
+             :reload-clj-files false
+             :css-dirs ["resources/public/laadunseuranta/css"]}
 
   ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
-  :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit," "cljsbuild" "once" "prod," "less" "once," "uberjar," "doc"]
-            "testit"             ["do" "clean," "deps," "test," "doo" "phantom" "test" "once"]
+  :aliases {"tuotanto"            ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
+                                   ;; Harjan fronttibuildi ja LESS
+                                   "cljsbuild" "once" "prod,"
+                                   "less" "once,"
+
+                                   ;; Harja mobiili laadunseuranta fronttibuildi
+                                   "cljsbuild" "once" "laadunseuranta-min,"
+
+                                   "uberjar," "doc"]
+            "testit"             ["do" "clean,"
+                                  "deps,"
+                                  "test,"
+                                  "doo" "phantom" "test" "once,"
+                                  "doo" "phantom" "laadunseuranta-test" "once"]
 
             ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt"                ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
@@ -243,7 +322,9 @@
 
             "selainrepl"          ["run" "-m" "harja.tyokalut.selainrepl"]
             "tarkista-migraatiot" ["run" "-m" "harja.tyokalut.migraatiot"]
-            "tuotanto-notest"     ["do" "compile," "cljsbuild" "once" "prod,"
+            "tuotanto-notest"     ["do" "compile,"
+                                   "cljsbuild" "once" "prod,"
+                                   "cljsbuild" "once" "laadunseuranta-min,"
                                    "less" "once," "uberjar"]
             }
 
@@ -257,4 +338,7 @@
              "Implementation-Version" "1.1"
              "Implementation-Vendor"  "Sun Microsystems, Inc."
              "Extension-Name"         "com.sun.media.imageio"}
+
+
+  ;;:doo {:paths {:phantom "phantomjs --local-storage-path=/tmp --local-storage-quota=1024 --offline-storage-path=/tmp --offline-storage-quota=1024"}}
   )

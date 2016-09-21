@@ -2,7 +2,6 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet])
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -153,7 +152,7 @@
   (mapv (fn [liite]
           [:poikkeamaliite
            [:tiedostonimi (:nimi liite)]
-           [:tiedosto (:sisalto liite)]])
+           [:tiedosto (String. (liitteet/enkoodaa-base64 (:data liite)))]])
         (:liitteet data)))
 
 (defn muodosta-viesti [data]
