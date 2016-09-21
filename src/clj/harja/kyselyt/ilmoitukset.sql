@@ -62,15 +62,15 @@ WHERE
   (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite])) AND
 
   -- Rajaa tienumerolla
-  (:tr - numero :: INTEGER IS NULL OR tr_numero = :tr - numero) AND
+  (:tr_numero::INTEGER IS NULL OR tr_numero = :tr_numero) AND
 
   -- Rajaa ilmoittajan nimellä
-  (:ilmoittaja - nimi :: TEXT IS NULL OR
-   CONCAT(i.ilmoittaja_etunimi, ' ', i.ilmoittaja_sukunimi) ILIKE :ilmoittaja - nimi) AND
+  (:ilmoittaja_nimi :: TEXT IS NULL OR
+   CONCAT(i.ilmoittaja_etunimi, ' ', i.ilmoittaja_sukunimi) ILIKE :ilmoittaja_nimi) AND
 
   -- Rajaa ilmoittajan puhelinnumerolla
-  (:ilmoittaja - puhelin :: TEXT IS NULL OR
-   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja - puhelin)
+  (:ilmoittaja_puhelin :: TEXT IS NULL OR
+   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja_puhelin)
 
 ORDER BY i.ilmoitettu DESC, it.kuitattu DESC
 LIMIT 501;
