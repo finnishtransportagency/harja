@@ -3,6 +3,10 @@
 INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, geometria) VALUES
   (:osoite3, :tie, :ajorata, :osa, :tiepiiri, :tr_pituus, ST_GeomFromText(:the_geom) :: GEOMETRY);
 
+-- name: vie-tien-osan-alkuajorata!
+INSERT INTO tr_osan_ajorata (tie,osa,ajorata,alkuajorata)
+VALUES (:tie, :osa, :ajorata, :alkuajorata);
+
 -- name: hae-tr-osoite-valille
 -- hakee tierekisteriosoitteen kahden pisteen välille
 SELECT *
@@ -45,6 +49,16 @@ FROM yrita_tierekisteriosoite_pisteelle(
 -- name: tuhoa-tieverkkodata!
 -- poistaa kaikki tieverkon tiedot taulusta. ajetaan transaktiossa
 DELETE FROM tieverkko;
+
+-- name: tuhoa-tien-osien-ajoradat!
+-- poistaa kaikki tien osien ajoratatiedot
+DELETE FROM tr_osan_ajorata;
+
+-- name: paivita-tr-osan-ajoradat!
+UPDATE tr_osan_ajorata
+   SET oikea = keraa_geometriat(:tie::INTEGER, :osa::INTEGER, 1::INTEGER),
+       vasen = keraa_geometriat(:tie::INTEGER, :osa::INTEGER, 2::INTEGER)
+ WHERE tie = :tie::INTEGER AND osa = :osa::INTEGER;
 
 -- name: paivita-paloiteltu-tieverkko
 -- päivittää tieverkkotaulut

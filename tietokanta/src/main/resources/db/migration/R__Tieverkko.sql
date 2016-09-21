@@ -28,56 +28,26 @@ BEGIN
   FOR i IN 1..ST_NumGeometries(jatkopatkat) LOOP
      IF i!=nykyinen THEN
        tmp := ST_GeometryN(jatkopatkat, i);
-       IF ST_Distance(vika_piste(viiva), eka_piste(tmp))<etaisyys THEN
+       --IF ST_Distance(vika_piste(viiva), eka_piste(tmp))<etaisyys THEN
+       IF vika_piste(viiva)=eka_piste(tmp) THEN
          etaisyys := ST_Distance(vika_piste(viiva), eka_piste(tmp));
          minimi := tmp;
        END IF;
      END IF;
   END LOOP;
+  --RAISE NOTICE 'jatkopatka nykyiselle % on %', nykyinen, st_astext(viiva);
   RETURN ST_LineMerge(ST_Collect(viiva, minimi));
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION on_jonkun_viimeinen_piste(p GEOMETRY, geometriat GEOMETRY) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION yhdista_viivat_jarjestyksessa(viiva geometry) RETURNS geometry AS $$
 DECLARE
-  i INTEGER;
-  g GEOMETRY;
-BEGIN
-  RAISE NOTICE 'tsekataan loppua %', st_astext(geometriat);
-  FOR i IN 1..ST_NumGeometries(geometriat) LOOP
-    RAISE NOTICE ' palan loppu %', st_astext(st_endpoint(st_geometryn(geometriat,i)));
-    IF ST_EndPoint(ST_GeometryN(geometriat, i)) = p THEN
-      RETURN true;
-    END IF;
-  END LOOP;
-  RETURN false;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION yhdista_viivat_jarjestyksessa(yksiajorataiset geometry, kaksiajorataiset geometry) RETURNS geometry AS $$
-DECLARE
-  yksiajr_alkupiste GEOMETRY;
-  kaksiajr_alkupiste GEOMETRY;
-  on_viim_yksi boolean;
-  on_viim_kaksi boolean;
-  viiva GEOMETRY;
-  alkupiste GEOMETRY;
   jarjestetty geometry;
 BEGIN
-    viiva := ST_Collect(yksiajorataiset,kaksiajorataiset);
-    -- Päätellään alkupiste: otetaan 1- ja 2-ajorataisista ensimmäiset pisteet.
-    -- Jompi kumpi niistä on alkupiste.
-    yksiajr_alkupiste := eka_piste(yksiajorataiset);
-    kaksiajr_alkupiste := eka_piste(kaksiajorataiset);
-    RAISE NOTICE 'yksiajr alkupiste %, kaksiajr alkupiste %', st_astext(yksiajr_alkupiste), st_astext(kaksiajr_alkupiste);
-    on_viim_yksi := on_jonkun_viimeinen_piste(yksiajr_alkupiste, kaksiajorataiset);
-    IF on_viim_yksi THEN
-      RAISE NOTICE 'yksajr alkupiste on jonkun loppupiste, se EI ole alkupiste';
+    IF GeometryType(viiva)='LINESTRING' THEN
+       RETURN viiva;
     END IF;
-    IF on_jonkun_viimeinen_piste(kaksiajr_alkupiste, viiva) THEN
-      RAISE NOTICE 'kaksiajr alkupiste on jonkun loppupiste, se EI ole alkupiste';
-    END IF;
-    --
+    -- Yhdistä viivat alkaen ensimmäisestä
     jarjestetty := ST_GeometryN(viiva,1);
     FOR i IN 1..ST_NumGeometries(viiva) LOOP
         jarjestetty := etsi_jatkopatka(i, jarjestetty, viiva);
@@ -109,24 +79,39 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION keraa_geometriat(tie_ INTEGER, osa_ INTEGER, ajorata_ INTEGER) RETURNS geometry AS $$
 DECLARE
   g geometry;
+  alkuajorata INTEGER;
 BEGIN
-  SELECT yhdista_viivat_jarjestyksessa(
-          (SELECT ST_Collect((g.f).geom)
-	     FROM (SELECT st_dump(geometria) as f
-	  	     FROM tieverkko
-           	    WHERE tie=tie_ AND osa=osa_ AND ajorata=0) g),
-	  (SELECT ST_Collect((g.f).geom)
-	     FROM (SELECT st_dump(geometria) as f
-	             FROM tieverkko
-		    WHERE tie=tie_ AND osa=osa_ AND ajorata=ajorata_) g))
-    INTO g;
-	   -- FIXME!
-	   -- aiempi UNION ALL ja yksi parametrit
-	   -- kummassa järjestyksessä nämä otetaan vaikuttaa merkittävästi!
-	   -- jos tieosa alkaa 2-ajorataisella pätkällä, tämä menee väärin
+  SELECT a.alkuajorata
+    FROM tr_osan_alkuajorata a WHERE a.tie=tie_ AND a.osa=osa_ AND a.ajorata=ajorata_
+    INTO alkuajorata;
+  -- Yhdistetään 0-ajorata sekä valittu ajorata sen mukaan kummalla tieosa alkaa
+  IF alkuajorata = 0 THEN
+    SELECT yhdista_viivat_jarjestyksessa(st_collect((g.f).geom))
+      FROM (SELECT st_dump(geometria) AS f
+              FROM tieverkko
+             WHERE tie=tie_ AND osa=osa_ AND ajorata=0
+            UNION ALL
+            SELECT st_dump(geometria) AS f
+ 	      FROM tieverkko
+ 	     WHERE tie=tie_ AND osa=osa_ AND ajorata=ajorata_) AS g
+      INTO g;
+  ELSIF alkuajorata = ajorata_ THEN
+    SELECT yhdista_viivat_jarjestyksessa(st_collect((g.f).geom))
+      FROM (SELECT st_dump(geometria) AS f
+              FROM tieverkko
+             WHERE tie=tie_ AND osa=osa_ AND ajorata=ajorata_
+            UNION ALL
+            SELECT st_dump(geometria) AS f
+ 	      FROM tieverkko
+ 	     WHERE tie=tie_ AND osa=osa_ AND ajorata=0) AS g
+      INTO g;
+  ELSE
+    RAISE NOTICE 'Tie %, osa %, ajorata %: ei tietoa kummalla ajoradalla osa alkaa', tie_, osa_, ajorata_;
+  END IF;
   RETURN g;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- VANHA VERSION
 --CREATE OR REPLACE FUNCTION keraa_geometriat(tie_ INTEGER, osa_ INTEGER, ajorata_ INTEGER) RETURNS geometry AS $$
@@ -321,11 +306,11 @@ BEGIN
     --
     -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
     osan_geometria := keraa_geometriat(tie_, osa, ajorata);
-    osan_pituus := st_length(osan_geometria);
+    --osan_pituus := st_length(osan_geometria);
     --osan_geometria := keraa_geometriat(tie_, osa, ajorata);
     osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_pituus), LEAST(1,e2/osan_pituus));
     RAISE NOTICE 'osan pit %, laskettu pit %', osan_pituus, st_length(osan_geometria);
-    RETURN osan_geometria;
+    RETURN osan_patka;
     --IF tulos IS NULL THEN
     --  tulos := osan_patka;
     --ELSE
