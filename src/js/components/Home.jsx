@@ -1,6 +1,6 @@
 import React, {PropTypes} from 'react';
 import NoticeList from './NoticeList.jsx';
-import Notice from './Notice.jsx';
+import SingleNoticeView from './SingleNoticeView.jsx';
 import Nav from './Nav.jsx';
 import {Button, Colors} from 'react-foundation';
 import pubsub from 'pubsub-js';
@@ -13,18 +13,20 @@ export default React.createClass({
   },
 
   componentWillMount() {
-    /*
-    this.pubsub_token = pubsub.subscribe('noticeSelected', (action, notice) => {
-      this.setState({ selection: notice });
+
+    this.pubsub_notice_token = pubsub.subscribe('noticeSelected', (action, selection) => {
+      this.setState({ selection: selection });
     });
-    */
-    this.pubsub_token = pubsub.subscribe('mainNavigation', (action, link) => {
+
+    this.pubsub_nav_token = pubsub.subscribe('mainNavigation', (action, link) => {
       console.log(action + " / " + link);
+      this.setState({ selection: null });
     });
   },
 
   componentWillUnmount: function() {
-    pubsub.unsubscribe(this.pubsub_token);
+    pubsub.unsubscribe(this.pubsub_notice_token);
+    pubsub.unsubscribe(this.pubsub_nav_token);
   },
 
   render() {
@@ -34,15 +36,17 @@ export default React.createClass({
     let singleNoticeEl;
 
     if (selection) {
-      singleNoticeEl = (<Notice notice={selection} />);
+      const list = this.props[selection.list];
+      const notice =list.filter((item) => { return item.id === selection.id})[0];
+      singleNoticeEl = (<SingleNoticeView notice={notice} list={list}/>);
     }
     else {
       mainEl = (
         <div>
         <Button color={Colors.SUCCESS}>TESTSAVE</Button>
-        <NoticeList notices={careNotices} />
-        <NoticeList notices={maintenanceNotices} />
-        <NoticeList notices={faqNotices} />
+        <NoticeList notices={careNotices} list='careNotices'/>
+        <NoticeList notices={maintenanceNotices} list='maintenanceNotices'/>
+        <NoticeList notices={faqNotices} list='faqNotices'/>
         </div>
       );
     }

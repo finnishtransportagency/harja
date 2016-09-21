@@ -5,10 +5,10 @@ import pubsub from 'pubsub-js';
 
 var ListItem = React.createClass({
   onclick: function() {
-    pubsub.publish('noticeSelected', this.props.item);
+    pubsub.publish('noticeSelected', {id: this.props.notice.id, list: this.props.list});
   },
   render: function() {
-    return <div onClick={this.onclick}>{this.props.item.title}</div>;
+    return <div onClick={this.onclick}>{this.props.notice.title}</div>;
   }
 });
 
@@ -28,7 +28,7 @@ export default React.createClass({
     let loadingEl;
     let noticesEl;
 
-    let {notices} = this.props;
+    let {notices, list} = this.props;
 
     if (!notices.length > 0) {
       loadingEl = (<p>Loading...</p>);
@@ -37,7 +37,7 @@ export default React.createClass({
       noticesEl = (
         <ul>
           {notices.map(notice =>
-            <ListItem item={notice} key={notice.id}/>//<Notice notice={notice} key={notice.id} />
+            <ListItem notice={notice} key={notice.id} list={list}/>//<Notice notice={notice} key={notice.id} />
           )}
         </ul>
       );
