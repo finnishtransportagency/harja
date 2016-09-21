@@ -2,7 +2,7 @@
 SELECT
   i.id,
   i.urakka,
-  u.nimi as urakkanimi,
+  u.nimi                        AS urakkanimi,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
@@ -20,15 +20,15 @@ SELECT
   i.tr_alkuetaisyys,
   i.tr_loppuetaisyys,
 
-  it.id                                                              AS kuittaus_id,
-  it.kuitattu                                                        AS kuittaus_kuitattu,
-  it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
+  it.id                         AS kuittaus_id,
+  it.kuitattu                   AS kuittaus_kuitattu,
+  it.kuittaustyyppi             AS kuittaus_kuittaustyyppi,
 
-  it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
-  it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
+  it.kuittaaja_henkilo_etunimi  AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi AS kuittaus_kuittaaja_sukunimi,
 
-  hy.id                                                              AS hallintayksikko_id,
-  hy.nimi                                                            AS hallintayksikko_nimi
+  hy.id                         AS hallintayksikko_id,
+  hy.nimi                       AS hallintayksikko_nimi
 
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
@@ -41,9 +41,9 @@ WHERE
   -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
   (
     (:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-    (:loppu_annettu IS FALSE AND i.ilmoitettu  >= :alku) OR
-    (:alku_annettu IS FALSE AND i.ilmoitettu  <= :loppu) OR
-    (i.ilmoitettu  BETWEEN :alku AND :loppu)
+    (:loppu_annettu IS FALSE AND i.ilmoitettu >= :alku) OR
+    (:alku_annettu IS FALSE AND i.ilmoitettu <= :loppu) OR
+    (i.ilmoitettu BETWEEN :alku AND :loppu)
   ) AND
 
   -- Tarkista ilmoituksen tilat
@@ -62,15 +62,15 @@ WHERE
   (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite])) AND
 
   -- Rajaa tienumerolla
-  (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
+  (:tr - numero :: INTEGER IS NULL OR tr_numero = :tr - numero) AND
 
   -- Rajaa ilmoittajan nimellä
-  (:ilmoittaja-nimi::TEXT IS NULL OR
-   CONCAT(i.ilmoittaja_etunimi,' ',i.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
+  (:ilmoittaja - nimi :: TEXT IS NULL OR
+   CONCAT(i.ilmoittaja_etunimi, ' ', i.ilmoittaja_sukunimi) ILIKE :ilmoittaja - nimi) AND
 
   -- Rajaa ilmoittajan puhelinnumerolla
-  (:ilmoittaja-puhelin::TEXT IS NULL OR
-   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
+  (:ilmoittaja - puhelin :: TEXT IS NULL OR
+   i.ilmoittaja_matkapuhelin LIKE :ilmoittaja - puhelin)
 
 ORDER BY i.ilmoitettu DESC, it.kuitattu DESC
 LIMIT 501;
@@ -108,9 +108,9 @@ WHERE ilmoitusid IN (:ilmoitusidt);
 SELECT
   i.id,
   i.urakka,
-  u.nimi as urakkanimi,
-  hy.id                                    AS hallintayksikko_id,
-  hy.nimi                                  AS hallintayksikko_nimi,
+  u.nimi                              AS urakkanimi,
+  hy.id                               AS hallintayksikko_id,
+  hy.nimi                             AS hallintayksikko_nimi,
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
@@ -142,27 +142,27 @@ SELECT
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
 
-  it.id                                    AS kuittaus_id,
-  it.kuitattu                              AS kuittaus_kuitattu,
-  it.vakiofraasi                           AS kuittaus_vakiofraasi,
-  it.vapaateksti                           AS kuittaus_vapaateksti,
-  it.kuittaustyyppi                        AS kuittaus_kuittaustyyppi,
+  it.id                               AS kuittaus_id,
+  it.kuitattu                         AS kuittaus_kuitattu,
+  it.vakiofraasi                      AS kuittaus_vakiofraasi,
+  it.vapaateksti                      AS kuittaus_vapaateksti,
+  it.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
 
-  it.kuittaaja_henkilo_etunimi             AS kuittaus_kuittaaja_etunimi,
-  it.kuittaaja_henkilo_sukunimi            AS kuittaus_kuittaaja_sukunimi,
-  it.kuittaaja_henkilo_matkapuhelin        AS kuittaus_kuittaaja_matkapuhelin,
-  it.kuittaaja_henkilo_tyopuhelin          AS kuittaus_kuittaaja_tyopuhelin,
-  it.kuittaaja_henkilo_sahkoposti          AS kuittaus_kuittaaja_sahkoposti,
-  it.kuittaaja_organisaatio_nimi           AS kuittaus_kuittaaja_organisaatio,
-  it.kuittaaja_organisaatio_ytunnus        AS kuittaus_kuittaaja_ytunnus,
+  it.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,
+  it.kuittaaja_henkilo_matkapuhelin   AS kuittaus_kuittaaja_matkapuhelin,
+  it.kuittaaja_henkilo_tyopuhelin     AS kuittaus_kuittaaja_tyopuhelin,
+  it.kuittaaja_henkilo_sahkoposti     AS kuittaus_kuittaaja_sahkoposti,
+  it.kuittaaja_organisaatio_nimi      AS kuittaus_kuittaaja_organisaatio,
+  it.kuittaaja_organisaatio_ytunnus   AS kuittaus_kuittaaja_ytunnus,
 
-  it.kasittelija_henkilo_etunimi           AS kuittaus_kasittelija_etunimi,
-  it.kasittelija_henkilo_sukunimi          AS kuittaus_kasittelija_sukunimi,
-  it.kasittelija_henkilo_matkapuhelin      AS kuittaus_kasittelija_matkapuhelin,
-  it.kasittelija_henkilo_tyopuhelin        AS kuittaus_kasittelija_tyopuhelin,
-  it.kasittelija_henkilo_sahkoposti        AS kuittaus_kasittelija_sahkoposti,
-  it.kasittelija_organisaatio_nimi         AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus      AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_henkilo_etunimi      AS kuittaus_kasittelija_etunimi,
+  it.kasittelija_henkilo_sukunimi     AS kuittaus_kasittelija_sukunimi,
+  it.kasittelija_henkilo_matkapuhelin AS kuittaus_kasittelija_matkapuhelin,
+  it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
+  it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
+  it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
 
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
@@ -203,26 +203,26 @@ SELECT
   i.lahettaja_sukunimi,
   i.lahettaja_puhelinnumero,
   i.lahettaja_sahkoposti,
-  it.id                                                              AS kuittaus_id,
-  it.kuitattu                                                        AS kuittaus_kuitattu,
-  it.vapaateksti                                                     AS kuittaus_vapaateksti,
-  it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
+  it.id                               AS kuittaus_id,
+  it.kuitattu                         AS kuittaus_kuitattu,
+  it.vapaateksti                      AS kuittaus_vapaateksti,
+  it.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
 
-  it.kuittaaja_henkilo_etunimi                                       AS kuittaus_kuittaaja_etunimi,
-  it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
-  it.kuittaaja_henkilo_matkapuhelin                                  AS kuittaus_kuittaaja_matkapuhelin,
-  it.kuittaaja_henkilo_tyopuhelin                                    AS kuittaus_kuittaaja_tyopuhelin,
-  it.kuittaaja_henkilo_sahkoposti                                    AS kuittaus_kuittaaja_sahkoposti,
-  it.kuittaaja_organisaatio_nimi                                     AS kuittaus_kuittaaja_organisaatio,
-  it.kuittaaja_organisaatio_ytunnus                                  AS kuittaus_kuittaaja_ytunnus,
+  it.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
+  it.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,
+  it.kuittaaja_henkilo_matkapuhelin   AS kuittaus_kuittaaja_matkapuhelin,
+  it.kuittaaja_henkilo_tyopuhelin     AS kuittaus_kuittaaja_tyopuhelin,
+  it.kuittaaja_henkilo_sahkoposti     AS kuittaus_kuittaaja_sahkoposti,
+  it.kuittaaja_organisaatio_nimi      AS kuittaus_kuittaaja_organisaatio,
+  it.kuittaaja_organisaatio_ytunnus   AS kuittaus_kuittaaja_ytunnus,
 
-  it.kasittelija_henkilo_etunimi                                     AS kuittaus_kasittelija_etunimi,
-  it.kasittelija_henkilo_sukunimi                                    AS kuittaus_kasittelija_sukunimi,
-  it.kasittelija_henkilo_matkapuhelin                                AS kuittaus_kasittelija_matkapuhelin,
-  it.kasittelija_henkilo_tyopuhelin                                  AS kuittaus_kasittelija_tyopuhelin,
-  it.kasittelija_henkilo_sahkoposti                                  AS kuittaus_kasittelija_sahkoposti,
-  it.kasittelija_organisaatio_nimi                                   AS kuittaus_kasittelija_organisaatio,
-  it.kasittelija_organisaatio_ytunnus                                AS kuittaus_kasittelija_ytunnus
+  it.kasittelija_henkilo_etunimi      AS kuittaus_kasittelija_etunimi,
+  it.kasittelija_henkilo_sukunimi     AS kuittaus_kasittelija_sukunimi,
+  it.kasittelija_henkilo_matkapuhelin AS kuittaus_kasittelija_matkapuhelin,
+  it.kasittelija_henkilo_tyopuhelin   AS kuittaus_kasittelija_tyopuhelin,
+  it.kasittelija_henkilo_sahkoposti   AS kuittaus_kasittelija_sahkoposti,
+  it.kasittelija_organisaatio_nimi    AS kuittaus_kasittelija_organisaatio,
+  it.kasittelija_organisaatio_ytunnus AS kuittaus_kasittelija_ytunnus
 FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON i.id = it.ilmoitus
 WHERE i.id IN (:idt);
@@ -300,8 +300,8 @@ SET
   valitetty          = :valitetty,
   yhteydenottopyynto = :yhteydenottopyynto,
   otsikko            = :otsikko,
-  paikankuvaus        = :paikankuvaus,
-  lisatieto        = :lisatieto,
+  paikankuvaus       = :paikankuvaus,
+  lisatieto          = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
   selitteet          = :selitteet :: ilmoituksenselite [],
   muokattu           = NOW()
@@ -377,7 +377,13 @@ SET tila = 'virhe'
 WHERE id = :id;
 
 -- name: onko-ilmoitukselle-vastaanottokuittausta
-SELECT id FROM ilmoitustoimenpide WHERE ilmoitus=:ilmoitusid AND kuittaustyyppi='vastaanotto';
+SELECT id
+FROM ilmoitustoimenpide
+WHERE ilmoitus = (SELECT id
+                  FROM ilmoitus
+                  WHERE ilmoitusid = :ilmoitusid
+                  LIMIT 1) AND
+      kuittaustyyppi = 'vastaanotto';
 
 -- name: luo-ilmoitustoimenpide<!
 INSERT INTO ilmoitustoimenpide
@@ -403,16 +409,16 @@ INSERT INTO ilmoitustoimenpide
  kasittelija_organisaatio_ytunnus)
 VALUES
   (:ilmoitus,
-   :ilmoitusid,
-   :kuitattu,
-   :vakiofraasi,
-   :vapaateksti,
-   :kuittaustyyppi :: kuittaustyyppi,
-   :kuittaaja_henkilo_etunimi,
-   :kuittaaja_henkilo_sukunimi,
-   :kuittaaja_henkilo_matkapuhelin,
-   :kuittaaja_henkilo_tyopuhelin,
-   :kuittaaja_henkilo_sahkoposti,
+    :ilmoitusid,
+    :kuitattu,
+    :vakiofraasi,
+    :vapaateksti,
+    :kuittaustyyppi :: kuittaustyyppi,
+    :kuittaaja_henkilo_etunimi,
+    :kuittaaja_henkilo_sukunimi,
+    :kuittaaja_henkilo_matkapuhelin,
+    :kuittaaja_henkilo_tyopuhelin,
+    :kuittaaja_henkilo_sahkoposti,
    :kuittaaja_organisaatio_nimi,
    :kuittaaja_organisaatio_ytunnus,
    :kasittelija_henkilo_etunimi,
@@ -448,7 +454,7 @@ FROM asiakaspalauteluokka apl
                                                                WHERE hallintayksikko = :hallintayksikko_id)) AND
        (:alkupvm :: DATE IS NULL OR i.ilmoitettu >= :alkupvm) AND
        (:loppupvm :: DATE IS NULL OR i.ilmoitettu <= :loppupvm)
-GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
+GROUP BY CUBE (apl.nimi, i.ilmoitustyyppi);
 
 -- name: hae-lahettamattomat-ilmoitustoimenpiteet
 SELECT id
@@ -457,10 +463,10 @@ WHERE tila IS NULL OR tila = 'virhe';
 
 -- name: hae-ilmoituksen-tieosoite
 SELECT
-  tr_numero as "tr-numero",
-  tr_alkuosa as "tr-alkuosa",
-  tr_alkuetaisyys as "tr-alkuetaisyys",
-  tr_loppuosa as "tr-loppuosa",
-  tr_loppuetaisyys as "tr-loppuetaisyys"
+  tr_numero        AS "tr-numero",
+  tr_alkuosa       AS "tr-alkuosa",
+  tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  tr_loppuosa      AS "tr-loppuosa",
+  tr_loppuetaisyys AS "tr-loppuetaisyys"
 FROM ilmoitus
 WHERE id = :id;
