@@ -3,8 +3,6 @@
 CREATE TABLE tr_osan_ajorata (
   tie INTEGER,
   osa INTEGER,
-  ajorata INTEGER,
-  alkuajorata INTEGER,
   oikea GEOMETRY,
   vasen GEOMETRY
 );

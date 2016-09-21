@@ -4,9 +4,10 @@
             [clj-time.periodic :refer [periodic-seq]]
             [chime :refer [chime-at]]
             [harja.kyselyt.tieverkko :as k]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile])
+  (:import (com.vividsolutions.jts.geom LineString MultiLineString GeometryFactory)))
 
-(defn paattele-alkuajorata
+#_(defn paattele-alkuajorata
   "Päättelee miltä ajoradalta tien osa alkaa. Palauttaa 0 tai 1 sen mukaan kummalla
   ajoradalla osa alkaa. Alkupiste on tien alku tien kasvusuuntaan katsottuna."
   [{g0 :the_geom :as ajr0} {g1 :the_geom :as ajr1}]
@@ -65,16 +66,14 @@
   linestringit tulevat käytettyä, palautetaan nil."
   [g0 g1]
   (let [ls0 (line-string-seq g0)
-        ls1 (line-string-seq g1)
-        ]
-    (loop [eka (first ls0)
-           loppupiste (viimeinen-piste eka)
+        ls1 (line-string-seq g1)]
+    (loop [result [(first ls0)]
+           loppupiste (viimeinen-piste (first ls0))
            ls0 (rest ls0)
            ls1 ls1]
       (if (and (empty? ls0) (empty? ls1))
         ;; Molemmat empty, onnistui!
-        ;; FIXME: palauta yhdistetty multilinestring
-        ::onnistui
+        (MultiLineString. (into-array LineString result) (GeometryFactory.))
 
         ;; Ei vielä loppu, ota jommasta kummasta seuraava pala, joka
         ;; jatkaa loppupisteestä
@@ -83,21 +82,21 @@
           (cond
             ;; ls0 jatkaa geometriaa
             (and seuraava-ls0 (= loppupiste (ensimmainen-piste seuraava-ls0)))
-            (recur seuraava-ls0 ;; FIXME: combine
+            (recur (conj result seuraava-ls0)
                    (viimeinen-piste seuraava-ls0)
                    (rest ls0)
                    ls1)
 
             ;; ls1 jatkaa geometriaa
             (and seuraava-ls1 (= loppupiste (ensimmainen-piste seuraava-ls1)))
-            (recur seuraava-ls1 ;; FIXME: combine
+            (recur (conj result seuraava-ls1)
                    (viimeinen-piste seuraava-ls1)
                    ls0
                    (rest ls1))
 
             ;; Jatkoa ei löydy, tämä viiva ei onnistunut
             :default
-            :ei-onnistu))))))
+            nil))))))
 
 (defn- keraa-geometriat
   "Yhdistää 1-ajorataisen (ajr0) ja 2-ajorataisen halutun suunnan mukaisen osan
@@ -114,24 +113,31 @@
     (or (yhdista-viivat g0 g1)
         (yhdista-viivat g1 g0))))
 
+(def onnistui (atom 0))
+(def ei-onnistu (atom 0))
+
 (defn vie-tieosa [db tie osa osan-geometriat]
   ;; todo: Onko ok, jos rivejä missä tätä tietoa ei ole ei tuoda?
 
   (let [ajoradat (into {}
                        (map (juxt :ajorata identity))
                        osan-geometriat)
-        alkuajorata-oikea (:ajorata (paattele-alkuajorata (ajoradat 0) (ajoradat 1)))
-        alkuajorata-vasen (:ajorata (paattele-alkuajorata (ajoradat 0) (ajoradat 2)))
+        oikea (keraa-geometriat (ajoradat 0) (ajoradat 1))
+        vasen (keraa-geometriat (ajoradat 0) (ajoradat 2))]
 
-        vasen (when (= :ei-onnistu ()))]
+    (if (nil? oikea)
+      (swap! ei-onnistu inc)
+      (swap! onnistui inc))
+    (if (nil? oikea)
+      (swap! ei-onnistu inc)
+      (swap! onnistui inc))
 
-    (println "TIE " tie ", OSA " osa)
-    (println " => OIKEA " (keraa-geometriat (ajoradat 0) (ajoradat 1)))
-    (println " => VASEN " (keraa-geometriat (ajoradat 0) (ajoradat 2)))
+    (k/vie-tien-osan-ajorata! db {:tie tie
+                                  :osa osa
+                                  :oikea (some-> oikea str)
+                                  :vasen (some-> vasen str)})
 
-    #_(k/vie-tien-osan-alkuajorata! db {:tie tie :osa osa :ajorata 1 :alkuajorata alkuajorata-oikea})
-    #_(k/vie-tien-osan-alkuajorata! db {:tie tie :osa osa :ajorata 2 :alkuajorata alkuajorata-vasen})
-
+    ;; Onko nämä enää tarpeellisia?
     #_(doseq [tv osan-geometriat]
       (k/vie-tieverkkotauluun! db (:osoite3 tv) (:tie tv) (:ajorata tv) (:osa tv) (:tiepiiri tv)
                                (:tr_pituus tv)
@@ -163,10 +169,11 @@
         (shapefile/tuo-ryhmiteltyna
          shapefile "TIE"
          (fn [tien-geometriat]
-           (let [tie (:tie (first tien-geometriat))]
-             (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
-               (when (= tie 110) (println "VIE tien " tie " OSA " osa))
-               (vie-tieosa db tie osa geometriat))))))
+           (let [tien-geometriat tien-geometriat;(filter :osoite3 tien-geometriat)
+                 ]
+             (let [tie (:tie (first tien-geometriat))]
+               (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
+                 (vie-tieosa db tie osa geometriat)))))))
 
       (k/paivita-paloiteltu-tieverkko db)
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))

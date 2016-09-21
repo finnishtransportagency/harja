@@ -260,15 +260,16 @@ DECLARE
   losa INTEGER;
   let INTEGER;
   -- Osan looppauksen jutut
-  osa INTEGER;
+  osa_ INTEGER;
   e1 INTEGER;
   e2 INTEGER;
   osan_geometria GEOMETRY;
   osan_patka GEOMETRY;
   -- Tuloksena syntyvä geometria
-  tulos GEOMETRY;
+  tulos GEOMETRY[];
   -- st_linemerge(st_collect(viiva1,viiva2))
 BEGIN
+  tulos := ARRAY[]::GEOMETRY[];
   -- Päätellään kumpaa ajorataa ollaan menossa
   -- Jos TR-osoite on kasvava, mennään oikeaa kaistaa (1)
   -- muuten mennään vasenta (2).
@@ -287,37 +288,32 @@ BEGIN
   END IF;
   RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata;
   tulos := NULL;
-  FOR osa IN aosa..losa LOOP
-    -- Haetaan osan pituus
-    osan_pituus := tr_osan_pituus(tie_, osa);
+  FOR osa_ IN aosa..losa LOOP
     -- Päätellään alkuetäisyys tälle osalle
-    IF osa = aosa THEN
+    IF osa_ = aosa THEN
       e1 := aet;
     ELSE
       e1 := 1;
     END IF;
     -- Päätellään loppuetäisyys tälle osalle
-    IF osa = losa THEN
+    IF osa_ = losa THEN
       e2 := let;
     ELSE
       e2 := osan_pituus;
     END IF;
-    RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa, e1, e2;
+    RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
     --
     -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
-    osan_geometria := keraa_geometriat(tie_, osa, ajorata);
-    --osan_pituus := st_length(osan_geometria);
-    --osan_geometria := keraa_geometriat(tie_, osa, ajorata);
+    IF ajorata = 1 THEN
+      SELECT oikea FROM tr_osan_ajorata toa WHERE toa.tie=tie_ AND toa.osa=osa_ INTO osan_geometria;
+    ELSE
+      SELECT vasen FROM tr_osan_ajorata toa WHERE toa.tie=tie_ AND toa.osa=osa_ INTO osan_geometria;
+    END IF;
+    osan_pituus := st_length(osan_geometria);
     osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_pituus), LEAST(1,e2/osan_pituus));
-    RAISE NOTICE 'osan pit %, laskettu pit %', osan_pituus, st_length(osan_geometria);
-    RETURN osan_patka;
-    --IF tulos IS NULL THEN
-    --  tulos := osan_patka;
-    --ELSE
-    --  tulos := ST_Collect(tulos, osan_patka);
-    --END IF;
+    tulos := tulos || osan_patka;
   END LOOP;
-  RETURN tulos;
+  RETURN ST_Collect(tulos);
 END;
 $$ LANGUAGE plpgsql;
 
