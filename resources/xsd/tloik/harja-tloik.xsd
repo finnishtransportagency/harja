@@ -94,8 +94,8 @@
     <xs:complexType name="sijainti">
         <xs:sequence>
             <xs:element name="tienumero" type="xs:integer" minOccurs="1" />
-            <xs:element name="x" type="xs:integer" minOccurs="1" />
-            <xs:element name="y" type="xs:integer" minOccurs="1" />
+            <xs:element name="x" type="xs:decimal" minOccurs="1" />
+            <xs:element name="y" type="xs:decimal" minOccurs="1" />
             <xs:element name="tieosa" type="xs:integer" minOccurs="0" />
             <xs:element name="etaisyys" type="xs:integer" minOccurs="0" />
         </xs:sequence>

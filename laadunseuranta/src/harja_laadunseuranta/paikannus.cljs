@@ -67,7 +67,20 @@
                                            paikannusoptiot))
                     +paikan-raportointivali+)))
 
+(defn aseta-testisijainti
+  "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi
+  olla pois päältä kun tätä käytetään."
+  [sijainti-atomi [x y]]
+  (swap! sijainti-atomi
+         (fn [{:keys [nykyinen]}]
+           {:edellinen nykyinen
+            :nykyinen {:lat y
+                       :lon x
+                       :heading 0
+                       :accuracy 20
+                       :speed 40
+                       :timestamp (timestamp)}})))
+
 (defn lopeta-paikannus [n]
   (when n
     (js/clearInterval n)))
-

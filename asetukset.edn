@@ -124,4 +124,5 @@
  ;; ClamAV REST palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
 
- :paivystystarkistus {:paivittainen-aika [12 11 00]}}
+ :paivystystarkistus  {:paivittainen-aika [12 11 00]}
+ }

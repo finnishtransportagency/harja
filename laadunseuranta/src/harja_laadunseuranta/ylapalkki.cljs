@@ -1,7 +1,8 @@
 (ns harja-laadunseuranta.ylapalkki
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.asetukset :as asetukset]
-            [harja-laadunseuranta.kuvat :as kuvat]))
+            [harja-laadunseuranta.kuvat :as kuvat]
+            [harja-laadunseuranta.utils :as utils]))
 
 (defn- formatoi-tr-osoite [tr-osoite]
   (let [{:keys [tie aosa aet]} tr-osoite]
@@ -27,13 +28,23 @@
   [:div.ylapalkki-button.keskityspainike.livicon-crosshairs {:on-click #(do (swap! keskita-ajoneuvoon not)
                                                                             (swap! keskita-ajoneuvoon not))}])
 
-(defn ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka tr-osoite kiinteistorajat ortokuva tallennus-kaynnissa tallennustilaa-muutetaan keskita-ajoneuvoon disabloi-kaynnistys?]}]
+(defn ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka
+                                    tr-osoite kiinteistorajat ortokuva
+                                    tallennus-kaynnissa tallennustilaa-muutetaan
+                                    keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka]}]
   [:div.ylapalkki
+   (when (utils/kehitysymparistossa?)
+     [:span#testiharja "TESTI"])
    [logo]
    (when-not @tallennus-kaynnissa
      [keskityspainike keskita-ajoneuvoon])
    [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
-   [:div.hoitoluokka
+   [:div.ylapalkin-metatiedot
+
+    [:div.urakkanimi {:on-click #(println "TODO: tästäkin vaihtuu urakka")}
+     (if @valittu-urakka
+       (utils/lyhennetty-urakan-nimi (:nimi @valittu-urakka))
+       "")]
     [:div.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
     [:div.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]
    [:div.ylapalkki-button.kiinteistorajat.livicon-home {:on-click #(swap! kiinteistorajat not)}]
