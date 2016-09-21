@@ -5,7 +5,9 @@
             [chime :refer [chime-at]]
             [harja.kyselyt.tieverkko :as k]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile])
-  (:import (com.vividsolutions.jts.geom LineString MultiLineString GeometryFactory)))
+  (:import (com.vividsolutions.jts.geom Coordinate LineString MultiLineString GeometryFactory)
+           (com.vividsolutions.jts.geom.impl CoordinateArraySequence)
+           (com.vividsolutions.jts.operation.linemerge LineSequencer)))
 
 #_(defn paattele-alkuajorata
   "Päättelee miltä ajoradalta tien osa alkaa. Palauttaa 0 tai 1 sen mukaan kummalla
@@ -60,6 +62,19 @@
   (let [arr (.getCoordinates g)]
     (aget arr (dec (alength arr)))))
 
+(defn jatkuva-line-string
+  "Koska tiedetään että viivan viimeinen ja seuraavan ensimmäinen piste
+  ovat sama, voidaan linestringit yhdistää helposti yhdeksi."
+  [[l & lines]]
+  (loop [pisteet (into [] (.getCoordinates l))
+         [l & lines] lines]
+    (if-not l
+      (LineString. (CoordinateArraySequence.
+                    (into-array Coordinate pisteet))
+                   (GeometryFactory.))
+      (recur (into pisteet (drop 1 (.getCoordinates l)))
+             lines))))
+
 (defn- yhdista-viivat
   "Yhdistää kaksi multilinestringiä siten, että viiva alkaa ensimmäisen
   multilinestringin osalla. Jos yhdistys ei onnistu siten, että kaikki
@@ -73,7 +88,7 @@
            ls1 ls1]
       (if (and (empty? ls0) (empty? ls1))
         ;; Molemmat empty, onnistui!
-        (MultiLineString. (into-array LineString result) (GeometryFactory.))
+        (jatkuva-line-string result)
 
         ;; Ei vielä loppu, ota jommasta kummasta seuraava pala, joka
         ;; jatkaa loppupisteestä
