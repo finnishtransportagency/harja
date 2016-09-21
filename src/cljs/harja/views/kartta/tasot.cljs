@@ -268,7 +268,7 @@
   (log "Karttataso pois: " (pr-str nimi))
   (reset! (tasojen-nakyvyys-atomit nimi) false))
 
-(defn ^:export piirra-tr-osoite [tie alkuosa alkuet loppuosa loppuet]
+(defn ^:export piirra-tr-osoite-vkm [tie alkuosa alkuet loppuosa loppuet]
   (go
     (let [tulos
           (<! (vkm/tieosoite {:numero tie
@@ -287,6 +287,23 @@
                                   asioiden-ulkoasu/tr-ikoni
                                   asioiden-ulkoasu/tr-viiva)})))))
 
-(defn ^:export poista-tr-osoite []
+(defn ^:export piirra-tr-osoite-harja [tie alkuosa alkuet loppuosa loppuet]
+  (go (let [tulos (<! (vkm/tieosoite->viiva {:numero tie
+                                             :alkuosa alkuosa
+                                             :alkuetaisyys alkuet
+                                             :loppuosa loppuosa
+                                             :loppuetaisyys loppuet}))]
+        (log "SAIN Harja TR-viivan: " (pr-str tulos))
+        (nayta-geometria! :harja-tr-osoite
+                          {:alue (maarittele-feature
+                                  (first tulos)
+                                  false
+                                  asioiden-ulkoasu/tr-ikoni
+                                  asioiden-ulkoasu/tr-viiva)}))))
+
+(defn ^:export poista-tr-osoite-vkm []
   (doseq [i (range 10)]
     (poista-geometria! (keyword (str "vkm-tr-osoite-" i)))))
+
+(defn ^:export poista-tr-osoite-harja []
+  (poista-geometria! :harja-tr-osoite))
