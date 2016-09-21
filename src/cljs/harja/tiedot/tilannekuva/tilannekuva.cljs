@@ -24,7 +24,7 @@
 (def
   ^{:doc "Kuinka pitkä urakan nimi hyväksytään pudotusvalikkoon"
     :const true}
-  urakan-nimen-pituus 39)
+  urakan-nimen-pituus 38)
 
 (def ^{:doc "Aika joka odotetaan ennen uusien tietojen hakemista, kun
  parametrit muuttuvat"
@@ -140,10 +140,9 @@ hakutiheys-historiakuva 1200000)
 
 (defn kasaa-parametrit [tila nakyva-alue suodattimet]
   (merge
-    {:urakat (apply clojure.set/union (map val (tk/valitut-suodattimet (:alueet suodattimet))))
-     :urakkatyyppi (:arvo @nav/urakkatyyppi)
+    {:urakat       (tk/valittujen-suodattimien-idt (:alueet suodattimet))
      :nykytilanne? (= :nykytilanne tila)
-     :alue nakyva-alue}
+     :alue         nakyva-alue}
     (tk/valitut-suodattimet (dissoc suodattimet :alueet))))
 
 (defn aikaparametrilla [parametrit]
@@ -164,15 +163,17 @@ hakutiheys-historiakuva 1200000)
     (let [funktio (fn [boolean-arvo]
                     (into #{}
                           (keep
-                            (fn [[nimi urakat]]
-                              (when-not (empty? urakat)
-                                (when-not (some
-                                            (fn [[suodatin valittu?]]
-                                              (= valittu? boolean-arvo))
-                                            urakat)
-                                  nimi)))
+                            (fn [[tyyppi aluekokonaisuudet]]
+                              (map (fn [[nimi urakat]]
+                                     (when-not (empty? urakat)
+                                       (when-not (some
+                                                   (fn [[suodatin valittu?]]
+                                                     (= valittu? boolean-arvo))
+                                                   urakat)
+                                         nimi)))
+                                   aluekokonaisuudet))
                             (:alueet @suodattimet))))]
-      {true (funktio true)
+      {true  (funktio true)
        false (funktio false)})))
 
 ;; Valitaanko palvelimelta palautettu suodatin vai ei.
@@ -216,30 +217,34 @@ hakutiheys-historiakuva 1200000)
         #_(log "Koko maa valittu! :)")
         false))))
 
-(defn- hae-aluesuodattimet [tila urakoitsija urakkatyyppi]
+(defn- hae-aluesuodattimet [tila urakoitsija]
   (go (let [tulos (<! (k/post! :hae-urakat-tilannekuvaan (aikaparametrilla
-                                                           {:urakoitsija (:id urakoitsija)
-                                                            :urakkatyyppi (:arvo urakkatyyppi)
+                                                           {:urakoitsija  (:id urakoitsija)
                                                             :nykytilanne? (= :nykytilanne tila)})))]
+        ;; tulos: [{:tyyppi :x :hallintayksikko {:id . :nimi .} :urakat [{:id :nimi}, ..]} {..}]
         (into {}
-              (map
-                (fn [aluekokonaisuus]
-                  {(get-in aluekokonaisuus [:hallintayksikko])
-                   (into {}
-                         (map
-                           (fn [{:keys [id nimi alue]}]
-                             [(tk/->Aluesuodatin id
-                                                 (-> nimi
-                                                     (clojure.string/replace " " "_")
-                                                     (clojure.string/replace "," "_")
-                                                     (clojure.string/replace "(" "_")
-                                                     (clojure.string/replace ")" "_")
-                                                     (keyword))
-                                                 (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
-                                                 alue)
-                              (valitse-urakka? id (:hallintayksikko aluekokonaisuus))])
-                           (:urakat aluekokonaisuus)))})
-                tulos)))))
+              (map (fn [[tyyppi aluekokonaisuus]]
+                     {tyyppi (into {}
+                                   (map (fn [{:keys [hallintayksikko urakat]}]
+                                          {hallintayksikko
+                                           (into {}
+                                                 (map (fn [{:keys [id nimi alue]}]
+                                                        [(tk/->Aluesuodatin id
+                                                                            (-> nimi
+                                                                                (clojure.string/replace " " "_")
+                                                                                (clojure.string/replace "," "_")
+                                                                                (clojure.string/replace "(" "_")
+                                                                                (clojure.string/replace ")" "_")
+                                                                                (keyword))
+                                                                            (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
+                                                                            alue)
+                                                         (valitse-urakka? id hallintayksikko)])
+                                                      urakat))})
+                                        aluekokonaisuus))}))
+              (group-by :tyyppi tulos))
+        ;; {:x {{:id . :nimi "Lappi"} [{:id 1 :nimi "Kuusamon urakka}]}
+        )))
+
 
 ;; Alkuperäinen logiikka nojasi siihen, että valitaan AINA vanhan suodattimen arvo,
 ;; jos sellainen löytyy. Jos ei löydy, niin sitten käytetään uuden suodattimen arvoa, jonka
@@ -264,16 +269,20 @@ hakutiheys-historiakuva 1200000)
   ;; mutta jos avaimelle löytyy arvo vanhoista tiedoista, käytetään sitä.
   (into {}
         (map
-          (fn [[hallintayksikko urakat]]
-            [(:nimi hallintayksikko)
+          (fn [[tyyppi aluekokonaisuudet]]
+            {tyyppi
              (into {}
-                   (map
-                     (fn [[suodatin valittu?]]
-                       (let [vanha-arvo (get-in vanhat [(:nimi hallintayksikko) suodatin])
-                             arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?
-                                                                   suodatin hallintayksikko)]
-                         [suodatin arvo]))
-                     urakat))])
+                   (map (fn [[hallintayksikko urakat]]
+                          {(:nimi hallintayksikko)
+                           (into {}
+                                 (map
+                                   (fn [[suodatin valittu?]]
+                                     (let [vanha-arvo (get-in vanhat [tyyppi (:nimi hallintayksikko) suodatin])
+                                           arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?
+                                                                                 suodatin hallintayksikko)]
+                                       [suodatin arvo]))
+                                   urakat))})
+                        aluekokonaisuudet))})
           uudet)))
 
 (def uudet-aluesuodattimet
@@ -282,7 +291,7 @@ hakutiheys-historiakuva 1200000)
                _ @nykytilanteen-aikasuodattimen-arvo
                _ @historiakuvan-aikavali]
               (go (when nakymassa?
-                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija @nav/urakkatyyppi))
+                    (let [tulos (<! (hae-aluesuodattimet tila @nav/valittu-urakoitsija))
                           yhdistetyt (yhdista-aluesuodattimet (:alueet @suodattimet) tulos)]
                       (swap! suodattimet assoc :alueet yhdistetyt)
                       tulos)))))

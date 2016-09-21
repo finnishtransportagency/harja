@@ -2,7 +2,7 @@
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  u.tyyppi AS urakka_tyyppi,
+  u.tyyppi AS tyyppi,
   o.id AS hallintayksikko_id,
   o.nimi AS hallintayksikko_nimi
 FROM urakka u
@@ -224,7 +224,7 @@ WHERE u.id = :id;
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  u.tyyppi AS urakka_tyyppi,
+  u.tyyppi AS tyyppi,
   hy.id AS hallintayksikko_id,
   hy.nimi AS hallintayksikko_nimi
 FROM urakka u
@@ -479,8 +479,8 @@ SELECT
   u.alue          AS urakka_alue,
   alueurakka.alue AS alueurakka_alue
 FROM urakka u
-  JOIN hanke ON u.hanke = hanke.id
-  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+  LEFT JOIN hanke ON u.hanke = hanke.id
+  LEFT JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id = :id;
 
 -- name: hae-urakoiden-geometriat
@@ -489,8 +489,8 @@ SELECT
   u.id AS urakka_id,
   ST_Simplify(alueurakka.alue, :toleranssi) AS alueurakka_alue
 FROM urakka u
-  JOIN hanke ON u.hanke = hanke.id
-  JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
+  LEFT JOIN hanke ON u.hanke = hanke.id
+  LEFT JOIN alueurakka ON hanke.alueurakkanro = alueurakka.alueurakkanro
 WHERE u.id IN (:idt);
 
 -- name: hae-urakan-sampo-id
