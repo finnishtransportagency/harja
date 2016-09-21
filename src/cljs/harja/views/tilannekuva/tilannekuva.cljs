@@ -19,7 +19,8 @@
             [harja.ui.on-off-valinta :as on-off]
             [harja.domain.tilannekuva :as tk]
             [harja.ui.modal :as modal]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.domain.tilannekuva :as domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
@@ -31,6 +32,16 @@
     (reset! hallintapaneeli-max-korkeus (max
                                           200
                                           (- etaisyys-alareunaan 30)))))
+
+(defonce paneelien-tila-atomit (atom {}))
+
+(defn paneelin-tila-atomi!
+  ([paneeli] (paneelin-tila-atomi! paneeli true))
+  ([paneeli luotavan-arvo]
+   (let [hae-arvo #(get @paneelien-tila-atomit paneeli)]
+     (or (hae-arvo)
+         (do (swap! paneelien-tila-atomit assoc paneeli (atom luotavan-arvo))
+             (hae-arvo))))))
 
 (defn tilan-vaihtaja []
   (let [on-off-tila (atom (not= :nykytilanne @tiedot/valittu-tila))]
@@ -82,73 +93,83 @@
    kokoelma-atomin antaminen tarkoittaa, että checkbox-ryhmä on osa usean checkbox-ryhmän kokoelmaa, joista
    vain atomin ilmoittama ryhmä voi olla kerrallaan auki. Jos kokoelmaa ei anneta, tämä checkbox-ryhmä ylläpitää
    itse omaa auki/kiinni-tilaansa."
-  [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-  (let [oma-auki-tila (atom false)
-        ryhmanjohtaja-tila-atom (reaction-writable
-                                  (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
-                                    :valittu
-                                    (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
-                                      :ei-valittu
-                                      :osittain-valittu)))]
-    (fn [otsikko suodattimet-atom ryhma-polku kokoelma-atom]
-      (let [ryhman-elementtien-avaimet (or (get-in tk/tehtavien-jarjestys ryhma-polku)
-                                           (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
-            auki? (fn [] (or @oma-auki-tila
-                             (and kokoelma-atom
-                                  (= otsikko @kokoelma-atom))))]
-        (when-not (empty? ryhman-elementtien-avaimet)
-          [:div.tk-checkbox-ryhma
-           [:div.tk-checkbox-ryhma-otsikko.klikattava
-            {:on-click (fn [_]
-                         (if kokoelma-atom
-                           ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
-                           (if (= otsikko @kokoelma-atom)
-                             (reset! kokoelma-atom nil)
-                             (reset! kokoelma-atom otsikko))
-                           ;; Ylläpitää itse omaa auki/kiinni-tilaansa
-                           (swap! oma-auki-tila not))
-                         (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
-            [:span {:class (str
-                             "tk-chevron-ryhma-tila chevron-rotate "
-                             (when-not (auki?) "chevron-rotate-down"))}
-             (if (auki?)
-               (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
-            [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
-             [checkbox/checkbox ryhmanjohtaja-tila-atom otsikko
-              {:on-change (fn [uusi-tila]
-                            ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
-                            (when (not= :osittain-valittu uusi-tila)
-                              (reset! suodattimet-atom
-                                      (reduce (fn [edellinen-map tehtava-avain]
-                                                (assoc-in edellinen-map
-                                                          (conj ryhma-polku tehtava-avain)
-                                                          (checkbox/checkbox-tila-keyword->boolean uusi-tila)))
-                                              @suodattimet-atom
-                                              (keys (get-in @suodattimet-atom ryhma-polku))))))}]]]
+  ([otsikko suodattimet-atom ryhma-polku]
+    (checkbox-suodatinryhma otsikko suodattimet-atom ryhma-polku nil))
+  ([otsikko suodattimet-atom ryhma-polku {:keys [auki-atomi?] :as optiot}]
+   (let [oma-auki-tila (or auki-atomi? (atom false))
+         ryhmanjohtaja-tila-atom (reaction-writable
+                                   (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
+                                     :valittu
+                                     (if (every? false? (vals (get-in @suodattimet-atom ryhma-polku)))
+                                       :ei-valittu
+                                       :osittain-valittu)))]
+     (fn [otsikko suodattimet-atom ryhma-polku {:keys [luokka sisallon-luokka otsikon-luokka
+                                                                     nayta-lkm? kokoelma-atom] :as optiot}]
+       (let [ryhman-elementtien-avaimet (or (get-in tk/tehtavien-jarjestys ryhma-polku)
+                                            (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
+             auki? (fn [] (or @oma-auki-tila
+                              (and kokoelma-atom
+                                   (= otsikko @kokoelma-atom))))
+             valittujen-lkm (count (filter true? (vals (get-in @suodattimet-atom ryhma-polku))))
+             kokonais-lkm (count (vals (get-in @suodattimet-atom ryhma-polku)))]
+         (when-not (empty? ryhman-elementtien-avaimet)
+           [:div {:class (str "tk-checkbox-ryhma" (when luokka (str " " luokka)))}
+            [:div
+             {:class    (str "tk-checkbox-ryhma-otsikko klikattava " (when (auki?) "alaraja"))
+              :on-click (fn [_]
+                          (if kokoelma-atom
+                            ;; Osa kokoelmaa, vain yksi kokoelman jäsen voi olla kerrallaan auki
+                            (if (= otsikko @kokoelma-atom)
+                              (reset! kokoelma-atom nil)
+                              (reset! kokoelma-atom otsikko))
+                            ;; Ylläpitää itse omaa auki/kiinni-tilaansa
+                            (swap! oma-auki-tila not))
+                          (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
+             [:span {:class (str
+                              "tk-chevron-ryhma-tila chevron-rotate "
+                              (when-not (auki?) "chevron-rotate-down"))}
+              (if (auki?)
+                (ikonit/livicon-chevron-down) (ikonit/livicon-chevron-right))]
+             [:div.tk-checkbox-ryhma-checkbox {:on-click #(.stopPropagation %)}
+              [checkbox/checkbox ryhmanjohtaja-tila-atom (str otsikko (when nayta-lkm? (str " (" valittujen-lkm "/" kokonais-lkm ")")))
+               {:otsikon-luokka otsikon-luokka
+                :on-change (fn [uusi-tila]
+                             ;; Aseta kaikkien tämän ryhmän suodattimien tilaksi tämän elementin uusi tila.
+                             (when (not= :osittain-valittu uusi-tila)
+                               (reset! suodattimet-atom
+                                       (reduce (fn [edellinen-map tehtava-avain]
+                                                 (assoc-in edellinen-map
+                                                           (conj ryhma-polku tehtava-avain)
+                                                           (checkbox/checkbox-tila-keyword->boolean uusi-tila)))
+                                               @suodattimet-atom
+                                               (keys (get-in @suodattimet-atom ryhma-polku))))))}]]]
 
-           (when (auki?)
-             [:div.tk-checkbox-ryhma-sisalto
-              (doall (for [elementti (seq ryhman-elementtien-avaimet)]
-                       ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
-                       [yksittainen-suodatincheckbox
-                        (:otsikko elementti)
-                        suodattimet-atom
-                        (conj ryhma-polku elementti)]))])])))))
+            (when (auki?)
+              [:div {:class (str "tk-checkbox-ryhma-sisalto" (when sisallon-luokka (str " " sisallon-luokka)))}
+               (doall (for [elementti (seq ryhman-elementtien-avaimet)]
+                        ^{:key (str "pudotusvalikon-asia-" (:id elementti))}
+                        [yksittainen-suodatincheckbox
+                         (:otsikko elementti)
+                         suodattimet-atom
+                         (conj ryhma-polku elementti)]))])]))))))
 
-(defn- asetuskokoelma [otsikko {:keys [salli-piilotus?] :as optiot} sisalto]
-  (let [auki? (atom true)]
-    (fn [otsikko optiot sisalto]
-      [:div.tk-asetuskokoelma
+(defn- asetuskokoelma
+  [otsikko {:keys [salli-piilotus? luokka auki-atomi? otsikon-luokka] :as optiot} sisalto]
+  (let [auki? (or auki-atomi? (atom true))]
+    (fn [otsikko {:keys [salli-piilotus? luokka otsikon-luokka] :as optiot} sisalto]
+      [:div {:class (str "tk-asetuskokoelma" (when luokka (str " " luokka)))}
        (when salli-piilotus?
-         [:div {:class (str
-                        "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
-                        (when-not @auki? "chevron-rotate-down"))
-               :on-click #(swap! auki? not)}
-         (if @auki?
-           (ikonit/livicon-chevron-down)
-           (ikonit/livicon-chevron-right))])
-       [:div {:class (str "tk-otsikko " (when salli-piilotus?
-                                          "tk-otsikko-sisenna"))}
+         [:div {:class    (str
+                            "tk-chevron-ryhma-tila chevron-rotate chevron-tk-asetuskokoelma "
+                            (when-not @auki? "chevron-rotate-down"))
+                :on-click #(swap! auki? not)}
+          (if @auki?
+            (ikonit/livicon-chevron-down)
+            (ikonit/livicon-chevron-right))])
+       [:div {:class (str "tk-otsikko "
+                          (when salli-piilotus?
+                            "tk-otsikko-sisenna")
+                          (when otsikon-luokka (str " " otsikon-luokka)))}
         otsikko]
        (when @auki?
          sisalto)])))
@@ -163,59 +184,93 @@
                           "Pohjois-Pohjanmaa ja Kainuu"
                           "Lappi"])
 
+(def urakkatyypin-otsikot {:hoito "Hoito"
+                           :paallystys "Päällystys"
+                           :valaistus "Valaistus"
+                           :paikkaus "Paikkaus"
+                           :tiemerkinta "Tiemerkintä"})
+
+(defn- tyypin-aluesuodattimet [tyyppi]
+  (komp/luo
+    (fn [tyyppi]
+      [asetuskokoelma
+       (urakkatyypin-otsikot tyyppi)
+       ;; TODO: poista kuollut koodi kunhan todetaan kumpi on parempi
+       {:salli-piilotus? true
+        :auki-atomi?     (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
+        :luokka          "taustavari-taso2 ylaraja"
+        :otsikon-luokka  "fontti-taso2"}
+       [:div.tk-suodatinryhmat
+        (doall
+          (for [alue tilannekuvan-alueet]
+            ^{:key (str tyyppi "-aluesuodatin-alueelle-" alue)}
+            [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] {:luokka          "taustavari-taso3 ylaraja"
+                                                                                       :sisallon-luokka "taustavari-taso4"
+                                                                                       :otsikon-luokka  "fontti-taso3"
+                                                                                       :nayta-lkm?      true
+                                                                                       :auki-atomi?     (paneelin-tila-atomi! (str [:alueet tyyppi alue]) false)}]))]])))
+
 (defn- aluesuodattimet []
   (komp/luo
     (fn []
       (let [onko-alueita? (some
-                            (fn [[_ suodattimet]]
-                              (not (empty? suodattimet)))
+                            (fn [[_ hy-ja-urakat]]
+                              (some not-empty (vals hy-ja-urakat)))
                             (:alueet @tiedot/suodattimet))
             ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
-                                             (nil? @tiedot/uudet-aluesuodattimet))]
+                                             (nil? @tiedot/uudet-aluesuodattimet))
+            tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))]
         [asetuskokoelma
          (cond
-           ensimmainen-haku-kaynnissa? "Haetaan alueita"
-           onko-alueita? "Näytä alueilta"
-           :else "Ei näytettäviä alueita")
-         {:salli-piilotus? true}
+           ensimmainen-haku-kaynnissa? "Haetaan urakoita"
+           onko-alueita? "Hae urakoista"
+           :else "Ei näytettäviä urakoita")
+         {:salli-piilotus? true
+          :auki-atomi? (paneelin-tila-atomi! :aluesuodattimet true)
+          :luokka "taustavari-taso1 eroa-huipulla ylaraja"
+          :otsikon-luokka "fontti-taso1"}
         (if ensimmainen-haku-kaynnissa?
            [yleiset/ajax-loader]
            [:div.tk-suodatinryhmat
             (doall
-             (for [alue tilannekuvan-alueet]
-               ^{:key alue}
-               [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet alue] nil]))])]))))
+              (for [urakkatyyppi tyypit-joissa-alueita]
+                ^{:key (str "aluesuodattimet-tyypille-" urakkatyyppi)}
+                [tyypin-aluesuodattimet urakkatyyppi]))])]))))
 
 (defn- aikasuodattimet []
-  [asetuskokoelma
-   (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
-                         " (max. yksi vuosi):"))
-   {:salli-piilotus? false}
-   [:div
-    (when (= :nykytilanne @tiedot/valittu-tila)
-      [nykytilanteen-aikavalinnat])
-    (when (= :historiakuva @tiedot/valittu-tila)
-      [historiankuvan-aikavalinnat])
-    (when (= :nykytilanne @tiedot/valittu-tila)
-      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma])
-    (when (= :nykytilanne @tiedot/valittu-tila)
-      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma])
-    [:div.tk-suodatinryhmat
+  (let [yleiset-asetukset {:luokka          "taustavari-taso3 ylaraja"
+                           :otsikon-luokka  "fontti-taso3"
+                           :sisallon-luokka "taustavari-taso4"
+                           :kokoelma-atom auki-oleva-checkbox-ryhma
+                           :nayta-lkm? false}]
+    [asetuskokoelma
+    (str "Näytä aikavälillä" (when-not (= :nykytilanne @tiedot/valittu-tila)
+                               " (max. yksi vuosi):"))
+    {:salli-piilotus? false
+     :luokka          "taustavari-taso0"}
+    [:div
+     (when (= :nykytilanne @tiedot/valittu-tila)
+       [nykytilanteen-aikavalinnat])
      (when (= :historiakuva @tiedot/valittu-tila)
-       [:div.tk-suodatinryhmat
-        ^{:key "ilmoitukset"} ; Avainta ei ehkä tarvittaisi tässä, mutta jostain syystä Reagent luulee näitä muuten samoiksi
-        [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit] auki-oleva-checkbox-ryhma]
-        ^{:key "yllapito"}
-        [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito] auki-oleva-checkbox-ryhma]])
-     [:div.tk-suodatinryhmat
-      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi] auki-oleva-checkbox-ryhma]
-      [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa] auki-oleva-checkbox-ryhma]
-      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat] auki-oleva-checkbox-ryhma]
-      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset] auki-oleva-checkbox-ryhma]]]
-    [:div.tk-yksittaiset-suodattimet
-     [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
-      tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
-      auki-oleva-checkbox-ryhma]]]])
+       [historiankuvan-aikavalinnat])
+     [:div.tk-yksittaiset-suodattimet.fontti-taso3
+      [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
+       tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]s
+       auki-oleva-checkbox-ryhma]]
+     [:div {:class "tk-suodatinryhmat"}
+      [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:ilmoitukset :tyypit]) false)})]
+      [checkbox-suodatinryhma "Ylläpito" tiedot/suodattimet [:yllapito]
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:yllapito]) false)})]
+      [checkbox-suodatinryhma "Talvihoitotyöt" tiedot/suodattimet [:talvi]
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:talvi]) false)})]
+      [checkbox-suodatinryhma "Kesähoitotyöt" tiedot/suodattimet [:kesa]
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:kesa]) false)})]
+      [checkbox-suodatinryhma "Laatupoikkeamat" tiedot/suodattimet [:laatupoikkeamat]
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:laatupoikkeamat]) false)})]
+      [checkbox-suodatinryhma "Tarkastukset" tiedot/suodattimet [:tarkastukset]
+       (merge yleiset-asetukset {:auki-atomi? (paneelin-tila-atomi! (str [:tarkastukset]) false)
+                                 :luokka "taustavari-taso3 yla-ja-alaraja"})]]]]))
 
 (defn suodattimet []
   (let [resize-kuuntelija (fn [this _]

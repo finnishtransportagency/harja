@@ -174,15 +174,7 @@
       (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
             haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
         (when (not (empty? haettavat-toimenpiteet))
-          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
-                valitun-alueen-geometria
-                (if urakka-id
-                  (let [urakan-aluetiedot (first (urakat-q/hae-urakan-geometria db urakka-id))]
-                    (or (:urakka_alue urakan-aluetiedot)
-                        (:alueurakka_alue urakan-aluetiedot)))
-                  (when hallintayksikko
-                    (:alue (first (hal-q/hae-hallintayksikon-geometria
-                                    db hallintayksikko)))))]
+          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)]
             (into {}
                   (comp
                     (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
@@ -195,7 +187,6 @@
                   (q/hae-tyokoneet db
                                    (:xmin alue) (:ymin alue)
                                    (:xmax alue) (:ymax alue)
-                                   valitun-alueen-geometria
                                    urakat
                                    tpi-haku-str))))))))
 
@@ -225,7 +216,6 @@
 
 (defn- hae-tarkastusten-reitit
   [db ch user {:keys [toleranssi alue alku loppu tarkastukset] :as tiedot} urakat]
-  (log/debug "Tarkastukset: " tiedot " => " (haettavat tarkastukset) ", urakat: " urakat )
   (when-not (empty? urakat)
     (q/hae-tarkastukset db ch
                         {:toleranssi toleranssi
@@ -239,18 +229,18 @@
                          :tyypit (map name (haettavat tarkastukset))})))
 
 (defn- hae-suljetut-tieosuudet
-  [db user {:keys [yllapito alue urakkatyyppi]} urakat]
-  (when (tk/valittu? yllapito tk/suljetut-tiet)
-    (vec (map (comp #(konv/array->vec % :kaistat)
-                    #(konv/array->vec % :ajoradat))
-              (q/hae-suljetut-tieosuudet db {:urakat (when-not (every? nil? urakat) urakat)
-                                             :urakatannettu (and (= :hoito urakkatyyppi)
-                                                                 (not (every? nil? urakat)))
-                                             :x1 (:xmin alue)
-                                             :y1 (:ymin alue)
-                                             :x2 (:xmax alue)
-                                             :y2 (:ymax alue)
-                                             :treshold 100})))))
+  [db user {:keys [yllapito alue nykytilanne?]} urakat]
+  (when (or (not-empty urakat) (oikeudet/voi-lukea? (if nykytilanne?
+                                                      oikeudet/tilannekuva-nykytilanne
+                                                      oikeudet/tilannekuva-historia)
+                                                    nil user))
+    (when (tk/valittu? yllapito tk/suljetut-tiet)
+      (vec (map (comp #(konv/array->vec % :kaistat)
+                      #(konv/array->vec % :ajoradat))
+                (q/hae-suljetut-tieosuudet db {:x1 (:xmin alue)
+                                               :y1 (:ymin alue)
+                                               :x2 (:xmax alue)
+                                               :y2 (:ymax alue)}))))))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
@@ -263,7 +253,7 @@
                                  (:xmax alue) (:ymax alue)))))
 
 (def tilannekuvan-osiot
-  #{:toteumat :tyokoneet :turvallisuuspoikkeamat :tarkastukset
+  #{:toteumat :tyokoneet :turvallisuuspoikkeamat
     :laatupoikkeamat :paikkaus :paallystys :ilmoitukset :suljetut-tieosuudet})
 
 (defmulti hae-osio (fn [db user tiedot urakat osio] osio))
@@ -311,7 +301,7 @@
    db user (if (:nykytilanne? tiedot)
              oikeudet/tilannekuva-nykytilanne
              oikeudet/tilannekuva-historia)
-   nil (:urakoitsija tiedot) (:urakkatyyppi tiedot)
+   nil (:urakoitsija tiedot) nil
    nil (:alku tiedot) (:loppu tiedot)))
 
 (defn hae-tilannekuvaan
