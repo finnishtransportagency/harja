@@ -9,7 +9,7 @@
 
 (defn formatoi-paivamaara [date]
   (when date
-    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss'Z'")]
+    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
       ;; T-LOIK: lähetetään ajat GMT+0 aikavyöhykkeellä
       (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
       (.format dateformat date))))
