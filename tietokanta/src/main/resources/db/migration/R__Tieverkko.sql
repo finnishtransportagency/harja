@@ -40,6 +40,14 @@ BEGIN
   RAISE NOTICE 'Haetaan geometria tie %, ajorata %', tie_, ajorata_;
   tulos := NULL;
   FOR osa_ IN aosa..losa LOOP
+    -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
+    SELECT geom FROM tr_osan_ajorata toa
+     WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
+      INTO osan_geometria;
+    IF osan_geometria IS NULL THEN
+      CONTINUE;
+    END IF;
+    osan_pituus := st_length(osan_geometria);
     -- Päätellään alkuetäisyys tälle osalle
     IF osa_ = aosa THEN
       e1 := aet;
@@ -53,16 +61,14 @@ BEGIN
       e2 := osan_pituus;
     END IF;
     RAISE NOTICE 'Haetaan geometriaa tien % osan % valille % - %', tie_, osa_, e1, e2;
-    -- Otetaan osan geometriaviivasta e1 -- e2 pätkä
-    SELECT geom FROM tr_osan_ajorata toa
-     WHERE toa.tie=tie_ AND toa.osa=osa_ AND toa.ajorata=ajorata_
-      INTO osan_geometria;
-    osan_pituus := st_length(osan_geometria);
-    osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_pituus), LEAST(1,e2/osan_pituus));
-    IF ajorata_ = 1 THEN
-      tulos := tulos || osan_patka;
-    ELSIF ajorata_ = 2 THEN
-      tulos := ST_Reverse(osan_patka) || tulos;
+    -- Lisätään jos geometria löytyi (osa on olemassa)
+    IF e1 != e2 THEN
+      osan_patka := ST_LineSubstring(osan_geometria, LEAST(1,e1/osan_pituus), LEAST(1,e2/osan_pituus));
+      IF ajorata_ = 1 THEN
+        tulos := tulos || osan_patka;
+      ELSIF ajorata_ = 2 THEN
+        tulos := ST_Reverse(osan_patka) || tulos;
+      END IF;
     END IF;
   END LOOP;
   viiva := ST_Collect(tulos);
