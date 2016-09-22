@@ -2,7 +2,9 @@
   (:require [clojure.string :as s]))
 
 (defn- prefix []
-  (if (#{"localhost:8000" "localhost:3000" "harja-dev5" "80.69.173.64"} (.-host js/location))
+  (if (#{"localhost:8000" "localhost:3000"
+         "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
+         "harja-test.solitaservices.fi"} (.-host js/location))
     ""
     "harja/"))
 
@@ -14,13 +16,14 @@
 (def +tapahtumastore+ "tapahtumat")
 (def +tarkastusajostore+ "tarkastusajo")
 (def +pollausvali+ 2000)
-(def +tallennus-url+ (str "/" (prefix) "laadunseuranta/api/reittimerkinta"))
-(def +paatos-url+ (str "/" (prefix) "laadunseuranta/api/paata-tarkastusajo"))
-(def +luonti-url+ (str "/" (prefix) "laadunseuranta/api/uusi-tarkastusajo"))
-(def +trosoite-haku-url+ (str "/" (prefix) "laadunseuranta/api/hae-tr-osoite"))
-(def +tr-tietojen-haku-url+ (str "/" (prefix) "laadunseuranta/api/hae-tr-tiedot"))
-(def +kayttajatiedot-url+ (str "/" (prefix) "laadunseuranta/api/hae-kayttajatiedot"))
-(def +liitteen-tallennus-url+ (str "/" (prefix) "laadunseuranta/tallenna-liite"))
+(def +tallennus-url+ (str "/" (prefix) "_/ls-reittimerkinta"))
+(def +paatos-url+ (str "/" (prefix) "_/ls-paata-tarkastusajo"))
+(def +luonti-url+ (str "/" (prefix) "_/ls-uusi-tarkastusajo"))
+(def +trosoite-haku-url+ (str "/" (prefix) "_/ls-hae-tr-osoite"))
+(def +tr-tietojen-haku-url+ (str "/" (prefix) "_/ls-hae-tr-tiedot"))
+(def +kayttajatiedot-url+ (str "/" (prefix) "_/ls-hae-kayttajatiedot"))
+(def +liitteen-tallennus-url+ (str "/" (prefix) "_/ls-tallenna-liite"))
+(def +urakkatyypin-urakat-url+ (str "/" (prefix) "_/ls-urakkatyypin-urakat"))
 
 (def +persistoitavien-max-maara+ 500)
 

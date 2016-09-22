@@ -49,7 +49,7 @@
       connection-factory
       (doto connection-factory
         (.setFaultTolerant true)
-        (.setFaultTolerantReconnectTimeout (int 30))))))
+        (.setFaultTolerantReconnectTimeout (int 600))))))
 
 (defn- viestin-kasittelija [kasittelija]
   (let [ch (async/chan)]

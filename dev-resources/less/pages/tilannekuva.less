@@ -1,12 +1,72 @@
 .haitari-tilannekuva {
+  max-width: 300px;
+  min-width: 300px;
+
   .haitari-sisalto {
-    background-color: @harmaa9;
+    background-color: @valkoinen;
   }
 
-  .haitari-sisalto.haitari-auki {
-    max-width: 300px;
-    min-width: 300px;
+
+
+  .haitari-heading {
+    background-color: @harmaa8;
   }
+}
+
+.taustavari-taso0 {
+  background-color: @valkoinen;
+}
+
+.taustavari-taso1 {
+  background-color: @harmaa9;
+}
+
+.taustavari-taso2 {
+  background-color: @harmaa11;
+}
+
+.taustavari-taso3 {
+  background-color: @harmaa13;
+}
+
+.taustavari-taso4 {
+  background-color: @harmaa15;
+}
+
+.fontti-taso1 {
+  font-size: 120%;
+}
+
+.fontti-taso2 {
+  font-weight: bold;
+}
+
+.fontti-taso3 {
+  text-transform: uppercase;
+}
+
+.fontti-taso4 {  }
+
+.eroa-huipulla {
+  margin-top: 5px;
+}
+
+.ylaraja {
+  border-width: 1px 0 0 0;
+  border-style: solid;
+  border-color: @harmaa5;
+}
+
+.yla-ja-alaraja {
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-color: @harmaa5;
+}
+
+.alaraja {
+  border-width: 0 0 1px 0;
+  border-style: solid;
+  border-color: @harmaa5;
 }
 
 #tk-tilan-vaihto {
@@ -37,8 +97,8 @@
     padding: 2px;
     display: inline-block;
   }
-
   margin-bottom: 10px;
+  padding-left: 5px;
 }
 
 #tk-historiakuvan-aikavalit {
@@ -53,15 +113,12 @@
 // Checkbox-ryhmät
 
 .tk-checkbox-ryhma {
-  border: 1px solid @harmaa3;
-  background-color: @harmaa10;
-  margin-bottom: 2px;
 }
 
 .tk-checkbox-ryhma-otsikko {
   height: 26px;
   white-space: nowrap; // Pakota otsikko viemään mahdollisimman paljon leveystilaa, älä rivitä
-  background-color: @harmaa10;
+  //background-color: @harmaa15;
 }
 
 .tk-chevron-ryhma-tila {
@@ -76,8 +133,6 @@
 
 .chevron-tk-asetuskokoelma {
   position: absolute;
-  top: 8px;
-  left: 5px;
 }
 
 .tk-checkbox-ryhma-checkbox {
@@ -92,21 +147,23 @@
 }
 
 .tk-checkbox-ryhma-sisalto {
-  padding: 5px;
+  padding: 5px 5px 5px 22px;
 }
 
 // Luokka elementille, jossa on otsikko ja useita suodatinryhmiä
 .tk-asetuskokoelma {
-  margin-top: 8px;
-  padding: 5px;
-  border: 1px solid @harmaa5;
-  background-color: @harmaa10;
+  padding: 5px 0 0 0;
   position: relative;
+}
+
+.tk-yksittaiset-suodattimet {
+  margin: 5px 0 5px 5px;
 }
 
 .tk-otsikko {
   padding-top: 2px;
-  padding-bottom: 5px;
+  padding-bottom: 2px;
+  padding-left: 5px;
 }
 
 .tk-otsikko-sisenna {
@@ -114,9 +171,7 @@
 }
 
 // Luokka elementille jossa on useita suodatinryhmiä
-.tk-suodatinryhmat {
-  margin-bottom: 10px;
-}
+.tk-suodatinryhmat {  }
 
 .chevron-rotate { transition: all .2s ease-in-out; }
 

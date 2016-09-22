@@ -216,7 +216,7 @@
          [kertapainike "Ojat" #(alivalikkoon :ojat)]
          [kertapainike "Sillat" #(alivalikkoon :sillat)]]))))
 
-(defn- paallystys [alivalikot havainnot]
+(defn- paallystyksen-tyovirheluettelo [alivalikot havainnot]
   (let [ikoni #(kuvat/paallystys-tyovirheet %)
         tallennuksia-kaynnissa? (some #(= true (val %)) @havainnot)]
     [:div.painikelaatikko
@@ -251,7 +251,7 @@
      [:div
       [:span.tyhja-nappi]
       [:span.tyhja-nappi]
-      [:button.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :paallystys)} "Sulje"]]]))
+      [:button.peruuta.nappi-toissijainen {:on-click #(turn-off alivalikot :tyovirheluettelo)} "Sulje"]]]))
 
 
 (defn- tiemerkinta [alivalikot]
@@ -308,23 +308,22 @@
 
            :default
            [:div.sidepanel-box
-            ;; soratietarkastus kytketty pois päältä
             [toggle-painike "Soratie alkaa" alivalikot :soratie :on-click #(swap! havainnot assoc :soratie true)]
             [on-painike "Liikenneympäristö" alivalikot :liikenneymparisto]
             [on-painike "Viherhoito" alivalikot :viherhoito]
             [on-painike "Muut" alivalikot :muut]])]
 
-    :yllapitotarkastus
+    :paallystys
     [:div.sidepanel
-     (cond (:paallystys @alivalikot)
-           [paallystys alivalikot havainnot]
+     (cond (:tyovirheluettelo @alivalikot)
+           [paallystyksen-tyovirheluettelo alivalikot havainnot]
 
            (:tiemerkinta @alivalikot)
            [tiemerkinta alivalikot]
 
            :default
            [:div.sidepanel-box
-            [on-painike "Päällystys" alivalikot :paallystys]
+            [on-painike "Työvirheluettelo" alivalikot :tyovirheluettelo]
             ;[on-painike "Tiemerkintä" alivalikot :tiemerkinta]
             ])]))
 

@@ -31,16 +31,17 @@
       ;; yritä uudleleen kunnes onnistuu
       (do (<! (timeout 1000))
           (recur)))))
- 
+
 (defn- paattaminen-peruttu []
   (reset! s/tallennus-kaynnissa true)
   (reset! s/tallennustilaa-muutetaan false))
 
+
 (defn- paata-ajo []
-  (reset! s/havainnot {})
   (go-loop []
-    (if (<! (comms/paata-ajo! @s/tarkastusajo))
+    (if (<! (comms/paata-ajo! @s/tarkastusajo @s/valittu-urakka))
       (s/tarkastusajo-seis!)
+
       ;; yritä uudelleen kunnes onnistuu, spinneri pyörii
       (do (<! (timeout 1000))
           (recur)))))
@@ -170,8 +171,9 @@
                                         :tallennus-kaynnissa s/tallennus-kaynnissa
                                         :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
                                         :keskita-ajoneuvoon s/keskita-ajoneuvoon
-                                        :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)}]
-        
+                                        :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
+                                        :valittu-urakka s/valittu-urakka}]
+
        [kartta/karttakomponentti
         {:wmts-url asetukset/+wmts-url+
          :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
@@ -181,15 +183,15 @@
          :reittipisteet-atomi s/reittipisteet
          :kirjauspisteet-atomi s/kirjauspisteet
          :optiot s/karttaoptiot}]
-       
+
        [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
-       
+
        (when @s/kirjaamassa-havaintoa
          [havaintolomake sulje-havaintodialogi sulje-havaintodialogi])
 
        (when @s/kirjaamassa-yleishavaintoa
          [havaintolomake yleishavainto-kirjattu sulje-yleishavaintodialogi])
-       
+
        (when @s/tarkastusajo-luotava
          [:div.tarkastusajon-luonti-dialog-container
           [tarkastusajon-luonti/tarkastusajon-luontidialogi luo-ajo luonti-peruttu]])
@@ -201,11 +203,11 @@
        (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
          [:div.tarkastusajon-luonti-dialog-container
           [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi jatka-ajoa pakota-ajon-lopetus]])
-       
+
        [spinneri s/lahettamattomia]
-       
+
        [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
-       
+
        (when @s/nayta-sivupaneeli
          [:div
           [:div.sivupaneeli-container
