@@ -35,9 +35,12 @@
             [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
             [harja.palvelin.raportointi.raportit.indeksitarkistus]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.raportointi :as raportti-domain]
+            [harja.domain.roolit :as roolit]
             [new-reliquary.core :as nr]
             [hiccup.core :refer [html]]
-            [harja.transit :as t]))
+            [harja.transit :as t]
+            [slingshot.slingshot :refer [throw+]]))
 
 (def ^:dynamic *raportin-suoritus*
   "Tämä bindataan raporttia suoritettaessa nykyiseen raporttikomponenttiin, jotta
@@ -168,7 +171,10 @@
        "Raportin suoritus"
        (str nimi)
        #(when-let [suoritettava-raportti (hae-raportti this nimi)]
-          (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
+         (when-not (= "urakka" konteksti)
+           (when-not (raportti-domain/voi-nahda-laajemman-kontekstin-raportit? kayttaja)
+             (throw+ (roolit/->EiOikeutta (str "Käyttäjällä " (:kayttajanimi kayttaja) " ei ole oikeutta laajennetun kontekstin urakoihin")))))
+         (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
                                      kayttaja (when (= "urakka" konteksti)
                                                 (:urakka-id suorituksen-tiedot)))
           (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti

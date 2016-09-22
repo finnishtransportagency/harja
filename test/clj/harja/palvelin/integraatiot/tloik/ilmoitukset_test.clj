@@ -49,8 +49,9 @@
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus)))
-      "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+  (let [ilmoitukset (hae-ilmoitus)]
+    (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+    (is (= "2015-09-29 17:49:45.0" (str (nth (first ilmoitukset) 3))) "Ilmoitusaika on parsittu oikein"))
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
