@@ -47,6 +47,7 @@
   ([nakyma]
    nakyma)
   ([nakyma item-id]
+   (assert (and nakyma item-id) "Lukon id:n muodostukseen vaaditaan näkymä ja item-id!")
    (str nakyma "_" item-id)))
 
 (defn- hae-lukko-idlla [lukko-id]
