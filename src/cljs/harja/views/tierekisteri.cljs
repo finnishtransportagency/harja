@@ -120,8 +120,17 @@
                                             (reset! valittu-osoite nil)
                                             (reset! valitse-kartalla? false))
                             :paivita #(reset! valittu-osoite %)
-                            :kun-valmis #(reset! valittu-osoite %)}]
+                            :kun-valmis #(do
+                                           (when-let [g (:geometria %)]
+                                             (tasot/nayta-geometria!
+                                              :tierekisteri-valinta-haku
+                                              {:alue g}))
+                                           (reset! valittu-osoite %))}]
         [:button {:on-click #(reset! valitse-kartalla? true)}
          "Valitse kartalla"])
       (when-let [valittu @valittu-osoite]
         [:div (pr-str valittu)])])))
+
+;; eism tie 20
+;; x: 431418, y: 7213120
+;; x: 445658, y: 7224320
