@@ -6,13 +6,13 @@
             [harja.kyselyt.urakat :as u]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn tuo-urakka [db alueurakkanro geometria]
+(defn tuo-urakka [db alueurakkanro geometria valaistusurakka]
   (if alueurakkanro
     (if geometria
-     (let [alueurakkanro (str alueurakkanro)
-           geometria (.toString geometria)]
-       (u/luo-valaistusurakka<! db alueurakkanro geometria))
-     (log/warn (format "Urakkalle (alueurakkanro: %s ei voida tuoda geometriaa, sillä se on tyhjä" alueurakkanro)))
+      (let [alueurakkanro (str alueurakkanro)
+            geometria (.toString geometria)]
+        (u/luo-valaistusurakka<! db alueurakkanro geometria valaistusurakka))
+      (log/warn (format "Urakkalle (alueurakkanro: %s ei voida tuoda geometriaa, sillä se on tyhjä" alueurakkanro)))
     (log/warn "Geometriaa ei voida tuoda ilman alueurakkanumeroa")))
 
 (defn vie-urakat-kantaan [db shapefile]
@@ -23,6 +23,6 @@
         (u/tuhoa-valaistusurakkadata! db)
         (let [urakat (shapefile/tuo shapefile)]
           (doseq [urakka urakat]
-            (tuo-urakka db (:ualue urakka) (:the_geom urakka)))))
+            (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:valourakka urakka))))))
       (log/debug "Valaistusurakoiden tuonti kantaan valmis."))
     (log/debug "Valaistusurakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
