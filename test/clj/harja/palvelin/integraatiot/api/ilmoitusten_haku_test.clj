@@ -49,7 +49,7 @@
     "matkapuhelin" nil,
     "tyopuhelin" nil,
     "email" "pekka.paivystaja@livi.fi"},
-   "ilmoitettu" "2015-09-29T11:49:45Z",
+   "ilmoitettu" "2015-09-29T14:49:45Z",
    "ilmoitusid" 123456789,
    "selitteet"
    [{"selite" "auraustarve"} {"selite" "aurausvallitNakemaesteena"}],
