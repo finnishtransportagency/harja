@@ -22,6 +22,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
+            [harja.views.tierekisteri :as tierekisteri]
+
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.tapahtumat :as t]
@@ -162,7 +164,8 @@
         :ilmoitukset [ilmoitukset/ilmoitukset]
         :hallinta [hallinta/hallinta]
         :tilannekuva [tilannekuva/tilannekuva]
-        :about [about/about])]]]
+        :about [about/about]
+        :tr [tierekisteri/tierekisteri])]]]
    [modal/modal-container]
    [viesti-container]
 

@@ -27,10 +27,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
-            [harja.ui.kartta.varit.puhtaat :as varit]
-            [harja.tyokalut.vkm :as vkm]
-            [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
-            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu])
+            [harja.ui.kartta.varit.puhtaat :as varit])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -267,43 +264,3 @@
   (tapahtumat/julkaise! {:aihe :karttatasot-muuttuneet :taso-pois nimi})
   (log "Karttataso pois: " (pr-str nimi))
   (reset! (tasojen-nakyvyys-atomit nimi) false))
-
-(defn ^:export piirra-tr-osoite-vkm [tie alkuosa alkuet loppuosa loppuet]
-  (go
-    (let [tulos
-          (<! (vkm/tieosoite {:numero tie
-                              :alkuosa alkuosa
-                              :alkuetaisyys alkuet
-                              :loppuosa loppuosa
-                              :loppuetaisyys loppuet}))
-          polut (get-in tulos ["lines" "lines"])]
-      (log "POLKUJA " (count polut))
-      (doseq [ajr (range (count polut))]
-        (nayta-geometria! (keyword (str "vkm-tr-osoite-" ajr))
-                          {:alue (maarittele-feature
-                                  {:type :line
-                                   :points (get-in polut [ajr "paths" 0])}
-                                  false
-                                  asioiden-ulkoasu/tr-ikoni
-                                  asioiden-ulkoasu/tr-viiva)})))))
-
-(defn ^:export piirra-tr-osoite-harja [tie alkuosa alkuet loppuosa loppuet]
-  (go (let [tulos (<! (vkm/tieosoite->viiva {:numero tie
-                                             :alkuosa alkuosa
-                                             :alkuetaisyys alkuet
-                                             :loppuosa loppuosa
-                                             :loppuetaisyys loppuet}))]
-        (log "SAIN Harja TR-viivan: " (pr-str tulos))
-        (nayta-geometria! :harja-tr-osoite
-                          {:alue (maarittele-feature
-                                  (first tulos)
-                                  false
-                                  asioiden-ulkoasu/tr-ikoni
-                                  asioiden-ulkoasu/tr-viiva)}))))
-
-(defn ^:export poista-tr-osoite-vkm []
-  (doseq [i (range 10)]
-    (poista-geometria! (keyword (str "vkm-tr-osoite-" i)))))
-
-(defn ^:export poista-tr-osoite-harja []
-  (poista-geometria! :harja-tr-osoite))
