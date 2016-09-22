@@ -38,7 +38,6 @@
                                              (:alkuetaisyys korjattu-osoite)
                                              (:loppuosa korjattu-osoite)
                                              (:loppuetaisyys korjattu-osoite))]
-    (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
     [(geo/pg->clj geom)]))
 
 (defn hae-osien-pituudet
