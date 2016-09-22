@@ -130,7 +130,7 @@
                      :nimi nimi})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
-          (let [kohdeosa (yha-q/luo-yllapitokohdeosa-geometrialla<!
+          (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa-geometrialla<!
              c
              {:yllapitokohde (:id kohde)
               :nimi nimi
@@ -143,8 +143,8 @@
               :tr_ajorata (:ajorata tierekisteriosoitevali)
               :tr_kaista (:kaista tierekisteriosoitevali)
               :yhaid yha-id})]
-            (when (:sijainti kohdeosa)
-              (log/warn "YHA:n kohdeosalle " (pr-str kohdeosa) " ei voitu muodostaa geometriaa"))))))
+            (when-not (:sijainti uusi-kohdeosa)
+              (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
     (paivita-yllapitourakan-geometriat c urakka-id)
