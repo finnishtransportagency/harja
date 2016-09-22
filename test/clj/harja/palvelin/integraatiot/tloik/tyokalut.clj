@@ -88,10 +88,81 @@
   </seliteet>
   </harja:ilmoitus>")
 
+(def +testi-valaistusilmoitus-sanoma+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+   <viestiId>14324234</viestiId>
+   <ilmoitusId>987654321</ilmoitusId>
+   <versionumero>1</versionumero>
+   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+   <ilmoitettu>2016-09-15T12:49:45</ilmoitettu>
+   <urakkatyyppi>valaistus</urakkatyyppi>
+   <otsikko>Valot pimeänä</otsikko>
+   <paikanKuvaus>Hailuodossa</paikanKuvaus>
+   <lisatieto>Valot ovat pimeänä.</lisatieto>
+   <yhteydenottopyynto>false</yhteydenottopyynto>
+   <sijainti>
+   <tienumero>816</tienumero>
+   <x>421076.487</x>
+   <y>7206558.394</y>
+   </sijainti>
+   <ilmoittaja>
+   <etunimi>Matti</etunimi>
+   <sukunimi>Meikäläinen</sukunimi>
+   <matkapuhelin>08023394852</matkapuhelin>
+   <sahkoposti>matti.meikalainen@palvelu.fi</sahkoposti>
+   <tyyppi>tienkayttaja</tyyppi>
+   </ilmoittaja>
+   <lahettaja>
+   <etunimi>Pekka</etunimi>
+   <sukunimi>Päivystäjä</sukunimi>
+   <matkapuhelin>929304449282</matkapuhelin>
+   <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+   </lahettaja>
+   <seliteet>
+   <selite>tievalaistusVioittunutOnnettomuudessa</selite>
+   </seliteet>
+   </harja:ilmoitus>
+   ")
+
+(def +testi-paallystysilmoitus-sanoma+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+   <viestiId>14324234</viestiId>
+   <ilmoitusId>987654321</ilmoitusId>
+   <versionumero>1</versionumero>
+   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+   <ilmoitettu>2016-09-21T10:49:45</ilmoitettu>
+   <urakkatyyppi>paallystys</urakkatyyppi>
+   <otsikko>[TESTI] Päällystys rikkonainen</otsikko>
+   <paikanKuvaus>Lauttarannassa</paikanKuvaus>
+   <lisatieto>Päällystyksessä reikiä</lisatieto>
+   <yhteydenottopyynto>false</yhteydenottopyynto>
+   <sijainti>
+   <tienumero>816</tienumero>
+   <x>418613.894</x>
+   <y>7207249.201</y>
+   </sijainti>
+   <ilmoittaja>
+   <etunimi>Matti</etunimi>
+   <sukunimi>Meikäläinen</sukunimi>
+   <matkapuhelin>08023394852</matkapuhelin>
+   <sahkoposti>matti.meikalainen@palvelu.fi</sahkoposti>
+   <tyyppi>tienkayttaja</tyyppi>
+   </ilmoittaja>
+   <lahettaja>
+   <etunimi>Pekka</etunimi>
+   <sukunimi>Päivystäjä</sukunimi>
+   <matkapuhelin>929304449282</matkapuhelin>
+   <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+   </lahettaja>
+   <seliteet>
+   <selite>paallystevaurio</selite>
+   </seliteet>
+   </harja:ilmoitus>")
+
 (defn luo-tloik-komponentti []
-  (->Tloik {:ilmoitusviestijono     +tloik-ilmoitusviestijono+
-            :ilmoituskuittausjono   +tloik-ilmoituskuittausjono+
-            :toimenpidejono         +tloik-ilmoitustoimenpideviestijono+
+  (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
+            :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
+            :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
             :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
 
 (def +ilmoitus-ruotsissa+
@@ -110,8 +181,15 @@
         ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
+(defn tuo-valaistusilmoitus []
+  (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-valaistusilmoitus-sanoma+)]
+    (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
+
 (defn hae-ilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 123456789;"))
+
+(defn hae-valaistusilmoitus []
+  (q "select * from ilmoitus where ilmoitusid = 987654321;"))
 
 (defn hae-ilmoitustoimenpide []
   (q "SELECT kuittaustyyppi
@@ -131,6 +209,11 @@
   (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
   (u "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
   (u "delete from ilmoitus where ilmoitusid = 123456789;"))
+
+(defn poista-valaistusilmoitus []
+  (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 987654321);")
+  (u "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = 987654321);")
+  (u "delete from ilmoitus where ilmoitusid = 987654321;"))
 
 (defn poista-paivystajatekstiviestit []
   (u "delete from paivystajatekstiviesti"))

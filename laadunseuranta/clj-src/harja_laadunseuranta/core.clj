@@ -105,8 +105,15 @@
      :tr-osoite (hae-tr-osoite db lat lon treshold)}))
 
 (defn- hae-urakkatyypin-urakat [db urakkatyyppi kayttaja]
-  (println "hae ur tyyypin urakat, kayttaja " kayttaja)
-  (let [urakat (q/hae-urakkatyypin-urakat db {:tyyppi urakkatyyppi})]
+  (let [urakat (map
+                 #(assoc % :urakkaroolissa? (if ((set
+                                                   (keys (:urakkaroolit kayttaja)))
+                                                  (:id %))
+                                              true
+                                              false))
+                 (q/hae-urakkatyypin-urakat db
+                                            {:tyyppi urakkatyyppi}
+                                            ))]
     urakat))
 
 (defn- muunna-havainnot [{kirjaukset :kirjaukset :as tiedot}]

@@ -49,8 +49,9 @@
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
-  (is (= 1 (count (hae-ilmoitus)))
-      "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+  (let [ilmoitukset (hae-ilmoitus)]
+    (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
+    (is (= "2015-09-29 17:49:45.0" (str (nth (first ilmoitukset) 3))) "Ilmoitusaika on parsittu oikein"))
   (poista-ilmoitus))
 
 (deftest tarkista-ilmoituksen-paivitys
@@ -147,3 +148,13 @@
         (poista-ilmoitus)))
     (catch IllegalArgumentException e
       (is false "Lähetystä Labyrintin SMS-Gatewayhyn ei yritetty."))))
+
+
+(deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
+  "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
+  (tuo-valaistusilmoitus)
+
+  (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2018';"))
+         (first (q "select urakka from ilmoitus where ilmoitusid = 987654321;")))
+      "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
+  (poista-valaistusilmoitus))

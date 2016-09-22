@@ -17,7 +17,7 @@
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
-  Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  Mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   ([db user oikeus]
    (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
@@ -27,6 +27,7 @@
           (comp
             (filter (fn [{:keys [urakka_id]}]
                       (oikeudet/voi-lukea? oikeus urakka_id user)))
+            (map #(assoc % :tyyppi (keyword (:tyyppi %))))
             (map konv/alaviiva->rakenne))
 
           (let [alku (or alku (pvm/nyt))
@@ -61,7 +62,7 @@
                  (when urakkatyyppi (name urakkatyyppi))
                  hallintayksikot)))))
      {:urakka :urakat}
-     (comp :id :hallintayksikko))))
+     (juxt :tyyppi (comp :id :hallintayksikko)))))
 
 (defn kayttajan-urakka-idt-aikavalilta
   ([db user oikeus]
@@ -114,11 +115,12 @@
        aluekokonaisuudet))))
 
 (defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
-  (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y))]
+  ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 10 metrin thesholdilla
+  (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y 10))]
     (if (and (empty? urakka-idt)
              (not= "hoito" urakkatyyppi))
-        ;; Jos ei löytynyt urakoita eri tyypillä, kokeillaan hoido urakoita
-      (map :id (q/hae-urakka-sijainnilla db "hoito" x y))
+      ;; Jos ei löytynyt urakoita eri tyypillä, kokeillaan hoido urakoita
+      (map :id (q/hae-urakka-sijainnilla db "hoito" x y 10))
       urakka-idt)))
 
 (defn- pura-sopimukset [{jdbc-array :sopimukset :as urakka}]

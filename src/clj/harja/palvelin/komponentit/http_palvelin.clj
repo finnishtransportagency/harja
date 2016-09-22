@@ -183,7 +183,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn- anti-csrf-kaytossa? [req]
   ;; ls- sisältävät palvelukutsut (mobiili laadunseuranta), ei käytä anti csrf tokenia
-  (not (str/includes? (:uri req) "ls-")))
+  (not (or (str/includes? (:uri req) "ls-")
+           (str/includes? (:uri req) "laadunseuranta"))))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi]
   component/Lifecycle

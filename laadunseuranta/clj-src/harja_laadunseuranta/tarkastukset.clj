@@ -3,6 +3,7 @@
             [harja-laadunseuranta.tietokanta :as tietokanta]
             [harja-laadunseuranta.kyselyt :as q]
             [harja-laadunseuranta.utils :as utils]
+            [harja.kyselyt.tarkastukset :as tark-q]
             [clojure.string :as str]))
 
 (def db tietokanta/db)
@@ -244,9 +245,10 @@
         geometria (:geom (first (q/tr-osoitteelle-viiva db
                                                         tarkastus )))
         tarkastus (assoc tarkastus :sijainti geometria)
-        tarkastus-id (:id (q/luo-uusi-tarkastus<! db
-                                                  (merge tarkastus
-                                                         {:luoja (:id kayttaja)})))]
+        _ (q/luo-uusi-tarkastus<! db
+                                  (merge tarkastus
+                                         {:luoja (:id kayttaja)}))
+        tarkastus-id (tark-q/luodun-tarkastuksen-id db )]
     (doseq [vakiohavainto-id (:vakiohavainnot tarkastus)]
       (q/luo-uusi-tarkastuksen-vakiohavainto<! db
                                                {:tarkastus tarkastus-id

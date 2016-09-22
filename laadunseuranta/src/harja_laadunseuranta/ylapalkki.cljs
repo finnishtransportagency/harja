@@ -33,6 +33,8 @@
                                     tallennus-kaynnissa tallennustilaa-muutetaan
                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka]}]
   [:div.ylapalkki
+   (when (utils/kehitysymparistossa?)
+     [:span#testiharja "TESTI"])
    [logo]
    (when-not @tallennus-kaynnissa
      [keskityspainike keskita-ajoneuvoon])

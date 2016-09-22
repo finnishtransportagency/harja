@@ -2,7 +2,7 @@
 
 /* harja.ui.yleiset namespacessa olevien yleisten komponenttien tyylejä */
 #app {
-  background-color: @harmaa10
+  background-color: @harmaa15;
 }
 
 .alasveto-ei-loydoksia {
@@ -173,9 +173,8 @@ button > .ajax-loader {
   }
 
   .haitari {
-    border: 1px ridge @harmaa7;
-    margin: 5px 5px 5px 5px;
-    background-color: @harmaa10;
+    border: 1px solid @harmaa7;
+    background-color: @harmaa15;
   }
 
   //Yksittäinen haitarin rivi
@@ -185,7 +184,9 @@ button > .ajax-loader {
 
   //Haitarin otsikko - "klikattava alue"
   .haitari-heading {
-    border: 1px ridge @harmaa3;
+    border-style: solid;
+    border-color: @harmaa7;
+    border-width: 0 0 1px 0;
   }
 
   // Caret
@@ -210,7 +211,7 @@ button > .ajax-loader {
   }
 
   .haitari-sisalto {
-    padding: 3px;
+
   }
 
   .haitari-kiinni {
