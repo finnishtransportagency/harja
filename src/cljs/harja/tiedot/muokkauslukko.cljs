@@ -118,7 +118,7 @@
             (let [uusi-lukko (<! (lukitse lukko-id))]
               (if (lukko-olemassa? uusi-lukko)
                 (do
-                  (log "[LUKKO] Näkymä lukittu. Lukon tiedot: " (pr-str @nykyinen-lukko))
+                  (log "[LUKKO] Näkymä lukittu. Uuden lukon tiedot: " (pr-str uusi-lukko))
                   (reset! nykyinen-lukko uusi-lukko)
                   (aloita-pollaus))
                 (do (log "[LUKKO] Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
