@@ -445,13 +445,13 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
        (:urakkatyyppi = 'valaistus' AND
         exists(SELECT id
                FROM valaistusurakka vu
-               WHERE vu.alueurakkanro = u.alueurakkanro AND
+               WHERE vu.valaistusurakkanro = u.urakkanro AND
                      st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
        OR
        ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
         exists(SELECT id
                FROM paallystyspalvelusopimus pps
-               WHERE pps.alueurakkanro = u.alueurakkanro AND
+               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
                      st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
 
 ORDER BY id ASC;
