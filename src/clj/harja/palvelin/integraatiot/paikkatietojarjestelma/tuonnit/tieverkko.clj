@@ -120,8 +120,8 @@
   [{g0 :the_geom :as ajr0} {g1 :the_geom :as ajr1}]
   (cond
     ;; Jos toinen on nil, valitaan suoraan toinen
-    (nil? g0) g1
-    (nil? g1) g0
+    (nil? g0) (jatkuva-line-string (line-string-seq g1))
+    (nil? g1) (jatkuva-line-string (line-string-seq g0))
 
     ;; Muuten yhdistetään viivat molemmin päin
     :default
@@ -147,10 +147,8 @@
       (swap! ei-onnistu inc)
       (swap! onnistui inc))
 
-    (k/vie-tien-osan-ajorata! db {:tie tie
-                                  :osa osa
-                                  :oikea (some-> oikea str)
-                                  :vasen (some-> vasen str)})
+    (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
+    (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})
 
     ;; Onko nämä enää tarpeellisia?
     #_(doseq [tv osan-geometriat]
