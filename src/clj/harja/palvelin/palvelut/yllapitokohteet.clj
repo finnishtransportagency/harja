@@ -212,12 +212,11 @@
               paikkausilmoitus (q/onko-olemassa-paikkausilmioitus? db id)]
           (log/debug "Vastaus päällystysilmoitus: " paallystysilmoitus)
           (log/debug "Vastaus paikkausilmoitus: " paikkausilmoitus)
-          (if (and (nil? paallystysilmoitus)
-                   (nil? paikkausilmoitus))
+          (if (or paallystysilmoitus paikkausilmoitus)
+            (log/debug "Ei voi poistaa, ylläpitokohteelle on kirjattu ilmoituksia!")
             (do
               (log/debug "Ilmoituksia ei löytynyt, poistetaan ylläpitokohde")
-              (q/poista-yllapitokohde! db {:id id :urakka urakka-id}))
-            (log/debug "Ei voi poistaa, ylläpitokohteelle on kirjattu ilmoituksia!"))))
+              (q/poista-yllapitokohde! db {:id id :urakka urakka-id})))))
     (do (log/debug "Päivitetään ylläpitokohde")
         (q/paivita-yllapitokohde! db
                                   {:kohdenumero kohdenumero

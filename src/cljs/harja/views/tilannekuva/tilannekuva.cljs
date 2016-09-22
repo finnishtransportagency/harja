@@ -255,7 +255,7 @@
        [historiankuvan-aikavalinnat])
      [:div.tk-yksittaiset-suodattimet.fontti-taso3
       [yksittainen-suodatincheckbox "Turvallisuuspoikkeamat"
-       tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]s
+       tiedot/suodattimet [:turvallisuus tk/turvallisuuspoikkeamat]
        auki-oleva-checkbox-ryhma]]
      [:div {:class "tk-suodatinryhmat"}
       [checkbox-suodatinryhma "Ilmoitukset" tiedot/suodattimet [:ilmoitukset :tyypit]

@@ -2,12 +2,17 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [hiccup.core :refer [html]])
-  (:import (java.text SimpleDateFormat)))
+  (:import (java.text SimpleDateFormat)
+           (java.util TimeZone)))
 
 (def +xsd-polku+ "xsd/tloik/")
 
 (defn formatoi-paivamaara [date]
-  (when date (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.S") date)))
+  (when date
+    (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
+      ;; T-LOIK:n lähetetään ajat GMT+0 aikavyöhykkeellä
+      (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
+      (.format dateformat date))))
 
 (defn muodosta-henkilo [data]
   (when data
