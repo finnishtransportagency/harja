@@ -104,11 +104,7 @@
   (log "[LUKKO] Päivitetään lukko")
   (go (log "[LUKKO] Tarkistetaan lukon " lukko-id " tila tietokannasta")
       (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
-        (if vanha-lukko
-          (do
-            (log "[LUKKO] Vanha lukko löytyi: " (pr-str vanha-lukko))
-            (reset! nykyinen-lukko vanha-lukko)
-            (aloita-pollaus))
+        (if (or (nil? vanha-lukko) (= vanha-lukko :ei-lukittu))
           (do
             (log "[LUKKO] Annetulla id:llä ei ole lukkoa. Lukitaan näkymä.")
             (let [uusi-lukko (<! (lukitse lukko-id))]
@@ -118,4 +114,8 @@
                   (reset! nykyinen-lukko uusi-lukko)
                   (aloita-pollaus))
                 (do (log "[LUKKO] Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
-                    (paivita-lukko lukko-id)))))))))
+                    (paivita-lukko lukko-id)))))
+          (do
+            (log "[LUKKO] Vanha lukko löytyi: " (pr-str vanha-lukko))
+            (reset! nykyinen-lukko vanha-lukko)
+            (aloita-pollaus))))))
