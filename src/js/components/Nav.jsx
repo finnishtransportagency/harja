@@ -23,16 +23,21 @@ export default React.createClass({
 
     return (
       <div>
-        <div className="title-bar" data-responsive-toggle="example-menu" data-hide-for="medium">
+        <div className="title-bar" data-responsive-toggle="top-menu" data-hide-for="medium">
           <button className="menu-icon" type="button" data-toggle></button>
           <div className="title-bar-title">Menu</div>
         </div>
 
-        <div className="top-bar" id="example-menu">
+        <div className="top-bar" id="top-menu">
           <div className="top-bar-left">
             <ul className="vertical medium-horizontal menu" data-responsive-menu="medium-dropdown">
               <li className="menu-text">Site Title</li>
-              {links.map(link => <li><NavItem item={link} key={link.title}/></li>)}
+              {
+                links.map((link, index) =>
+                  <li key={index}>
+                    <NavItem item={link} key={link.title}/>
+                  </li>)
+              }
             </ul>
           </div>
         </div>
