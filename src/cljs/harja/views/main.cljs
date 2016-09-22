@@ -90,7 +90,8 @@
     (when (and (mobiiliselain?)
                (oikeudet/laadunseuranta))
       [:li {:role "presentation"}
-       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu" (str k/+polku+ "laadunseuranta/")]])]
+       [staattinen-linkki-uuteen-ikkunaan "Laadunseurannan mobiilityökalu"
+        (str k/+polku+ "laadunseuranta/index.html")]])]
 
    :right
    [palaute/palaute-linkki @istunto/kayttaja (nav/nykyinen-url)]

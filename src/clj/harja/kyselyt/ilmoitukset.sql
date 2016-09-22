@@ -377,7 +377,13 @@ SET tila = 'virhe'
 WHERE id = :id;
 
 -- name: onko-ilmoitukselle-vastaanottokuittausta
-SELECT id FROM ilmoitustoimenpide WHERE ilmoitus=:ilmoitusid AND kuittaustyyppi='vastaanotto';
+SELECT id
+FROM ilmoitustoimenpide
+WHERE ilmoitus = (SELECT id
+                  FROM ilmoitus
+                  WHERE ilmoitusid = :ilmoitusid
+                  LIMIT 1) AND
+      kuittaustyyppi = 'vastaanotto';
 
 -- name: luo-ilmoitustoimenpide<!
 INSERT INTO ilmoitustoimenpide
@@ -403,16 +409,16 @@ INSERT INTO ilmoitustoimenpide
  kasittelija_organisaatio_ytunnus)
 VALUES
   (:ilmoitus,
-   :ilmoitusid,
-   :kuitattu,
-   :vakiofraasi,
-   :vapaateksti,
-   :kuittaustyyppi :: kuittaustyyppi,
-   :kuittaaja_henkilo_etunimi,
-   :kuittaaja_henkilo_sukunimi,
-   :kuittaaja_henkilo_matkapuhelin,
-   :kuittaaja_henkilo_tyopuhelin,
-   :kuittaaja_henkilo_sahkoposti,
+    :ilmoitusid,
+    :kuitattu,
+    :vakiofraasi,
+    :vapaateksti,
+    :kuittaustyyppi :: kuittaustyyppi,
+    :kuittaaja_henkilo_etunimi,
+    :kuittaaja_henkilo_sukunimi,
+    :kuittaaja_henkilo_matkapuhelin,
+    :kuittaaja_henkilo_tyopuhelin,
+    :kuittaaja_henkilo_sahkoposti,
    :kuittaaja_organisaatio_nimi,
    :kuittaaja_organisaatio_ytunnus,
    :kasittelija_henkilo_etunimi,
