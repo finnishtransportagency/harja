@@ -298,6 +298,7 @@ FROM yhteyshenkilo y
   JOIN paivystys p ON p.yhteyshenkilo = y.id
   LEFT JOIN organisaatio o ON o.id = y.organisaatio
 WHERE p.urakka = :urakka AND
+      -- Tarvitaan jotta voidaan hakea esim. muodossa Erkki Esimerkki <erkki.esimerkki@example.com>
       :sahkoposti ILIKE (SELECT '%' || y.sahkoposti || '%');
 
 -- name: hae-yhteyshenkilo
