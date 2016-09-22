@@ -9,7 +9,8 @@
             [harja.views.kartta.tasot :as tasot]
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
-            [cljs.core.async :refer [<! >! chan timeout]])
+            [cljs.core.async :refer [<! >! chan timeout]]
+            [harja.ui.tierekisteri :as tr])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
@@ -17,6 +18,9 @@
 
 (defonce koordinaatti (r/atom {:x nil :y nil}))
 (defonce koordinaatin-osoite (r/atom nil))
+
+(defonce valitse-kartalla? (r/atom false))
+(defonce valittu-osoite (r/atom nil))
 
 (defn hae! []
   (tasot/poista-geometria! :tierekisteri-haettu-osoite)
@@ -109,4 +113,15 @@
       [:div "Tervetuloa salaiseen TR osioon"]
       [tr-haku]
       [:hr]
-      [koordinaatti-haku]])))
+      [koordinaatti-haku]
+      [:hr]
+      (if @valitse-kartalla?
+        [tr/karttavalitsin {:kun-peruttu #(do
+                                            (reset! valittu-osoite nil)
+                                            (reset! valitse-kartalla? false))
+                            :paivita #(reset! valittu-osoite %)
+                            :kun-valmis #(reset! valittu-osoite %)}]
+        [:button {:on-click #(reset! valitse-kartalla? true)}
+         "Valitse kartalla"])
+      (when-let [valittu @valittu-osoite]
+        [:div (pr-str valittu)])])))
