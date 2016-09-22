@@ -525,7 +525,7 @@ FROM valaistusurakka
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-valaistusurakka<!
-INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakka)
+INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka);
 
 
@@ -538,5 +538,5 @@ FROM paallystyspalvelusopimus
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-paallystyspalvelusopimus<!
-INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyssopimus)
+INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
