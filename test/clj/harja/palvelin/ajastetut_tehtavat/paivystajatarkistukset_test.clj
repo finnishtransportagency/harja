@@ -92,7 +92,7 @@
            3))
 
     ;; Kaikki testidatan käynnissä olleet urakat löytyi
-    (is (= (count urakoiden-paivystykset) 16))))
+    (is (= (count urakoiden-paivystykset) 17))))
 
 (deftest urakat-ilman-paivystysta-toimii
   ;; Testidatassa ei yhdelläkään urakalla päivystystä annettuna aikana, eli palautuu sama data takaisin
