@@ -81,7 +81,7 @@
       (log "[LUKKO] Suoritetaan pollaus nykyiselle lukolle: " (pr-str @nykyinen-lukko))
       (let [lukko-id (:id @nykyinen-lukko)]
         (when (kayttaja-omistaa-lukon? @nykyinen-lukko)
-          (virkista-nykyinen-lukko lukko-id)
+          (virkista-nykyinen-lukko lukko-id))))
           ;; Jos käyttäjä odottaa toisen käyttäjän lukon vapautumista, voitaisiin
           ;; lukkoa pollata ja sen vapautuessa lukita näkymä tälle käyttäjälle.
           ;; Tällöin pitäisi kuitenkin päivittää näkymään uudet tiedot.
