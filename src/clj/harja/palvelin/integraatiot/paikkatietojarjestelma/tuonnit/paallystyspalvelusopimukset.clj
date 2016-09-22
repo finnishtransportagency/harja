@@ -6,14 +6,16 @@
             [harja.kyselyt.urakat :as u]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn tuo-urakka [db alueurakkanro geometria paallystyssopimus]
-  (if alueurakkanro
+(defn tuo-urakka [db alueurakkanro geometria paallystyssopimusnro]
+  (if paallystyssopimusnro
     (if geometria
       (let [alueurakkanro (str alueurakkanro)
+            paallystyssopimusnro (str (int paallystyssopimusnro))
             geometria (.toString geometria)]
-        (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria paallystyssopimus))
-      (log/warn (format "Palvelusopimusta (alueurakkanro: %s ei voida tuoda geometriaa, sillä se on tyhjä" alueurakkanro)))
-    (log/warn "Geometriaa ei voida tuoda ilman alueurakkanumeroa")))
+        (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria paallystyssopimusnro))
+      (log/warn (format "Palvelusopimusta (paallystyssopimusnro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
+                        paallystyssopimusnro)))
+    (log/warn "Geometriaa ei voida tuoda ilman päällystyssopimusnumeroa")))
 
 (defn vie-urakat-kantaan [db shapefile]
   (if shapefile
