@@ -1,5 +1,8 @@
 -- Tieverkon osien ajoradat
 
+DROP TABLE tieverkko;
+DROP TABLE tieverkko_geom;
+
 CREATE TABLE tr_osan_ajorata (
   tie INTEGER,
   osa INTEGER,
