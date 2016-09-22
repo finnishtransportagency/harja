@@ -28028,7 +28028,7 @@ function hasArrayNature(obj) {
   return (
     // not null/false
     !!obj && (
-    // arrays are objects, NodeLists are functions in Safari
+    // arrays are objects, NodeCategory are functions in Safari
     typeof obj == 'object' || typeof obj == 'function') &&
     // quacks like an array
     'length' in obj &&

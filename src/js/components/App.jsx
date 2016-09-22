@@ -2,24 +2,24 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import request from 'superagent';
 import Home from './Home.jsx';
-import {Lists} from '../enums.js';
+import {Category} from '../enums.js';
 
 export default React.createClass({
 
   getInitialState() {
     let initialState = {
-      lists: {}
+      Category: {}
     }
-    initialState[Lists.CARE] = []
-    initialState[Lists.MAINTENANCE] = []
-    initialState[Lists.FAQ] = []
+    initialState[Category.CARE] = []
+    initialState[Category.MAINTENANCE] = []
+    initialState[Category.FAQ] = []
     return initialState;
   },
 
   componentDidMount() {
-    setTimeout(() => { this.getNotices('care.json', Lists.CARE); }, 500);
-    setTimeout(() => { this.getNotices('maintenance.json', Lists.MAINTENANCE); }, 3000);
-    setTimeout(() => { this.getNotices('faq.json', Lists.FAQ); }, 5000);
+    setTimeout(() => { this.getNotices('care.json', Category.CARE); }, 500);
+    setTimeout(() => { this.getNotices('maintenance.json', Category.MAINTENANCE); }, 3000);
+    setTimeout(() => { this.getNotices('faq.json', Category.FAQ); }, 5000);
     /*
     this.getNotices('care.json', 'careNotices');
     this.getNotices('maintenance.json', 'maintenanceNotices');

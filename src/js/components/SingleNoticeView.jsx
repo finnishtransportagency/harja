@@ -5,12 +5,12 @@ export default React.createClass({
   getDefaultProps() {
     return {
       notice: null,
-      list: null
+      category: null
     };
   },
 
   render() {
-    let {notice, list} = this.props;
+    let {notice, category} = this.props;
     return (
       <Notice notice={notice}/>
     );

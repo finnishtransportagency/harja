@@ -1,9 +1,10 @@
 import React, {PropTypes} from 'react';
 import NoticeList from './NoticeList.jsx';
 import SingleNoticeView from './SingleNoticeView.jsx';
+import NoticeTypeView from './NoticeTypeView.jsx';
 import Nav from './Nav.jsx';
 import {Button, Colors} from 'react-foundation';
-import {Lists, Events} from '../enums.js';
+import {Category, Events} from '../enums.js';
 import pubsub from 'pubsub-js';
 
 export default React.createClass({
@@ -14,52 +15,56 @@ export default React.createClass({
   },
 
   componentWillMount() {
-
-    this.pubsub_notice_token = pubsub.subscribe(Events.NOTICE, (action, selection) => {
-      this.setState({ selection: selection });
-    });
-
     this.pubsub_nav_token = pubsub.subscribe(Events.NAV, (navEvent, data) => {
-      console.log(navEvent + " / " + data);
-      if (data.action === Events.HOME) {
-        this.setState({ selection: null });
+      switch (data.action) {
+        case Events.HOME:
+          this.setState({ selection: null });
+          break;
+        case Events.NOTICE:
+          this.setState({ selection: {id: data.id, category: data.category} });
+          break;
+        case Events.CATEGORY:
+          this.setState({ selection: {category: data.category} });
+          break;
       }
     });
   },
 
   componentWillUnmount: function() {
-    pubsub.unsubscribe(this.pubsub_notice_token);
     pubsub.unsubscribe(this.pubsub_nav_token);
   },
 
   render() {
     let {care, maintenance, faq} = this.props;
     let {selection} = this.state;
-    let mainEl;
-    let singleNoticeEl;
+    let mainEl, singleNoticeEl, noticeTypeEl;
 
-    if (selection) {
-      const list = this.props[selection.list];
-      const notice =list.filter((item) => { return item.id === selection.id})[0];
-      singleNoticeEl = (<SingleNoticeView notice={notice} list={list}/>);
+    if (selection && selection.id != null) {
+      const category = this.props[selection.category];
+      const notice =category.filter((item) => { return item.id === selection.id})[0];
+      singleNoticeEl = (<SingleNoticeView notice={notice} category={category}/>);
+    }
+    else if (selection && selection.category) {
+      const props = {category: selection.category, notices: this.props[selection.category]}
+      noticeTypeEl = (<NoticeTypeView {...props}/>);
     }
     else {
       mainEl = (
         <div>
-        <Button color={Colors.SUCCESS}>TESTSAVE</Button>
-        <NoticeList notices={care} list={Lists.CARE}/>
-        <NoticeList notices={maintenance} list={Lists.MAINTENANCE}/>
-        <NoticeList notices={faq} list={Lists.FAQ}/>
+        <NoticeList notices={care} category={Category.CARE}/>
+        <NoticeList notices={maintenance} category={Category.MAINTENANCE}/>
+        <NoticeList notices={faq} category={Category.FAQ}/>
         </div>
       );
     }
 
     return (
       <div>
-        <Nav />
         <h1>Harja Info</h1>
+        <Nav />
           {mainEl}
           {singleNoticeEl}
+          {noticeTypeEl}
       </div>
     );
   }

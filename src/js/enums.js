@@ -1,4 +1,4 @@
-export const Lists = {
+export const Category = {
   CARE: 'care',
   MAINTENANCE: 'maintenance',
   FAQ: 'faq'
@@ -6,7 +6,7 @@ export const Lists = {
 
 export const Events = {
   NAV: 'nav',
-  NOTICE: 'noticeSelected',
-  LIST: 'listSelected',
+  NOTICE: 'notice',
+  CATEGORY: 'category',
   HOME: 'home'
 };
