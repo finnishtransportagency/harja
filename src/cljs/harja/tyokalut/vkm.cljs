@@ -104,10 +104,6 @@
                        {:type :point
                         :coordinates [x y]}))))))))
 
-(defn tieosoite->piste [trosoite]
-  (log "Haetaan piste tieosoitteelle")
-  (k/post! :hae-tr-pisteeksi trosoite nil true))
-
 (defn tieosoite->viiva [trosoite]
   (k/post! :hae-tr-viivaksi trosoite nil true))
 
