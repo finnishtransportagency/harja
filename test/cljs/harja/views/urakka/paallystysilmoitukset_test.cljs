@@ -49,6 +49,7 @@
    :muutoshinta 666
    :kohdenimi nil
    :kohdenumero "666"
+   :yllapitokohde-id "777"
    :kommentit []
    :tr-numero 20
    :tr-alkuosa 1
