@@ -6,7 +6,7 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]))
 
-(def +treshold+ 250)
+(def +threshold+ 250)
 
 (defn muunna-geometria [tros]
   (assoc tros :geometria (geo/pg->clj (:geometria tros))))
@@ -17,13 +17,14 @@
   (when-let [tros (first (tv/hae-tr-osoite-valille db
                                                    (:x1 params) (:y1 params)
                                                    (:x2 params) (:y2 params)
-                                                   +treshold+))]
+                                                   +threshold+))]
     (muunna-geometria tros)))
 
 (defn hae-tr-pisteella
   "params on mappi {:x .. :y ..}"
-  [db params]
-  (let [tros (first (tv/hae-tr-osoite db (:x params) (:y params) +treshold+))]
+  [db {:keys [x y] :as params}]
+  (let [tros (first (tv/hae-tr-osoite db {:x x :y y
+                                          :treshold +threshold+}))]
     (muunna-geometria tros)))
 
 (defn hae-tr-viiva
@@ -39,17 +40,6 @@
                                              (:loppuetaisyys korjattu-osoite))]
     (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
     [(geo/pg->clj geom)]))
-
-(defn hae-tr-piste
-  "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
-  [db params]
-  (log/debug "Haetaan piste osoitteelle: " (pr-str params))
-  (let [geom (first (tv/tierekisteriosoite-pisteeksi db
-                                                    (:numero params)
-                                                    (:alkuosa params)
-                                                    (:alkuetaisyys params)))]
-    (log/debug "Osoitteelle löydettiin geometria: " (pr-str geom))
-    (geo/pg->clj (:tierekisteriosoitteelle_piste geom))))
 
 (defn hae-osien-pituudet
   "Hakee tierekisteriosien pituudet annetulle tielle ja osan välille.
@@ -73,9 +63,6 @@
      :hae-tr-viivaksi (fn [_ params]
                         (hae-tr-viiva db params))
 
-     :hae-tr-pisteeksi (fn [_ params]
-                         (hae-tr-piste db params))
-
      :hae-tr-osien-pituudet (fn [_ params]
                               (hae-osien-pituudet db params)))
 
@@ -85,6 +72,5 @@
                      :hae-tr-pisteilla
                      :hae-tr-pisteella
                      :hae-tr-viivaksi
-                     :hae-tr-pisteeksi
                      :hae-osien-pituudet)
     this))
