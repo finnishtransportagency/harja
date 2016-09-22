@@ -209,7 +209,7 @@
   (when (and
           (some? (:yhatiedot vastaus))
           (= (:id @nav/valittu-urakka) harja-urakka-id))
-    (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc :yhatiedot vastaus))
+    (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc :yhatiedot (:yhatiedot vastaus)))
 
   ;; Kohteiden osittain epäonnistunut päivittäminen näytetään modal-dialogissa
   (when (and (= (:status vastaus) :error)
