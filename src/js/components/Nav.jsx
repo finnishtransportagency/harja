@@ -22,12 +22,20 @@ export default React.createClass({
     ];
 
     return (
-      <div className="main-nav">
-        <ButtonGroup>
-          {links.map(link =>
-            <NavItem item={link} key={link.title}/>
-          )}
-        </ButtonGroup>
+      <div>
+        <div className="title-bar" data-responsive-toggle="example-menu" data-hide-for="medium">
+          <button className="menu-icon" type="button" data-toggle></button>
+          <div className="title-bar-title">Menu</div>
+        </div>
+
+        <div className="top-bar" id="example-menu">
+          <div className="top-bar-left">
+            <ul className="vertical medium-horizontal menu" data-responsive-menu="medium-dropdown">
+              <li className="menu-text">Site Title</li>
+              {links.map(link => <li><NavItem item={link} key={link.title}/></li>)}
+            </ul>
+          </div>
+        </div>
       </div>
     );
   }

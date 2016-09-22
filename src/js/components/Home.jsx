@@ -60,11 +60,10 @@ export default React.createClass({
 
     return (
       <div>
-        <h1>Harja Info</h1>
         <Nav />
-          {mainEl}
-          {singleNoticeEl}
-          {noticeTypeEl}
+        {mainEl}
+        {singleNoticeEl}
+        {noticeTypeEl}
       </div>
     );
   }
