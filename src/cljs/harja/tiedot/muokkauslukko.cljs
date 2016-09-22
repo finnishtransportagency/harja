@@ -24,18 +24,22 @@
 (defn- kayttaja-omistaa-lukon? [lukko]
   (= (:kayttaja lukko) (:id @istunto/kayttaja)))
 
+(defn lukko-olemassa? [lukko]
+  (and (some? lukko)
+       (not= lukko :ei-lukittu)))
+
 (defn nakyma-lukittu? [lukko]
-  (if (or (nil? lukko) (= :ei-lukittu lukko))
-    (do
-      (log "[LUKKO] Nykyistä lukkoa ei ole. Näkymä ei ole lukittu.")
-      false)
+  (if (lukko-olemassa? lukko)
     (do
       (let [kayttajan-oma-lukko (kayttaja-omistaa-lukon? lukko)]
         (log (str "[LUKKO] Nykyinen käyttäjä " (:id @istunto/kayttaja)))
         (log (str "[LUKKO] Nykyinen lukko " (pr-str lukko)))
         (log (str "[LUKKO] Nykyisen lukon omistaja " (:kayttaja lukko)))
         (log "[LUKKO] Käyttäjä omistaa lukon: " kayttajan-oma-lukko)
-        (false? kayttajan-oma-lukko)))))
+        (false? kayttajan-oma-lukko)))
+    (do
+      (log "[LUKKO] Nykyistä lukkoa ei ole. Näkymä ei ole lukittu.")
+      false)))
 
 (defn nykyinen-nakyma-lukittu? []
   (nakyma-lukittu? @nykyinen-lukko))
@@ -104,18 +108,18 @@
   (log "[LUKKO] Päivitetään lukko")
   (go (log "[LUKKO] Tarkistetaan lukon " lukko-id " tila tietokannasta")
       (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
-        (if (or (nil? vanha-lukko) (= vanha-lukko :ei-lukittu))
+        (if (lukko-olemassa? vanha-lukko)
+          (do
+            (log "[LUKKO] Vanha lukko löytyi: " (pr-str vanha-lukko))
+            (reset! nykyinen-lukko vanha-lukko)
+            (aloita-pollaus))
           (do
             (log "[LUKKO] Annetulla id:llä ei ole lukkoa. Lukitaan näkymä.")
             (let [uusi-lukko (<! (lukitse lukko-id))]
-              (if uusi-lukko
+              (if (lukko-olemassa? uusi-lukko)
                 (do
                   (log "[LUKKO] Näkymä lukittu. Lukon tiedot: " (pr-str @nykyinen-lukko))
                   (reset! nykyinen-lukko uusi-lukko)
                   (aloita-pollaus))
                 (do (log "[LUKKO] Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
-                    (paivita-lukko lukko-id)))))
-          (do
-            (log "[LUKKO] Vanha lukko löytyi: " (pr-str vanha-lukko))
-            (reset! nykyinen-lukko vanha-lukko)
-            (aloita-pollaus))))))
+                    (paivita-lukko lukko-id)))))))))
