@@ -565,10 +565,14 @@
   [:span
    [yleiset/livi-pudotusvalikko
     {:valitse-fn nav/valitse-hallintayksikko
-     :valinta v-hal
-     :class "raportti-alasveto"
-     :format-fn (fnil hy/elynumero-ja-nimi {:nimi "Kaikki ELYt"})}
-    (concat [nil]
+     :valinta    v-hal
+     :class      "raportti-alasveto"
+     :format-fn  (fnil hy/elynumero-ja-nimi {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                                     "Kaikki ELYt"
+                                                     "Valitse ELY")})}
+    (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+              [nil]
+              [])
             @hy/hallintayksikot)]
    " "
    [yleiset/livi-pudotusvalikko
@@ -619,8 +623,12 @@
                           :format-fn      (fnil (comp
                                                   (partial fmt/lyhennetty-urakan-nimi urakan-nimen-pituus)
                                                   :nimi)
-                                                {:nimi "Kaikki urakat"})}
-                         (concat [nil]
+                                                {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                                         "Kaikki urakat"
+                                                         "Valitse urakka")})}
+                         (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                   [nil]
+                                   [])
                                  (map
                                    #(assoc % :nimi
                                              (fmt/lyhennetty-urakan-nimi urakan-nimen-pituus (:nimi %)))
