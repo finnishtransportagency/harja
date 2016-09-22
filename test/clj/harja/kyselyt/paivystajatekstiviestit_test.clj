@@ -73,7 +73,7 @@
     (is (= 1 (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id ensimmainen-ilmoitus puhelin))
         "Viestinumero on 1, kun ensimmäinen viesti lähetetään")
 
-    (is (= 1111 (:ilmoitusid (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelin 1))))
+    (is (= ensimmainen-ilmoitus (:ilmoitusid (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelin 1))))
         "Oikea ilmoitus löytyy haulla")
 
     (sulje-ilmoitus ensimmainen-ilmoitus)
@@ -81,7 +81,7 @@
     (luo-ilmoitus toinen-ilmoitus)
     (is (= 1 (paivystajatekstiviestit/kirjaa-uusi-viesti db paivystaja-id toinen-ilmoitus puhelin))
         "Viestinumero on 1, kun toinen viesti lähetetään ja ensimmäinen on lopetettu")
-    (is (= 2222 (:ilmoitusid (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelin 1))))
+    (is (= toinen-ilmoitus (:ilmoitusid (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelin 1))))
         "Oikea ilmoitus löytyy haulla, kun ensimmäinen ilmoitus on suljettu")
 
     (poista-ilmoitustoimenpiteet)
