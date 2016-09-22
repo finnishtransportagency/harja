@@ -80,12 +80,13 @@
     (do
       (log "[LUKKO] Suoritetaan pollaus nykyiselle lukolle: " (pr-str @nykyinen-lukko))
       (let [lukko-id (:id @nykyinen-lukko)]
-        (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
+        (when (kayttaja-omistaa-lukon? @nykyinen-lukko)
           (virkista-nykyinen-lukko lukko-id)
-          #_(paivita-lukko lukko-id))))
-          ; Lukkoa itselleen odottava käyttäjä voisi päivittää lukon tiedot ja jos lukkoa ei ole, lukita näkymän itselleen.
-          ; Tällöin pitäisi kuitenkin päivittää näkymään uudet tiedot. Tämä vaatisi tiedon siitä, että lukko vapautui ja
-          ; näkymä voidaan päivittää.
+          ;; Jos käyttäjä odottaa toisen käyttäjän lukon vapautumista, voitaisiin
+          ;; lukkoa pollata ja sen vapautuessa lukita näkymä tälle käyttäjälle.
+          ;; Tällöin pitäisi kuitenkin päivittää näkymään uudet tiedot.
+          ;; Toistaiseksi hyväksytään, että käyttäjän pitää palata näkymään takaisin kun
+          ;; lukko on vapautunut ja uudet tiedot saatavilla.
     (log "[LUKKO] Ei nykyistä lukkoa, ei pollata")))
 
 (defn- aloita-pollaus []
