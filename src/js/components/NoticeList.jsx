@@ -2,10 +2,11 @@ import React from 'react';
 import Notice from './Notice.jsx';
 import request from 'superagent';
 import pubsub from 'pubsub-js';
+import {Events} from '../enums.js';
 
 var ListItem = React.createClass({
   onclick: function() {
-    pubsub.publish('noticeSelected', {id: this.props.notice.id, list: this.props.list});
+    pubsub.publish(Events.NOTICE, {id: this.props.notice.id, list: this.props.list});
   },
   render: function() {
     return <div onClick={this.onclick}>{this.props.notice.title}</div>;

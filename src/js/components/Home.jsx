@@ -3,6 +3,7 @@ import NoticeList from './NoticeList.jsx';
 import SingleNoticeView from './SingleNoticeView.jsx';
 import Nav from './Nav.jsx';
 import {Button, Colors} from 'react-foundation';
+import {Lists, Events} from '../enums.js';
 import pubsub from 'pubsub-js';
 
 export default React.createClass({
@@ -14,13 +15,15 @@ export default React.createClass({
 
   componentWillMount() {
 
-    this.pubsub_notice_token = pubsub.subscribe('noticeSelected', (action, selection) => {
+    this.pubsub_notice_token = pubsub.subscribe(Events.NOTICE, (action, selection) => {
       this.setState({ selection: selection });
     });
 
-    this.pubsub_nav_token = pubsub.subscribe('mainNavigation', (action, link) => {
-      console.log(action + " / " + link);
-      this.setState({ selection: null });
+    this.pubsub_nav_token = pubsub.subscribe(Events.NAV, (navEvent, data) => {
+      console.log(navEvent + " / " + data);
+      if (data.action === Events.HOME) {
+        this.setState({ selection: null });
+      }
     });
   },
 
@@ -30,7 +33,7 @@ export default React.createClass({
   },
 
   render() {
-    let {careNotices, maintenanceNotices, faqNotices} = this.props;
+    let {care, maintenance, faq} = this.props;
     let {selection} = this.state;
     let mainEl;
     let singleNoticeEl;
@@ -44,9 +47,9 @@ export default React.createClass({
       mainEl = (
         <div>
         <Button color={Colors.SUCCESS}>TESTSAVE</Button>
-        <NoticeList notices={careNotices} list='careNotices'/>
-        <NoticeList notices={maintenanceNotices} list='maintenanceNotices'/>
-        <NoticeList notices={faqNotices} list='faqNotices'/>
+        <NoticeList notices={care} list={Lists.CARE}/>
+        <NoticeList notices={maintenance} list={Lists.MAINTENANCE}/>
+        <NoticeList notices={faq} list={Lists.FAQ}/>
         </div>
       );
     }
