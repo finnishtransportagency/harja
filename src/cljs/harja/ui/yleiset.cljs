@@ -178,7 +178,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            {:bottom "calc(100% - 1px)"
             :top    "auto"})))
 
-(defn livi-pudotusvalikko [_ vaihtoehdot]
+(defn livi-pudotusvalikko
+  "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
+   format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
+  [_ vaihtoehdot]
   (let [auki? (atom false)
         avautumissuunta (atom :alas)
         max-korkeus (atom 0)
@@ -218,7 +221,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                               (swap! auki? not)
                             nil))
              :on-focus    on-focus
-             :on-key-down #(let [kc (.-keyCode %)]
+             :on-key-down #(let [kc (.-keyCode %)
+                                 vaihtoehdot (if (map? vaihtoehdot)
+                                               (mapv (fn [avain]
+                                                      (-> [avain (get vaihtoehdot avain)]))
+                                                    (keys vaihtoehdot))
+                                               vaihtoehdot)]
                             ;; keycode 9 on TAB, ei tehdä silloin mitään, jotta kenttien
                             ;; välillä liikkumista ei estetä
                             (when-not (= kc 9)
