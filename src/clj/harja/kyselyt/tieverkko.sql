@@ -4,8 +4,8 @@ INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, geometri
   (:osoite3, :tie, :ajorata, :osa, :tiepiiri, :tr_pituus, ST_GeomFromText(:the_geom) :: GEOMETRY);
 
 -- name: vie-tien-osan-ajorata!
-INSERT INTO tr_osan_ajorata (tie,osa,oikea,vasen)
-VALUES (:tie, :osa, ST_GeomFromText(:oikea), ST_GeomFromText(:vasen));
+INSERT INTO tr_osan_ajorata (tie,osa,ajorata,geom)
+VALUES (:tie, :osa, :ajorata, ST_GeomFromText(:geom));
 
 -- name: hae-tr-osoite-valille
 -- hakee tierekisteriosoitteen kahden pisteen välille
