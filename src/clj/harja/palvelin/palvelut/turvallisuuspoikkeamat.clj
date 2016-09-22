@@ -126,7 +126,8 @@
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
                 :kuvaus kuvaus
-                :vammat (konv/seq->array vammat)
+                :vammat (when vammat
+                          (name vammat))
                 :poissa sairauspoissaolopaivat
                 :sairaalassa sairaalavuorokaudet
                 :tyyppi (konv/seq->array tyyppi)
@@ -136,7 +137,8 @@
                 :toteuttaja toteuttaja
                 :tilaaja tilaaja
                 :sijainti sijainti
-                :vahingoittuneet_ruumiinosat (konv/seq->array vahingoittuneetruumiinosat)
+                :vahingoittuneet_ruumiinosat (when vahingoittuneetruumiinosat
+                                               (name vahingoittuneetruumiinosat))
                 :sairauspoissaolo_jatkuu sairauspoissaolojatkuu
                 :aiheutuneet_seuraukset seuraukset
                 :vaylamuoto (name vaylamuoto)

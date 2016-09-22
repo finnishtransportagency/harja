@@ -207,14 +207,7 @@
             vaaralliset-aineet-disablointi-fn (fn [valitut vaihtoehto]
                                                 (and
                                                   (= vaihtoehto :vaarallisten-aineiden-vuoto)
-                                                  (not (valitut :vaarallisten-aineiden-kuljetus))))
-            henkilovahinkojen-disablointi-fn (fn [valitut vaihtoehto]
-                                               (or (and
-                                                     (not= vaihtoehto :ei_tietoa)
-                                                     (valitut :ei_tietoa))
-                                                   (and (= vaihtoehto :ei_tietoa)
-                                                        (not (empty? valitut))
-                                                        (not (valitut :ei_tietoa)))))]
+                                                  (not (valitut :vaarallisten-aineiden-kuljetus))))]
         [:div
          [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
          (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
@@ -373,17 +366,15 @@
                 :nimi :vammat
                 :uusi-rivi? true
                 :palstoja 1
-                :tyyppi :checkbox-group
-                :disabloi henkilovahinkojen-disablointi-fn
-                :vaihtoehdot turpodomain/vammat-avaimet-jarjestyksessa
-                :vaihtoehto-nayta turpodomain/vammat}
+                :tyyppi :valinta
+                :valinnat turpodomain/vammat-avaimet-jarjestyksessa
+                :valinta-nayta #(or (turpodomain/vammat %) "- valitse -")}
                {:otsikko "Vahingoittuneet ruumiinosat"
                 :nimi :vahingoittuneetruumiinosat
                 :palstoja 1
-                :tyyppi :checkbox-group
-                :disabloi henkilovahinkojen-disablointi-fn
-                :vaihtoehdot turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
-                :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}))
+                :tyyppi :valinta
+                :valinnat turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
+                :valinta-nayta #(or (turpodomain/vahingoittunut-ruumiinosa %) "- valitse -")}))
            {:otsikko "Kommentit" :nimi :kommentit
             :tyyppi :komponentti
             :palstoja 2

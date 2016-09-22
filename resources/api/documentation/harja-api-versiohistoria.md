@@ -2,6 +2,8 @@
 <b>Julkaistu: 14.9.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 0.3.1. Julkaistu: 19.9.2016:
+    - Turvallisuuspoikkeaman kirjauksessa aiheutuneet vammat ja vahingoittuneet ruumiinosat kirjataan jatkossa yhtenä string-arvona.
 - Versionumero: 0.3.0. Julkaistu: 14.9.2016:
     - Päivietty aikataulun skeemaan uudet termit: alku -> aloitettu, loppu -> valmis.
 - Versionumero: 0.2.9. Julkaistu: 9.9.2016:
