@@ -20,6 +20,14 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.paallystys :as paallystys-q]))
 
+(defn- tarkista-kirjoitusoikeus [db urakka-id]
+  (let [urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
+    (case urakan-tyyppi
+      "paallystys"
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+      "paikkaus"
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id))))
+
 (defn tarkista-yllapitokohteen-urakka [db urakka-id yllapitokohde]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
@@ -163,6 +171,10 @@
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
+(defn- paivita-yllapitokohteen-kohdeosien-geometria [db yllapitokohde-id urakka-id]
+  (q/paivita-yllapitokohteen-kohdeosien-geometria<! db {:kohdeid yllapitokohde-id
+                                                        :urakka urakka-id}))
+
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
@@ -237,12 +249,11 @@
                                    :kaasuindeksi kaasuindeksi
                                    :indeksin_kuvaus indeksin-kuvaus
                                    :id id
-                                   :urakka urakka-id}))))
+                                   :urakka urakka-id})
+        (paivita-yllapitokohteen-kohdeosien-geometria db id urakka-id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
-  ;; FIXME: pitäisikö tarkistaa vain jompi kumpi
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (tarkista-kirjoitusoikeus db urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
