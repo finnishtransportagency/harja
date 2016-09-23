@@ -47,12 +47,11 @@
                               :kaasuindeksi 123})
 
 (def yllapitokohdeosa-testidata {:nimi "Testiosa123456"
-                                 :tr_numero 1234
-                                 :tr_alkuosa 3
-                                 :tr_alkuetaisyys 1
-                                 :tr_loppuosa 123
-                                 :tr_loppuetaisyys 1
-                                 :sijainti {:type :multiline :lines [{:type :line :points [[1 2] [3 4]]}]}
+                                 :tr-numero 20
+                                 :tr-alkuosa 1
+                                 :tr-alkuetaisyys 1
+                                 :tr-loppuosa 2
+                                 :tr-loppuetaisyys 2
                                  :kvl 4
                                  :nykyinen_paallyste 2
                                  :toimenpide "Ei tehdä mitään"})
@@ -155,6 +154,7 @@
                                                                :yllapitokohde-id yllapitokohde-id})]
         (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
         (is (not (nil? kohdeosat-kannassa)))
+        (is (every? :sijainti kohdeosat-kannassa) "Geometria muodostettiin")
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
         (u (str "DELETE FROM yllapitokohdeosa WHERE nimi = 'Testiosa123456';"))))))
 
