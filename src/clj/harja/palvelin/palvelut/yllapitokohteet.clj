@@ -272,47 +272,27 @@
                                :tr_loppuetaisyys tr-loppuetaisyys
                                :tr_ajorata tr-ajorata
                                :tr_kaista tr-kaista
-                               :toimenpide toimenpide
-                               :sijainti (when sijainti
-                                           (geo/geometry (geo/clj->pg sijainti)))})))
+                               :toimenpide toimenpide})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
                                          tr-kaista toimenpide sijainti] :as kohdeosa}]
-  (do (log/debug "Päivitetään ylläpitokohdeosa")
-      (q/paivita-yllapitokohdeosa<! db
-                                    {:nimi nimi
-                                     :tunnus tunnus
-                                     :tr_numero tr-numero
-                                     :tr_alkuosa tr-alkuosa
-                                     :tr_alkuetaisyys tr-alkuetaisyys
-                                     :tr_loppuosa tr-loppuosa
-                                     :tr_loppuetaisyys tr-loppuetaisyys
-                                     :tr_ajorata tr-ajorata
-                                     :tr_kaista tr-kaista
-                                     :toimenpide toimenpide
-                                     :sijainti (when-not (empty? sijainti)
-                                                 (geo/geometry (geo/clj->pg sijainti)))
-                                     :id id
-                                     :urakka urakka-id})))
 
-(defn tallenna-yllapitokohdeosa
-  "Tallentaa yksittäisen ylläpitokohdeosan kantaan.
-   Tarkistaa, tuleeko kohdeosa päivittää, poistaa vai luoda uutena.
-   Palauttaa päivitetyn kohdeosan (tai nil jos kohdeosa poistettiin"
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osa]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
-  (jdbc/with-db-transaction [c db]
-    (yha/lukitse-urakan-yha-sidonta db urakka-id)
-    (log/debug "Tallennetaan ylläpitokohdeosa. Ylläpitokohde-id: " yllapitokohde-id)
-    (log/debug (str "Käsitellään saapunut ylläpitokohdeosa"))
-    (let [uusi-osa (if (and (:id osa) (not (neg? (:id osa))))
-                     (paivita-yllapitokohdeosa c user urakka-id osa)
-                     (luo-uusi-yllapitokohdeosa c user yllapitokohde-id osa))]
-      (yha/paivita-yllapitourakan-geometriat c urakka-id)
-      uusi-osa)))
+  (log/debug "Päivitetään ylläpitokohdeosa")
+  (q/paivita-yllapitokohdeosa<! db
+                                {:nimi nimi
+                                 :tunnus tunnus
+                                 :tr_numero tr-numero
+                                 :tr_alkuosa tr-alkuosa
+                                 :tr_alkuetaisyys tr-alkuetaisyys
+                                 :tr_loppuosa tr-loppuosa
+                                 :tr_loppuetaisyys tr-loppuetaisyys
+                                 :tr_ajorata tr-ajorata
+                                 :tr_kaista tr-kaista
+                                 :toimenpide toimenpide
+                                 :id id
+                                 :urakka urakka-id}))
 
 (defn tallenna-yllapitokohdeosat
   "Tallentaa ylläpitokohdeosat kantaan.
