@@ -20,7 +20,7 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.paallystys :as paallystys-q]))
 
-(defn- tarkista-kirjoitusoikeus [db urakka-id]
+(defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
     (case urakan-tyyppi
       "paallystys"
@@ -28,7 +28,15 @@
       "paikkaus"
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id))))
 
-(defn tarkista-yllapitokohteen-urakka [db urakka-id yllapitokohde]
+(defn- tarkista-urakkatyypin-mukainen-lukuoikeus [db user urakka-id]
+  (let [urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))]
+    (case urakan-tyyppi
+      "paallystys"
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+      "paikkaus"
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id))))
+
+(defn- vaadi-yllapitokohde-kuuluu-urakkaan [db urakka-id yllapitokohde]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
   (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde})))
@@ -42,8 +50,7 @@
                                       ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
     (let [vastaus (into []
@@ -84,8 +91,7 @@
       vastaus)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
-  (or (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))
+  (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
   (jdbc/with-db-transaction [db db]
     (let [vastaus (q/hae-urakan-yllapitokohteet-lomakkeelle db {:urakka urakka-id
@@ -95,8 +101,7 @@
 
 (defn hae-urakan-yllapitokohdeosat [db user {:keys [urakka-id sopimus-id yllapitokohde-id]}]
   (log/debug "Haetaan urakan ylläpitokohdeosat. Urakka-id " urakka-id ", sopimus-id: " sopimus-id ", yllapitokohde-id: " yllapitokohde-id)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (let [vastaus (into []
                       paallystys-q/kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:urakka urakka-id
@@ -253,7 +258,7 @@
         (paivita-yllapitokohteen-kohdeosien-geometria db id urakka-id))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
-  (tarkista-kirjoitusoikeus db urakka-id)
+  (tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
     (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
@@ -310,8 +315,7 @@
    Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id)
+  (tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (jdbc/with-db-transaction [c db]
     (yha/lukitse-urakan-yha-sidonta db urakka-id)
 
