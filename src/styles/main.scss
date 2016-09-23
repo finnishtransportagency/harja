@@ -1,41 +1,56 @@
 @import "../../node_modules/foundation-sites/scss/foundation";
-
-@include foundation-flex-grid;
-@include foundation-flex-classes;
 @include foundation-everything;
 
-$light-blue: #1db8e0;
-$blue: #38a8d1;
-$dark-blue: #0088ce;
-$light-orange: #f9a94d;
-$light-green: #abc742;
-$grey: #444;
-$light-grey: #c8c8c8;
+// Main colors
+$blue-darker: #0046ad;
+$blue: #0088ce;
+$blue-light: #3db7e4;
+$blue-lighter: #8dc8e8;
+$blue-cyan: #00b0ca;
 
+// Greys
+$grey-darker: #444444;
+$grey-dark: #4b4b4b;
+$grey: #97999b;
+$grey-light: #c8c8c8;
+$grey-lighter: #f1f1f1;
 
-$primary-color: green;
+// Supplementary colors
+$green: #9eb83d;
+$green-light: #abc742;
+$cyan: #35b5b3;
+$orange: #f79421;
+$orange-ligh: #f9a94d;
+$purple: #a678b4;
 
-.menu-logo {
+.harja-menu-logo {
   height: 2em;
 }
 
-.header-logo {
+.harja-header-logo {
   height: 3em;
 }
 
-.header {
+.harja-header {
   background-color: white;
   color: black;
 }
 
-h1 {
-  color: $primary-color;
+.harja-title-bar {
+  background-color: $blue;
 }
 
-li.task {
-  list-style-type: none;
+.harja-menu {
+  background-color: $blue-light;
+  padding: 0px;
+}
 
-  label {
-    padding: 0 10px;
+.harja-menu li {
+  .button {
+    background-color: $blue-light;
+  }
+  .button:hover,
+  .button:focus {
+    background-color: $blue;
   }
 }

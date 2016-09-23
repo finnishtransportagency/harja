@@ -23,10 +23,10 @@ export default React.createClass({
 
     return (
       <div>
-        <div className="title-bar header show-for-medium">
+        <div className="title-bar harja-header show-for-medium">
           <div className="top-bar-left">
-            <img className="header-logo" src="styles/images/livi_logo_blue.png" alt="liikennevirasto logo" />
-            <img className="header-logo" src="styles/images/harja_logo_text.png" alt="harja logo" srcSet="styles/images/harja_logo_text.svg" />
+            <img className="harja-header-logo" src="styles/images/livi_logo_blue.png" alt="liikennevirasto logo" />
+            <img className="harja-header-logo" src="styles/images/harja_logo_text.png" alt="harja logo" srcSet="styles/images/harja_logo_text.svg" />
           </div>
           <div className="top-bar-right">
             <div className="title-bar-title">Liikenneviraston Harja-projekti</div>
@@ -35,14 +35,14 @@ export default React.createClass({
 
         <div className="title-bar" data-responsive-toggle="top-menu" data-hide-for="medium">
           <div className="top-bar-left">
-            <img className="menu-logo" src="styles/images/harja_logo.png" alt="harja logo" />
+            <img className="harja-menu-logo" src="styles/images/harja_logo.png" alt="harja logo" />
           </div>
           <div className="top-bar-right">
             <button className="menu-icon" type="button" data-toggle></button>
           </div>
         </div>
 
-        <div className="top-bar" id="top-menu">
+        <div className="harja-menu top-bar" id="top-menu">
           <div className="top-bar-left">
             <ul className="vertical medium-horizontal menu" data-responsive-menu="medium-dropdown">
               {
