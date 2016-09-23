@@ -1,5 +1,7 @@
 @import "../../node_modules/foundation-sites/scss/foundation";
-@include foundation-everything;
+@include foundation-everything(true);
+@include foundation-flex-grid;
+@include foundation-flex-classes;
 
 // Main colors
 $blue-darker: #0046ad;
@@ -23,17 +25,30 @@ $orange: #f79421;
 $orange-ligh: #f9a94d;
 $purple: #a678b4;
 
+$left-pad: 10%;
+$right-pad: 10%;
+
 .harja-menu-logo {
   height: 2em;
 }
 
 .harja-header-logo {
-  height: 3em;
+  height: 2em;
+  margin-right: 1em;
+}
+
+.livi-header-logo {
+  height: 4em;
+  margin-right: 1em;
 }
 
 .harja-header {
   background-color: white;
   color: black;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  padding-left: $left-pad;
+  padding-right: $right-pad;
 }
 
 .harja-title-bar {
@@ -42,7 +57,24 @@ $purple: #a678b4;
 
 .harja-menu {
   background-color: $blue-light;
-  padding: 0px;
+  ul {
+    background-color: $blue-light;
+  }
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: $left-pad;
+  padding-right: $right-pad;
+  @include breakpoint(small only) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .menu.vertical {
+    li {
+      a {
+        justify-content: center;
+      }
+    }
+  }
 }
 
 .harja-menu li {
