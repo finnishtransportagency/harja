@@ -128,7 +128,7 @@
       (is (= maara-ennen-testia maara-testin-jalkeen))
       (is (= kohteet-kannassa nykyiset-kohteet)))))
 
-(deftest tallenna-paallystyskohdeosa-kantaan
+(deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id yllapitokohde-id-jolla-on-paallystysilmoitus]
     (is (not (nil? yllapitokohde-id)))
 
