@@ -112,7 +112,7 @@
         (do
           (log/warn "Maksuerän (numero: " numero ") lukitus epäonnistui.")
           {:virhe :maksueran-lukitseminen-epaonnistui}))
-      (catch Exception e
+      (catch Throwable e
         (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
         (merkitse-maksueralle-lahetysvirhe db numero)
         (integraatioloki/kirjaa-epaonnistunut-integraatio

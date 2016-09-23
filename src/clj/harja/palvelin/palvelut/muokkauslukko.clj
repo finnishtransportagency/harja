@@ -59,7 +59,7 @@
 (defn lukitse
   "Yrittää luoda uuden lukon annetulla id:llä.
   Jos onnistuu, palauttaa lukon tiedot
-  Jos epäonnistuu, palauttaa nil"
+  Jos epäonnistuu, palauttaa :ei-lukittu"
   [db user {:keys [id]}]
   (jdbc/with-db-transaction [db db]
     (log/debug "Yritetään lukita " id)
@@ -77,7 +77,7 @@
               (vapauta-lukko db (:id lukko))
               (q/luo-lukko<! db id (:id user)))
             (do (log/debug "Ei voida lukita " id " koska on jo lukittu!")
-                nil)))))))
+                :ei-lukittu)))))))
 
 (defrecord Muokkauslukko []
   component/Lifecycle
