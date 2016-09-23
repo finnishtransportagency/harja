@@ -92,6 +92,7 @@
                                            +kayttaja-jvh+ {:urakka-id urakka-id
                                                            :sopimus-id sopimus-id})]
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
+      (is (every? #(pos? (:pituus %)) kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
