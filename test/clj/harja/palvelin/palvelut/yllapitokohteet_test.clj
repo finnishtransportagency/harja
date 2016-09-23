@@ -62,6 +62,7 @@
                                                            JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
                                                            WHERE urakka = " (hae-muhoksen-paallystysurakan-id) " AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
 
+
 (deftest paallystyskohteet-haettu-oikein
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-yllapitokohteet +kayttaja-jvh+
@@ -76,6 +77,7 @@
 (deftest tallenna-paallystyskohde-kantaan
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+        urakan-geometria-ennen-muutosta (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))]
@@ -90,8 +92,10 @@
           kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :urakan-yllapitokohteet
                                            +kayttaja-jvh+ {:urakka-id urakka-id
-                                                           :sopimus-id sopimus-id})]
+                                                           :sopimus-id sopimus-id})
+          urakan-geometria-muutoksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
+      (is (not= urakan-geometria-ennen-muutosta urakan-geometria-muutoksen-jalkeen "Urakan geometria päivittyi"))
       (is (every? #(pos? (:pituus %)) kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
@@ -134,6 +138,7 @@
 
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+          urakan-geometria-ennen-muutosta (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))
           maara-ennen-lisaysta (ffirst (q
                                          (str "SELECT count(*) FROM yllapitokohdeosa
                                             LEFT JOIN yllapitokohde ON yllapitokohde.id = yllapitokohdeosa.yllapitokohde
@@ -152,10 +157,12 @@
                                                :urakan-yllapitokohdeosat
                                                +kayttaja-jvh+ {:urakka-id urakka-id
                                                                :sopimus-id sopimus-id
-                                                               :yllapitokohde-id yllapitokohde-id})]
+                                                               :yllapitokohde-id yllapitokohde-id})
+            urakan-geometria-muutoksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
         (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
         (is (not (nil? kohdeosat-kannassa)))
         (is (every? :sijainti kohdeosat-kannassa) "Geometria muodostettiin")
+        (is (not= urakan-geometria-ennen-muutosta urakan-geometria-muutoksen-jalkeen "Urakan geometria päivittyi"))
         (is (match (first kohdeosat-kannassa)
                    {:tr-kaista nil
                     :sijainti _
