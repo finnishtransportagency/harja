@@ -445,13 +445,13 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
        (:urakkatyyppi = 'valaistus' AND
         exists(SELECT id
                FROM valaistusurakka vu
-               WHERE vu.alueurakkanro = u.alueurakkanro AND
+               WHERE vu.valaistusurakkanro = u.urakkanro AND
                      st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
        OR
        ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
         exists(SELECT id
                FROM paallystyspalvelusopimus pps
-               WHERE pps.alueurakkanro = u.alueurakkanro AND
+               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
                      st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
 
 ORDER BY id ASC;
@@ -525,8 +525,8 @@ FROM valaistusurakka
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-valaistusurakka<!
-INSERT INTO valaistusurakka (alueurakkanro, alue)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
+INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka);
 
 
 -- name: tuhoa-paallystyspalvelusopimusdata!
@@ -538,5 +538,5 @@ FROM paallystyspalvelusopimus
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-paallystyspalvelusopimus<!
-INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
+INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);

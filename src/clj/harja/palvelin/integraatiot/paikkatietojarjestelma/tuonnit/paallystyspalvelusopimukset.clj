@@ -6,14 +6,16 @@
             [harja.kyselyt.urakat :as u]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
-(defn tuo-urakka [db alueurakkanro geometria]
-  (if alueurakkanro
+(defn tuo-urakka [db alueurakkanro geometria paallystyssopimusnro]
+  (if paallystyssopimusnro
     (if geometria
-     (let [alueurakkanro (str alueurakkanro)
-           geometria (.toString geometria)]
-       (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria))
-     (log/warn (format "Palvelusopimusta (alueurakkanro: %s ei voida tuoda geometriaa, sillä se on tyhjä" alueurakkanro)))
-    (log/warn "Geometriaa ei voida tuoda ilman alueurakkanumeroa")))
+      (let [alueurakkanro (str alueurakkanro)
+            paallystyssopimusnro (str (int (Double/parseDouble paallystyssopimusnro)))
+            geometria (.toString geometria)]
+        (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria paallystyssopimusnro))
+      (log/warn (format "Palvelusopimusta (paallystyssopimusnro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
+                        paallystyssopimusnro)))
+    (log/warn "Geometriaa ei voida tuoda ilman päällystyssopimusnumeroa")))
 
 (defn vie-urakat-kantaan [db shapefile]
   (if shapefile
@@ -23,6 +25,6 @@
         (u/tuhoa-paallystyspalvelusopimusdata! db)
         (let [urakat (shapefile/tuo shapefile)]
           (doseq [urakka urakat]
-            (tuo-urakka db (:ualue urakka) (:the_geom urakka)))))
+            (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:paalurakka urakka))))))
       (log/debug "Päällystyksen palvelusopimusten tuonti kantaan valmis."))
     (log/debug "Päällystyksen palvelusopimusten tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
