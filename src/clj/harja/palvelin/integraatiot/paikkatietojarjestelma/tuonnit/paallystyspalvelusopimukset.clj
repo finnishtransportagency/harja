@@ -10,7 +10,7 @@
   (if paallystyssopimusnro
     (if geometria
       (let [alueurakkanro (str alueurakkanro)
-            paallystyssopimusnro (str (int (. Double parseDouble paallystyssopimusnro)))
+            paallystyssopimusnro (str (int (Double/parseDouble paallystyssopimusnro)))
             geometria (.toString geometria)]
         (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria paallystyssopimusnro))
       (log/warn (format "Palvelusopimusta (paallystyssopimusnro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
