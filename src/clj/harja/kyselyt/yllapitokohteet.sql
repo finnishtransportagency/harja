@@ -308,22 +308,7 @@ SET
                                                          CAST(:tr_alkuosa AS INTEGER),
                                                          CAST(:tr_alkuetaisyys AS INTEGER),
                                                          CAST(:tr_loppuosa AS INTEGER),
-                                                         CAST(:tr_loppuetaisyys AS INTEGER)))
-
--- name: paivita-yllapitokohteen-kohdeosien-geometria<!
-UPDATE yllapitokohdeosa
-SET
-  sijainti = (SELECT tierekisteriosoitteelle_viiva AS geom
-              FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
-                                                 CAST(:tr_alkuosa AS INTEGER),
-                                                 CAST(:tr_alkuetaisyys AS INTEGER),
-                                                 CAST(:tr_loppuosa AS INTEGER),
-                                                 CAST(:tr_loppuetaisyys AS INTEGER)))
-
-WHERE yllapitokohde = :kohdeid
-      AND yllapitokohde IN (SELECT id
-                            FROM yllapitokohde
-                            WHERE urakka = :urakka);
+                                                         CAST(:tr_loppuetaisyys AS INTEGER)));
 
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan

@@ -177,10 +177,6 @@
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
-(defn- paivita-yllapitokohteen-kohdeosien-geometria [db yllapitokohde-id urakka-id]
-  (q/paivita-yllapitokohteen-kohdeosien-geometria<! db {:kohdeid yllapitokohde-id
-                                                        :urakka urakka-id}))
-
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
@@ -255,8 +251,7 @@
                                    :kaasuindeksi kaasuindeksi
                                    :indeksin_kuvaus indeksin-kuvaus
                                    :id id
-                                   :urakka urakka-id})
-        (paivita-yllapitokohteen-kohdeosien-geometria db id urakka-id))))
+                                   :urakka urakka-id}))))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id kohteet]}]
   (tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)

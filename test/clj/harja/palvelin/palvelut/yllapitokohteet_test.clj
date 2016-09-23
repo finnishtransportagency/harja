@@ -43,7 +43,6 @@
 (def yllapitokohde-testidata {:kohdenumero 999
                               :nimi "Testiramppi4564ddf"
                               :sopimuksen_mukaiset_tyot 400
-                              :lisatyo false
                               :bitumi_indeksi 123
                               :kaasuindeksi 123})
 
