@@ -37,6 +37,7 @@ SELECT
   valmispvm_kohde                 AS "valmispvm-kohde",
   valmispvm_paallystys            AS "valmispvm-paallystys",
   takuupvm,
+  ypk.id                          AS "yllapitokohde-id",
   ypk.nimi                        AS kohdenimi,
   ypk.kohdenumero,
   ypk.sopimuksen_mukaiset_tyot    AS "sopimuksen-mukaiset-tyot",
