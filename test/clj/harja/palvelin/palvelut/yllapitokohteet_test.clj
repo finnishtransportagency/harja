@@ -66,7 +66,7 @@
 (deftest paallystyskohteet-haettu-oikein
   (let [res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-yllapitokohteet +kayttaja-jvh+
-                            {:urakka-id  @muhoksen-paallystysurakan-id
+                            {:urakka-id @muhoksen-paallystysurakan-id
                              :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
@@ -82,16 +82,16 @@
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))]
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id  urakka-id
-                                                                :sopimus-id sopimus-id
-                                                                :kohteet    [yllapitokohde-testidata]})
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :sopimus-id sopimus-id
+                                                              :kohteet [yllapitokohde-testidata]})
     (let [maara-lisayksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
           kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :urakan-yllapitokohteet
-                                         +kayttaja-jvh+ {:urakka-id  urakka-id
-                                                         :sopimus-id sopimus-id})]
+                                           :urakan-yllapitokohteet
+                                           +kayttaja-jvh+ {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id})]
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
@@ -101,18 +101,18 @@
   (let [urakka-id @muhoksen-paallystysurakan-id
         sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
         maara-ennen-testia (ffirst (q
-                                       (str "SELECT count(*) FROM yllapitokohde
+                                     (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         nykyiset-kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :urakan-yllapitokohteet +kayttaja-jvh+
-                                         {:urakka-id  @muhoksen-paallystysurakan-id
+                                         {:urakka-id @muhoksen-paallystysurakan-id
                                           :sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id})
         kohde-jolla-ilmoitus (first (filter :paallystysilmoitus-id nykyiset-kohteet))
         paivitetyt-kohteet (map
                              (fn [kohde] (if (= (:id kohde) (:id kohde-jolla-ilmoitus))
                                            (assoc kohde :poistettu true)
                                            kohde))
-                                  nykyiset-kohteet)]
+                             nykyiset-kohteet)]
 
     (kutsu-palvelua (:http-palvelin jarjestelma)
                     :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
@@ -140,19 +140,19 @@
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))]
 
       (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-yllapitokohdeosat +kayttaja-jvh+ {:urakka-id          urakka-id
-                                                                   :sopimus-id         sopimus-id
-                                                                   :yllapitokohde-id yllapitokohde-id
-                                                                   :osat [yllapitokohdeosa-testidata]})
+                      :tallenna-yllapitokohdeosat +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                  :sopimus-id sopimus-id
+                                                                  :yllapitokohde-id yllapitokohde-id
+                                                                  :osat [yllapitokohdeosa-testidata]})
       (let [maara-lisayksen-jalkeen (ffirst (q
                                               (str "SELECT count(*) FROM yllapitokohdeosa
                                             LEFT JOIN yllapitokohde ON yllapitokohde.id = yllapitokohdeosa.yllapitokohde
                                             AND urakka = " urakka-id " AND sopimus = " sopimus-id ";")))
             kohdeosat-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                        :urakan-yllapitokohdeosat
-                                                        +kayttaja-jvh+ {:urakka-id          urakka-id
-                                                                        :sopimus-id         sopimus-id
-                                                                        :yllapitokohde-id yllapitokohde-id})]
+                                               :urakan-yllapitokohdeosat
+                                               +kayttaja-jvh+ {:urakka-id urakka-id
+                                                               :sopimus-id sopimus-id
+                                                               :yllapitokohde-id yllapitokohde-id})]
         (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
         (is (not (nil? kohdeosat-kannassa)))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
@@ -164,34 +164,34 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-        kohteet [{:kohdenumero                 "L03", :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu-muokkaaja 2, :urakka 5,
-                  :aikataulu-kohde-valmis      (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
-                  :valmis-tiemerkintaan        (pvm/->pvm-aika "23.5.2016 12:00"), :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00"),
-                  :id                          1, :sopimus 8, :aikataulu-muokattu (pvm/->pvm-aika "29.5.2016 12:00"), :aikataulu-tiemerkinta-alku nil,
+        kohteet [{:kohdenumero "L03", :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu-muokkaaja 2, :urakka 5,
+                  :aikataulu-kohde-valmis (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
+                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2016 12:00"), :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00"),
+                  :id 1, :sopimus 8, :aikataulu-muokattu (pvm/->pvm-aika "29.5.2016 12:00"), :aikataulu-tiemerkinta-alku nil,
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2016")}]
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-yllapitokohteiden-aikataulu +kayttaja-jvh+ {:urakka-id  urakka-id
-                                                                                        :sopimus-id sopimus-id
-                                                                                        :kohteet    kohteet})
+                                :tallenna-yllapitokohteiden-aikataulu +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                      :sopimus-id sopimus-id
+                                                                                      :kohteet kohteet})
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
         vastaus-leppajarven-ramppi (first (filter #(= "L03" (:kohdenumero %)) vastaus))
-        odotettu {:aikataulu-kohde-valmis       (pvm/->pvm "29.5.2016")
-                  :aikataulu-muokkaaja         2
-                  :aikataulu-paallystys-alku   (pvm/->pvm-aika "19.5.2016 12:00")
-                  :aikataulu-paallystys-loppu   (pvm/->pvm-aika "20.5.2016 12:00")
-                  :aikataulu-tiemerkinta-alku  nil
+        odotettu {:aikataulu-kohde-valmis (pvm/->pvm "29.5.2016")
+                  :aikataulu-muokkaaja 2
+                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00")
+                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00")
+                  :aikataulu-tiemerkinta-alku nil
                   :aikataulu-tiemerkinta-loppu nil
-                  :id                          1
-                  :kohdenumero                 "L03"
-                  :nimi                        "Leppäjärven ramppi"
-                  :sopimus                     8
-                  :urakka                      5
-                  :valmis-tiemerkintaan       (pvm/->pvm-aika "23.5.2016 12:00")}]
+                  :id 1
+                  :kohdenumero "L03"
+                  :nimi "Leppäjärven ramppi"
+                  :sopimus 8
+                  :urakka 5
+                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2016 12:00")}]
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
-    (is (= (:aikataulu-paallystys-alku odotettu) (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-paallystys-alku")
-    (is (= (:aikataulu-paallystys-loppu odotettu) (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-paallystys-loppu")
-    (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-tiemerkinta-alku")
-    (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
-    (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi) ) "päällystyskohteen :aikataulu-kohde-valmis")))
+    (is (= (:aikataulu-paallystys-alku odotettu) (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-alku")
+    (is (= (:aikataulu-paallystys-loppu odotettu) (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-loppu")
+    (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-alku")
+    (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
+    (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-kohde-valmis")))
