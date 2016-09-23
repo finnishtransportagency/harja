@@ -4039,8 +4039,15 @@ table.hover tr:nth-of-type(even):hover {
 .clearfix::after {
   clear: both; }
 
-.harja-logo {
+.menu-logo {
   height: 2em; }
+
+.header-logo {
+  height: 3em; }
+
+.header {
+  background-color: white;
+  color: black; }
 
 h1 {
   color: green; }
