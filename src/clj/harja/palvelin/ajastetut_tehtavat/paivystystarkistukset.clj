@@ -131,7 +131,7 @@
        (lukot/yrita-ajaa-lukon-kanssa
          db
          "paivystystarkistukset"
-         (paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1))))))))
+         #(paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1))))))))
 
 (defrecord Paivystystarkistukset [asetukset]
   component/Lifecycle
