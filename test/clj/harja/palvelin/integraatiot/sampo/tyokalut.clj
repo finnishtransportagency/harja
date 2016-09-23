@@ -30,8 +30,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"TESTIHANKE\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\"
-        vv_alueurakkanro=\"TH-123\">
+        financialDepartmentHash=\"KP981303\">
         <documentLinks/>
       </Project>
     </Sampo2harja>")
@@ -42,7 +41,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"muho1\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\" vv_alueurakkanro=\"TH-123\">>
+        financialDepartmentHash=\"KP981303\">
         <documentLinks/>
       </Project>
     </Sampo2harja>")
@@ -53,7 +52,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"tiem1\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\" vv_alueurakkanro=\"TH-123\">>
+        financialDepartmentHash=\"KP981303\">
         <documentLinks/>
       </Project>
     </Sampo2harja>")
@@ -64,7 +63,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"valai1\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\" vv_alueurakkanro=\"TH-123\">>
+        financialDepartmentHash=\"KP981303\">
         <documentLinks/>
       </Project>
     </Sampo2harja>")
