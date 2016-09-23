@@ -201,3 +201,30 @@ BEGIN
     ORDER BY tie,osa;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Hakee annetuille pisteille (geometrycollection) viivan jokaiselle
+-- pistevälille. Palauttaa jokaiselle välille alkupisteen, loppupisteen
+-- ja tieverkolle projisoidun geometrian. Jos projisoitua geometriaa ei
+-- löydy, palautetaan NULL.
+CREATE OR REPLACE FUNCTION tieviivat_pisteille(
+  pisteet geometry,
+  threshold INTEGER) RETURNS SETOF RECORD AS $$
+DECLARE
+  alku geometry;
+  loppu geometry;
+  i INTEGER;
+  pisteita INTEGER;
+BEGIN
+  i := 1;
+  pisteita := ST_NumGeometries(pisteet);
+  WHILE i < pisteita LOOP
+    alku := ST_GeometryN(pisteet, i);
+    loppu := ST_GeometryN(pisteet, i+1);
+    --RAISE NOTICE 'alku: %, loppu: %', st_astext(alku), st_astext(loppu);
+    RETURN NEXT (alku, loppu,
+    	   	 (SELECT ytp.geometria
+	            FROM yrita_tierekisteriosoite_pisteille2(alku, loppu, threshold) ytp));
+    i := i + 1;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
