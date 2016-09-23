@@ -1,4 +1,4 @@
-(ns harja.palvelin.ajastetut-tehtavat.paivystajatarkistukset-test
+(ns harja.palvelin.ajastetut-tehtavat.paivystystarkistukset-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
