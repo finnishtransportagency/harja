@@ -70,9 +70,9 @@ SELECT
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   u.takuu_loppupvm,
   (SELECT array_agg(concat((CASE WHEN paasopimus IS NULL
-                            THEN '*'
-			    ELSE '' END),
-                            id, '=', sampoid))
+    THEN '*'
+                            ELSE '' END),
+                           id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
   ST_Simplify(au.alue, 50) AS alueurakan_alue
@@ -83,11 +83,11 @@ FROM urakka u
   LEFT JOIN alueurakka au ON h.alueurakkanro = au.alueurakkanro
   LEFT JOIN yhatiedot yt ON u.id = yt.urakka
 WHERE hallintayksikko = :hallintayksikko
-  AND (u.id IN (:sallitut_urakat)
-       OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
-            'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
-           OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
-               :kayttajan_org_id = urk.id)));
+      AND (u.id IN (:sallitut_urakat)
+           OR (('hallintayksikko' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi OR
+                'liikennevirasto' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi)
+               OR ('urakoitsija' :: organisaatiotyyppi = :kayttajan_org_tyyppi :: organisaatiotyyppi AND
+                   :kayttajan_org_id = urk.id)));
 
 -- name: hae-urakan-organisaatio
 -- Hakee urakan organisaation urakka-id:llä.
@@ -355,16 +355,16 @@ SELECT
   yt.kohdeluettelo_paivitetty AS yha_kohdeluettelo_paivitetty,
   yt.sidonta_lukittu          AS yha_sidonta_lukittu,
   (SELECT EXISTS(SELECT id
-                     FROM paallystysilmoitus
-                     WHERE paallystyskohde IN (SELECT id
-                                               FROM yllapitokohde
-                                               WHERE urakka = u.id)))
+                 FROM paallystysilmoitus
+                 WHERE paallystyskohde IN (SELECT id
+                                           FROM yllapitokohde
+                                           WHERE urakka = u.id)))
   OR
   (SELECT EXISTS(SELECT id
-                     FROM paikkausilmoitus
-                     WHERE paikkauskohde IN (SELECT id
-                                             FROM yllapitokohde
-                                             WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
+                 FROM paikkausilmoitus
+                 WHERE paikkauskohde IN (SELECT id
+                                         FROM yllapitokohde
+                                         WHERE urakka = u.id))) as sisaltaa_ilmoituksia,
   (SELECT array_agg(concat(id, '=', sampoid))
    FROM sopimus s
    WHERE urakka = u.id)    AS sopimukset,
@@ -508,13 +508,13 @@ FROM urakka where sampoid = :sampoid;
 
 -- name: aseta-takuun-loppupvm!
 UPDATE urakka
-   SET takuu_loppupvm = :loppupvm
- WHERE id = :urakka
+SET takuu_loppupvm = :loppupvm
+WHERE id = :urakka
 
 -- name: aseta-urakan-indeksi!
 UPDATE urakka
-   SET indeksi = :indeksi
- WHERE id = :urakka
+SET indeksi = :indeksi
+WHERE id = :urakka
 
 -- name: tuhoa-valaistusurakkadata!
 DELETE FROM valaistusurakka;
