@@ -3,7 +3,6 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.sopimukset :as sopimukset]
-            [harja.kyselyt.hankkeet :as hankkeet]
             [harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi :as urakkatyyppi]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sanoma]
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet]
@@ -14,8 +13,6 @@
             [harja.palvelin.integraatiot.sampo.kasittely.valitavoitteet :as valitavoitteet]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]]))
-
-
 
 (defn pudota-etunollat [alueurakkanumero]
   (str/replace alueurakkanumero #"^0+" ""))
@@ -67,7 +64,7 @@
   ;; Samposta ei tuoda paikkausurakoita
   (some? (#{"paallystys" "tiemerkinta" "valaistus"} urakkatyyppi)))
 
-(defn- luo-yllapidon-toimenpiteet [db {:keys [urakka-id urakkatyyppi alkupvm loppupvm] :as urakan-tiedot}]
+(defn- luo-yllapidon-toimenpiteet [db {:keys [urakka-id urakkatyyppi alkupvm loppupvm]}]
   (when (yllapito-urakka? urakkatyyppi)
     (log/debug "Luodaan " urakkatyyppi "-urakalle toimenpideinstanssi")
     (let [yllapidon-3-tason-toimenpidekoodit {"paallystys" "PAAL_YKSHINT"
@@ -85,8 +82,8 @@
   (when (= urakkatyyppi "paallystys")
     "kokonaisurakka"))
 
-(defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id
-                                   yhteyshenkilo-sampo-id ely-hash]}]
+(defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
+                                   ely-hash]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
     (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro alueurakkanro)
@@ -97,7 +94,10 @@
           ely-id (:id (first (organisaatiot/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
           urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
                                      sopimustyyppi ely-id)]
-      (log/debug "Käsiteltävän urakan id on:" urakka-id)
+      (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
+                         urakka-id
+                         urakkatyyppi
+                         alueurakkanro))
       (urakat/paivita-hankkeen-tiedot-urakalle! db hanke-sampo-id)
       (paivita-yhteyshenkilo db yhteyshenkilo-sampo-id urakka-id)
       (paivita-sopimukset db sampo-id)
