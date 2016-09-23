@@ -1,9 +1,9 @@
--- Poistetaan nämä roolit
-DELETE FROM yhteyshenkilo_urakka
-WHERE rooli = 'Kunnossapitopäällikkö'
-      OR rooli = 'Sillanvalvoja'
-      OR rooli = 'Kelikeskus'
-      OR rooli = 'Tieliikennekeskus';
+-- Poistetaan muut kuin nämä roolit
+SELECT *  FROM yhteyshenkilo_urakka
+WHERE rooli != 'Kunnossapitopäällikkö'
+      OR rooli != 'Sillanvalvoja'
+      OR rooli != 'Kelikeskus'
+      OR rooli != 'Tieliikennekeskus';
 
 -- Poistetaan yhteyshenkilöt joilla ei ole enää muita rooleja, eikä päivystystä
 DELETE FROM yhteyshenkilo
