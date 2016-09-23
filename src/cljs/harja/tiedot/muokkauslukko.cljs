@@ -29,6 +29,7 @@
        (not= lukko :ei-lukittu)))
 
 (defn nakyma-lukittu? [lukko]
+  (log "[LUKKO] Tarkistetaan onko näkymä lukittu: " (pr-str lukko))
   (if (lukko-olemassa? lukko)
     (do
       (let [kayttajan-oma-lukko (kayttaja-omistaa-lukon? lukko)]

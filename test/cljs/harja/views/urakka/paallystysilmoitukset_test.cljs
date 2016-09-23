@@ -152,6 +152,8 @@
                                                                                4 3900
                                                                                5 400}))
         _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))
+        _ (fake-palvelukutsu :lukitse (constantly {:id "paallystysilmoitus_777",
+                                                   :kayttaja 2, :aikaleima (t/now)}))
         tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
     (async
      done
