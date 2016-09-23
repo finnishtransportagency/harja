@@ -87,6 +87,7 @@
   <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
   </harja:ilmoitus>")
+
 (def +testi-valaistusilmoitus-sanoma+
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
@@ -122,6 +123,41 @@
    </seliteet>
    </harja:ilmoitus>
    ")
+
+(def +testi-paallystysilmoitus-sanoma+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+   <viestiId>14324234</viestiId>
+   <ilmoitusId>987654321</ilmoitusId>
+   <versionumero>1</versionumero>
+   <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+   <ilmoitettu>2016-09-21T10:49:45</ilmoitettu>
+   <urakkatyyppi>paallystys</urakkatyyppi>
+   <otsikko>[TESTI] Päällystys rikkonainen</otsikko>
+   <paikanKuvaus>Lauttarannassa</paikanKuvaus>
+   <lisatieto>Päällystyksessä reikiä</lisatieto>
+   <yhteydenottopyynto>false</yhteydenottopyynto>
+   <sijainti>
+   <tienumero>816</tienumero>
+   <x>418613.894</x>
+   <y>7207249.201</y>
+   </sijainti>
+   <ilmoittaja>
+   <etunimi>Matti</etunimi>
+   <sukunimi>Meikäläinen</sukunimi>
+   <matkapuhelin>08023394852</matkapuhelin>
+   <sahkoposti>matti.meikalainen@palvelu.fi</sahkoposti>
+   <tyyppi>tienkayttaja</tyyppi>
+   </ilmoittaja>
+   <lahettaja>
+   <etunimi>Pekka</etunimi>
+   <sukunimi>Päivystäjä</sukunimi>
+   <matkapuhelin>929304449282</matkapuhelin>
+   <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+   </lahettaja>
+   <seliteet>
+   <selite>paallystevaurio</selite>
+   </seliteet>
+   </harja:ilmoitus>")
 
 (defn luo-tloik-komponentti []
   (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
