@@ -118,7 +118,10 @@
     urakoiden-paivystykset))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
-  (let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)
+  (log/info "Päivystystarkistus disabloitu")
+  ;; FIXME Disabloitu, koska saattaa lähettää turhia maileja. Täytyy tutkia vika
+  ;; Ks. HAR-3139
+  #_(let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
 
