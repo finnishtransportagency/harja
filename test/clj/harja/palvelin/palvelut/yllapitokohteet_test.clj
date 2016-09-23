@@ -5,6 +5,7 @@
             [harja.palvelin.palvelut.paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
+            [clojure.core.match :refer [match]]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]))
 
@@ -155,6 +156,20 @@
         (log/debug "Kohdeosa kannassa: " (pr-str kohdeosat-kannassa))
         (is (not (nil? kohdeosat-kannassa)))
         (is (every? :sijainti kohdeosat-kannassa) "Geometria muodostettiin")
+        (is (match (first kohdeosat-kannassa)
+                   {:tr-kaista nil
+                    :sijainti _
+                    :tr-ajorata nil
+                    :tr-loppuosa 2
+                    :tunnus nil
+                    :tr-alkuosa 1
+                    :tr-loppuetaisyys 2
+                    :nimi "Testiosa123456"
+                    :id _
+                    :tr-alkuetaisyys 1
+                    :tr-numero 20
+                    :toimenpide "Ei tehdä mitään"}
+                   true))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
         (u (str "DELETE FROM yllapitokohdeosa WHERE nimi = 'Testiosa123456';"))))))
 
