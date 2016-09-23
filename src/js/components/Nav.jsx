@@ -23,15 +23,23 @@ export default React.createClass({
 
     return (
       <div>
+        <div className="title-bar show-for-medium">
+          <img src="styles/images/harja_logo.png" alt="harja logo" srcSet="styles/images/harja_logo_soft.svg" />
+          <div className="title-bar-title">Liikenneviraston Harja-projekti</div>
+        </div>
+
         <div className="title-bar" data-responsive-toggle="top-menu" data-hide-for="medium">
-          <button className="menu-icon" type="button" data-toggle></button>
-          <div className="title-bar-title">Menu</div>
+          <div className="top-bar-left">
+            <img className="harja-logo" src="styles/images/harja_logo.png" alt="harja logo" />
+          </div>
+          <div className="top-bar-right">
+            <button className="menu-icon" type="button" data-toggle></button>
+          </div>
         </div>
 
         <div className="top-bar" id="top-menu">
           <div className="top-bar-left">
             <ul className="vertical medium-horizontal menu" data-responsive-menu="medium-dropdown">
-              <li className="menu-text">Site Title</li>
               {
                 links.map((link, index) =>
                   <li key={index}>
