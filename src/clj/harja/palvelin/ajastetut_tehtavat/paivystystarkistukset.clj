@@ -105,7 +105,8 @@
     urakoiden-paivystykset))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
-  (let [voimassa-olevat-urakat (urakat/hae-voimassa-olevat-urakat db nykyhetki)
+  (log/info "Päivystystarkistukset disabloitu, otetaan myöhemmin käyttöön")
+  #_(let [voimassa-olevat-urakat (urakat/hae-voimassa-olevat-urakat db nykyhetki)
         paivystykset (hae-voimassa-olevien-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta paivystykset voimassa-olevat-urakat nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
