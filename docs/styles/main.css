@@ -3897,29 +3897,32 @@ a:visited {
 .harja-header {
   background-color: white;
   color: black;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  padding-left: 10%;
-  padding-right: 10%; }
+  padding-top: 1em;
+  padding-bottom: 1em;
+  padding-left: 4rem;
+  padding-right: 4rem; }
 
 #harja-footer {
   background-color: #4b4b4b;
   color: white;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  padding-left: 10%;
-  padding-right: 10%;
-  margin-top: 2rem;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  padding-left: 4rem;
+  padding-right: 4rem;
+  margin-top: 2em;
   position: fixed;
   bottom: 0;
   width: 100%; }
   #harja-footer p {
-    text-align: center; }
+    text-align: right; }
   #harja-footer .columns {
-    padding-left: 0; }
+    padding-left: 0;
+    padding-right: 0; }
   @media screen and (max-width: 39.9375em) {
     #harja-footer .livi-header-logo {
-      display: none; } }
+      display: none; }
+    #harja-footer p {
+      text-align: center; } }
 
 .harja-title-bar {
   background-color: #3db7e4; }
@@ -3928,8 +3931,8 @@ a:visited {
   background-color: #3db7e4;
   padding-top: 0;
   padding-bottom: 0;
-  padding-left: 10%;
-  padding-right: 10%; }
+  padding-left: 4rem;
+  padding-right: 4rem; }
   .harja-menu ul {
     background-color: #3db7e4; }
   @media screen and (max-width: 39.9375em) {
