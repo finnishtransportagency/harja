@@ -40,9 +40,14 @@
   (Coordinate. x y))
 
 (defn jatkuva-line-string
-  "Koska tiedetään että viivan viimeinen ja seuraavan ensimmäinen piste
-  ovat sama, voidaan linestringit yhdistää helposti yhdeksi."
-  [lines]
+  "Yritä yhdistää tie yhtenäiseksi linestringiksi. Valtaosa teiden osien geometrioista jakaa alku-
+  ja loppupisteet, joten ne voidaan muuntaa linestringiksi pudottamalla
+  duplikoitu yhtenäinen piste.
+  Joissain teissä on oikeasti reikiä geometriassa eikä niitä voi yhdistää
+  yhdeksi linestringiksi. Tässä tapauksessa pitää palauttaa multilinestring.
+  Jos geometriaa kuljetaan vastasuuntaan, pitää multilinestring osat kääntää
+  toisin päin."
+  [lines kaanna-multilinestring?]
   (let [line-strings
         (mapv luo-line-string
               (reduce
@@ -199,8 +204,6 @@
   (let [coords (drop-while #(not= alkupiste (piste %))
                            (seq (.getCoordinates ls)))]
     (when (> (count coords) 1)
-      #_(println "PALAUTETAAN LEIKATTU LS alkupisteella " alkupiste
-               ", jossa coords: " coords)
       (luo-line-string coords))))
 
 (defn luo-fallback [{g :the_geom}]
@@ -209,17 +212,34 @@
           (line-string-seq g))))
 
 (defn vie-tieosa [db tie osa osan-geometriat]
+  ;; Yrittää ensin muodostaa "normaali"tapauksen, jossa tien geometria
+  ;; on yhtenäinen linestring. Fallback tapauksessa joudutaan tekemään
+  ;; multilinestring. Emme tiedä kummalla ajoradalla osa alkaa, joten yhdistämistä
+  ;; yritetään molemmin päin joista jompi kumpi saa kaikki osat käytettyä.
+  ;;
+  ;; Normaalitapaus, jossa yhdistetään vain yhteinen ja haluttu ajorata
+  ;; yhtenäiseksi onnistuu noin 98,4% tapauksista.
+  ;;
+  ;; Fallback tapaus on lainata toiselta ajoradalta pätkä, jos tällä ajoradalla
+  ;; on aukko geometriassa. Esim 2-ajr geometria on puutteellinen, mutta lainaamalla
+  ;; pala 1-ajr geometriasta täydentäää sen. Näitä tapauksia on noin 1,1%
+  ;;
+  ;; Loput geometriat ovat tapauksia, joissa linestring muodostaminen ei onnistu.
+  ;; Näissä tapauksissa osan keskellä on oikeasti aukko. Tällöin käytetään vielä
+  ;; fallbackia joka ottaa aina lähimmän palan jatkoksi ja muodostaa multilinestringin.
+  ;; Tämä kattaa loput noin vajaa 0,5% tapauksista.
+  ;;
   (let [ajoradat (into {}
                        (map (juxt :ajorata identity))
                        osan-geometriat)
         oikea (or (keraa-geometriat (ajoradat 0) (ajoradat 1)
                                     (luo-fallback (ajoradat 2)) false)
-                  (do
-                    (println "TIE " tie " OSA " osa " tarvii ultimate fallback")
-                    (keraa-geometriat (ajoradat 0) (ajoradat 1)
-                                      (luo-fallback (ajoradat 2)) true)))
-        vasen (keraa-geometriat (ajoradat 0) (ajoradat 2)
-                                (luo-fallback (ajoradat 1)) false)]
+                  (keraa-geometriat (ajoradat 0) (ajoradat 1)
+                                    (luo-fallback (ajoradat 2)) true))
+        vasen (or (keraa-geometriat (ajoradat 0) (ajoradat 2)
+                                    (luo-fallback (ajoradat 1)) false)
+                  (keraa-geometriat (ajoradat 0) (ajoradat 2)
+                                    (luo-fallback (ajoradat 1)) true))]
 
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})))
