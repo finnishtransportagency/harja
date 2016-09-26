@@ -95,10 +95,13 @@
                                      (yhteyshenkilot-q/hae-kaynissa-olevien-urakoiden-paivystykset
                                        db
                                        {:pvm (c/to-sql-time pvm)}))
-        urakoiden-paivystykset (map #(-> %
-                                         (assoc :paivystys-alku (c/from-sql-time (:paivystys-alku %)))
-                                         (assoc :paivystys-loppu (c/from-sql-time (:paivystys-loppu %))))
-                                    urakoiden-paivystykset)]
+        urakoiden-paivystykset (map
+                                 #(-> %
+                                      (assoc :paivystys-alku
+                                             (pvm/suomen-aikavyohykkeessa (c/from-sql-time (:paivystys-alku %))))
+                                      (assoc :paivystys-loppu
+                                             (pvm/suomen-aikavyohykkeessa (c/from-sql-time (:paivystys-loppu %)))))
+                                 urakoiden-paivystykset)]
     urakoiden-paivystykset))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
