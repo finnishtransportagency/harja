@@ -142,12 +142,12 @@
 (defn vain-hoitokausivalinta? [raportti]
   (#{:suolasakko} raportti))
 
-(defn vain-kuukausivalinta? [raportti hy-ja-ur-valittu?]
+(defn vain-kuukausivalinta? [raportti urakka-valittu?]
   ;; Näytetään vain kuukausivalinta, jos kyseessä on työmaakokous
-  ;; TAI jos kyseessä on tarkastusraportti, eikä ole valittu hallintayksikköä ja urakkaa.
+  ;; TAI jos kyseessä on tarkastusraportti, eikä ole valittu urakkaa.
   (or (#{:tyomaakokous} raportti)
       (and
-        (not hy-ja-ur-valittu?)
+        (not urakka-valittu?)
         (#{:kelitarkastusraportti
           :laaduntarkastusraportti
           :laatupoikkeamaraportti
@@ -203,7 +203,7 @@
                      (pvm/vuosi (:loppupvm ur))
                      (pvm/vuosi (pvm/nyt)))
         vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))
-        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) (and ur hal))]
+        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled (or @vapaa-aikavali?
