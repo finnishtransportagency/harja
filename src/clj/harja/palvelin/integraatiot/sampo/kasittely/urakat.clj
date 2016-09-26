@@ -38,16 +38,16 @@
     (urakat/paivita-urakka-alueiden-nakyma db)
     uusi-id))
 
-(defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi sopimustyyppi
+(defn- tallenna-urakka [db sampo-id nimi alkupvm loppupvm hanke-sampo-id urakkanro urakkatyyppi sopimustyyppi
                         ely-id]
   (let [urakka-id (:id (first (urakat/hae-id-sampoidlla db sampo-id)))]
     (if urakka-id
       (do
-        (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id alueurakkanro urakkatyyppi sopimustyyppi
+        (paivita-urakka db nimi alkupvm loppupvm hanke-sampo-id urakka-id urakkanro urakkatyyppi sopimustyyppi
                         ely-id)
         urakka-id)
       (do
-        (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id alueurakkanro urakkatyyppi sopimustyyppi
+        (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
                     ely-id)))))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]
