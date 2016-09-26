@@ -3,6 +3,8 @@
 DROP TABLE tieverkko;
 DROP TABLE tieverkko_geom;
 
+CREATE TYPE tr_osan_kohta AS ( etaisyys INTEGER, piste GEOMETRY );
+
 CREATE TABLE tr_osan_ajorata (
   tie INTEGER,
   osa INTEGER,
