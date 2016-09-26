@@ -194,8 +194,10 @@ DECLARE
   r RECORD;
   aosa INTEGER;
   aet INTEGER;
+  alkukohta tr_osan_kohta;
   losa INTEGER;
   let INTEGER;
+  loppukohta tr_osan_kohta;
   geom GEOMETRY;
   tmp_osa INTEGER;
   tmp_et INTEGER;
@@ -215,9 +217,11 @@ BEGIN
     RETURN NULL;
   ELSE
     aosa := r.alkuosa;
-    aet := CAST((ST_LineLocatePoint(r.alkuosa_geom, apiste) * ST_Length(r.alkuosa_geom)) AS INTEGER);
+    alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste);
+    aet := alkukohta.etaisyys;
     losa := r.loppuosa;
-    let := CAST((ST_LineLocatePoint(r.loppuosa_geom, bpiste) * ST_Length(r.loppuosa_geom)) AS INTEGER);
+    loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste);
+    let := loppukohta.etaisyys;
     -- Varmista TR-osoitteen suunta ajoradan mukaan
     RAISE NOTICE 'ajorata %', r.ajorata;
     IF (r.ajorata = 1 AND (aosa > losa OR (aosa=losa AND aet > let))) OR
