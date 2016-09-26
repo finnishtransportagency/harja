@@ -1,8 +1,3 @@
--- name: vie-tieverkkotauluun!
--- vie entryn tieverkkotauluun
-INSERT INTO tieverkko (osoite3, tie, ajorata, osa, tiepiiri, tr_pituus, geometria) VALUES
-  (:osoite3, :tie, :ajorata, :osa, :tiepiiri, :tr_pituus, ST_GeomFromText(:the_geom) :: GEOMETRY);
-
 -- name: vie-tien-osan-ajorata!
 INSERT INTO tr_osan_ajorata (tie,osa,ajorata,geom)
 VALUES (:tie, :osa, :ajorata, ST_GeomFromText(:geom));
@@ -18,7 +13,7 @@ FROM tierekisteriosoite_pisteille(
 -- name: hae-tr-osoite-valille*
 -- hakee tierekisteriosoitteen kahden pisteen välille tai NULL jos ei löydy
 SELECT *
-FROM yrita_tierekisteriosoite_pisteille(
+FROM yrita_tierekisteriosoite_pisteille2(
          ST_MakePoint(:x1, :y1) :: GEOMETRY,
          ST_MakePoint(:x2, :y2) :: GEOMETRY,
          :threshold :: INTEGER) AS tr_osoite;
@@ -42,13 +37,9 @@ FROM tierekisteriosoite_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY, CAST(:tresho
 -- name: hae-tr-osoite*
 -- Hakee TR osoitteen pisteelle tai nil jos ei löydy
 SELECT *
-FROM yrita_tierekisteriosoite_pisteelle(
+FROM yrita_tierekisteriosoite_pisteelle2(
          ST_MakePoint(:x, :y) :: GEOMETRY,
          CAST(:treshold AS INTEGER)) AS tr_osoite;
-
--- name: tuhoa-tieverkkodata!
--- poistaa kaikki tieverkon tiedot taulusta. ajetaan transaktiossa
-DELETE FROM tieverkko;
 
 -- name: tuhoa-tien-osien-ajoradat!
 -- poistaa kaikki tien osien ajoratatiedot
