@@ -7,13 +7,13 @@
             [harja.palvelin.integraatiot.sampo.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn kasittele-hanke [db {:keys [viesti-id nimi alkupvm loppupvm alueurakkanro sampo-id]}]
+(defn kasittele-hanke [db {:keys [viesti-id nimi alkupvm loppupvm sampo-id]}]
   (log/debug "Käsitellään hanke Sampo id:llä: " sampo-id)
   (try
     (let []
       (if (hankkeet/onko-tuotu-samposta? db sampo-id)
-        (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro sampo-id)
-        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro sampo-id))
+        (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm sampo-id)
+        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm sampo-id))
 
       (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
       (maksuerat/perusta-maksuerat-hoidon-urakoille db))
