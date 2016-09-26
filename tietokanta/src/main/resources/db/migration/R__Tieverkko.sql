@@ -72,6 +72,9 @@ BEGIN
     END IF;
   END LOOP;
   viiva := ST_Collect(tulos);
+  IF ST_GeometryType(viiva)='ST_GeometryCollection' AND ST_NumGeometries(viiva)=1 THEN
+    viiva := ST_GeometryN(viiva, 1);
+  END IF;
   RETURN viiva;
 END;
 $$ LANGUAGE plpgsql;
