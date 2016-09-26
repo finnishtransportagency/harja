@@ -10,7 +10,7 @@
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
-  "Palautetta HARJAsta")
+  "")
 
 (def palaute-body
   (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
@@ -18,7 +18,7 @@
        "Ota kuvakaappaukseen mukaan koko selainikkuna."))
 
 (def virhe-otsikko
-  "HARJA räsähti")
+  "")
 
 (defn tekniset-tiedot [kayttaja url user-agent]
   (let [enc #(.encodeURIComponent js/window %)]
