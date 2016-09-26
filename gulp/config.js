@@ -1,4 +1,4 @@
-var dest = './dist';
+var dest = './docs';
 var src = './src';
 var gutil = require('gulp-util');
 
