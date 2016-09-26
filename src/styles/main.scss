@@ -3,6 +3,8 @@
 @include foundation-flex-grid;
 @include foundation-flex-classes;
 
+@import "foundation-icons.css";
+
 // Main colors
 $blue-darker: #0046ad;
 $blue: #0088ce;
@@ -31,12 +33,19 @@ $right-pad: 4rem;
 $logo-height: 4em;
 $logo-height-small: 2em;
 
+$harja-list-top-height: 0.5em;
+$harja-list-bottom-height: 0.2em;
+
 html, body {
   height: 100%;
 }
 
-#main, #home, #content {
+#main, #harja-home, #harja-content {
   height: 100%;
+}
+
+#harja-content {
+  background-color: $grey-lighter;
 }
 
 a {
@@ -53,6 +62,32 @@ a:visited {
 .harja-header-logo {
   height: $logo-height-small;
   margin-right: 1em;
+}
+
+.harja-loading {
+  height: $logo-height-small;
+}
+
+.harja-noticelist {
+  background-color: white;
+  border-left: 0;
+  border-right: 0;
+  padding: 1em;
+}
+
+.harja-care-noticelist {
+  border-top: $harja-list-top-height solid $green;
+  border-bottom: $harja-list-bottom-height solid $grey-light;
+}
+
+.harja-maintenance-noticelist {
+  border-top: $harja-list-top-height solid $orange;
+  border-bottom: $harja-list-bottom-height solid $grey-light;
+}
+
+.harja-faq-noticelist {
+  border-top: $harja-list-top-height solid $blue;
+  border-bottom: $harja-list-bottom-height solid $grey-light;
 }
 
 .livi-header-logo {

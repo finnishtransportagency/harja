@@ -11,6 +11,7 @@
    * 2. Prevent iOS and IE text size adjust after device orientation change,
    *    without disabling user zoom.
    */
+@import url(foundation-icons.css);
 html {
   font-family: sans-serif;
   /* 1 */
@@ -3874,8 +3875,11 @@ table.hover tr:nth-of-type(even):hover {
 html, body {
   height: 100%; }
 
-#main, #home, #content {
+#main, #harja-home, #harja-content {
   height: 100%; }
+
+#harja-content {
+  background-color: #f1f1f1; }
 
 a {
   color: #3db7e4; }
@@ -3889,6 +3893,27 @@ a:visited {
 .harja-header-logo {
   height: 2em;
   margin-right: 1em; }
+
+.harja-loading {
+  height: 2em; }
+
+.harja-noticelist {
+  background-color: white;
+  border-left: 0;
+  border-right: 0;
+  padding: 1em; }
+
+.harja-care-noticelist {
+  border-top: 0.5em solid #9eb83d;
+  border-bottom: 0.2em solid #c8c8c8; }
+
+.harja-maintenance-noticelist {
+  border-top: 0.5em solid #f79421;
+  border-bottom: 0.2em solid #c8c8c8; }
+
+.harja-faq-noticelist {
+  border-top: 0.5em solid #0088ce;
+  border-bottom: 0.2em solid #c8c8c8; }
 
 .livi-header-logo {
   height: 4em;

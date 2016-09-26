@@ -51,18 +51,24 @@ export default React.createClass({
     }
     else {
       mainEl = (
-        <div>
-        <NoticeList notices={care} category={Category.CARE}/>
-        <NoticeList notices={maintenance} category={Category.MAINTENANCE}/>
-        <NoticeList notices={faq} category={Category.FAQ}/>
+        <div className="row">
+          <div className="medium-4 small-12 columns">
+            <NoticeList notices={care} category={Category.CARE}/>
+          </div>
+          <div className="medium-4 small-12 columns">
+            <NoticeList notices={maintenance} category={Category.MAINTENANCE}/>
+          </div>
+          <div className="medium-4 small-12 columns">
+            <NoticeList notices={faq} category={Category.FAQ}/>
+          </div>
         </div>
       );
     }
 
     return (
-      <div id="home">
+      <div id="harja-home">
         <Nav />
-        <div id="content">
+        <div id="harja-content">
           {mainEl}
           {singleNoticeEl}
           {noticeTypeEl}
