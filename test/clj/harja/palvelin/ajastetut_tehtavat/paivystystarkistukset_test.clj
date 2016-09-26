@@ -80,7 +80,7 @@
                                    pvm)]
     urakat-ilman-paivystysta))
 
-(deftest urakat-ilman-paivystysta-toimii
+(deftest muhoksen-urakan-paivystys-loytyy
   (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2016 1 1))]
     ;; Muhoksen urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
@@ -90,7 +90,7 @@
     ;; Kaikki muut urakat sisältyy
     (is (= (count urakat-ilman-paivystysta) 17))))
 
-(deftest urakat-ilman-paivystysta-toimii
+(deftest oulun-urakan-paivystys-loytyy
   (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 11 2))]
     ;; Oulun 2014-2019 urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
@@ -100,10 +100,32 @@
     ;; Kaikki muut urakat sisältyy
     (is (= (count urakat-ilman-paivystysta) 17))))
 
-(deftest urakat-ilman-paivystysta-toimii
+(deftest oulun-ja-muhoksen-paivystys-loytyy
+  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 2))]
+    ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
+    (is (nil? (first (filter
+                       #(or (= (:nimi %) "Oulun alueurakka 2014-2019")
+                            (= (:nimi %) "Muhoksen päällystysurakka"))
+                       urakat-ilman-paivystysta))))
+
+    ;; Kaikki muut urakat sisältyy
+    (is (= (count urakat-ilman-paivystysta) 16))))
+
+(deftest oulun-ja-muhoksen-paivystys-loytyy-2
+  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 1))]
+    ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
+    (is (nil? (first (filter
+                       #(or (= (:nimi %) "Oulun alueurakka 2014-2019")
+                            (= (:nimi %) "Muhoksen päällystysurakka"))
+                       urakat-ilman-paivystysta))))
+
+    ;; Kaikki muut urakat sisältyy
+    (is (= (count urakat-ilman-paivystysta) 16))))
+
+(deftest kaikki-urakat-listataan-ilman-paivystysta
   (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2060 1 1))]
-    ;; Millään urakalla ei päivystystä ko. päivänä
-    (is (= (count urakat-ilman-paivystysta) 18))))
+    ;; Ei urakoita käynnissä tänä aikana, mitään ei palaudu
+    (is (= (count urakat-ilman-paivystysta) 0))))
 
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
