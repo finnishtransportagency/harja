@@ -28,6 +28,21 @@ $purple: #a678b4;
 $left-pad: 10%;
 $right-pad: 10%;
 
+html, body {
+  height: 100%;
+}
+
+#main, #home, #content {
+  height: 100%;
+}
+
+a {
+  color: $blue-light;
+}
+a:visited {
+  color: $blue;
+}
+
 .harja-menu-logo {
   height: 2em;
 }
@@ -51,8 +66,32 @@ $right-pad: 10%;
   padding-right: $right-pad;
 }
 
+#harja-footer {
+  background-color: $grey-dark;
+  color: white;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  padding-left: $left-pad;
+  padding-right: $right-pad;
+  margin-top: 2rem;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  p {
+    text-align: center;
+  }
+  .columns {
+    padding-left: 0;
+  }
+  @include breakpoint(small only) {
+    .livi-header-logo {
+      display: none;
+    }
+  }
+}
+
 .harja-title-bar {
-  background-color: $blue;
+  background-color: $blue-light;
 }
 
 .harja-menu {

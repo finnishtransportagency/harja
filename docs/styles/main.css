@@ -3871,6 +3871,18 @@ table.hover tr:nth-of-type(even):hover {
   .large-order-6 {
     order: 6; } }
 
+html, body {
+  height: 100%; }
+
+#main, #home, #content {
+  height: 100%; }
+
+a {
+  color: #3db7e4; }
+
+a:visited {
+  color: #0088ce; }
+
 .harja-menu-logo {
   height: 2em; }
 
@@ -3890,8 +3902,27 @@ table.hover tr:nth-of-type(even):hover {
   padding-left: 10%;
   padding-right: 10%; }
 
+#harja-footer {
+  background-color: #4b4b4b;
+  color: white;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  padding-left: 10%;
+  padding-right: 10%;
+  margin-top: 2rem;
+  position: fixed;
+  bottom: 0;
+  width: 100%; }
+  #harja-footer p {
+    text-align: center; }
+  #harja-footer .columns {
+    padding-left: 0; }
+  @media screen and (max-width: 39.9375em) {
+    #harja-footer .livi-header-logo {
+      display: none; } }
+
 .harja-title-bar {
-  background-color: #0088ce; }
+  background-color: #3db7e4; }
 
 .harja-menu {
   background-color: #3db7e4;
