@@ -122,6 +122,17 @@
     ;; Kaikki muut urakat sisältyy
     (is (= (count urakat-ilman-paivystysta) 16))))
 
+(deftest oulun-ja-muhoksen-paivystys-loytyy-3
+  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 6))]
+    ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
+    (is (nil? (first (filter
+                       #(or (= (:nimi %) "Oulun alueurakka 2014-2019")
+                            (= (:nimi %) "Muhoksen päällystysurakka"))
+                       urakat-ilman-paivystysta))))
+
+    ;; Kaikki muut urakat sisältyy
+    (is (= (count urakat-ilman-paivystysta) 16))))
+
 (deftest kaikki-urakat-listataan-ilman-paivystysta
   (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2060 1 1))]
     ;; Ei urakoita käynnissä tänä aikana, mitään ei palaudu
