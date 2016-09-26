@@ -1,3 +1,21 @@
+-- Kääntää MULTILINESTRING geometrian osien järjestyksen toisin päin.
+-- Tämä tarvitaan kun kerätään vasemmalla ajoradalla olevia geometrioita
+-- yhteen. ST_Reverse kääntää vain pisteet, mutta ei osia, piirtäessä
+-- loppunuoli jää ensimmäisen palan loppuun, jos osien järjestystä ei käännä.
+CREATE OR REPLACE FUNCTION kaanna_multilinestring(geom GEOMETRY)
+RETURNS GEOMETRY AS $$
+DECLARE
+  i INTEGER;
+  tulos GEOMETRY[];
+BEGIN
+  tulos := ARRAY[]::GEOMETRY[];
+  FOR i IN 1..ST_NumGeometries(geom) LOOP
+    tulos := ST_GeometryN(geom, i) || tulos;
+  END LOOP;
+  RETURN ST_Collect(tulos);
+END;
+$$ LANGUAGE plpgsql;
+
 -- Tatun uusi yritys tieosista
 CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva3(
     tie_ INTEGER,
@@ -67,6 +85,9 @@ BEGIN
       IF ajorata_ = 1 THEN
         tulos := tulos || osan_patka;
       ELSIF ajorata_ = 2 THEN
+        IF ST_GeometryType(osan_patka)='ST_MultiLineString' THEN
+	  osan_patka = kaanna_multilinestring(osan_patka);
+	END IF;
         tulos := ST_Reverse(osan_patka) || tulos;
       END IF;
     END IF;
@@ -90,12 +111,51 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY)
+  RETURNS tr_osan_kohta AS $$
+DECLARE
+  aet INTEGER;
+  geom_ GEOMETRY;
+  ls GEOMETRY;
+  i INTEGER;
+  pit FLOAT;
+  kohta FLOAT;
+  etaisyys FLOAT;
+  osui INTEGER;
+BEGIN
+  geom_ := ST_Multi(osan_geometria);
+  pit := 0.0;
+  etaisyys := NULL;
+  -- Katsotaan mihin linestringiin osuttiin
+  FOR i IN 1..ST_NumGeometries(geom_) LOOP
+    ls := ST_GeometryN(geom_, i);
+    --RAISE NOTICE 'ls# %, etäisyys %  (aiempi etäisyys %)', i, ST_Distance(piste,ls), etaisyys;
+    IF etaisyys IS NULL OR ST_Distance(piste, ls) < etaisyys THEN
+      etaisyys = ST_Distance(piste, ls);
+      osui := i;
+    END IF;
+  END LOOP;
+  RAISE NOTICE 'osui multilinestring ls# %', osui;
+  -- Lasketaan etäisyys
+  FOR i IN 1..osui LOOP
+    ls := ST_GeometryN(geom_, i);
+    IF i < osui THEN
+      pit := pit + ST_Length(ls);
+    ELSE
+      aet := CAST(pit + ST_LineLocatePoint(ls, piste) * ST_Length(ls) AS INTEGER);
+      RETURN ROW(aet, ST_ClosestPoint(ls, piste)::GEOMETRY);
+    END IF;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
 CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteelle2(
   piste geometry, threshold INTEGER)
   RETURNS tr_osoite AS $$
 DECLARE
   osa_ RECORD;
-  aet INTEGER;
+  kohta tr_osan_kohta;
 BEGIN
   SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
     FROM tr_osan_ajorata
@@ -107,9 +167,8 @@ BEGIN
   IF osa_ IS NULL THEN
     RETURN NULL;
   ELSE
-    RAISE NOTICE 'löytyi %', ST_AsText(osa_.geom);
-    aet := CAST((ST_LineLocatePoint(osa_.geom, piste) * ST_Length(osa_.geom)) AS INTEGER);
-    RETURN ROW(osa_.tie, osa_.osa, aet, 0, 0, ST_ClosestPoint(osa_.geom, piste)::GEOMETRY);
+    kohta := laske_tr_osan_kohta(osa_.geom, piste);
+    RETURN ROW(osa_.tie, osa_.osa, kohta.etaisyys, 0, 0, kohta.piste::GEOMETRY);
   END IF;
 END;
 $$ LANGUAGE plpgsql;
