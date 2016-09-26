@@ -10,6 +10,7 @@
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
             [clj-time.coerce :as c]
+            [harja.palvelin.tyokalut.lukot :as lukot]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.fmt :as fmt]
             [clojure.string :as str]
@@ -117,7 +118,10 @@
     urakoiden-paivystykset))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
-  (let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)
+  (log/info "Päivystystarkistus disabloitu")
+  ;; FIXME Disabloitu, koska saattaa lähettää turhia maileja. Täytyy tutkia vika
+  ;; Ks. HAR-3139
+  #_(let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
 
@@ -127,7 +131,10 @@
     (ajastettu-tehtava/ajasta-paivittain
      paivittainen-aika
      (fn [_]
-       (paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1)))))))
+       (lukot/yrita-ajaa-lukon-kanssa
+         db
+         "paivystystarkistukset"
+         #(paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1))))))))
 
 (defrecord Paivystystarkistukset [asetukset]
   component/Lifecycle

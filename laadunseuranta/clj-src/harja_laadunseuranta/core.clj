@@ -197,7 +197,7 @@
      :body (str id)}))
 
 (defn ohjaa-index-html []
-  (redirect "/laadunseuranta/index.html"))
+  (redirect "/harja/laadunseuranta/index.html"))
 
 (defn luo-routet [db http]
   ;; Ohjaa /laadunseuranta(/) index.html sivulle

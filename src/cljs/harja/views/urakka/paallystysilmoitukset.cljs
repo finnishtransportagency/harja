@@ -529,10 +529,11 @@
                (* (- (:toteutunut-maara rivi) (:tilattu-maara rivi)) (:yksikkohinta rivi)))}]
       toteutuneet-maarat]]))
 
-(defn paallystysilmoituslomake [urakka {:keys [kohdenumero yllapitokohdetyyppi]} _ muokkaa! historia tallennus-onnistui]
+(defn paallystysilmoituslomake [urakka {:keys [yllapitokohde-id yllapitokohdetyyppi] :as lomake}
+                                _ muokkaa! historia tallennus-onnistui]
   (komp/luo
     (komp/ulos #(kartta/poista-popup!))
-    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" kohdenumero))
+    (komp/lukko (lukko/muodosta-lukon-id "paallystysilmoitus" yllapitokohde-id))
     (fn [urakka {:keys [virheet tila valmispvm-kohde kirjoitusoikeus?] :as lomakedata-nyt}
          lukko muokkaa! historia tallennus-onnistui]
       (let [lukittu? (lukko/nakyma-lukittu? lukko)
