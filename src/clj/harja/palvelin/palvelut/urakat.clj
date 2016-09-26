@@ -11,7 +11,8 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clj-time.coerce :as c]))
 
 (def ^{:const true} oletus-toleranssi 50)
 
@@ -274,6 +275,8 @@
                                                                               {:urakka urakka-id})
     :ok))
 
+(defn hae-voimassa-olevat-urakat [db pvm]
+  (q/hae-voimassa-olevat-urakat db {:pvm (c/to-sql-time pvm)}))
 
 (defrecord Urakat []
   component/Lifecycle

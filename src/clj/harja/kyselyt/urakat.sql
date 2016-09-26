@@ -456,6 +456,15 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
 
 ORDER BY id ASC;
 
+-- name: hae-voimassa-olevat-urakat
+-- Hakee urakat, jotka ovat voimassa annettuna päivänä
+SELECT
+  id,
+  nimi,
+  sampoid
+FROM urakka u
+WHERE u.loppupvm >= :pvm;
+
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :elynumero);

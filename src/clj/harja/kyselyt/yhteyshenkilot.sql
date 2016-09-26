@@ -318,12 +318,12 @@ WHERE
 
 -- name: hae-kaynissa-olevien-urakoiden-paivystykset
 SELECT
+  p.id,
+  alku as "paivystys-alku",
+  loppu as "paivystys-loppu",
   u.id as "urakka-id",
-  u.sampoid as "sampo-id",
-  nimi,
-  p.id as paivystys_id,
-  alku as paivystys_alku,
-  loppu as paivystys_loppu
-FROM urakka u
-  LEFT JOIN paivystys p ON p.urakka = u.id
+  u.nimi as "urakka-nimi",
+  u.sampoid as "sampo-id"
+FROM paivystys p
+  JOIN urakka u ON p.urakka = u.id
 WHERE u.loppupvm >= :pvm;
