@@ -69,7 +69,6 @@
         1)))
 
 (deftest urakat-ilman-paivystysta-toimii
-  ;; Testidatassa ei yhdelläkään urakalla päivystystä annettuna aikana, eli palautuu sama data takaisin
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         urakat (urakat/hae-voimassa-olevat-urakat testitietokanta (t/local-date 2016 1 1))
         paivystykset (paivystajatarkistukset/hae-voimassa-olevien-urakoiden-paivystykset
