@@ -44,10 +44,8 @@
   ja loppupisteet, joten ne voidaan muuntaa linestringiksi pudottamalla
   duplikoitu yhtenäinen piste.
   Joissain teissä on oikeasti reikiä geometriassa eikä niitä voi yhdistää
-  yhdeksi linestringiksi. Tässä tapauksessa pitää palauttaa multilinestring.
-  Jos geometriaa kuljetaan vastasuuntaan, pitää multilinestring osat kääntää
-  toisin päin."
-  [lines kaanna-multilinestring?]
+  yhdeksi linestringiksi. Tässä tapauksessa pitää palauttaa multilinestring."
+  [lines]
   (let [line-strings
         (mapv luo-line-string
               (reduce
