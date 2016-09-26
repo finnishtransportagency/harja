@@ -89,7 +89,8 @@
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
      {:otsikko "Taka\u00ADrajan toisto\u00ADkuu\u00ADkausi" :leveys 10 :nimi :takaraja-toistokuukausi
       :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
-    (sort-by :takaraja @toistuvat-valitavoitteet-atom)]
+    (sort-by (juxt :takaraja-toistokuukausi :takaraja-toistopaiva)
+             @toistuvat-valitavoitteet-atom)]
    [yleiset/vihje-elementti
     [:span
      "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
