@@ -79,10 +79,13 @@
                                    paivystykset
                                    urakat
                                    (t/local-date 2016 1 1))]
-    ;; Muhoksen urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon: urakat ilman päivystystä
+    ;; Muhoksen urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
                   #(= (:nimi %) "Muhoksen päällystysurakka")
-                  urakat-ilman-paivystysta))))))
+                  urakat-ilman-paivystysta))))
+
+    ;; Kaikki muut urakat sisältyy
+    (is (= (count urakat-ilman-paivystysta) 17))))
 
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
