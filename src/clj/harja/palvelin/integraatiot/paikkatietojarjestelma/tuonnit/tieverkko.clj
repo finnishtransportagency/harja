@@ -105,8 +105,6 @@
             loppupiste (viimeinen-piste (first ls0))
             ls0 (rest ls0)
             ls1 ls1]
-       #_(println "ALKU-LOPPU: " (coord (ensimmainen-piste (last result)))
-                  " -> " (coord (viimeinen-piste (last result))))
        (if (and (empty? ls0) (empty? ls1))
          ;; Molemmat empty, onnistui!
          ;; HUOM: fallbackin ei tarvitse olla tyhjä
@@ -119,19 +117,17 @@
            (cond
              ;; ls0 jatkaa geometriaa
              (and seuraava-ls0 (= loppupiste (ensimmainen-piste seuraava-ls0)))
-             (do #_(println "LS0 " (coord loppupiste) " -> " (coord (viimeinen-piste seuraava-ls0)))
-                 (recur (conj result seuraava-ls0)
-                        (viimeinen-piste seuraava-ls0)
-                        (rest ls0)
-                        ls1))
+             (recur (conj result seuraava-ls0)
+                    (viimeinen-piste seuraava-ls0)
+                    (rest ls0)
+                    ls1)
 
              ;; ls1 jatkaa geometriaa
              (and seuraava-ls1 (= loppupiste (ensimmainen-piste seuraava-ls1)))
-             (do #_(println "LS1 " (coord loppupiste) " -> " (coord (viimeinen-piste seuraava-ls1)))
-                 (recur (conj result seuraava-ls1)
-                        (viimeinen-piste seuraava-ls1)
-                        ls0
-                        (rest ls1)))
+             (recur (conj result seuraava-ls1)
+                    (viimeinen-piste seuraava-ls1)
+                    ls0
+                    (rest ls1))
 
              ;; Last ditch effort: kutsutaan fallbackia etsimään
              ;; jatkopala joko seuraavaan ls0 tai ls1 pätkään.
@@ -141,11 +137,10 @@
                                     (fallback (piste loppupiste)))]
                (cond
                  fallback-ls
-                 (do #_(println "LSF " (coord loppupiste) " -> " (coord (viimeinen-piste fallback-ls)))
-                     (recur (conj result fallback-ls)
-                            (viimeinen-piste fallback-ls)
-                            ls0
-                            ls1))
+                 (recur (conj result fallback-ls)
+                        (viimeinen-piste fallback-ls)
+                        ls0
+                        ls1)
 
                  ;; Jos ota lähin on päällä, otetaan ls0/ls1 lähempi
                  ota-lahin?
@@ -184,7 +179,6 @@
   viivat yhdeksi viivaksi. Osasta ei tiedetä kummalla ajoradalle se alkaa, mutta
   koko viiva on kulutettava, joten pitää yrittää molempia."
   [{g0 :the_geom :as ajr0} {g1 :the_geom :as ajr1} fallback ota-lahin?]
-  ;(println "KERÄTÄÄN GEOM " ajr0 " JA " ajr1)
   (cond
     ;; Jos toinen on nil, valitaan suoraan toinen
     (nil? g0) (jatkuva-line-string (line-string-seq g1))
@@ -247,16 +241,13 @@
     (do
       (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
-        ;(k/tuhoa-tieverkkodata! db)
         (k/tuhoa-tien-osien-ajoradat! db)
         (shapefile/tuo-ryhmiteltyna
          shapefile "TIE"
          (fn [tien-geometriat]
-           (let [tien-geometriat tien-geometriat;(filter :osoite3 tien-geometriat)
-                 ]
-             (let [tie (:tie (first tien-geometriat))]
-               (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
-                 (vie-tieosa db tie osa geometriat)))))))
+           (let [tie (:tie (first tien-geometriat))]
+             (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
+               (vie-tieosa db tie osa geometriat))))))
 
       (k/paivita-paloiteltu-tieverkko db)
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
