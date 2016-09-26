@@ -10,7 +10,8 @@
             [harja.ui.kartta.esitettavat-asiat :refer [maarittele-feature]]
             [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]
             [cljs.core.async :refer [<! >! chan timeout]]
-            [harja.ui.tierekisteri :as tr])
+            [harja.ui.tierekisteri :as tr]
+            [harja.loki :refer [log]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
@@ -33,6 +34,24 @@
                                       false
                                       asioiden-ulkoasu/tr-ikoni
                                       asioiden-ulkoasu/tr-viiva)}))))
+
+
+(defn hae-vkm! []
+  (dotimes [i 10]
+    (tasot/poista-geometria! (keyword (str "vkm-tr-osoite-" i))))
+  (go
+    (let [tulos
+          (<! (vkm/tieosoite @tr))
+          polut (get-in tulos ["lines" "lines"])]
+      (log "POLKUJA " (count polut))
+      (doseq [ajr (range (count polut))]
+        (tasot/nayta-geometria! (keyword (str "vkm-tr-osoite-" ajr))
+                                {:alue (maarittele-feature
+                                        {:type :line
+                                         :points (get-in polut [ajr "paths" 0])}
+                                        false
+                                        asioiden-ulkoasu/tr-ikoni
+                                        asioiden-ulkoasu/tr-viiva)})))))
 
 (defn kaanna! []
   (swap! tr
@@ -82,7 +101,8 @@
 
    [:div
     [:button {:on-click hae!} "Hae"]
-    [:button {:on-click kaanna!} "Käännä alku/loppu"]]])
+    [:button {:on-click kaanna!} "Käännä alku/loppu"]
+    [:button {:on-click hae-vkm!} "Hae VKM polut"]]])
 
 (defn koordinaatti-haku []
   [:div.tierekisteri-koordinaatti-haku

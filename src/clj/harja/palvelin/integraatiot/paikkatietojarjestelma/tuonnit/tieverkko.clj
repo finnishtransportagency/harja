@@ -111,8 +111,7 @@
                            (viimeinen-piste fallback-ls)
                            ls0
                            ls1))
-                (do #_(println "EI FALLBACKIA")
-                    nil)))))))))
+                nil))))))))
 
 (defn- keraa-geometriat
   "Yhdistää 1-ajorataisen (ajr0) ja 2-ajorataisen halutun suunnan mukaisen osan
@@ -146,11 +145,26 @@
     (some #(alkaen-pisteesta % alkupiste)
           (line-string-seq g))))
 
+(defn luo-siltaava-fallback [fallback]
+  (fn [alkupiste p1 p2]
+    (or (fallback alkupiste p1 p2)
+        ;; Ultimate fallback, tehdään ylimääräinen linestring joka siltaa
+        ;; tämän pätkän seuraavaan linnuntietä pitkin.
+        ;; Otetaan lähempi seuraavista ls0/ls1 pätkistä ja yhdistetään siihen
+        (let [et-p1 (some-> p1 (geo/etaisyys alkupiste))
+              et-p2 (some-> p2 (geo/etaisyys alkupiste))]
+          (println "EI fallbackia, etäisyydet: et-p1: " et-p1 "; et-p2: " et-p2)
+          nil))))
+
 (defn vie-tieosa [db tie osa osan-geometriat]
   (let [ajoradat (into {}
                        (map (juxt :ajorata identity))
                        osan-geometriat)
-        oikea (keraa-geometriat (ajoradat 0) (ajoradat 1) (constantly nil))
+        oikea (or (keraa-geometriat (ajoradat 0) (ajoradat 1)
+                                    (luo-fallback (ajoradat 2)))
+                  (keraa-geometriat (ajoradat 0) (ajoradat 1)
+                                    (luo-siltaava-fallback
+                                     (luo-fallback (ajoradat 2)))))
         vasen (keraa-geometriat (ajoradat 0) (ajoradat 2)
                                 (luo-fallback (ajoradat 1)))]
 
