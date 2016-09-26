@@ -68,16 +68,20 @@
                     paivystykset)))
         1)))
 
-(deftest urakat-ilman-paivystysta-toimii
+(defn- hae-urakat-ilman-paivystysta [pvm]
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
-        urakat (urakat/hae-voimassa-olevat-urakat testitietokanta (t/local-date 2016 1 1))
+        urakat (urakat/hae-voimassa-olevat-urakat testitietokanta pvm)
         paivystykset (paivystajatarkistukset/hae-voimassa-olevien-urakoiden-paivystykset
-                                 testitietokanta
-                                 (t/local-date 2016 1 1))
+                       testitietokanta
+                       pvm)
         urakat-ilman-paivystysta (paivystajatarkistukset/urakat-ilman-paivystysta
                                    paivystykset
                                    urakat
-                                   (t/local-date 2016 1 1))]
+                                   pvm)]
+    urakat-ilman-paivystysta))
+
+(deftest urakat-ilman-paivystysta-toimii
+  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2016 1 1))]
     ;; Muhoksen urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
                   #(= (:nimi %) "Muhoksen päällystysurakka")
@@ -85,6 +89,21 @@
 
     ;; Kaikki muut urakat sisältyy
     (is (= (count urakat-ilman-paivystysta) 17))))
+
+(deftest urakat-ilman-paivystysta-toimii
+  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 11 2))]
+    ;; Oulun 2014-2019 urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
+    (is (nil? (first (filter
+                       #(= (:nimi %) "Oulun alueurakka 2014-2019")
+                       urakat-ilman-paivystysta))))
+
+    ;; Kaikki muut urakat sisältyy
+    (is (= (count urakat-ilman-paivystysta) 17))))
+
+(deftest urakat-ilman-paivystysta-toimii
+  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2060 1 1))]
+    ;; Millään urakalla ei päivystystä ko. päivänä
+    (is (= (count urakat-ilman-paivystysta) 18))))
 
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
