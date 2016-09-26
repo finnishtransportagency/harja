@@ -13,7 +13,7 @@
     (let []
       (if (hankkeet/onko-tuotu-samposta? db sampo-id)
         (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm alueurakkanro sampo-id)
-        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro tyypit sampo-id))
+        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm alueurakkanro sampo-id))
 
       (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
       (maksuerat/perusta-maksuerat-hoidon-urakoille db))

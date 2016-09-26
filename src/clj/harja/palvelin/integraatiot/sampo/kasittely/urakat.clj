@@ -83,7 +83,7 @@
     "kokonaisurakka"))
 
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
-                                   ely-hash]}]
+                                   ely-hash alueurakkanro]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
     (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro alueurakkanro)
