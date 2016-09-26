@@ -49,6 +49,7 @@
    :muutoshinta 666
    :kohdenimi nil
    :kohdenumero "666"
+   :yllapitokohde-id "777"
    :kommentit []
    :tr-numero 20
    :tr-alkuosa 1
@@ -151,6 +152,8 @@
                                                                                4 3900
                                                                                5 400}))
         _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))
+        _ (fake-palvelukutsu :lukitse (constantly {:id "paallystysilmoitus_777",
+                                                   :kayttaja 2, :aikaleima (t/now)}))
         tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
     (async
      done

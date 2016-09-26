@@ -38,8 +38,7 @@
    :loppupvm               (parsi-paivamaara (z/xml1-> project (z/attr :schedule_finish)))
    :hanke-sampo-id         (z/xml1-> project (z/attr :programId))
    :yhteyshenkilo-sampo-id (z/xml1-> project (z/attr :resourceId))
-   :ely-hash               (z/xml1-> project (z/attr :financialDepartmentHash))
-   :alueurakkanro          (z/xml1-> project (z/attr :vv_alueurakkanro))})
+   :ely-hash               (z/xml1-> project (z/attr :financialDepartmentHash))})
 
 (defn lue-sopimus [order]
   {:viesti-id            (hae-viesti-id order)

@@ -106,7 +106,7 @@
                                    :lukitse
                                    +kayttaja-tero+ {:id "nakyma1"})]
     (is (not (nil? jvh-lukko)))
-    (is (nil? tero-lukko))))
+    (is (= tero-lukko :ei-lukittu))))
 
 (deftest kayttajan-A-ei-voi-virkistaa-kayttajan-B-lukkoa
   (let [jvh-lukko (kutsu-palvelua (:http-palvelin jarjestelma)
