@@ -200,12 +200,13 @@ SELECT
   t.turvallisuuskoordinaattori_etunimi  AS turvallisuuskoordinaattorietunimi,
   t.turvallisuuskoordinaattori_sukunimi AS turvallisuuskoordinaattorisukunimi,
   t.aiheutuneet_seuraukset              AS seuraukset,
+  u.urakkanro                           AS alueurakkanro,
 
   u.sampoid                             AS "urakka-sampoid",
   u.nimi                                AS "urakka-nimi",
 
   h.nimi                                AS "hanke-nimi",
-  h.alueurakkanro                       AS "alueurakkanro",
+
 
   k.id                                  AS korjaavatoimenpide_id,
   k.kuvaus                              AS korjaavatoimenpide_kuvaus,
