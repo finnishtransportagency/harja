@@ -132,16 +132,16 @@
         viiva? (and (:losa tr-osoite)
                     (:let tr-osoite))
         geometria (when tr-osoite
-                    (:sijainti (first (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
-                                       db {:tie (:numero tr-osoite)
-                                           :aosa (:aosa tr-osoite)
-                                           :aet (:aet tr-osoite)
-                                           :losa (if viiva?
-                                                   (:losa tr-osoite)
-                                                   (:aosa tr-osoite))
-                                           :let (if viiva?
-                                                  (:let tr-osoite)
-                                                  (:aet tr-osoite))}))))]
+                    (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
+                     db {:tie (:numero tr-osoite)
+                         :aosa (:aosa tr-osoite)
+                         :aet (:aet tr-osoite)
+                         :losa (if viiva?
+                                 (:losa tr-osoite)
+                                 (:aosa tr-osoite))
+                         :let (if viiva?
+                                (:let tr-osoite)
+                                (:aet tr-osoite))}))]
     geometria))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
