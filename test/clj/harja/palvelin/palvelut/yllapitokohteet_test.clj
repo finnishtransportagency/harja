@@ -97,7 +97,6 @@
       (log/debug "Kohteet kannassa: " (pr-str kohteet-kannassa))
       (is (not (nil? kohteet-kannassa)))
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-muutoksen-jalkeen "Urakan geometria päivittyi"))
-      (is (every? #(pos? (:pituus %)) kohteet-kannassa))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
       (u (str "DELETE FROM yllapitokohde WHERE nimi = 'Testiramppi4564ddf';")))))
 
