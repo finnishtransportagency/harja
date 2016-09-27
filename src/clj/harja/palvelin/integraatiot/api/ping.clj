@@ -7,10 +7,16 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
-            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]))
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.kyselyt.status :as q-status]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
-(defn tarkista-yhteydet [db ]
-  ;; todo: tee kantakysely
+(defn tarkista-yhteydet [db]
+  (when (not (= 3 (q-status/tarkista-kantayhteys db)))
+    (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+             :virheet [{:koodi virheet/+tietokanta-yhteys-poikki+
+                        :viesti "Tietokantayhteys ei on poikki"}]}))
+
   (tee-kirjausvastauksen-body {:ilmoitukset "pong"}))
 
 (defrecord Ping []
