@@ -171,6 +171,6 @@
             (if (k/virhe? vastaus)
               (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
               (do (log "[YLLÄPITOKOHTEET] Kohteet tallennettu: " (pr-str vastaus))
-                  (viesti/nayta! "Tallennus onnistui. Tarkista ja tallenna muokkaamiesi kohteiden alikohteiden osoitteet."
+                  (viesti/nayta! "Tallennus onnistui. Tarkista ja tallenna myös muokkaamiesi tieosoitteiden alikohteet."
                                  :success viesti/viestin-nayttoaika-keskipitka)
                   (valmis-fn vastaus))))))))
