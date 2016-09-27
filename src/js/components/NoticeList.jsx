@@ -2,6 +2,7 @@ import React from 'react';
 import Notice from './Notice.jsx';
 import request from 'superagent';
 import pubsub from 'pubsub-js';
+import {Button} from 'react-foundation';
 import {Events, Category} from '../enums.js';
 
 var ListItem = React.createClass({
@@ -10,9 +11,14 @@ var ListItem = React.createClass({
   },
   render: function() {
     return (
-      <div>
-        <img className="harja-icon" src="images/clock.png" alt="harja logo" srcSet="images/clock.svg" />
-        <div onClick={this.onclick}>{this.props.notice.title}</div>
+      <div className="harja-noticelist-item">
+        <div className="row">
+          <img className="harja-icon medium-2 columns" src="images/clock.png" alt="harja logo" srcSet="images/clock.svg" />
+          <div className="harja-date medium-10 columns">{this.props.notice.date}</div>
+        </div>
+        <div className="row">
+          <a className="harja-notice-link columns" href="#" onClick={this.onclick}>{this.props.notice.title}</a>
+        </div>
       </div>
     );
   }

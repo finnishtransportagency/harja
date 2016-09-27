@@ -4,7 +4,6 @@ import SingleNoticeView from './SingleNoticeView.jsx';
 import NoticeTypeView from './NoticeTypeView.jsx';
 import Nav from './Nav.jsx';
 import Footer from './Footer.jsx';
-import {Button, Colors} from 'react-foundation';
 import {Category, Events} from '../enums.js';
 import pubsub from 'pubsub-js';
 

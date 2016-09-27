@@ -3896,11 +3896,23 @@ a:visited {
 .harja-loading {
   height: 2em; }
 
+.harja-date {
+  padding-left: 0;
+  color: #c8c8c8; }
+
 .harja-noticelist {
   background-color: white;
   border-left: 0;
   border-right: 0;
   padding: 1em; }
+
+.harja-noticelist-item {
+  margin-bottom: 1em; }
+
+a.harja-notice-link {
+  color: #0088ce; }
+  a.harja-notice-link:hover, a.harja-notice-link:focus {
+    color: #0046ad; }
 
 .harja-care-noticelist {
   border-top: 0.5em solid #9eb83d;

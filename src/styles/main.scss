@@ -66,11 +66,29 @@ a:visited {
   height: $logo-height-small;
 }
 
+.harja-date {
+  padding-left: 0;
+  color: $grey-light;
+}
+
 .harja-noticelist {
   background-color: white;
   border-left: 0;
   border-right: 0;
   padding: 1em;
+}
+
+.harja-noticelist-item {
+  margin-bottom: 1em;
+}
+
+a.harja-notice-link {
+  color: $blue;
+
+  &:hover,
+  &:focus {
+    color: $blue-darker;
+  }
 }
 
 .harja-care-noticelist {
