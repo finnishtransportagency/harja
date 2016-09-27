@@ -107,7 +107,7 @@ CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
   RETURNS SETOF geometry
 AS $$
 BEGIN
-  RETURN NEXT tr_osoitteelle_viiva2(tie_, aosa_, aet_, losa_, let_);
+  RETURN NEXT tr_osoitteelle_viiva3(tie_, aosa_, aet_, losa_, let_);
 END;
 $$ LANGUAGE plpgsql;
 
