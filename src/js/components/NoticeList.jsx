@@ -11,7 +11,7 @@ var ListItem = React.createClass({
   render: function() {
     return (
       <div>
-        <i className="fi-clock"></i>
+        <img className="harja-icon" src="styles/images/clock.png" alt="harja logo" srcSet="styles/images/clock.svg" />
         <div onClick={this.onclick}>{this.props.notice.title}</div>
       </div>
     );
