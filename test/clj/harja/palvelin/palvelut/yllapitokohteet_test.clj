@@ -216,3 +216,21 @@
     (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-alku")
     (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
     (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-kohde-valmis")))
+
+(deftest testidatassa-validit-kohteet
+  ;; On kiva jos meidän oma testidata on validia
+  (let [kohteet (q "SELECT
+                   ypko.tr_numero,
+                   ypko.tr_alkuosa,
+                   ypko.tr_alkuetaisyys,
+                   ypko.tr_loppuosa,
+                   ypko.tr_loppuetaisyys,
+                   ypk.tr_numero as kohde_tr_numero,
+                   ypk.tr_alkuosa as kohde_tr_alkuosa,
+                   ypk.tr_alkuetaisyys as kohde_tr_alkuetaisyys,
+                   ypk.tr_loppuosa as kohde_tr_loppuosa,
+                   ypk.tr_loppuetaisyys as kohde_tr_loppuetaisyys
+                   FROM yllapitokohdeosa ypko
+                   LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id;")]
+    (doseq [kohde kohteet]
+      (is (= (get kohde 0) (get kohde 5)) "Alikohteen tienumero on sama kuin pääkohteella"))))
