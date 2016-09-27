@@ -308,7 +308,11 @@ SET
                                                          CAST(:tr_alkuosa AS INTEGER),
                                                          CAST(:tr_alkuetaisyys AS INTEGER),
                                                          CAST(:tr_loppuosa AS INTEGER),
-                                                         CAST(:tr_loppuetaisyys AS INTEGER)));
+                                                         CAST(:tr_loppuetaisyys AS INTEGER)))
+WHERE id = :id
+      AND yllapitokohde IN (SELECT id
+                            FROM yllapitokohde
+                            WHERE urakka = :urakka);
 
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan
