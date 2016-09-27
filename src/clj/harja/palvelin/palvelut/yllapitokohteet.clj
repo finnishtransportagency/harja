@@ -50,6 +50,23 @@
                                       urakka-id " vaan urakkaan " kohteen-urakka
                                       ", eikä valittu urakka myöskään ole kohteen suorittava tiemerkintäurakka"))))))
 
+(defn- laske-osien-pituudet
+  "Hakee tieverkosta osien pituudet tielle"
+  [db yllapitokohteet]
+  (fmap
+    (fn [osat]
+      (let [tie (:tr-numero (first osat))
+            osat (into #{}
+                       (comp (mapcat (juxt :tr-alkuosa :tr-loppuosa))
+                             (remove nil?))
+                       osat)
+            min-osa (reduce min 1 osat)
+            max-osa (reduce max 1 osat)]
+        (into {}
+              (map (juxt :osa :pituus))
+              (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
+    (group-by :tr-numero yllapitokohteet)))
+
 (defn hae-urakan-yllapitokohteet [db user {:keys [urakka-id sopimus-id]}]
   (tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet.")
@@ -67,22 +84,7 @@
                                                          :yllapitokohde (:id %)})))))
                         (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                      :sopimus sopimus-id}))
-          osien-pituudet-tielle
-          (fmap
-            (fn [osat]
-              ;; Hakee tieverkosta osien pituudet tielle
-              (let [tie (:tr-numero (first osat))
-                    osat (into #{}
-                               (comp (mapcat (juxt :tr-alkuosa :tr-loppuosa))
-                                     (remove nil?))
-                               osat)
-                    min-osa (reduce min 1 osat)
-                    max-osa (reduce max 1 osat)]
-                (into {}
-                      (map (juxt :osa :pituus))
-                      (tieverkko/hae-osien-pituudet db tie min-osa max-osa))))
-            (group-by :tr-numero vastaus))
-
+          osien-pituudet-tielle (laske-osien-pituudet db vastaus)
           vastaus (mapv #(assoc %
                           :pituus
                           (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))
