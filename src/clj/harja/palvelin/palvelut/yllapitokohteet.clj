@@ -37,7 +37,7 @@
       "paikkaus"
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkauskohteet user urakka-id))))
 
-(defn- vaadi-yllapitokohde-kuuluu-urakkaan [db urakka-id yllapitokohde]
+(defn vaadi-yllapitokohde-kuuluu-urakkaan [db urakka-id yllapitokohde]
   "Tarkistaa, että ylläpitokohde kuuluu annettuun urakkaan tai annettu urakka on merkitty
    suorittavaksi tiemerkintäurakakaksi. Jos kumpikaan ei ole totta, heittää poikkeuksen."
   (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde})))
