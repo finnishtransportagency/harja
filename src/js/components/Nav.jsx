@@ -3,7 +3,7 @@ import {Button, ButtonGroup, Link, Colors} from 'react-foundation';
 import {Events, Category} from '../enums.js';
 import pubsub from 'pubsub-js';
 
-var NavItem = React.createClass({
+let NavItem = React.createClass({
   onclick: function() {
     pubsub.publish(Events.NAV, this.props.item.data);
   },

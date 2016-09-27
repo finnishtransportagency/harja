@@ -3896,7 +3896,12 @@ a:visited {
 .harja-loading {
   height: 2em; }
 
+.harja-icon {
+  height: 1.5em; }
+
 .harja-date {
+  height: 1.5em;
+  font-weight: bold;
   padding-left: 0;
   color: #c8c8c8; }
 
@@ -3925,9 +3930,6 @@ a.harja-notice-link {
 .harja-faq-noticelist {
   border-top: 0.5em solid #0088ce;
   border-bottom: 0.2em solid #c8c8c8; }
-
-.harja-icon {
-  height: 1.5em; }
 
 .livi-header-logo {
   height: 4em;
