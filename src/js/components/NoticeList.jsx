@@ -13,8 +13,8 @@ let ListItem = React.createClass({
     return (
       <div className="harja-noticelist-item">
         <div className="row">
-          <img className="harja-icon medium-2 columns" src="images/clock.png" alt="harja logo" srcSet="images/clock.svg" />
-          <div className="harja-date medium-10 small-10 columns">{this.props.notice.date}</div>
+          <img className="harja-icon medium-2 hide-for-small columns" src="images/clock.png" alt="harja logo" srcSet="images/clock.svg" />
+          <div className="harja-date medium-10 small-12 columns">{this.props.notice.date}</div>
         </div>
         <div className="row">
           <a className="harja-notice-link columns" href="#" onClick={this.onclick}>{this.props.notice.title}</a>
