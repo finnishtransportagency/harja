@@ -151,7 +151,6 @@
         (#{:kelitarkastusraportti
           :laaduntarkastusraportti
           :laatupoikkeamaraportti
-          :sanktioraportti
           :soratietarkastusraportti
           :tiestotarkastusraportti} raportti))))
 
