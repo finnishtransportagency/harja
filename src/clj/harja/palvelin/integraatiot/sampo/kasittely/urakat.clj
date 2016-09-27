@@ -32,8 +32,9 @@
 (defn- luo-urakka [db nimi alkupvm loppupvm hanke-sampo-id sampo-id alueurakkanro urakkatyyppi sopimustyyppi
                    hallintayksikko]
   (log/debug "Luodaan uusi urakka.")
-  (let [uusi-id (:id (urakat/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id alueurakkanro urakkatyyppi
-                                          hallintayksikko sopimustyyppi))]
+
+  (let [uusi-id (:id (urakat/luo-urakka<! db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkatyyppi hallintayksikko
+                                          sopimustyyppi alueurakkanro))]
     (log/debug "Uusi urakka id on:" uusi-id)
     (urakat/paivita-urakka-alueiden-nakyma db)
     uusi-id))
