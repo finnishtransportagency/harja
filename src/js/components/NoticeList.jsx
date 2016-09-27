@@ -11,7 +11,7 @@ var ListItem = React.createClass({
   render: function() {
     return (
       <div>
-        <img className="harja-icon" src="styles/images/clock.png" alt="harja logo" srcSet="styles/images/clock.svg" />
+        <img className="harja-icon" src="images/clock.png" alt="harja logo" srcSet="images/clock.svg" />
         <div onClick={this.onclick}>{this.props.notice.title}</div>
       </div>
     );
@@ -53,7 +53,7 @@ export default React.createClass({
 
     if (!notices.length > 0) {
       loadingEl = (
-        <img className="harja-loading" src="styles/images/ajax-loader.gif" alt="ladataan..." />
+        <img className="harja-loading" src="images/ajax-loader.gif" alt="ladataan..." />
       );
     }
     else {

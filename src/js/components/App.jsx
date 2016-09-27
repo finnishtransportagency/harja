@@ -28,7 +28,7 @@ export default React.createClass({
   },
 
   getNotices(file, type) {
-    const url = '../data/' + file;
+    const url = '../../data/' + file;
     request.get(url)
       .set('Accept', 'application/json')
       .end((err, response) => {

@@ -19,8 +19,8 @@
     "watchify": "^3.7.0"
   },
   "scripts": {
-    "dev": "gulp --type dev",
-    "start": "gulp",
+    "watch": "gulp --type dev watch",
+    "server": "gulp server",
     "build": "gulp build"
   },
   "jest": {

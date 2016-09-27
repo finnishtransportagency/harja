@@ -25,8 +25,8 @@ export default React.createClass({
       <div>
         <div className="harja-header title-bar show-for-medium">
           <div className="top-bar-left">
-            <img className="livi-header-logo" src="styles/images/livi_logo_blue.png" alt="liikennevirasto logo" />
-            <img className="harja-header-logo" src="styles/images/harja_logo_text.png" alt="harja logo" srcSet="styles/images/harja_logo_text.svg" />
+            <img className="livi-header-logo" src="images/livi_logo_blue.png" alt="liikennevirasto logo" />
+            <img className="harja-header-logo" src="images/harja_logo_text.png" alt="harja logo" srcSet="images/harja_logo_text.svg" />
           </div>
           <div className="top-bar-right">
             <div className="title-bar-title">Liikenneviraston Harja-projekti</div>
@@ -35,7 +35,7 @@ export default React.createClass({
 
         <div className="harja-title-bar title-bar" data-responsive-toggle="top-menu" data-hide-for="medium">
           <div className="top-bar-left">
-            <img className="harja-menu-logo" src="styles/images/harja_logo.png" alt="harja logo" />
+            <img className="harja-menu-logo" src="images/harja_logo.png" alt="harja logo" />
           </div>
           <div className="top-bar-right">
             <button className="menu-icon" type="button" data-toggle></button>

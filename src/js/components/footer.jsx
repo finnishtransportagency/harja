@@ -6,7 +6,7 @@ export default React.createClass({
       <footer id="harja-footer">
         <div className="row align-middle">
           <div className="columns medium-4">
-            <img className="livi-header-logo" src="styles/images/livi_logo_white.png" alt="liikennevirasto logo" />
+            <img className="livi-header-logo" src="images/livi_logo_white.png" alt="liikennevirasto logo" />
           </div>
           <div className="columns medium-8 small-12">
             <p>Tätä projektia ylläpitää <span><a href="http://www.liikennevirasto.fi/">Liikennevirasto</a></span></p>

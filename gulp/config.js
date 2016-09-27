@@ -1,11 +1,12 @@
-var dest = './docs';
+var dest = './dist';
 var src = './src';
+var server_root = './';
 var gutil = require('gulp-util');
 
 module.exports = {
   server: {
     settings: {
-      root: dest,
+      root: server_root,
       host: 'localhost',
       port: 8080,
       livereload: {
@@ -17,8 +18,7 @@ module.exports = {
     src: src + '/styles/**/*.{sass,scss,css}',
     dest: dest + '/styles',
     settings: {
-      indentedSyntax: false, // Enable .sass syntax?
-      imagePath: '/images' // Used by the image-url helper
+      indentedSyntax: false // Enable .sass syntax?
     }
   },
   browserify: {
@@ -32,11 +32,7 @@ module.exports = {
   },
   html: {
     src: src + '/index.html',
-    dest: dest
-  },
-  images: {
-    src: src + '/styles/images/*',
-    dest: dest + '/styles/images',
+    dest: server_root
   },
   watch: {
     src: src + '/**/*.*',
