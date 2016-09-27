@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.yllapitokohteet_test
+(ns harja.palvelin.integraatiot.api.yllapitokohteet-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
