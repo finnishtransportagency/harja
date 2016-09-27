@@ -233,4 +233,8 @@
                    FROM yllapitokohdeosa ypko
                    LEFT JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id;")]
     (doseq [kohde kohteet]
-      (is (= (get kohde 0) (get kohde 5)) "Alikohteen tienumero on sama kuin pääkohteella"))))
+      (is (= (get kohde 0) (get kohde 5)) "Alikohteen tienumero on sama kuin pääkohteella")
+      (is (and (>= (get kohde 1) (get kohde 6))
+               (<= (get kohde 1) (get kohde 8))) "Alikohde on kohteen sisällä")
+      (is (and (>= (get kohde 3) (get kohde 6))
+               (<= (get kohde 3) (get kohde 8))) "Alikohde on kohteen sisällä"))))
