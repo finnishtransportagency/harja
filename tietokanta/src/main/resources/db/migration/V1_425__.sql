@@ -21,7 +21,7 @@ CREATE MATERIALIZED VIEW urakoiden_alueet AS
     END
 
   FROM urakka u
-    LEFT JOIN alueurakka au ON u.alueurakkanro = au.alueurakkanro;
+    LEFT JOIN alueurakka au ON u.urakkanro = au.alueurakkanro;
 
 DROP MATERIALIZED VIEW pohjavesialueet_urakoittain;
 CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
@@ -31,7 +31,7 @@ CREATE MATERIALIZED VIEW pohjavesialueet_urakoittain AS
           u.id,
           au.alue
         FROM urakka u
-          JOIN alueurakka au ON u.alueurakkanro = au.alueurakkanro
+          JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
         WHERE u.tyyppi = 'hoito' :: urakkatyyppi),
       pohjavesialue_alue AS (
         SELECT
@@ -57,7 +57,7 @@ CREATE MATERIALIZED VIEW sillat_alueurakoittain AS
     u.id AS urakka,
     s.id AS silta
   FROM urakka u
-    JOIN alueurakka au ON u.alueurakkanro = au.alueurakkanro
+    JOIN alueurakka au ON u.urakkanro = au.alueurakkanro
     JOIN silta s ON ST_CONTAINS(au.alue, s.alue)
   WHERE u.tyyppi = 'hoito' :: urakkatyyppi;
 
