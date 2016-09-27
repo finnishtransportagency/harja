@@ -1,6 +1,6 @@
 -- Paikkauskohteet
 
--- Muhoksen päällystysurakka
+-- Muhoksen paikkausurakka
 
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, yllapitokohdetyyppi, yllapitokohdetyotyyppi) VALUES ((SELECT id FROM urakka WHERE  nimi = 'Muhoksen paikkausurakka'), (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka') AND paasopimus IS null), 311, 'Oulaisten ohitusramppi 2', 0, 3457, 5, 6,'paallyste' :: yllapitokohdetyyppi , 'paikkaus'::yllapitokohdetyotyyppi);
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, sijainti) VALUES ((SELECT id FROM yllapitokohde WHERE nimi ='Oulaisten ohitusramppi 2'), 'Laivalahti 1', 19521, 10, 5, 10, 15, ST_GeomFromText('MULTILINESTRING((426888 7212758,427081 7212739),(434777 7215499,436899 7217174,438212 7219910,438676 7220554,440102 7221432,441584 7222729,442255 7223162,443128 7223398,443750 7223713,448682 7225293,451886 7226708,456379 7228018,459945 7229222,461039 7229509))'));
