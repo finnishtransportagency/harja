@@ -39,12 +39,13 @@
     [:h2 [:b otsikko]]
 
     [:table.otsikot-ja-arvot
-     (for [[nimi arvo] nimi-arvo-parit]
-       (when-not (nil? arvo)
-         ^{:key (str nimi arvo)}
-         [:tr
-          [:td.otsikko [:b nimi]]
-          [:td.arvo arvo]]))]
+     [:tbody
+      (for [[nimi arvo] nimi-arvo-parit]
+        (when-not (nil? arvo)
+          ^{:key (str nimi arvo)}
+          [:tr
+           [:td.otsikko [:b nimi]]
+           [:td.arvo arvo]]))]]
 
     (when linkki
       [:a.arvolistaus-linkki.klikattava
@@ -121,7 +122,7 @@
                                                                                   (.preventDefault e)
                                                                                   (modal/piilota!))}
                                           "Takaisin tilannekuvaan"]}
-                               [ilmoituksen-tiedot/ilmoitus (dissoc tapahtuma :type :alue)]))}}))))
+                               [ilmoituksen-tiedot/ilmoitus nil (dissoc tapahtuma :type :alue)]))}}))))
 
 (defmethod nayta-popup :suljettu-tieosuus-klikattu [tapahtuma]
   (kartta/nayta-popup! (geometrian-koordinaatti tapahtuma)
