@@ -100,14 +100,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 -- wrapperi rajapinnan pitämiseksi samana
 CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_viiva(
   tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER, losa_ INTEGER, let_ INTEGER)
   RETURNS SETOF geometry
 AS $$
 BEGIN
-  RETURN NEXT tr_osoitteelle_viiva3(tie_, aosa_, aet_, losa_, let_);
+  IF aosa_=losa_ AND aet_=let_ THEN
+    RETURN NEXT tierekisteriosoitteelle_piste(tie_, aosa_, aet_);
+  ELSE
+    RETURN NEXT tr_osoitteelle_viiva3(tie_, aosa_, aet_, losa_, let_);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_piste(tie_ INTEGER, aosa_ INTEGER, aet_ INTEGER) RETURNS geometry AS $$
+DECLARE
+ osan_geometria GEOMETRY;
+ osan_kohta FLOAT;
+BEGIN
+  SELECT geom
+    FROM tr_osan_ajorata
+   WHERE tie=tie_ AND osa=aosa_
+   ORDER BY ajorata
+   LIMIT 1
+   INTO osan_geometria;
+  osan_kohta := LEAST(1, aosa_/ST_Length(osan_geometria));
+  RETURN ST_LineSubstring(osan_geometria, osan_kohta, osan_kohta);
 END;
 $$ LANGUAGE plpgsql;
 
