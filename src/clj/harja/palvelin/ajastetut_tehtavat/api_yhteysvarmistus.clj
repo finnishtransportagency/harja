@@ -38,7 +38,7 @@
     (log/debug (format "Varmistetaan API:n yhteys %s minuutin välein." minuutit))
     (ajastettu-tehtava/ajasta-minuutin-valein
       minuutit
-      (fn [] (tarkista-api-yhteys db integraatioloki url kayttajatunnus salasana)))))
+      (fn [_] (tarkista-api-yhteys db integraatioloki url kayttajatunnus salasana)))))
 
 (defrecord ApiVarmistus [ajovali-minuutteina url kayttajatunnus salasana]
   component/Lifecycle
