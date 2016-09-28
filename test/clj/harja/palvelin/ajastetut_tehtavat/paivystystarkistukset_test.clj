@@ -83,16 +83,13 @@
 (defn- hae-urakat-ilman-paivystysta [pvm]
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
-        _ (log/debug "Voimassa olevat urakat: " (pr-str urakat))
         paivystykset (paivystajatarkistukset/hae-voimassa-olevien-urakoiden-paivystykset
                        testitietokanta
                        pvm)
-        _ (log/debug "Löytyi päivystykset: " (pr-str paivystykset))
         urakat-ilman-paivystysta (paivystajatarkistukset/urakat-ilman-paivystysta
                                    paivystykset
                                    urakat
-                                   pvm)
-        _ (log/debug "Urakat ilman päivytystä: " (pr-str urakat-ilman-paivystysta))]
+                                   pvm)]
     urakat-ilman-paivystysta))
 
 (deftest muhoksen-urakan-paivystys-loytyy
@@ -119,10 +116,9 @@
     (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
 (deftest oulun-ja-muhoksen-paivystys-loytyy
-  (let [pvm (t/local-date 2015 11 2)
+  (let [pvm (t/local-date 2015 12 5)
         testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
-        _ (log/debug "TARKISTA URAKAT: " (pr-str urakat))
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
     (is (nil? (first (filter
@@ -132,37 +128,8 @@
                        #(= (:nimi %) "Muhoksen päällystysurakka")
                        urakat-ilman-paivystysta))))
 
-    ;; Kaikki muut urakat sisältyy
+    ;; Kaikki muut urakat ilman päivytystä
     (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
-
-(deftest oulun-ja-muhoksen-paivystys-loytyy-2
-  (let [pvm (t/local-date 2060 1 1)
-        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
-        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
-        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 1))]
-    ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
-    (is (nil? (first (filter
-                       #(= (:nimi %) "Oulun alueurakka 2014-2019")
-                       urakat-ilman-paivystysta))))
-    (is (nil? (first (filter
-                       #(= (:nimi %) "Muhoksen päällystysurakka")
-                       urakat-ilman-paivystysta))))
-
-    ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
-
-(deftest oulun-ja-muhoksen-paivystys-loytyy-3
-  (let [pvm (t/local-date 2060 1 1)
-        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
-        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
-        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 6))]
-    ;; Oulun 2014-2019 urakalla päivitys päättyy juuri tänä ajanhetkenä, eli ei sisälly joukkoon
-    (is (nil? (first (filter
-                       #(= (:nimi %) "Muhoksen päällystysurakka")
-                       urakat-ilman-paivystysta))))
-
-    ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
 (deftest kaikki-urakat-listataan-ilman-paivystysta
   (let [pvm (t/local-date 2060 1 1)
