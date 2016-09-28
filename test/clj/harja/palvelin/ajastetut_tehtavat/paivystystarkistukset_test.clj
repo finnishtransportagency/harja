@@ -125,8 +125,10 @@
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
     (is (nil? (first (filter
-                       #(or (= (:nimi %) "Oulun alueurakka 2014-2019")
-                            (= (:nimi %) "Muhoksen päällystysurakka"))
+                       #(= (:nimi %) "Oulun alueurakka 2014-2019")
+                       urakat-ilman-paivystysta))))
+    (is (nil? (first (filter
+                       #(= (:nimi %) "Muhoksen päällystysurakka")
                        urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
@@ -139,8 +141,10 @@
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 1))]
     ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
     (is (nil? (first (filter
-                       #(or (= (:nimi %) "Oulun alueurakka 2014-2019")
-                            (= (:nimi %) "Muhoksen päällystysurakka"))
+                       #(= (:nimi %) "Oulun alueurakka 2014-2019")
+                       urakat-ilman-paivystysta))))
+    (is (nil? (first (filter
+                       #(= (:nimi %) "Muhoksen päällystysurakka")
                        urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
