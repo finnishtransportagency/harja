@@ -336,4 +336,7 @@ SELECT
   sampoid
 FROM urakka u
 WHERE u.alkupvm <= :pvm
-      AND u.loppupvm >= :pvm;
+      AND u.loppupvm >= :pvm
+      -- PENDING Lisätään urakkatyyppejä sitä mukaan kun
+      -- päätyvät tuotantoon
+      AND tyyppi = 'hoito'::urakkatyyppi;

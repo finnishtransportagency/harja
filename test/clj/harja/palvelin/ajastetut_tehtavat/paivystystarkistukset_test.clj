@@ -93,14 +93,17 @@
     urakat-ilman-paivystysta))
 
 (deftest muhoksen-urakan-paivystys-loytyy
-  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2016 1 1))]
+  (let [pvm (t/local-date 2016 1 1)
+        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Muhoksen urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
                   #(= (:nimi %) "Muhoksen päällystysurakka")
                   urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) 17))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
 (deftest oulun-urakan-paivystys-loytyy
   (let [pvm (t/local-date 2015 11 2)
