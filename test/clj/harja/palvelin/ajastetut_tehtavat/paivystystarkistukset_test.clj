@@ -115,6 +115,19 @@
     ;; Kaikki muut urakat sisältyy
     (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
+(deftest oulun-urakan-paivystys-loytyy-paivystyksen-alkupaivana
+  (let [pvm (t/local-date 2015 11 1)
+        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
+    ;; Oulun 2014-2019 urakalla päivitys alkaa samana päivänä, eli ei sisälly joukkoon "urakat ilman päivystystä"
+    (is (nil? (first (filter
+                       #(= (:nimi %) "Oulun alueurakka 2014-2019")
+                       urakat-ilman-paivystysta))))
+
+    ;; Kaikki muut urakat sisältyy
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
+
 (deftest oulun-ja-muhoksen-paivystys-loytyy
   (let [pvm (t/local-date 2015 12 5)
         testitietokanta (tietokanta/luo-tietokanta testitietokanta)
