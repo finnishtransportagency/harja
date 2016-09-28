@@ -125,4 +125,7 @@
  :virustarkistus {:url "http://localhost:8080/scan"}
 
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
+
+ :sonja-jms-yhteysvarmistus {:ajovali-minuutteina 1
+                             :jono "Harja.Ping"}
  }

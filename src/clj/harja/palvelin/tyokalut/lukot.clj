@@ -20,7 +20,7 @@
       (aja-toiminto db tunniste toiminto-fn)
       true)
     (do
-      (log/debug (format "Lukkoa: %s on asetettu. Toimintoa ei voida ajaa." tunniste))
+      (log/debug (format "Lukko: %s on asetettu. Toimintoa ei voida ajaa." tunniste))
       false)))
 
 (defn aja-lukon-kanssa
