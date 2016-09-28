@@ -183,7 +183,6 @@ BEGIN
       osui := i;
     END IF;
   END LOOP;
-  RAISE NOTICE 'osui multilinestring ls# %', osui;
   -- Lasketaan etäisyys
   FOR i IN 1..osui LOOP
     ls := ST_GeometryN(geom_, i);
