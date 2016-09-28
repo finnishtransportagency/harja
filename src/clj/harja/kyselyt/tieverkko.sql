@@ -59,6 +59,7 @@ SELECT * FROM tr_osoitteelle_viiva3(
 
 
 -- name: tierekisteriosoite-pisteeksi
+-- single?: true
 -- hakee pisteen annetulle tierekisteriosoitteelle jossa ei ole loppuosaa
 SELECT *
 FROM tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER), CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER));
