@@ -36,7 +36,7 @@
           (let [virheviesti (format "Yhteyskokeilu Sonjan JMS-jonoon (%s) ei palauttanut oletettua vastausta. Vastaus: %s." jono saapunut-viesti)]
             (log/error virheviesti)
             (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti virheviesti tapahtuma-id nil)))))
-    (swap! viestit [])))
+    (reset! viestit [])))
 
 (defn tee-jms-yhteysvarmistus-tehtava [{:keys [integraatioloki sonja]} minuutit jono]
   (when (and minuutit jono)
