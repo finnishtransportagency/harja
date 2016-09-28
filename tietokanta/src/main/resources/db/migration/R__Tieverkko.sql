@@ -147,6 +147,7 @@ CREATE OR REPLACE FUNCTION tierekisteriosoitteelle_piste(tie_ INTEGER, aosa_ INT
 DECLARE
  osan_geometria GEOMETRY;
  osan_kohta FLOAT;
+ tulos GEOMETRY;
 BEGIN
   SELECT geom
     FROM tr_osan_ajorata
@@ -155,7 +156,11 @@ BEGIN
    LIMIT 1
    INTO osan_geometria;
   osan_kohta := LEAST(1, aet_/ST_Length(osan_geometria));
-  RETURN ST_LineSubstring(osan_geometria, osan_kohta, osan_kohta);
+  tulos := ST_LineSubstring(osan_geometria, osan_kohta, osan_kohta);
+  IF ST_GeometryType(tulos)='ST_GeometryCollection' AND ST_NumGeometries(tulos)=1 THEN
+    tulos := ST_GeometryN(tulos, 1);
+  END IF;
+  RETURN tulos;
 END;
 $$ LANGUAGE plpgsql;
 
