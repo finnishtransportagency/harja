@@ -57,6 +57,9 @@ export default React.createClass({
             notice.id = index;
             notice.type = type
             notice.date = notice.date === null ? '' : notice.date.toLocaleDateString('fi-FI');
+            notice.title = notice.title || '';
+            notice.body = notice.body || '';
+            notice.images = notice.images || [];
             return notice;
           });
 

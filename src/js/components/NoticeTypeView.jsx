@@ -27,10 +27,14 @@ export default React.createClass({
         break;
     }
     return (
-      <div>
-        <h1>{title}</h1>
-        <p>{body}</p>
-        <NoticeList notices={this.props.notices} category={this.props.category}/>
+      <div className="row">
+        <div className="medium-8 columns">
+          <h1>{title}</h1>
+          <p>{body}</p>
+        </div>
+        <div className="medium-4 columns">
+          <NoticeList notices={this.props.notices} category={this.props.category}/>
+        </div>
       </div>
     );
   }

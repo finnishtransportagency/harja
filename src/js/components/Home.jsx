@@ -40,9 +40,10 @@ export default React.createClass({
     let mainEl, singleNoticeEl, noticeTypeEl;
 
     if (selection && selection.id != null) {
-      const category = this.props[selection.category];
-      const notice =category.filter((item) => { return item.id === selection.id})[0];
-      singleNoticeEl = (<SingleNoticeView notice={notice} category={category}/>);
+      const notices = this.props[selection.category];
+      const notice = notices.filter((item) => { return item.id === selection.id})[0];
+      const props = {notice: notice, category: selection.category, notices: notices}
+      singleNoticeEl = (<SingleNoticeView  {...props}/>);
     }
     else if (selection && selection.category) {
       const props = {category: selection.category, notices: this.props[selection.category]}

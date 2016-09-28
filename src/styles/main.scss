@@ -44,6 +44,8 @@ html, body {
 
 #harja-content {
   background-color: $grey-lighter;
+  padding-left: $left-pad;
+  padding-right: $right-pad;
 }
 
 a {
