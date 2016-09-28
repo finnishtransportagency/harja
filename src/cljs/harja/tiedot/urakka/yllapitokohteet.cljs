@@ -5,7 +5,10 @@
     [harja.loki :refer [log tarkkaile!]]
     [cljs.core.async :refer [<!]]
     [harja.asiakas.kommunikaatio :as k]
-    [harja.tiedot.urakka :as urakka])
+    [harja.tiedot.urakka :as urakka]
+    [harja.tiedot.urakka :as u]
+    [harja.tiedot.navigaatio :as nav]
+    [harja.ui.viesti :as viesti])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -154,3 +157,20 @@
                              (alku kohdeosa)))}
              (zipmap (iterate inc (+ 2 (count avaimet-ennen)))
                      (map #(get kohdeosat %) (rest avaimet-jalkeen)))))))
+
+(defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi valmis-fn]
+  (when (oikeustarkistus-fn)
+    (fn [kohteet]
+      (go (let [urakka-id (:id @nav/valittu-urakka)
+                [sopimus-id _] @u/valittu-sopimusnumero
+                _ (log "[YLLÄPITOKOHTEET] Tallennetaan kohteet: " (pr-str kohteet))
+                vastaus (<! (tallenna-yllapitokohteet!
+                              urakka-id sopimus-id
+                              (mapv #(assoc % :tyyppi kohdetyyppi)
+                                    kohteet)))]
+            (if (k/virhe? vastaus)
+              (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
+              (do (log "[YLLÄPITOKOHTEET] Kohteet tallennettu: " (pr-str vastaus))
+                  (viesti/nayta! "Tallennus onnistui. Tarkista ja tallenna myös muokkaamiesi tieosoitteiden alikohteet."
+                                 :success viesti/viestin-nayttoaika-keskipitka)
+                  (valmis-fn vastaus))))))))
