@@ -53,13 +53,19 @@ export default React.createClass({
       mainEl = (
         <div className="row">
           <div className="medium-4 small-12 columns">
-            <NoticeList notices={care} category={Category.CARE} shorten={3}/>
+            <div className="harja-noticelist harja-care-noticelist">
+              <NoticeList notices={care} category={Category.CARE} shorten={3}/>
+            </div>
           </div>
           <div className="medium-4 small-12 columns">
-            <NoticeList notices={maintenance} category={Category.MAINTENANCE} shorten={3}/>
+            <div className="harja-noticelist harja-maintenance-noticelist">
+              <NoticeList notices={maintenance} category={Category.MAINTENANCE} shorten={3}/>
+            </div>
           </div>
           <div className="medium-4 small-12 columns">
-            <NoticeList notices={faq} category={Category.FAQ} shorten={3}/>
+            <div className="harja-noticelist harja-faq-noticelist">
+              <NoticeList notices={faq} category={Category.FAQ} shorten={3}/>
+            </div>
           </div>
         </div>
       );

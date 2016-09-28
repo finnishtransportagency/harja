@@ -43,9 +43,7 @@ export default React.createClass({
     let titleText, buttonText = '';
 
     let {notices, category} = this.props;
-
-    let className = 'harja-noticelist harja-' + category + '-noticelist';
-
+    
     switch (category) {
       case Category.CARE:
         titleText = 'Ajankohtaista teiden hoidossa';
@@ -88,7 +86,7 @@ export default React.createClass({
     }
 
     return (
-      <div className={className}>
+      <div>
         <h5>{titleText}</h5>
         {loadingEl}
         {noticesEl}

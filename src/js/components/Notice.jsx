@@ -38,6 +38,9 @@ export default React.createClass({
         <div className="row">
           <p>{notice.body}</p>
         </div>
+        <div className="row">
+          {imagesEl}
+        </div>
       </div>
     );
   }

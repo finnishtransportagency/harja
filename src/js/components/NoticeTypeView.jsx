@@ -10,8 +10,10 @@ export default React.createClass({
   },
 
   render() {
-    let {notice, category} = this.props;
+    let {notice, category, notices} = this.props;
     let title, body;
+    let className = 'harja-noticelist harja-' + category + '-noticelist';
+
     switch (category) {
       case Category.CARE:
         title = 'Teiden hoito';
@@ -26,14 +28,21 @@ export default React.createClass({
         body = 'Meiltä kysytään usein lorem ipsum....'
         break;
     }
+
     return (
-      <div className="row">
-        <div className="medium-8 columns">
-          <h1>{title}</h1>
-          <p>{body}</p>
+      <div>
+        <div className="row">
+          <div className="medium-8 columns">
+            <h1>{title}</h1>
+            <p>{body}</p>
+          </div>
         </div>
-        <div className="medium-4 columns">
-          <NoticeList notices={this.props.notices} category={this.props.category}/>
+        <div className="row">
+          <div className="medium-12 small-12 columns">
+            <div className={className}>
+              <NoticeList notices={notices} category={category}/>
+            </div>
+          </div>
         </div>
       </div>
     );
