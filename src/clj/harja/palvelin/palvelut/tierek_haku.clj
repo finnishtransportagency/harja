@@ -33,19 +33,22 @@
   (log/debug "Haetaan viiva osoiteelle " (pr-str params))
   (let [korjattu-osoite params
         viiva? (and (:loppuosa korjattu-osoite)
-                    (:loppuetaisyys korjattu-osoite))]
-    [(geo/pg->clj
-      (if viiva?
-        (tv/tierekisteriosoite-viivaksi db
-                                        (:numero korjattu-osoite)
-                                        (:alkuosa korjattu-osoite)
-                                        (:alkuetaisyys korjattu-osoite)
-                                        (:loppuosa korjattu-osoite)
-                                        (:loppuetaisyys korjattu-osoite))
-        (tv/tierekisteriosoite-pisteeksi db
-                                         (:numero korjattu-osoite)
-                                         (:alkuosa korjattu-osoite)
-                                         (:alkuetaisyys korjattu-osoite))))]))
+                    (:loppuetaisyys korjattu-osoite))
+        geom (geo/pg->clj
+              (if viiva?
+                (tv/tierekisteriosoite-viivaksi db
+                                                (:numero korjattu-osoite)
+                                                (:alkuosa korjattu-osoite)
+                                                (:alkuetaisyys korjattu-osoite)
+                                                (:loppuosa korjattu-osoite)
+                                                (:loppuetaisyys korjattu-osoite))
+                (tv/tierekisteriosoite-pisteeksi db
+                                                 (:numero korjattu-osoite)
+                                                 (:alkuosa korjattu-osoite)
+                                                 (:alkuetaisyys korjattu-osoite))))]
+    (if geom
+      [geom]
+      {:virhe "Tierekisteriosoitetta ei löydy"})))
 
 (defn hae-osien-pituudet
   "Hakee tierekisteriosien pituudet annetulle tielle ja osan välille.
