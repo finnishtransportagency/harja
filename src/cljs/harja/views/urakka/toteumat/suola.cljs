@@ -51,7 +51,12 @@
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
            muokattava? (comp not true? :koneellinen)
-           listaus  (reverse (sort-by :alkanut @toteumat))]
+           yhteenvetorivi (when-not (empty? @toteumat)
+                            {:yhteenveto true
+                             :materiaali {:nimi "Yhteensä käytetty"}
+                             :maara      (reduce + (keep :maara @toteumat))
+                             :id         "suolatoteumien_yhteenvetorivi"})
+           listaus (keep identity (conj (reverse (sort-by :alkanut @toteumat)) yhteenvetorivi))]
        [:div.suolatoteumat
         [kartta/kartan-paikka]
         [:span.valinnat

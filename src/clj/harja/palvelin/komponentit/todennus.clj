@@ -7,15 +7,15 @@
             [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [harja.domain
-             [oikeudet :as oikeudet]
-             [roolit :as roolit]]
+             [oikeudet :as oikeudet]]
             [harja.kyselyt
-             [kayttajat :as q]
-             [konversio :as konv]]
+             [kayttajat :as q]]
             [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
             [slingshot.slingshot :refer [throw+ try+]]
             [taoensso.timbre :as log])
   (:import (org.apache.commons.codec.net BCodec)))
+
+(def todennusvirhe {:virhe :todennusvirhe})
 
 (defn- ryhman-rooli-ja-linkki
   "Etsii annetulle OAM ryhmälle roolin. Ryhmä voi olla suoraan roolin nimi
@@ -143,31 +143,34 @@ ja palauttaa käyttäjätiedot"
        puhelin "oam_user_mobile"
        :as headerit}]
 
-  (let [organisaatio (hae-kayttajalle-organisaatio ely db organisaatio)
+  ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
+  (if (q/onko-jarjestelma? db kayttajanimi)
+    (throw+ todennusvirhe)
+    (let [organisaatio (hae-kayttajalle-organisaatio ely db organisaatio)
 
-        kayttaja {:kayttajanimi kayttajanimi
-                  :etunimi etunimi
-                  :sukunimi sukunimi
-                  :sahkoposti sahkoposti
-                  :puhelin puhelin
-                  :organisaatio (:id organisaatio)}
-        kayttaja-id (q/varmista-kayttaja
-                     db
-                     (assoc kayttaja
-                            :organisaatio (:id organisaatio)))]
-    (log/info "SÄHKE HEADERIT: " headerit
-              "; KÄYTTÄJÄ ID: " kayttaja-id
-              "; ORGANISAATIO: " organisaatio)
-    (merge (assoc kayttaja
-                  :organisaatio organisaatio
-                  :organisaation-urakat (into #{}
-                                              (map :id)
-                                              (q/hae-organisaation-urakat db (:id organisaatio)))
-                  :id kayttaja-id)
-           (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
-                             (partial q/hae-urakoitsijan-id-ytunnuksella db)
-                             oikeudet/roolit
-                             ryhmat))))
+         kayttaja {:kayttajanimi kayttajanimi
+                   :etunimi etunimi
+                   :sukunimi sukunimi
+                   :sahkoposti sahkoposti
+                   :puhelin puhelin
+                   :organisaatio (:id organisaatio)}
+         kayttaja-id (q/varmista-kayttaja
+                       db
+                       (assoc kayttaja
+                         :organisaatio (:id organisaatio)))]
+     (log/info "SÄHKE HEADERIT: " headerit
+               "; KÄYTTÄJÄ ID: " kayttaja-id
+               "; ORGANISAATIO: " organisaatio)
+     (merge (assoc kayttaja
+              :organisaatio organisaatio
+              :organisaation-urakat (into #{}
+                                          (map :id)
+                                          (q/hae-organisaation-urakat db (:id organisaatio)))
+              :id kayttaja-id)
+            (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
+                              (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                              oikeudet/roolit
+                              ryhmat)))))
 
 (defn- ohita-oikeudet
   "Mahdollista kaikkien OAM_* headerien ohittaminen tietyille käyttäjille konfiguraatiossa.
@@ -194,8 +197,6 @@ headerit palautetaan normaalisti."
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
   (todenna-pyynto [this req] "Todenna annetun HTTP-pyynnön käyttäjätiedot, palauttaa uuden
 req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
-
-(def todennusvirhe {:virhe :todennusvirhe})
 
 (defrecord HttpTodennus [oikeudet]
   component/Lifecycle
