@@ -54,7 +54,7 @@
            yhteenvetorivi (when-not (empty? @toteumat)
                             {:yhteenveto true
                              :materiaali {:nimi "Yhteensä käytetty"}
-                             :maara      (reduce + (map :maara @toteumat))
+                             :maara      (reduce + (keep :maara @toteumat))
                              :id         "suolatoteumien_yhteenvetorivi"})
            listaus (keep identity (conj (reverse (sort-by :alkanut @toteumat)) yhteenvetorivi))]
        [:div.suolatoteumat
