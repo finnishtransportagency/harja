@@ -154,7 +154,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                          (update :tilat
                                                  #(if (empty? %) (into #{} tila-filtterit) %)))))
            :notifioi-uudet? notifioi-uudet?})))
-    app)
+    (assoc app :ilmoitukset nil))
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
