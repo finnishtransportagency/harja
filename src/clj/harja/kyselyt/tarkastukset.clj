@@ -15,7 +15,7 @@
                              ulkoinen-id havainnot laadunalitus yllapitokohde] :as tarkastus}]
   (log/debug "Tallenna tai päivitä urakan " urakka-id " tarkastus: " tarkastus)
   (when yllapitokohde
-    (yllapitokohteet/tarkista-yllapitokohteen-urakka db urakka-id yllapitokohde))
+    (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde))
   (let [sijainti (if (instance? PGgeometry sijainti)
                    sijainti
                    (and sijainti (geo/geometry (geo/clj->pg sijainti))))]
