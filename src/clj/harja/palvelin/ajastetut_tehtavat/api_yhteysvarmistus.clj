@@ -43,5 +43,6 @@
   (start [this]
     (assoc this :api-varmistus (tee-api-varmistus-tehtava this ajovali-minuutteina url kayttajatunnus salasana)))
   (stop [this]
-    ((get this :api-varmistus))
+    (let [lopeta (get this :api-varmistus)]
+      (when lopeta (lopeta)))
     this))
