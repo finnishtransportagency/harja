@@ -36,8 +36,7 @@
                                                  (:db this) lahetysjono-ulos))))
     (fn [] ())))
 
-(defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan
-                  lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
+(defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
   component/Lifecycle
   (start [this]
     (log/debug "Käynnistetään Sampo komponentti")

@@ -15,7 +15,7 @@
   (when (not (= 3 (q-status/tarkista-kantayhteys db)))
     (throw+ {:type virheet/+sisainen-kasittelyvirhe+
              :virheet [{:koodi virheet/+tietokanta-yhteys-poikki+
-                        :viesti "Tietokantayhteys ei on poikki"}]}))
+                        :viesti "Tietokantayhteys on poikki"}]}))
 
   (tee-kirjausvastauksen-body {:ilmoitukset "pong"}))
 
@@ -23,13 +23,13 @@
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
-      http :pong
+      http :ping
       (GET "/api/ping" request
-        (kasittele-kutsu db integraatioloki :ping request nil json-skeemat/kirjausvastaus
+        (kasittele-kutsu db integraatioloki :ping-sisaan request nil json-skeemat/kirjausvastaus
                          (fn [_ _ _ _]
                            (tarkista-yhteydet db)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :pong)
+    (poista-palvelut http :ping)
     this))
