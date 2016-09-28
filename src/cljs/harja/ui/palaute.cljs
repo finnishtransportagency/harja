@@ -10,7 +10,7 @@
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko
-  "Palautetta HARJAsta")
+  "")
 
 (def palaute-body
   (str "Kerro meille mitä yritit tehdä, ja millaiseen ongelmaan törmäsit. Harkitse kuvakaappauksen "
@@ -18,7 +18,7 @@
        "Ota kuvakaappaukseen mukaan koko selainikkuna."))
 
 (def virhe-otsikko
-  "HARJA räsähti")
+  "")
 
 (defn tekniset-tiedot [kayttaja url user-agent]
   (let [enc #(.encodeURIComponent js/window %)]
@@ -46,7 +46,9 @@
 
 (defn- lisaa-kentta
   ([kentta pohja lisays] (lisaa-kentta kentta pohja lisays "&"))
-  ([kentta pohja lisays valimerkki] (str pohja valimerkki kentta (ilman-valimerkkeja lisays))))
+  ([kentta pohja lisays valimerkki] (if (empty? lisays)
+                                      pohja
+                                      (str pohja valimerkki kentta (ilman-valimerkkeja lisays)))))
 
 (defn- subject
   ([pohja lisays] (lisaa-kentta "subject=" pohja lisays))
@@ -65,7 +67,8 @@
                          (tekniset-tiedot
                            @istunto/kayttaja
                            (-> js/window .-location .-href)
-                           (-> js/window .-navigator .-userAgent)))))}
+                           (-> js/window .-navigator .-userAgent)))
+                    (if-not (empty? palaute-otsikko) "&" "?")))}
    [:span (ikonit/livicon-kommentti) " Palautetta!"]])
 
 (defn virhe-palaute [virhe]
@@ -75,7 +78,8 @@
               (body (virhe-body virhe
                                 @istunto/kayttaja
                                 (-> js/window .-location .-href)
-                                (-> js/window .-navigator .-userAgent))))
+                                (-> js/window .-navigator .-userAgent))
+                    (if-not (empty? virhe-otsikko) "&" "?")))
     :on-click #(.stopPropagation %)}
    [:span
     [ikonit/envelope]
