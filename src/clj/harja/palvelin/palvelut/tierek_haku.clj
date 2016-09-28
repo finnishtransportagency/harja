@@ -32,12 +32,18 @@
   [db params]
   (log/debug "Haetaan viiva osoiteelle " (pr-str params))
   (let [korjattu-osoite params
+        viiva? (and (:loppuosa korjattu-osoite)
+                    (:loppuetaisyys korjattu-osoite))
         geom (tv/tierekisteriosoite-viivaksi db
                                              (:numero korjattu-osoite)
                                              (:alkuosa korjattu-osoite)
                                              (:alkuetaisyys korjattu-osoite)
-                                             (:loppuosa korjattu-osoite)
-                                             (:loppuetaisyys korjattu-osoite))]
+                                             (if viiva?
+                                               (:loppuosa korjattu-osoite)
+                                               (:alkuosa korjattu-osoite))
+                                             (if viiva?
+                                               (:loppuetaisyys korjattu-osoite)
+                                               (:alkuosa korjattu-osoite)))]
     [(geo/pg->clj geom)]))
 
 (defn hae-osien-pituudet

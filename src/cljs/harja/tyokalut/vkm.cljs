@@ -107,6 +107,9 @@
 (defn tieosoite->viiva [trosoite]
   (k/post! :hae-tr-viivaksi trosoite nil true))
 
+(defn tieosoite->piste [trosoite]
+  (k/post! :hae-tr-viivaksi trosoite nil true))
+
 (defn koordinaatti->trosoite [[x y]]
   (k/post! :hae-tr-pisteella {:x x :y y} nil true))
 
