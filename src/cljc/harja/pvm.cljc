@@ -692,3 +692,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      "Antaa joda daten suomen aikavyöhykkeellä"
      [joda-time]
      (t/from-time-zone joda-time suomen-aikavyohyke)))
+
+#?(:clj
+   (defn suomen-aikavyohykkeeseen
+     "Antaa joda daten suomen aikavyöhykkeellä"
+     [joda-time]
+     (t/to-time-zone joda-time suomen-aikavyohyke)))

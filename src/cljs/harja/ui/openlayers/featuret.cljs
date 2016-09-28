@@ -4,11 +4,11 @@
 
             [ol.geom.Polygon]
             [ol.geom.MultiPolygon]
-
             [ol.geom.Point]
             [ol.geom.Circle]
             [ol.geom.LineString]
             [ol.geom.MultiLineString]
+            [ol.geom.GeometryCollection]
 
             [ol.style.Style]
             [ol.style.Fill]
@@ -33,6 +33,8 @@ pienemmällä zindexillä." :const true}
 
 
 (defmulti luo-feature :type)
+(defmulti luo-geometria :type)
+
 
 (defn aseta-tyylit [feature {:keys [fill color stroke marker zindex] :as geom}]
   (doto feature
@@ -103,9 +105,12 @@ pienemmällä zindexillä." :const true}
                                                        :miterLimit (or miter 10)})
                         :zindex (or zindex (swap! kasvava-zindex inc))}))
 
+(defmethod luo-geometria :viiva [{points :points}]
+  (ol.geom.LineString. (clj->js points)))
+
 (defmethod luo-feature :viiva
-  [{:keys [viivat points ikonit]}]
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))})
+  [{:keys [viivat points ikonit] :as viiva}]
+  (let [feature (ol.Feature. #js {:geometry (luo-geometria viiva)})
         kasvava-zindex (atom oletus-zindex)
         taitokset (atom [])
         laske-taitokset (fn []
@@ -118,10 +123,14 @@ pienemmällä zindexillä." :const true}
         tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
     (doto feature (.setStyle (clj->js tyylit)))))
 
+(defmethod luo-geometria :moniviiva
+  [{lines :lines}]
+  (ol.geom.MultiLineString.
+   (clj->js (mapv :points lines))))
+
 (defmethod luo-feature :moniviiva
-  [{:keys [lines viivat ikonit]}]
-  (let [feature (ol.Feature. #js {:geometry (ol.geom.MultiLineString.
-                                             (clj->js (mapv :points lines)))})
+  [{:keys [lines viivat ikonit] :as moniviiva}]
+  (let [feature (ol.Feature. #js {:geometry (luo-geometria moniviiva)})
         kasvava-zindex (atom oletus-zindex)
         taitokset (atom [])
         laske-taitokset (fn []
@@ -134,8 +143,12 @@ pienemmällä zindexillä." :const true}
         tyylit (apply concat (mapv tee-viiva viivat) (mapv tee-ikoni ikonit))]
     (doto feature (.setStyle (clj->js tyylit)))))
 
-(defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor]}]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+(defmethod luo-geometria :merkki
+  [{c :coordinates}]
+  (ol.geom.Point. (clj->js c)))
+
+(defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor] :as merkki}]
+  (doto (ol.Feature. #js {:geometry (luo-geometria merkki)})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
                                 #js {:src    (str img)
@@ -144,12 +157,14 @@ pienemmällä zindexillä." :const true}
                       :zIndex (or zindex oletus-zindex)}))))
 
 
+(defmethod luo-geometria :polygon [{c :coordinates}]
+  (ol.geom.Polygon. (clj->js [c])))
 
-(defmethod luo-feature :polygon [{:keys [coordinates] :as spec}]
-  (ol.Feature. #js {:geometry (ol.geom.Polygon. (clj->js [coordinates]))}))
+(defmethod luo-geometria :icon [{c :coordinates}]
+  (ol.geom.Point. (clj->js c)))
 
-(defmethod luo-feature :icon [{:keys [coordinates img direction anchor]}]
-  (doto (ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
+(defmethod luo-feature :icon [{:keys [coordinates img direction anchor] :as icon}]
+  (doto (ol.Feature. #js {:geometry (luo-geometria icon)})
     (.setStyle (ol.style.Style.
                  #js {:image  (ol.style.Icon.
                                 #js {:src          img
@@ -162,24 +177,33 @@ pienemmällä zindexillä." :const true}
                                      :anchorYUnits "fraction"})
                       :zIndex oletus-zindex}))))
 
+(defmethod luo-geometria :point [{c :coordinates}]
+  (ol.geom.Point. (clj->js c)))
+
 (defmethod luo-feature :point [{:keys [coordinates radius] :as point}]
   #_(ol.Feature. #js {:geometry (ol.geom.Point. (clj->js coordinates))})
   (luo-feature (assoc point
                  :type :circle
                  :radius (or radius 10))))
 
-(defmethod luo-feature :circle [{:keys [coordinates radius]}]
-  (ol.Feature. #js {:geometry (ol.geom.Circle. (clj->js coordinates) radius)}))
+(defmethod luo-geometria :circle [{:keys [coordinates radius]}]
+  (ol.geom.Circle. (clj->js coordinates) radius))
 
+(defmethod luo-geometria :multipolygon [{polygons :polygons}]
+  (let [multi (ol.geom.MultiPolygon.)]
+    (doseq [polygon polygons]
+      (.appendPolygon multi (ol.geom.Polygon. (clj->js [(:coordinates polygon)]))))
+    multi))
 
-(defmethod luo-feature :multipolygon [{:keys [polygons] :as spec}]
-  (ol.Feature. #js {:geometry (let [multi (ol.geom.MultiPolygon.)]
-                                (doseq [polygon polygons]
-                                  (.appendPolygon multi (ol.geom.Polygon. (clj->js [(:coordinates polygon)]))))
-                                multi)}))
+(defmethod luo-geometria :multiline [{lines :lines}]
+  (ol.geom.MultiLineString. (clj->js (mapv :points lines))))
 
-(defmethod luo-feature :multiline [{:keys [lines] :as spec}]
-  (ol.Feature. #js {:geometry (ol.geom.MultiLineString. (clj->js (mapv :points lines)))}))
+(defmethod luo-geometria :line [{points :points}]
+  (ol.geom.LineString. (clj->js points)))
 
-(defmethod luo-feature :line [{:keys [points] :as spec}]
-  (ol.Feature. #js {:geometry (ol.geom.LineString. (clj->js points))}))
+(defmethod luo-geometria :geometry-collection [{gs :geometries}]
+  (log "LUODAAN GEOMETRY-COLLECTION " (pr-str gs))
+  (ol.geom.GeometryCollection. (clj->js (mapv luo-geometria gs))))
+
+(defmethod luo-feature :default [this]
+  (ol.Feature. #js {:geometry (luo-geometria this)}))
