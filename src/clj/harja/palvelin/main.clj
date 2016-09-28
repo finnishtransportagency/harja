@@ -86,13 +86,15 @@
     [harja.palvelin.integraatiot.api.varusteet :as api-varusteet]
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
+    [harja.palvelin.integraatiot.api.ping :as api-ping]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
-    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
-     :as suolasakkojen-lahetys]
+    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
+    [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
+    [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -137,8 +139,8 @@
       :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
 
       :liitteiden-hallinta (component/using
-                            (harja.palvelin.komponentit.liitteet/->Liitteet)
-                            [:db :virustarkistus])
+                             (harja.palvelin.komponentit.liitteet/->Liitteet)
+                             [:db :virustarkistus])
 
       ;; Integraatioloki
       :integraatioloki
@@ -193,8 +195,8 @@
               [:db :integraatioloki :liitteiden-hallinta])
 
       :yha-integraatio (component/using
-             (yha-integraatio/->Yha (:yha asetukset))
-             [:db :integraatioloki])
+                         (yha-integraatio/->Yha (:yha asetukset))
+                         [:db :integraatioloki])
 
       :raportointi (component/using
                      (raportointi/luo-raportointi)
@@ -288,7 +290,7 @@
                    [:http-palvelin :sampo :db])
 
       :liitteet (component/using
-                 (liitteet/->Liitteet)
+                  (liitteet/->Liitteet)
                   [:http-palvelin :liitteiden-hallinta])
 
       :laadunseuranta (component/using
@@ -327,6 +329,24 @@
                                 (:geometriapaivitykset asetukset))
                               [:db :integraatioloki])
 
+      :api-yhteysvarmistus (component/using
+                             (let [{:keys [ajovali-minuutteina
+                                           url
+                                           kayttajatunnus
+                                           salasana]} (:api-yhteysvarmistus asetukset)]
+                               (api-yhteysvarmistus/->ApiVarmistus
+                                 ajovali-minuutteina
+                                 url
+                                 kayttajatunnus
+                                 salasana))
+                             [:db :integraatioloki])
+
+
+      :sonja-jms-yhteysvarmistus (component/using
+                                   (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
+                                     (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
+                                   [:db :integraatioloki :sonja])
+
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
                      {:db :db-replica
@@ -337,8 +357,8 @@
                      [:http-palvelin :db])
 
       :api-jarjestelmatunnukset (component/using
-                                 (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
-                                 [:http-palvelin :db])
+                                  (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
+                                  [:http-palvelin :db])
 
       ;; Harja API
       :api-urakat (component/using
@@ -387,23 +407,26 @@
                          [:http-palvelin :db :integraatioloki :klusterin-tapahtumat
                           :tloik])
       :api-yllapitokohteet (component/using
-                            (api-yllapitokohteet/->Yllapitokohteet)
+                             (api-yllapitokohteet/->Yllapitokohteet)
                              [:http-palvelin :db :integraatioloki])
+      :api-ping (component/using
+                  (api-ping/->Ping)
+                  [:http-palvelin :db :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
       (component/using
-       (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
-       [:db])
+        (laskutusyhteenvedot/->LaskutusyhteenvetojenMuodostus)
+        [:db])
 
       :status (component/using
-               (status/luo-status)
-               [:http-palvelin :db :db-replica :sonja])
+                (status/luo-status)
+                [:http-palvelin :db :db-replica :sonja])
 
       :harja-laadunseuranta
       (component/using
-       (harja-laadunseuranta/->Laadunseuranta laadunseuranta)
-       [:db :http-palvelin]))))
+        (harja-laadunseuranta/->Laadunseuranta laadunseuranta)
+        [:db :http-palvelin]))))
 
 (defonce harja-jarjestelma nil)
 
@@ -411,9 +434,9 @@
   (try
     (alter-var-root #'harja-jarjestelma
                     (constantly
-                     (-> (lue-asetukset asetusfile)
-                         luo-jarjestelma
-                         component/start)))
+                      (-> (lue-asetukset asetusfile)
+                          luo-jarjestelma
+                          component/start)))
     (status/aseta-status! (:status harja-jarjestelma) 200 "Harja käynnistetty")
     (catch Throwable t
       (log/fatal t "Harjan käynnistyksessä virhe")

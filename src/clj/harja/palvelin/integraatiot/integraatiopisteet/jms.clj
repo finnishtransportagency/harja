@@ -26,7 +26,7 @@
          virheviesti (format "Lähetys JMS jonoon: %s epäonnistui." jono)]
      (try
        (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
-         (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti)
+         (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
          (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti))
        (catch Exception poikkeus
          (log/error poikkeus "Virhe JMS lähetyksessä jonoon: " jono)
@@ -47,7 +47,7 @@
                             viesti-id (viesti->id data)
                             onnistunut (onnistunut? data)]
                         (if viesti-id
-                          (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut)
+                          (lokittaja :saapunut-jms-kuittaus viesti-id viestin-sisalto onnistunut jono)
                           (log/error "Kuittauksesta ei voitu hakea viesti-id:tä."))
                         (kasittelija data viesti-id onnistunut))))
     (catch Exception e
@@ -62,7 +62,7 @@
         (log/debug "Vastaanotettiin viesti jonosta " jono-sisaan ": " viesti)
         (let [viestin-sisalto (.getText viesti)
               ulkoinen-id (.getJMSCorrelationID viesti)
-              tapahtuma-id (lokittaja :saapunut-jms-viesti ulkoinen-id viestin-sisalto)
+              tapahtuma-id (lokittaja :saapunut-jms-viesti ulkoinen-id viestin-sisalto jono-sisaan)
               [onnistui? data] (try
                                  [true (viestiparseri viestin-sisalto)]
                                  (catch Exception e
@@ -73,7 +73,7 @@
             (try
               (let [vastaus (kasittelija data)
                     vastauksen-sisalto (kuittausmuodostaja vastaus)]
-                (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "")
+                (lokittaja :lahteva-jms-kuittaus vastauksen-sisalto tapahtuma-id true "" jono-ulos)
                 (sonja/laheta sonja jono-ulos vastauksen-sisalto {:correlation-id ulkoinen-id}))
               (catch Exception e
                 ;; Hallitsematon virhe viestin käsittelyssä, kirjataan epäonnistunut integraatio
