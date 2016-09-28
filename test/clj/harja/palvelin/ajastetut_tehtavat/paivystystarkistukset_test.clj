@@ -68,13 +68,13 @@
                     paivystykset)))
         1)))
 
-(deftest hae-kaynnissa-olevat-rakat-paivystystarkistukseen-toimii
+(deftest hae-kaynnissa-olevat-urakat-paivystystarkistukseen-toimii
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta (t/local-date 2016 1 1))]
     (is (= (count urakat) 18))
     urakat))
 
-(deftest hae-kaynnissa-olevat-rakat-paivystystarkistukseen-toimii
+(deftest hae-kaynnissa-olevat-urakat-paivystystarkistukseen-toimii
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta (t/local-date 2007 1 1))]
     (is (= (count urakat) 1))
@@ -122,6 +122,7 @@
   (let [pvm (t/local-date 2015 11 2)
         testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        _ (log/debug "TARKISTA URAKAT: " (pr-str urakat))
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
     (is (nil? (first (filter
