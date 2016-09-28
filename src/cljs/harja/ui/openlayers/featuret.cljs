@@ -206,5 +206,4 @@ pienemmällä zindexillä." :const true}
   (ol.geom.GeometryCollection. (clj->js (mapv luo-geometria gs))))
 
 (defmethod luo-feature :default [this]
-  (log "LUO FEAT: " (pr-str this))
   (ol.Feature. #js {:geometry (luo-geometria this)}))
