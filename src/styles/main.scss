@@ -63,7 +63,11 @@ a:visited {
 }
 
 .harja-loading {
-  height: $logo-height-small;
+  padding-top: $logo-height-small;
+  padding-bottom: $logo-height-small;
+  height: calc(3*$logo-height-small);
+  display: block;
+  margin: 0 auto;
 }
 
 .harja-icon {
@@ -88,6 +92,14 @@ a:visited {
   margin-bottom: 1em;
 }
 
+
+.harja-more {
+  a::after {
+  content: "\00BB";
+}
+}
+
+
 a.harja-notice-link {
   color: $blue;
 
@@ -100,16 +112,31 @@ a.harja-notice-link {
 .harja-care-noticelist {
   border-top: $harja-list-top-height solid $green;
   border-bottom: $harja-list-bottom-height solid $grey-light;
+  .harja-more {
+    a {
+      background-color: $green;
+    }
+  }
 }
 
 .harja-maintenance-noticelist {
   border-top: $harja-list-top-height solid $orange;
   border-bottom: $harja-list-bottom-height solid $grey-light;
+  .harja-more {
+    a {
+      background-color: $orange;
+    }
+  }
 }
 
 .harja-faq-noticelist {
   border-top: $harja-list-top-height solid $blue;
   border-bottom: $harja-list-bottom-height solid $grey-light;
+  .harja-more {
+    a {
+      background-color: $blue;
+    }
+  }
 }
 
 .livi-header-logo {

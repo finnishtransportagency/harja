@@ -3894,7 +3894,11 @@ a:visited {
   margin-right: 1em; }
 
 .harja-loading {
-  height: 2em; }
+  padding-top: 2em;
+  padding-bottom: 2em;
+  height: calc(3*$logo-height-small);
+  display: block;
+  margin: 0 auto; }
 
 .harja-icon {
   height: 1.5em; }
@@ -3914,6 +3918,9 @@ a:visited {
 .harja-noticelist-item {
   margin-bottom: 1em; }
 
+.harja-more a::after {
+  content: "\00BB"; }
+
 a.harja-notice-link {
   color: #0088ce; }
   a.harja-notice-link:hover, a.harja-notice-link:focus {
@@ -3922,14 +3929,20 @@ a.harja-notice-link {
 .harja-care-noticelist {
   border-top: 0.5em solid #9eb83d;
   border-bottom: 0.2em solid #c8c8c8; }
+  .harja-care-noticelist .harja-more a {
+    background-color: #9eb83d; }
 
 .harja-maintenance-noticelist {
   border-top: 0.5em solid #f79421;
   border-bottom: 0.2em solid #c8c8c8; }
+  .harja-maintenance-noticelist .harja-more a {
+    background-color: #f79421; }
 
 .harja-faq-noticelist {
   border-top: 0.5em solid #0088ce;
   border-bottom: 0.2em solid #c8c8c8; }
+  .harja-faq-noticelist .harja-more a {
+    background-color: #0088ce; }
 
 .livi-header-logo {
   height: 4em;

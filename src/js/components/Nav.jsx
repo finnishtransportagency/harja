@@ -1,16 +1,7 @@
 import React, {PropTypes} from 'react';
-import {Button, ButtonGroup, Link, Colors} from 'react-foundation';
 import {Events, Category} from '../enums.js';
-import pubsub from 'pubsub-js';
+import NavButton from './NavButton.jsx'
 
-let NavItem = React.createClass({
-  onclick: function() {
-    pubsub.publish(Events.NAV, this.props.item.data);
-  },
-  render: function() {
-    return <Link onClick={this.onclick}>{this.props.item.title}</Link>;
-  }
-});
 
 export default React.createClass({
   render() {
@@ -48,7 +39,7 @@ export default React.createClass({
               {
                 links.map((link, index) =>
                   <li key={index}>
-                    <NavItem item={link} key={link.title}/>
+                    <NavButton item={link} key={link.title}/>
                   </li>)
               }
             </ul>

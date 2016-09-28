@@ -1,8 +1,8 @@
 import React from 'react';
 import Notice from './Notice.jsx';
+import NavButton from './NavButton.jsx';
 import request from 'superagent';
 import pubsub from 'pubsub-js';
-import {Button} from 'react-foundation';
 import {Events, Category} from '../enums.js';
 
 let ListItem = React.createClass({
@@ -33,13 +33,14 @@ export default React.createClass({
 
   getDefaultProps() {
     return {
-      notices: []
+      notices: [],
+      shorten: 0
     }
   },
 
   render() {
-    let loadingEl, noticesEl;
-    let titleText = '';
+    let loadingEl, noticesEl, moreEl;
+    let titleText, buttonText = '';
 
     let {notices, category} = this.props;
 
@@ -48,12 +49,15 @@ export default React.createClass({
     switch (category) {
       case Category.CARE:
         titleText = 'Ajankohtaista teiden hoidossa';
+        buttonText = 'Kaikki teiden hoito-tiedotteet'
         break;
       case Category.MAINTENANCE:
         titleText = 'Ajankohtaista teiden ylläpidossa';
+        buttonText = 'Kaikki teiden ylläpito-tiedotteet'
         break;
       case Category.FAQ:
         titleText = 'Usein Kysytyt Kysymykset';
+        buttonText = 'Kaikki kysymykset'
         break;
     }
 
@@ -63,10 +67,21 @@ export default React.createClass({
       );
     }
     else {
+      let show = notices;
+      if (this.props.shorten > 0) {
+        show = notices.slice(0, this.props.shorten);
+        const link = {title: buttonText, data: {action: Events.CATEGORY, category: category}};
+        moreEl = (
+          <div className="harja-more">
+            <NavButton item={link} />
+          </div>
+        );
+      }
+
       noticesEl = (
         <ul>
-          {notices.map(notice =>
-            <ListItem notice={notice} key={notice.id} category={category}/>//<Notice notice={notice} key={notice.id} />
+          {show.map(notice =>
+            <ListItem notice={notice} key={notice.id} category={category}/>
           )}
         </ul>
       );
@@ -77,6 +92,7 @@ export default React.createClass({
         <h5>{titleText}</h5>
         {loadingEl}
         {noticesEl}
+        {moreEl}
       </div>
     );
   }
