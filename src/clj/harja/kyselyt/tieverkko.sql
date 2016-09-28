@@ -45,12 +45,6 @@ FROM yrita_tierekisteriosoite_pisteelle2(
 -- poistaa kaikki tien osien ajoratatiedot
 DELETE FROM tr_osan_ajorata;
 
--- name: paivita-tr-osan-ajoradat!
-UPDATE tr_osan_ajorata
-   SET oikea = keraa_geometriat(:tie::INTEGER, :osa::INTEGER, 1::INTEGER),
-       vasen = keraa_geometriat(:tie::INTEGER, :osa::INTEGER, 2::INTEGER)
- WHERE tie = :tie::INTEGER AND osa = :osa::INTEGER;
-
 -- name: paivita-paloiteltu-tieverkko
 -- päivittää tieverkkotaulut
 SELECT paivita_tr_taulut();
