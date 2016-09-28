@@ -10,9 +10,7 @@
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]))
 
 
-(defn kasittele-vastaus [url body headers]
-  (println "body" body)
-  (println "headers" headers)
+(defn kasittele-vastaus [url body]
   (when (not (= "{\"ilmoitukset\":\"pong\"}" body))
     (log/error (format "Harja API:n yhteys ei toimi URL:ssa (%s). Palvelu ei palauttanut oletettua vastausta. Vastaus: %s." url body))))
 
@@ -21,15 +19,15 @@
     db integraatioloki "api" "ping-ulos"
     (fn [konteksti]
       (try
-        ;; Huom. lokaalisti testatessa täytyy asettaa OAM_REMOTE_USER otsikoihin järjestelmätunnuksen kanssa
         (let [http-asetukset {:metodi :GET
                               :url url
-                              :otsikot {"OAM_REMOTE_USER" "yit-rakennus"}
-                              ;; :kayttajatunnus kayttajatunnus
-                              ;; :salasana salasana
+                              ;; Huom. lokaalisti testatessa täytyy asettaa OAM_REMOTE_USER otsikoihin järjestelmätunnuksen kanssa
+                              ;; :otsikot {"OAM_REMOTE_USER" "***"}
+                              :kayttajatunnus kayttajatunnus
+                              :salasana salasana
                               }
-              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (kasittele-vastaus url body headers))
+              {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+          (kasittele-vastaus url body))
         (catch Exception e
           (log/error e (format "Harja API:n yhteys ei toimi URL:ssa (%s)" url)))))))
 

@@ -7,7 +7,7 @@
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
             [harja.palvelin.integraatiot.sampo.vienti :as vienti]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [ harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
+            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))

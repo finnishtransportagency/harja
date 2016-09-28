@@ -125,9 +125,4 @@
  :virustarkistus {:url "http://localhost:8080/scan"}
 
  :paivystystarkistus  {:paivittainen-aika [12 11 00]}
-
- :api-yhteysvarmistus {:ajovali-minuutteina 1
-                       :url "http://localhost:3000/api/ping"
-                       :kayttajatunnus ""
-                       :salasana ""}
  }
