@@ -339,4 +339,4 @@ WHERE u.alkupvm <= :pvm
       AND u.loppupvm >= :pvm
       -- PENDING Lisätään urakkatyyppejä sitä mukaan kun
       -- päätyvät tuotantoon
-      AND tyyppi = 'hoito'::urakkatyyppi;
+      AND (:tyyppi::urakkatyyppi IS NULL OR tyyppi = :tyyppi::urakkatyyppi);
