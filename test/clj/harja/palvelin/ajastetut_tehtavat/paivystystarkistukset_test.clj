@@ -106,17 +106,23 @@
     (is (= (count urakat-ilman-paivystysta) 17))))
 
 (deftest oulun-urakan-paivystys-loytyy
-  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 11 2))]
+  (let [pvm (t/local-date 2015 11 2)
+        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
                        #(= (:nimi %) "Oulun alueurakka 2014-2019")
                        urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) 17))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
 (deftest oulun-ja-muhoksen-paivystys-loytyy
-  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 2))]
+  (let [pvm (t/local-date 2015 11 2)
+        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
     (is (nil? (first (filter
                        #(or (= (:nimi %) "Oulun alueurakka 2014-2019")
@@ -124,10 +130,13 @@
                        urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) 16))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
 
 (deftest oulun-ja-muhoksen-paivystys-loytyy-2
-  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 1))]
+  (let [pvm (t/local-date 2060 1 1)
+        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 1))]
     ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
     (is (nil? (first (filter
                        #(or (= (:nimi %) "Oulun alueurakka 2014-2019")
@@ -135,22 +144,28 @@
                        urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) 16))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
 
 (deftest oulun-ja-muhoksen-paivystys-loytyy-3
-  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 6))]
+  (let [pvm (t/local-date 2060 1 1)
+        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2015 12 6))]
     ;; Oulun 2014-2019 urakalla päivitys päättyy juuri tänä ajanhetkenä, eli ei sisälly joukkoon
     (is (nil? (first (filter
                        #(= (:nimi %) "Muhoksen päällystysurakka")
                        urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) 17))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
 (deftest kaikki-urakat-listataan-ilman-paivystysta
-  (let [urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2060 1 1))]
+  (let [pvm (t/local-date 2060 1 1)
+        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2060 1 1))]
     ;; Ei urakoita käynnissä tänä aikana, mitään ei palaudu
-    (is (= (count urakat-ilman-paivystysta) 0))))
+    (is (= (count urakat-ilman-paivystysta) (count urakat)))))
 
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
