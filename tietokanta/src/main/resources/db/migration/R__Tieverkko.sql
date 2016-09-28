@@ -16,6 +16,31 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Yhdistää linestring ja multilinestringit yhdeksi multilinestringiksi
+CREATE OR REPLACE FUNCTION yhdista_multilinestring(geometriat GEOMETRY)
+  RETURNS GEOMETRY AS $$
+DECLARE
+  i INTEGER;
+  j INTEGER;
+  viiva GEOMETRY;
+  tulos GEOMETRY[];
+BEGIN
+  tulos := ARRAY[]::GEOMETRY[];
+  FOR i IN 1..ST_NumGeometries(geometriat) LOOP
+    viiva := ST_GeometryN(geometriat, i);
+    IF ST_GeometryType(viiva) = 'ST_MultiLineString' THEN
+      FOR j IN 1..ST_NumGeometries(viiva) LOOP
+        tulos := tulos || ST_GeometryN(viiva, j);
+      END LOOP;
+    ELSE
+      tulos := tulos || viiva;
+    END IF;
+  END LOOP;
+  RETURN ST_Collect(tulos);
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Tatun uusi yritys tieosista
 CREATE OR REPLACE FUNCTION tr_osoitteelle_viiva3(
     tie_ INTEGER,
@@ -93,8 +118,12 @@ BEGIN
     END IF;
   END LOOP;
   viiva := ST_Collect(tulos);
-  IF ST_GeometryType(viiva)='ST_GeometryCollection' AND ST_NumGeometries(viiva)=1 THEN
-    viiva := ST_GeometryN(viiva, 1);
+  IF ST_GeometryType(viiva)='ST_GeometryCollection' THEN
+    IF ST_NumGeometries(viiva)=1 THEN
+      viiva := ST_GeometryN(viiva, 1);
+    ELSE
+      viiva := yhdista_multilinestring(viiva);
+    END IF;
   END IF;
   RETURN viiva;
 END;
