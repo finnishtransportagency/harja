@@ -11,7 +11,8 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clj-time.coerce :as c]))
 
 (def ^{:const true} oletus-toleranssi 50)
 
@@ -273,7 +274,6 @@
     (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
                                                                               {:urakka urakka-id})
     :ok))
-
 
 (defrecord Urakat []
   component/Lifecycle

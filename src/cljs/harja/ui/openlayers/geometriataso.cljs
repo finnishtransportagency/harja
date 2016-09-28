@@ -25,7 +25,8 @@
 
 (def ^{:doc "Tyypit, joille pitää kutsua aseta-tyylit" :private true}
   tyyppi-tarvitsee-tyylit
-  #{:polygon :point :circle :multipolygon :multiline :line})
+  #{:polygon :point :circle :multipolygon :multiline :line
+    :geometry-collection})
 
 (defn update-ol3-layer-geometries
   "Given a vector of ol3 layer and map of current geometries and a
