@@ -106,7 +106,7 @@
 
 (defn hae-urakat-paivystystarkistukseen
   ;; TODO Mahdollista rajaaminen usealla urakkatyypillä kun
-  ;; on useita urakkatyyppejä totannossa. Kun kaikki urakkatyypit
+  ;; on useita urakkatyyppejä tuotannossa. Kun kaikki urakkatyypit
   ;; tuotannossa, ei filtteriä enää tarvita.
   ([db pvm] (hae-urakat-paivystystarkistukseen db pvm nil))
   ([db pvm urakkatyyppi]
