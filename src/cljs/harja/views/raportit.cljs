@@ -139,7 +139,20 @@
 (defonce vapaa-aikavali? (atom false))
 (defonce vapaa-aikavali (atom [nil nil]))
 
-(def vain-hoitokausivalinta? #{:suolasakko})
+(defn vain-hoitokausivalinta? [raportti]
+  (#{:suolasakko} raportti))
+
+(defn vain-kuukausivalinta? [raportti urakka-valittu?]
+  ;; Näytetään vain kuukausivalinta, jos kyseessä on työmaakokous
+  ;; TAI jos kyseessä on tarkastusraportti, eikä ole valittu urakkaa.
+  (or (#{:tyomaakokous} raportti)
+      (and
+        (not urakka-valittu?)
+        (#{:kelitarkastusraportti
+          :laaduntarkastusraportti
+          :laatupoikkeamaraportti
+          :soratietarkastusraportti
+          :tiestotarkastusraportti} raportti))))
 
 (defonce paivita-aikavalinta
   (run! (let [hk @valittu-hoitokausi
@@ -149,7 +162,10 @@
               aikavali @vapaa-aikavali
               vain-hoitokausivalinta? (vain-hoitokausivalinta?
                                         (:nimi @valittu-raporttityyppi))
+              vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi)
+                                                           (and @nav/valittu-urakka @nav/valittu-hallintayksikko))
               [alku loppu] (cond
+                             vain-kuukausivalinta? kk
                              vain-hoitokausivalinta? hk
                              vapaa-aikavali? aikavali
                              kk kk
@@ -185,11 +201,13 @@
         vuosi-vika (if ur
                      (pvm/vuosi (:loppupvm ur))
                      (pvm/vuosi (pvm/nyt)))
-        vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))]
+        vain-hoitokausivalinta? (vain-hoitokausivalinta? (:nimi @valittu-raporttityyppi))
+        vain-kuukausivalinta? (vain-kuukausivalinta? (:nimi @valittu-raporttityyppi) ur)]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
       [ui-valinnat/vuosi {:disabled (or @vapaa-aikavali?
-                                        vain-hoitokausivalinta?)}
+                                        vain-hoitokausivalinta?
+                                        vain-kuukausivalinta?)}
        vuosi-eka vuosi-vika valittu-vuosi
        #(do
          (reset! valittu-vuosi %)
@@ -197,7 +215,8 @@
          (reset! valittu-kuukausi nil))]
       (when (or hoitourakassa? (nil? ur))
         [ui-valinnat/hoitokausi
-         {:disabled @vapaa-aikavali?}
+         {:disabled (or @vapaa-aikavali?
+                        vain-kuukausivalinta?)}
          (if hoitourakassa?
            (u/hoitokaudet ur)
            (u/edelliset-hoitokaudet 5 true))
@@ -208,12 +227,19 @@
            (reset! valittu-kuukausi nil))])
       [ui-valinnat/kuukausi {:disabled (or @vapaa-aikavali?
                                            vain-hoitokausivalinta?)
-                             :nil-valinta (if @valittu-vuosi
-                                            "Koko vuosi"
-                                            "Koko hoitokausi")}
-       @kuukaudet valittu-kuukausi]]
+                             :nil-valinta (cond
+                                            vain-kuukausivalinta?
+                                            "Valitse kuukausi"
 
-     (when-not vain-hoitokausivalinta?
+                                            @valittu-vuosi
+                                            "Koko vuosi"
+
+                                            :else
+                                            "Koko hoitokausi")}
+       (cond-> @kuukaudet
+               vain-kuukausivalinta? rest) valittu-kuukausi]]
+
+     (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali
         [yleiset/raksiboksi {:teksti "Valittu aikaväli"
                              :toiminto #(swap! vapaa-aikavali? not)
