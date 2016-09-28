@@ -282,7 +282,12 @@ VALUES (:yllapitokohde,
   :tr_ajorata,
   :tr_kaista,
   :toimenpide,
-        :sijainti);
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))));
 
 -- name: paivita-yllapitokohdeosa<!
 -- Päivittää yllapitokohdeosan
@@ -298,7 +303,12 @@ SET
   tr_ajorata       = :tr_ajorata,
   tr_kaista        = :tr_kaista,
   toimenpide       = :toimenpide,
-  sijainti         = :sijainti
+  sijainti         = (SELECT tierekisteriosoitteelle_viiva AS geom
+                      FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                                         CAST(:tr_alkuosa AS INTEGER),
+                                                         CAST(:tr_alkuetaisyys AS INTEGER),
+                                                         CAST(:tr_loppuosa AS INTEGER),
+                                                         CAST(:tr_loppuetaisyys AS INTEGER)))
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde

@@ -17,7 +17,7 @@
   [db user {:keys [id kohde tekija urakka aika selvitys-pyydetty kuvaus sijainti tr yllapitokohde]}]
   (let [{:keys [numero alkuosa loppuosa alkuetaisyys loppuetaisyys]} tr]
     (when yllapitokohde
-      (yllapitokohteet/tarkista-yllapitokohteen-urakka db urakka yllapitokohde))
+      (yllapitokohteet/vaadi-yllapitokohde-kuuluu-urakkaan db urakka yllapitokohde))
     (if id
       (do
        (paivita-laatupoikkeaman-perustiedot<! db
