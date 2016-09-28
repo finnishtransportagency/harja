@@ -154,7 +154,7 @@ BEGIN
    ORDER BY ajorata
    LIMIT 1
    INTO osan_geometria;
-  osan_kohta := LEAST(1, aosa_/ST_Length(osan_geometria));
+  osan_kohta := LEAST(1, aet_/ST_Length(osan_geometria));
   RETURN ST_LineSubstring(osan_geometria, osan_kohta, osan_kohta);
 END;
 $$ LANGUAGE plpgsql;
