@@ -90,10 +90,10 @@
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
-    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys
-     :as suolasakkojen-lahetys]
+    [harja.palvelin.ajastetut-tehtavat.suolasakkojen-lahetys :as suolasakkojen-lahetys]
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
+    [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -327,6 +327,18 @@
                               (geometriapaivitykset/->Geometriapaivitykset
                                 (:geometriapaivitykset asetukset))
                               [:db :integraatioloki])
+
+      :api-yhteysvarmistus (component/using
+                             (let [{:keys [ajovali-minuutteina
+                                           url
+                                           kayttajatunnus
+                                           salasana]} (:api-yhteysvarmistus asetukset)]
+                               (api-yhteysvarmistus/->ApiVarmistus
+                                ajovali-minuutteina
+                                url
+                                kayttajatunnus
+                                salasana))
+                             [:db :integraatioloki])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
