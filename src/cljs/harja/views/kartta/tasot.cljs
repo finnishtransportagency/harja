@@ -2,6 +2,7 @@
   "Määrittelee kartan näkyvät tasot. Tämä kerää kaikkien yksittäisten tasojen
   päällä/pois flägit ja osaa asettaa ne."
   (:require [reagent.core :refer [atom]]
+            [cljs.core.async :refer [<!]]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
@@ -27,7 +28,8 @@
             [harja.tiedot.hallintayksikot :as hal]
             [harja.ui.openlayers.taso :as taso]
             [harja.ui.kartta.varit.puhtaat :as varit])
-  (:require-macros [reagent.ratom :refer [reaction] :as ratom]))
+  (:require-macros [reagent.ratom :refer [reaction] :as ratom]
+                   [cljs.core.async.macros :refer [go]]))
 
 ;; Kaikki näytettävät karttatasot
 (def +karttatasot+
@@ -96,7 +98,7 @@
              ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
              (#{:tilannekuva} sivu)
              nil
-             
+
              ;; Ilmoituksissa ei haluta näyttää navigointiin
              ;; tarkoitettuja geometrioita (kuten urakat), mutta jos esim HY on
              ;; valittu, voidaan näyttää sen rajat.

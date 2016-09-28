@@ -206,7 +206,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                                                (wrap-anti-forgery anti-csrf-kaytossa?))]
 
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                                resurssit dev-resurssit))
+                                                 dev-resurssit resurssit))
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija kehitysmoodi))

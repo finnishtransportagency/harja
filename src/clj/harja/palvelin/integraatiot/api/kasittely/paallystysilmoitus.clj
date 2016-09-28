@@ -25,7 +25,7 @@
                     :aet (:aet sijainti)
                     :losa (:losa sijainti)
                     :loppuet (:let sijainti)}
-            sijainti-geometria (:tierekisteriosoitteelle_viiva (first (q-tieverkko/tierekisteriosoite-viivaksi db osoite)))
+            sijainti-geometria (q-tieverkko/tierekisteriosoite-viivaksi db osoite)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)

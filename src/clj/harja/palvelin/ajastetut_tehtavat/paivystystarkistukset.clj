@@ -4,6 +4,7 @@
             [chime :refer [chime-at]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot-q]
+            [harja.palvelin.palvelut.urakat :as urakat]
             [clj-time.periodic :refer [periodic-seq]]
             [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -48,7 +49,7 @@
     ilmoituksen-saajat))
 
 (defn- ilmoita-paivystyksettomasta-urakasta [urakka fim email pvm]
-  (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampo-id urakka))]
+  (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampoid urakka))]
     (if-not (empty? ilmoituksen-saajat)
       (laheta-ilmoitus-henkiloille email (:nimi urakka) ilmoituksen-saajat pvm)
       (log/warn (format "Urakalla %s ei ole päivystystä %s ja urakalle ei löydy FIM:stä henkiöä, jolle tehdä ilmoitus."
@@ -61,71 +62,69 @@
 
 (defn urakat-ilman-paivystysta
   "Palauttaa urakat, joille ei ole päivystystä kyseisenä päivänä"
-  [urakoiden-paivystykset pvm]
+  [paivystykset urakat pvm]
   (log/debug "Tarkistetaan urakkakohtaisesti, onko annetulle päivälle " (pr-str pvm) " olemassa päivystys.")
   ;; PENDING Mahdollisesti olisi hyvä tarkistaa esim. niin että joka tunnille on päivystys.
   ;; Nyt ei tule varoitusta jos päivystys ei täytä koko ajanjaksoa. Mietitään tämä myöhemmin.
   (let [urakalla-paivystys-annettuna-paivana?
-        (fn [paivystykset pvm]
-          (let [paivystys-annettuna-paivana? (fn [pvm paivystys-alku paivystys-loppu]
+        (fn [paivystykset urakka pvm]
+          (let [urakan-paivystykset (filter
+                                      #(= (:urakka-id %) (:id urakka))
+                                      paivystykset)
+                paivystys-annettuna-paivana? (fn [pvm paivystys-alku paivystys-loppu]
                                                (pvm/valissa? pvm
                                                              paivystys-alku
                                                              paivystys-loppu
                                                              true))]
-            (some?
-              (some #(paivystys-annettuna-paivana?
-                      pvm
-                      (:alku %)
-                      (:loppu %))
-                    paivystykset))))]
+            (and (not (empty? urakan-paivystykset))
+                 (some?
+                   (some #(paivystys-annettuna-paivana?
+                           pvm
+                           (:paivystys-alku %)
+                           (:paivystys-loppu %))
+                     urakan-paivystykset)))))]
 
     (filter
-      #(not (urakalla-paivystys-annettuna-paivana? (:paivystykset %) pvm))
-      urakoiden-paivystykset)))
+      #(not (urakalla-paivystys-annettuna-paivana? paivystykset % pvm))
+      urakat)))
 
-(defn hae-urakoiden-paivystykset
-  "Hakee urakoiden päivystystiedot. Palauttaa vain sellaiset urakat jotka ovat olleet
-   voimassa annetun päivämäärän aikana."
+(defn hae-voimassa-olevien-urakoiden-paivystykset
   [db pvm]
   (let [urakoiden-paivystykset (into []
                                      (map konv/alaviiva->rakenne)
                                      (yhteyshenkilot-q/hae-kaynissa-olevien-urakoiden-paivystykset
                                        db
                                        {:pvm (c/to-sql-time pvm)}))
-        urakat (distinct (map #(dissoc % :paivystys) urakoiden-paivystykset))
-        ;; sarakkeet-vektoriin ei palauta urakoita, joilla ei ole päivystyksiä.
-        ;; Siksi lisätään kaikille urakoille erikseen päivystystiedot
-        paivystykset (konv/sarakkeet-vektoriin
-                                 urakoiden-paivystykset
-                                 {:paivystys :paivystykset}
-                                 :id)
-        urakoiden-paivystykset (mapv
-                                 (fn [urakka]
-                                   (if-let [urakan-paivystykset
-                                             (first
-                                               (filter #(= (:urakka-id %) (:urakka-id urakka))
-                                                       paivystykset))]
-                                     (assoc urakka :paivystykset (:paivystykset urakan-paivystykset))
-                                     urakka))
-                                 urakat)
-        urakoiden-paivystykset (map (fn [u]
-                                      (assoc u :paivystykset
-                                               (map #(assoc %
-                                                      :alku (c/from-sql-time (:alku %))
-                                                      :loppu (c/from-sql-time (:loppu %)))
-                                                    (:paivystykset u))))
-                                    urakoiden-paivystykset)]
+        urakoiden-paivystykset (map
+                                 #(-> %
+                                      (assoc :paivystys-alku
+                                             (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-alku %))))
+                                      (assoc :paivystys-loppu
+                                             (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-loppu %)))))
+                                 urakoiden-paivystykset)]
     urakoiden-paivystykset))
 
+(defn hae-urakat-paivystystarkistukseen
+  ;; TODO Mahdollista rajaaminen usealla urakkatyypillä kun
+  ;; on useita urakkatyyppejä tuotannossa. Kun kaikki urakkatyypit
+  ;; tuotannossa, ei filtteriä enää tarvita.
+  ([db pvm] (hae-urakat-paivystystarkistukseen db pvm nil))
+  ([db pvm urakkatyyppi]
+  (yhteyshenkilot-q/hae-urakat-paivystystarkistukseen db {:pvm (c/to-sql-time pvm)
+                                                          :tyyppi (when urakkatyyppi
+                                                                    (name urakkatyyppi))})))
+
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
-  (log/info "Päivystystarkistus disabloitu")
-  ;; FIXME Disabloitu, koska saattaa lähettää turhia maileja. Täytyy tutkia vika
-  ;; Ks. HAR-3139
-  #_(let [urakoiden-paivystykset (hae-urakoiden-paivystykset db nykyhetki)
-        urakat-ilman-paivystysta (urakat-ilman-paivystysta urakoiden-paivystykset nykyhetki)]
+  (log/info "Päivystystarkistukset disabloitu, otetaan myöhemmin käyttöön")
+  #_(let [voimassa-olevat-urakat (urakat/hae-urakat-paivystystarkistukseen db nykyhetki :hoito)
+        paivystykset (hae-voimassa-olevien-urakoiden-paivystykset db nykyhetki)
+        urakat-ilman-paivystysta (urakat-ilman-paivystysta paivystykset voimassa-olevat-urakat nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
 
-(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim sonja-sahkoposti] :as this} paivittainen-aika]
+(defn tee-paivystyksien-tarkistustehtava
+  "Tarkistaa, onko urakalle olemassa päivystys tarkistushetkeä seuraavana päivänä.
+   Käsittelee vain ne urakat, jotka ovat voimassa annettuna päivänä."
+  [{:keys [db fim sonja-sahkoposti] :as this} paivittainen-aika]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (when paivittainen-aika
     (ajastettu-tehtava/ajasta-paivittain

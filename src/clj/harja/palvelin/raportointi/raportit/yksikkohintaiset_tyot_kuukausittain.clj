@@ -143,7 +143,7 @@
                                                             1))))
                                      (iterate (fn [pvm]
                                                 (t/plus pvm (t/months 1)))
-                                              (t/to-time-zone (c/from-date alkupvm) (t/time-zone-for-id "Europe/Helsinki"))))
+                                              (pvm/suomen-aikavyohykkeeseen (c/from-date alkupvm))))
         raportin-nimi "Yksikköhintaiset työt kuukausittain"
         otsikko (raportin-otsikko
                   (case konteksti
