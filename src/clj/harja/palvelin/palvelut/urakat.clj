@@ -275,9 +275,6 @@
                                                                               {:urakka urakka-id})
     :ok))
 
-(defn hae-voimassa-olevat-urakat [db pvm]
-  (q/hae-voimassa-olevat-urakat db {:pvm (c/to-sql-time pvm)}))
-
 (defrecord Urakat []
   component/Lifecycle
   (start [{http :http-palvelin

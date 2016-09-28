@@ -68,16 +68,31 @@
                     paivystykset)))
         1)))
 
+(deftest hae-kaynnissa-olevat-rakat-paivystystarkistukseen-toimii
+  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta (t/local-date 2016 1 1))]
+    (is (= (count urakat) 18))
+    urakat))
+
+(deftest hae-kaynnissa-olevat-rakat-paivystystarkistukseen-toimii
+  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta (t/local-date 2007 1 1))]
+    (is (= (count urakat) 1))
+    urakat))
+
 (defn- hae-urakat-ilman-paivystysta [pvm]
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
-        urakat (urakat/hae-voimassa-olevat-urakat testitietokanta pvm)
+        urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
+        _ (log/debug "Voimassa olevat urakat: " (pr-str urakat))
         paivystykset (paivystajatarkistukset/hae-voimassa-olevien-urakoiden-paivystykset
                        testitietokanta
                        pvm)
+        _ (log/debug "Löytyi päivystykset: " (pr-str paivystykset))
         urakat-ilman-paivystysta (paivystajatarkistukset/urakat-ilman-paivystysta
                                    paivystykset
                                    urakat
-                                   pvm)]
+                                   pvm)
+        _ (log/debug "Urakat ilman päivytystä: " (pr-str urakat-ilman-paivystysta))]
     urakat-ilman-paivystysta))
 
 (deftest muhoksen-urakan-paivystys-loytyy

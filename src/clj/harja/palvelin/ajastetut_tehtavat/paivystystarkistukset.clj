@@ -98,20 +98,26 @@
         urakoiden-paivystykset (map
                                  #(-> %
                                       (assoc :paivystys-alku
-                                             (pvm/suomen-aikavyohykkeessa (c/from-sql-time (:paivystys-alku %))))
+                                             (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-alku %))))
                                       (assoc :paivystys-loppu
-                                             (pvm/suomen-aikavyohykkeessa (c/from-sql-time (:paivystys-loppu %)))))
+                                             (pvm/suomen-aikavyohykkeeseen (c/from-sql-time (:paivystys-loppu %)))))
                                  urakoiden-paivystykset)]
     urakoiden-paivystykset))
 
+(defn hae-urakat-paivystystarkistukseen [db pvm]
+  (yhteyshenkilot-q/hae-urakat-paivystystarkistukseen db {:pvm (c/to-sql-time pvm)}))
+
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
   (log/info "Päivystystarkistukset disabloitu, otetaan myöhemmin käyttöön")
-  #_(let [voimassa-olevat-urakat (urakat/hae-voimassa-olevat-urakat db nykyhetki)
+  #_(let [voimassa-olevat-urakat (urakat/hae-urakat-paivystystarkistukseen db nykyhetki)
         paivystykset (hae-voimassa-olevien-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta paivystykset voimassa-olevat-urakat nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))
 
-(defn tee-paivystyksien-tarkistustehtava [{:keys [db fim sonja-sahkoposti] :as this} paivittainen-aika]
+(defn tee-paivystyksien-tarkistustehtava
+  "Tarkistaa, onko urakalle olemassa päivystys tarkistushetkeä seuraavana päivänä.
+   Käsittelee vain ne urakat, jotka ovat voimassa annettuna päivänä."
+  [{:keys [db fim sonja-sahkoposti] :as this} paivittainen-aika]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (when paivittainen-aika
     (ajastettu-tehtava/ajasta-paivittain

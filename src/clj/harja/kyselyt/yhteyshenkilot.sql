@@ -327,3 +327,13 @@ SELECT
 FROM paivystys p
   JOIN urakka u ON p.urakka = u.id
 WHERE u.loppupvm >= :pvm;
+
+-- name: hae-urakat-paivystystarkistukseen
+-- Hakee urakat, jotka ovat voimassa annettuna päivänä
+SELECT
+  id,
+  nimi,
+  sampoid
+FROM urakka u
+WHERE u.alkupvm <= :pvm
+      AND u.loppupvm >= :pvm;
