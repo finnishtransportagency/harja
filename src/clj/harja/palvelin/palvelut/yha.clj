@@ -130,7 +130,7 @@
                      :nimi nimi})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
-          (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa-geometrialla<!
+          (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
              c
              {:yllapitokohde (:id kohde)
               :nimi nimi

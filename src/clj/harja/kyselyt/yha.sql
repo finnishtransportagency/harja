@@ -108,25 +108,6 @@ VALUES (
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-  :sijainti,
-  :yhaid);
-
--- name: luo-yllapitokohdeosa-geometrialla<!
--- Luo uuden yllapitokohdeosan
-INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tunnus, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti,
-                              yhaid)
-VALUES (
-  :yllapitokohde,
-  :nimi,
-  :tunnus,
-  :tr_numero,
-  :tr_alkuosa,
-  :tr_alkuetaisyys,
-  :tr_loppuosa,
-  :tr_loppuetaisyys,
-  :tr_ajorata,
-  :tr_kaista,
   (SELECT tierekisteriosoitteelle_viiva AS geom
    FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
                                       CAST(:tr_alkuosa AS INTEGER),
