@@ -1,7 +1,12 @@
 (ns harja.shp
   "Shape filejen käsittelyn apureita"
-  (:import (org.geotools.data.shapefile ShapefileDataStore)
-           (org.geotools.map MapContent FeatureLayer))
+  (:import (org.geotools.data Query)
+   (org.geotools.data.shapefile ShapefileDataStore)
+           (org.geotools.map MapContent FeatureLayer)
+           (org.geotools.filter SortByImpl)
+
+           (org.opengis.filter.expression PropertyName)
+           (org.opengis.filter.sort SortBy SortOrder))
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -9,7 +14,7 @@
   (-> tiedosto
       io/as-url
       ShapefileDataStore.))
-      
+
 
 (defn featuret
   "Palauttaa shapefilen featuret listana."
@@ -31,6 +36,39 @@
                (keyword (.toLowerCase (.getLocalPart (.getName p))))
                (.getValue p))
              ps))))
+
+(defn featuret-ryhmiteltyna
+  "Palauttaa shapefilen featuret sortattuna annetun avaimen mukaan"
+  [shp kentta callback]
+
+  (let [sort-by (-> shp .getFilterFactory
+                    (.sort kentta SortOrder/ASCENDING))
+        q (doto (Query.)
+            (.setSortBy (into-array SortBy
+                                    [sort-by])))]
+    (with-open [iter (-> shp
+                         .getFeatureSource
+                         (.getFeatures q) .features)]
+      (loop [ryhma nil
+             aiempi-value ::alku]
+        (if-not (.hasNext iter)
+          ;; Viimeinen ryhmä, kutsu callback ja lopeta
+          (when ryhma
+            (callback ryhma))
+
+          (let [item (.next iter)
+                value (some-> item (.getProperty kentta) .getValue)]
+            (if (not= value aiempi-value)
+              (do
+                (when-not (empty? ryhma)
+                  (callback ryhma))
+                ;; Aloitetaan uusi ryhmä
+                (recur [(feature-propertyt item)] value))
+
+              ;; Samaa ryhmää, joinaa mukaan
+              (recur (conj ryhma (feature-propertyt item)) aiempi-value))))))))
+
+
 
 (defn suljettu-rengas [koordinaatit]
   (let [koordinaatit (vec koordinaatit)
