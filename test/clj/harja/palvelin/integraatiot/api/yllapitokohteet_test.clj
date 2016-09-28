@@ -47,7 +47,7 @@
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
-    ;; Tarkistetana, että tiedot tallentuivat oikein
+    ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
                                              takuupvm, valmispvm_paallystys, muutoshinta
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
