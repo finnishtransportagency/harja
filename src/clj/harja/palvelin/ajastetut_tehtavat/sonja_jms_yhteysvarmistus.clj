@@ -25,12 +25,12 @@
 
 (defn tarkista-jms-yhteys [integraatioloki sonja jono]
   (let [lahteva-viesti "ping"
-        lokiviesti (integraatioloki/tee-jms-lokiviesti "ulos" lahteva-viesti nil)
+        lokiviesti (integraatioloki/tee-jms-lokiviesti "ulos" lahteva-viesti nil jono)
         tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sonja" "ping" nil lokiviesti)]
     (sonja/laheta sonja jono lahteva-viesti)
     (when (odota-viestin-saapumista integraatioloki tapahtuma-id #(= 1 (count @viestit)) 100000)
       (let [saapunut-viesti (first @viestit)
-            lokiviesti (integraatioloki/tee-jms-lokiviesti "sisään" saapunut-viesti nil)]
+            lokiviesti (integraatioloki/tee-jms-lokiviesti "sisään" saapunut-viesti nil jono)]
         (if (= lahteva-viesti saapunut-viesti)
           (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki lokiviesti "Yhteyskokeilu onnistunut" tapahtuma-id nil)
           (let [virheviesti (format "Yhteyskokeilu Sonjan JMS-jonoon (%s) ei palauttanut oletettua vastausta. Vastaus: %s." jono saapunut-viesti)]
