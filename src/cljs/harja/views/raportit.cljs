@@ -215,8 +215,7 @@
          (reset! valittu-kuukausi nil))]
       (when (or hoitourakassa? (nil? ur))
         [ui-valinnat/hoitokausi
-         {:disabled (or @vapaa-aikavali?
-                        vain-kuukausivalinta?)}
+         {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
            (u/hoitokaudet ur)
            (u/edelliset-hoitokaudet 5 true))
