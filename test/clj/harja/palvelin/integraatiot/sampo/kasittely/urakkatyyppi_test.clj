@@ -13,6 +13,7 @@
 (deftest tarkista-urakkatyypin-paattely
   (is (= "paallystys" (urakkatyyppi/paattele-urakkatyyppi "TYP")) "Päällystys urakkatyyppi päätellään oikein.")
   (is (= "valaistus" (urakkatyyppi/paattele-urakkatyyppi "TYV")) "Valaistus urakkatyyppi päätellään oikein.")
+  (is (= "paallystys" (urakkatyyppi/paattele-urakkatyyppi "TY")) "Ilman alityyppiä tuotu ylläpidon urakka merkitään päällystykseksi.")
   (is (= "siltakorjaus" (urakkatyyppi/paattele-urakkatyyppi "TYS")) "Siltakorjaus urakkatyyppi päätellään oikein.")
   (is (= "tiemerkinta" (urakkatyyppi/paattele-urakkatyyppi "TYT")) "Tiemerkintä urakkatyyppi päätellään oikein.")
   (is (= "hoito" (urakkatyyppi/paattele-urakkatyyppi "TH")) "Hoito urakkatyyppi päätellään oikein.")

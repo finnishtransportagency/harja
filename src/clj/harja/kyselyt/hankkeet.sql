@@ -1,12 +1,12 @@
 -- name: luo-hanke<!
 -- Luo uuden hankkeen.
-INSERT INTO hanke (nimi, alkupvm, loppupvm, alueurakkanro, sampo_tyypit, sampoid)
-VALUES (:nimi, :alkupvm, :loppupvm, :alueurakkanro, :sampo_tyypit, :sampoid);
+INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid)
+VALUES (:nimi, :alkupvm, :loppupvm, :sampoid);
 
 -- name: paivita-hanke-samposta!
 -- Paivittaa hankkeen Samposta saaduilla tiedoilla
 UPDATE hanke
-SET nimi = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm, alueurakkanro = :alueurakkanro, sampo_tyypit = :sampo_tyypit
+SET nimi = :nimi, alkupvm = :alkupvm, loppupvm = :loppupvm
 WHERE sampoid = :sampoid;
 
 -- name: onko-tuotu-samposta
