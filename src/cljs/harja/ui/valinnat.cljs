@@ -47,8 +47,7 @@
                           :disabled disabled
                           :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
                           :valitse-fn valitse-fn
-                          :class      "suunnittelu-alasveto"
-                          }
+                          :class      "suunnittelu-alasveto"}
      hoitokaudet]]))
 
 (defn kuukausi [{:keys [disabled nil-valinta]} kuukaudet valittu-kuukausi-atom]
@@ -62,8 +61,7 @@
                                          (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
                                        (or nil-valinta "Kaikki"))
                          :valitse-fn #(reset! valittu-kuukausi-atom %)
-                         :class      "suunnittelu-alasveto"
-                         }
+                         :class      "suunnittelu-alasveto"}
     kuukaudet]])
 
 (defn hoitokauden-kuukausi
@@ -77,8 +75,7 @@
                                          (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
                                        "Koko hoitokausi")
                          :valitse-fn valitse-fn
-                         :class      "suunnittelu-alasveto"
-                         }
+                         :class      "suunnittelu-alasveto"}
     hoitokauden-kuukaudet]])
 
 (defn urakan-hoitokausi-ja-kuukausi
