@@ -9,8 +9,12 @@
         "P" "paallystys"
         "T" "tiemerkinta"
         "S" "siltakorjaus"
-        "hoito"))
-    "hoito"))
+        (do
+          (log/error "Samposta luettiin sisään ylläpidon urakka tuntemattomalla alityypillä")
+          "paallystys")))
+    (do
+      (log/error "Samposta luettiin sisään ylläpidon urakka ilman alityyppiä")
+      "paallystys")))
 
 (defn paattele-urakkatyyppi [tyypit]
   ;; Ensimmäinen kirjain kertoo yläkategorian (tie, rata, vesi)
