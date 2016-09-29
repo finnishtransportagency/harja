@@ -40,7 +40,18 @@
 
 (defn valitse-urakka []
   (let [urakkalista @nav/hallintayksikon-urakkalista
-        suodatettu-urakkalista @nav/suodatettu-urakkalista]
+        suodatettu-urakkalista @nav/suodatettu-urakkalista
+        nyt (pvm/nyt)
+        tulevia? (some #(pvm/ennen? nyt (:alkupvm %)) suodatettu-urakkalista)
+        kaynnissaolevia? (some #(and
+                                 (pvm/jalkeen? nyt (:alkupvm %))
+                                 (pvm/ennen? nyt (:loppupvm %))) suodatettu-urakkalista)
+        paattyneita? (some #(pvm/jalkeen? nyt (:loppupvm %)) suodatettu-urakkalista)
+        naytettavat-ryhmat (into []
+                                 (keep identity)
+                                 [(when tulevia? :tulevat)
+                                  (when kaynnissaolevia? :kaynnissa)
+                                  (when paattyneita? :paattyneet)])]
     [:div.row
      [:div.col-md-4
       (if (nil? urakkalista)
@@ -51,12 +62,14 @@
           ^{:key "ur-lista"}
           [suodatettu-lista {:format         :nimi :haku :nimi
                              :selection      nav/valittu-urakka
-                             :nayta-ryhmat   [:kaynnissa :paattyneet]
-                             :ryhmittely     (let [nyt (pvm/nyt)]
-                                               #(if (pvm/jalkeen? nyt (:loppupvm %))
+                             :nayta-ryhmat   naytettavat-ryhmat
+                             :ryhmittely     #(if (pvm/ennen? nyt (:alkupvm %))
+                                               :tulevat
+                                               (if (pvm/jalkeen? nyt (:loppupvm %))
                                                  :paattyneet
                                                  :kaynnissa))
                              :ryhman-otsikko #(case %
+                                               :tulevat "Tulevat urakat"
                                                :kaynnissa "Käynnissä olevat urakat"
                                                :paattyneet "Päättyneet urakat")
                              :on-select      nav/valitse-urakka!
