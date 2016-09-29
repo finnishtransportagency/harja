@@ -1,6 +1,5 @@
 (ns harja.tyokalut.vkm
-  "Viitekehysmuuntimen kyselyt (mm. TR-osoitehaku)
-  HUOM! OSA TÄMÄN NAMESPACEN TARJOAMISTA PALVELUISTA ON VANHENTUNUT"
+  "Viitekehysmuuntimen kyselyt (mm. TR-osoitehaku)"
   (:require [cljs.core.async :refer [<! >! chan put! close! alts! timeout]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
