@@ -642,7 +642,8 @@
                           :ryhmittely     (let [nyt (pvm/nyt)]
                                             #(if (pvm/jalkeen? nyt (:loppupvm %))
                                               :paattyneet
-                                              :kaynnissa))
+                                              (when (pvm/jalkeen? nyt (:alkupvm %))
+                                                :kaynnissa)))
                           :ryhman-otsikko #(case %
                                             :kaynnissa "Käynnissä olevat urakat"
                                             :paattyneet "Päättyneet urakat")
