@@ -276,6 +276,7 @@
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
     (komp/luo
+      (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
       (fn []
