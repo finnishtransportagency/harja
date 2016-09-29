@@ -20,6 +20,7 @@
 (def +tuntematon-yllapitokohde+ "tuntematon-yllapitokohde")
 (def +urakkaan-kuulumaton-yllapitokohde+ "urakkaan-kuulumaton-yllapitokohde")
 (def +viallinen-yllapitokohteen-tai-alikohteen-sijainti+ "viallinen-yllapitokohteen-tai-alikohteen-sijainti")
+(def +tietokanta-yhteys-poikki+ "tietokanta-yhteys-poikki")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

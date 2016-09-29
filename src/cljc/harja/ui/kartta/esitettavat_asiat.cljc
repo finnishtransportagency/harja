@@ -156,28 +156,32 @@
    (let [geo (or (:sijainti asia) asia)
          tyyppi (:type geo)
          koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
-     (when (not (empty? koordinaatit))
-       (cond
-         ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
-         ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
-         (or (= :point tyyppi) (= 1 (count koordinaatit)))
-         (when merkit
+     (if (= :geometry-collection tyyppi)
+       (merge
+        (maarittele-viiva valittu? merkit viivat)
+        asia)
+       (when (not (empty? koordinaatit))
+         (cond
+           ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
+           ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
+           (or (= :point tyyppi) (= 1 (count koordinaatit)))
+           (when merkit
+             (merge
+              (maarittele-piste valittu? (or pisteen-ikoni merkit))
+              {:type        :merkki
+               :coordinates (flatten koordinaatit)}))        ;; [x y] -> [x y] && [[x y]] -> [x y]
+
+           (= :line tyyppi)
            (merge
-             (maarittele-piste valittu? (or pisteen-ikoni merkit))
-             {:type        :merkki
-              :coordinates (flatten koordinaatit)}))        ;; [x y] -> [x y] && [[x y]] -> [x y]
+            (maarittele-viiva valittu? merkit viivat)
+            {:type   :viiva
+             :points koordinaatit})
 
-         (= :line tyyppi)
-         (merge
-           (maarittele-viiva valittu? merkit viivat)
-           {:type   :viiva
-            :points koordinaatit})
-
-         (= :multiline tyyppi)
-         (merge
-           (maarittele-viiva valittu? merkit viivat)
-           {:type   :moniviiva
-            :lines (:lines geo)}))))))
+           (= :multiline tyyppi)
+           (merge
+            (maarittele-viiva valittu? merkit viivat)
+            {:type   :moniviiva
+             :lines (:lines geo)})))))))
 
 ;;;;;;
 

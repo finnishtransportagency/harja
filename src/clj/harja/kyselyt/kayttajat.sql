@@ -362,3 +362,9 @@ SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus
 -- name: hae-kayttajan-yleisin-urakkatyyppi
 -- single?: true
 SELECT tyyppi FROM urakka WHERE id IN (:idt) GROUP BY tyyppi ORDER BY count(id) DESC LIMIT 1;
+
+-- name: onko-jarjestelma?
+-- single?: true
+SELECT jarjestelma
+FROM kayttaja
+WHERE kayttajanimi = :kayttajanimi;

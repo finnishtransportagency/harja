@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.yllapitokohteet_test
+(ns harja.palvelin.integraatiot.api.yllapitokohteet-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
@@ -47,7 +47,7 @@
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
 
-    ;; Tarkistetana, että tiedot tallentuivat oikein
+    ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, aloituspvm, valmispvm_kohde,
                                              takuupvm, valmispvm_paallystys, muutoshinta
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde)))
