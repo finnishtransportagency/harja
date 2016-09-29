@@ -98,7 +98,7 @@
           (if-let [viesti-id (sonja/laheta sonja lahetysjono-ulos maksuera-xml)]
             (do
               (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" maksuera-xml))
+              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" maksuera-xml lahetysjono-ulos))
             (do
               (log/error "Maksuerän (numero: " numero ") lähetys Sonjaan epäonnistui.")
               (integraatioloki/kirjaa-epaonnistunut-integraatio

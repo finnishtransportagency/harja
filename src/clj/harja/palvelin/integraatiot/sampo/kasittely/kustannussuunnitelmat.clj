@@ -124,7 +124,7 @@
         (if-let [kustannussuunnitelma-xml (muodosta-kustannussuunnitelma db numero)]
           (if-let [viesti-id (sonja/laheta sonja lahetysjono-ulos kustannussuunnitelma-xml)]
             (do
-              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" kustannussuunnitelma-xml)
+              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" kustannussuunnitelma-xml lahetysjono-ulos)
               (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id))
             (do
               (log/error "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.")

@@ -23,7 +23,7 @@
   (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
   (sonja/kuuntele (:sonja this) kuittausjono-ulos
                   (fn [viesti]
-                    (vienti/kasittele-kuittaus (:integraatioloki this) (:db this) viesti))))
+                    (vienti/kasittele-kuittaus (:integraatioloki this) (:db this) viesti kuittausjono-ulos))))
 
 (defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika lahetysjono-ulos]
   (if paivittainen-lahetysaika
