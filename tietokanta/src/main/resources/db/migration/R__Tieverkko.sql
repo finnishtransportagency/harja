@@ -95,7 +95,7 @@ BEGIN
     IF osa_ = aosa THEN
       e1 := aet;
     ELSE
-      e1 := 1;
+      e1 := 0;
     END IF;
     -- Päätellään loppuetäisyys tälle osalle
     IF osa_ = losa THEN
