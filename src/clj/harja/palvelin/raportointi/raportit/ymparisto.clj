@@ -116,7 +116,7 @@
                suunniteltu (when-not (empty? suunnitellut)
                          (reduce + suunnitellut))
                luokitellut (filter :luokka rivit)
-               materiaalirivit (filter #(not (:luokka %)) rivit)
+               materiaalirivit (remove #(nil? (:kk %)) rivit)
                kk-rivit (group-by :kk materiaalirivit)
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
                                      (assoc kk-arvot kk (reduce + 0 (keep :maara rivit))))
