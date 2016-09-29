@@ -108,7 +108,7 @@
              [{:otsikko "Määrä yhteensä" :leveys "8%" :fmt :numero :jos-tyhja "-"
                :excel [:summa-vasen (if urakoittain? 2 1)]}
               {:otsikko "Tot-%" :leveys "8%" :fmt :prosentti :jos-tyhja "-"}
-              {:otsikko "Suunniteltu\u00admäärä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
+              {:otsikko "Suunniteltu määrä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
 
       (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
