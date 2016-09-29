@@ -363,7 +363,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -403,7 +403,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
