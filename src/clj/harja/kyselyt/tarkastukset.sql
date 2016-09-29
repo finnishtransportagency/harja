@@ -559,6 +559,6 @@ FROM tarkastus t
 WHERE t.tyyppi = 'laatu'::tarkastustyyppi
       AND (t.aika BETWEEN :alku AND :loppu)
       AND (:tienumero::integer IS NULL OR t.tr_numero = :tienumero)
-      AND (:urakka::integer IS NULL OR t.urakka = :urakka)
+      AND ((:urakka::integer IS NULL AND u.urakkanro IS NOT NULL) OR t.urakka = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (:laadunalitus::boolean IS NULL OR t.laadunalitus = :laadunalitus)
