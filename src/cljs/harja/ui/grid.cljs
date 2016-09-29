@@ -776,7 +776,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                    rivin-virheet (get kaikki-virheet id)
                                                    rivin-varoitukset (get kaikki-varoitukset id)
                                                    rivin-huomautukset (get kaikki-huomautukset id)]
-                                               (when-not (:poistettu rivi)
+                                               (when-not (or (:yhteenveto rivi) (:poistettu rivi))
                                                  [^{:key id}
                                                  [muokkaus-rivi {:ohjaus ohjaus
                                                                  :vetolaatikot vetolaatikot
