@@ -280,7 +280,9 @@
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
       (fn []
-        [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
+        [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus
+                                      :overflow-x "hidden"
+                                      :overflow-y "auto"}}
          [tilan-vaihtaja]
          [aikasuodattimet]
          [aluesuodattimet]]))))
