@@ -259,7 +259,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
@@ -290,7 +290,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
