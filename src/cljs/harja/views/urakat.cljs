@@ -51,12 +51,15 @@
           ^{:key "ur-lista"}
           [suodatettu-lista {:format         :nimi :haku :nimi
                              :selection      nav/valittu-urakka
-                             :nayta-ryhmat   [:kaynnissa :paattyneet]
+                             :nayta-ryhmat   [:tulevat :kaynnissa :paattyneet]
                              :ryhmittely     (let [nyt (pvm/nyt)]
-                                               #(if (pvm/jalkeen? nyt (:loppupvm %))
-                                                 :paattyneet
-                                                 :kaynnissa))
+                                               #(if (pvm/ennen? nyt (:alkupvm %))
+                                                 :tulevat
+                                                 (if (pvm/jalkeen? nyt (:loppupvm %))
+                                                   :paattyneet
+                                                   :kaynnissa)))
                              :ryhman-otsikko #(case %
+                                               :tulevat "Tulevat urakat"
                                                :kaynnissa "Käynnissä olevat urakat"
                                                :paattyneet "Päättyneet urakat")
                              :on-select      nav/valitse-urakka!
