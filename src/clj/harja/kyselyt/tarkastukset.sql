@@ -464,7 +464,7 @@ SELECT
   u.nimi as urakka
 FROM tarkastus t
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
                    AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
@@ -495,7 +495,7 @@ SELECT
   u.nimi as urakka
 FROM tarkastus t
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
