@@ -385,7 +385,7 @@ SELECT paivita_urakoiden_alueet();
 
 -- name: hae-urakan-alueurakkanumero
 -- Hakee urakan alueurakkanumeron
-SELECT urakkanro
+SELECT urakkanro AS alueurakkanro
 FROM urakka
 WHERE id = :id;
 
@@ -395,7 +395,7 @@ SELECT
   u.id,
   u.hanke,
   u.nimi,
-  u.urakkanro
+  u.urakkanro AS alueurakkanro
 FROM urakka u
 WHERE u.id IN (SELECT id
                FROM urakka
