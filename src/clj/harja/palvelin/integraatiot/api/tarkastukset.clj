@@ -29,8 +29,10 @@
     :soratie (tarkastukset/luo-tai-paivita-soratiemittaus db id uusi? mittaus)
     nil))
 
-(defn kasittele-tarkastukset [db liitteiden-hallinta kayttaja tyyppi urakka-id data]
-  (mapv
+(defn kasittele-tarkastukset
+  "Käsittelee annetut tarkastukset ja palautta listan string-varoituksia."
+  [db liitteiden-hallinta kayttaja tyyppi urakka-id data]
+  (keep
    (fn [rivi]
      (let [tarkastus (:tarkastus rivi)
            ulkoinen-id (-> tarkastus :tunniste :id)]
@@ -79,7 +81,8 @@
   (let [urakka-id (Long/parseLong id)]
     (log/debug (format "Kirjataan tarkastus tyyppiä: %s käyttäjän: %s toimesta. Data: %s" tyyppi (:kayttajanimi kayttaja) data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (tee-onnistunut-vastaus (join ", " (kasittele-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)))))
+    (let [varoitukset (kasittele-tarkastukset db liitteiden-hallinta kayttaja tyyppi urakka-id data)]
+      (tee-onnistunut-vastaus (join ", " varoitukset)))))
 
 (def palvelut
   [{:palvelu       :lisaa-tiestotarkastus

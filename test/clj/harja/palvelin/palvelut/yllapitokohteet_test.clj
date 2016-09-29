@@ -56,7 +56,8 @@
                                  :nykyinen_paallyste 2
                                  :toimenpide "Ei tehdä mitään"})
 
-(def yllapitokohde-id-jolla-on-paallystysilmoitus (ffirst (q (str "
+(defn yllapitokohde-id-jolla-on-paallystysilmoitus []
+  (ffirst (q (str "
                                                            SELECT yllapitokohde.id as paallystyskohde_id
                                                            FROM yllapitokohde
                                                            JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
@@ -132,7 +133,7 @@
       (is (= kohteet-kannassa nykyiset-kohteet)))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
-  (let [yllapitokohde-id yllapitokohde-id-jolla-on-paallystysilmoitus]
+  (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
     (is (not (nil? yllapitokohde-id)))
 
     (let [urakka-id @muhoksen-paallystysurakan-id

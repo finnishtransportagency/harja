@@ -58,22 +58,23 @@
                            :takuupvm        (pvm/luo-pvm 2005 9 1)}]}})
 
 
-(def paikkauskohde-id-jolla-ei-ilmoitusta (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
+(defn paikkauskohde-id-jolla-ei-ilmoitusta []
+  (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
                                                              FROM yllapitokohde
                                                              FULL OUTER JOIN paikkausilmoitus ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                                              WHERE paikkausilmoitus.id IS NULL
                                                              AND urakka = " (hae-muhoksen-paikkausurakan-id) "
                                                              AND sopimus = " (hae-muhoksen-paikkausurakan-paasopimuksen-id) ";"))))
-(log/debug "Paikkauskohde id ilman ilmoitusta: " paikkauskohde-id-jolla-ei-ilmoitusta)
 
-(def paikkauskohde-id-jolla-on-ilmoitus (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
+(defn paikkauskohde-id-jolla-on-ilmoitus []
+  (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
                                                          FROM yllapitokohde
                                                          JOIN paikkausilmoitus ON yllapitokohde.id = paikkausilmoitus.paikkauskohde
                                                          WHERE urakka = " (hae-muhoksen-paikkausurakan-id) " AND sopimus = " (hae-muhoksen-paikkausurakan-paasopimuksen-id) ";"))))
-(log/debug "Paikkauskohde id jolla on ilmoitus: " paikkauskohde-id-jolla-on-ilmoitus)
+
 
 (deftest skeemavalidointi-toimii
-  (let [paikkauskohde-id paikkauskohde-id-jolla-ei-ilmoitusta]
+  (let [paikkauskohde-id (paikkauskohde-id-jolla-ei-ilmoitusta)]
     (is (not (nil? paikkauskohde-id)))
 
     (let [urakka-id @muhoksen-paikkausurakan-id
@@ -97,7 +98,7 @@
         (is (= maara-ennen-pyyntoa maara-pyynnon-jalkeen))))))
 
 (deftest tallenna-uusi-paikkausilmoitus-kantaan
-  (let [paikkauskohde-id paikkauskohde-id-jolla-ei-ilmoitusta]
+  (let [paikkauskohde-id (paikkauskohde-id-jolla-ei-ilmoitusta)]
     (is (not (nil? paikkauskohde-id)))
 
     (let [urakka-id @muhoksen-paikkausurakan-id
@@ -128,7 +129,7 @@
         (u (str "DELETE FROM paikkausilmoitus WHERE paikkauskohde = " paikkauskohde-id ";"))))))
 
 (deftest paivita-paikkausilmoitukselle-paatostiedot
-  (let [paikkauskohde-id paikkauskohde-id-jolla-on-ilmoitus]
+  (let [paikkauskohde-id (paikkauskohde-id-jolla-on-ilmoitus)]
     (is (not (nil? paikkauskohde-id)))
 
     (let [urakka-id @muhoksen-paikkausurakan-id
@@ -167,7 +168,7 @@
                   WHERE paikkauskohde =" paikkauskohde-id ";"))))))
 
 (deftest ala-paivita-paikkausilmoitukselle-paatostiedot-jos-ei-oikeuksia
-  (let [paikkauskohde-id paikkauskohde-id-jolla-on-ilmoitus]
+  (let [paikkauskohde-id (paikkauskohde-id-jolla-on-ilmoitus)]
     (is (not (nil? paikkauskohde-id)))
 
     (let [urakka-id @muhoksen-paikkausurakan-id

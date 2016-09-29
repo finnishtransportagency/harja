@@ -103,6 +103,14 @@
    (s/optional-key :virustarkistus)       {:url            s/Str}
 
    (s/optional-key :paivystystarkistus)   {:paivittainen-aika [s/Num]}
+
+   (s/optional-key :api-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
+                                           (s/optional-key :url)                     s/Str
+                                           (s/optional-key :kayttajatunnus)          s/Str
+                                           (s/optional-key :salasana)                s/Str}
+
+   (s/optional-key :sonja-jms-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
+                                                 (s/optional-key :jono)                    s/Str}
    })
 
 (def oletusasetukset
