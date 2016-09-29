@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.urakkatyyppi
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
 (defn paattele-yllapidon-tyyppi [tyypit]
   (if (< 2 (count tyypit))
