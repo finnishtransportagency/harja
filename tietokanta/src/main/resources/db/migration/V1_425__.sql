@@ -1,12 +1,10 @@
 -- Siirtää alueurakkanumeron urakka tasolta hanketasolle
 
-ALTER TABLE urakka
-  ADD COLUMN alueurakkanro VARCHAR(16);
-
 UPDATE urakka u
-SET alueurakkanro = (SELECT h.alueurakkanro
-                     FROM hanke h
-                     WHERE h.id = u.hanke);
+SET urakkanro = (SELECT h.alueurakkanro
+                 FROM hanke h
+                 WHERE h.id = u.hanke)
+WHERE urakkanro IS NULL;
 
 DROP MATERIALIZED VIEW urakoiden_alueet;
 CREATE MATERIALIZED VIEW urakoiden_alueet AS

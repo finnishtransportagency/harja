@@ -18,7 +18,7 @@
   (str/replace alueurakkanumero #"^0+" ""))
 
 (defn pura-alueurakkanro [alueurakkanro]
-  (let [osat (clojure.string/split alueurakkanro #"-")]
+  (let [osat (str/split alueurakkanro #"-")]
     (if (= 2 (count osat))
       {:tyypit (first osat) :alueurakkanro (second osat)}
       {:tyypit nil :alueurakkanro alueurakkanro})))
