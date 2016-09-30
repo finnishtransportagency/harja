@@ -27,7 +27,7 @@ VALUES
    'Hengissä selvittiin',
    true,
    'Turvallisuuskoordinaattori Erkki', 'Esimerkki',
-   'Torni kaatui',
+   'Torni kaatui Ernon päälle',
    'Outo paikka',
    true,
    true);
