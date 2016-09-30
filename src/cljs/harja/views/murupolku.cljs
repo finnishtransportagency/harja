@@ -15,7 +15,8 @@
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.oikeudet :as oikeudet]))
 
 (defn koko-maa []
   [:li
@@ -137,10 +138,9 @@
       (fn []
         (let [ur @nav/valittu-urakka
               ei-urakkaa? (nil? ur)
-              urakoitsija? (-> @istunto/kayttaja
-                               :organisaatio
-                               :tyyppi
-                               (= :urakoitsija))]
+              urakoitsija? (oikeudet/organisaatiotyypissa?
+                             @istunto/kayttaja
+                             "urakoitsija")]
           [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                            (if @nav/murupolku-nakyvissa?
                              ""

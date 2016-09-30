@@ -214,19 +214,26 @@
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi vain-laadunalitukset?]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-   (into []
-         (comp tarkastus-xf
-               (if palauta-reitti?
-                 identity
-                 (map #(dissoc % :sijainti))))
-         (tarkastukset/hae-urakan-tarkastukset
-          db urakka-id
-          (konv/sql-timestamp alkupvm)
-          (konv/sql-timestamp loppupvm)
-          (if tienumero true false) tienumero
-          (if tyyppi true false) (and tyyppi (name tyyppi))
-          vain-laadunalitukset?
-          max-rivimaara))))
+   (let [urakoitsija? (oikeudet/organisaatiotyypissa?
+                        user
+                        "urakoitsija")
+         tarkastukset (into []
+                            (comp tarkastus-xf
+                                  (if palauta-reitti?
+                                    identity
+                                    (map #(dissoc % :sijainti))))
+                            (tarkastukset/hae-urakan-tarkastukset
+                              db urakka-id
+                              (konv/sql-timestamp alkupvm)
+                              (konv/sql-timestamp loppupvm)
+                              (if tienumero true false) tienumero
+                              (if tyyppi true false) (and tyyppi (name tyyppi))
+                              vain-laadunalitukset?
+                              max-rivimaara))
+         tarkastukset (if urakoitsija?
+                        (filter :nayta-urakoitsijalle tarkastukset)
+                        tarkastukset)]
+     tarkastukset)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
