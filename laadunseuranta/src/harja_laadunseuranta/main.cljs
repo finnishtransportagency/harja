@@ -172,7 +172,8 @@
                                         :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
                                         :keskita-ajoneuvoon s/keskita-ajoneuvoon
                                         :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
-                                        :valittu-urakka s/valittu-urakka}]
+                                        :valittu-urakka s/valittu-urakka
+                                        :palvelinvirhe s/palvelinvirhe}]
 
        [kartta/karttakomponentti
         {:wmts-url asetukset/+wmts-url+
