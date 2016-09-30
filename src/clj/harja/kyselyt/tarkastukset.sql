@@ -14,13 +14,13 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
-  ypk.tr_numero        AS yllapitokohde_tr_numero,
-  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
-  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
-  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
-  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
-  ypk.kohdenumero      AS yllapitokohde_numero,
-  ypk.nimi             AS yllapitokohde_nimi,
+  t.nayta_urakoitsijalle AS "nayta-urakoitsijalle",
+  ypk.tr_numero          AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa         AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys    AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa        AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys   AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero        AS yllapitokohde_numero,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
@@ -80,29 +80,31 @@ SELECT
   t.laadunalitus,
   t.luoja,
   t.yllapitokohde,
-  o.nimi        AS organisaatio,
+  o.nimi                   AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
-  END AS tekija,
-  (SELECT array_agg(nimi) FROM tarkastus_vakiohavainto t_vh
-    JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
-  WHERE tarkastus = t.id) as vakiohavainnot,
-  stm.hoitoluokka      AS soratiemittaus_hoitoluokka,
-  stm.tasaisuus        AS soratiemittaus_tasaisuus,
-  stm.kiinteys         AS soratiemittaus_kiinteys,
-  stm.polyavyys        AS soratiemittaus_polyavyys,
-  stm.sivukaltevuus    AS soratiemittaus_sivukaltevuus,
-  thm.talvihoitoluokka AS talvihoitomittaus_hoitoluokka,
-  thm.lumimaara        AS talvihoitomittaus_lumimaara,
-  thm.tasaisuus        AS talvihoitomittaus_tasaisuus,
-  thm.kitka            AS talvihoitomittaus_kitka,
-  thm.lampotila_tie    AS talvihoitomittaus_lampotila_tie,
-  thm.lampotila_ilma   AS talvihoitomittaus_lampotila_ilma,
-  thm.ajosuunta        AS talvihoitomittaus_ajosuunta,
-  tl.laatupoikkeama    AS laatupoikkeamaid
+  END                      AS tekija,
+  (SELECT array_agg(nimi)
+   FROM tarkastus_vakiohavainto t_vh
+     JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
+   WHERE tarkastus = t.id) AS vakiohavainnot,
+  stm.hoitoluokka          AS soratiemittaus_hoitoluokka,
+  stm.tasaisuus            AS soratiemittaus_tasaisuus,
+  stm.kiinteys             AS soratiemittaus_kiinteys,
+  stm.polyavyys            AS soratiemittaus_polyavyys,
+  stm.sivukaltevuus        AS soratiemittaus_sivukaltevuus,
+  thm.talvihoitoluokka     AS talvihoitomittaus_hoitoluokka,
+  thm.lumimaara            AS talvihoitomittaus_lumimaara,
+  thm.tasaisuus            AS talvihoitomittaus_tasaisuus,
+  thm.kitka                AS talvihoitomittaus_kitka,
+  thm.lampotila_tie        AS talvihoitomittaus_lampotila_tie,
+  thm.lampotila_ilma       AS talvihoitomittaus_lampotila_ilma,
+  thm.ajosuunta            AS talvihoitomittaus_ajosuunta,
+  tl.laatupoikkeama        AS laatupoikkeamaid,
+  t.nayta_urakoitsijalle   AS "nayta-urakoitsijalle"
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
@@ -129,10 +131,10 @@ ORDER BY l.luotu ASC;
 INSERT
 INTO tarkastus
 (lahde, urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde)
+ sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde, nayta_urakoitsijalle)
 VALUES (:lahde::lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
                  :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
-        :havainnot, :laadunalitus, :yllapitokohde);
+        :havainnot, :laadunalitus, :yllapitokohde, :nayta_urakoitsijalle);
 
 -- name: luodun-tarkastuksen-id
 -- single?: true
@@ -143,19 +145,20 @@ SELECT currval('tarkastus_id_seq');
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot
 UPDATE tarkastus
-SET aika           = :aika,
-  tr_numero        = :tr_numero,
-  tr_alkuosa       = :tr_alkuosa,
-  tr_alkuetaisyys  = :tr_alkuetaisyys,
-  tr_loppuosa      = :tr_loppuosa,
-  tr_loppuetaisyys = :tr_loppuetaisyys,
-  sijainti         = :sijainti,
-  tarkastaja       = :tarkastaja,
-  tyyppi           = :tyyppi :: tarkastustyyppi,
-  muokkaaja        = :muokkaaja,
-  muokattu         = current_timestamp,
-  havainnot        = :havainnot,
-  laadunalitus     = :laadunalitus,
+SET aika               = :aika,
+  tr_numero            = :tr_numero,
+  tr_alkuosa           = :tr_alkuosa,
+  tr_alkuetaisyys      = :tr_alkuetaisyys,
+  tr_loppuosa          = :tr_loppuosa,
+  tr_loppuetaisyys     = :tr_loppuetaisyys,
+  sijainti             = :sijainti,
+  tarkastaja           = :tarkastaja,
+  tyyppi               = :tyyppi :: tarkastustyyppi,
+  muokkaaja            = :muokkaaja,
+  muokattu             = current_timestamp,
+  havainnot            = :havainnot,
+  laadunalitus         = :laadunalitus,
+  nayta_urakoitsijalle = :nayta_urakoitsijalle,
   yllapitokohde    = :yllapitokohde
 WHERE urakka = :urakka AND id = :id;
 

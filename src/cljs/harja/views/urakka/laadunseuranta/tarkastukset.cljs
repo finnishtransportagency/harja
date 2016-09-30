@@ -328,8 +328,19 @@
          {:otsikko (when-not voi-muokata?
                      ;; Näytä otsikko näyttömuodossa
                      "Laadun alitus")
-          :teksti "Laadun alitus" :nayta-rivina? true
+          :teksti "Laadun alitus"
+          :nayta-rivina? true
           :nimi :laadunalitus
+          :tyyppi :checkbox
+          :palstoja 2
+          :fmt fmt/totuus}
+
+         {:otsikko (when-not voi-muokata?
+                     ;; Näytä otsikko näyttömuodossa
+                     "Näytä urakoitsijalle")
+          :teksti "Näytä urakoitsijalle"
+          :nimi :nayta-urakoitsijalle
+          :nayta-rivina? true
           :tyyppi :checkbox
           :palstoja 2
           :fmt fmt/totuus}
