@@ -235,5 +235,5 @@
                                              (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
                                              (.replace "__TAPAHTUMAPAIVAMAARA__" "2066-01-30T12:00:00Z")))]
     (cheshire/decode (:body vastaus) true)
-    (is (not= 200 (:status vastaus)) "Onnea 60 vuotias Harja!")
+    (is (not= 200 (:status vastaus)) "Onnea 60-vuotias Harja!")
     (is (str/includes? (:body vastaus) "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"))))
