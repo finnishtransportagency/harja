@@ -57,6 +57,7 @@
   {:uusi? true
    :aika (pvm/nyt)
    :tarkastaja @istunto/kayttajan-nimi
+   :nayta-urakoitsijalle (oikeudet/organisaatiotyypissa? @istunto/kayttaja "urakoitsija")
    :laadunalitus false})
 
 (defn valitse-tarkastus [tarkastus-id]
@@ -335,15 +336,18 @@
           :palstoja 2
           :fmt fmt/totuus}
 
-         {:otsikko (when-not voi-muokata?
-                     ;; Näytä otsikko näyttömuodossa
-                     "Näytä urakoitsijalle")
-          :teksti "Näytä urakoitsijalle"
-          :nimi :nayta-urakoitsijalle
-          :nayta-rivina? true
-          :tyyppi :checkbox
-          :palstoja 2
-          :fmt fmt/totuus}
+         (let [kenttaa-voi-muokata? (not (oikeudet/organisaatiotyypissa? @istunto/kayttaja "urakoitsija"))]
+           {:otsikko (when (or (not voi-muokata?)
+                               (not kenttaa-voi-muokata?))
+                       ;; Näytä otsikko näyttömuodossa
+                       "Näytä urakoitsijalle")
+            :teksti "Näytä urakoitsijalle"
+            :nimi :nayta-urakoitsijalle
+            :nayta-rivina? true
+            :muokattava? (constantly kenttaa-voi-muokata?)
+            :tyyppi :checkbox
+            :palstoja 2
+            :fmt fmt/totuus})
 
          (when (not (empty? (:vakiohavainnot tarkastus)))
            {:otsikko "Vakio\u00ADhavainnot"
