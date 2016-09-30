@@ -202,11 +202,14 @@
 
 (defn paivystajat [ur]
   (let [paivystajat (atom nil)
+        kaynnissaolevan-hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))
         hae! (fn [urakka-id]
                (reset! paivystajat nil)
                (go (reset! paivystajat
                            (reverse (sort-by :loppu
-                                             (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
+                                             (filter
+                                               #(>= (:loppu %) kaynnissaolevan-hoitokauden-alkupvm)
+                                               (<! (yht/hae-urakan-paivystajat urakka-id))))))))]
     (hae! (:id ur))
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id))
