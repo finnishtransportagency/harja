@@ -309,17 +309,20 @@
           :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
           :palstoja 1}
 
-         (case (:tyyppi tarkastus)
-           :talvihoito (talvihoitomittaus)
-           :soratie (soratiemittaus)
-           nil)
+         (when (= :hoito urakkatyyppi)
+           (case (:tyyppi tarkastus)
+             :talvihoito (talvihoitomittaus)
+             :soratie (soratiemittaus)
+             nil))
 
          (when (and
+                 (= :hoito urakkatyyppi)
                  (:talvihoitomittaus tarkastus)
                  (= :laatu (:tyyppi tarkastus)))
            (talvihoitomittaus))
 
          (when (and
+                 (= :hoito urakkatyyppi)
                  (:soratiemittaus tarkastus)
                  (= :laatu (:tyyppi tarkastus)))
            (soratiemittaus))
