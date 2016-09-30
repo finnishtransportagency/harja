@@ -1,17 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://restimport.xml.turi.oikeatoliot.fi"
-           targetNamespace="http://restimport.xml.turi.oikeatoliot.fi" elementFormDefault="unqualified"
-           attributeFormDefault="unqualified">
+           targetNamespace="http://restimport.xml.turi.oikeatoliot.fi"
+           elementFormDefault="unqualified" attributeFormDefault="unqualified">
     <xs:element name="poikkeama">
         <xs:complexType>
             <xs:sequence>
+                <xs:element name="lähde">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="lähdejärjestelmä" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmoituksen lähdejärjestelmä.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="300"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="lähdeid" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmoituksen tunniste lähdejärjestelmässä.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:int">
+                                        <xs:minInclusive value="1"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
                 <xs:element name="tapahtumantiedot">
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element name="id" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Poikkeamailmoituksen yksilöivä tunnistenumero.
+                                        Poikkeamailmoituksen yksilöivä tunnistenumero TURI-järjestelmässä.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -30,6 +60,31 @@
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
                                         <xs:maxLength value="300"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="sampohankeid" minOccurs="1" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmoitusta koskevan hankkeen tunniste Liikenneviraston
+                                        Sampo-järjestelmässä.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="32"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="sampohankeyhteyshenkilö" minOccurs="1" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Hankkeen yhteyshenkilö.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="256"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -70,18 +125,7 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="harjaid" minOccurs="0" maxOccurs="1">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Poikkeamailmoituksen tunniste HARJA-järjestelmässä.
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="1"/>
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
+
                             <xs:element name="tyyppi" minOccurs="0" maxOccurs="unbounded">
                                 <xs:annotation>
                                     <xs:documentation>
@@ -211,7 +255,8 @@
                                         4 = Vika turvalaitteissa
                                         8 = Muu tekninen vika
 
-                                        Tämä kenttä on käytössä, jos syy-kentän arvo on 1
+                                        Tämä kenttä on käytössä, jos syy-kentän
+                                        arvo on 1
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -483,10 +528,12 @@
                                         Oma arvio tapahtumaan johtaneista syistä
 
                                         Kirjataan mahdollisimman tarkasti, mikä aiheutti onnettomuuden tai
-                                        vaaratilanteen ja miksi se tapahtui. Kirjauksessa tulee käydä esille mitkä
-                                        koneet, laitteet tai materiaalit ovat liittyneet tapahtumaan tai sen syntyyn,
-                                        ovatko ympäristö, organisaation toiminta- ja johtamistavat tai työmenetelmät
-                                        vaikuttaneet tapahtumaan tai aiheuttaneet tapahtuman.
+                                        vaaratilanteen ja miksi se tapahtui.
+                                        Kirjauksessa tulee käydä esille mitkä koneet, laitteet tai materiaalit ovat
+                                        liittyneet tapahtumaan tai sen syntyyn, ovatko ympäristö, organisaation
+                                        toiminta- ja
+                                        johtamistavat tai työmenetelmät vaikuttaneet tapahtumaan tai aiheuttaneet
+                                        tapahtuman.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -726,14 +773,29 @@
                                     <xs:restriction base="xs:boolean"/>
                                 </xs:simpleType>
                             </xs:element>
+                            <xs:element name="tila" minOccurs="1" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Poikkeamailmituksen tila.
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Avoin"/>
+                                        <xs:enumeration value="Käsitelty"/>
+                                        <xs:enumeration value="Täydennetty"/>
+                                        <xs:enumeration value="Suljettu"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
                             <xs:element name="lisatiedot" minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Lisätietoja
 
                                         Mikäli tapahtumaan halutaan liittää enemmän lisätietoa, se voidaan kirjata
-                                        lisätietoihin, kuten viittaukset muihin selvityksiin, esim. urakoitsijan omaan
-                                        järjestelmään tehdyn poikkeamailmoituksen numero.
+                                        lisätietoihin, kuten viittaukset muihin selvityksiin, esim.
+                                        urakoitsijan omaan järjestelmään tehdyn poikkeamailmoituksen numero.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
