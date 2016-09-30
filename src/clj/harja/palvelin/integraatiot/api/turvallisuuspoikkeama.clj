@@ -18,7 +18,10 @@
             [clojure.string :as str]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
+            [clj-time.core :as t]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tarkista-ammatin-selitteen-tallennus [turvallisuuspoikkeamat]
@@ -207,9 +210,16 @@
          (catch Throwable t
            (log/info "Ongelma kirjattaessa korjaava toimenpide: " t)))))
 
+(defn vaadi-turvallisuuspoikkeama-ei-tulevaisuudessa [{:keys [tapahtumapaivamaara] :as data}]
+  (when (t/after? (json/aika-string->joda-time tapahtumapaivamaara) (t/now))
+    (throw+ {:type virheet/+viallinen-kutsu+
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                        :viesti "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"}]})))
+
 (defn tallenna-turvallisuuspoikkeama [liitteiden-hallinta db urakka-id kirjaaja data]
   (log/debug "Aloitetaan turvallisuuspoikkeaman tallennus.")
   (jdbc/with-db-transaction [db db]
+    (vaadi-turvallisuuspoikkeama-ei-tulevaisuudessa data)
     (let [tp-id (luo-tai-paivita-turvallisuuspoikkeama db urakka-id kirjaaja data)
           kommentit (:kommentit data)
           korjaavat (:korjaavatToimenpiteet data)

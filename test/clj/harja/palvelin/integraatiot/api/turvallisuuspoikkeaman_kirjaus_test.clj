@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [clj-time.coerce :as c]
             [clj-time.core :as t]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [clojure.string :as str]))
 
 (def kayttaja "yit-rakennus")
 
@@ -102,9 +103,9 @@
                                          kayttaja portti
                                          (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                                              slurp
-                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")))]
+                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                                             (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))]
     (cheshire/decode (:body vastaus) true)
-    (log/debug vastaus)
     (is (= 200 (:status vastaus)))
 
     ;; Tarkista ensin perustasolla, että turpon kirjaus onnistui ja tiedot löytyvät
@@ -224,3 +225,15 @@
                    true))
         ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
         (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))))
+
+(deftest tallenna-turvallisuuspoikkeama-tulevaisuuteen-kaatuu
+  (let [urakka (hae-oulun-alueurakan-2005-2012-id)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+                                         kayttaja portti
+                                         (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                                             slurp
+                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                                             (.replace "__TAPAHTUMAPAIVAMAARA__" "2066-01-30T12:00:00Z")))]
+    (cheshire/decode (:body vastaus) true)
+    (is (not= 200 (:status vastaus)) "Onnea 60 vuotias Harja!")
+    (is (str/includes? (:body vastaus) "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"))))
