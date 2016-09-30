@@ -51,13 +51,13 @@
               tapahtuma-xf
               (if (and alkaen paattyen)
                 (q/hae-jarjestelman-integraatiotapahtumat-aikavalilla db
-                                                                      (if jarjestelma true false) jarjestelma
-                                                                      (if integraatio true false) integraatio
+                                                                      (boolean jarjestelma) jarjestelma
+                                                                      (boolean integraatio) integraatio
                                                                       (konversio/sql-date alkaen)
                                                                       (konversio/sql-date paattyen))
                 (q/hae-uusimmat-integraatiotapahtumat db
-                                                      (if jarjestelma true false) jarjestelma
-                                                      (if integraatio true false) integraatio)))]
+                                                      (boolean jarjestelma) jarjestelma
+                                                      (boolean integraatio) integraatio)))]
     tapahtumat))
 
 (defn hae-integraatiotapahtumien-maarat
@@ -67,8 +67,8 @@
         jarjestelma (when jarjestelma (:jarjestelma jarjestelma))
         maarat (q/hae-integraatiotapahtumien-maarat
                 db
-                (if jarjestelma true false) jarjestelma
-                (if integraatio true false) integraatio)]
+                (boolean jarjestelma) jarjestelma
+                (boolean integraatio) integraatio)]
     maarat))
 
 (defn hae-integraatiotapahtuman-viestit [db kayttaja tapahtuma-id]

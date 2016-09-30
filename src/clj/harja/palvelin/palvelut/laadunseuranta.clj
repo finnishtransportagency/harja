@@ -226,8 +226,8 @@
                               db urakka-id
                               (konv/sql-timestamp alkupvm)
                               (konv/sql-timestamp loppupvm)
-                              (if tienumero true false) tienumero
-                              (if tyyppi true false) (and tyyppi (name tyyppi))
+                              (boolean tienumero) tienumero
+                              (boolean tyyppi ) (and tyyppi (name tyyppi))
                               vain-laadunalitukset?
                               max-rivimaara))
          tarkastukset (if urakoitsija?

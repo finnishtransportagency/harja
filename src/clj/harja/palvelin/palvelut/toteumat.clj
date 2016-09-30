@@ -536,7 +536,7 @@
                                                      sopimus-id
                                                      (konv/sql-date alkupvm)
                                                      (konv/sql-date loppupvm)
-                                                     (if tienumero true false)
+                                                     (boolean tienumero)
                                                      tienumero))
         kasitellyt-toteumarivit (konv/sarakkeet-vektoriin
                                   toteumat
