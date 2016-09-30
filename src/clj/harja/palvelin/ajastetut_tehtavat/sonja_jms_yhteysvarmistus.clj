@@ -8,7 +8,8 @@
             [chime :refer [chime-at]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.komponentit.sonja :as sonja]))
+            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.tyokalut.lukot :as lukot]))
 
 (def viestit (atom []))
 
@@ -23,28 +24,31 @@
         true
         (recur max-ts)))))
 
-(defn tarkista-jms-yhteys [integraatioloki sonja jono]
-  (let [lahteva-viesti "ping"
-        lokiviesti (integraatioloki/tee-jms-lokiviesti "ulos" lahteva-viesti nil jono)
-        tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sonja" "ping" nil lokiviesti)]
-    (sonja/laheta sonja jono lahteva-viesti)
-    (when (odota-viestin-saapumista integraatioloki tapahtuma-id #(= 1 (count @viestit)) 100000)
-      (let [saapunut-viesti (first @viestit)
-            lokiviesti (integraatioloki/tee-jms-lokiviesti "sisään" saapunut-viesti nil jono)]
-        (if (= lahteva-viesti saapunut-viesti)
-          (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki lokiviesti "Yhteyskokeilu onnistunut" tapahtuma-id nil)
-          (let [virheviesti (format "Yhteyskokeilu Sonjan JMS-jonoon (%s) ei palauttanut oletettua vastausta. Vastaus: %s." jono saapunut-viesti)]
-            (log/error virheviesti)
-            (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti virheviesti tapahtuma-id nil)))))
-    (reset! viestit [])))
+(defn tarkista-jms-yhteys [db integraatioloki sonja jono]
+  (lukot/yrita-ajaa-lukon-kanssa
+    db
+    "sonja-jms-yhteysvarmistus"
+    (let [lahteva-viesti "ping"
+          lokiviesti (integraatioloki/tee-jms-lokiviesti "ulos" lahteva-viesti nil jono)
+          tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sonja" "ping" nil lokiviesti)]
+      (sonja/laheta sonja jono lahteva-viesti)
+      (when (odota-viestin-saapumista integraatioloki tapahtuma-id #(= 1 (count @viestit)) 100000)
+        (let [saapunut-viesti (first @viestit)
+              lokiviesti (integraatioloki/tee-jms-lokiviesti "sisään" saapunut-viesti nil jono)]
+          (if (= lahteva-viesti saapunut-viesti)
+            (integraatioloki/kirjaa-onnistunut-integraatio integraatioloki lokiviesti "Yhteyskokeilu onnistunut" tapahtuma-id nil)
+            (let [virheviesti (format "Yhteyskokeilu Sonjan JMS-jonoon (%s) ei palauttanut oletettua vastausta. Vastaus: %s." jono saapunut-viesti)]
+              (log/error virheviesti)
+              (integraatioloki/kirjaa-epaonnistunut-integraatio integraatioloki lokiviesti virheviesti tapahtuma-id nil)))))
+      (reset! viestit []))))
 
-(defn tee-jms-yhteysvarmistus-tehtava [{:keys [integraatioloki sonja]} minuutit jono]
+(defn tee-jms-yhteysvarmistus-tehtava [{:keys [db integraatioloki sonja]} minuutit jono]
   (when (and minuutit jono)
     (log/debug (format "Varmistetaan Sonjan JMS jonoihin yhteys %s minuutin välein." minuutit))
     (sonja/kuuntele sonja jono #(swap! viestit conj (.getText %)))
     (ajastettu-tehtava/ajasta-minuutin-valein
       minuutit
-      (fn [_] (tarkista-jms-yhteys integraatioloki sonja jono)))))
+      (fn [_] (tarkista-jms-yhteys db integraatioloki sonja jono)))))
 
 (defrecord SonjaJmsYhteysvarmistus [ajovali-minuutteina jono]
   component/Lifecycle
