@@ -67,7 +67,10 @@
    :ei_tietoa 14})
 
 (defn vammat->numerot [vammat]
-  (mapv
+  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
+  [[:vammanlaatu (vamma->numero (first vammat))]]
+  #_(mapv
     (fn [vammat] [:vammanlaatu (vamma->numero vammat)])
     vammat))
 
@@ -87,7 +90,10 @@
    :ei_tietoa 13})
 
 (defn vahingoittuneet-ruumiinosat->numerot [vammat]
-  (mapv
+  ;; PENDING Turi tukee tällä hetkellä vain yhtä arvoa tässä.
+  ;; Lähetetään (satunnainen) ensimmäinen arvo ja myöhemmin toivottavasti kaikki.
+  [[:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero (first vammat))]]
+  #_(mapv
     (fn [vammat] [:vahingoittunutruumiinosa (vahingoittunut-ruumiinosa->numero vammat)])
     vammat))
 
