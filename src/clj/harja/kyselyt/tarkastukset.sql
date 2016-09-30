@@ -95,6 +95,7 @@ SELECT
   stm.kiinteys         AS soratiemittaus_kiinteys,
   stm.polyavyys        AS soratiemittaus_polyavyys,
   stm.sivukaltevuus    AS soratiemittaus_sivukaltevuus,
+  stm.tarkastus        AS soratiemittaus_tarkastus,
   thm.talvihoitoluokka AS talvihoitomittaus_hoitoluokka,
   thm.lumimaara        AS talvihoitomittaus_lumimaara,
   thm.tasaisuus        AS talvihoitomittaus_tasaisuus,
@@ -102,6 +103,7 @@ SELECT
   thm.lampotila_tie    AS talvihoitomittaus_lampotila_tie,
   thm.lampotila_ilma   AS talvihoitomittaus_lampotila_ilma,
   thm.ajosuunta        AS talvihoitomittaus_ajosuunta,
+  thm.tarkastus        AS talvihoitomittaus_tarkastus,
   tl.laatupoikkeama    AS laatupoikkeamaid
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id

@@ -233,27 +233,44 @@
     (assoc tarkastus
            :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id)))))
 
+(def talvihoitomittauksen-kentat
+  [[:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
+    [:lampotila :tie] [:lampotila :ilma]])
+
+(def soratiemittauksen-kentat
+  [[:tasaisuus] [:polyavyys] [:kiinteys] [:sivukaltevuus] [:hoitoluokka]])
+
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
-      (let [uusi? (nil? (:id tarkastus))
+      (let [uusi-tarkastus? (nil? (:id tarkastus))
+            tarkastustyyppi (:tyyppi tarkastus)
+            talvihoitomittaus? (some #(get-in (:talvihoitomittaus tarkastus) %)
+                                     talvihoitomittauksen-kentat)
+            soratiemittaus? (some #(get-in (:soratiemittaus tarkastus) %)
+                                     soratiemittauksen-kentat)
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
-        (condp = (:tyyppi tarkastus)
-          :talvihoito
+        (when (and (or
+                     (= :talvihoito tarkastustyyppi)
+                     (= :laatu tarkastustyyppi))
+                   talvihoitomittaus?)
           (tarkastukset/luo-tai-paivita-talvihoitomittaus
-           c id uusi?
+           c id (or uusi-tarkastus? (not (:tarkastus (:talvihoitomittaus tarkastus))))
            (-> (:talvihoitomittaus tarkastus)
                (assoc :lampotila-tie
                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
                (assoc :lampotila-ilma
-                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))))
+                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma])))))
 
-          :soratie
-          (tarkastukset/luo-tai-paivita-soratiemittaus c id uusi? (:soratiemittaus tarkastus))
-
-          nil)
+        (when (or
+                (= :soratie tarkastustyyppi)
+                (= :laatu tarkastustyyppi)
+                soratiemittaus?)
+          (tarkastukset/luo-tai-paivita-soratiemittaus c id
+                                                       (or uusi-tarkastus? (not (:tarkastus (:soratiemittaus tarkastus))))
+                                                       (:soratiemittaus tarkastus)))
 
         (when-let [uusi-liite (:uusi-liite tarkastus)]
           (log/info "UUSI LIITE: " uusi-liite)

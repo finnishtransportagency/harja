@@ -206,8 +206,7 @@
 
                   {:otsikko "Sivukalt." :tyyppi :numero :yksikko "%"
                    :nimi :sivukaltevuus :palstoja 1
-                   :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
-                   :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]}
+                   :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)}
 
                   {:otsikko "Soratiehoitoluokka" :tyyppi :valinta
                    :nimi :hoitoluokka :palstoja 1
