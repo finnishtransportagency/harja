@@ -131,7 +131,7 @@ button {
     position: absolute;
     right: 240px;
     top: 70px;
-    z-index: 2000000;
+    z-index: 10000;
 }
 
 .keskityspainike {
