@@ -217,8 +217,9 @@
                                                         (not (valitut :ei_tietoa)))))]
         [:div
          [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
+         (lomake/yleinen-huomautus "Kirjatusta turvallisuuspoikkeamasta lähetetään TURI:in väliaikaisesti vain yksi vahingoittunut ruumiinosa ja vamma.")
          (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
-           (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:n epäonnistui "
+           (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:in epäonnistui "
                                          (pvm/pvm-aika (:lahetetty @turvallisuuspoikkeama)))))
          [lomake/lomake
           {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
