@@ -204,9 +204,8 @@
                    :hae (comp :polyavyys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :polyavyys] %2)
                    :validoi [kuntoluokka]}
 
-                  {:otsikko "Sivukaltevuus" :tyyppi :numero :yksikko "%"
+                  {:otsikko "Sivukalt." :tyyppi :numero :yksikko "%"
                    :nimi :sivukaltevuus :palstoja 1
-                   :pakollinen? true
                    :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)
                    :validoi [[:ei-tyhja "Anna sivukaltevuus%"]]}
 
@@ -315,6 +314,16 @@
            :talvihoito (talvihoitomittaus)
            :soratie (soratiemittaus)
            nil)
+
+         (when (and
+                 (:talvihoitomittaus tarkastus)
+                 (= :laatu (:tyyppi tarkastus)))
+           (talvihoitomittaus))
+
+         (when (and
+                 (:soratiemittaus tarkastus)
+                 (= :laatu (:tyyppi tarkastus)))
+           (soratiemittaus))
 
          {:otsikko "Havain\u00ADnot"
           :nimi :havainnot
