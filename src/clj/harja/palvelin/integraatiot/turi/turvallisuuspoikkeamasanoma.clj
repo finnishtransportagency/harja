@@ -175,7 +175,10 @@
   (let [sisalto (muodosta-viesti data)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
-      (let [virheviesti (format "Turvallisuuspoikkeamaa ei voida lähettää. XML ei ole validia. Validointivirheet: %s " virheet)]
+      (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
+                                 Validointivirheet: %s\n
+                                 Muodostettu sanoma:\n
+                                 %s" virheet xml)]
         (log/error virheviesti)
         (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
                  :error virheviesti}))
