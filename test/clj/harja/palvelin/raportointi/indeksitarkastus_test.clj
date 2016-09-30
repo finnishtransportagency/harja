@@ -49,7 +49,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 12 31))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Indeksitarkistus")
+    (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti KOKO MAA 01.01.2014 - 31.12.2015")
 
     ;; Kaikki yhteensä
     (let [otsikko "Kaikki yhteensä"

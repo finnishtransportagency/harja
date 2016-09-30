@@ -9,7 +9,6 @@ BEGIN
   DELETE FROM sopimuksen_kaytetty_materiaali skm
     WHERE skm.sopimus = sop
     AND skm.alkupvm = pvm;
-
   FOR mat IN SELECT date_trunc('day',t.alkanut) as alkupvm, tm.materiaalikoodi,
                     SUM(CASE
 		          WHEN (t.poistettu IS NOT TRUE AND tm.poistettu IS NOT TRUE)
@@ -24,7 +23,9 @@ BEGIN
   LOOP
     INSERT
       INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
-      VALUES (sop, mat.alkupvm, mat.materiaalikoodi, mat.maara);
+      VALUES (sop, mat.alkupvm, mat.materiaalikoodi, mat.maara)
+      ON CONFLICT ON CONSTRAINT uniikki_sop_pvm_mk
+      DO UPDATE SET maara = mat.maara;
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
