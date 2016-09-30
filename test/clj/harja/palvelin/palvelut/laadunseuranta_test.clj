@@ -172,7 +172,7 @@
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
       (is (= #{:ok? :jarjestelma :havainnot :laadunalitus :vakiohavainnot :aika
-               :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde}
+               :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde :nayta-urakoitsijalle}
              (into #{} (keys tarkastus)))))))
 
 (deftest hae-tarkastus

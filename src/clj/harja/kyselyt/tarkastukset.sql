@@ -158,8 +158,8 @@ SET aika               = :aika,
   muokattu             = current_timestamp,
   havainnot            = :havainnot,
   laadunalitus         = :laadunalitus,
-  nayta_urakoitsijalle = :nayta_urakoitsijalle,
-  yllapitokohde    = :yllapitokohde
+  yllapitokohde        = :yllapitokohde,
+  nayta_urakoitsijalle = :nayta_urakoitsijalle
 WHERE urakka = :urakka AND id = :id;
 
 -- name: luo-talvihoitomittaus<!

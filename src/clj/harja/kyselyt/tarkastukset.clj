@@ -30,7 +30,7 @@
                          (:loppuosa tr) (:loppuetaisyys tr)
                          sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id
                          havainnot laadunalitus yllapitokohde
-                         nayta-urakoitsijalle)
+                         (or nayta-urakoitsijalle false))
         (luodun-tarkastuksen-id db))
 
       (do (log/debug (format "Päivitetään tarkastus id: %s " id))
@@ -38,7 +38,7 @@
                               (konv/sql-timestamp aika)
                               (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
                               sijainti tarkastaja (name tyyppi) (:id user)
-                              havainnot laadunalitus yllapitokohde nayta-urakoitsijalle
+                              havainnot laadunalitus yllapitokohde (or nayta-urakoitsijalle false)
                               urakka-id id)
           id))))
 
