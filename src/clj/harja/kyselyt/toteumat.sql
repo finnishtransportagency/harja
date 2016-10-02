@@ -275,7 +275,7 @@ SET alkanut           = :alkanut,
   tyyppi              = :tyyppi :: toteumatyyppi,
   reitti              = :reitti,
   sopimus             = :sopimus
-WHERE ulkoinen_id = :id AND urakka = :urakka;
+WHERE ulkoinen_id = :id AND luoja = :kayttaja;
 
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
@@ -650,7 +650,7 @@ FROM reittipiste rp
 WHERE
   rp.toteuma = :toteuma_id
 ORDER BY rp.aika ASC;
-  
+
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
   tr_numero,

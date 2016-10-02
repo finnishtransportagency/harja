@@ -46,8 +46,7 @@
            (:toteumatyyppi toteuma)
            (:reitti toteuma)
            sopimus-id
-           (get-in toteuma [:tunniste :id])
-           urakka-id))))
+           (get-in toteuma [:tunniste :id])))))
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
