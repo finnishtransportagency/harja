@@ -261,8 +261,8 @@ BEGIN
          ON b.tie=a.tie AND b.ajorata=a.ajorata
    WHERE a.geom IS NOT NULL AND
          b.geom IS NOT NULL AND
-	 ST_Distance(apiste, a.geom) < threshold AND
-         ST_Distance(bpiste, b.geom) < threshold
+	 ST_Intersects(apiste, a.envelope) AND
+         ST_Intersects(bpiste, b.envelope)
    ORDER BY d ASC LIMIT 1
    INTO r;
   IF r IS NULL THEN
@@ -311,12 +311,16 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION paivita_tr_taulut() RETURNS VOID AS $$
 DECLARE
 BEGIN
+  -- Poista vanhat pituudet
   DELETE FROM tr_osien_pituudet;
+  -- Laske uudet pituudet
   INSERT INTO tr_osien_pituudet
     SELECT tie, osa, ST_Length(geom) AS pituus
       FROM tr_osan_ajorata
      WHERE ajorata=1 AND geom IS NOT NULL
     ORDER BY tie,osa;
+  -- Päivitä osien envelopet
+  UPDATE tr_osan_ajorata SET envelope = ST_Expand(ST_Envelope(geom), 250);
 END;
 $$ LANGUAGE plpgsql;
 
