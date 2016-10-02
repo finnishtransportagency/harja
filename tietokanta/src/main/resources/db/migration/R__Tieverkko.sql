@@ -212,7 +212,7 @@ BEGIN
   SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
     FROM tr_osan_ajorata
    WHERE geom IS NOT NULL AND
-         ST_Distance(piste, geom) < threshold
+         ST_Intersects(piste, envelope)
    ORDER BY d ASC LIMIT 1
    INTO osa_;
   -- Jos osa löytyy, ota etäisyys
