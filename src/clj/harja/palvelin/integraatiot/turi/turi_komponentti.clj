@@ -17,7 +17,10 @@
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
 (defn kasittele-turin-vastaus [db id _]
-  (q/lokita-lahetys<! db true id))
+  (q/lokita-lahetys<! db true id)
+
+  ;; TODO Tallenna turi-id, tarvitaan vastaus-skeema tai esimerkki
+  (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id id))
 
 (defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
   (let [liitteet (:liitteet turvallisuuspoikkeama)]

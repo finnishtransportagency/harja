@@ -551,3 +551,8 @@ WHERE (:kayttajanimi IS NULL OR lower(kayttajanimi) LIKE (CONCAT(lower(:kayttaja
 SELECT urakka
 FROM turvallisuuspoikkeama
 WHERE id = :id;
+
+-- name: tallenna-turvallisuuspoikkeaman-turi-id
+UPDATE turvallisuuspoikkeama SET
+  turi_id = :turi_id
+WHERE id = :id;
