@@ -24,7 +24,8 @@
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.core.async :as async]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [harja.domain.roolit :as roolit]))
 
 (defn tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
@@ -172,7 +173,8 @@
   (when-not (empty? urakat)
     (when nykytilanne?
       (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
-            haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
+            haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))
+            urakoitsija? (= :urakoitsija (roolit/osapuoli user))]
         (when (not (empty? haettavat-toimenpiteet))
           (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)]
             (into {}
@@ -185,10 +187,11 @@
                     (map #(konv/array->set % :tehtavat))
                     (map (juxt :tyokoneid identity)))
                   (q/hae-tyokoneet db
-                                   (:xmin alue) (:ymin alue)
-                                   (:xmax alue) (:ymax alue)
-                                   urakat
-                                   tpi-haku-str))))))))
+                                   (merge alue
+                                          {:urakat urakat
+                                           :nayta-kaikki (not urakoitsija?)
+                                           :organisaatio (get-in user [:organisaatio :id])
+                                           :toimenpiteet tpi-haku-str})))))))))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
   (let [koodit (some->> (union talvi kesa)
