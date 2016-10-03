@@ -345,7 +345,7 @@
       :sonja-jms-yhteysvarmistus (component/using
                                    (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
                                      (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
-                                   [:db :integraatioloki :sonja])
+                                   [:db :integraatioloki :sonja :klusterin-tapahtumat])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)

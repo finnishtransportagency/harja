@@ -28,7 +28,7 @@
     (muunna-geometria tros)))
 
 (defn hae-tr-viiva
-  "params on mappi {:tie .. :aosa .. :aet .. :losa .. :let"
+  "Params on mappi: {:numero int, :alkuosa int, :alkuetaisyys int, :loppuosa int, :loppuetaisyys int}"
   [db params]
   (log/debug "Haetaan viiva osoiteelle " (pr-str params))
   (let [korjattu-osoite params

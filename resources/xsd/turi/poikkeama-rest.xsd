@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://restimport.xml.turi.oikeatoliot.fi" targetNamespace="http://restimport.xml.turi.oikeatoliot.fi" elementFormDefault="unqualified" attributeFormDefault="unqualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://restimport.xml.turi.oikeatoliot.fi"
+           targetNamespace="http://restimport.xml.turi.oikeatoliot.fi" elementFormDefault="unqualified"
+           attributeFormDefault="unqualified">
     <xs:element name="poikkeama">
         <xs:complexType>
             <xs:sequence>
@@ -9,7 +11,8 @@
                             <xs:element name="sampohankenimi" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Poikkeamailmoitusta koskevan hankkeen nimi Liikenneviraston Sampo-järjestelmässä.
+                                        Poikkeamailmoitusta koskevan hankkeen nimi Liikenneviraston
+                                        Sampo-järjestelmässä.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -33,7 +36,8 @@
                             <xs:element name="sampourakkaid" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Poikkeamailmoitusta koskevan urakan tunniste Liikenneviraston Sampo-järjestelmässä.
+                                        Poikkeamailmoitusta koskevan urakan tunniste Liikenneviraston
+                                        Sampo-järjestelmässä.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -62,7 +66,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="1" />
+                                        <xs:minInclusive value="1"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -80,10 +84,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:long">
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="32"/>
+                                        <xs:enumeration value="64"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -113,11 +117,11 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -126,12 +130,13 @@
                                     <xs:documentation>
                                         Junanumero
 
-                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista arvoista: 1,2,4
+                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista
+                                        arvoista: 1,2,4
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -147,17 +152,18 @@
                                         16 = Infrarakentaminen
                                         32 = Ulkopuolinen vaihtotyö
 
-                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista arvoista: 16
+                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista
+                                        arvoista: 16
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="32"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -175,11 +181,11 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -198,10 +204,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -220,10 +226,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -242,10 +248,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -294,8 +300,8 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -331,22 +337,22 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
-                                        <xs:enumeration value="64" />
-                                        <xs:enumeration value="128" />
-                                        <xs:enumeration value="256" />
-                                        <xs:enumeration value="512" />
-                                        <xs:enumeration value="1024" />
-                                        <xs:enumeration value="2048" />
-                                        <xs:enumeration value="4096" />
-                                        <xs:enumeration value="8192" />
-                                        <xs:enumeration value="16384" />
-                                        <xs:enumeration value="32768" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
+                                        <xs:enumeration value="16"/>
+                                        <xs:enumeration value="32"/>
+                                        <xs:enumeration value="64"/>
+                                        <xs:enumeration value="128"/>
+                                        <xs:enumeration value="256"/>
+                                        <xs:enumeration value="512"/>
+                                        <xs:enumeration value="1024"/>
+                                        <xs:enumeration value="2048"/>
+                                        <xs:enumeration value="4096"/>
+                                        <xs:enumeration value="8192"/>
+                                        <xs:enumeration value="16384"/>
+                                        <xs:enumeration value="32768"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -360,8 +366,8 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
-                                        <xs:maxInclusive value="9999999" />
+                                        <xs:minInclusive value="0"/>
+                                        <xs:maxInclusive value="9999999"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -390,66 +396,66 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="eureffinn" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:double">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="eureffine" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:double">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tienimi" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tienumero" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tieaosa" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tielosa" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tieaet" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="tielet" minOccurs="0">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -464,7 +470,11 @@
                                     <xs:documentation>
                                         Oma arvio tapahtumaan johtaneista syistä
 
-                                        Kirjataan mahdollisimman tarkasti, mikä aiheutti onnettomuuden tai vaaratilanteen ja miksi se tapahtui. Kirjauksessa tulee käydä esille mitkä koneet, laitteet tai materiaalit ovat liittyneet tapahtumaan tai sen syntyyn, ovatko ympäristö, organisaation toiminta- ja johtamistavat tai työmenetelmät vaikuttaneet tapahtumaan tai aiheuttaneet tapahtuman.
+                                        Kirjataan mahdollisimman tarkasti, mikä aiheutti onnettomuuden tai
+                                        vaaratilanteen ja miksi se tapahtui. Kirjauksessa tulee käydä esille mitkä
+                                        koneet, laitteet tai materiaalit ovat liittyneet tapahtumaan tai sen syntyyn,
+                                        ovatko ympäristö, organisaation toiminta- ja johtamistavat tai työmenetelmät
+                                        vaikuttaneet tapahtumaan tai aiheuttaneet tapahtuman.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -486,10 +496,10 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:long">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
+                                        <xs:enumeration value="4"/>
+                                        <xs:enumeration value="8"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -498,7 +508,8 @@
                                     <xs:documentation>
                                         Aiheutuneet seuraukset
 
-                                        Kirjataan tarkasti tapahtumasta tai vaaratilanteesta aiheutuneet seuraukset (vahingot).
+                                        Kirjataan tarkasti tapahtumasta tai vaaratilanteesta aiheutuneet seuraukset
+                                        (vahingot).
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -515,7 +526,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -529,7 +540,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -552,7 +563,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="200"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -565,7 +576,8 @@
                                     </xs:documentation>
                                 </xs:annotation>
                             </xs:element>
-                            <xs:element name="vahingoittunutruumiinosa" type="vahingoittunutruumiinosaType"  minOccurs="0">
+                            <xs:element name="vahingoittunutruumiinosa" type="vahingoittunutruumiinosaType"
+                                        minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Vahingoittunut ruumiinosa
@@ -584,7 +596,7 @@
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="0" />
+                                        <xs:minInclusive value="0"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -597,7 +609,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
+                                    <xs:restriction base="xs:boolean"/>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="sairaalahoitovuorokaudet" minOccurs="0">
@@ -619,7 +631,8 @@
                                     <xs:documentation>
                                         Korjaavat toimenpiteet
 
-                                        Tehtävät ja/tai korjaavat toimenpiteet, joita havainnon kirjaaja esittää poikkeaman käsittelyn pohjaksi.
+                                        Tehtävät ja/tai korjaavat toimenpiteet, joita havainnon kirjaaja esittää
+                                        poikkeaman käsittelyn pohjaksi.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -698,7 +711,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
+                                    <xs:restriction base="xs:boolean"/>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="lisatiedot" minOccurs="0">
@@ -706,7 +719,9 @@
                                     <xs:documentation>
                                         Lisätietoja
 
-                                        Mikäli tapahtumaan halutaan liittää enemmän lisätietoa, se voidaan kirjata lisätietoihin, kuten viittaukset muihin selvityksiin, esim. urakoitsijan omaan järjestelmään tehdyn poikkeamailmoituksen numero.
+                                        Mikäli tapahtumaan halutaan liittää enemmän lisätietoa, se voidaan kirjata
+                                        lisätietoihin, kuten viittaukset muihin selvityksiin, esim. urakoitsijan omaan
+                                        järjestelmään tehdyn poikkeamailmoituksen numero.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -775,15 +790,16 @@
                                         Tila
 
                                         0 = Avoin: toimenpide toteuttamatta
-                                        1 = Siirretty: toimenpide siirretty esimerkiksi toisen hankkeen tai organisaation toteutettavaksi
+                                        1 = Siirretty: toimenpide siirretty esimerkiksi toisen hankkeen tai
+                                        organisaation toteutettavaksi
                                         2 = Suljettu: toimenpide toteutettu
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
-                                        <xs:enumeration value="0" />
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
+                                        <xs:enumeration value="0"/>
+                                        <xs:enumeration value="1"/>
+                                        <xs:enumeration value="2"/>
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -794,7 +810,7 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:boolean" />
+                                    <xs:restriction base="xs:boolean"/>
                                 </xs:simpleType>
                             </xs:element>
                             <xs:element name="maarapvm" type="xs:date" minOccurs="0">
@@ -817,7 +833,7 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="tiedosto" type="xs:base64Binary" />
+                            <xs:element name="tiedosto" type="xs:base64Binary"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
@@ -4047,7 +4063,8 @@
             </xs:enumeration>
             <xs:enumeration value="16">
                 <xs:annotation>
-                    <xs:documentation>Rakennustyöntekijä (rakennusmies, purku-, muotti-, raudoitus-, betoni-)</xs:documentation>
+                    <xs:documentation>Rakennustyöntekijä (rakennusmies, purku-, muotti-, raudoitus-, betoni-)
+                    </xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
             <xs:enumeration value="17">

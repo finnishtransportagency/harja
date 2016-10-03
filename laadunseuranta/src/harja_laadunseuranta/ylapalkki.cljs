@@ -31,7 +31,8 @@
 (defn ylapalkkikomponentti [{:keys [tiedot-nakyvissa hoitoluokka soratiehoitoluokka
                                     tr-osoite kiinteistorajat ortokuva
                                     tallennus-kaynnissa tallennustilaa-muutetaan
-                                    keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka]}]
+                                    keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
+                                    palvelinvirhe]}]
   [:div.ylapalkki
    (when (utils/kehitysymparistossa?)
      [:span#testiharja "TESTI"])
@@ -50,4 +51,5 @@
    [:div.ylapalkki-button.kiinteistorajat.livicon-home {:on-click #(swap! kiinteistorajat not)}]
    [:div.ylapalkki-button.ortokuva.livicon-eye {:on-click #(swap! ortokuva not)}]
    [:div.ylapalkki-button.infonappi.livicon-circle-info {:on-click #(swap! tiedot-nakyvissa not)}]
-   [kaynnistyspainike tallennus-kaynnissa tallennustilaa-muutetaan disabloi-kaynnistys?]])
+   [kaynnistyspainike tallennus-kaynnissa tallennustilaa-muutetaan disabloi-kaynnistys?]
+   (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])

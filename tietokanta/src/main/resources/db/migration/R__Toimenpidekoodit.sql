@@ -930,7 +930,7 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Kevyen liikenteen yhteyden uudelleen rakentaminen','14121',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='14120') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='14120') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='14120') );
 SELECT lisaa_toimenpidekoodi(
-    'Varuste ja laite','141210',2,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='14000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='14000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='14000') );
+    'Varuste ja laite','141210',2,  null,  260,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='14000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='14000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='14000') );
 SELECT lisaa_toimenpidekoodi(
     'Tievalaistuksen saneeraus','141211',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='141210') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='141210') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='141210') );
 SELECT lisaa_toimenpidekoodi(
@@ -2820,12 +2820,12 @@ UPDATE toimenpidekoodi SET suoritettavatehtava = 'turvalaite' :: suoritettavateh
 -- p_emo_taso    INTEGER)
 
 SELECT lisaa_toimenpidekoodi('Ei yksilöity', NULL, 4, '-', NULL, t.nimi, t.koodi, t.taso)
-  FROM toimenpidekoodi t WHERE taso = 3 AND nimi = 'Laaja toimenpide';
+FROM toimenpidekoodi t WHERE taso = 3 AND nimi = 'Laaja toimenpide';
 
 
 UPDATE toimenpidekoodi
-   SET hinnoittelu = ARRAY['kokonaishintainen'::hinnoittelutyyppi],
-       api_seuranta = TRUE
- WHERE taso = 4 AND
-       emo in (SELECT id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide')
-       AND nimi = 'Ei yksilöity';
+SET hinnoittelu = ARRAY['kokonaishintainen'::hinnoittelutyyppi],
+  api_seuranta = TRUE
+WHERE taso = 4 AND
+      emo in (SELECT id from toimenpidekoodi t3 WHERE t3.nimi = 'Laaja toimenpide')
+      AND nimi = 'Ei yksilöity';
