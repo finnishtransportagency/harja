@@ -3884,7 +3884,7 @@ html, body {
   padding-left: 4rem;
   padding-right: 4rem;
   height: auto;
-  margin-bottom: 5rem; }
+  margin-bottom: 6rem; }
 
 a {
   color: #3db7e4; }
@@ -3966,7 +3966,7 @@ a.harja-notice-link {
   padding-right: 4rem; }
 
 #harja-footer {
-  height: 5rem;
+  height: 6rem;
   background-color: #4b4b4b;
   color: white;
   padding-top: 1em;
