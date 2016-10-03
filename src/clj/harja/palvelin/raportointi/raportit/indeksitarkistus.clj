@@ -4,6 +4,8 @@
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [taoensso.timbre :as log]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.tyokalut.functor :refer [fmap]]))
 
 (defn summa [laskutusyhteenvedot avain]
@@ -69,7 +71,11 @@
                          (fn [kuukauden-laskutusyhteenvedot]
                            (map :nimi kuukauden-laskutusyhteenvedot)))
                        (vals laskutusyhteenvedot-kk))
-
+        alueen-nimi (if urakka-id
+                       (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                       (if hallintayksikko-id
+                         (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                         "KOKO MAA"))
         ;; Tehdään jokaiselle tuottelle omat kk-rivit tarkempia
         ;; taulukoita varten
         tuotteen-laskutusyhteenvedot-kk
@@ -81,7 +87,7 @@
                      tuotteet))]
 
     (into []
-          (concat [:raportti {:nimi "Indeksitarkistus"}]
+          (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}]
              [(indeksitaulukko "Kaikki yhteensä" kuukaudet laskutusyhteenvedot-kk)]
              (for [tuote tuotteet]
                (indeksitaulukko tuote kuukaudet (get tuotteen-laskutusyhteenvedot-kk tuote)))))))

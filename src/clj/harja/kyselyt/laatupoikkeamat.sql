@@ -359,7 +359,7 @@ SELECT
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
-  JOIN urakka u ON lp.urakka = u.id
+  JOIN urakka u ON (lp.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
@@ -385,7 +385,7 @@ SELECT
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   JOIN organisaatio o ON k.organisaatio = o.id
-  JOIN urakka u ON lp.urakka = u.id
+  JOIN urakka u ON (lp.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))

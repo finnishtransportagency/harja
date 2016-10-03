@@ -16,7 +16,8 @@
                  :salasana s/Str})
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
-  {:http-palvelin                         {:portti                         s/Int
+  {(s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
+   :http-palvelin                         {:portti                         s/Int
                                            :url                            s/Str
                                            (s/optional-key :threads)       s/Int
                                            (s/optional-key :max-body-size) s/Int}

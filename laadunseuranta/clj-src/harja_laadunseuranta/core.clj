@@ -135,7 +135,7 @@
                         (s/validate skeema-sisaan))
             tulos (try {:ok (kasittelija user tiedot)}
                        (catch Throwable t
-                         (println t "Virhe LS API-kutsussa, tiedot: " (pr-str tiedot))
+                         (log/warn t "Virhe LS API-kutsussa, tiedot: " (pr-str tiedot))
                          {:error (.getMessage t)}))]
         (->> tulos
              (s/validate skeema-ulos))))))

@@ -43,7 +43,6 @@
 (defn luo-tai-paivita-talvihoitomittaus [db tarkastus uusi?
                                          {:keys [hoitoluokka lumimaara tasaisuus
                                                  kitka lampotila-ilma lampotila-tie ajosuunta] :as talvihoitomittaus}]
-  (log/debug "Talvihoitoluokka" hoitoluokka)
   (if uusi?
     (do (log/info "PARAMS:" db
                   (or hoitoluokka "") lumimaara tasaisuus
