@@ -118,7 +118,9 @@ FROM tarkastus t
                                        t.tyyppi = 'laatu' :: tarkastustyyppi)
                                       AND thm.tarkastus = t.id)
   LEFT JOIN tarkastus_laatupoikkeama tl ON t.id = tl.tarkastus
-WHERE t.urakka = :urakka AND t.id = :id;
+WHERE t.urakka = :urakka
+      AND t.id = :id
+      AND (:vain_urakoitsijalle IS FALSE OR t.nayta_urakoitsijalle = TRUE);
 
 -- name: hae-tarkastuksen-liitteet
 -- Hakee annetun tarkastuksen kaikki liitteet

@@ -234,7 +234,14 @@
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-  (let [tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id)))]
+  (let [urakoitsija? (oikeudet/organisaatiotyypissa?
+                       user
+                       "urakoitsija")
+        tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus
+                                                 db
+                                                 urakka-id
+                                                 tarkastus-id
+                                                 urakoitsija?)))]
     (assoc tarkastus
            :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id)))))
 
