@@ -203,8 +203,15 @@ SELECT
   u.urakkanro                           AS alueurakkanro,
 
   u.sampoid                             AS "urakka-sampoid",
+  (SELECT (etunimi || ' ' || sukunimi)
+   FROM yhteyshenkilo
+   WHERE id =
+         (SELECT kayttaja
+          FROM kayttaja_urakka_rooli
+          WHERE urakka = t.urakka
+                AND rooli = 'Sampo yhteyshenkilö'
+          LIMIT 1))                     AS "sampo-yhteyshenkilo",
   u.nimi                                AS "urakka-nimi",
-
   h.nimi                                AS "hanke-nimi",
 
 

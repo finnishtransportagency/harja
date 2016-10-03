@@ -116,19 +116,19 @@
 (defn rakenna-lahde [data]
   [:lähde
    [:lähdejärjestelmä "Harja"]
-   [:lähde-id nil]]) ; TODO Mitä tähän tulee?
+   [:lähde-id nil]]) ; TODO Selvitä tämä arvo
 
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
-          [[:id nil]] ; TODO Hae tämä
-          [[:sampohankeid nil]] ; TODO Hae tämä
+          [[:id nil]] ; TODO Selvitä tämä arvo
+          [[:sampohankeid (:urakka-sampoid data)]]
           [[:sampohankenimi (:urakka-nimi data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
-          [[:sampoyhteyshenkilö nil]] ;; TODO Hae tämä
+          [[:sampoyhteyshenkilö (:sampo-yhteyshenkilo data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:alueurakkanro (:alueurakkanro data)]]
-          (poikkeamatyypit->numerot (:tyyppi data))
+          (poikkeamatyypit->numerot (:tygyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
            [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
            [:kuvaus (:kuvaus data)]])))
