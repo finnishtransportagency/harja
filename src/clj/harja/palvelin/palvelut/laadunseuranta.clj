@@ -223,15 +223,13 @@
                                     (map #(dissoc % :sijainti))))
                             (tarkastukset/hae-urakan-tarkastukset
                               db urakka-id
+                              urakoitsija?
                               (konv/sql-timestamp alkupvm)
                               (konv/sql-timestamp loppupvm)
                               (boolean tienumero) tienumero
                               (boolean tyyppi ) (and tyyppi (name tyyppi))
                               vain-laadunalitukset?
-                              max-rivimaara))
-         tarkastukset (if urakoitsija?
-                        (filter :nayta-urakoitsijalle tarkastukset)
-                        tarkastukset)]
+                              max-rivimaara))]
      tarkastukset)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
