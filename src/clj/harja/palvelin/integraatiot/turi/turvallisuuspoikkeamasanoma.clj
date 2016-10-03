@@ -107,14 +107,21 @@
    :suljettu 2
    :toteutettu 2})
 
+(defn rakenna-lahde [data]
+  [:lähde
+   [:lähdejärjestelmä "Harja"]
+   [:lähde-id nil]]) ; TODO Mitä tähän tulee?
+
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
+          [[:id nil]] ; TODO Hae tämä
+          [[:sampohankeid nil]] ; TODO Hae tämä
           [[:sampohankenimi (:urakka-nimi data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
+          [[:sampoyhteyshenkilö nil]] ;; TODO Hae tämä
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:alueurakkanro (:alueurakkanro data)]]
-          [[:harjaid (:id data)]]
           (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
            [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
@@ -168,7 +175,8 @@
 (defn muodosta-viesti [data]
   (into [:imp:poikkeama {:xmlns:imp "http://restimport.xml.turi.oikeatoliot.fi"}]
         (concat
-          [(rakenna-tapahtumatiedot data)
+          [(rakenna-lahde data)
+           (rakenna-tapahtumatiedot data)
            (rakenna-tapahtumapaikka data)
            (rakenna-syyt-ja-seuraukset data)
            (rakenna-tapahtumakasittely data)]
