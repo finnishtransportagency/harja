@@ -30,9 +30,12 @@ $right-pad: 4rem;
 
 $logo-height: 4em;
 $logo-height-small: 2em;
+$harja-loading-height: 6em;   // 3*logo-height-small
 
 $harja-list-top-height: 0.5em;
 $harja-list-bottom-height: 0.2em;
+
+$harja-footer-height: 5rem;
 
 html, body {
   height: 100%;
@@ -42,10 +45,15 @@ html, body {
   height: 100%;
 }
 
-#harja-content {
+#harja-home, #harja-content {
   background-color: $grey-lighter;
+}
+
+#harja-content {
   padding-left: $left-pad;
   padding-right: $right-pad;
+  height: auto;
+  margin-bottom: $harja-footer-height;
 }
 
 a {
@@ -67,7 +75,7 @@ a:visited {
 .harja-loading {
   padding-top: $logo-height-small;
   padding-bottom: $logo-height-small;
-  height: calc(3*$logo-height-small);
+  height: $harja-loading-height;
   display: block;
   margin: 0 auto;
 }
@@ -94,13 +102,11 @@ a:visited {
   margin-bottom: 1em;
 }
 
-
 .harja-more {
     a::after {
     content: "\00BB";
   }
 }
-
 
 a.harja-notice-link {
   color: $blue;
@@ -160,6 +166,7 @@ a.harja-notice-link {
 }
 
 #harja-footer {
+  height: $harja-footer-height;
   background-color: $grey-dark;
   color: white;
   padding-top: 1em;

@@ -3877,10 +3877,14 @@ html, body {
 #main, #harja-home, #harja-content {
   height: 100%; }
 
+#harja-home, #harja-content {
+  background-color: #f1f1f1; }
+
 #harja-content {
-  background-color: #f1f1f1;
   padding-left: 4rem;
-  padding-right: 4rem; }
+  padding-right: 4rem;
+  height: auto;
+  margin-bottom: 5rem; }
 
 a {
   color: #3db7e4; }
@@ -3898,7 +3902,7 @@ a:visited {
 .harja-loading {
   padding-top: 2em;
   padding-bottom: 2em;
-  height: calc(3*$logo-height-small);
+  height: 6em;
   display: block;
   margin: 0 auto; }
 
@@ -3962,6 +3966,7 @@ a.harja-notice-link {
   padding-right: 4rem; }
 
 #harja-footer {
+  height: 5rem;
   background-color: #4b4b4b;
   color: white;
   padding-top: 1em;
