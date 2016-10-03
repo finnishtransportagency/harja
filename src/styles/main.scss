@@ -96,9 +96,9 @@ a:visited {
 
 
 .harja-more {
-  a::after {
-  content: "\00BB";
-}
+    a::after {
+    content: "\00BB";
+  }
 }
 
 
@@ -109,6 +109,10 @@ a.harja-notice-link {
   &:focus {
     color: $blue-darker;
   }
+}
+
+.harja-notice-image {
+  margin-bottom: 1rem;
 }
 
 .harja-care-noticelist {
