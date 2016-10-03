@@ -95,9 +95,9 @@
                         :siltojen-alk-osoite                       "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_silta.shz"
                         :siltojen-alk-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
 
-                        :urakoiden-shapefile                       "file://shp/Hoitourakat/PTV_Hoitourakat10_2015.shx"
-                        :urakoiden-alk-osoite                      "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2015.shz"
-                        :urakoiden-alk-tuontikohde                 "./shp/Hoitourakat/PTV_Hoitourakat10_2015.shz"
+                        :urakoiden-shapefile                       "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
+                        :urakoiden-alk-osoite                      "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_Hoitourakat10_2016.shz"
+                        :urakoiden-alk-tuontikohde                 "./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
 
                         :ely-alueiden-shapefile                    "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
                         :ely-alueiden-alk-osoite                   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/ULKOISET_Elyt_infra.shz"

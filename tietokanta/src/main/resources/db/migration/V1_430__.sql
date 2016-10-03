@@ -1,0 +1,1 @@
+ALTER TABLE tarkastus ADD COLUMN nayta_urakoitsijalle boolean DEFAULT FALSE NOT NULL;
