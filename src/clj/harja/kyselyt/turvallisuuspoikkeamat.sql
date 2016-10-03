@@ -165,6 +165,7 @@ WHERE t.id = :id AND t.urakka = :urakka;
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
 SELECT
   t.id,
+  t.turi_id                             AS "turi-id",
   t.urakka,
   t.tapahtunut,
   t.kasitelty,
