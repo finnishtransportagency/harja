@@ -16,7 +16,7 @@
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
-(defn kasittele-turin-vastaus [db id _]
+(defn kasittele-turin-vastaus [db id]
   (q/lokita-lahetys<! db true id)
 
   ;; TODO Tallenna turi-id, tarvitaan vastaus-skeema tai esimerkki
@@ -70,7 +70,7 @@
                                   :kayttajatunnus kayttajatunnus
                                   :salasana salasana
                                   :otsikot {"Content-Type" "text/xml"}})
-               (kasittele-turin-vastaus db id)))
+               (kasittele-turin-vastaus db)))
         {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
       (catch Throwable t
         (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
