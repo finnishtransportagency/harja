@@ -35,7 +35,7 @@ WHERE (:urakka::INTEGER IS NULL OR lp.urakka = :urakka)
       AND (:urakka::INTEGER IS NOT NULL OR
            (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
                                  u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
-      AND lp.aika :: DATE BETWEEN :alku AND :loppu;
+      AND s.perintapvm BETWEEN :alku AND :loppu;
 
 -- name: hae-kontekstin-urakat
 -- Listaa kaikki ne urakat, joita haku koskee
