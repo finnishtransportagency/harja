@@ -181,22 +181,6 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
       (.getLocalPort s)
       (finally (.close s)))))
 
-;; Määritellään käyttäjiä, joita testeissä voi käyttää
-;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
-
-;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789" :organisaatio 9
-                      :roolit #{"ELY_Urakanvalvoja"}})
-
-;; id:2 Järjestelmävastuuhenkilö
-(def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
-                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
-                     :etunimi "Jalmari" :urakka-roolit []
-                     :organisaatio {:id 1 :nimi "Liikennevirasto",
-                                    :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
-                     :organisaation-urakat #{}
-                     :urakkaroolit {}})
-
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
 (def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh" :organisaatio 11})
 
@@ -343,6 +327,43 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
+
+;; Määritellään käyttäjiä, joita testeissä voi käyttää
+;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
+
+;; id:1 Tero Toripolliisi, POP ELY aluevastaava
+(def +kayttaja-tero+
+  {:id 1 :etunimi "Tero"
+   :sukunimi "Toripolliisi"
+   :kayttajanimi "LX123456789"
+   :organisaatio 9
+   :roolit #{"ELY_Urakanvalvoja"}})
+
+;; id:2 Järjestelmävastuuhenkilö
+(def +kayttaja-jvh+
+  {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
+   :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
+   :etunimi "Jalmari" :urakka-roolit []
+   :organisaatio {:id 1 :nimi "Liikennevirasto",
+                  :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+   :organisaation-urakat #{}
+   :urakkaroolit {}})
+
+(def +kayttaja-urakan-vastuuhenkilo+
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]
+    {:organisaation-urakat #{urakka-id}
+     :sahkoposti nil
+     :kayttajanimi "yit_uuvh"
+     :puhelin nil
+     :sukunimi "Vastuuhenkilö"
+     :roolit #{}
+     :organisaatioroolit {}
+     :id 7
+     :etunimi "Yitin"
+     :organisaatio {:id 11
+                    :nimi "YIT Rakennus Oy"
+                    :tyyppi "urakoitsija"}
+     :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)

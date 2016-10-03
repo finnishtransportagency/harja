@@ -242,8 +242,9 @@
                                                  urakka-id
                                                  tarkastus-id
                                                  urakoitsija?)))]
-    (assoc tarkastus
-           :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id)))))
+    (when tarkastus
+      (assoc tarkastus
+       :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
 (def talvihoitomittauksen-kentat
   [[:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]

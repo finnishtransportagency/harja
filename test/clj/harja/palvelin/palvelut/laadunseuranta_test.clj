@@ -175,6 +175,19 @@
                :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde :nayta-urakoitsijalle}
              (into #{} (keys tarkastus)))))))
 
+(deftest hae-urakan-tarkastukset-urakoitsijalle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-tarkastukset +kayttaja-urakan-vastuuhenkilo+
+                                {:urakka-id urakka-id
+                                 :alkupvm   (pvm/luo-pvm (+ 1900 100) 9 1)
+                                 :loppupvm  (pvm/luo-pvm (+ 1900 130) 8 30)
+                                 :tienumero nil
+                                 :tyyppi    nil
+                                 :vain-laadunalitukset? false})]
+    (is (not (empty? vastaus)))
+    (is (= (count vastaus) 1))))
+
 (deftest hae-tarkastus
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -182,6 +195,25 @@
                                                                :tarkastus-id 1})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))))
+
+(deftest hae-tarkastus-joka-ei-nay-urakoitsijalle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                {:urakka-id urakka-id
+                                 :tarkastus-id (ffirst (q "SELECT id FROM tarkastus
+                                                           WHERE havainnot != 'Tämä tarkastus näkyy myös urakoitsijalle';"))})]
+    (is (empty? vastaus))))
+
+(deftest hae-tarkastus-joka-nakyy-urakoitsijalle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-tarkastus +kayttaja-urakan-vastuuhenkilo+
+                                {:urakka-id urakka-id
+                                 :tarkastus-id (ffirst (q "SELECT id FROM tarkastus
+                                                           WHERE havainnot = 'Tämä tarkastus näkyy myös urakoitsijalle';"))})]
+    (is (not (empty? vastaus)))
+    (is (= (:havainnot vastaus) "Tämä tarkastus näkyy myös urakoitsijalle"))))
 
 (deftest hae-urakan-sanktiot-test
   (is (oikeat-sarakkeet-palvelussa?
