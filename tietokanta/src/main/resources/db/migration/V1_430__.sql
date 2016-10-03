@@ -1,0 +1,1 @@
+ALTER TABLE turvallisuuspoikkeama ADD COLUMN turi_id INTEGER;
