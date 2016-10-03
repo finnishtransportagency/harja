@@ -16,14 +16,14 @@
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
-(defn kasittele-turin-vastaus [db harja-turpo-id body]
+(defn kasittele-turin-vastaus [db harja-turpo-id headers body]
   (q/lokita-lahetys<! db true harja-turpo-id)
   (let [turi-id (re-find #"\d+" body)
-        ]
-    (if (integer? turi-id)
+        status (:status body)]
+    (if (and (= status 200)
+             (integer? turi-id))
       (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
-
-      ))
+      (log/error "TURI:in lähetelly turvallisuuspoikkeamalle ei saatu id:tä."))))
 
 (defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
   (let [liitteet (:liitteet turvallisuuspoikkeama)]
@@ -76,7 +76,7 @@
                                    :otsikot {"Content-Type" "text/xml"}}
                   sanoma)]
             (log/debug "HEADERIT: " (pr-str headers))
-            (kasittele-turin-vastaus db id body))))
+            (kasittele-turin-vastaus db id headers body))))
         {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
       (catch Throwable t
         (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
