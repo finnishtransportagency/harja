@@ -107,6 +107,12 @@
    :suljettu 2
    :toteutettu 2})
 
+(def turvallisuuspoikkeaman-tila
+  {:avoin "Avoin"
+   :kasitelty "Käsitelty"
+   :taydennetty "Täydennetty"
+   :suljettu "Suljettu"})
+
 (defn rakenna-lahde [data]
   [:lähde
    [:lähdejärjestelmä "Harja"]
@@ -154,7 +160,8 @@
 (defn rakenna-tapahtumakasittely [data]
   [:tapahtumankasittely
    [:otsikko (:tapahtuman-otsikko data)]
-   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]])
+   [:luontipvm (xml/formatoi-paivamaara (:luotu data))]
+   [:tila (turvallisuuspoikkeaman-tila (:tila data))]])
 
 (defn rakenna-poikkeamatoimenpide [data]
   (mapv (fn [toimenpide]
