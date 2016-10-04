@@ -41,28 +41,29 @@
   (log/debug "Merkitään kustannussuunnitelma (numero:" numero ") lähetetyksi.")
   (= 1 (kustannussuunnitelmat/merkitse-kustannussuunnitelma-lahetetyksi! db numero)))
 
-(defn tee-oletus-vuosisummat [vuodet]
-  (map #(hash-map :alkupvm (pvm/aika-iso8601 (:alkupvm %)),
-                  :loppupvm (pvm/aika-iso8601 (:loppupvm %)),
-                  :summa 1) vuodet))
-
 (defn aseta-pvm [pvm vuosi kuukausi paiva]
   (.setTime pvm vuosi)
   (.set pvm Calendar/MONTH kuukausi)
   (.set pvm Calendar/DAY_OF_MONTH paiva)
   (.setTimeZone pvm (TimeZone/getTimeZone "EET")))
 
+(defn rakenna-vuosi [vuosi summa]
+  (let [alku (Calendar/getInstance)
+        loppu (Calendar/getInstance)]
+    (aseta-pvm alku (:alkupvm vuosi) Calendar/JANUARY 1)
+    (aseta-pvm loppu (:loppupvm vuosi) Calendar/DECEMBER 31)
+    {:alkupvm (pvm/aika-iso8601 (.getTime alku))
+     :loppupvm (pvm/aika-iso8601 (.getTime loppu))
+     :summa summa}))
+
+(defn tee-oletus-vuosisummat [vuodet]
+  (map (fn [vuosi] (rakenna-vuosi vuosi 1)) vuodet))
+
 (defn tee-vuosisummat [vuodet summat]
   (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
     (mapv (fn [vuosi]
-            (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)
-                  alku (Calendar/getInstance)
-                  loppu (Calendar/getInstance)]
-              (aseta-pvm alku (:alkupvm vuosi) Calendar/JANUARY 1)
-              (aseta-pvm loppu (:loppupvm vuosi) Calendar/DECEMBER 31)
-              {:alkupvm (pvm/aika-iso8601 (.getTime alku))
-               :loppupvm (pvm/aika-iso8601 (.getTime loppu))
-               :summa summa}))
+            (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
+              (rakenna-vuosi vuosi summa)))
           vuodet)))
 
 (defn tee-vuosittaiset-summat [db numero maksueran-tiedot]
