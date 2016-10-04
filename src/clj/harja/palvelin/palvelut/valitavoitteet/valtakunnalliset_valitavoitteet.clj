@@ -119,7 +119,10 @@
                                                  (inc (t/year (c/from-date (:loppupvm urakka)))))]
         (doseq [vuosi urakan-jaljella-olevat-vuodet]
           (let [tarkka-takaraja (t/local-date vuosi takaraja-toistokuukausi takaraja-toistopaiva)]
-            (when (t/after? tarkka-takaraja pvm/kayttoonottto)
+            (when (and (t/after? tarkka-takaraja pvm/kayttoonottto)
+                       (pvm/valissa? tarkka-takaraja
+                                     (c/from-date (:alkupvm urakka))
+                                     (c/from-date (:loppupvm urakka))))
               (log/debug "Lisätään toistuva välitavoite " nimi " urakkaan " (:nimi urakka) " takarajalla "
                          vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
               (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
