@@ -104,7 +104,9 @@
 
 (defn kopioi-valtakunnallinen-toistuva-valitavoite-sopiviin-urakoihin
   "Luo välitavoitteen annettuihin urakoihin kertaalleen per urakkavuosi
-  jos urakka on annettua tyyppiä eikä se ole päättynyt."
+  jos urakka on annettua tyyppiä eikä se ole päättynyt.
+
+  Ei kopioi välitavoitetta jos takarajaksi muodostuu aika ennen järjestelmän käyttöönottoa."
   [db user {:keys [takaraja-toistopaiva urakkatyyppi takaraja-toistokuukausi nimi] :as valitavoite}
    valtakunnallinen-valitavoite-id urakat]
   (let [linkitettavat-urakat (filter
@@ -116,16 +118,15 @@
                                                       (t/year (c/from-date (:alkupvm urakka))))
                                                  (inc (t/year (c/from-date (:loppupvm urakka)))))]
         (doseq [vuosi urakan-jaljella-olevat-vuodet]
-          (log/debug "Lisätään toistuva välitavoite " nimi " urakkaan " (:nimi urakka) " takarajalla "
-                     vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
-          (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
-                                            :takaraja (konv/sql-date (c/to-date (t/local-date
-                                                                                  vuosi
-                                                                                  takaraja-toistokuukausi
-                                                                                  takaraja-toistopaiva)))
-                                            :nimi nimi
-                                            :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
-                                            :luoja (:id user)}))))))
+          (let [tarkka-takaraja (t/local-date vuosi takaraja-toistokuukausi takaraja-toistopaiva)]
+            (when (t/after? tarkka-takaraja (pvm/kayttoonottto))
+              (log/debug "Lisätään toistuva välitavoite " nimi " urakkaan " (:nimi urakka) " takarajalla "
+                         vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
+              (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
+                                                :takaraja (konv/sql-date (c/to-date tarkka-takaraja))
+                                                :nimi nimi
+                                                :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
+                                                :luoja (:id user)}))))))))
 
 (defn- luo-uudet-valtakunnalliset-toistuvat-valitavoitteet
   "Luo uudet valtakunnalliset toistuvat välitavoitteet ja aloittaa niiden kopioinnin urakoihin."
