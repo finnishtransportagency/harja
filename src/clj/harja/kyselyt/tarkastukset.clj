@@ -21,7 +21,7 @@
   (let [sijainti (if (instance? PGgeometry sijainti)
                    sijainti
                    (and sijainti (geo/geometry (geo/clj->pg sijainti))))
-        urakoitsija? (= roolit/osapuoli user :urakoitsija)]
+        urakoitsija? (= (roolit/osapuoli user) :urakoitsija)]
     (if (nil? id)
       (do
         (log/debug "Luodaan uusi tarkastus")

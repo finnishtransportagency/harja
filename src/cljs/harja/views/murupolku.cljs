@@ -139,7 +139,7 @@
       (fn []
         (let [ur @nav/valittu-urakka
               ei-urakkaa? (nil? ur)
-              urakoitsija? (= roolit/osapuoli @istunto/kayttaja :urakoitsija)]
+              urakoitsija? (= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)]
           [:span {:class (when (empty? @nav/tarvitsen-isoa-karttaa)
                            (if @nav/murupolku-nakyvissa?
                              ""

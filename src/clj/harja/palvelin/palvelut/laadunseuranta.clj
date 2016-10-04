@@ -213,7 +213,7 @@
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi vain-laadunalitukset?]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-   (let [urakoitsija? (= roolit/osapuoli user :urakoitsija)
+   (let [urakoitsija? (= (roolit/osapuoli user) :urakoitsija)
          tarkastukset (into []
                             (comp tarkastus-xf
                                   (if palauta-reitti?
@@ -232,7 +232,7 @@
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-  (let [urakoitsija? (= roolit/osapuoli user :urakoitsija)
+  (let [urakoitsija? (= (roolit/osapuoli user) :urakoitsija)
         tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus
                                                  db
                                                  urakka-id
