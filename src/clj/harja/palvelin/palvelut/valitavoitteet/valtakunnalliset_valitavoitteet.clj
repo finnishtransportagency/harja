@@ -106,7 +106,8 @@
   "Luo välitavoitteen annettuihin urakoihin kertaalleen per urakkavuosi
   jos urakka on annettua tyyppiä eikä se ole päättynyt.
 
-  Ei kopioi välitavoitetta jos takarajaksi muodostuu aika ennen järjestelmän käyttöönottoa."
+  Ei kopioi välitavoitetta jos takarajaksi muodostuu aika, joka ei ole
+  urakan voimassaoloaikana tai on ennen järjestelmän käyttöönottoa."
   [db user {:keys [takaraja-toistopaiva urakkatyyppi takaraja-toistokuukausi nimi] :as valitavoite}
    valtakunnallinen-valitavoite-id urakat]
   (let [linkitettavat-urakat (filter
