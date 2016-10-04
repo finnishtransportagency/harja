@@ -5,6 +5,7 @@ import NoticeTypeView from './NoticeTypeView.jsx';
 import Nav from './Nav.jsx';
 import Footer from './Footer.jsx';
 import Hero from './Hero.jsx';
+import DevLinks from './DevLinks.jsx';
 import {Category, Events} from '../enums.js';
 import pubsub from 'pubsub-js';
 
@@ -77,6 +78,7 @@ export default React.createClass({
       <div id="harja-home">
         <Nav />
         {heroEl}
+        <DevLinks />
         <div id="harja-content">
           {mainEl}
           {singleNoticeEl}

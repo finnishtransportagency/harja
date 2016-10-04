@@ -176,7 +176,6 @@ a.harja-notice-link {
   color: white;
   padding-bottom: 2em;
   padding-top:  2em;
-  margin-bottom: 1em;
 
   p {
     padding-bottom: 2em;
@@ -188,6 +187,17 @@ a.harja-notice-link {
     a {
       width: 100%;
     }
+  }
+}
+
+.harja-devlinks {
+  background-color: $blue-light;
+  margin-bottom: 2em;
+  a {
+    margin-top: 2em;
+    margin-bottom: 2em;
+    color: $blue;
+    background-color: $grey-lighter;
   }
 }
 

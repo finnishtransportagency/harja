@@ -3977,8 +3977,7 @@ a.harja-notice-link {
   background-color: #c8c8c8;
   color: white;
   padding-bottom: 2em;
-  padding-top: 2em;
-  margin-bottom: 1em; }
+  padding-top: 2em; }
   .harja-hero p {
     padding-bottom: 2em; }
   .harja-hero .harja-more {
@@ -3986,6 +3985,15 @@ a.harja-notice-link {
     width: 50%; }
     .harja-hero .harja-more a {
       width: 100%; }
+
+.harja-devlinks {
+  background-color: #3db7e4;
+  margin-bottom: 2em; }
+  .harja-devlinks a {
+    margin-top: 2em;
+    margin-bottom: 2em;
+    color: #0088ce;
+    background-color: #f1f1f1; }
 
 .livi-header-logo {
   height: 4em;
