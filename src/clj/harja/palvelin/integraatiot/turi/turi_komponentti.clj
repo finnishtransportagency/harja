@@ -77,9 +77,9 @@
                   sanoma)]
             (log/debug "HEADERIT: " (pr-str headers))
             (kasittele-turin-vastaus db id headers body))))
-        {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
+        {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))}
       (catch Throwable t
-        (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id)))))
+        (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
 
 (defn laheta-turvallisuuspoikkeamat-turiin [this]
   (let [idt (q/hae-lahettamattomat-turvallisuuspoikkeamat (:db this))]

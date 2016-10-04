@@ -121,7 +121,7 @@
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
-          [[:id (:turi-id data)]]
+          [[:id (:turi-id data)]] ;; TODO Tarkista onko tämä todella turi-id
           [[:sampohankeid (:urakka-sampoid data)]]
           [[:sampohankenimi (:urakka-nimi data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
