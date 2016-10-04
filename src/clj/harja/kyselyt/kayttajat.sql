@@ -244,7 +244,7 @@ SELECT
   o.nimi   AS nimi,
   o.tyyppi AS tyyppi
 FROM organisaatio o
-WHERE o.nimi = :nimi
+WHERE lower(o.nimi) = lower(:nimi)
 
 -- name: hae-organisaatioita
 -- Käyttäjän organisaatiohaku nimen osalla.
