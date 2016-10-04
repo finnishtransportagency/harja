@@ -60,7 +60,7 @@
                   :paikankuvaus        (z/xml1-> data :paikanKuvaus z/text)
                   :lisatieto        (z/xml1-> data :lisatieto z/text)
                   :viesti-id          (z/xml1-> data :viestiId z/text)
-                  :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :viestiId z/text)))
+                  :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :yhteydenottopyynto z/text)))
                   :ilmoittaja         (when-let [ilmoittaja (into {} (z/xml-> data :ilmoittaja lue-ilmoittaja))]
                                         (if (empty? ilmoittaja) nil ilmoittaja))
                   :lahettaja          (when-let [lahettaja (into {} (z/xml-> data :lahettaja lue-lahettaja))]

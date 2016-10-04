@@ -76,8 +76,11 @@
     (send! kanava
            (aja-virhekasittelyn-kanssa
              "laheta-ilmoitus"
+             nil
+             nil
              (fn []
-               (let [data {:ilmoitukset (mapv (fn [ilmoitus] (sanomat/rakenna-ilmoitus (konversio/alaviiva->rakenne ilmoitus))) ilmoitukset)}
+               (let [data {:ilmoitukset (mapv (fn [ilmoitus] (sanomat/rakenna-ilmoitus
+                                                               (konversio/alaviiva->rakenne ilmoitus))) ilmoitukset)}
                      vastaus (tee-vastaus json-skeemat/ilmoitusten-haku data)]
                  (lokita-vastaus integraatioloki :hae-ilmoitukset vastaus tapahtuma-id)
                  (doseq [ilmoitus ilmoitukset]
@@ -101,36 +104,39 @@
                                   true)}))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki tapahtumat request]
-  (aja-virhekasittelyn-kanssa
-    "hae-ilmoitukset"
-    (fn []
-      (let [{urakka-id :urakka-id
-             muuttunut-jalkeen :muuttunut-jalkeen
-             odota-uusia? :odota-uusia?
-             sulje-vastauksen-jalkeen? :sulje-vastauksen-jalkeen?} (pura-ilmoitusten-kuuntelun-kutsuparametrit request)
-            tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
-            kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
-        (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Muutosaika: %s." urakka-id muuttunut-jalkeen))
-        (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-        (with-channel request kanava
-                      (on-close kanava
-                                (fn [_]
-                                  (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
-                                  (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))
+  (let [parametrit (pura-ilmoitusten-kuuntelun-kutsuparametrit request)]
+    (aja-virhekasittelyn-kanssa
+     "hae-ilmoitukset"
+     nil
+     parametrit
+     (fn []
+       (let [{urakka-id :urakka-id
+              muuttunut-jalkeen :muuttunut-jalkeen
+              odota-uusia? :odota-uusia?
+              sulje-vastauksen-jalkeen? :sulje-vastauksen-jalkeen?} parametrit
+             tapahtuma-id (lokita-kutsu integraatioloki :hae-ilmoitukset request nil)
+             kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
+         (log/debug (format "Käynnistetään ilmoitusten kuuntelu urakalle id: %s. Muutosaika: %s." urakka-id muuttunut-jalkeen))
+         (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+         (with-channel request kanava
+                       (on-close kanava
+                                 (fn [_]
+                                   (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
+                                   (notifikaatiot/lopeta-ilmoitusten-kuuntelu tapahtumat urakka-id)))
 
-                      (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki tapahtumat kanava tapahtuma-id sulje-vastauksen-jalkeen?)
-                            odottavat-ilmoitukset (and muuttunut-jalkeen (ilmoitukset/hae-muuttuneet-ilmoitukset db urakka-id muuttunut-jalkeen))]
+                       (let [laheta-ilmoitukset (ilmoituslahettaja integraatioloki tapahtumat kanava tapahtuma-id sulje-vastauksen-jalkeen?)
+                             odottavat-ilmoitukset (and muuttunut-jalkeen (ilmoitukset/hae-muuttuneet-ilmoitukset db urakka-id muuttunut-jalkeen))]
 
-                        ;; Jos löytyi vanhoja ilmoituksia tai ei pidä jäädä odottamaan uusia ilmoituksia, palautetaan response välittömästi
-                        (when (or (not odota-uusia?) (not (empty? odottavat-ilmoitukset)))
-                          (laheta-ilmoitukset odottavat-ilmoitukset))
+                         ;; Jos löytyi vanhoja ilmoituksia tai ei pidä jäädä odottamaan uusia ilmoituksia, palautetaan response välittömästi
+                         (when (or (not odota-uusia?) (not (empty? odottavat-ilmoitukset)))
+                           (laheta-ilmoitukset odottavat-ilmoitukset))
 
-                        ;; Muussa tapauksessa jäädään kuuntelemaan uusia ilmoituksia
-                        (notifikaatiot/kuuntele-urakan-ilmoituksia
-                          tapahtumat
-                          urakka-id
-                          (fn [ilmoitus-id]
-                            (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-ilmoitusidlla db [(Integer/parseInt ilmoitus-id)]))))))))))
+                         ;; Muussa tapauksessa jäädään kuuntelemaan uusia ilmoituksia
+                         (notifikaatiot/kuuntele-urakan-ilmoituksia
+                           tapahtumat
+                           urakka-id
+                           (fn [ilmoitus-id]
+                             (laheta-ilmoitukset (ilmoitukset/hae-ilmoitukset-ilmoitusidlla db [(Integer/parseInt ilmoitus-id)])))))))))))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
