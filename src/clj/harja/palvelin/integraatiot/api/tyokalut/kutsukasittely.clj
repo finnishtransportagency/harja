@@ -142,11 +142,11 @@
        {:status status}))))
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
-  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %. " resurssi virheet (pr-str kutsu)))
+  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
-  (log/error (format "Resurssin: %s kutsu on viallinen: %s. Pametrit: %. Kutsu: %." resurssi virheet parametrit (pr-str kutsu)))
+  (log/error (format "Resurssin: %s kutsu on viallinen: %s. Pametrit: %. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-ei-hakutuloksia [virheet resurssi]
@@ -268,9 +268,9 @@
                        (lokita-kutsu integraatioloki resurssi request body))
         parametrit (:params request)
         vastaus (aja-virhekasittelyn-kanssa
+                  resurssi
                   body
                   parametrit
-                  resurssi
                   #(let
                     [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                      kutsun-data (lue-kutsu kutsun-skeema request body)
