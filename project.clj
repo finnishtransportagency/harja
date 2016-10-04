@@ -148,7 +148,7 @@
 
   :repositories [["harja-data" "http://185.26.50.104/mvn/"]
                  ["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
-                 ["solita" "http://mvn.solita.fi/repository/solita/"]]
+                 ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
 
 
   :plugins [[lein-cljsbuild "1.1.2"]

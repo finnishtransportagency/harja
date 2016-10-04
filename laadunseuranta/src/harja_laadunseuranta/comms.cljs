@@ -1,6 +1,7 @@
 (ns harja-laadunseuranta.comms
   (:require [ajax.core :refer [POST GET raw-response-format]]
             [cljs.core.async :as async :refer [put! <! chan close!]]
+            [harja-laadunseuranta.sovellus :as s]
             [harja-laadunseuranta.asetukset :as asetukset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -14,10 +15,18 @@
 
 (defn post! [url data]
   (let [c (chan)]
-    (POST url {:params data
+    (POST url {:params        data
                :error-handler #(hanskaa-virhe % c)
-               :handler #(put! c %)
-               :format :transit})
+               :handler       #(do
+                                (if (and (map? %) (contains? % :error))
+                                  (do
+                                    (reset! s/palvelinvirhe (pr-str %))
+                                    (.warn js/console (str "Virhe: " (pr-str %))))
+                                  (do
+                                    (reset! s/palvelinvirhe nil)
+                                    (put! c %)))
+                                (close! c))
+               :format        :transit})
     c))
 
 (defn send-file! [url file-data mime-type]
