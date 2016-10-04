@@ -176,7 +176,12 @@
             haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))
             urakoitsija? (= :urakoitsija (roolit/osapuoli user))]
         (when (not (empty? haettavat-toimenpiteet))
-          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)]
+          (let [tpi-haku-str (konv/seq->array haettavat-toimenpiteet)
+                parametrit (merge alue
+                                  {:urakat urakat
+                                   :nayta-kaikki (not urakoitsija?)
+                                   :organisaatio (get-in user [:organisaatio :id])
+                                   :toimenpiteet tpi-haku-str})]
             (into {}
                   (comp
                     (map #(update-in % [:sijainti] (comp geo/piste-koordinaatit)))
@@ -186,12 +191,7 @@
                     (map #(assoc % :tyyppi :tyokone))
                     (map #(konv/array->set % :tehtavat))
                     (map (juxt :tyokoneid identity)))
-                  (q/hae-tyokoneet db
-                                   (merge alue
-                                          {:urakat urakat
-                                           :nayta-kaikki (not urakoitsija?)
-                                           :organisaatio (get-in user [:organisaatio :id])
-                                           :toimenpiteet tpi-haku-str})))))))))
+                  (q/hae-tyokoneet db parametrit))))))))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa]}]
   (let [koodit (some->> (union talvi kesa)
