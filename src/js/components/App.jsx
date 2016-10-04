@@ -29,6 +29,19 @@ export default React.createClass({
     */
   },
 
+  defaultTitle(type) {
+    switch(type) {
+      case Category.CARE:
+        return 'Hoitotiedote';
+      case Category.MAINTENANCE:
+        return 'Ylläpitötiedote';
+      case Category.FAQ:
+        return 'Kysymys';
+      default:
+        return 'Tiedote';
+    }
+  },
+
   getNotices(file, type) {
     const url = '../../data/' + file;
     request.get(url)
@@ -56,8 +69,8 @@ export default React.createClass({
           .map((notice, index) => {
             notice.id = index;
             notice.type = type
-            notice.date = notice.date === null ? '' : notice.date.toLocaleDateString('fi-FI');
-            notice.title = notice.title || '';
+            notice.date = notice.date === null ? 'Ei päivämäärää' : notice.date.toLocaleDateString('fi-FI');
+            notice.title = notice.title || this.defaultTitle(type);
             notice.body = notice.body || '';
             notice.images = notice.images || [];
             return notice;
