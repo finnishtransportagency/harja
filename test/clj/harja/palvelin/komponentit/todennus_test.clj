@@ -1,7 +1,25 @@
 (ns harja.palvelin.komponentit.todennus-test
   (:require [harja.palvelin.komponentit.todennus :as todennus]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.test :as t :refer [deftest is use-fixtures]]))
+            [harja.testi :refer :all]
+            [clojure.test :as t :refer [deftest is use-fixtures testing]]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root
+   #'jarjestelma
+   (fn [_]
+     (component/start
+      (component/system-map
+       :db (tietokanta/luo-tietokanta testitietokanta)
+       :todennus (component/using
+                  (todennus/http-todennus nil)
+                  [:db])))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+(use-fixtures :once jarjestelma-fixture)
 
 (def testiroolit {"root" {:nimi "root"
                           :kuvaus "Pääkäyttäjä"}
@@ -63,3 +81,26 @@
                          :urakkaroolit       {14303 #{"ELY_Urakanvalvoja"}
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
+
+(deftest ota-organisaatio-y-tunnuksesta
+  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
+    (testing "Organisaatio löytyy, jos OAM_ORGANIZATION on annettu oikein"
+      (let [req (todenna {:headers {"oam_remote_user" "daniel"
+                                    "oam_user_first_name" "Daniel"
+                                    "oam_user_last_name" "Destialainen"
+                                    "oam_user_mail" "daniel@example.com"
+                                    "oam_user_mobile" "1234567890"
+                                    "oam_organization" "Destia Oy"
+                                    "oam_groups" ""}})]
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 13))))
+
+    (testing "Jos muuta organisaatiotietoa ei löyty, yritä ottaa se roolin Y-tunnuksesta"
+      (let [req (todennus/todenna-pyynto (:todennus jarjestelma)
+                                         {:headers {"oam_remote_user" "alpo"
+                                                    "oam_user_first_name" "Alpo"
+                                                    "oam_user_last_name" "Asfalttimies"
+                                                    "oam_user_mail" "alpo@example.com"
+                                                    "oam_user_mobile" "1234567890"
+                                                    "oam_organization" "Eitällaistaolekaan Oy"
+                                                    "oam_groups" "2234567-8_Paakayttaja"}})]
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 20))))))

@@ -118,17 +118,34 @@ on nil."
                  ;; Sähköposti ja puhelin
                  "oam_user_mail" "oam_user_mobile"])))
 
+(defn- hae-organisaatio-elynumerolla [db ely]
+  (some->> ely
+           (re-matches #"\d+")
+           Long/parseLong
+           (q/hae-ely-numerolla db)
+           first))
+
+(defn- hae-organisaatio-nimella [db nimi]
+  (first (q/hae-organisaatio-nimella db nimi)))
+
+(defn- hae-organisaatio-liitetylle-roolille [db roolit]
+  (some->> roolit
+           :organisaatioroolit
+           keys
+           first
+           (q/hae-organisaatio-idlla db)
+           first))
+
 (defn- hae-kayttajalle-organisaatio
-  [ely db organisaatio]
+  [db ely organisaatio roolit]
   (or
    ;; Jos ELY-numero haetaan se
-   (some->> ely
-            (re-matches #"\d+")
-            Long/parseLong
-            (q/hae-ely-numerolla db)
-            first)
+   (hae-organisaatio-elynumerolla db ely)
    ;; Muuten haetaan org. nimellä
-   (first (q/hae-organisaatio-nimella db organisaatio))))
+   (hae-organisaatio-nimella db organisaatio)
+   ;; Muuten etsitään urakoitsijakohtaista roolia
+   (hae-organisaatio-liitetylle-roolille db roolit)))
+
 
 (defn- varmista-kayttajatiedot
   "Ottaa tietokannan ja käyttäjän OAM headerit. Varmistaa että käyttäjä on olemassa
@@ -146,7 +163,11 @@ ja palauttaa käyttäjätiedot"
   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
   (if (q/onko-jarjestelma? db kayttajanimi)
     (throw+ todennusvirhe)
-    (let [organisaatio (hae-kayttajalle-organisaatio ely db organisaatio)
+    (let [roolit (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
+                                   (partial q/hae-urakoitsijan-id-ytunnuksella db)
+                                   oikeudet/roolit
+                                   ryhmat)
+          organisaatio (hae-kayttajalle-organisaatio db ely organisaatio roolit)
 
          kayttaja {:kayttajanimi kayttajanimi
                    :etunimi etunimi
@@ -167,10 +188,7 @@ ja palauttaa käyttäjätiedot"
                                           (map :id)
                                           (q/hae-organisaation-urakat db (:id organisaatio)))
               :id kayttaja-id)
-            (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
-                              (partial q/hae-urakoitsijan-id-ytunnuksella db)
-                              oikeudet/roolit
-                              ryhmat)))))
+            roolit))))
 
 (defn- ohita-oikeudet
   "Mahdollista kaikkien OAM_* headerien ohittaminen tietyille käyttäjille konfiguraatiossa.
@@ -202,8 +220,6 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
   component/Lifecycle
   (start [this]
     (log/info "Todennetaan HTTP käyttäjä KOKA headereista.")
-    (kuuntele! (:klusterin-tapahtumat this)
-               :kayttaja-muokattu #(swap! kayttajatiedot cache/evict %))
     this)
   (stop [this]
     this)
