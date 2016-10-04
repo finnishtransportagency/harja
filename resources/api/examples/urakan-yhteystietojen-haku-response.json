@@ -1,0 +1,56 @@
+{
+  "urakka": {
+    "alueurakkanro": "1234",
+    "elynro": 1,
+    "nimi": "testiurakka",
+    "sampoid": "1121",
+    "alkupvm": "2016-10-1T12:00:00Z",
+    "loppupvm": "2017-09-30T12:00:00Z",
+    "urakoitsija": {
+      "nimi": "Yritys OY",
+      "ytunnus": "1234567-8",
+      "katuosoite": "Testitie 1",
+      "postinumero": "20930"
+    },
+    "yhteyshenkilot": [
+      {
+        "yhteyshenkilo": {
+          "rooli": "urakoitsijan-vastuuhenkilo",
+          "nimi": "Urho Urakoitsija",
+          "puhelinnumero": "589883920",
+          "email": "urho@exmaple.com"
+        },
+        "yhteyshenkilo": {
+          "rooli": "ely-urakan-valvoja",
+          "nimi": "Eija Elyläinen",
+          "puhelinnumero": "345344534534",
+          "email": "eija@exmaple.com"
+        },
+        "yhteyshenkilo": {
+          "rooli": "sillanvalvoja",
+          "nimi": "Seija Sillanvalvoja",
+          "puhelinnumero": "3453453453",
+          "email": "seija@exmaple.com"
+        },
+        "yhteyshenkilo": {
+          "rooli": "kunnossapitopaaallikko",
+          "nimi": "Kimmo Kunnossapitäjä",
+          "puhelinnumero": "3453453453",
+          "email": "kimmo@exmaple.com"
+        },
+        "yhteyshenkilo": {
+          "rooli": "kelikeskus",
+          "nimi": "Testikelikeskus",
+          "puhelinnumero": "3453453453",
+          "email": "kelikeskus@exmaple.com"
+        },
+        "yhteyshenkilo": {
+          "rooli": "tieliikennekeskus",
+          "nimi": "Testitieliikennekeskus",
+          "puhelinnumero": "3453453453",
+          "email": "tieliikennekeskus@exmaple.com"
+        }
+      }
+    ]
+  }
+}

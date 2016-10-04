@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.0</b>
-<b>Julkaistu: 1.10.2016</b>
+<b>Nykyinen versio: 1.0.1</b>
+<b>Julkaistu: 4.10.2016</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.1 Julkaistu: 4.10.2016:
+    - Lisätty uusi rajapinta urakan yhteystietojen hakemiselle Paikkatietojärjestelmää varten.  
 - Versionumero: 1.0.0 Julkaistu: 1.10.2016:
     - Ensimmäinen virallinen versio
 - Versionumero: 0.3.1. Julkaistu: 28.9.2016:

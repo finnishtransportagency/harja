@@ -83,3 +83,5 @@
 (def +suljetun-tieosuuden-poisto+ "api/schemas/suljetun-tieosuuden-poisto-request.schema.json")
 (def suljetun-tieosuuden-poisto (tee-validaattori +suljetun-tieosuuden-poisto+))
 
+(def +urakan-yhteystietojen-haku+ "api/schemas/urakan-yhteystietojen-haku-response.schema.json")
+(def urakan-yhteystietojen-haku (tee-validaattori +urakan-yhteystietojen-haku+))
