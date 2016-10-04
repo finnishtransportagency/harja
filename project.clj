@@ -1,5 +1,5 @@
 (def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
-                     (.getHostName (java.net.InetAddress/getLocalHost))))
+                    (.getHostName (java.net.InetAddress/getLocalHost))))
 
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
@@ -147,7 +147,8 @@
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
 
   :repositories [["harja-data" "http://185.26.50.104/mvn/"]
-                 ["osgeo" "http://download.osgeo.org/webdav/geotools/"]] ;; FIXME: move artifacts to mvn.solita.fi
+                 ["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
+                 ["solita" "http://mvn.solita.fi/repository/solita/"]]
 
 
   :plugins [[lein-cljsbuild "1.1.2"]
@@ -223,8 +224,8 @@
                 :source-paths ["laadunseuranta/src" "laadunseuranta/cljc-src"]
 
                 :figwheel {:devcards true
-                                        ;:nrepl-port 7889
-                                        ;:server-port 3450
+                           ;:nrepl-port 7889
+                           ;:server-port 3450
                            }
 
                 :compiler {:main harja-laadunseuranta.devcards-core
