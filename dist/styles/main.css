@@ -4015,6 +4015,8 @@ a.harja-notice-link {
 
 .harja-devlinks {
   background-color: #3db7e4;
+  margin-left: 0;
+  margin-right: 0;
   margin-bottom: 2em; }
   .harja-devlinks a {
     margin-top: 2em;
