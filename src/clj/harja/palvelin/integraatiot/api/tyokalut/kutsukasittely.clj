@@ -146,7 +146,7 @@
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
-  (log/error (format "Resurssin: %s kutsu on viallinen: %s. Pametrit: %. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
+  (log/error (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-ei-hakutuloksia [virheet resurssi]
