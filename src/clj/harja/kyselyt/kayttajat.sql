@@ -246,6 +246,10 @@ SELECT
 FROM organisaatio o
 WHERE lower(o.nimi) = lower(:nimi)
 
+-- name: hae-organisaatio-idlla
+-- Hakee organisaation id:n, nimen ja tyypin id:n perusteella.
+SELECT id,nimi,tyyppi FROM organisaatio WHERE id = :id
+
 -- name: hae-organisaatioita
 -- Käyttäjän organisaatiohaku nimen osalla.
 SELECT
