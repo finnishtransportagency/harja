@@ -190,7 +190,7 @@
 (defn hae-kayttaja [db kayttajanimi]
   (let [kayttaja (first (kayttajat/hae-kayttaja-kayttajanimella db kayttajanimi))]
     (if kayttaja
-      (konv/array->set (konv/organisaatio kayttaja) :roolit)
+      (konv/organisaatio kayttaja)
       (do
         (log/error "Tuntematon käyttäjätunnus: " kayttajanimi)
         (throw+ {:type virheet/+tuntematon-kayttaja+

@@ -41,27 +41,13 @@
               (not (nil? urakka-id))
               (q/hae-urakoiden-organisaatiotiedot db urakka-id)
 
-              #_(roolit/lukuoikeus-kaikkiin-urakoihin? user)
               ;; Haetaan vaan kaikki urakat, näistä filtteröidään joka tapauksessa
               ;; pois sellaiset, johon käyttäjällä ei ole oikeutta
               :else
               (q/hae-kaikki-urakat-aikavalilla
                 db (konv/sql-date alku) (konv/sql-date loppu)
                 (when urakoitsija urakoitsija)
-                (when urakkatyyppi (name urakkatyyppi)) hallintayksikot)
-
-              ;:else
-              #_(do
-                (log/debug "Hae käyttäjän urakat aikaväliltä")
-                (log/debug (:id user))
-                (log/debug (konv/sql-date alku) (konv/sql-date loppu))
-                (log/debug urakoitsija urakkatyyppi hallintayksikot)
-                (kayttajat-q/hae-kayttajan-urakat-aikavalilta
-                 db (:id user)
-                 (konv/sql-date alku) (konv/sql-date loppu)
-                 (when urakoitsija urakoitsija)
-                 (when urakkatyyppi (name urakkatyyppi))
-                 hallintayksikot)))))
+                (when urakkatyyppi (name urakkatyyppi)) hallintayksikot))))
      {:urakka :urakat}
      (juxt :tyyppi (comp :id :hallintayksikko)))))
 

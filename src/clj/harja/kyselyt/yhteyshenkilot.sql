@@ -89,22 +89,6 @@ FROM paivystys p
 WHERE (:alkaen :: DATE IS NULL OR p.alku <= :paattyen :: DATE) AND
       (:paattyen :: DATE IS NULL OR p.loppu >= :alkaen :: DATE);
 
--- name: hae-urakan-kayttajat
--- Hakee urakkaan linkitetyt oikeat käyttäjät
-SELECT
-  k.id,
-  kur.rooli,
-  k.etunimi,
-  k.sukunimi,
-  k.puhelin,
-  k.sahkoposti,
-  o.nimi AS organisaatio_nimi
-FROM kayttaja_urakka_rooli kur
-  JOIN kayttaja k ON kur.kayttaja = k.id
-  JOIN organisaatio o ON k.organisaatio = o.id
-WHERE kur.urakka = :urakka
-      AND kur.poistettu = FALSE AND k.poistettu = FALSE;
-
 -- name: hae-yhteyshenkilotyypit
 -- Hakee käytetyt yhteyshenkilötyypit
 SELECT DISTINCT (rooli)
