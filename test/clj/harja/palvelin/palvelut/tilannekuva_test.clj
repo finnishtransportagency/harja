@@ -94,22 +94,24 @@
                             (ryhma parametrit)
                             (keys (ryhma parametrit)))))
 
-(defn hae-tk [parametrit]
-  (let [urakat (kutsu-palvelua (:http-palvelin jarjestelma)
-                               :hae-urakat-tilannekuvaan +kayttaja-jvh+
-                               {:nykytilanne? (:nykytilanne? parametrit)
-                                :alku         (:alku parametrit)
-                                :loppu        (:loppu parametrit)
-                                :urakoitsija  (:urakoitsija parametrit)
-                                :urakkatyyppi (:urakkatyyppi parametrit)})
-        urakat (into #{} (mapcat
+(defn hae-tk
+  ([parametrit] (hae-tk +kayttaja-jvh+ parametrit))
+  ([kayttaja parametrit]
+   (let [urakat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakat-tilannekuvaan kayttaja
+                                {:nykytilanne? (:nykytilanne? parametrit)
+                                 :alku         (:alku parametrit)
+                                 :loppu        (:loppu parametrit)
+                                 :urakoitsija  (:urakoitsija parametrit)
+                                 :urakkatyyppi (:urakkatyyppi parametrit)})
+         urakat (into #{} (mapcat
                            (fn [aluekokonaisuus]
                              (map :id (:urakat aluekokonaisuus)))
                            urakat))]
-    (kutsu-palvelua (:http-palvelin jarjestelma)
-                   :hae-tilannekuvaan +kayttaja-jvh+
-                   (tk/valitut-suodattimet (assoc parametrit
-                                             :urakat urakat)))))
+     (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :hae-tilannekuvaan kayttaja
+                     (tk/valitut-suodattimet (assoc parametrit
+                                                    :urakat urakat))))))
 
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk parametrit-laaja-historia)]
@@ -194,3 +196,35 @@
                        (assoc :nykytilanne? true))
         vastaus (hae-tk parametrit)]
     (is (= (count (vals (:tyokoneet vastaus))) 0))))
+
+(defn- insert-tyokone [urakka organisaatio]
+  (let [x 523892
+        y 7229981
+        sql (str "INSERT INTO tyokonehavainto "
+                 "(tyokoneid, jarjestelma, organisaatio, viestitunniste,lahetysaika,tyokonetyyppi,"
+                 "sijainti,urakkaid,tehtavat) "
+                 "VALUES (666, 'yksikkötesti', " organisaatio ",666,NOW(),'yksikkötesti',"
+                 "ST_MakePoint(" x ", " y ")::POINT, "
+                 (if urakka urakka "NULL") ", '{harjaus}')")]
+    (u sql)))
+
+
+(deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet []
+  (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
+        urakoitsija (hae-oulun-alueurakan-2005-2012-urakoitsija)
+        hae #(get-in (hae-tk % parametrit) [:tyokoneet 666])]
+    ;; Insert menee ok
+    (is (= 1 (insert-tyokone nil urakoitsija)) "Urakattoman työkonehavainnon voi insertoida")
+
+    ;; jvh näkee työkoneen
+    (is (hae +kayttaja-jvh+) "jvh näkee työkoneen")
+
+    ;; ely käyttäjä näkee
+    (is (hae +kayttaja-tero+) "ELYläinen näkee työkoneen")
+
+    ;; saman urakoitsijaorganisaation käyttäjä näkee työkoneen
+    (is (hae +kayttaja-yit_uuvh+) "Saman urakoitsijan käyttäjä näkee työkoneen")
+
+
+    ;; eri urakoitsijaorganisaation käyttä ei näe työkonetta
+    (is (nil? (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))
