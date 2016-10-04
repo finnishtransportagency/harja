@@ -4,6 +4,7 @@ import SingleNoticeView from './SingleNoticeView.jsx';
 import NoticeTypeView from './NoticeTypeView.jsx';
 import Nav from './Nav.jsx';
 import Footer from './Footer.jsx';
+import Hero from './Hero.jsx';
 import {Category, Events} from '../enums.js';
 import pubsub from 'pubsub-js';
 
@@ -37,7 +38,7 @@ export default React.createClass({
   render() {
     let {care, maintenance, faq} = this.props;
     let {selection} = this.state;
-    let mainEl, singleNoticeEl, noticeTypeEl;
+    let heroEl, mainEl, singleNoticeEl, noticeTypeEl;
 
     if (selection && selection.id != null) {
       const notices = this.props[selection.category];
@@ -50,6 +51,7 @@ export default React.createClass({
       noticeTypeEl = (<NoticeTypeView {...props}/>);
     }
     else {
+      heroEl = <Hero />;
       mainEl = (
         <div className="row">
           <div className="medium-4 small-12 columns">
@@ -74,6 +76,7 @@ export default React.createClass({
     return (
       <div id="harja-home">
         <Nav />
+        {heroEl}
         <div id="harja-content">
           {mainEl}
           {singleNoticeEl}

@@ -124,29 +124,65 @@ a.harja-notice-link {
 .harja-care-noticelist {
   border-top: $harja-list-top-height solid $green;
   border-bottom: $harja-list-bottom-height solid $grey-light;
-  .harja-more {
-    a {
-      background-color: $green;
-    }
-  }
 }
 
 .harja-maintenance-noticelist {
   border-top: $harja-list-top-height solid $orange;
   border-bottom: $harja-list-bottom-height solid $grey-light;
-  .harja-more {
-    a {
-      background-color: $orange;
-    }
-  }
 }
 
 .harja-faq-noticelist {
   border-top: $harja-list-top-height solid $blue;
   border-bottom: $harja-list-bottom-height solid $grey-light;
+}
+
+.harja-care {
+  a {
+    background-color: $green;
+  }
+  a:hover,
+  a:focus {
+    background-color: $green-light;
+  }
+}
+
+.harja-maintenance {
+  a {
+    background-color: $orange;
+  }
+  a:hover,
+  a:focus {
+    background-color: $orange-light;
+  }
+}
+
+.harja-faq {
+  a {
+    background-color: $blue;
+  }
+  a:hover,
+  a:focus {
+    background-color: $blue-light;
+  }
+}
+
+.harja-hero {
+  background: url("hero.jpg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  background-size: cover;
+  background-color: $grey-light;
+  color: white;
+  padding-bottom: 1em;
+  padding-top:  1em;
+  margin-bottom: 1em;
+
   .harja-more {
+    margin: auto;
+    width: 50%;
     a {
-      background-color: $blue;
+      width: 100%;
     }
   }
 }

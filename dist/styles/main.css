@@ -3938,20 +3938,52 @@ a.harja-notice-link {
 .harja-care-noticelist {
   border-top: 0.5em solid #9eb83d;
   border-bottom: 0.2em solid #c8c8c8; }
-  .harja-care-noticelist .harja-more a {
-    background-color: #9eb83d; }
 
 .harja-maintenance-noticelist {
   border-top: 0.5em solid #f79421;
   border-bottom: 0.2em solid #c8c8c8; }
-  .harja-maintenance-noticelist .harja-more a {
-    background-color: #f79421; }
 
 .harja-faq-noticelist {
   border-top: 0.5em solid #0088ce;
   border-bottom: 0.2em solid #c8c8c8; }
-  .harja-faq-noticelist .harja-more a {
-    background-color: #0088ce; }
+
+.harja-care a {
+  background-color: #9eb83d; }
+
+.harja-care a:hover,
+.harja-care a:focus {
+  background-color: #abc742; }
+
+.harja-maintenance a {
+  background-color: #f79421; }
+
+.harja-maintenance a:hover,
+.harja-maintenance a:focus {
+  background-color: #f9a94d; }
+
+.harja-faq a {
+  background-color: #0088ce; }
+
+.harja-faq a:hover,
+.harja-faq a:focus {
+  background-color: #3db7e4; }
+
+.harja-hero {
+  background: url("hero.jpg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  background-size: cover;
+  background-color: #c8c8c8;
+  color: white;
+  padding-bottom: 1em;
+  padding-top: 1em;
+  margin-bottom: 1em; }
+  .harja-hero .harja-more {
+    margin: auto;
+    width: 50%; }
+    .harja-hero .harja-more a {
+      width: 100%; }
 
 .livi-header-logo {
   height: 4em;

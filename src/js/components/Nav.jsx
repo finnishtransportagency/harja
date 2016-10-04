@@ -13,7 +13,7 @@ export default React.createClass({
     ];
 
     return (
-      <div>
+      <nav>
         <div className="harja-header title-bar show-for-medium">
           <div className="top-bar-left">
             <img className="livi-header-logo" src="images/livi_logo_blue.png" alt="liikennevirasto logo" />
@@ -45,7 +45,7 @@ export default React.createClass({
             </ul>
           </div>
         </div>
-      </div>
+      </nav>
     );
   }
 });

@@ -21,6 +21,10 @@ module.exports = {
       indentedSyntax: false // Enable .sass syntax?
     }
   },
+  style_images: {
+    src: src + '/styles/**/*.{jpg,jpeg,png,gif,tiff}',
+    dest: dest + '/styles'
+  },
   browserify: {
     settings: {
       transform: ['babelify']

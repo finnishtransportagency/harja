@@ -43,7 +43,7 @@ export default React.createClass({
     let titleText, buttonText = '';
 
     let {notices, category} = this.props;
-    
+
     switch (category) {
       case Category.CARE:
         titleText = 'Ajankohtaista teiden hoidossa';
@@ -68,9 +68,10 @@ export default React.createClass({
       let show = notices;
       if (this.props.shorten > 0) {
         show = notices.slice(0, this.props.shorten);
+        const className = "harja-more harja-"+category
         const link = {title: buttonText, data: {action: Events.CATEGORY, category: category}};
         moreEl = (
-          <div className="harja-more">
+          <div className={className}>
             <NavButton item={link} />
           </div>
         );
