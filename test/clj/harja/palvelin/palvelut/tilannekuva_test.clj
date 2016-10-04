@@ -206,7 +206,6 @@
                  "VALUES (666, 'yksikkötesti', " organisaatio ",666,NOW(),'yksikkötesti',"
                  "ST_MakePoint(" x ", " y ")::POINT, "
                  (if urakka urakka "NULL") ", '{harjaus}')")]
-    (println sql)
     (u sql)))
 
 
