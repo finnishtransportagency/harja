@@ -344,7 +344,8 @@
                    :alku alkupvm :loppu loppupvm
                    :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
                    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
-                   :vain_laadunalitukset vain-laadunalitukset?})))
+                   :vain_laadunalitukset vain-laadunalitukset?
+                   :kayttaja_on_urakoitsija (= (roolit/osapuoli user) :urakoitsija)})))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 

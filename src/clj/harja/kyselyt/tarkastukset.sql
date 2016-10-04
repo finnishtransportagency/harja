@@ -59,9 +59,10 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
    AND t.sijainti IS NOT NULL
    AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
    AND (t.aika >= :alku AND t.aika <= :loppu)
+   AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
    AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
    AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
-   AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
+   AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
 
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
