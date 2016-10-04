@@ -49,11 +49,15 @@ html, body {
   background-color: $grey-lighter;
 }
 
-#harja-content {
+#harja-main-view {
   padding-left: $left-pad;
   padding-right: $right-pad;
   height: auto;
   margin-bottom: $harja-footer-height;
+}
+
+.harja-sub-views {
+  background-color: white;
 }
 
 a {
@@ -91,10 +95,6 @@ a:visited {
   color: $grey-light;
 }
 
-.harja-noticetype {
-  background-color: white;
-}
-
 .harja-noticelist {
   background-color: white;
   border-left: 0;
@@ -104,6 +104,36 @@ a:visited {
 
 .harja-noticelist-item {
   margin-bottom: 1em;
+}
+
+.harja-breadcrumbs {
+  background-color: $grey-dark;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  color: white;
+  margin-left: 0;
+  margin-right: 0;
+  p {
+    margin: 0;
+  }
+}
+
+.harja-breadcrumb {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  color: white;
+}
+
+a.harja-breadcrumb {
+  a:hover {
+    color: $grey-lighter;
+  }
+  a:focus {
+    color: white;
+  }
+  a:visited {
+    color: white;
+  }
 }
 
 .harja-more {

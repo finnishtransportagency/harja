@@ -3880,11 +3880,14 @@ html, body {
 #harja-main-view {
   background-color: #f1f1f1; }
 
-#harja-content {
+#harja-main-view {
   padding-left: 4rem;
   padding-right: 4rem;
   height: auto;
   margin-bottom: 6rem; }
+
+.harja-sub-views {
+  background-color: white; }
 
 a {
   color: #3db7e4; }
@@ -3915,9 +3918,6 @@ a:visited {
   padding-left: 0;
   color: #c8c8c8; }
 
-.harja-noticetype {
-  background-color: white; }
-
 .harja-noticelist {
   background-color: white;
   border-left: 0;
@@ -3926,6 +3926,30 @@ a:visited {
 
 .harja-noticelist-item {
   margin-bottom: 1em; }
+
+.harja-breadcrumbs {
+  background-color: #4b4b4b;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  color: white;
+  margin-left: 0;
+  margin-right: 0; }
+  .harja-breadcrumbs p {
+    margin: 0; }
+
+.harja-breadcrumb {
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  color: white; }
+
+a.harja-breadcrumb a:hover {
+  color: #f1f1f1; }
+
+a.harja-breadcrumb a:focus {
+  color: white; }
+
+a.harja-breadcrumb a:visited {
+  color: white; }
 
 .harja-more a::after {
   content: "\00BB"; }
