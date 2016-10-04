@@ -214,17 +214,17 @@
         urakoitsija (hae-oulun-alueurakan-2005-2012-urakoitsija)
         hae #(get-in (hae-tk % parametrit) [:tyokoneet 666])]
     ;; Insert menee ok
-    (is (= 1 (insert-tyokone nil urakoitsija)))
+    (is (= 1 (insert-tyokone nil urakoitsija)) "Urakattoman työkonehavainnon voi insertoida")
 
     ;; jvh näkee työkoneen
-    (is (hae +kayttaja-jvh+))
+    (is (hae +kayttaja-jvh+) "jvh näkee työkoneen")
 
     ;; ely käyttäjä näkee
-    (is (hae +kayttaja-tero+))
+    (is (hae +kayttaja-tero+) "ELYläinen näkee työkoneen")
 
     ;; saman urakoitsijaorganisaation käyttäjä näkee työkoneen
-    (is (hae +kayttaja-yit_uuvh+))
+    (is (hae +kayttaja-yit_uuvh+) "Saman urakoitsijan käyttäjä näkee työkoneen")
 
 
     ;; eri urakoitsijaorganisaation käyttä ei näe työkonetta
-    (is (nil? (hae +kayttaja-ulle+)))))
+    (is (nil? (hae +kayttaja-ulle+)) "Eri urakoitsijan käyttäjä ei näe työkonetta")))
