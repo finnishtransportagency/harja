@@ -225,7 +225,7 @@
                               (konv/sql-timestamp alkupvm)
                               (konv/sql-timestamp loppupvm)
                               (boolean tienumero) tienumero
-                              (boolean tyyppi ) (and tyyppi (name tyyppi))
+                              (boolean tyyppi) (and tyyppi (name tyyppi))
                               vain-laadunalitukset?
                               max-rivimaara))]
      tarkastukset)))

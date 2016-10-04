@@ -348,15 +348,13 @@
           :palstoja 2
           :fmt fmt/totuus}
 
-         (let [kenttaa-voi-muokata? (not (= roolit/osapuoli @istunto/kayttaja :urakoitsija))]
-           {:otsikko (when (or (not voi-muokata?)
-                               (not kenttaa-voi-muokata?))
+         (when (not= roolit/osapuoli @istunto/kayttaja :urakoitsija)
+           {:otsikko (when-not voi-muokata?
                        ;; Näytä otsikko näyttömuodossa
                        "Näytä urakoitsijalle")
             :teksti "Näytä urakoitsijalle"
             :nimi :nayta-urakoitsijalle
             :nayta-rivina? true
-            :muokattava? (constantly kenttaa-voi-muokata?)
             :tyyppi :checkbox
             :palstoja 2
             :fmt fmt/totuus})
