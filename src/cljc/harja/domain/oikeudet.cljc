@@ -204,11 +204,3 @@
          (str "\"" oikeustyyppi "\" oikeutta"))
        ": "
        (:kuvaus oikeus)))
-
-(defn organisaatiotyypissa?
-  "Tyyppi on string: liikennevirasto, urakoitsija, ely"
-  [kayttaja tyyppi]
-  (-> kayttaja
-      :organisaatio
-      :tyyppi
-      (= tyyppi)))

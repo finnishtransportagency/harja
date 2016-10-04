@@ -27,7 +27,8 @@
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.asiakas.kommunikaatio :as k]
             [harja.fmt :as fmt]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta])
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -57,7 +58,7 @@
   {:uusi? true
    :aika (pvm/nyt)
    :tarkastaja @istunto/kayttajan-nimi
-   :nayta-urakoitsijalle (oikeudet/organisaatiotyypissa? @istunto/kayttaja "urakoitsija")
+   :nayta-urakoitsijalle (= roolit/osapuoli @istunto/kayttaja :urakoitsija)
    :laadunalitus false})
 
 (defn valitse-tarkastus [tarkastus-id]
@@ -347,7 +348,7 @@
           :palstoja 2
           :fmt fmt/totuus}
 
-         (let [kenttaa-voi-muokata? (not (oikeudet/organisaatiotyypissa? @istunto/kayttaja "urakoitsija"))]
+         (let [kenttaa-voi-muokata? (not (= roolit/osapuoli @istunto/kayttaja :urakoitsija))]
            {:otsikko (when (or (not voi-muokata?)
                                (not kenttaa-voi-muokata?))
                        ;; Näytä otsikko näyttömuodossa
