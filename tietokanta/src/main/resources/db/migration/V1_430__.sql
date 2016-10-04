@@ -11,7 +11,7 @@ WHERE id IN
          JOIN valitavoite vvt ON vt.valtakunnallinen_valitavoite = vvt.id
        WHERE vt.urakka IS NOT NULL -- Tuplavarmistus
              AND vt.valtakunnallinen_valitavoite IS NOT NULL -- Tuplavarmistus
-             -- Takaraja ennen käyttöömottoa
+             -- Takaraja ennen käyttöönottoa
              AND vt.takaraja <= '2016-10-01'
              -- Liittyy vuosittain toistuvaan valtakunnalliseen välitavoitteeseen
              AND vvt.takaraja_toistokuukausi IS NOT NULL
