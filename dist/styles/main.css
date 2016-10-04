@@ -3874,10 +3874,10 @@ table.hover tr:nth-of-type(even):hover {
 html, body {
   height: 100%; }
 
-#main, #harja-home, #harja-content {
+#main, #harja-home, #harja-main-view {
   height: 100%; }
 
-#harja-home, #harja-content {
+#harja-main-view {
   background-color: #f1f1f1; }
 
 #harja-content {
@@ -3914,6 +3914,9 @@ a:visited {
   font-weight: bold;
   padding-left: 0;
   color: #c8c8c8; }
+
+.harja-noticetype {
+  background-color: white; }
 
 .harja-noticelist {
   background-color: white;

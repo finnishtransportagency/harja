@@ -39,35 +39,46 @@ export default React.createClass({
   render() {
     let {care, maintenance, faq} = this.props;
     let {selection} = this.state;
-    let heroEl, mainEl, singleNoticeEl, noticeTypeEl;
+    let heroEl, devEl, mainEl, singleNoticeEl, noticeTypeEl;
 
     if (selection && selection.id != null) {
       const notices = this.props[selection.category];
       const notice = notices.filter((item) => { return item.id === selection.id})[0];
       const props = {notice: notice, category: selection.category, notices: notices}
-      singleNoticeEl = (<SingleNoticeView  {...props}/>);
+      singleNoticeEl = (
+        <div className="harja-sub-views">
+          <SingleNoticeView  {...props}/>
+        </div>
+        );
     }
     else if (selection && selection.category) {
       const props = {category: selection.category, notices: this.props[selection.category]}
-      noticeTypeEl = (<NoticeTypeView {...props}/>);
+      noticeTypeEl = (
+        <div className="harja-sub-views">
+          <NoticeTypeView {...props}/>
+        </div>
+      );
     }
     else {
       heroEl = <Hero />;
+      devEl = <DevLinks />;
       mainEl = (
-        <div className="row">
-          <div className="medium-4 small-12 columns">
-            <div className="harja-noticelist harja-care-noticelist">
-              <NoticeList notices={care} category={Category.CARE} shorten={3}/>
+        <div id="harja-main-view">
+          <div className="harja row">
+            <div className="medium-4 small-12 columns">
+              <div className="harja-noticelist harja-care-noticelist">
+                <NoticeList notices={care} category={Category.CARE} shorten={3}/>
+              </div>
             </div>
-          </div>
-          <div className="medium-4 small-12 columns">
-            <div className="harja-noticelist harja-maintenance-noticelist">
-              <NoticeList notices={maintenance} category={Category.MAINTENANCE} shorten={3}/>
+            <div className="medium-4 small-12 columns">
+              <div className="harja-noticelist harja-maintenance-noticelist">
+                <NoticeList notices={maintenance} category={Category.MAINTENANCE} shorten={3}/>
+              </div>
             </div>
-          </div>
-          <div className="medium-4 small-12 columns">
-            <div className="harja-noticelist harja-faq-noticelist">
-              <NoticeList notices={faq} category={Category.FAQ} shorten={3}/>
+            <div className="medium-4 small-12 columns">
+              <div className="harja-noticelist harja-faq-noticelist">
+                <NoticeList notices={faq} category={Category.FAQ} shorten={3}/>
+              </div>
             </div>
           </div>
         </div>
@@ -78,12 +89,10 @@ export default React.createClass({
       <div id="harja-home">
         <Nav />
         {heroEl}
-        <DevLinks />
-        <div id="harja-content">
-          {mainEl}
-          {singleNoticeEl}
-          {noticeTypeEl}
-        </div>
+        {devEl}
+        {mainEl}
+        {singleNoticeEl}
+        {noticeTypeEl}
         <Footer />
       </div>
     );
