@@ -3976,9 +3976,11 @@ a.harja-notice-link {
   background-size: cover;
   background-color: #c8c8c8;
   color: white;
-  padding-bottom: 1em;
-  padding-top: 1em;
+  padding-bottom: 2em;
+  padding-top: 2em;
   margin-bottom: 1em; }
+  .harja-hero p {
+    padding-bottom: 2em; }
   .harja-hero .harja-more {
     margin: auto;
     width: 50%; }
