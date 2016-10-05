@@ -12,6 +12,7 @@
    :sijainti {:nykyinen nil
               :edellinen nil}
    :palautettava-tarkastusajo nil
+   :valittu-urakka nil
    :tarkastusajo nil
    :tarkastustyyppi nil
    :kirjaamassa-havaintoa false
@@ -42,7 +43,8 @@
    :virheet []
    :ilmoitukset []
    :vakiohavaintojen-kuvaukset nil
-   :idxdb nil})
+   :idxdb nil
+   :palvelinvirhe nil})
 
 (defonce sovellus (atom sovelluksen-alkutila))
 
@@ -89,6 +91,7 @@
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 
 (def sijainti (reagent/cursor sovellus [:sijainti]))
+(def valittu-urakka (reagent/cursor sovellus [:valittu-urakka]))
 (def tarkastusajo (reagent/cursor sovellus [:tarkastusajo]))
 (def tarkastustyyppi (reagent/cursor sovellus [:tarkastustyyppi]))
 
@@ -144,6 +147,8 @@
 
 (def idxdb (reagent/cursor sovellus [:idxdb]))
 
+(def palvelinvirhe (reagent/cursor sovellus [:palvelinvirhe]))
+
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo)))
 
 (def tallennustilaa-muutetaan (reagent/cursor sovellus [:tallennustilaa-muutetaan]))
@@ -157,6 +162,10 @@
                                       (not @tarkastusajo-paattymassa)
                                       (not @kirjaamassa-havaintoa))))
 
+; näyttää urakkavalitsimen, arvoksi annettava urakkatyyppi stringinä
+; niin kuin se on Harjan kannassa, esim. paallystys
+(def nayta-urakkavalitsin (atom nil))
+
 
 (def tarkastusajo-luotava (reaction (and @tallennustilaa-muutetaan
                                          (nil? @tarkastusajo)
@@ -168,7 +177,9 @@
          :tallennus-kaynnissa false
          :tallennustilaa-muutetaan false
          :tarkastustyyppi nil
-         :tarkastusajo nil))
+         :tarkastusajo nil
+         :valittu-urakka nil
+         :pikahavainnot {}))
 
 (defn tarkastusajo-kayntiin [sovellus tarkastustyyppi ajo-id]
   (assoc sovellus
@@ -184,6 +195,9 @@
 
 (defn tarkastusajo-seis! []
   (swap! sovellus tarkastusajo-seis))
+
+(defn valitse-urakka! [urakka]
+  (reset! valittu-urakka urakka))
 
 (def beta-kayttajat #{"A018983" "K870689"})
 

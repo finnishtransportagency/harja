@@ -229,7 +229,7 @@
           (if (:poistettu toteuma)
             (do
               (log/debug "poista toteuma materiaali id: " tmid)
-              (poista-toteuma-materiaali! db (:id user) toteuma))
+              (poista-toteuma-materiaali! db user toteuma))
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
               (toteumat/paivita-toteuma! db

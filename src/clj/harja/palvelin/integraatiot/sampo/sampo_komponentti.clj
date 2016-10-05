@@ -7,7 +7,7 @@
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
             [harja.palvelin.integraatiot.sampo.vienti :as vienti]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [ harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
+            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
@@ -23,7 +23,7 @@
   (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
   (sonja/kuuntele (:sonja this) kuittausjono-ulos
                   (fn [viesti]
-                    (vienti/kasittele-kuittaus (:integraatioloki this) (:db this) viesti))))
+                    (vienti/kasittele-kuittaus (:integraatioloki this) (:db this) viesti kuittausjono-ulos))))
 
 (defn tee-paivittainen-lahetys-tehtava [this paivittainen-lahetysaika lahetysjono-ulos]
   (if paivittainen-lahetysaika
@@ -36,8 +36,7 @@
                                                  (:db this) lahetysjono-ulos))))
     (fn [] ())))
 
-(defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan
-                  lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
+(defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
   component/Lifecycle
   (start [this]
     (log/debug "Käynnistetään Sampo komponentti")

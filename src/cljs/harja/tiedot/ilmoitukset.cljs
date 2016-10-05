@@ -43,7 +43,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                 :valittu-ilmoitus nil
                 :uusi-kuittaus-auki? false
                 :ilmoitushaku-id nil ;; ilmoitushaun timeout
-                :notifioi-uudet? false ;; vain taustalla tehty haku notifioi uudet ilmoitukset (ja jos käyttäjä hyväksyy)
+                :taustahaku? false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
                 :ilmoitukset nil ;; haetut ilmoitukset
                 :valinnat {:tyypit +ilmoitustyypit+
                            :tilat (into #{} tila-filtterit)
@@ -113,7 +113,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
   ([app] (hae app 300))
   ([app timeout] (hae app timeout false))
-  ([{haku :ilmoitushaku :as app} timeout notifioi-uudet?]
+  ([{haku :ilmoitushaku-id :as app} timeout taustahaku?]
     ;; Jos seuraava haku ollaan laukaisemassa, peru se
    (when haku
      (.clearTimeout js/window haku))
@@ -121,7 +121,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
        (assoc :ilmoitushaku-id (.setTimeout js/window
                                             (t/send-async! v/->HaeIlmoitukset)
                                             timeout))
-       (assoc :notifioi-uudet? notifioi-uudet?))))
+       (assoc :taustahaku? taustahaku?))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -140,7 +140,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
         (update-in app [:valinnat] merge valinnat))))
 
   v/HaeIlmoitukset
-  (process-event [_ {valinnat :valinnat notifioi-uudet? :notifioi-uudet? :as app}]
+  (process-event [_ {valinnat :valinnat taustahaku? :taustahaku? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (go
         (tulos!
@@ -153,21 +153,23 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                                  #(if (empty? %) +ilmoitustyypit+ %))
                                          (update :tilat
                                                  #(if (empty? %) (into #{} tila-filtterit) %)))))
-           :notifioi-uudet? notifioi-uudet?})))
-    app)
+           :taustahaku? taustahaku?})))
+    (if taustahaku?
+      app
+      (assoc app :ilmoitukset nil)))
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
     (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
                                             (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
-      (when (:notifioi-uudet? tulokset)
+      (when (:taustahaku? tulokset)
         (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset
                                                   {:aani? @aanimerkki-uusista-ilmoituksista?}))
       (hae (assoc app
              ;; Uudet ilmoitukset
              :ilmoitukset (cond-> (:ilmoitukset tulokset)
-                                  (:notifioi-uudet? tulokset)
+                                  (:taustahaku? tulokset)
                                   (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
                                   true
                                   (jarjesta-ilmoitukset))

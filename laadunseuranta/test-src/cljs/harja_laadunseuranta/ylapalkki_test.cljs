@@ -4,7 +4,8 @@
             [dommy.core :as dommy]
             [harja-laadunseuranta.testutils :refer [sel sel1]]
             [harja-laadunseuranta.asetukset :as asetukset]
-            [harja-laadunseuranta.ylapalkki :as ylapalkki])
+            [harja-laadunseuranta.ylapalkki :as ylapalkki]
+            [cljs-react-test.utils])
   (:require-macros [harja-laadunseuranta.test-macros :refer [with-component prepare-component-tests]]
                    [harja-laadunseuranta.macros :refer [after-delay]]))
 
@@ -16,16 +17,19 @@
                            :aosa 4
                            :aet 3000})
           kuva (atom nil)]
-      (with-component [ylapalkki/ylapalkkikomponentti {:tiedot-nakyvissa (atom false)
-                                                       :hoitoluokka (atom "Ia")
-                                                       :soratiehoitoluokka (atom "5")
-                                                       :tr-osoite tr-osoite
-                                                       :kiinteistorajat (atom false)
-                                                       :ortokuva (atom false)
-                                                       :tallennus-kaynnissa (atom false)
-                                                       :tallennustilaa-muutetaan kuva
-                                                       :keskita-ajoneuvoon (atom false)
-                                                       :disabloi-kaynnistys? (atom false)}]
+      (with-component [ylapalkki/ylapalkkikomponentti
+                       {:tiedot-nakyvissa (atom false)
+                        :hoitoluokka (atom "Ia")
+                        :soratiehoitoluokka (atom "5")
+                        :tr-osoite tr-osoite
+                        :kiinteistorajat (atom false)
+                        :ortokuva (atom false)
+                        :tallennus-kaynnissa (atom false)
+                        :tallennustilaa-muutetaan kuva
+                        :keskita-ajoneuvoon (atom false)
+                        :disabloi-kaynnistys? (atom false)
+                        :valittu-urakka (atom {:nimi "Foo" :id 666})
+                        :palvelinvirhe (atom nil)}]
         (let [palkki-div (sel1 [:div.tr-osoite])
               hoitoluokka-div (sel1 [:div.soratiehoitoluokka])
               talvihoitoluokka-div (sel1 [:div.talvihoitoluokka])]

@@ -5,11 +5,16 @@
             [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml])
   (:import (java.text SimpleDateFormat ParseException)
-           (java.sql Date)))
+           (java.sql Date)
+           (java.util TimeZone)))
 
 (defn parsi-paivamaara [teksti]
   (if teksti
-    (try (new Date (.getTime (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") teksti)))
+    (try
+      (let [dateformat (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss")]
+        ;; T-LOIK lähettää ajat GMT+0 aikavyöhykkeellä
+        (.setTimeZone dateformat (TimeZone/getTimeZone "GMT"))
+        (new Date (.getTime (.parse dateformat teksti))))
          (catch ParseException e
            (log/error e "Virhe parsiessa päivämäärää: " teksti)
            nil))
@@ -55,7 +60,7 @@
                   :paikankuvaus        (z/xml1-> data :paikanKuvaus z/text)
                   :lisatieto        (z/xml1-> data :lisatieto z/text)
                   :viesti-id          (z/xml1-> data :viestiId z/text)
-                  :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :viestiId z/text)))
+                  :yhteydenottopyynto (boolean (Boolean/valueOf (z/xml1-> data :yhteydenottopyynto z/text)))
                   :ilmoittaja         (when-let [ilmoittaja (into {} (z/xml-> data :ilmoittaja lue-ilmoittaja))]
                                         (if (empty? ilmoittaja) nil ilmoittaja))
                   :lahettaja          (when-let [lahettaja (into {} (z/xml-> data :lahettaja lue-lahettaja))]

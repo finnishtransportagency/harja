@@ -74,8 +74,7 @@ INSERT INTO tarkastus_liite (tarkastus, liite) VALUES (:tarkastus, :liite);
 -- Palauttaa sen (hoito)urakan jonka alueella reitin pisteitä osuu eniten
 WITH ur AS (SELECT u.id,u.tyyppi,u.alkupvm,u.loppupvm,a.alue
               FROM urakka u
-              INNER JOIN hanke h ON u.hanke=h.id
-              INNER JOIN alueurakka a ON h.alueurakkanro=a.alueurakkanro
+              INNER JOIN alueurakka a ON u.urakkanro=a.alueurakkanro
 	      WHERE NOW() BETWEEN u.alkupvm AND u.loppupvm
                 AND u.nimi NOT ILIKE '%testi%')
    SELECT ur.id FROM tarkastusreitti r
@@ -99,3 +98,10 @@ SELECT tierekisteriosoitteelle_viiva AS geom
 				     CAST(:tr_alkuetaisyys AS INTEGER),
 				     CAST(:tr_loppuosa AS INTEGER),
 				     CAST(:tr_loppuetaisyys AS INTEGER));
+
+-- name: hae-urakkatyypin-urakat
+-- Hakee urakkatyypin urakat käsivalintaa varten. Mahdollistetaan usealla tyypillä haku,
+-- esim. paallystys ja tiemerkinta yhtaikaa
+SELECT id, sampoid, nimi, alkupvm, loppupvm, tyyppi
+  FROM urakka
+ WHERE tyyppi in (:tyyppi::urakkatyyppi);

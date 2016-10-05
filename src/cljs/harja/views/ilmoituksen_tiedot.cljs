@@ -60,17 +60,20 @@
    [:div.kuittaukset
     [:h3 "Kuittaukset"]
     [:div
-     (if-let [uusi-kuittaus (:uusi-kuittaus ilmoitus)]
-       [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
-       (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
-                                       (:id @nav/valittu-urakka))
+     ;; Tilannekuvanäkymässä ei voi tehdä kuittauksia, mutta tätä komponenttia käytetään
+     ;; näyttämään ilmoituksen tarkempia tietoja. Tällöin e! on nil
+     (when e!
+       (if-let [uusi-kuittaus (:uusi-kuittaus ilmoitus)]
+         [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
+         (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                         (:id @nav/valittu-urakka))
 
-         (if (:ilmoitusid ilmoitus)
-           [:button.nappi-ensisijainen
-            {:class "uusi-kuittaus-nappi"
-             :on-click #(e! (v/->AvaaUusiKuittaus))}
-            (ikonit/livicon-plus) " Uusi kuittaus"]
-           [yleiset/vihje "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia"])))
+           (if (:ilmoitusid ilmoitus)
+             [:button.nappi-ensisijainen
+              {:class    "uusi-kuittaus-nappi"
+               :on-click #(e! (v/->AvaaUusiKuittaus))}
+              (ikonit/livicon-plus) " Uusi kuittaus"]
+             [yleiset/vihje "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia"]))))
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div

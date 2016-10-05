@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.urakat-test
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]))
+            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
+            [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]))
 
 (deftest tarkista-urakan-tallentuminen
   (tuo-urakka)
@@ -40,3 +41,11 @@
   (tuo-urakka)
   (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Pohjanmaa ja Kainuu") "Urakan hallintayksiköksi on asetettu Pohjois-Pohjanmaan ELY")
   (poista-urakka))
+
+(deftest tarkista-alueurakkanumeron-purku
+  (let [osat (urakat/pura-alueurakkanro "TYS-0666")]
+    (is (= "TYS" (:tyypit osat)) "Tyypit on purettu oikein")
+    (is (= "0666" (:alueurakkanro osat)) "Alueurakkanumero on purettu oikein"))
+  (let [osat (urakat/pura-alueurakkanro "TYS0666")]
+    (is (nil? (:tyypit osat)) "Tyyppiä ei ole päätelty")
+    (is (= "TYS0666" (:alueurakkanro osat)) "Alueurakkanumero on purettu oikein")))

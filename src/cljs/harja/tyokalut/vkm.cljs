@@ -1,6 +1,5 @@
 (ns harja.tyokalut.vkm
-  "Viitekehysmuuntimen kyselyt (mm. TR-osoitehaku)
-  HUOM! OSA TÄMÄN NAMESPACEN TARJOAMISTA PALVELUISTA ON VANHENTUNUT"
+  "Viitekehysmuuntimen kyselyt (mm. TR-osoitehaku)"
   (:require [cljs.core.async :refer [<! >! chan put! close! alts! timeout]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
@@ -34,14 +33,18 @@
   [uri parametrit]
   (let [kutsu-id (vkm-kutsu-id)
         callback (str "vkm_tulos_" kutsu-id)
+        kutsu-url (str (vkm-base-url) uri
+                       (map->parametrit
+                        (assoc parametrit
+                               :callback callback)))
+        _ (log "TEHDÄÄN VKM KUTSU: " kutsu-url)
         s (doto (.createElement js/document "script")
             (.setAttribute "type" "text/javascript")
-            (.setAttribute "src" (str (vkm-base-url) uri
-                                      (map->parametrit
-                                        (assoc parametrit
-                                          :callback callback)))))
+            (.setAttribute "src" kutsu-url))
         ch (chan)
-        tulos #(do (put! ch (js->clj %))
+        tulos #(do
+                 (log "VKM VASTAUS: " %)
+                 (put! ch (js->clj %))
                    (close! ch)
                    (.removeChild (.-head js/document) s)
                    (aset js/window callback nil))]
@@ -100,11 +103,10 @@
                        {:type :point
                         :coordinates [x y]}))))))))
 
-(defn tieosoite->piste [trosoite]
-  (log "Haetaan piste tieosoitteelle")
-  (k/post! :hae-tr-pisteeksi trosoite nil true))
-
 (defn tieosoite->viiva [trosoite]
+  (k/post! :hae-tr-viivaksi trosoite nil true))
+
+(defn tieosoite->piste [trosoite]
   (k/post! :hae-tr-viivaksi trosoite nil true))
 
 (defn koordinaatti->trosoite [[x y]]

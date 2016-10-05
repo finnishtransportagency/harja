@@ -11,7 +11,6 @@
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.varusteet :as varusteet]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [dekoodaa-base64]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.palvelin.integraatiot.api.sanomat.tierekisteri-sanomat :as tierekisteri-sanomat]
@@ -133,16 +132,18 @@
         viiva? (and (:losa tr-osoite)
                     (:let tr-osoite))
         geometria (when tr-osoite
-                    (:sijainti (first (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
-                                       db {:tie (:numero tr-osoite)
-                                           :aosa (:aosa tr-osoite)
-                                           :aet (:aet tr-osoite)
-                                           :losa (if viiva?
-                                                   (:losa tr-osoite)
-                                                   (:aosa tr-osoite))
-                                           :let (if viiva?
-                                                  (:let tr-osoite)
-                                                  (:aet tr-osoite))}))))]
+                    (:sijainti
+                     (first
+                      (toteumat-q/varustetoteuman-toimenpiteelle-sijainti
+                       db {:tie (:numero tr-osoite)
+                           :aosa (:aosa tr-osoite)
+                           :aet (:aet tr-osoite)
+                           :losa (if viiva?
+                                   (:losa tr-osoite)
+                                   (:aosa tr-osoite))
+                           :let (if viiva?
+                                  (:let tr-osoite)
+                                  (:aet tr-osoite))}))))]
     geometria))
 
 (defn- luo-uusi-varustetoteuma [db kirjaaja toteuma-id varustetoteuma toimenpiteen-tiedot tietolaji
@@ -278,8 +279,7 @@
                   (hae-toimenpiteen-geometria db toimenpiteen-tiedot)))
               (get-in varustetoteuma [:varustetoteuma :toimenpiteet]))
         geometry-collection (GeometryCollection.
-                              (into-array Geometry
-                                          (map #(.getGeometry %) geometriat)))
+                             (into-array Geometry (map #(.getGeometry %) geometriat)))
         pg-geometry (PGgeometry. geometry-collection)]
     (toteumat-q/paivita-toteuman-reitti<! db {:reitti pg-geometry
                                               :id toteuma-id})))

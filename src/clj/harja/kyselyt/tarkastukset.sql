@@ -95,6 +95,7 @@ SELECT
   stm.kiinteys         AS soratiemittaus_kiinteys,
   stm.polyavyys        AS soratiemittaus_polyavyys,
   stm.sivukaltevuus    AS soratiemittaus_sivukaltevuus,
+  stm.tarkastus        AS soratiemittaus_tarkastus,
   thm.talvihoitoluokka AS talvihoitomittaus_hoitoluokka,
   thm.lumimaara        AS talvihoitomittaus_lumimaara,
   thm.tasaisuus        AS talvihoitomittaus_tasaisuus,
@@ -102,12 +103,18 @@ SELECT
   thm.lampotila_tie    AS talvihoitomittaus_lampotila_tie,
   thm.lampotila_ilma   AS talvihoitomittaus_lampotila_ilma,
   thm.ajosuunta        AS talvihoitomittaus_ajosuunta,
+  thm.tarkastus        AS talvihoitomittaus_tarkastus,
   tl.laatupoikkeama    AS laatupoikkeamaid
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
-  LEFT JOIN soratiemittaus stm ON (t.tyyppi = 'soratie' :: tarkastustyyppi AND stm.tarkastus = t.id)
-  LEFT JOIN talvihoitomittaus thm ON (t.tyyppi = 'talvihoito' :: tarkastustyyppi AND thm.tarkastus = t.id)
+  LEFT JOIN soratiemittaus stm ON ((t.tyyppi = 'soratie' :: tarkastustyyppi
+                                    OR
+                                    t.tyyppi = 'laatu' :: tarkastustyyppi)
+                                   AND stm.tarkastus = t.id)
+  LEFT JOIN talvihoitomittaus thm ON ((t.tyyppi = 'talvihoito' :: tarkastustyyppi OR
+                                       t.tyyppi = 'laatu' :: tarkastustyyppi)
+                                      AND thm.tarkastus = t.id)
   LEFT JOIN tarkastus_laatupoikkeama tl ON t.id = tl.tarkastus
 WHERE t.urakka = :urakka AND t.id = :id;
 
@@ -259,7 +266,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
@@ -290,7 +297,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
@@ -363,7 +370,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -403,7 +410,7 @@ SELECT
   liite.koko as liite_koko,
   liite.liite_oid as liite_oid
 FROM tarkastus t
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -464,7 +471,7 @@ SELECT
   u.nimi as urakka
 FROM tarkastus t
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
 WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
                    AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
@@ -495,7 +502,7 @@ SELECT
   u.nimi as urakka
 FROM tarkastus t
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
-  JOIN urakka u ON t.urakka = u.id
+  JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
@@ -559,6 +566,6 @@ FROM tarkastus t
 WHERE t.tyyppi = 'laatu'::tarkastustyyppi
       AND (t.aika BETWEEN :alku AND :loppu)
       AND (:tienumero::integer IS NULL OR t.tr_numero = :tienumero)
-      AND (:urakka::integer IS NULL OR t.urakka = :urakka)
+      AND ((:urakka::integer IS NULL AND u.urakkanro IS NOT NULL) OR t.urakka = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (:laadunalitus::boolean IS NULL OR t.laadunalitus = :laadunalitus)

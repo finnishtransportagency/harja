@@ -24,7 +24,8 @@
     kuittaus
     tapahtuma-id
     (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus)
-    lisatietoja))
+    lisatietoja
+    kuittausjono))
 
 (defn tuo-sampo-viestin-data [db data]
   (let [hankkeet (:hankkeet data)
@@ -58,7 +59,8 @@
                                                                  "sampo"
                                                                  "sisaanluku"
                                                                  viesti-id
-                                                                 viestin-sisalto)]
+                                                                 viestin-sisalto
+                                                                 kuittausjono)]
     (try+
       (let [tuonti (fn [] (kasittele-sisaanluku db viestin-sisalto))
             kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]

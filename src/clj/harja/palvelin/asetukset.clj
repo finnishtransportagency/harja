@@ -16,7 +16,8 @@
                  :salasana s/Str})
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
-  {:http-palvelin                         {:portti                         s/Int
+  {(s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
+   :http-palvelin                         {:portti                         s/Int
                                            :url                            s/Str
                                            (s/optional-key :threads)       s/Int
                                            (s/optional-key :max-body-size) s/Int}
@@ -87,7 +88,10 @@
                                            (s/optional-key :ely-alueiden-alk-tuontikohde)              s/Str
                                            (s/optional-key :valaistusurakoiden-shapefile)              s/Str
                                            (s/optional-key :valaistusurakoiden-alk-osoite)             s/Str
-                                           (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str}
+                                           (s/optional-key :valaistusurakoiden-alk-tuontikohde)        s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-shapefile)              s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-alk-osoite)             s/Str
+                                           (s/optional-key :paallystyspalvelusopimusten-alk-tuontikohde)         s/Str}
 
    (s/optional-key :yha)                  {:url            s/Str
                                            :kayttajatunnus s/Str
@@ -100,6 +104,14 @@
    (s/optional-key :virustarkistus)       {:url            s/Str}
 
    (s/optional-key :paivystystarkistus)   {:paivittainen-aika [s/Num]}
+
+   (s/optional-key :api-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
+                                           (s/optional-key :url)                     s/Str
+                                           (s/optional-key :kayttajatunnus)          s/Str
+                                           (s/optional-key :salasana)                s/Str}
+
+   (s/optional-key :sonja-jms-yhteysvarmistus)  {(s/optional-key :ajovali-minuutteina)     s/Int
+                                                 (s/optional-key :jono)                    s/Str}
    })
 
 (def oletusasetukset

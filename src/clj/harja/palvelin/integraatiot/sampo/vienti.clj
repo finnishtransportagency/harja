@@ -11,7 +11,7 @@
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
 
-(defn kasittele-kuittaus [integraatioloki db viesti]
+(defn kasittele-kuittaus [integraatioloki db viesti jono]
   (log/debug "Vastaanotettiin Sampon kuittausjonosta viesti: " viesti)
   (let [kuittaus-xml (.getText viesti)]
     ;todo: kytke päälle
@@ -20,8 +20,15 @@
           onnistunut (not (contains? kuittaus :virhe))]
       (log/debug "Luettiin kuittaus: " kuittaus)
       (if-let [viesti-id (:viesti-id kuittaus)]
-        (let [lahetystyyppi (if (= :maksuera (:viesti-tyyppi kuittaus)) "maksuera-lähetys" "kustannussuunnitelma-lahetys")]
-          (integraatioloki/kirjaa-saapunut-jms-kuittaus integraatioloki kuittaus-xml viesti-id lahetystyyppi onnistunut)
+        (let [lahetystyyppi (if (= :maksuera (:viesti-tyyppi kuittaus))
+                              "maksuera-lähetys"
+                              "kustannussuunnitelma-lahetys")]
+          (integraatioloki/kirjaa-saapunut-jms-kuittaus
+            integraatioloki
+            kuittaus-xml
+            viesti-id
+            lahetystyyppi
+            onnistunut jono)
           (if (= :maksuera (:viesti-tyyppi kuittaus))
             (maksuera/kasittele-maksuera-kuittaus db kuittaus viesti-id)
             (kustannussuunnitelma/kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id)))

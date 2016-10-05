@@ -21,9 +21,8 @@
 
 (def +xsd-polku+ "xsd/tloik/")
 
-(defn laheta-kuittaus [sonja lokittaja kuittausjono kuittaus korrelaatio-id
-                       tapahtuma-id onnistunut lisatietoja]
-  (lokittaja :lahteva-jms-kuittaus kuittaus tapahtuma-id onnistunut lisatietoja)
+(defn laheta-kuittaus [sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id onnistunut lisatietoja]
+  (lokittaja :lahteva-jms-kuittaus kuittaus tapahtuma-id onnistunut lisatietoja kuittausjono)
   (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
 
 (defn lue-ilmoitus [sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti]
@@ -110,7 +109,7 @@
   (let [jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
         korrelaatio-id (.getJMSCorrelationID viesti)
-        tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto)
+        tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto kuittausjono)
         {:keys [viesti-id ilmoitus-id] :as ilmoitus}
         (lue-ilmoitus sonja lokittaja kuittausjono korrelaatio-id tapahtuma-id viesti)]
     (try+

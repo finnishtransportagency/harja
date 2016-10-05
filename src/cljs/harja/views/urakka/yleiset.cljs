@@ -202,11 +202,14 @@
 
 (defn paivystajat [ur]
   (let [paivystajat (atom nil)
+        kaynnissaolevan-hoitokauden-alkupvm (first (pvm/paivamaaran-hoitokausi (pvm/nyt)))
         hae! (fn [urakka-id]
                (reset! paivystajat nil)
                (go (reset! paivystajat
                            (reverse (sort-by :loppu
-                                             (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
+                                             (filter
+                                               #(>= (:loppu %) kaynnissaolevan-hoitokauden-alkupvm)
+                                               (<! (yht/hae-urakan-paivystajat urakka-id))))))))]
     (hae! (:id ur))
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id))
@@ -255,14 +258,14 @@
       [yleiset/livi-pudotusvalikko {:class "alasveto-yleiset-tiedot"
                                     :valinta sopimustyyppi
                                     :format-fn #(if %
-                                                  (str/capitalize (name %))
-                                                  "Ei sopimustyyppiä")
+                                                 (str/capitalize (name %))
+                                                 "Ei sopimustyyppiä")
                                     :valitse-fn #(tallenna-sopimustyyppi ur %)
                                     :disabled (not kirjoitusoikeus?)}
        sopimus/+sopimustyypit+])))
 
 (defn yha-tiedot [ur]
-  {:yha-tuontioikeus?  (yhatiedot/yha-tuontioikeus? ur)
+  {:yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
    :paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                        (= (:tyyppi ur) :paikkaus))
    :paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
@@ -344,6 +347,7 @@
                                                              (reset! auki? false))
                                 {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
+
 (defn yleiset-tiedot [ur]
   (let [{:keys [paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?]
          :as yha-tiedot} (yha-tiedot ur)]
@@ -375,8 +379,7 @@
       "Urakkatyyppi: " ; Päällystysurakan voi muuttaa paikkaukseksi ja vice versa
       (yllapidon-urakkatyypin-vaihto ur yha-tiedot)
 
-      "Indeksi: " [urakan-indeksi ur]
-      ]]))
+      "Indeksi: " [urakan-indeksi ur]]]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)

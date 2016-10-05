@@ -112,7 +112,7 @@ Host harja-*-stg
 
 * Luo itsellesi SSH-avainpari ja pyydä tuttuja laittamaan julkinen avain palvelimelle.
 
-ssh -L7777:localhost:5432 harja-dfb1-stg
+ssh -L7777:localhost:5432 harja-db1-stg
  * Luo yhteys esim. käyttämäsi IDE:n avulla,
     * tietokanta: harja, username: flyway salasana: kysy tutuilta
 
@@ -215,3 +215,50 @@ upstream sms-kasittelija {
 5. Luo SSH-tunneli: ssh -L 28080:gw.labyrintti.com:28080 harja-app1-stg
 6. Lähetä tekstiviesti numeroon +358 50 9023530
 -> Viesti pitäisi välittyä REPL:n
+
+
+# Liikenneviraston Harja-järjestelmän laadunseurantatyökalu #
+
+Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa
+ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
+
+Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja:
+
+    lein figwheel laadunseuranta-dev
+
+Avaa selain http://localhost:8000/laadunseuranta/index.html
+
+Palvelin käynnistyy kun Harja käynnistetään.
+
+## Lisenssi
+https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
+
+# Sonjan JMS jonojen käyttäminen Hermes JMS:llä
+1. Hae Hermes JMS: https://sourceforge.net/projects/hermesjms/
+2. Asenna Java SE 6 runtime: https://support.apple.com/kb/DL1572?locale=en_US
+3. Kopioi harja-testidata repositoriosta hermes-config.xml kansioon ~/.hermes
+4. Kopioi harja-testidata repositoriosta Sonic2013_libs & SonicClientLibs Sonic MQ:n JMS kirjastot haluamaasi kansioon
+5. Avaa ~/.hermes/hermes-config.xml tiedosto
+6. Muokkaa Sonic JMS ajurien jarrien sijainti kansioihin, johon kopioit ne aiemmin
+7. Lisää ssh configiin (~/.ssh/config) seuraavat asetukset:
+ Host harja-app1-stg
+         ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
+          
+         # Testi-Sonjan JMS jonot (7.6.2)
+         LocalForward 2511 testihaproxy.liikennevirasto.fi:2001
+         # LocalForward 2511 192.83.32.231:2511
+ 
+         # Testi-Sonjan (2013) JMS jonot
+         LocalForward 2511 testihaproxy.liikennevirasto.fi:2002
+         # LocalForward 2512 81.22.173.248:2511
+ 
+         # Tuotanto-Sonja (7.6.2)
+         LocalForward 2001 haproxy.liikennevirasto.fi:2001
+         # LocalForward 2001 nginplus.liikennevirasto.fi:2001
+ 
+         # Tuotanto-Sonja (2013)
+         LocalForward 2002 haproxy.liikennevirasto.fi:2002
+         # LocalForward 2002 nginplus.liikennevirasto.fi:2002
+8. Avaa ssh-yhteys harja-app1-stg palvelimelle: ssh harja-db1-stg
+9. Avaa Hermes JMS  
+ 

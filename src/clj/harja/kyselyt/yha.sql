@@ -108,7 +108,12 @@ VALUES (
   :tr_loppuetaisyys,
   :tr_ajorata,
   :tr_kaista,
-  :sijainti,
+  (SELECT tierekisteriosoitteelle_viiva AS geom
+   FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
+                                      CAST(:tr_alkuosa AS INTEGER),
+                                      CAST(:tr_alkuetaisyys AS INTEGER),
+                                      CAST(:tr_loppuosa AS INTEGER),
+                                      CAST(:tr_loppuetaisyys AS INTEGER))),
   :yhaid);
 
 -- name: hae-yllapitokohde-idlla

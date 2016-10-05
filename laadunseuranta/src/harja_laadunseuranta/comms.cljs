@@ -1,6 +1,7 @@
 (ns harja-laadunseuranta.comms
   (:require [ajax.core :refer [POST GET raw-response-format]]
             [cljs.core.async :as async :refer [put! <! chan close!]]
+            [harja-laadunseuranta.sovellus :as s]
             [harja-laadunseuranta.asetukset :as asetukset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -14,10 +15,18 @@
 
 (defn post! [url data]
   (let [c (chan)]
-    (POST url {:params data
+    (POST url {:params        data
                :error-handler #(hanskaa-virhe % c)
-               :handler #(put! c %)
-               :format :transit})
+               :handler       #(do
+                                (if (and (map? %) (contains? % :error))
+                                  (do
+                                    (reset! s/palvelinvirhe (pr-str %))
+                                    (.warn js/console (str "Virhe: " (pr-str %))))
+                                  (do
+                                    (reset! s/palvelinvirhe nil)
+                                    (put! c %)))
+                                (close! c))
+               :format        :transit})
     c))
 
 (defn send-file! [url file-data mime-type]
@@ -34,7 +43,7 @@
                :error-handler #(hanskaa-virhe % c)
                :handler #(put! c (js/parseInt %))})
     c))
- 
+
 (defn get! [url]
   (let [c (chan)]
     (GET url {:error-handler #(close! c)
@@ -42,8 +51,12 @@
               :format :transit})
     c))
 
-(defn paata-ajo! [tarkastusajo-id]
-  (post! asetukset/+paatos-url+ {:tarkastusajo {:id tarkastusajo-id}}))
+(defn hae-urakkatyypin-urakat [urakkatyyppi]
+  (post! asetukset/+urakkatyypin-urakat-url+ urakkatyyppi))
+
+(defn paata-ajo! [tarkastusajo-id urakka]
+  (post! asetukset/+paatos-url+ {:urakka (:id urakka)
+                                 :tarkastusajo {:id tarkastusajo-id}}))
 
 (defn luo-ajo! [tarkastustyyppi]
   (post! asetukset/+luonti-url+ {:tyyppi tarkastustyyppi}))
@@ -85,3 +98,9 @@
 (defn hae-tr-tiedot [sijainti]
   (post! asetukset/+tr-tietojen-haku-url+ (assoc (select-keys sijainti [:lat :lon])
                                                  :treshold asetukset/+tros-haun-treshold+)))
+
+(defn hae-tiedosto [url]
+  (let [c (chan)]
+    (GET url {:handler #(put! c %)
+              :format :raw})
+    c))

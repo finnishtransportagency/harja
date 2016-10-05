@@ -159,7 +159,7 @@
      ([oikeus kayttaja urakka-id]
       (when-not (voi-lukea? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei lukuoikeutta "
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei lukuoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -171,7 +171,7 @@
      ([oikeus kayttaja urakka-id]
       (when-not (voi-kirjoittaa? oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei kirjoitusoikeutta "
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei kirjoitusoikeutta "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))
@@ -182,7 +182,7 @@
      ([tyyppi oikeus kayttaja urakka-id]
       (when-not  (on-muu-oikeus? tyyppi oikeus urakka-id kayttaja)
         (throw+ (roolit/->EiOikeutta
-                 (str "Käyttäjällä '" (:kayttajanimi kayttaja) "' ei oikeutta '" tyyppi "' "
+                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei oikeutta '" tyyppi "' "
                       (:kuvaus oikeus)
                       (when urakka-id
                         (str " urakassa " urakka-id)))))))))

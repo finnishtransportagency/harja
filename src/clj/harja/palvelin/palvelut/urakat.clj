@@ -11,13 +11,14 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clj-time.coerce :as c]))
 
 (def ^{:const true} oletus-toleranssi 50)
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
-  Mäpit ovat muotoa {:hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  Mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Tarkastaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   ([db user oikeus]
    (kayttajan-urakat-aikavalilta db user oikeus nil nil nil nil (pvm/nyt) (pvm/nyt)))
@@ -27,6 +28,7 @@
           (comp
             (filter (fn [{:keys [urakka_id]}]
                       (oikeudet/voi-lukea? oikeus urakka_id user)))
+            (map #(assoc % :tyyppi (keyword (:tyyppi %))))
             (map konv/alaviiva->rakenne))
 
           (let [alku (or alku (pvm/nyt))
@@ -61,7 +63,7 @@
                  (when urakkatyyppi (name urakkatyyppi))
                  hallintayksikot)))))
      {:urakka :urakat}
-     (comp :id :hallintayksikko))))
+     (juxt :tyyppi (comp :id :hallintayksikko)))))
 
 (defn kayttajan-urakka-idt-aikavalilta
   ([db user oikeus]
@@ -114,12 +116,34 @@
        aluekokonaisuudet))))
 
 (defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
-  (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y))]
+  ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 10 metrin thesholdilla
+  (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y 10))]
     (if (and (empty? urakka-idt)
              (not= "hoito" urakkatyyppi))
-        ;; Jos ei löytynyt urakoita eri tyypillä, kokeillaan hoido urakoita
-      (map :id (q/hae-urakka-sijainnilla db "hoito" x y))
+      ;; Jos ei löytynyt urakoita eri tyypillä, kokeillaan hoido urakoita
+      (map :id (q/hae-urakka-sijainnilla db "hoito" x y 10))
       urakka-idt)))
+
+(defn- pura-sopimukset [{jdbc-array :sopimukset :as urakka}]
+  (loop [sopimukset {}
+         paasopimus nil
+         [s & ss] (when jdbc-array (seq (.getArray jdbc-array)))]
+    (if-not s
+      (assoc urakka
+             :sopimukset sopimukset
+             :paasopimus paasopimus)
+      (let [[id sampoid] (str/split s #"=")
+            paasopimus? (str/starts-with? id "*")
+            id (Long/parseLong
+                (if paasopimus?
+                  (subs id 1)
+                  id))]
+        (recur (assoc sopimukset
+                      id sampoid)
+               (if paasopimus?
+                 id
+                 paasopimus)
+               ss)))))
 
 (def urakka-xf
   (comp (muunna-pg-tulokset :alue :alueurakan_alue)
@@ -139,14 +163,12 @@
 
         (map #(assoc % :takuu {:loppupvm (:takuu_loppupvm %)}))
 
-        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "3=8H05228/10"] ja
-        ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"}
-        (map #(update-in % [:sopimukset] (fn [jdbc-array]
-                                           (if (nil? jdbc-array)
-                                             {}
-                                             (into {} (map (fn [s](let [[id sampoid] (str/split s #"=")]
-                                                                    [(Long/parseLong id) sampoid]))
-                                                           (.getArray jdbc-array)))))))
+        ;; :sopimukset kannasta muodossa ["2=8H05228/01" "*3=8H05228/10"] ja
+        ;; tarjotaan ulos muodossa {:sopimukset {"2" "8H05228/01", "3" "8H05228/10"
+        ;;                          :paasopimus 3}
+        ;; jossa pääsopimus on se, joka alkaa '*' merkilla
+        (map pura-sopimukset)
+
         (map #(assoc % :hallintayksikko {:id (:hallintayksikko_id %)
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
@@ -252,7 +274,6 @@
     (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
                                                                               {:urakka urakka-id})
     :ok))
-
 
 (defrecord Urakat []
   component/Lifecycle

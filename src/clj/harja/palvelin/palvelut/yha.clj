@@ -110,38 +110,41 @@
                     nykyinen-paallyste
                     nimi] :as kohde} kohteet]
       (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
-      (let [kohde (yha-q/luo-yllapitokohde<! c
-                                             {:urakka urakka-id
-                                              :tr_numero (:tienumero tierekisteriosoitevali)
-                                              :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                              :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                              :tr_loppuosa (:losa tierekisteriosoitevali)
-                                              :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                              :tr_ajorata (:ajorata tierekisteriosoitevali)
-                                              :tr_kaista (:kaista tierekisteriosoitevali)
-                                              :yhatunnus tunnus
-                                              :yhaid yha-id
-                                              :yllapitokohdetyyppi (name yllapitokohdetyyppi)
-                                              :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
-                                              :yllapitoluokka yllapitoluokka
-                                              :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
-                                              :nykyinen_paallyste nykyinen-paallyste
-                                              :nimi nimi})]
+      (let [kohde (yha-q/luo-yllapitokohde<!
+                    c
+                    {:urakka urakka-id
+                     :tr_numero (:tienumero tierekisteriosoitevali)
+                     :tr_alkuosa (:aosa tierekisteriosoitevali)
+                     :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+                     :tr_loppuosa (:losa tierekisteriosoitevali)
+                     :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                     :tr_ajorata (:ajorata tierekisteriosoitevali)
+                     :tr_kaista (:kaista tierekisteriosoitevali)
+                     :yhatunnus tunnus
+                     :yhaid yha-id
+                     :yllapitokohdetyyppi (name yllapitokohdetyyppi)
+                     :yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi)
+                     :yllapitoluokka yllapitoluokka
+                     :keskimaarainen_vuorokausiliikenne keskimaarainen_vuorokausiliikenne
+                     :nykyinen_paallyste nykyinen-paallyste
+                     :nimi nimi})]
         (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
           (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
-          (yha-q/luo-yllapitokohdeosa<! c
-                                        {:yllapitokohde (:id kohde)
-                                         :nimi nimi
-                                         :tunnus tunnus
-                                         :sijainti sijainti
-                                         :tr_numero (:tienumero tierekisteriosoitevali)
-                                         :tr_alkuosa (:aosa tierekisteriosoitevali)
-                                         :tr_alkuetaisyys (:aet tierekisteriosoitevali)
-                                         :tr_loppuosa (:losa tierekisteriosoitevali)
-                                         :tr_loppuetaisyys (:let tierekisteriosoitevali)
-                                         :tr_ajorata (:ajorata tierekisteriosoitevali)
-                                         :tr_kaista (:kaista tierekisteriosoitevali)
-                                         :yhaid yha-id}))))
+          (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
+             c
+             {:yllapitokohde (:id kohde)
+              :nimi nimi
+              :tunnus tunnus
+              :tr_numero (:tienumero tierekisteriosoitevali)
+              :tr_alkuosa (:aosa tierekisteriosoitevali)
+              :tr_alkuetaisyys (:aet tierekisteriosoitevali)
+              :tr_loppuosa (:losa tierekisteriosoitevali)
+              :tr_loppuetaisyys (:let tierekisteriosoitevali)
+              :tr_ajorata (:ajorata tierekisteriosoitevali)
+              :tr_kaista (:kaista tierekisteriosoitevali)
+              :yhaid yha-id})]
+            (when-not (:sijainti uusi-kohdeosa)
+              (log/warn "YHA:n kohdeosalle " (pr-str uusi-kohdeosa) " ei voitu muodostaa geometriaa"))))))
     (merkitse-urakan-kohdeluettelo-paivitetyksi c urakka-id)
     (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
     (paivita-yllapitourakan-geometriat c urakka-id)

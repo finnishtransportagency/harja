@@ -244,7 +244,11 @@ SELECT
   o.nimi   AS nimi,
   o.tyyppi AS tyyppi
 FROM organisaatio o
-WHERE o.nimi = :nimi
+WHERE lower(o.nimi) = lower(:nimi)
+
+-- name: hae-organisaatio-idlla
+-- Hakee organisaation id:n, nimen ja tyypin id:n perusteella.
+SELECT id,nimi,tyyppi FROM organisaatio WHERE id = :id
 
 -- name: hae-organisaatioita
 -- Käyttäjän organisaatiohaku nimen osalla.
@@ -362,3 +366,9 @@ SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus
 -- name: hae-kayttajan-yleisin-urakkatyyppi
 -- single?: true
 SELECT tyyppi FROM urakka WHERE id IN (:idt) GROUP BY tyyppi ORDER BY count(id) DESC LIMIT 1;
+
+-- name: onko-jarjestelma?
+-- single?: true
+SELECT jarjestelma
+FROM kayttaja
+WHERE kayttajanimi = :kayttajanimi;
