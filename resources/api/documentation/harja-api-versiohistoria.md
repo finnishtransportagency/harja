@@ -4,7 +4,7 @@
 <b>Versiohistoria:</b>
 
 - Versionumero: 1.0.1 Julkaistu: 5.10.2016:
-    - Turvallisuuspoikkeaman kirjauksessa aiheutuneet vammat ja vahingoittuneet ruumiinosat kirjataan jatkossa yhtenä string-arvona (TURI vastaanottaa vain yhden arvon EU-standardin mukaisesti).
+    - Turvallisuuspoikkeaman kirjauksessa kentistä "aiheutuneet_vammat" ja "vahingoittuneet_ruumiinosat" tallennetaan vain ensimmäinen arvo. TURI vastaanottaa näistä vain yhden arvon, joten myös Harjaan kirjataan jatkossa vain yksi arvo (EU-standardin mukaisesti). Itse rajapinta pysyy samana kuin ennenkin, muutos on pelkästään sisäinen.
     - Estetty turvallisuuspoikkeaman tapahtumapäivämäärän kirjaaminen tulevaisuuteen API:n kautta.
 - Versionumero: 1.0.0 Julkaistu: 1.10.2016:
     - Ensimmäinen virallinen versio

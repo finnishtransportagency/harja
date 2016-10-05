@@ -71,7 +71,7 @@
                                                 (tallenna-ammatinselite? data))
                                        ammatinselite)
                         :kuvaus kuvaus
-                        :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array [aiheutuneetVammat]))
+                        :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array [(first aiheutuneetVammat)]))
                         :poissa (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
                         :sairaalassa (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
                         :vahinkoluokittelu (konv/seq->array vahinkoluokittelu)
@@ -95,7 +95,7 @@
                                     (geo/clj->pg {:type :point
                                                   :coordinates ((juxt :x :y) koordinaatit)}))
                         :vahingoittuneet_ruumiinosat (when (tallenna-henkilovahinko? data)
-                                                       (konv/seq->array [vahingoittuneetRuumiinosat]))
+                                                       (konv/seq->array [(first vahingoittuneetRuumiinosat)]))
                         :sairauspoissaolo_jatkuu (when (tallenna-henkilovahinko? data)
                                                    sairauspoissaoloJatkuu)
                         :aiheutuneet_seuraukset seuraukset
@@ -133,7 +133,7 @@
                       ammatinselite)
        :tehtava (when (tallenna-henkilovahinko? data) tyotehtava)
        :kuvaus kuvaus
-       :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array [aiheutuneetVammat]))
+       :vammat (when (tallenna-henkilovahinko? data) (konv/seq->array [(first aiheutuneetVammat)]))
        :poissa (when (tallenna-henkilovahinko? data) sairauspoissaolopaivat)
        :sairaalassa (when (tallenna-henkilovahinko? data) sairaalahoitovuorokaudet)
        :tyyppi (konv/seq->array luokittelu)
@@ -157,7 +157,7 @@
                                       false)
        :paikan_kuvaus paikan_kuvaus
        :vahingoittuneet_ruumiinosat
-       (when (tallenna-henkilovahinko? data) (konv/seq->array [vahingoittuneetRuumiinosat]))
+       (when (tallenna-henkilovahinko? data) (konv/seq->array [(first vahingoittuneetRuumiinosat)]))
        :sairauspoissaolo_jatkuu (when (tallenna-henkilovahinko? data) sairauspoissaoloJatkuu)
        :aiheutuneet_seuraukset seuraukset
        :ilmoittaja_etunimi (:etunimi ilmoittaja)

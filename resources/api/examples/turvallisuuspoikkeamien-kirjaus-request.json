@@ -63,8 +63,8 @@
       "henkilovahinko": {
         "tyontekijanammatti": "muu_tyontekija",
         "ammatinselite": "Auraaja",
-        "aiheutuneetVammat": "luunmurtumat",
-        "vahingoittuneetRuumiinosat": "selka",
+        "aiheutuneetVammat": ["luunmurtumat"],
+        "vahingoittuneetRuumiinosat": ["selka", "vartalo"],
         "sairauspoissaoloJatkuu": true,
         "sairauspoissaolopaivat": 2,
         "sairaalahoitovuorokaudet": 0

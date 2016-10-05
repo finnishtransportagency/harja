@@ -36,8 +36,9 @@
                                                       :liite :liitteet}))
                     turpo
                     ;; Aiemmin oli mahdollista kirjata useampi ruumiinosa tai vamma, nyt vain yksi
-                    ;; Kantaan tukee edelleen useaa arvoa tässä (vanhan datan ja jos tulevaisuudessa halutaankin kirjata useampi).
-                    ;; Palautetaan satunnainen ensimmäinen arvo
+                    ;; Kantaan tukee edelleen useaa arvoa tässä
+                    ;; (vanhan datan takia ja jos tulevaisuudessa halutaankin kirjata useampi).
+                    ;; Palautetaan satunnainen ensimmäinen arvo.
                     (assoc turpo :vammat (first (:vammat turpo)))
                     (assoc turpo :vahingoittuneetruumiinosat (first (:vahingoittuneetruumiinosat turpo)))
                     (assoc turpo :korjaavattoimenpiteet
