@@ -34,7 +34,7 @@ FROM tarkastus t
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
 WHERE t.urakka = :urakka
-      AND (:vain_urakoitsijalle IS FALSE OR t.nayta_urakoitsijalle = TRUE)
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
@@ -121,7 +121,7 @@ FROM tarkastus t
   LEFT JOIN tarkastus_laatupoikkeama tl ON t.id = tl.tarkastus
 WHERE t.urakka = :urakka
       AND t.id = :id
-      AND (:vain_urakoitsijalle IS FALSE OR t.nayta_urakoitsijalle = TRUE);
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-tarkastuksen-liitteet
 -- Hakee annetun tarkastuksen kaikki liitteet
@@ -247,7 +247,8 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -279,7 +280,8 @@ WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikk
                    AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-koko-maan-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -309,7 +311,8 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-urakan-kelitarkastukset-liitteineen-raportille
 -- Hakee urakan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
