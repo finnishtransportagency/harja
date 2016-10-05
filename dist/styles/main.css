@@ -3883,7 +3883,7 @@ html, body {
 #harja-main-view {
   padding-left: 4rem;
   padding-right: 4rem;
-  height: auto;
+  height: 100%;
   padding-top: 2em;
   padding-bottom: 6rem; }
 
