@@ -18,8 +18,7 @@
   "Palauttaa urakan tämän hetkiset päivystäjät, jotka ovat vastuuhenkilöitä (heille viesti)"
   [db urakkaid]
   (->> urakkaid
-       (hae-urakan-taman-hetkiset-paivystajat db)
-       (filter :vastuuhenkilo)))
+       (hae-urakan-taman-hetkiset-paivystajat db)))
 
 (defn luo-yhteyshenkilo [db etu suku tyopuhelin matkapuhelin email org sampoid kayttajatunnus ulkoinen_id]
   (harja.kyselyt.yhteyshenkilot/luo-yhteyshenkilo<!
