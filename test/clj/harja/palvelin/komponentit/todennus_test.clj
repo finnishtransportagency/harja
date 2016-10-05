@@ -82,7 +82,7 @@
                                               13343 #{"ELY_Urakanvalvoja"}}}]
     (is (= vastaus odotetut-roolit))))
 
-(deftest ota-organisaatio-y-tunnuksesta
+(deftest ota-organisaatio-roolin-y-tunnuksesta
   (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
     (testing "Organisaatio löytyy, jos OAM_ORGANIZATION on annettu oikein"
       (let [req (todenna {:headers {"oam_remote_user" "daniel"
@@ -104,3 +104,28 @@
                                                     "oam_organization" "Eitällaistaolekaan Oy"
                                                     "oam_groups" "2234567-8_Paakayttaja"}})]
         (is (= (get-in req [:kayttaja :organisaatio :id]) 20))))))
+
+(deftest ota-organisaatio-companyid-headerista
+  (let [todenna #(todennus/todenna-pyynto (:todennus jarjestelma) %)]
+    (testing "Organisaatio löytyy, jos OAM_USER_COMPANYID on annettu oikein vaikka nimi olisi väärä"
+      (let [req (todenna {:headers {"oam_remote_user" "daniel"
+                                    "oam_user_first_name" "Daniel"
+                                    "oam_user_last_name" "Destialainen"
+                                    "oam_user_mail" "daniel@example.com"
+                                    "oam_user_mobile" "1234567890"
+                                    "oam_organization" "Dezdia Oy"
+                                    "oam_user_companyid" "2163026-3"
+                                    "oam_groups" ""}})]
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 13))))
+
+    (testing "Organisaatio löytyy edelleen nimen perusteella, jos OAM_USER_COMPANYID:ssä on roskaa"
+      (let [req (todennus/todenna-pyynto (:todennus jarjestelma)
+                                         {:headers {"oam_remote_user" "alpo"
+                                                    "oam_user_first_name" "Alpo"
+                                                    "oam_user_last_name" "Asfalttimies"
+                                                    "oam_user_mail" "alpo@example.com"
+                                                    "oam_user_mobile" "1234567890"
+                                                    "oam_organization" "Destia oy"
+                                                    "oam_user_companyid" "NOT_FOUND"
+                                                    "oam_groups" ""}})]
+        (is (= (get-in req [:kayttaja :organisaatio :id]) 13))))))
