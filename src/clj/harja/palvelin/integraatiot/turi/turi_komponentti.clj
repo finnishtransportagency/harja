@@ -75,7 +75,6 @@
                                    :salasana salasana
                                    :otsikot {"Content-Type" "text/xml"}}
                   sanoma)]
-            (log/debug "HEADERIT: " (pr-str headers))
             (kasittele-turin-vastaus db id headers body))))
         {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))}
       (catch Throwable t

@@ -35,6 +35,11 @@
                                                       :korjaavatoimenpide :korjaavattoimenpiteet
                                                       :liite :liitteet}))
                     turpo
+                    ;; Aiemmin oli mahdollista kirjata useampi ruumiinosa tai vamma, nyt vain yksi
+                    ;; Kantaan tukee edelleen useaa arvoa tässä (vanhan datan ja jos tulevaisuudessa halutaankin kirjata useampi).
+                    ;; Palautetaan satunnainen ensimmäinen arvo
+                    (assoc turpo :vammat (first (:vammat turpo)))
+                    (assoc turpo :vahingoittuneetruumiinosat (first (:vahingoittuneetruumiinosat turpo)))
                     (assoc turpo :korjaavattoimenpiteet
                                  (mapv #(assoc % :vastuuhenkilo
                                                  (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
@@ -126,8 +131,7 @@
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
                 :kuvaus kuvaus
-                :vammat (when vammat
-                          (name vammat))
+                :vammat (konv/seq->array [vammat])
                 :poissa sairauspoissaolopaivat
                 :sairaalassa sairaalavuorokaudet
                 :tyyppi (konv/seq->array tyyppi)
@@ -137,8 +141,7 @@
                 :toteuttaja toteuttaja
                 :tilaaja tilaaja
                 :sijainti sijainti
-                :vahingoittuneet_ruumiinosat (when vahingoittuneetruumiinosat
-                                               (name vahingoittuneetruumiinosat))
+                :vahingoittuneet_ruumiinosat (konv/seq->array [vahingoittuneetruumiinosat])
                 :sairauspoissaolo_jatkuu sairauspoissaolojatkuu
                 :aiheutuneet_seuraukset seuraukset
                 :vaylamuoto (name vaylamuoto)
