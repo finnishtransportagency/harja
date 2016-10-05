@@ -333,6 +333,9 @@ a.harja-notice-link {
       a {
         justify-content: center;
       }
+      a:visited {
+        color: white;
+      }
     }
   }
 }

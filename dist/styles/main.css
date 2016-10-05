@@ -4097,6 +4097,8 @@ a.harja-notice-link {
       padding-right: 0; } }
   .harja-menu .menu.vertical li a {
     justify-content: center; }
+  .harja-menu .menu.vertical li a:visited {
+    color: white; }
 
 .harja-menu li .button {
   background-color: #3db7e4; }
