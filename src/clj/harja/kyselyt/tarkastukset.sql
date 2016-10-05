@@ -348,7 +348,8 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-hallintayksikon-kelitarkastukset-liitteineen-raportille
 -- Hakee hallintayksikön kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -387,7 +388,8 @@ WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikk
                    AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-koko-maan-kelitarkastukset-liitteineen-raportille
 -- Hakee koko maan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -426,7 +428,8 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-urakan-soratietarkastukset-raportille
 -- Hakee urakan soratietarkastukset aikavälin perusteella raportille
