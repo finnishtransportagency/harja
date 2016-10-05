@@ -42,10 +42,10 @@ export default React.createClass({
                     <NavButton item={link} key={link.title}/>
                   </li>)
               }
-              <li className="show-for-small-only">
+              <li className="show-for-medium">
                 <a className="button" href="apidoc/api.html" target="_blank">Katso API</a>
               </li>
-              <li className="show-for-small-only">
+              <li className="show-for-medium">
                 <a className="button" href="https://github.com/finnishtransportagency/harja" target="_blank">Projekti GitHubissa</a>
               </li>
             </ul>
