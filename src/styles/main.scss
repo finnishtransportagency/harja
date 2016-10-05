@@ -54,7 +54,8 @@ html, body {
   padding-left: $left-pad;
   padding-right: $right-pad;
   height: auto;
-  margin-bottom: $harja-footer-height;
+  padding-top: 2em;
+  padding-bottom: $harja-footer-height;
 }
 
 .harja-sub-views {
@@ -259,7 +260,6 @@ a.harja-notice-link {
   background-color: $blue-light;
   margin-left: 0;
   margin-right: 0;
-  margin-bottom: 2em;
   a {
     margin-top: 2em;
     margin-bottom: 2em;
