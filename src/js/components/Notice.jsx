@@ -35,7 +35,7 @@ export default React.createClass({
           <h5>{notice.short}</h5>
         </div>
         <div className="column row">
-          <p>{notice.body}</p>
+          <p dangerouslySetInnerHTML={{__html: notice.body}}></p>
         </div>
         {imagesEl}
       </div>
