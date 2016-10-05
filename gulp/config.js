@@ -22,7 +22,7 @@ module.exports = {
     }
   },
   style_images: {
-    src: src + '/styles/**/*.{jpg,jpeg,png,gif,tiff}',
+    src: src + '/styles/**/*.{jpg,jpeg,png,svg,gif,tiff}',
     dest: dest + '/styles'
   },
   browserify: {

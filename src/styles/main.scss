@@ -27,6 +27,7 @@ $purple: #a678b4;
 
 $left-pad: 4rem;
 $right-pad: 4rem;
+$harja-button-pad: 3em;
 
 $logo-height: 4em;
 $logo-height-small: 2em;
@@ -84,8 +85,38 @@ a:visited {
   margin: 0 auto;
 }
 
-.harja-icon {
-  height: 1.5em;
+.harja-icon-clock {
+  &::before {
+    content: "";
+    width: 2em;
+    height: 100%;
+    display: block;
+    float: left;
+    background: url("clock.png");
+    background-image:
+      linear-gradient(transparent, transparent),
+      url("clock.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+}
+
+.harja-icon-link {
+  a::before {
+    content: "";
+    width: 2em;
+    height: 1em;
+    display: block;
+    float: left;
+    background: url("link.png");
+    background-image:
+      linear-gradient(transparent, transparent),
+      url("link.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
 }
 
 .harja-date {
@@ -138,7 +169,7 @@ a.harja-breadcrumb {
 
 .harja-more {
     a::after {
-    content: "\00BB";
+    content: " \00BB";
   }
 }
 

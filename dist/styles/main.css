@@ -3909,8 +3909,29 @@ a:visited {
   display: block;
   margin: 0 auto; }
 
-.harja-icon {
-  height: 1.5em; }
+.harja-icon-clock::before {
+  content: "";
+  width: 2em;
+  height: 100%;
+  display: block;
+  float: left;
+  background: url("clock.png");
+  background-image: linear-gradient(transparent, transparent), url("clock.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain; }
+
+.harja-icon-link a::before {
+  content: "";
+  width: 2em;
+  height: 1em;
+  display: block;
+  float: left;
+  background: url("link.png");
+  background-image: linear-gradient(transparent, transparent), url("link.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain; }
 
 .harja-date {
   height: 1.5em;
@@ -3952,7 +3973,7 @@ a.harja-breadcrumb a:visited {
   color: white; }
 
 .harja-more a::after {
-  content: "\00BB"; }
+  content: " \00BB"; }
 
 a.harja-notice-link {
   color: #0088ce; }
