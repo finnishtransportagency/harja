@@ -9,7 +9,7 @@ export default React.createClass({
             <img className="livi-header-logo" src="images/livi_logo_white.png" alt="liikennevirasto logo" />
           </div>
           <div className="columns medium-8 small-12">
-            <p>Tätä projektia ylläpitää <span><a href="http://www.liikennevirasto.fi/">Liikennevirasto</a></span></p>
+            <p>Tätä projektia ylläpitää <span><a href="http://www.liikennevirasto.fi/" target="_blank">Liikennevirasto</a></span></p>
           </div>
         </div>
       </footer>

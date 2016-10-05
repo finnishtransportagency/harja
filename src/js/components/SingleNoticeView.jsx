@@ -44,7 +44,7 @@ export default React.createClass({
     return (
       <div>
         <div className="harja-breadcrumbs">
-          <div className="row column">
+          <div className="row column show-for-medium">
             <p><NavButton item={homeLink} /><span> &gt; </span><NavButton item={categoryLink} /><span> &gt; </span><a className="harja-breadcrumb" href="#">{title}</a></p>
           </div>
         </div>
