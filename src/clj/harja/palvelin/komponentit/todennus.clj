@@ -111,8 +111,8 @@ on nil."
    (select-keys headerit
                 [;; Käyttäjätunnus ja ryhmät
                  "oam_remote_user" "oam_groups"
-                 ;; ELY-numero (tai null) ja org nimi
-                 "oam_departmentnumber" "oam_organization"
+                 ;; ELY-numero (tai null), org nimi ja Y-tunnus
+                 "oam_departmentnumber" "oam_organization" "oam_user_companyid"
                  ;; Etu- ja sukunimi
                  "oam_user_first_name" "oam_user_last_name"
                  ;; Sähköposti ja puhelin
@@ -136,11 +136,18 @@ on nil."
            (q/hae-organisaatio-idlla db)
            first))
 
+(defn- hae-organisaatio-y-tunnuksella [db y-tunnus]
+  (some->> y-tunnus
+           (q/hae-organisaatio-y-tunnuksella db)
+           first))
+
 (defn- hae-kayttajalle-organisaatio
-  [db ely organisaatio roolit]
+  [db ely y-tunnus organisaatio roolit]
   (or
    ;; Jos ELY-numero haetaan se
    (hae-organisaatio-elynumerolla db ely)
+   ;; Jos yrityksen Y-tunnus annettu, hae sillä
+   (hae-organisaatio-y-tunnuksella db y-tunnus)
    ;; Muuten haetaan org. nimellä
    (hae-organisaatio-nimella db organisaatio)
    ;; Muuten etsitään urakoitsijakohtaista roolia
@@ -158,6 +165,7 @@ ja palauttaa käyttäjätiedot"
        sukunimi "oam_user_last_name"
        sahkoposti "oam_user_mail"
        puhelin "oam_user_mobile"
+       y-tunnus "oam_user_companyid"
        :as headerit}]
 
   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
@@ -167,7 +175,7 @@ ja palauttaa käyttäjätiedot"
                                    (partial q/hae-urakoitsijan-id-ytunnuksella db)
                                    oikeudet/roolit
                                    ryhmat)
-          organisaatio (hae-kayttajalle-organisaatio db ely organisaatio roolit)
+          organisaatio (hae-kayttajalle-organisaatio db ely y-tunnus organisaatio roolit)
 
          kayttaja {:kayttajanimi kayttajanimi
                    :etunimi etunimi
