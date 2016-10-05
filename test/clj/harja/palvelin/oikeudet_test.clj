@@ -204,4 +204,8 @@
   (is (not (oikeudet/voi-lukea? oikeudet/urakat-laadunseuranta-tarkastukset
                                      666 ely-lv)))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
-                                 666 ely-lv))))
+                                     666 ely-lv))))
+
+(deftest jvh-voi-kirjoittaa-suolatoteumat
+  (is (oikeudet/voi-lukea? oikeudet/urakat-toteumat-suola 123 jvh))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-suola 123 jvh)))

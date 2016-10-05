@@ -141,12 +141,12 @@
                            :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
        {:status status}))))
 
-(defn kasittele-invalidi-json [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s" resurssi virheet))
+(defn kasittele-invalidi-json [virheet kutsu resurssi]
+  (log/error (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
-(defn kasittele-viallinen-kutsu [virheet resurssi]
-  (log/error (format "Resurssin: %s kutsu on viallinen: %s " resurssi virheet))
+(defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
+  (log/error (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str kutsu)))
   (tee-viallinen-kutsu-virhevastaus virheet))
 
 (defn kasittele-ei-hakutuloksia [virheet resurssi]
@@ -197,14 +197,14 @@
                  :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
-(defn aja-virhekasittelyn-kanssa [resurssi ajo]
+(defn aja-virhekasittelyn-kanssa [resurssi kutsu parametrit ajo]
   (try+
     (ajo)
     ;; Tunnetut poikkeustilanteet, virhetiedot voidaan julkaista
     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-      (kasittele-invalidi-json virheet resurssi))
+      (kasittele-invalidi-json virheet kutsu resurssi))
     (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
-      (kasittele-viallinen-kutsu virheet resurssi))
+      (kasittele-viallinen-kutsu virheet kutsu parametrit resurssi))
     (catch [:type virheet/+ei-hakutuloksia+] {:keys [virheet]}
       (kasittele-ei-hakutuloksia virheet resurssi))
     (catch [:type virheet/+puutteelliset-parametrit+] {:keys [virheet]}
@@ -266,11 +266,13 @@
   (let [body (lue-body request)
         tapahtuma-id (when integraatioloki
                        (lokita-kutsu integraatioloki resurssi request body))
+        parametrit (:params request)
         vastaus (aja-virhekasittelyn-kanssa
                   resurssi
+                  body
+                  parametrit
                   #(let
-                    [parametrit (:params request)
-                     kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                    [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                      kutsun-data (lue-kutsu kutsun-skeema request body)
                      vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
                     (tee-vastaus vastauksen-skeema vastauksen-data)))]
