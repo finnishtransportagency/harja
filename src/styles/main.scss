@@ -151,19 +151,17 @@ a:visited {
 }
 
 .harja-breadcrumb {
-  margin-left: 0.5em;
-  margin-right: 0.5em;
   color: white;
 }
 
 a.harja-breadcrumb {
-  a:hover {
-    color: $grey-lighter;
+  &:hover {
+    color: $grey-light;
   }
-  a:focus {
+  &:focus {
     color: white;
   }
-  a:visited {
+  &:visited {
     color: white;
   }
 }
@@ -265,6 +263,10 @@ a.harja-notice-link {
     margin-bottom: 2em;
     color: $blue;
     background-color: $grey-lighter;
+  }
+  a:hover,
+  a:focus {
+    background-color: $grey;
   }
 }
 

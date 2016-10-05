@@ -3960,17 +3960,15 @@ a:visited {
     margin: 0; }
 
 .harja-breadcrumb {
-  margin-left: 0.5em;
-  margin-right: 0.5em;
   color: white; }
 
-a.harja-breadcrumb a:hover {
-  color: #f1f1f1; }
+a.harja-breadcrumb:hover {
+  color: #c8c8c8; }
 
-a.harja-breadcrumb a:focus {
+a.harja-breadcrumb:focus {
   color: white; }
 
-a.harja-breadcrumb a:visited {
+a.harja-breadcrumb:visited {
   color: white; }
 
 .harja-more a::after {
@@ -4044,6 +4042,9 @@ a.harja-notice-link {
     margin-bottom: 2em;
     color: #0088ce;
     background-color: #f1f1f1; }
+  .harja-devlinks a:hover,
+  .harja-devlinks a:focus {
+    background-color: #97999b; }
 
 .livi-header-logo {
   height: 4em;
