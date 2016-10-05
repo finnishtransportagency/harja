@@ -14,7 +14,7 @@ export default React.createClass({
 
     return (
       <nav>
-        <div className="harja-header title-bar show-for-medium">
+        <div className="harja-header title-bar show-for-large">
           <div className="top-bar-left">
             <img className="livi-header-logo" src="images/livi_logo_blue.png" alt="liikennevirasto logo" />
             <img className="harja-header-logo" src="images/harja_logo_text.png" alt="harja logo" srcSet="images/harja_logo_text.svg" />
@@ -24,7 +24,7 @@ export default React.createClass({
           </div>
         </div>
 
-        <div className="harja-title-bar title-bar" data-responsive-toggle="top-menu" data-hide-for="medium">
+        <div className="harja-title-bar title-bar" data-responsive-toggle="top-menu" data-hide-for="large">
           <div className="top-bar-left">
             <img className="harja-menu-logo" src="images/harja_logo.png" alt="harja logo" />
           </div>
