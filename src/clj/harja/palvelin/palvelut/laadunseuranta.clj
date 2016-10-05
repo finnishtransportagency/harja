@@ -213,7 +213,7 @@
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi vain-laadunalitukset?]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-   (let [urakoitsija? (= (roolit/osapuoli user) :urakoitsija)
+   (let [urakoitsija? (roolit/urakoitsija? user)
          tarkastukset (into []
                             (comp tarkastus-xf
                                   (if palauta-reitti?
@@ -232,7 +232,7 @@
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-  (let [urakoitsija? (= (roolit/osapuoli user) :urakoitsija)
+  (let [urakoitsija? (roolit/urakoitsija? user)
         tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus
                                                  db
                                                  urakka-id
@@ -345,7 +345,7 @@
                    :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
                    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
                    :vain_laadunalitukset vain-laadunalitukset?
-                   :kayttaja_on_urakoitsija (= (roolit/osapuoli user) :urakoitsija)})))
+                   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 
