@@ -41,7 +41,7 @@
 
 (defn hae-kayttaja [db kayttaja-id]
   (when-let [k (first (k-q/hae-kayttaja db kayttaja-id))]
-    (konv/array->set (konv/organisaatio k) :roolit)))
+    (assoc (konv/organisaatio k) :roolit #{})))
 
 
 
