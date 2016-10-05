@@ -2,7 +2,7 @@
   "name": "harja-info",
   "version": "0.1.0",
   "description": "Harja Info: Liikenneviraston kunnossapidon seurannan ja raportoinnin info-sivut",
-  "author": "",
+  "author": "Antti Ahola",
   "license": "",
   "devDependencies": {
     "babel-preset-es2015": "^6.14.0",
