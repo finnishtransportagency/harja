@@ -1,0 +1,37 @@
+[
+	{
+		"date": "2015-03-25",
+		"title": "Tiedote #1",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue.",
+		"images": ["/data/test/Liikennehankkeiden_vaikutukset.jpg", "/data/test/Tripla.jpg"]
+	},
+  {
+		"date": "2016-02-03",
+		"title": "Tiedote #2",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue.",
+		"images": ["/data/test/Tripla.jpg"]
+	},
+  {
+		"date": "2016-02-30",
+		"title": "Tiedote #3",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue.",
+		"images": ["/data/test/Tripla.jpg", "http://www.liikennevirasto.fi/documents/20473/251256/liikennevirasto_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
+	},
+  {
+		"date": "2011-01-10",
+		"title": "Tiedote...",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue.",
+		"images": ["http://www.liikennevirasto.fi/documents/20473/251256/liikennevirasto_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
+	},
+  {
+		"date": "2011-02-30",
+		"title": "Tiedote..............",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue.",
+		"images": ["http://www.liikennevirasto.fi/documents/20473/251256/liikennevirasto_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
+	}
+]

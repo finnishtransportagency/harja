@@ -3888,7 +3888,8 @@ html, body {
   padding-bottom: 6rem; }
 
 .harja-sub-views {
-  background-color: white; }
+  background-color: white;
+  padding-bottom: 6rem; }
 
 a {
   color: #3db7e4; }

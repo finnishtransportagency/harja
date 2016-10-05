@@ -17,16 +17,25 @@ export default React.createClass({
   },
 
   componentDidMount() {
-    // Slow down fetching for development
-    setTimeout(() => { this.getNotices('care.json', Category.CARE); }, 500);
-    setTimeout(() => { this.getNotices('maintenance.json', Category.MAINTENANCE); }, 3000);
-    setTimeout(() => { this.getNotices('faq.json', Category.FAQ); }, 5000);
+    const url = document.URL;
+    const param = url.substr(url.lastIndexOf('?')+1,url.length);
+    let test = '';
+    if (param === 'test') test = 'test/';
+    const careUrl = test + 'care.json';
+    const maintenanceUrl = test + 'maintenance.json';
+    const faqUrl = test + 'faq.json';
 
-    /*
-    this.getNotices('care.json', 'careNotices');
-    this.getNotices('maintenance.json', 'maintenanceNotices');
-    this.getNotices('faq.json', 'faqNotices');
-    */
+    if (param === 'test') {
+      // Slow down fetching for development
+      setTimeout(() => { this.getNotices(careUrl, Category.CARE); }, 500);
+      setTimeout(() => { this.getNotices(maintenanceUrl, Category.MAINTENANCE); }, 3000);
+      setTimeout(() => { this.getNotices(faqUrl, Category.FAQ); }, 5000);
+    }
+    else {
+      this.getNotices(careUrl, Category.CARE);
+      this.getNotices(maintenanceUrl, Category.MAINTENANCE);
+      this.getNotices(faqUrl, Category.FAQ);
+    }
   },
 
   defaultTitle(type) {
