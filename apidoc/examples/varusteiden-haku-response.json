@@ -1,0 +1,47 @@
+{
+  "varusteet": [
+    {
+      "varuste": {
+        "tunniste": "HARJ123456789",
+        "tietue": {
+          "sijainti": {
+            "tie": {
+              "numero": 1,
+              "aosa": 1,
+              "aet": 4,
+              "losa": 1,
+              "let": 1,
+              "ajr": 10,
+              "puoli": 1,
+              "kaista": 2
+            }
+          },
+          "alkupvm": "2015-01-01T00:00:00Z",
+          "loppupvm": "2015-01-01T00:00:00Z",
+          "karttapvm": "2015-01-01T00:00:00Z",
+          "kuntoluokitus": "1",
+          "ely": 1,
+          "tietolaji": {
+            "tunniste": "tl506",
+            "arvot": {
+              "LMNUMERO": "9987",
+              "SIVUTIE": "2",
+              "LMALA": "2",
+              "LMVANHA": "0",
+              "LMTYYPPI": "1",
+              "LMKAUSI": "0",
+              "LMKIINNIT": "1",
+              "LMMATER": "1",
+              "LMTEKSTI": "Testi liikennemerkki",
+              "LMOMIST": "Omistaja",
+              "OPASTETUNN": "",
+              "KUNTOLUOKK": "4",
+              "TUNNISTE": "123456789",
+              "URAKKA": "400"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-01T00:00:00Z"
+  },
+  "varustetoteumat": [
+    {
+      "varustetoteuma": {
+        "toteuma": {
+          "tunniste": {
+            "id": 3
+          },
+          "alkanut": "2016-01-01T00:00:00Z",
+          "paattynyt": "2016-01-01T00:00:00Z",
+          "toteumatyyppi": "yksikkohintainen",
+          "sopimusId": 1,
+          "suorittaja": {
+            "nimi": "Tehotekijät Oy",
+            "ytunnus": "8765432-1"
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1
+              }
+            }
+          ]
+        },
+        "toimenpiteet": [
+          {
+            "varusteen-lisays": {
+              "lisaaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 74846,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "lisatty": "2016-01-01T00:00:00Z",
+              "varuste": {
+                "tilannepvm": "2016-01-01T00:00:00Z",
+                "tietue": {
+                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "sijainti": {
+                    "tie": {
+                      "numero": 89,
+                      "aet": 12,
+                      "aosa": 1,
+                      "ajr": 0,
+                      "puoli": 1
+                    }
+                  },
+                  "tietolaji": {
+                    "tunniste": "tl506",
+                    "arvot": {
+                      "LMNUMERO": "9987",
+                      "SIVUTIE": "2",
+                      "LMALA": "2",
+                      "LMVANHA": "0",
+                      "LMTYYPPI": "1",
+                      "LMKAUSI": "0",
+                      "LMKIINNIT": "1",
+                      "LMMATER": "1",
+                      "LMTEKSTI": "Testi liikennemerkki",
+                      "LMOMIST": "Omistaja",
+                      "OPASTETUNN": "",
+                      "KUNTOLUOKK": "4",
+                      "URAKKA": "400"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "varusteen-poisto": {
+              "poistaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 85644,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "poistettu": "2016-01-01T00:00:00Z",
+              "tunniste": "HARJ951547",
+              "tietolajitunniste": "tl505"
+            }
+          },
+          {
+            "varusteen-paivitys": {
+              "paivittaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 74846,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "paivitetty": "2016-01-01T00:00:00Z",
+              "varuste": {
+                "tunniste": "HARJ951547",
+                "tilannepvm": "2016-01-01T00:00:00Z",
+                "tietue": {
+                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "sijainti": {
+                    "tie": {
+                      "numero": 89,
+                      "aet": 12,
+                      "aosa": 1,
+                      "ajr": 0,
+                      "puoli": 1
+                    }
+                  },
+                  "tietolaji": {
+                    "tunniste": "tl506",
+                    "arvot": {
+                      "LMNUMERO": "9987",
+                      "SIVUTIE": "2",
+                      "LMALA": "2",
+                      "LMVANHA": "0",
+                      "LMTYYPPI": "1",
+                      "LMKAUSI": "0",
+                      "LMKIINNIT": "1",
+                      "LMMATER": "1",
+                      "LMTEKSTI": "Testi liikennemerkki",
+                      "LMOMIST": "Omistaja",
+                      "OPASTETUNN": "",
+                      "KUNTOLUOKK": "4",
+                      "URAKKA": "400"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "varusteen-tarkastus": {
+              "tarkastaja": {
+                "organisaatio": "Asfaltia Oy",
+                "henkilo": {
+                  "id": 74846,
+                  "etunimi": "Keijo",
+                  "sukunimi": "Käsittelijä"
+                }
+              },
+              "tarkastettu": "2016-01-01T00:00:00Z",
+              "varuste": {
+                "tunniste": "HARJ951547",
+                "tietue": {
+                  "alkupvm": "2016-01-01T00:00:00Z",
+                  "sijainti": {
+                    "tie": {
+                      "numero": 89,
+                      "aet": 12,
+                      "aosa": 1,
+                      "ajr": 0,
+                      "puoli": 1
+                    }
+                  },
+                  "tietolaji": {
+                    "tunniste": "tl506",
+                    "arvot": {
+                      "LMNUMERO": "9987",
+                      "SIVUTIE": "2",
+                      "LMALA": "2",
+                      "LMVANHA": "0",
+                      "LMTYYPPI": "1",
+                      "LMKAUSI": "0",
+                      "LMKIINNIT": "1",
+                      "LMMATER": "1",
+                      "LMTEKSTI": "Testi liikennemerkki",
+                      "LMOMIST": "Omistaja",
+                      "OPASTETUNN": "",
+                      "KUNTOLUOKK": "4",
+                      "URAKKA": "400"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

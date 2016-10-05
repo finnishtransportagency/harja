@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "urakat": {
+      "id": "urn:harja/urakat",
+      "type": "array",
+      "maxItems" : 500,
+      "items": {
+        "id": "http://example.com/item-schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "urakka": {
+            "id": "urn:harja/urakat/0/urakka",
+            "type": "object",
+            "additionalProperties": false,
+            "required": true,
+            "properties": {
+              "tiedot": {
+                "id": "urn:harja/urakat/0/urakka/tiedot",
+                "type": "object",
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/urakka-otsikko.schema.json",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

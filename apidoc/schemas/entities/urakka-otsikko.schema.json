@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "id": "urn:harja/id",
+      "type": "integer",
+      "required": true
+    },
+    "nimi": {
+      "id": "urn:harja/nimi",
+      "type": "string",
+      "required": true
+    },
+    "urakoitsija": {
+      "id": "urn:harja/urakoitsija",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "properties": {
+        "ytunnus": {
+          "id": "urn:harja/urakoitsija/ytunnus",
+          "type": "string"
+        },
+        "nimi": {
+          "id": "urn:harja/urakoitsija/nimi",
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    "vaylamuoto": {
+      "id": "urn:harja/vaylamuoto",
+      "type": "string",
+      "required": true
+    },
+    "tyyppi": {
+      "id": "urn:harja/urakkatyyppi",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/urakkatyyppi.schema.json",
+      "required": true
+    },
+    "alkupvm": {
+      "id": "urn:harja/alkupvm",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "loppupvm": {
+      "id": "urn:harja/loppupvm",
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    },
+    "alueurakkanumero": {
+      "id": "urn:harja/alueurakkanumero",
+      "type": "string"
+    }
+  }
+}

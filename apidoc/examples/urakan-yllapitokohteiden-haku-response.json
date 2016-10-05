@@ -1,0 +1,84 @@
+{
+  "yllapitokohteet": [
+    {
+      "yllapitokohde": {
+        "tunniste": {
+          "id": 1234
+        },
+        "sopimus": {
+          "id": 456789132
+        },
+        "kohdenumero": "123",
+        "nimi": "Testipäällystyskohde",
+        "tyyppi": "paallyste",
+        "tyotyyppi": "paallystys",
+        "sijainti": {
+          "numero": 70020,
+          "aosa": 810,
+          "aet": 137,
+          "losa": 814,
+          "let": 1891,
+          "ajr": 1,
+          "kaista": 1
+        },
+        "yllapitoluokka": 1,
+        "keskimaarainen-vuorokausiliikenne": 1,
+        "nykyinen-paallyste": "betoni",
+        "alikohteet": [
+          {
+            "alikohde": {
+              "tunniste": {
+                "id": 1235
+              },
+              "tunnus": "A",
+              "nimi": "1. Testialikohde",
+              "sijainti": {
+                "numero": 70020,
+                "aosa": 810,
+                "aet": 137,
+                "losa": 812,
+                "let": 1,
+                "ajr": 1,
+                "kaista": 1
+              },
+              "toimenpide": "testitoimenpide"
+            }
+          },
+          {
+            "alikohde": {
+              "tunniste": {
+                "id": 1235
+              },
+              "tunnus": "B",
+              "nimi": "2. Testialikohde",
+              "sijainti": {
+                "numero": 70020,
+                "aosa": 812,
+                "aet": 1,
+                "losa": 814,
+                "let": 1891,
+                "ajr": 1,
+                "kaista": 1
+              },
+              "toimenpide": "testitoimenpide"
+            }
+          }
+        ],
+        "aikataulu": {
+          "paallystys-aloitettu": "2015-01-10T12:00:00Z",
+          "paallystys-valmis": "2015-01-12T12:00:00Z",
+          "valmis-tiemerkintaan": "2015-01-12T14:00:00Z",
+          "tiemerkinta-aloitettu": "2015-01-12T16:00:00Z",
+          "tiemerkinta-valmis": "2015-01-15T12:00:00Z",
+          "kohde-valmis": "2015-01-16T12:00:00Z",
+          "paallystysilmoitus": {
+            "aloituspvm": "2015-01-10T12:00:00Z",
+            "valmispvm-paallystys": "2015-01-12T12:00:00Z",
+            "valmispvm-kohde": "2015-01-16T12:00:00Z",
+            "takuupvm": "2015-02-15T12:00:00Z"
+          }
+        }
+      }
+    }
+  ]
+}

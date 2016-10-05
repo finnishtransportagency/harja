@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "ehdotettutoimenpide": {
+      "id": "urn:harja/ehdotettutoimenpide",
+      "required": true,
+      "enum": [
+        "eiToimenpiteita",
+        "puhdistettava",
+        "urakanKunnostettava",
+        "korjausOhjelmoitava",
+        "eiPade",
+        ""
+      ]
+    },
+    "lisatietoja": {
+      "id": "urn:harja/lisatietoja",
+      "type": "string"
+    }
+  }
+}

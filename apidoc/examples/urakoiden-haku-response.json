@@ -1,0 +1,36 @@
+{
+  "urakat": [
+    {
+      "urakka": {
+        "tiedot": {
+          "id": 123456789,
+          "nimi": "Oulun alueurakka",
+          "urakoitsija": {
+            "ytunnus": "123456-8",
+            "nimi": "Asfaltia"
+          },
+          "vaylamuoto": "tie",
+          "tyyppi": "hoito",
+          "alkupvm": "2016-01-30T12:00:00Z",
+          "loppupvm": "2016-01-30T12:00:00Z"
+        }
+      }
+    },
+    {
+      "urakka": {
+        "tiedot": {
+          "id": 123456789,
+          "nimi": "Oulun päällyysteurakka",
+          "urakoitsija": {
+            "ytunnus": "123456-8",
+            "nimi": "Asfaltia"
+          },
+          "vaylamuoto": "tie",
+          "tyyppi": "paallystys",
+          "alkupvm": "2016-01-30T12:00:00Z",
+          "loppupvm": "2016-01-30T12:00:00Z"
+        }
+      }
+    }
+  ]
+}
