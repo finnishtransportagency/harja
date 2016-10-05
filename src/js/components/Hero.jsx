@@ -27,7 +27,7 @@ export default React.createClass({
     );
 
     return (
-      <section className="harja-hero">
+      <section className="harja-hero show-for-medium">
         <div className="row column align-middle text-center">
           <h4>Liikenneviraston Harja-projekti</h4>
           <p>Liikenneviraston väylien kunnossapidon seurannan ja raportoinnin järjestelmä Harja</p>
