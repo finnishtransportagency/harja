@@ -1,8 +1,10 @@
 <b>Nykyinen versio: 1.0.1</b>
-<b>Julkaistu: 1.10.2016</b>
+<b>Julkaistu: 5.10.2016</b>
 
 <b>Versiohistoria:</b>
-- Versionumero: 1.0.1 Julkaistu: 1.10.2016:
+
+- Versionumero: 1.0.1 Julkaistu: 5.10.2016:
+    - Turvallisuuspoikkeaman kirjauksessa aiheutuneet vammat ja vahingoittuneet ruumiinosat kirjataan jatkossa yhtenä string-arvona.
     - Estetty turvallisuuspoikkeaman tapahtumapäivämäärän kirjaaminen tulevaisuuteen API:n kautta.
 - Versionumero: 1.0.0 Julkaistu: 1.10.2016:
     - Ensimmäinen virallinen versio

@@ -113,7 +113,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
   ([app] (hae app 300))
   ([app timeout] (hae app timeout false))
-  ([{haku :ilmoitushaku :as app} timeout taustahaku?]
+  ([{haku :ilmoitushaku-id :as app} timeout taustahaku?]
     ;; Jos seuraava haku ollaan laukaisemassa, peru se
    (when haku
      (.clearTimeout js/window haku))

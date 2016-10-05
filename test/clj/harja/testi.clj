@@ -185,8 +185,10 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789" :organisaatio 9
-                      :roolit #{"ELY_Urakanvalvoja"}})
+(def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789"
+                      :organisaatio {:id 9 :tyyppi :hallintayksikko :nimi "Pop"}
+                      :roolit #{"ELY_Urakanvalvoja"}
+                      :organisaation-urakat #{}})
 
 ;; id:2 Järjestelmävastuuhenkilö
 (def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
@@ -198,7 +200,19 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
                      :urakkaroolit {}})
 
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh" :organisaatio 11})
+(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
+                          :organisaatio {:id 11 :nimi "YIT" :tyyppi "urakoitsija"}
+                          :roolit #{}
+                          :urakkaroolit {}
+                          :organisaatioroolit {11 #{"Kayttaja"}}
+                          :organisaation-urakat #{1 4 20 22}})
+
+(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
+                      :organisaatio {:id 13 :nimi "Destia Oy" :tyyppi "urakoitsija"}
+                      :roolit #{}
+                      :urakkaroolit {}
+                      :organisaatioroolit {13 #{"Kayttaja"}}
+                      :organisaation-urakat #{2 21}})
 
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))

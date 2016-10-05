@@ -65,9 +65,8 @@
                          :tyontekijanammattimuu nil
                          :tyyppi #{:tyotapaturma}
                          :urakka urakka-id
-                         :vahingoittuneetruumiinosat #{}
                          :vahinkoluokittelu #{}
-                         :vammat #{}}]
+                         :vammat nil}]
                true))))
 
 (defn poista-tp-taulusta
@@ -126,12 +125,6 @@
                                     (.getArray arvo))))
         ;; Tyyppi -> set
         (assoc turpo 15 (into #{} (when-let [arvo (get turpo 15)]
-                                    (.getArray arvo))))
-        ;; Vammat -> set
-        (assoc turpo 19 (into #{} (when-let [arvo (get turpo 19)]
-                                    (.getArray arvo))))
-        ;; Vahingoittuneet ruumiinosat -> set
-        (assoc turpo 20 (into #{} (when-let [arvo (get turpo 20)]
                                     (.getArray arvo))))))
 
 (defn hae-korjaavat-toimenpiteet [turpo-id]
@@ -153,7 +146,7 @@
             :tapahtunut (pvm/luo-pvm (+ 1900 105) 6 1)
             :tyontekijanammatti :kuorma-autonkuljettaja
             :kuvaus "e2e taas punaisena"
-            :vammat #{:luunmurtumat}
+            :vammat :luunmurtumat
             :sairauspoissaolopaivat 0
             :sairaalavuorokaudet 0
             :paikan-kuvaus "Metsätie"
@@ -214,8 +207,8 @@
                            "kuorma-autonkuljettaja"
                            nil
                            nil
-                           #{"luunmurtumat"}
-                           #{}
+                           "luunmurtumat"
+                           nil
                            nil
                            nil
                            nil
@@ -247,7 +240,7 @@
                                            :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
                                            :tyontekijanammatti :porari
                                            :kuvaus "e2e taas punaisena"
-                                           :vammat #{:sokki}
+                                           :vammat :sokki
                                            :sairauspoissaolopaivat 0
                                            :sairaalavuorokaudet 0
                                            :vakavuusaste :vakava
@@ -291,8 +284,8 @@
                            "porari"
                            nil
                            nil
-                           #{"sokki"}
-                           #{}
+                           "sokki"
+                           nil
                            nil
                            nil
                            nil
