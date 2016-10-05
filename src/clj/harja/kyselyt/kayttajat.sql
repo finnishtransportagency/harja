@@ -250,6 +250,10 @@ WHERE lower(o.nimi) = lower(:nimi)
 -- Hakee organisaation id:n, nimen ja tyypin id:n perusteella.
 SELECT id,nimi,tyyppi FROM organisaatio WHERE id = :id
 
+-- name: hae-organisaatio-y-tunnuksella
+-- Hakee organisaation id:n, nimen ja tyypin Y-tunnuksen perusteella.
+SELECT id,nimi,tyyppi FROM organisaatio WHERE ytunnus = :y-tunnus
+
 -- name: hae-organisaatioita
 -- Käyttäjän organisaatiohaku nimen osalla.
 SELECT
