@@ -114,19 +114,29 @@
             (kasittele-onnistunut-siirto uudet-maksuerat)
             (kasittele-epaonnistunut-siirto lahetettavat-maksueranumerot uudet-kuittausta-odottavat))))))
 
-(defn pollaa-kantaa
+(defn- pollaa-kantaa
   "Jos on olemassa maksueriä tai kustannussuunnitelmia, jotka odottavat kuittausta, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."
   []
-  (reset! pollataan-kantaa? true)
-  (let [ur @nav/valittu-urakka]
+  (when-not @pollataan-kantaa?
+    (log "[MAKSUERAT] Käynnistetään pollaus.")
+    (reset! pollataan-kantaa? true)
     (go-loop []
-             (when @pollataan-kantaa?
-               (when (not (empty? @kuittausta-odottavat-maksuerat))
-                 (let [result (<! (maksuerat/hae-urakan-maksuerat (:id ur)))]
-                   (log "tuli maksueriä: " result)
-                   (reset! maksuerat/maksuerat result)))
-               (<! (timeout 10000))
-               (recur)))))
+      (when @pollataan-kantaa?
+        (<! (timeout 10000)) ;; Älä pollaa heti näkymään tultaessa
+        (when (not (empty? @kuittausta-odottavat-maksuerat))
+          (let [urakka-id-haettaessa (:id @nav/valittu-urakka)
+                _ (log "[MAKSUERAT] Pollataan uudet maksuerät urakalle " urakka-id-haettaessa)
+                result (<! (maksuerat/hae-urakan-maksuerat urakka-id-haettaessa))
+                urakka-id-nyt (:id @nav/valittu-urakka)]
+            (if (= urakka-id-nyt urakka-id-haettaessa)
+              (do (log "[MAKSUERAT] Pollattu uudet maksuerät urakalle " urakka-id-nyt)
+                  (reset! maksuerat/maksuerat result))
+              (log "[MAKSUERAT] Maksuerät pollattu, mutta urakka vaihtui. Hylätään."))))
+        (recur)))))
+
+(defn- lopeta-pollaus []
+  (log "[MAKSUERAT] Lopetetaan pollaus.")
+  (reset! pollataan-kantaa? false))
 
 (defn nayta-tila [tila lahetetty]
   (case tila
@@ -140,13 +150,11 @@
 (defn maksuerat-listaus
   "Maksuerien pääkomponentti"
   []
-  (pollaa-kantaa)
-  (komp/luo
-    (komp/lippu maksuerat/nakymassa?)
-    {:component-will-unmount
-     (fn []
-       (reset! pollataan-kantaa? false))}
 
+  (komp/luo
+    (komp/sisaan #(pollaa-kantaa))
+    (komp/ulos #(lopeta-pollaus))
+    (komp/lippu maksuerat/nakymassa?)
     (fn []
       (let [kuittausta-odottavat @kuittausta-odottavat-maksuerat
             maksuerarivit @maksuerarivit
