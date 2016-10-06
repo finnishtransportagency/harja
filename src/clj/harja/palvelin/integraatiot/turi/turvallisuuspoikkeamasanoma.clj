@@ -116,18 +116,17 @@
 (defn rakenna-lahde [data]
   [:lähde
    [:lähdejärjestelmä "Harja"]
-   [:lähde-id 666]]) ; TODO Selvitä tämä arvo
+   [:lähdeid 666]]) ; TODO Selvitä tämä arvo
 
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
           (when-let [turi-id (:turi-id data)]
             [[:id turi-id]]) ;; TODO Tarkista onko tämä todella turi-id
-          [[:sampohankeid (:urakka-sampoid data)]] ;; Invalid content was found starting with element 'sampohankeid'. One of '{id, sampohankenimi}' is expected?
           [[:sampohankenimi (:urakka-nimi data)]]
+          [[:sampohankeid (:urakka-sampoid data)]] ;; Invalid content was found starting with element 'sampohankeid'. One of '{id, sampohankenimi}' is expected?
+          [[:sampohankeyhteyshenkilö (:sampo-yhteyshenkilo data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
-          (when-let [sampo-yhteyshenkilo (:sampo-yhteyshenkilo data)]
-            [[:sampoyhteyshenkilö sampo-yhteyshenkilo]])
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tygyppi data))
