@@ -34,7 +34,7 @@
   (lukko/yrita-ajaa-lukon-kanssa
     db
     "tloik-kuittausten-uudelleenlahetys"
-    (do
+    #(do
       (log/debug "Lähetetään lähettämättömät ilmoitustoimenpiteet T-LOIK:n.")
       (let [idt (mapv :id (ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))]
         (doseq [id idt]
