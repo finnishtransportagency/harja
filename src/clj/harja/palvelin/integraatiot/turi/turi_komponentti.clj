@@ -75,8 +75,9 @@
                                    :salasana salasana
                                    :otsikot {"Content-Type" "text/xml"}}
                   sanoma)]
-            (kasittele-turin-vastaus db id headers body))))
-        {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))}
+            (kasittele-turin-vastaus db id headers body)))
+        {:virhekasittelija (fn [_ _]
+                             (q/lokita-lahetys<! db false id))})
       (catch Throwable t
         (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
 
