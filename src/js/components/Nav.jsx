@@ -29,7 +29,7 @@ export default React.createClass({
             <img className="harja-menu-logo" src="images/harja_logo.png" alt="harja logo" />
           </div>
           <div className="top-bar-right">
-            <button className="menu-icon" type="button" data-toggle></button>
+            <button className="harja-icon-menu" type="button" data-toggle></button>
           </div>
         </div>
 
@@ -42,10 +42,10 @@ export default React.createClass({
                     <NavButton item={link} key={link.title}/>
                   </li>)
               }
-              <li className="show-for-medium">
+              <li className="hide-for-large">
                 <a className="button" href="apidoc/api.html" target="_blank">Katso API</a>
               </li>
-              <li className="show-for-medium">
+              <li className="hide-for-large">
                 <a className="button" href="https://github.com/finnishtransportagency/harja" target="_blank">Projekti GitHubissa</a>
               </li>
             </ul>

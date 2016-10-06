@@ -3872,7 +3872,8 @@ table.hover tr:nth-of-type(even):hover {
     order: 6; } }
 
 html, body {
-  height: 100%; }
+  height: 100%;
+  font-size: large; }
 
 #main, #harja-home, #harja-main-view {
   height: 100%; }
@@ -3898,7 +3899,19 @@ a:visited {
   color: #0088ce; }
 
 .harja-menu-logo {
-  height: 2em; }
+  height: 4em; }
+
+.harja-icon-menu::before {
+  content: "";
+  width: 4em;
+  height: 4em;
+  display: block;
+  float: left;
+  background: url("menu.png");
+  background-image: linear-gradient(transparent, transparent), url("menu.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain; }
 
 .harja-header-logo {
   height: 2em;

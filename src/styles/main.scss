@@ -40,6 +40,7 @@ $harja-footer-height: 6rem; // logo:4 + top:1 + bottom:1
 
 html, body {
   height: 100%;
+  font-size: large;
 }
 
 #main, #harja-home, #harja-main-view {
@@ -71,7 +72,24 @@ a:visited {
 }
 
 .harja-menu-logo {
-  height: $logo-height-small;
+  height: $logo-height;
+}
+
+.harja-icon-menu {
+  &::before {
+    content: "";
+    width: $logo-height;
+    height: $logo-height;
+    display: block;
+    float: left;
+    background: url("menu.png");
+    background-image:
+      linear-gradient(transparent, transparent),
+      url("menu.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
 }
 
 .harja-header-logo {

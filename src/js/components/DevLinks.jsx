@@ -3,7 +3,7 @@ import React from 'react';
 export default React.createClass({
   render() {
     return (
-      <div className="harja-devlinks hide-for-medium">
+      <div className="harja-devlinks show-for-large">
         <div className="row align-middle text-center">
           <div className="harja-more harja-icon-link column medium-6">
             <a className="button" href="apidoc/api.html" target="_blank">Katso API</a>
