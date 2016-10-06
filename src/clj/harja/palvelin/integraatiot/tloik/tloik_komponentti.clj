@@ -13,7 +13,8 @@
              [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
              [tekstiviesti :as tekstiviesti]
              [sahkoposti :as sahkopostiviesti]]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukko]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -62,17 +63,17 @@
                                          (:lahettaja viesti)
                                          (:otsikko vastaus) (:sisalto vastaus)))
             (catch Throwable t
-              (log/error t "VIRHE T-LOIK kuittaussähköpostin vastaanotossa"))))))))
+              (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))
 
-(defn tee-paivittainen-lahetys-tehtava [this jms-lahettaja aika]
-  (if aika
+(defn tee-ajastettu-uudelleenlahetys-tehtava [this jms-lahettaja aikavali]
+  (if aikavali
     (do
-      (log/debug "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi joka päivä kello: " aika)
-      (ajastettu-tehtava/ajasta-paivittain
-        aika
+      (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
+      (ajastettu-tehtava/ajasta-minuutin-valein
+        aikavali
         (fn [_] (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet jms-lahettaja (:db this)))))
     (constantly nil)))
 
@@ -81,7 +82,7 @@
   (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
     (log/debug "Käynnistetään T-LOIK komponentti")
     (rekisteroi-kuittauskuuntelijat this asetukset)
-    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono paivittainen-lahetysaika]} asetukset
+    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono uudelleenlahetysvali-minuuteissa]} asetukset
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                                    {:sms labyrintti
                                     :email sonja-sahkoposti})
@@ -96,10 +97,10 @@
         :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija
                                               this
                                               toimenpidekuittausjono)
-        :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava
+        :paivittainen-lahetys-tehtava (tee-ajastettu-uudelleenlahetys-tehtava
                                         this
                                         jms-lahettaja
-                                        paivittainen-lahetysaika))))
+                                        uudelleenlahetysvali-minuuteissa))))
   (stop [this]
     (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
                        :sonja-toimenpidekuittauskuuntelija
