@@ -58,7 +58,7 @@
         [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
-  [bs/navbar {}
+  [bs/navbar {:luokka (when (k/kehitysymparistossa?) "testiharja")}
    [:span
     [:img#harja-brand-icon {:alt      "HARJA"
                             :src      "images/harja_logo_soft.svg"
