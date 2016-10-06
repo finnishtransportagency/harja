@@ -33,6 +33,9 @@
     false
     (not (lomake/voi-tallentaa-ja-muokattu? sanktio))))
 
+(defn on-sakko? [sanktio]
+  (:sakko? sanktio))
+
 (defn sanktion-tiedot
   [optiot]
   (let [muokattu (atom @tiedot/valittu-sanktio)
@@ -125,12 +128,34 @@
             :leveys 2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         {:otsikko "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
-          :pakollinen? true
-          :yksikko "€"
-          :validoi [[:ei-tyhja "Anna summa"]]}
+         {:otsikko       "Sanktio/muistutus"
+          :nimi          :sakko?
+          :palstoja      1
+          ;:rivi? true
+          :tyyppi        :valinta
+          :pakollinen?   true
+          :valinnat      [:sakko :muistutus]
+          :valinta-nayta #(case %
+                           :sakko "Sakko"
+                           :muistutus "Muistutus"
+                           "- valitse -")
+          :aseta         (fn [rivi arvo]
+                           (let [sakko? (= :sakko arvo)]
+                             (assoc rivi
+                               :sakko? sakko?
+                               :summa (when sakko? (:summa rivi))
+                               :toimenpideinstanssi (when sakko?
+                                                      (:toimenpideinstanssi rivi)))))
+          :hae           #(if (on-sakko? %) :sakko :muistutus)}
 
-         (when (urakka/indeksi-kaytossa?)
+         (when (on-sakko? @muokattu)
+           {:otsikko     "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
+            :pakollinen? true
+            :uusi-rivi? true
+            :yksikko     "€"
+            :validoi     [[:ei-tyhja "Anna summa"]]})
+
+         (when (and (on-sakko? @muokattu) (urakka/indeksi-kaytossa?))
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
             :valinnat ["MAKU 2005" "MAKU 2010"]
@@ -141,6 +166,7 @@
            {:otsikko "Laji" :tyyppi :valinta
             :pakollinen? true
             :palstoja 1
+            :uusi-rivi? true
             :nimi :laji
             :hae (comp keyword :laji)
             :aseta #(assoc %1 :laji %2 :tyyppi nil)
@@ -167,7 +193,7 @@
             :valinnat-fn (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
             :valinta-nayta #(if % (:nimi %) " - valitse tyyppi -")
             :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
-         (when-not yllapito?
+         (when (and (on-sakko? @muokattu) (not yllapito?))
            {:otsikko "Toimenpide"
             :pakollinen? true
             :nimi :toimenpideinstanssi

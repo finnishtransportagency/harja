@@ -16,6 +16,7 @@
 (def nakymassa? (atom false))
 (defn uusi-sanktio []
   {:suorasanktio true
+   :sakko? true
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
                     :paatos {:paatos "sanktio"}
                     :aika (pvm/nyt)}})
