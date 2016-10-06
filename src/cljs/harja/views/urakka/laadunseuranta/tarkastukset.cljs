@@ -228,6 +228,18 @@
       (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
       (not validi?))))
 
+(defn siirtymanapin-vihjeteksti [tarkastus]
+  (let [huom-teksti (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                      " HUOM! Laatupoikkeamat näkyvät aina urakoitsijalle")]
+    (str
+      (cond
+        (:laatupoikkeamaid tarkastus)
+        "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
+
+        (not (:laatupoikkeamaid tarkastus))
+        "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
+      huom-teksti)))
+
 (defn tarkastuslomake [tarkastus-atom optiot]
   (let [urakka-id (:id @nav/valittu-urakka)
         urakkatyyppi (:tyyppi @nav/valittu-urakka)
@@ -376,30 +388,28 @@
                                                      #(swap! tarkastus-atom assoc :uusi-liite %))
                             :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
          (when voi-kirjoittaa?
-           {:rivi? true
-            :uusi-rivi? true
-            :nimi :laatupoikkeama
-            :tyyppi :komponentti
-            :vihje (if (:laatupoikkeamaid tarkastus)
-                     "Tallentaa muutokset ja avaa tarkastuksen pohjalta luodun laatupoikkeaman."
-                     "Tallentaa muutokset ja kirjaa tarkastuksen pohjalta uuden laatupoikkeaman.")
+           {:rivi?       true
+            :uusi-rivi?  true
+            :nimi        :laatupoikkeama
+            :tyyppi      :komponentti
+            :vihje       (siirtymanapin-vihjeteksti tarkastus)
             :komponentti (fn [{tarkastus :data}]
                            [napit/palvelinkutsu-nappi
-                           (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
-                           (fn []
-                             (go
-                               (let [tarkastus (<! (tarkastukset/tallenna-tarkastus urakka-id tarkastus (:nakyma optiot)))
-                                     tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
-                                                                   tarkastus
-                                                                   (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
-                                 tarkastus-ja-laatupoikkeama)))
-                           {:disabled (not (lomake/voi-tallentaa? tarkastus))
-                            :kun-onnistuu (fn [tarkastus]
-                                            (reset! tarkastus-atom tarkastus)
-                                            (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
-                            :virheviesti "Tarkastuksen tallennus epäonnistui."
-                            :ikoni (ikonit/livicon-arrow-right)
-                            :luokka :nappi-toissijainen}])})]
+                            (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
+                            (fn []
+                              (go
+                                (let [tarkastus (<! (tarkastukset/tallenna-tarkastus urakka-id tarkastus (:nakyma optiot)))
+                                      tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
+                                                                    tarkastus
+                                                                    (<! (tarkastukset/lisaa-laatupoikkeama tarkastus)))]
+                                  tarkastus-ja-laatupoikkeama)))
+                            {:disabled     (not (lomake/voi-tallentaa? tarkastus))
+                             :kun-onnistuu (fn [tarkastus]
+                                             (reset! tarkastus-atom tarkastus)
+                                             (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
+                             :virheviesti  "Tarkastuksen tallennus epäonnistui."
+                             :ikoni        (ikonit/livicon-arrow-right)
+                             :luokka       :nappi-toissijainen}])})]
         tarkastus]])))
 
 
