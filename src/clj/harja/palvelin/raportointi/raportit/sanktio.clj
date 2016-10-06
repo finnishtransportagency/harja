@@ -26,7 +26,7 @@
         (or (nil? sakkoryhma) (if (set? sakkoryhma)
                                 (sakkoryhma (:sakkoryhma rivi))
                                 (= sakkoryhma (:sakkoryhma rivi))))
-        (or (nil? urakka-id) (= urakka-id (:urakka_id rivi)))
+        (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
         (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
         (or (nil? sanktiotyyppi) (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
@@ -37,7 +37,7 @@
     (fn [rivi]
       (and
         (not (sanktiot-domain/sakko? rivi))
-        (or (nil? urakka-id) (= urakka-id (:urakka_id rivi)))
+        (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
         (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
@@ -232,6 +232,13 @@
                                                :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                                :alku alkupvm
                                                :loppu loppupvm}))
+
+        urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi]) sanktiot-kannassa))
+        ;; jos on jostain syystä sanktioita urakassa joka ei käynnissä, spesiaalikäsittely, I'm sorry
+        naytettavat-alueet (if (= konteksti :hallintayksikko)
+                             (vec (sort-by :nimi (set/union (into #{} naytettavat-alueet)
+                                                        urakat-joista-loytyi-sanktioita)))
+                             naytettavat-alueet)
         yhteensa-sarake? (> (count naytettavat-alueet) 1)
         raportin-otsikot (into [] (concat
                                     [{:otsikko "" :leveys 12}]
