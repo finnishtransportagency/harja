@@ -38,9 +38,13 @@ INSERT INTO liite (lahde, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu)
 SELECT x.id, x.sijainti, x.kitkamittaus, x.lampotila, x.tasaisuus, x.lumisuus, x.kuvaus, x.kuva, x.havainnot, x.tarkastusajo,
        x.aikaleima, x.polyavyys, x.sivukaltevuus, x.kiinteys, x.tyyppi,
        (x.trosoite).tie, (x.trosoite).aosa, (x.trosoite).aet, x.laadunalitus
-FROM (SELECT t.id, t.sijainti, t.kitkamittaus, t.lampotila, t.tasaisuus, t.lumisuus, t.kuvaus, t.kuva, t.havainnot, t.tarkastusajo,
-       t.aikaleima, t.polyavyys, t.sivukaltevuus, t.kiinteys, a.tyyppi,
-       CAST(yrita_tierekisteriosoite_pisteelle2(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite, t.laadunalitus
+FROM (SELECT t.id, t.sijainti, t.kitkamittaus, t.lampotila, t.tasaisuus, t.lumisuus,
+             t.kuvaus, t.kuva, t.havainnot, t.tarkastusajo, t.aikaleima,
+	     t.polyavyys, t.sivukaltevuus, t.kiinteys, a.tyyppi,
+             COALESCE(sama_tr_pisteille(t.sijainti) OVER (ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING),
+	              yrita_tierekisteriosoite_pisteelle2(t.sijainti, 250))
+		      AS trosoite,
+	     t.laadunalitus
   FROM tarkastusreitti t
  INNER JOIN tarkastusajo a ON a.id=t.tarkastusajo
  WHERE t.tarkastusajo=:tarkastusajo

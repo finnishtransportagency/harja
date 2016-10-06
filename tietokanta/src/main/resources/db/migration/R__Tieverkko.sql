@@ -350,3 +350,62 @@ BEGIN
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Etsii osoitteen cpisteelle käyttäen kahta edellistä (apiste, bpiste)
+-- ja kahta seuraavaa (dpiste, episte) apuna samalla tiellä pysymiseen.
+-- Tämän pitäisi estää poistuminen rampeille huonon GPS-signaalin takia.
+CREATE OR REPLACE FUNCTION yrita_sama_tierekisteriosoite_pisteille(pisteet geometry[])
+  RETURNS tr_osoite AS $$
+DECLARE
+  apiste geometry;
+  bpiste geometry;
+  cpiste geometry;
+  dpiste geometry;
+  episte geometry;
+  r RECORD;
+  aosa INTEGER;
+  aet INTEGER;
+  alkukohta tr_osan_kohta;
+BEGIN
+  IF array_length(pisteet,1) < 5 THEN
+    RETURN NULL;
+  END IF;
+  apiste := pisteet[1];
+  bpiste := pisteet[2];
+  cpiste := pisteet[3];
+  dpiste := pisteet[4];
+  episte := pisteet[5];
+  SELECT c.tie,c.osa,c.geom,
+         (ST_Distance(apiste, a.geom) +
+	  ST_Distance(bpiste, b.geom) +
+	  ST_Distance(cpiste, c.geom) +
+	  ST_Distance(dpiste, d.geom) +
+	  ST_Distance(episte, e.geom)) as d
+    FROM tr_osan_ajorata a
+         JOIN tr_osan_ajorata b ON b.tie=a.tie AND b.ajorata=a.ajorata
+	 JOIN tr_osan_ajorata c ON c.tie=a.tie AND c.ajorata=a.ajorata
+	 JOIN tr_osan_ajorata d ON d.tie=a.tie AND d.ajorata=a.ajorata
+	 JOIN tr_osan_ajorata e ON e.tie=a.tie AND e.ajorata=a.ajorata
+   WHERE a.geom IS NOT NULL AND
+         b.geom IS NOT NULL AND
+	 c.geom IS NOT NULL AND
+	 d.geom IS NOT NULL AND
+	 e.geom IS NOT NULL AND
+	 ST_Intersects(apiste, a.envelope) AND
+         ST_Intersects(bpiste, b.envelope) AND
+	 ST_Intersects(cpiste, c.envelope) AND
+	 ST_Intersects(dpiste, d.envelope) AND
+	 ST_Intersects(episte, e.envelope)
+   ORDER BY d ASC LIMIT 1
+   INTO r;
+  IF r IS NULL THEN
+    RETURN NULL;
+  ELSE
+    aosa := r.osa;
+    alkukohta := laske_tr_osan_kohta(r.geom, cpiste);
+    aet := alkukohta.etaisyys;
+    RETURN ROW(r.tie, aosa, aet, aosa, aet, alkukohta.piste);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
