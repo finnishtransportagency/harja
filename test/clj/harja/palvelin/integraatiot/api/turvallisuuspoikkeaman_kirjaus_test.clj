@@ -117,44 +117,7 @@
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
           korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
-      (is (match uusin-tp [_
-                           urakka
-                           (_ :guard #(and (= (t/year %) 2016)
-                                           (= (t/month %) 1)
-                                           (= (t/day %) 30)))
-                           (_ :guard #(and (= (t/year %) 2016)
-                                           (= (t/month %) 2)
-                                           (= (t/day %) 1)))
-                           (_ :guard #(some? %))
-                           "Aura-auto suistui tieltä väistäessä jalankulkijaa."
-                           2
-                           0
-                           1234
-                           1
-                           100
-                           73
-                           20
-                           #{"henkilovahinko"}
-                           "vakava"
-                           #{"tyotapaturma", "vaaratilanne"}
-                           "muu_tyontekija"
-                           "Auraaja"
-                           "Sairaalareissu"
-                           "luunmurtumat"
-                           "selka"
-                           true
-                           "Veera"
-                           "Veistelijä"
-                           "tie"
-                           "Yritys Oy"
-                           "Paula Projektipäällikkö"
-                           "Mikko"
-                           "Meikäläinen"
-                           "Aura-auto suistui tieltä"
-                           "Liukas tie keskellä metsää."
-                           true
-                           false]
-                 true))
+      (is (= (nth uusin-tp 30) "Liukas tie keskellä metsää."))
       (is (= (count korjaavat-toimenpiteet) 1))
       (is (match (first korjaavat-toimenpiteet)
                  ["Kaadetaan risteystä pimentävä pensaikko"
@@ -179,44 +142,7 @@
             turpo-id (first uusin-tp)
             korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
 
-        (is (match uusin-tp [_
-                             urakka
-                             (_ :guard #(and (= (t/year %) 2016)
-                                             (= (t/month %) 1)
-                                             (= (t/day %) 30)))
-                             (_ :guard #(and (= (t/year %) 2016)
-                                             (= (t/month %) 2)
-                                             (= (t/day %) 1)))
-                             (_ :guard #(some? %))
-                             "Aura-auto suistui tieltä väistäessä jalankulkijaa."
-                             2
-                             0
-                             1234
-                             1
-                             100
-                             73
-                             20
-                             #{"henkilovahinko"}
-                             "vakava"
-                             #{"tyotapaturma", "vaaratilanne"}
-                             "muu_tyontekija"
-                             "Auraaja"
-                             "Sairaalareissu"
-                             "luunmurtumat"
-                             "selka"
-                             true
-                             "Veera"
-                             "Veistelijä"
-                             "tie"
-                             "Yritys Oy"
-                             "Paula Projektipäällikkö"
-                             "Mikko"
-                             "Meikäläinen"
-                             "Aura-auto suistui tieltä"
-                             "Liukas tie metsän reunalla."
-                             true
-                             false]
-                   true))
+        (is (= (nth uusin-tp 30) "Liukas tie metsän reunalla."))
         ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
         (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))))
 
