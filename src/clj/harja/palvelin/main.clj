@@ -94,6 +94,7 @@
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
+    [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -334,11 +335,17 @@
                                            kayttajatunnus
                                            salasana]} (:api-yhteysvarmistus asetukset)]
                                (api-yhteysvarmistus/->ApiVarmistus
-                                ajovali-minuutteina
-                                url
-                                kayttajatunnus
-                                salasana))
+                                 ajovali-minuutteina
+                                 url
+                                 kayttajatunnus
+                                 salasana))
                              [:db :integraatioloki])
+
+
+      :sonja-jms-yhteysvarmistus (component/using
+                                   (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
+                                     (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
+                                   [:db :integraatioloki :sonja :klusterin-tapahtumat])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)

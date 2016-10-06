@@ -28,7 +28,8 @@
                         :tallennustilaa-muutetaan kuva
                         :keskita-ajoneuvoon (atom false)
                         :disabloi-kaynnistys? (atom false)
-                        :valittu-urakka (atom {:nimi "Foo" :id 666})}]
+                        :valittu-urakka (atom {:nimi "Foo" :id 666})
+                        :palvelinvirhe (atom nil)}]
         (let [palkki-div (sel1 [:div.tr-osoite])
               hoitoluokka-div (sel1 [:div.soratiehoitoluokka])
               talvihoitoluokka-div (sel1 [:div.talvihoitoluokka])]

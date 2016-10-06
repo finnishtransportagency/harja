@@ -320,12 +320,11 @@ SELECT
 FROM tyokonehavainto t
 WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax),
                   CAST(sijainti AS GEOMETRY)) AND
-      (t.urakkaid IN (:urakat) OR t.urakkaid IS NULL) AND
-      /*
-      Alunperin ajateltiin, että jos urakkaa ei ole valittuna, niin näytetään kaikki alueella
-      toimivat työkoneet (informaation jako, työn läpinäkyvyys). Todettiin kuitenkin että ainakin
-      alkuun pidetään urakoitsijen työkoneiden liikkeet salassa.
-      */
+      (t.urakkaid IN (:urakat) OR
+      -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
+       (t.urakkaid IS NULL AND
+       (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+      -- Rajaa toimenpiteellä
       (t.tehtavat && :toimenpiteet :: suoritettavatehtava []);
 
 -- name: hae-toimenpidekoodit

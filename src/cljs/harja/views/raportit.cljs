@@ -215,8 +215,7 @@
          (reset! valittu-kuukausi nil))]
       (when (or hoitourakassa? (nil? ur))
         [ui-valinnat/hoitokausi
-         {:disabled (or @vapaa-aikavali?
-                        vain-kuukausivalinta?)}
+         {:disabled @vapaa-aikavali?}
          (if hoitourakassa?
            (u/hoitokaudet ur)
            (u/edelliset-hoitokaudet 5 true))
@@ -642,7 +641,8 @@
                           :ryhmittely     (let [nyt (pvm/nyt)]
                                             #(if (pvm/jalkeen? nyt (:loppupvm %))
                                               :paattyneet
-                                              :kaynnissa))
+                                              (when (pvm/jalkeen? nyt (:alkupvm %))
+                                                :kaynnissa)))
                           :ryhman-otsikko #(case %
                                             :kaynnissa "Käynnissä olevat urakat"
                                             :paattyneet "Päättyneet urakat")

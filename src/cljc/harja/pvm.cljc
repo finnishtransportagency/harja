@@ -39,6 +39,21 @@
          (instance? org.joda.time.LocalDate pvm)
          (instance? org.joda.time.LocalDateTime pvm))))
 
+#?(:clj
+   (def suomen-aikavyohyke (DateTimeZone/forID "Europe/Helsinki")))
+
+#?(:clj
+   (defn suomen-aikavyohykkeessa
+     "Antaa joda daten suomen aikavyöhykkeellä"
+     [joda-time]
+     (t/from-time-zone joda-time suomen-aikavyohyke)))
+
+#?(:clj
+   (defn suomen-aikavyohykkeeseen
+     "Antaa joda daten suomen aikavyöhykkeellä"
+     [joda-time]
+     (t/to-time-zone joda-time suomen-aikavyohyke)))
+
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
      (goog.date.DateTime.
@@ -374,7 +389,7 @@
 (defn- d [x]
   #?(:cljs x
      :clj (if (instance? Date x)
-            (tc/from-date x)
+            (suomen-aikavyohykkeeseen (tc/from-date x))
             x)))
 
 (defn vuosi
@@ -684,17 +699,4 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn paivaa-sitten [paivaa]
      (-> paivaa t/days t/ago)))
 
-#?(:clj
-   (def suomen-aikavyohyke (DateTimeZone/forID "Europe/Helsinki")))
-
-#?(:clj
-   (defn suomen-aikavyohykkeessa
-     "Antaa joda daten suomen aikavyöhykkeellä"
-     [joda-time]
-     (t/from-time-zone joda-time suomen-aikavyohyke)))
-
-#?(:clj
-   (defn suomen-aikavyohykkeeseen
-     "Antaa joda daten suomen aikavyöhykkeellä"
-     [joda-time]
-     (t/to-time-zone joda-time suomen-aikavyohyke)))
+(def kayttoonottto (t/local-date 2016 10 1))

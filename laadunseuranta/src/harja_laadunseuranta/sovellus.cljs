@@ -43,7 +43,8 @@
    :virheet []
    :ilmoitukset []
    :vakiohavaintojen-kuvaukset nil
-   :idxdb nil})
+   :idxdb nil
+   :palvelinvirhe nil})
 
 (defonce sovellus (atom sovelluksen-alkutila))
 
@@ -145,6 +146,8 @@
 (def yleishavainto-kaynnissa (reagent/cursor sovellus [:pikahavainnot :yleishavainto]))
 
 (def idxdb (reagent/cursor sovellus [:idxdb]))
+
+(def palvelinvirhe (reagent/cursor sovellus [:palvelinvirhe]))
 
 (def sijainnin-tallennus-mahdollinen (reaction (and @idxdb @tarkastusajo)))
 
