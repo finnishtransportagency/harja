@@ -121,7 +121,7 @@
       (is (t/month (nth uusin-tp 3)) 1)
       (is (t/day (nth uusin-tp 3)) 30)
       (is (= (nth uusin-tp 30) "Liukas tie keskellä metsää."))
-      (is (= (konv/array->set (nth uusin-tp 19)) #{"luunmurtumat"})) ;; Vain 1. vammat ja ruumiinosa tallennetaan
+      (is (= (konv/array->set (nth uusin-tp 19)) #{"luunmurtumat"})) ;; Vain 1. vamma ja ruumiinosa tallennetaan
       (is (= (konv/array->set (nth uusin-tp 20)) #{"selka"}))
       (is (= (count korjaavat-toimenpiteet) 1))
       (is (match (first korjaavat-toimenpiteet)
