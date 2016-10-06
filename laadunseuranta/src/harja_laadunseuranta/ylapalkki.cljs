@@ -33,7 +33,7 @@
                                     tallennus-kaynnissa tallennustilaa-muutetaan
                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
                                     palvelinvirhe]}]
-  [:div.ylapalkki
+  [:div.ylapalkki {:class (when (utils/kehitysymparistossa?) "testiharja")}
    (when (utils/kehitysymparistossa?)
      [:span#testiharja "TESTI"])
    [logo]
