@@ -65,6 +65,8 @@
                          :tyontekijanammattimuu nil
                          :tyyppi #{:tyotapaturma}
                          :urakka urakka-id
+                         :vaaralliset-aineet #{}
+                         :vahingoittuneetruumiinosat nil
                          :vahinkoluokittelu #{}
                          :vammat nil}]
                true))))
