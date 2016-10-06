@@ -23,7 +23,7 @@
     (if (and (= status 200)
              (integer? turi-id))
       (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
-      (log/error "TURI:in lähetelly turvallisuuspoikkeamalle ei saatu id:tä."))))
+      (log/error "TURI:in lähettämälle turvallisuuspoikkeamalle ei saatu id:tä."))))
 
 (defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
   (let [liitteet (:liitteet turvallisuuspoikkeama)]
