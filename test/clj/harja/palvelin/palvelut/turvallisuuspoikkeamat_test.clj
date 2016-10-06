@@ -188,7 +188,12 @@
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
           turpon-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
+
       (is (not (empty? uusin-tp)))
+      (is (= (nth uusin-tp 13) #{"ymparistovahinko"}))
+      (is (= (nth uusin-tp 14) "lieva"))
+      (is (= (nth uusin-tp 15) #{"tyotapaturma"}))
+      (is (= (nth uusin-tp 16) "kuorma-autonkuljettaja"))
       (is (= (nth uusin-tp 29) "Kävi möhösti"))
       (is (= (count turpon-korjaavat-toimenpiteet) 1))
       (is (match (first turpon-korjaavat-toimenpiteet)
