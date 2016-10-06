@@ -13,7 +13,8 @@
              [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
              [tekstiviesti :as tekstiviesti]
              [sahkoposti :as sahkopostiviesti]]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukko]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))
@@ -69,11 +70,14 @@
 
 (defn tee-ajastettu-uudelleenlahetys-tehtava [this jms-lahettaja aikavali]
   (if aikavali
-    (do
-      (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
-      (ajastettu-tehtava/ajasta-minuutin-valein
-        aikavali
-        (fn [_] (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet jms-lahettaja (:db this)))))
+    (lukko/yrita-ajaa-lukon-kanssa
+      db
+      "tloik-kuittausten-uudelleenlahetys"
+      (do
+       (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
+       (ajastettu-tehtava/ajasta-minuutin-valein
+         aikavali
+         (fn [_] (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet jms-lahettaja (:db this))))))
     (constantly nil)))
 
 (defrecord Tloik [asetukset]
