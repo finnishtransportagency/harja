@@ -33,7 +33,7 @@
 (defn laheta-lahettamattomat-ilmoitustoimenpiteet [jms-lahettaja db]
   (lukko/yrita-ajaa-lukon-kanssa
     db
-    "tloik-kuittausten-uudelleenlahetys"
+    "tloik-uudelleenlahetys"
     #(do
       (log/debug "Lähetetään lähettämättömät ilmoitustoimenpiteet T-LOIK:n.")
       (let [idt (mapv :id (ilmoitukset/hae-lahettamattomat-ilmoitustoimenpiteet db))]
