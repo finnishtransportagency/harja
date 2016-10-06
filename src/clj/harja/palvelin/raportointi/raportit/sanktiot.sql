@@ -20,9 +20,10 @@ SELECT
     kuukauden_indeksikorotus(s.perintapvm::DATE, s.indeksi, s.maara, u.id) - s.maara
   END AS indeksikorotus
 FROM sanktio s
-  JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+  LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
-  JOIN urakka u ON tpi.urakka = u.id
+  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+  JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id)
   JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
       AND ((:hallintayksikko::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR (u.id IN (SELECT id

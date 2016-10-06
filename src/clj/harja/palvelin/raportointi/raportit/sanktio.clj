@@ -14,7 +14,9 @@
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
 (defn- rivi-kuuluu-talvihoitoon? [rivi]
-  (= (str/lower-case (:toimenpidekoodi_taso2 rivi)) "talvihoito"))
+  (if (:toimenpidekoodi_taso2 rivi)
+    (= (str/lower-case (:toimenpidekoodi_taso2 rivi)) "talvihoito")
+    false))
 
 (defn- suodata-sakot [rivit {:keys [urakka-id hallintayksikko-id sakkoryhma talvihoito? sanktiotyyppi] :as suodattimet}]
   (filter
