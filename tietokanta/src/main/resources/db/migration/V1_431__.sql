@@ -10,7 +10,7 @@ CREATE TYPE ilmoittajatyyppi AS ENUM (
   'asukas',
   'tienkayttaja',
   'urakoitsija',
-  'vagtrafikant'
+  'vägtrafikant'
 );
 
 CREATE TYPE ilmoituksenselite AS ENUM (
