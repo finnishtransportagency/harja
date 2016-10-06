@@ -142,7 +142,8 @@
                                        kayttaja portti
                                        (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                                            slurp
-                                           (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")))
+                                           (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")
+                                           (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
             uusin-paivitetty-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
             turpo-id (first uusin-paivitetty-tp)
             korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
