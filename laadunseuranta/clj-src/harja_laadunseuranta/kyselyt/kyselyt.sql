@@ -35,7 +35,9 @@ INSERT INTO liite (lahde, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu)
        VALUES (:lahde::lahde, :tyyppi, :koko, :oid, :pikkukuva, :luoja, now());
 
 -- name: hae-reitin-merkinnat-raw
-SELECT x.id, x.sijainti, x.kitkamittaus, x.lampotila, x.tasaisuus, x.lumisuus, x.kuvaus, x.kuva, x.havainnot, x.tarkastusajo,
+SELECT x.id, x.sijainti,
+       x.kitkamittaus, x.lampotila, x.tasaisuus, x.lumisuus,
+       x.kuvaus, x.kuva, x.havainnot, x.tarkastusajo,
        x.aikaleima, x.polyavyys, x.sivukaltevuus, x.kiinteys, x.tyyppi,
        (x.trosoite).tie, (x.trosoite).aosa, (x.trosoite).aet, x.laadunalitus
 FROM (SELECT t.id, t.sijainti, t.kitkamittaus, t.lampotila, t.tasaisuus, t.lumisuus,
