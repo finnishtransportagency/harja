@@ -160,7 +160,6 @@ button {
     border-left: 1px solid rgb(40,40,40);
     box-sizing: border-box;
 }
-
 /* ---------- alustus ---------- */
 .alustuskomponentticontainer {
     position: absolute;
@@ -1039,6 +1038,10 @@ button:disabled {
     top: 5px;
     left: 66px;
     text-decoration: none;
+}
+.ylapalkki.testiharja {
+    border: 1px solid #dd0000;
+    background: red;
 }
 .liikenneturvallisuusmuistutus {
     border: 2px solid black;
