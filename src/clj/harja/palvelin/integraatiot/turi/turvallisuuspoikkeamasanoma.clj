@@ -124,7 +124,7 @@
           (when-let [turi-id (:turi-id data)]
             [[:id turi-id]])
           [[:sampohankenimi (:urakka-nimi data)]]
-          [[:sampohankeid (:urakka-sampoid data)]] ;; Invalid content was found starting with element 'sampohankeid'. One of '{id, sampohankenimi}' is expected?
+          [[:sampohankeid (:urakka-sampoid data)]]
           [[:sampohankeyhteyshenkilo (:sampo-yhteyshenkilo data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
