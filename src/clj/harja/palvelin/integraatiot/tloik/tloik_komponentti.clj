@@ -62,7 +62,7 @@
                                          (:lahettaja viesti)
                                          (:otsikko vastaus) (:sisalto vastaus)))
             (catch Throwable t
-              (log/error t "VIRHE T-LOIK kuittaussähköpostin vastaanotossa"))))))))
+              (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) (:toimenpideviestijono asetukset)))
@@ -70,7 +70,7 @@
 (defn tee-ajastettu-uudelleenlahetys-tehtava [this jms-lahettaja aikavali]
   (if aikavali
     (do
-      (log/debug "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein. " aikavali)
+      (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
       (ajastettu-tehtava/ajasta-minuutin-valein
         aikavali
         (fn [_] (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet jms-lahettaja (:db this)))))
