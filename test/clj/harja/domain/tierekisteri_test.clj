@@ -44,6 +44,10 @@
            {:teksti-tie? false})
          "20"))
   (is (= (tierekisteri/tierekisteriosoite-tekstina
+           {:aosa 3 :aet 3 :losa 5 :let 3}
+           {:teksti-tie? false})
+         "Ei tierekisteriosoitetta"))
+  (is (= (tierekisteri/tierekisteriosoite-tekstina
            {:tie 20 :aosa 5})
          "Tie 20"))
   (is (= (tierekisteri/tierekisteriosoite-tekstina
