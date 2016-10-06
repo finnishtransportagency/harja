@@ -219,15 +219,6 @@
   (reset! tiedot-laatupoikkeamat/valittu-laatupoikkeama-id laatupoikkeama-id)
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :laatupoikkeamat))
 
-(defn validoi-tarkastuslomake [tarkastus]
-  (if (and (not (lomake/muokattu? tarkastus))
-           (:id tarkastus))
-    ;; Olemassaoleva tarkastus avattu, mutta ei muokattu => salli tallennus
-    false
-    (let [validi? (lomake/voi-tallentaa-ja-muokattu? tarkastus)]
-      (log "tarkastus: " (pr-str tarkastus) " :: validi? " validi?)
-      (not validi?))))
-
 (defn siirtymanapin-vihjeteksti [tarkastus]
   (let [huom-teksti (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                       " HUOM! Laatupoikkeamat näkyvät aina urakoitsijalle")]
