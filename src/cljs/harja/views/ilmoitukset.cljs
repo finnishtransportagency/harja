@@ -228,8 +228,12 @@
                :tasaa :keskita
                :tyyppi :komponentti
                :komponentti (fn [rivi]
-                              [:input {:type "checkbox"
-                                       :checked (valitut-ilmoitukset rivi)}])
+                              (let [liidosta-tullut? (not (:ilmoitusid rivi))]
+                                [:span (when liidosta-tullut?
+                                         {:title tiedot/vihje-liito})
+                                 [:input {:type "checkbox"
+                                          :disabled liidosta-tullut?
+                                          :checked (valitut-ilmoitukset rivi)}]]))
                :leveys 1})
             {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
              :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}

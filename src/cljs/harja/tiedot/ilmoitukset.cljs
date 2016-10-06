@@ -284,3 +284,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
 (defn sulje-ilmoitus! []
   (swap! ilmoitukset assoc :valittu-ilmoitus nil))
+
+(def vihje-liito
+  "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia")
