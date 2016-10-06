@@ -1,4 +1,4 @@
-(ns harja.domain.puhelinnumero_test
+(ns harja.domain.puhelinnumero-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
             [harja.domain.puhelinnumero :as puhelinnumero]))

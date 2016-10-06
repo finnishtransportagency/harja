@@ -106,18 +106,18 @@
          alkuetaisyys (or (:alkuetaisyys tr) (:tr-alkuetaisyys tr) (:aet tr))
          loppuosa (or (:loppuosa tr) (:tr-loppuosa tr) (:losa tr))
          loppuetaisyys (or (:loppuetaisyys tr) (:tr-loppuetaisyys tr) (:let tr))
-         ei-tierekisteriosoitetta (let [lause "Ei tierekisteriosoitetta"]
-                                    (if (nil? (:teksti-ei-tr-osoitetta? optiot))
-                                      lause
-                                      (when (:teksti-ei-tr-osoitetta? optiot) lause)))]
+         ei-tierekisteriosoitetta (if (or (nil? (:teksti-ei-tr-osoitetta? optiot))
+                                          (boolean (:teksti-ei-tr-osoitetta? optiot)))
+                                    "Ei tierekisteriosoitetta"
+                                    "")]
      ;; Muodosta teksti
      (str (if tie
             (str tie-sana
-                 tie " / "
-                 alkuosa " / "
-                 alkuetaisyys
-                 (when loppuosa (str " / " loppuosa))
-                 (when loppuetaisyys (str " / " loppuetaisyys)))
+                 tie
+                 (when (and alkuosa alkuetaisyys)
+                   (str " / " alkuosa " / " alkuetaisyys))
+                 (when (and alkuosa alkuetaisyys loppuosa loppuetaisyys)
+                   (str " / " loppuosa " / " loppuetaisyys)))
             ei-tierekisteriosoitetta)))))
 
 
