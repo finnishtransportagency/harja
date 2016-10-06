@@ -70,14 +70,11 @@
 
 (defn tee-ajastettu-uudelleenlahetys-tehtava [this jms-lahettaja aikavali]
   (if aikavali
-    (lukko/yrita-ajaa-lukon-kanssa
-      db
-      "tloik-kuittausten-uudelleenlahetys"
-      (do
-       (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
-       (ajastettu-tehtava/ajasta-minuutin-valein
-         aikavali
-         (fn [_] (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet jms-lahettaja (:db this))))))
+    (do
+      (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
+      (ajastettu-tehtava/ajasta-minuutin-valein
+        aikavali
+        (fn [_] (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet jms-lahettaja (:db this)))))
     (constantly nil)))
 
 (defrecord Tloik [asetukset]
