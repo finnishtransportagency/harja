@@ -11,7 +11,8 @@
             [harja.palvelin.tyokalut.lukot :as lukot]
             [harja.kyselyt.yhteystarkistukset :as yhteystarkistukset]
             [clj-time.format :as format]
-            [clj-time.coerce :as coerce]))
+            [clj-time.coerce :as coerce]
+            [clj-time.core :as time]))
 
 (def sonja-yhteystarkistus "sonja-ping")
 
@@ -30,8 +31,11 @@
         (sonja/laheta sonja jono lahteva-viesti)))))
 
 (defn tarkista-tila [db minuutit]
-  (let [viimeisin-tarkistus (coerce/from-sql-time (yhteystarkistukset/hae-viimeisin-ajoaika db sonja-yhteystarkistus))]
-    (when viimeisin-tarkistus )
+  ;; todo: tee kanta tasolla: tallenna molemmat lähetys aika ja vastaanotto aika
+  (let [viimeisin-tarkistus (coerce/from-sql-time (yhteystarkistukset/hae-viimeisin-ajoaika db sonja-yhteystarkistus))
+        edellisesta-kulunut (time/in-minutes (time/interval viimeisin-tarkistus (time/now)))]
+    (when (> edellisesta-kulunut (+ minuutit 1))
+      )
     ))
 
 (defn tee-jms-yhteysvarmistus-tehtava [{:keys [db sonja]} minuutit jono]
