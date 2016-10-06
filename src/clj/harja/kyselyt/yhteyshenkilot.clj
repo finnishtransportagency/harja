@@ -15,7 +15,7 @@
   (:exists (first (harja.kyselyt.yhteyshenkilot/onko-olemassa-paivystys-ulkoisella-idlla db kayttaja-id ulkoinen-id))))
 
 (defn hae-urakan-tamanhetkiset-paivystajat
-  "Palauttaa urakan tämän hetkiset päivystäjät, jotka ovat vastuuhenkilöitä (heille viesti)"
+  "Palauttaa urakan tämän hetkiset päivystäjät"
   [db urakkaid]
   (->> urakkaid
        (hae-urakan-taman-hetkiset-paivystajat db)))
