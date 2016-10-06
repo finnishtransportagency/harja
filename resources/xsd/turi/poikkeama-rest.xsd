@@ -5,10 +5,10 @@
     <xs:element name="poikkeama">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="lähde">
+                <xs:element name="lahde">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="lähdejärjestelmä" minOccurs="0" maxOccurs="1">
+                            <xs:element name="lahdejarjestelma" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Poikkeamailmoituksen lähdejärjestelmä.
@@ -20,7 +20,7 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="lähdeid" minOccurs="0" maxOccurs="1">
+                            <xs:element name="lahdeid" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Poikkeamailmoituksen tunniste lähdejärjestelmässä.
@@ -76,7 +76,7 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
-                            <xs:element name="sampohankeyhteyshenkilö" minOccurs="1" maxOccurs="1">
+                            <xs:element name="sampohankeyhteyshenkilo" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Hankkeen yhteyshenkilö.
@@ -134,7 +134,8 @@
 
                                         8 = Työtapaturma
                                         16 = Muuu turvallisuuspoikkeama
-                                        32 = Vaaratilanne
+                                        32 =
+                                        Vaaratilanne
                                         64 = Turvallisuushavainto
                                     </xs:documentation>
                                 </xs:annotation>
@@ -206,7 +207,8 @@
                                         4 = Junaliikennöinti
                                         8 = Kunnossapito
                                         16 = Infrarakentaminen
-                                        32 = Ulkopuolinen vaihtotyö
+                                        32 = Ulkopuolinen
+                                        vaihtotyö
 
                                         Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista
                                         arvoista: 16
@@ -278,7 +280,8 @@
                                         4 = Virhe ratatyön suojaamisessa
                                         8 = Muu virhetoiminto
 
-                                        Tämä kenttä on käytössä, jos syy-kentän arvo on 2
+                                        Tämä
+                                        kenttä on käytössä, jos syy-kentän arvo on 2
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -383,7 +386,8 @@
                                         64 = Junakalusto
                                         128 = Terminaali
                                         256 = Halli
-                                        512 = Asema
+                                        512
+                                        = Asema
                                         1024 = Tuotantolaitos
                                         2048 = Työmaa
                                         4096 = Tieliikenneajoneuvo
@@ -866,7 +870,8 @@
                                         0 = Avoin: toimenpide toteuttamatta
                                         1 = Siirretty: toimenpide siirretty esimerkiksi toisen hankkeen tai
                                         organisaation toteutettavaksi
-                                        2 = Suljettu: toimenpide toteutettu
+                                        2 = Suljettu:
+                                        toimenpide toteutettu
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
