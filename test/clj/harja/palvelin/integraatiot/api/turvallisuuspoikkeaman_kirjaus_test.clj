@@ -113,7 +113,7 @@
       (is (number? tp-id))
       (is (number? kommentti-id)))
 
-    ;; Tiukka tarkastus, datan pitää olla kirjattu täysin oikein
+    ;; Tarkistetaan, että data tallentui oikein
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
           korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
@@ -134,7 +134,6 @@
                  true))
 
       ;; Myös päivitys toimii
-
       (let [vanhat-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
             _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                                        kayttaja portti

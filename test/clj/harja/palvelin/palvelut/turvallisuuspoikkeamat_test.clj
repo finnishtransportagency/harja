@@ -184,7 +184,7 @@
 
     (is (= (hae-tp-maara) (+ 1 vanha-maara)))
 
-    ;; Tiukka testi, datan pitää olla tallentunut oikein
+    ;; Tarkistetaan, että data tallentui oikein
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
           turpon-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
