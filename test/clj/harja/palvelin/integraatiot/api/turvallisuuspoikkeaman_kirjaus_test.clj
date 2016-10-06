@@ -28,7 +28,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(defn hae-uusin-turvallisuuspoikkeama []
+(defn hae-turvallisuuspoikkeama-ulkoisella-idlla [ulkoinen-id]
   (as-> (first (q (str "SELECT
                         id,
                         urakka,
@@ -64,8 +64,8 @@
                         vaarallisten_aineiden_kuljetus,
                         vaarallisten_aineiden_vuoto
                         FROM turvallisuuspoikkeama
-                        ORDER BY luotu DESC
-                        LIMIT 1;")))
+                        WHERE ulkoinen_id = " ulkoinen-id
+                        " LIMIT 1;")))
         turpo
         ;; Tapahtumapvm ja käsittely -> clj-time
         (assoc turpo 2 (c/from-sql-date (get turpo 2)))
@@ -91,7 +91,8 @@
         (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
 
 (deftest tallenna-turvallisuuspoikkeama
-  (let [urakka (hae-oulun-alueurakan-2005-2012-id)
+  (let [ulkoinen-id 757577
+        urakka (hae-oulun-alueurakan-2005-2012-id)
         tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                                          kayttaja portti
@@ -114,7 +115,7 @@
       (is (number? kommentti-id)))
 
     ;; Tarkistetaan, että data tallentui oikein
-    (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
+    (let [uusin-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
           turpo-id (first uusin-tp)
           korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
       (is (t/year (nth uusin-tp 3)) 2016)
@@ -142,13 +143,22 @@
                                        (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                                            slurp
                                            (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")))
-            uusin-paivitetty-tp (hae-uusin-turvallisuuspoikkeama)
+            uusin-paivitetty-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
             turpo-id (first uusin-paivitetty-tp)
             korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
 
+        (log/debug "Uusin päivitetty tp: " (pr-str uusin-paivitetty-tp))
         (is (= (nth uusin-paivitetty-tp 30) "Liukas tie metsän reunalla."))
         ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
-        (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))))
+        (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))
+
+    (u "DELETE FROM turvallisuuspoikkeama_kommentti WHERE turvallisuuspoikkeama =
+    (SELECT id FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ");")
+    (u "DELETE FROM turvallisuuspoikkeama_liite WHERE turvallisuuspoikkeama =
+    (SELECT id FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ");")
+    (u "DELETE FROM korjaavatoimenpide WHERE turvallisuuspoikkeama =
+    (SELECT id FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ");")
+    (u "DELETE FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ";")))
 
 (deftest tallenna-turvallisuuspoikkeama-tulevaisuuteen-kaatuu
   (let [urakka (hae-oulun-alueurakan-2005-2012-id)
