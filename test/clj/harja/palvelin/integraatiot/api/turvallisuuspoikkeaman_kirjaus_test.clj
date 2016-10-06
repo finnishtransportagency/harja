@@ -146,7 +146,6 @@
             turpo-id (first uusin-paivitetty-tp)
             korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
 
-        (is (= uusin-paivitetty-tp []))
         (is (= (nth uusin-paivitetty-tp 30) "Liukas tie metsän reunalla."))
         ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
         (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))))
