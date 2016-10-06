@@ -218,7 +218,7 @@ BEGIN
                 FROM toteuma_tehtava tt
                   JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
                                        AND tot.poistettu IS NOT TRUE)
-                  JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+                  JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
                   JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
                                                     AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut
@@ -259,7 +259,7 @@ BEGIN
     FROM toteuma_tehtava tt
       JOIN toteuma tot ON (tt.toteuma = tot.id AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi
                            AND tot.poistettu IS NOT TRUE)
-      JOIN toimenpidekoodi tpk4 ON (tt.toimenpidekoodi = tpk4.id AND tpk4.poistettu IS NOT TRUE)
+      JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
       JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
       JOIN yksikkohintainen_tyo yht ON (tt.toimenpidekoodi = yht.tehtava
                                         AND yht.alkupvm <= tot.alkanut AND yht.loppupvm >= tot.alkanut
