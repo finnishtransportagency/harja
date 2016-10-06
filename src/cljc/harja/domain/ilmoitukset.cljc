@@ -195,7 +195,8 @@
    :tielleOnVuotanutNestettäLiikkuvastaAjoneuvosta "Tielle on vuotanut nestettä liikkuvasta ajoneuvosta"
    :tapahtumaOhi "Tapahtuma ohi"
    :kevyenLiikenteenVaylatOvatjaatymassa "Kevyenliikenteen vaylat ovat jäätymässä"
-   :tietOvatjaisiäJamarkia "Tiet ovat jäisia ja märkiä"})
+   :tietOvatjaisiäJamarkia "Tiet ovat jäisia ja märkiä"
+   :kiertotienKunnossapito "Kiertotien kunnossapito"})
 
 (defn parsi-selitteet [selitteet]
   (string/join ", "
