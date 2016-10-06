@@ -9,8 +9,7 @@ CREATE TYPE ilmoittajatyyppi AS ENUM (
   'muu',
   'asukas',
   'tienkayttaja',
-  'urakoitsija',
-  'vägtrafikant'
+  'urakoitsija'
 );
 
 CREATE TYPE ilmoituksenselite AS ENUM (
@@ -100,9 +99,13 @@ ALTER TABLE ilmoitus
   RENAME COLUMN ilmoittaja_tyyppi TO ilmoittaja_tyyppi_temp;
 ALTER TABLE ilmoitus
   RENAME COLUMN selitteet TO selitteet_temp;
+ALTER TABLE asiakaspalauteluokka
+  RENAME COLUMN selitteet TO selitteet_temp;
 ALTER TABLE ilmoitus
   ADD ilmoittaja_tyyppi ilmoittajatyyppi;
 ALTER TABLE ilmoitus
+  ADD selitteet ilmoituksenselite [];
+ALTER TABLE asiakaspalauteluokka
   ADD selitteet ilmoituksenselite [];
 
 UPDATE ilmoitus
@@ -110,9 +113,14 @@ SET
   ilmoittaja_tyyppi = ilmoittaja_tyyppi_temp :: TEXT :: ilmoittajatyyppi,
   selitteet         = selitteet_temp :: TEXT :: ilmoituksenselite [];
 
+UPDATE asiakaspalauteluokka
+SET selitteet = selitteet_temp :: TEXT :: ilmoituksenselite [];
+
 ALTER TABLE ilmoitus
   DROP COLUMN ilmoittaja_tyyppi_temp;
 ALTER TABLE ilmoitus
+  DROP COLUMN selitteet_temp;
+ALTER TABLE asiakaspalauteluokka
   DROP COLUMN selitteet_temp;
 
 DROP TYPE ilmoituksenselite_temp CASCADE;
