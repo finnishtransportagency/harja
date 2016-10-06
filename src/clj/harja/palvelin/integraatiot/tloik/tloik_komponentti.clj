@@ -81,7 +81,7 @@
   (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
     (log/debug "Käynnistetään T-LOIK komponentti")
     (rekisteroi-kuittauskuuntelijat this asetukset)
-    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono uudelleen-lahetysvali-minuuteissa]} asetukset
+    (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono uudelleenlahetysvali-minuuteissa]} asetukset
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                                    {:sms labyrintti
                                     :email sonja-sahkoposti})
@@ -99,7 +99,7 @@
         :paivittainen-lahetys-tehtava (tee-ajastettu-uudelleenlahetys-tehtava
                                         this
                                         jms-lahettaja
-                                        uudelleen-lahetysvali-minuuteissa))))
+                                        uudelleenlahetysvali-minuuteissa))))
   (stop [this]
     (let [kuuntelijat [:sonja-ilmoitusviestikuuntelija
                        :sonja-toimenpidekuittauskuuntelija

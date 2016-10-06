@@ -52,7 +52,7 @@
          :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
          :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
          :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
-         :uudelleen-lahetysvali-minuuteissa 30}
+         :uudelleenlahetysvali-minuuteissa 30}
 
  :turi {:url "https://testiextranet.liikennevirasto.fi/turvallisuuspoikkeama/api/poikkeamaTuonti"
         :kayttajatunnus "testi"
