@@ -142,11 +142,12 @@
                                        (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                                            slurp
                                            (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")))
-            uusin-tp (hae-uusin-turvallisuuspoikkeama)
-            turpo-id (first uusin-tp)
+            uusin-paivitetty-tp (hae-uusin-turvallisuuspoikkeama)
+            turpo-id (first uusin-paivitetty-tp)
             korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
 
-        (is (= (nth uusin-tp 30) "Liukas tie metsän reunalla."))
+        (is (= uusin-paivitetty-tp []))
+        (is (= (nth uusin-paivitetty-tp 30) "Liukas tie metsän reunalla."))
         ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
         (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))))
 

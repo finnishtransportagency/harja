@@ -116,16 +116,18 @@
 (defn rakenna-lahde [data]
   [:lähde
    [:lähdejärjestelmä "Harja"]
-   [:lähde-id nil]]) ; TODO Selvitä tämä arvo
+   [:lähde-id 666]]) ; TODO Selvitä tämä arvo
 
 (defn rakenna-tapahtumatiedot [data]
   (into [:tapahtumantiedot]
         (concat
-          [[:id (:turi-id data)]] ;; TODO Tarkista onko tämä todella turi-id
-          [[:sampohankeid (:urakka-sampoid data)]]
+          (when-let [turi-id (:turi-id data)]
+            [[:id turi-id]]) ;; TODO Tarkista onko tämä todella turi-id
+          [[:sampohankeid (:urakka-sampoid data)]] ;; Invalid content was found starting with element 'sampohankeid'. One of '{id, sampohankenimi}' is expected?
           [[:sampohankenimi (:urakka-nimi data)]]
           [[:sampourakkanimi (:hanke-nimi data)]]
-          [[:sampoyhteyshenkilö (:sampo-yhteyshenkilo data)]]
+          (when-let [sampo-yhteyshenkilo (:sampo-yhteyshenkilo data)]
+            [[:sampoyhteyshenkilö sampo-yhteyshenkilo]])
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:alueurakkanro (:alueurakkanro data)]]
           (poikkeamatyypit->numerot (:tygyppi data))
@@ -150,7 +152,8 @@
         (concat
           [[:seuraukset (:seuraukset data)]
            (when (ammatti->numero (:tyontekijanammatti data)) [:ammatti (ammatti->numero (:tyontekijanammatti data))])
-           [:ammattimuutarkenne (:tyontekijanammattimuu data)]]
+           (when-let [ammatti-muu (:tyontekijanammattimuu data)]
+             [:ammattimuutarkenne ammatti-muu])]
           (vammat->numerot (:vammat data))
           (vahingoittuneet-ruumiinosat->numerot (:vahingoittuneetruumiinosat data))
           [[:sairauspoissaolot (or (:sairauspoissaolopaivat data) 0)]
