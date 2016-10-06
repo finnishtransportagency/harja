@@ -117,6 +117,9 @@
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
           korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
+      (is (t/year (nth uusin-tp 3)) 2016)
+      (is (t/month (nth uusin-tp 3)) 1)
+      (is (t/day (nth uusin-tp 3)) 30)
       (is (= (nth uusin-tp 30) "Liukas tie keskellä metsää."))
       (is (= (count korjaavat-toimenpiteet) 1))
       (is (match (first korjaavat-toimenpiteet)
