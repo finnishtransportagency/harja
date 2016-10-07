@@ -57,7 +57,7 @@
        [:button.nappi-toissijainen.grid-lisaa
         {:on-click
          (fn [e]
-           (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre teksti]))}
+           (nayta-sisalto-modaalissa-dialogissa "Lisätiedot kokonaisuudessaan" [:pre {:style {:white-space "pre-line"}} teksti]))}
         (ikonit/eye-open)]]
       teksti)))
 

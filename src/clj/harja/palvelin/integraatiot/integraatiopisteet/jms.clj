@@ -2,15 +2,16 @@
   (:require [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.kyselyt.integraatiot :as q])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn kasittele-epaonnistunut-lahetys [lokittaja tapahtuma-id virheviesti]
-  (log/error virheviesti)
-  (lokittaja :epaonnistunut virheviesti nil tapahtuma-id nil)
-  (virheet/heita-sisainen-kasittelyvirhe-poikkeus
-    {:koodi :sonja-lahetys-epaonnistui :viesti virheviesti}))
+(defn kasittele-epaonnistunut-lahetys
+  ([lokittaja tapahtuma-id virheviesti] (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id nil virheviesti))
+  ([lokittaja tapahtuma-id poikkeus virheviesti]
+   (log/error poikkeus virheviesti)
+   (lokittaja :epaonnistunut nil virheviesti tapahtuma-id nil)
+   (virheet/heita-sisainen-kasittelyvirhe-poikkeus
+     {:koodi :sonja-lahetys-epaonnistui :viesti virheviesti})))
 
 (defn kasittele-poikkeus-lahetyksessa [lokittaja tapahtuma-id poikkeus virheviesti]
   (log/error poikkeus virheviesti)
@@ -18,12 +19,24 @@
   (virheet/heita-sisainen-kasittelyvirhe-poikkeus
     {:koodi :sonja-lahetys-epaonnistui :viesti (format "Poikkeus: %s" poikkeus)}))
 
+(defn muodosta-viesti [lokittaja tapahtuma-id viesti]
+  (if (fn? viesti)
+    (try
+      (viesti)
+      (catch Throwable e
+        (let [virheviesti (format "Virhe muodostaessa JMS viestin sisältöä: %s" e)]
+          (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id e virheviesti)
+          (virheet/heita-sisainen-kasittelyvirhe-poikkeus
+            {:koodi :sonja-lahetys-epaonnistui :viesti virheviesti}))))
+    viesti))
+
 (defn laheta-jonoon
   ([lokittaja sonja jono viesti] (laheta-jonoon lokittaja sonja jono viesti nil))
   ([lokittaja sonja jono viesti viesti-id]
    (log/debug (format "Lähetetään JMS jonoon: %s viesti: %s." jono viesti))
    (let [tapahtuma-id (lokittaja :alkanut nil nil)
-         virheviesti (format "Lähetys JMS jonoon: %s epäonnistui." jono)]
+         virheviesti (format "Lähetys JMS jonoon: %s epäonnistui." jono)
+         viesti (muodosta-viesti lokittaja tapahtuma-id viesti)]
      (try
        (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
          (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)

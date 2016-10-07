@@ -11,14 +11,13 @@
 (defn laheta [jms-lahettaja db id]
   (let [viesti-id (str (UUID/randomUUID))
         data (konversio/alaviiva->rakenne (first (ilmoitukset/hae-ilmoitustoimenpide db id)))
-        xml (toimenpide-sanoma/muodosta data viesti-id)]
-    (if xml
-      (do
-        (jms-lahettaja xml viesti-id)
-        (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db viesti-id id)
-        (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id)))
-      (do
-        (log/error (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n epäonnistui." id))
+        muodosta-xml #(toimenpide-sanoma/muodosta data viesti-id)]
+    (try
+      (jms-lahettaja muodosta-xml viesti-id)
+      (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db viesti-id id)
+      (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id))
+      (catch Exception e
+        (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n epäonnistui." id))
         (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id)))))
 
 (defn laheta-ilmoitustoimenpide [jms-lahettaja db id]
