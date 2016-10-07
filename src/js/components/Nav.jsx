@@ -5,7 +5,14 @@ import NavButton from './NavButton.jsx'
 
 export default React.createClass({
   render() {
-    const links = [
+    const largeButtonLinks = [
+      {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}, buttonStyle: 'large button'},
+      {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}, buttonStyle: 'large button'},
+      {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}, buttonStyle: 'large button'},
+      {title: 'UKK', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'}
+    ];
+
+    const normalButtonLinks = [
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}},
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}},
@@ -35,19 +42,28 @@ export default React.createClass({
 
         <div className="harja-menu top-bar" id="top-menu">
           <div className="top-bar-left">
-            <ul className="vertical medium-horizontal menu" data-responsive-menu="medium-dropdown">
+            <ul className="vertical large-horizontal menu hide-for-large" data-responsive-menu="large-dropdown">
               {
-                links.map((link, index) =>
+                largeButtonLinks.map((link, index) =>
                   <li key={index}>
-                    <NavButton item={link} key={link.title}/>
+                    <NavButton item={link} key={link.title} />
                   </li>)
               }
-              <li className="hide-for-large">
-                <a className="button" href="apidoc/api.html" target="_blank">Katso API</a>
+              <li>
+                <a className="large button" href="apidoc/api.html" target="_blank">Katso API</a>
               </li>
-              <li className="hide-for-large">
-                <a className="button" href="https://github.com/finnishtransportagency/harja" target="_blank">Projekti GitHubissa</a>
+              <li >
+                <a className="large button" href="https://github.com/finnishtransportagency/harja" target="_blank">Projekti GitHubissa</a>
               </li>
+            </ul>
+
+            <ul className="vertical large-horizontal menu show-for-large " data-responsive-menu="large-dropdown">
+              {
+                normalButtonLinks.map((link, index) =>
+                  <li key={index}>
+                    <NavButton item={link} key={link.title} />
+                  </li>)
+              }
             </ul>
           </div>
         </div>
