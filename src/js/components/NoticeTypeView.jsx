@@ -14,7 +14,7 @@ export default React.createClass({
   render() {
     let {category, notices, content} = this.props;
     let titleEl, contentEl, listEl;
-    let className = 'harja-noticelist harja-' + category + '-noticelist';
+    const className = 'harja-noticelist harja-' + category + '-noticelist';
 
     if (category) {
       listEl = (

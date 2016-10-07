@@ -19,10 +19,14 @@ export default React.createClass({
 
   render() {
     let {notice, category, notices} = this.props;
+
     const title = notice.title;
+    const className = 'harja-noticelist harja-' + category + '-noticelist';
+
     const homeLink = {title: 'Harja-projekti',
       data: {action: Events.HOME},
       buttonStyle: 'harja-breadcrumb'};
+
     let categoryLink = '';
     switch (category) {
       case Category.CARE:
@@ -41,6 +45,7 @@ export default React.createClass({
           buttonStyle: 'harja-breadcrumb'}
         break;
     }
+
     return (
       <div>
         <div className="harja-breadcrumbs show-for-medium">
@@ -52,8 +57,10 @@ export default React.createClass({
           <div className="small-12 medium-8 large-8 columns">
             <Notice notice={notice}/>
           </div>
-          <div className="harja-noticelist small-12 medium-4 large-4 columns">
-            <NoticeList notices={notices} category={category}/>
+          <div className="small-12 medium-4 large-4 columns">
+            <div className={className}>
+              <NoticeList notices={notices} category={category}/>
+            </div>
           </div>
         </div>
       </div>

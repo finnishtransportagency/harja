@@ -188,6 +188,18 @@ a.harja-breadcrumb {
 
 .harja-singlenotice-content {
   padding-top: 2em;
+  .notice {
+    margin-bottom: 2em;
+  }
+}
+
+.harja-singlenotice-content {
+  .harja-noticelist {
+    border-bottom: 0;
+    @include breakpoint(medium up) {
+      border-top: 0;
+    }
+  }
 }
 
 .harja-more {
