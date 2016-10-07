@@ -116,7 +116,8 @@ WHERE sijainti IS NOT NULL AND
       (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)) AND
-      t.tyyppi :: TEXT IN (:tyypit);
+      t.tyyppi :: TEXT IN (:tyypit) AND
+      (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-turvallisuuspoikkeamat
 SELECT
