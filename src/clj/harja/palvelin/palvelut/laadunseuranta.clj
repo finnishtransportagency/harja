@@ -130,7 +130,8 @@
                         (:id tyyppi)
                         toimenpideinstanssi
                          urakka
-                         summa indeksi laatupoikkeama (or suorasanktio false))]
+                         summa indeksi laatupoikkeama (or suorasanktio false)
+                        (:id user))]
       (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
       (:id uusi-sanktio))
 
@@ -141,7 +142,8 @@
         toimenpideinstanssi
         urakka
         summa indeksi laatupoikkeama (or suorasanktio false)
-        id)
+        id
+        (:id user))
       (sanktiot/merkitse-maksuera-likaiseksi! db id)
       id)))
 
