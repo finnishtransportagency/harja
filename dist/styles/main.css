@@ -3884,7 +3884,7 @@ html, body {
 #harja-main-view {
   height: 100%;
   padding-top: 2em;
-  padding-bottom: 6rem; }
+  margin-bottom: 6rem; }
 
 .harja-sub-views {
   background-color: white;
