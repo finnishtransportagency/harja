@@ -25,8 +25,8 @@ $orange: #f79421;
 $orange-light: #f9a94d;
 $purple: #a678b4;
 
-$left-pad: 4rem;
-$right-pad: 4rem;
+$left-pad: 4em;
+$right-pad: 4em;
 $harja-button-pad: 3em;
 
 $logo-height: 4em;
@@ -52,8 +52,6 @@ html, body {
 }
 
 #harja-main-view {
-  padding-left: $left-pad;
-  padding-right: $right-pad;
   height: 100%;
   padding-top: 2em;
   padding-bottom: $harja-footer-height;

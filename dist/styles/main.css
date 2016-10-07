@@ -3882,8 +3882,6 @@ html, body {
   background-color: #f1f1f1; }
 
 #harja-main-view {
-  padding-left: 4rem;
-  padding-right: 4rem;
   height: 100%;
   padding-top: 2em;
   padding-bottom: 6rem; }
@@ -4089,8 +4087,8 @@ a.harja-notice-link {
   color: black;
   padding-top: 1em;
   padding-bottom: 1em;
-  padding-left: 4rem;
-  padding-right: 4rem; }
+  padding-left: 4em;
+  padding-right: 4em; }
 
 #harja-footer {
   height: 6rem;
@@ -4098,8 +4096,8 @@ a.harja-notice-link {
   color: white;
   padding-top: 1em;
   padding-bottom: 1em;
-  padding-left: 4rem;
-  padding-right: 4rem;
+  padding-left: 4em;
+  padding-right: 4em;
   margin-top: 2em;
   position: fixed;
   bottom: 0;
@@ -4122,8 +4120,8 @@ a.harja-notice-link {
   background-color: #3db7e4;
   padding-top: 0;
   padding-bottom: 0;
-  padding-left: 4rem;
-  padding-right: 4rem; }
+  padding-left: 4em;
+  padding-right: 4em; }
   .harja-menu ul {
     background-color: #3db7e4; }
   @media screen and (max-width: 39.9375em) {
