@@ -53,5 +53,5 @@
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do
-        (log/error "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia.")
+        (log/error (format "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia. XML: %s.") xml)
         nil))))
