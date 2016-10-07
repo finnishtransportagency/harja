@@ -15,8 +15,8 @@ let ListItem = React.createClass({
         <div className="row column">
           <div className="harja-date harja-icon-clock">{this.props.notice.date}</div>
         </div>
-        <div className="row">
-          <a className="harja-notice-link medium-12 small-12 columns" href="#" onClick={this.onclick}>{this.props.notice.title}</a>
+        <div className="row column">
+          <a className="harja-notice-link" href="#" onClick={this.onclick}>{this.props.notice.title}</a>
         </div>
       </div>
     );

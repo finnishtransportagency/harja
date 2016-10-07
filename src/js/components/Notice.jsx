@@ -4,7 +4,7 @@ export default React.createClass({
   getDefaultProps() {
     return {
       notice: {
-        date: 'Ei päivämäärää',
+        date: 'Ei päiväystä',
         title: '',
         short: '',
         body: '',
@@ -31,7 +31,7 @@ export default React.createClass({
         <div className="column row">
           <h4>{notice.title}</h4>
         </div>
-        <div className="row column">
+        <div className="column row">
           <div className="harja-date harja-icon-clock">{notice.date}</div>
         </div>
         <div className="column row">

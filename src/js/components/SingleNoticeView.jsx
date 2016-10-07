@@ -47,12 +47,12 @@ export default React.createClass({
           <div className="row column">
             <p><NavButton item={homeLink} /><span> &gt; </span><NavButton item={categoryLink} /><span> &gt; </span><a className="harja-breadcrumb" href="#">{title}</a></p>
           </div>
-        </div>
+      </div>
         <div className="harja-singlenotice-content row">
-          <div className="medium-8 columns">
+          <div className="small-12 medium-8 large-8 columns">
             <Notice notice={notice}/>
           </div>
-          <div className="harja-noticelist medium-4 columns">
+          <div className="harja-noticelist small-12 medium-4 large-4 columns">
             <NoticeList notices={notices} category={category}/>
           </div>
         </div>

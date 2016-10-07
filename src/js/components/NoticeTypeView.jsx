@@ -18,11 +18,9 @@ export default React.createClass({
 
     if (category) {
       listEl = (
-        <div className="row">
-          <div className="medium-12 small-12 columns">
-            <div className={className}>
-              <NoticeList notices={notices} category={category}/>
-            </div>
+        <div className="row column">
+          <div className={className}>
+            <NoticeList notices={notices} category={category}/>
           </div>
         </div>
       );
@@ -33,10 +31,10 @@ export default React.createClass({
 
       // If either content or body text is missing, use the whole row.
       // Otherwise split the display area
-      let className = 'medium-12 large-6 column';
+      let className = 'small-12 medium-12 large-6 column';
 
       if (!content.images || !content.body) {
-        className = 'medium-12 large-12 column';
+        className = 'small-12 medium-12 large-12 column';
       }
 
       if (content.images) {
@@ -71,7 +69,7 @@ export default React.createClass({
 
       titleEl = (
         <div className="harja-singlenotice-title">
-          <div className="medium-12 row column text-center">
+          <div className="row column text-center">
             <h3>{content.title}</h3>
             <p>{content.short}</p>
           </div>

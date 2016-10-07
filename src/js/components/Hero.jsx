@@ -32,13 +32,13 @@ export default React.createClass({
           <h4>Liikenneviraston Harja-projekti</h4>
           <p>Liikenneviraston väylien kunnossapidon seurannan ja raportoinnin järjestelmä Harja</p>
           <div className="row">
-            <div className="medium-4 column">
+            <div className="large-4 column">
               {moreCareEl}
             </div>
-            <div className="medium-4 column">
+            <div className="large-4 column">
               {moreMaintenanceEl}
             </div>
-            <div className="medium-4 column">
+            <div className="large-4 column">
               {moreFaqEl}
             </div>
           </div>
