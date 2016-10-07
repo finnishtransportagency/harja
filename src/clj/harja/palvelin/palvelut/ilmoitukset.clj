@@ -292,7 +292,16 @@
     (log/debug "Löydettiin tiedot " (count tulos) " ilmoitukselle.")
     tulos))
 
+(defn- tarkista-oikeudet [db user ilmoitustoimenpiteet]
+  (let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
+                                                 (konv/seq->array
+                                                   (map
+                                                     :ilmoituksen-id ilmoitustoimenpiteet)))]
+    (doseq [urakka-id urakka-idt]
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id))))
+
 (defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
+  (tarkista-oikeudet db user ilmoitustoimenpiteet)
   (vec
     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))
