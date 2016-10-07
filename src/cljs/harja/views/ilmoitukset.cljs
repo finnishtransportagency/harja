@@ -32,7 +32,8 @@
             [harja.ui.notifikaatiot :as notifikaatiot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
@@ -192,7 +193,9 @@
              ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
       (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
             valitse-ilmoitus! (when kuittaa-monta-nyt
-                                #(e! (v/->ValitseKuitattavaIlmoitus %)))]
+                                #(e! (v/->ValitseKuitattavaIlmoitus %)))
+            voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                                      (:id @nav/valittu-urakka))]
         [:span.ilmoitukset
 
          [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -207,7 +210,8 @@
 
           (when-not kuittaa-monta-nyt
             [napit/yleinen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
-             {:luokka "pull-right kuittaa-monta"}])
+             {:luokka "pull-right kuittaa-monta"
+              :disabled (not voi-kirjoittaa?)}])
 
           (when kuittaa-monta-nyt
             [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
