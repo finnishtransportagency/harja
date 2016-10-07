@@ -63,7 +63,7 @@ export default React.createClass({
       }
 
       contentEl = (
-        <div className="row">
+        <div className="harja-singlenotice-content row">
           {bodyEl}
           {imagesEl}
         </div>
