@@ -1,9 +1,14 @@
 import React, {PropTypes} from 'react';
 import {Events, Category} from '../enums.js';
 import NavButton from './NavButton.jsx'
+import pubsub from 'pubsub-js';
 
 
 export default React.createClass({
+  onclick: function() {
+    pubsub.publish(Events.NAV, {action: Events.HOME});
+  },
+
   render() {
     const largeButtonLinks = [
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}, buttonStyle: 'large button'},
@@ -33,10 +38,12 @@ export default React.createClass({
 
         <div className="harja-title-bar title-bar" data-responsive-toggle="top-menu" data-hide-for="large">
           <div className="top-bar-left">
-            <img className="harja-menu-logo" src="images/harja_logo.png" alt="harja logo" />
+            <a href="#" onClick={this.onclick}>
+              <img className="harja-menu-logo" src="images/harja_logo.png" alt="harja logo" />
+            </a>
           </div>
           <div className="top-bar-right">
-            <button className="harja-icon-menu" type="button" data-toggle></button>
+            <button className="harja-icon-menu" type="button" data-toggle="top-menu"></button>
           </div>
         </div>
 

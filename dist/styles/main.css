@@ -3897,12 +3897,12 @@ a:visited {
   color: #0088ce; }
 
 .harja-menu-logo {
-  height: 4em; }
+  height: 3em; }
 
 .harja-icon-menu::before {
   content: "";
-  width: 4em;
-  height: 4em;
+  width: 3em;
+  height: 3em;
   display: block;
   float: left;
   background: url("menu.png");
@@ -4087,7 +4087,7 @@ a.harja-notice-link {
     background-color: #97999b; }
 
 .livi-header-logo {
-  height: 4em;
+  height: 3em;
   margin-right: 1em; }
 
 .livi-footer-logo {
