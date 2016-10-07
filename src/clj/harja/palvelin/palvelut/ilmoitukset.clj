@@ -261,11 +261,13 @@
         ilmoitustoimenpiteet [(when (and (= tyyppi :aloitus)
                                          (not (q/ilmoitukselle-olemassa-vastaanottokuittaus? db ulkoinen-ilmoitusid)))
                                 (let [aloitus-kuittaus (tallenna "vastaanotto" "Vastaanotettu" nil)]
-                                  (tloik/laheta-ilmoitustoimenpide tloik (:id aloitus-kuittaus))
+                                  (when tloik
+                                    (tloik/laheta-ilmoitustoimenpide tloik (:id aloitus-kuittaus)))
                                   aloitus-kuittaus))
 
                               (let [kuittaus (tallenna (name tyyppi) vapaateksti vakiofraasi)]
-                                (tloik/laheta-ilmoitustoimenpide tloik (:id kuittaus))
+                                (when tloik
+                                  (tloik/laheta-ilmoitustoimenpide tloik (:id kuittaus)))
                                 kuittaus)]]
 
     (vec (remove nil? ilmoitustoimenpiteet))))
@@ -294,9 +296,8 @@
 
 (defn- tarkista-oikeudet [db user ilmoitustoimenpiteet]
   (let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
-                                                 (konv/seq->array
-                                                   (map
-                                                     :ilmoituksen-id ilmoitustoimenpiteet)))]
+                                                 (map
+                                                     :ilmoituksen-id ilmoitustoimenpiteet))]
     (doseq [urakka-id urakka-idt]
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id))))
 
