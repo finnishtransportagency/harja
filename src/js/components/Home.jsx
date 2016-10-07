@@ -67,17 +67,17 @@ export default React.createClass({
       mainEl = (
         <div id="harja-main-view">
           <div className="row">
-            <div className="medium-12 large-4 columns">
+            <div className="small-12 medium-12 large-4 columns">
               <div className="harja-noticelist harja-care-noticelist">
                 <NoticeList notices={care} category={Category.CARE} shorten={3}/>
               </div>
             </div>
-            <div className="medium-12 large-4  columns">
+            <div className="small-12 medium-12 large-4  columns">
               <div className="harja-noticelist harja-maintenance-noticelist">
                 <NoticeList notices={maintenance} category={Category.MAINTENANCE} shorten={3}/>
               </div>
             </div>
-            <div className="medium-12 large-4  columns">
+            <div className="small-12 medium-12 large-4  columns">
               <div className="harja-noticelist harja-faq-noticelist">
                 <NoticeList notices={faq} category={Category.FAQ} shorten={3}/>
               </div>
