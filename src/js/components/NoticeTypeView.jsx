@@ -5,38 +5,19 @@ import {Category} from '../enums.js';
 export default React.createClass({
   getDefaultProps() {
     return {
-      category: null
+      category: null,
+      notices: [],
+      content: null
     };
   },
 
   render() {
-    let {notice, category, notices} = this.props;
-    let title, body;
+    let {category, notices, content} = this.props;
+    let titleEl, contentEl, listEl;
     let className = 'harja-noticelist harja-' + category + '-noticelist';
 
-    switch (category) {
-      case Category.CARE:
-        title = 'Teiden hoito';
-        body = 'Teitä hoidetaan lorem ipsum......'
-        break;
-      case Category.MAINTENANCE:
-        title = 'Teiden huolto';
-        body = 'Teitä huolletaan lorem ipsum......'
-        break;
-      case Category.FAQ:
-        title = 'UKK';
-        body = 'Meiltä kysytään usein lorem ipsum....'
-        break;
-    }
-
-    return (
-      <div>
-        <div className="row">
-          <div className="medium-8 columns">
-            <h1>{title}</h1>
-            <p>{body}</p>
-          </div>
-        </div>
+    if (category) {
+      listEl = (
         <div className="row">
           <div className="medium-12 small-12 columns">
             <div className={className}>
@@ -44,6 +25,65 @@ export default React.createClass({
             </div>
           </div>
         </div>
+      );
+    }
+
+    if (content) {
+      let imagesEl, bodyEl;
+
+      // If either content or body text is missing, use the whole row.
+      // Otherwise split the display area
+      let className = 'medium-12 large-6 column';
+
+      if (!content.images || !content.body) {
+        className = 'medium-12 large-12 column';
+      }
+
+      if (content.images) {
+        const imageList = (
+          content.images.map( (url, index) =>
+            <div className="harja-notice-image column row" key={index}>
+              <img src={url} />
+            </div>
+          )
+        );
+        imagesEl = (
+            <div className={className}>
+              {imageList}
+          </div>
+        );
+      }
+
+      if (content.body) {
+        bodyEl = (
+          <div className={className}>
+            <p>{content.body}</p>
+          </div>
+        );
+      }
+
+      contentEl = (
+        <div className="row">
+          {bodyEl}
+          {imagesEl}
+        </div>
+      );
+
+      titleEl = (
+        <div className="harja-singlenotice-title">
+          <div className="medium-12 row column text-center">
+            <h3>{content.title}</h3>
+            <p>{content.short}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        {titleEl}
+        {contentEl}
+        {listEl}
       </div>
     );
   }

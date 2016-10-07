@@ -37,7 +37,7 @@ export default React.createClass({
   },
 
   render() {
-    let {care, maintenance, faq} = this.props;
+    let {care, maintenance, faq, content} = this.props;
     let {selection} = this.state;
     let heroEl, devEl, mainEl, singleNoticeEl, noticeTypeEl;
 
@@ -52,7 +52,9 @@ export default React.createClass({
         );
     }
     else if (selection && selection.category) {
-      const props = {category: selection.category, notices: this.props[selection.category]}
+      const props = {category: selection.category,
+        notices: this.props[selection.category],
+        content: this.props.content.find( item => ( item.category === selection.category ))}
       noticeTypeEl = (
         <div className="harja-sub-views">
           <NoticeTypeView {...props}/>

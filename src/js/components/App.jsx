@@ -13,6 +13,7 @@ export default React.createClass({
     initialState[Category.CARE] = []
     initialState[Category.MAINTENANCE] = []
     initialState[Category.FAQ] = []
+    initialState[Category.CONTENT] = []
     return initialState;
   },
 
@@ -30,11 +31,13 @@ export default React.createClass({
       setTimeout(() => { this.getNotices(careUrl, Category.CARE); }, 500);
       setTimeout(() => { this.getNotices(maintenanceUrl, Category.MAINTENANCE); }, 3000);
       setTimeout(() => { this.getNotices(faqUrl, Category.FAQ); }, 5000);
+      setTimeout(() => { this.getContent(); }, 5000);
     }
     else {
       this.getNotices(careUrl, Category.CARE);
       this.getNotices(maintenanceUrl, Category.MAINTENANCE);
       this.getNotices(faqUrl, Category.FAQ);
+      this.getContent();
     }
   },
 
@@ -87,6 +90,29 @@ export default React.createClass({
 
         this.setState({
           [type]: notices,
+        });
+      });
+  },
+
+  getContent() {
+    const url = 'data/content.json';
+    request.get(url)
+      .set('Accept', 'application/json')
+      .end((err, response) => {
+        if (err) return console.error(err);
+
+        const contents = response.body.map((content) => {
+            content.title = content.title || '';
+            content.short = content.short || null;
+            content.body = content.body || null;
+            content.images = content.images || null;
+            if (content.images && content.images.length < 1) content.images = null;
+            return content;
+          })
+
+
+        this.setState({
+          [Category.CONTENT]: contents,
         });
       });
   },

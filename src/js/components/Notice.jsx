@@ -4,8 +4,11 @@ export default React.createClass({
   getDefaultProps() {
     return {
       notice: {
+        date: 'Ei päivämäärää',
         title: '',
-        body: ''
+        short: '',
+        body: '',
+        images: []
       }
     };
   },
@@ -18,7 +21,7 @@ export default React.createClass({
     const images = notice.images;
     let imagesEl = (
         images.map( (url, index) =>
-          <div className="column row harja-notice-image" key={index}>
+          <div className="harja-notice-image column row" key={index}>
             <img src={url} />
           </div>
         )
