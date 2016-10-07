@@ -24,6 +24,8 @@ To build deployment (minified) version of code, run:
 $ npm run build
 ```
 
+In order to load test data add "?test" parameter to address eg. http://localhost:8080/?test
+
 
 ## Adding notices
 
