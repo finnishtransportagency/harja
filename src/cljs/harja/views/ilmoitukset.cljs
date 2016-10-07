@@ -193,9 +193,7 @@
              ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
       (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
             valitse-ilmoitus! (when kuittaa-monta-nyt
-                                #(e! (v/->ValitseKuitattavaIlmoitus %)))
-            voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
-                                                      (:id @nav/valittu-urakka))]
+                                #(e! (v/->ValitseKuitattavaIlmoitus %)))]
         [:span.ilmoitukset
 
          [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -210,8 +208,7 @@
 
           (when-not kuittaa-monta-nyt
             [napit/yleinen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
-             {:luokka "pull-right kuittaa-monta"
-              :disabled (not voi-kirjoittaa?)}])
+             {:luokka "pull-right kuittaa-monta"}])
 
           (when kuittaa-monta-nyt
             [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
@@ -232,11 +229,14 @@
                :tasaa :keskita
                :tyyppi :komponentti
                :komponentti (fn [rivi]
-                              (let [liidosta-tullut? (not (:ilmoitusid rivi))]
+                              (let [liidosta-tullut? (not (:ilmoitusid rivi))
+                                    kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                                                               (:urakka rivi))]
                                 [:span (when liidosta-tullut?
                                          {:title tiedot/vihje-liito})
                                  [:input {:type "checkbox"
-                                          :disabled liidosta-tullut?
+                                          :disabled (or liidosta-tullut?
+                                                        (not kirjoitusoikeus?))
                                           :checked (valitut-ilmoitukset rivi)}]]))
                :leveys 1})
             {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
