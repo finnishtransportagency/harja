@@ -29,8 +29,7 @@
             (into []
                   (if @tuleville?
                     (u/rivit-tulevillekin-kausille ur uudet-tyot valittu-hoitokausi)
-                    uudet-tyot
-                    ))
+                    uudet-tyot))
             res (<! (yks-hint-tyot/tallenna-urakan-yksikkohintaiset-tyot ur sopimusnumero muuttuneet))
             prosessoidut-tyorivit (s/prosessoi-tyorivit ur res)]
         (reset! tyot prosessoidut-tyorivit)
@@ -175,6 +174,7 @@
            :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
                        #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-yks-hint-tyot %)
                        :ei-mahdollinen)
+           :tallenna-vain-muokatut false
            :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
                                               :kirjoitus
                                               oikeudet/urakat-suunnittelu-yksikkohintaisettyot)
