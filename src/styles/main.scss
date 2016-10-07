@@ -36,7 +36,7 @@ $harja-loading-height: 6em;   // 3*logo-height-small
 $harja-list-top-height: 0.5em;
 $harja-list-bottom-height: 0.2em;
 
-$harja-footer-height: 6rem; // logo:4 + top:1 + bottom:1
+$harja-footer-height: 4em; // logo:2 + top:1 + bottom:1
 
 html, body {
   height: 100%;
@@ -316,6 +316,10 @@ a.harja-notice-link {
   margin-right: 1em;
 }
 
+.livi-footer-logo {
+  height: $logo-height-small;
+}
+
 .harja-header {
   background-color: white;
   color: black;
@@ -323,35 +327,6 @@ a.harja-notice-link {
   padding-bottom: 1em;
   padding-left: $left-pad;
   padding-right: $right-pad;
-}
-
-#harja-footer {
-  height: $harja-footer-height;
-  background-color: $grey-dark;
-  color: white;
-  padding-top: 1em;
-  padding-bottom: 1em;
-  padding-left: $left-pad;
-  padding-right: $right-pad;
-  margin-top: 2em;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  p {
-    text-align: right;
-  }
-  .columns {
-    padding-left: 0;
-    padding-right: 0;
-  }
-  @include breakpoint(small only) {
-    .livi-header-logo {
-      display: none;
-    }
-    p {
-      text-align: center;
-    }
-  }
 }
 
 .harja-title-bar {
@@ -390,5 +365,34 @@ a.harja-notice-link {
   .button:hover,
   .button:focus {
     background-color: $blue;
+  }
+}
+
+#harja-footer {
+  height: $harja-footer-height;
+  background-color: $grey-dark;
+  color: white;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  padding-left: $left-pad;
+  padding-right: $right-pad;
+  margin-top: 2em;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  p {
+    text-align: right;
+  }
+  .columns {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  @include breakpoint(small only) {
+    .livi-header-logo {
+      display: none;
+    }
+    p {
+      text-align: center;
+    }
   }
 }

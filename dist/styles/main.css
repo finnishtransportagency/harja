@@ -3884,11 +3884,11 @@ html, body {
 #harja-main-view {
   height: 100%;
   padding-top: 2em;
-  margin-bottom: 6rem; }
+  margin-bottom: 4em; }
 
 .harja-sub-views {
   background-color: white;
-  padding-bottom: 6rem; }
+  padding-bottom: 4em; }
 
 a {
   color: #3db7e4; }
@@ -4082,6 +4082,9 @@ a.harja-notice-link {
   height: 4em;
   margin-right: 1em; }
 
+.livi-footer-logo {
+  height: 2em; }
+
 .harja-header {
   background-color: white;
   color: black;
@@ -4089,29 +4092,6 @@ a.harja-notice-link {
   padding-bottom: 1em;
   padding-left: 4em;
   padding-right: 4em; }
-
-#harja-footer {
-  height: 6rem;
-  background-color: #4b4b4b;
-  color: white;
-  padding-top: 1em;
-  padding-bottom: 1em;
-  padding-left: 4em;
-  padding-right: 4em;
-  margin-top: 2em;
-  position: fixed;
-  bottom: 0;
-  width: 100%; }
-  #harja-footer p {
-    text-align: right; }
-  #harja-footer .columns {
-    padding-left: 0;
-    padding-right: 0; }
-  @media screen and (max-width: 39.9375em) {
-    #harja-footer .livi-header-logo {
-      display: none; }
-    #harja-footer p {
-      text-align: center; } }
 
 .harja-title-bar {
   background-color: #3db7e4; }
@@ -4139,3 +4119,26 @@ a.harja-notice-link {
 .harja-menu li .button:hover,
 .harja-menu li .button:focus {
   background-color: #0088ce; }
+
+#harja-footer {
+  height: 4em;
+  background-color: #4b4b4b;
+  color: white;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  padding-left: 4em;
+  padding-right: 4em;
+  margin-top: 2em;
+  position: fixed;
+  bottom: 0;
+  width: 100%; }
+  #harja-footer p {
+    text-align: right; }
+  #harja-footer .columns {
+    padding-left: 0;
+    padding-right: 0; }
+  @media screen and (max-width: 39.9375em) {
+    #harja-footer .livi-header-logo {
+      display: none; }
+    #harja-footer p {
+      text-align: center; } }
