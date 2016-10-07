@@ -65,28 +65,35 @@ export default React.createClass({
         // 2. Sort notices by date. Those with no date to bottom
         // 3. Add running index number and stringify date
         const notices = response.body.map((notice) => {
-            let d = new Date(notice.date+'Z');
-            if (isNaN( d.getTime() )) {
-              d = null;
+          // This way works on iphone and others
+          let d = null;
+          if (notice.date) {
+            var arr = notice.date.split(/[-]/);
+            if (arr.length >= 3) {
+              d = new Date(arr[0], arr[1]-1, arr[2]);
+              if (isNaN( d.getTime() )) {
+                d = null;
+              }
             }
-            notice.date = d;
-            return notice;
-          })
-          .sort((a,b) => {
-              if (a.date === null && b.date === null) return 0;
-              if (a.date === null) return 1;
-              if (b.date === null) return -1;
-              return b.date.getTime() - a.date.getTime()
-          })
-          .map((notice, index) => {
-            notice.id = index;
-            notice.type = type
-            notice.date = notice.date === null ? 'Ei päivämäärää' : notice.date.toLocaleDateString('fi-FI');
-            notice.title = notice.title || this.defaultTitle(type);
-            notice.body = notice.body || '';
-            notice.images = notice.images || [];
-            return notice;
-          });
+          }
+          notice.date = d;
+          return notice;
+        })
+        .sort((a,b) => {
+          if (a.date === null && b.date === null) return 0;
+          if (a.date === null) return 1;
+          if (b.date === null) return -1;
+          return b.date.getTime() - a.date.getTime()
+        })
+        .map((notice, index) => {
+          notice.id = index;
+          notice.type = type
+          notice.date = notice.date === null ? 'Ei päivämäärää' : notice.date.toLocaleDateString('fi-FI');
+          notice.title = notice.title || this.defaultTitle(type);
+          notice.body = notice.body || '';
+          notice.images = notice.images || [];
+          return notice;
+        });
 
         this.setState({
           [type]: notices,
