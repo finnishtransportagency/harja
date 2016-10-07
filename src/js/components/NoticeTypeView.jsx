@@ -57,7 +57,7 @@ export default React.createClass({
       if (content.body) {
         bodyEl = (
           <div className={className}>
-            <p>{content.body}</p>
+            <p dangerouslySetInnerHTML={{__html: content.body}}></p>
           </div>
         );
       }

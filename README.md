@@ -84,3 +84,44 @@ images  : array           : optional : Array of urls pointing to either this pro
 	}
 ]
 ```
+
+
+## Adding content
+
+To edit content on the "Teiden hoito", "Teiden ylläpito" and "Usein kysytyt kysymykset" edit the "content.json" -file on data-folder
+
+
+## "Content" -file fields:
+
+category: text						: mandatory, must be one of: "care", "maintenance" or "faq"
+title   : text            : optional
+short   : text            : optional
+body    : text/html       : optional : Can be left out but that makes no sense. Remember to escape quotes etc if you put in html like video embed codes.
+images  : array           : optional : Array of urls pointing to either this project folder or outside source (see examples)
+
+
+## Example "Content" -file:
+
+[
+	{
+		"category": "care",
+		"title": "Teiden hoito",
+    "short": "Lorem ipsum dolor sit amet",
+    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "images": ["/images/hoidon-aikataulu-2016.png"]
+	},
+  {
+		"category": "maintenance",
+		"title": "Teiden ylläpito",
+    "short": "Lorem ipsum dolor sit amet",
+    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "images": ["/images/yllapidon-aikataulu-2016.png"]
+	},
+  {
+    "category": "faq",
+    "title": "Usein kysytyt kysymykset",
+    "short": "Lorem ipsum dolor sit amet",
+    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "images": []
+  }
+]
