@@ -3954,15 +3954,6 @@ a:visited {
   padding-left: 0;
   color: #c8c8c8; }
 
-.harja-noticelist {
-  background-color: white;
-  border-left: 0;
-  border-right: 0;
-  padding: 1em; }
-
-.harja-noticelist-item {
-  margin-bottom: 1em; }
-
 .harja-breadcrumbs {
   background-color: #4b4b4b;
   padding-top: 0.5em;
@@ -3985,6 +3976,9 @@ a.harja-breadcrumb:focus {
 a.harja-breadcrumb:visited {
   color: white; }
 
+.harja-singlenotice-content {
+  padding-top: 2em; }
+
 .harja-more a::after {
   content: " \00BB"; }
 
@@ -3996,15 +3990,29 @@ a.harja-notice-link {
 .harja-notice-image {
   margin-bottom: 1rem; }
 
+.harja-noticelist {
+  background-color: white;
+  border-left: 0;
+  border-right: 0;
+  padding: 0 1em 1em 1em; }
+  .harja-noticelist ul {
+    margin-left: 0; }
+
+.harja-noticelist-item {
+  margin-bottom: 1em; }
+
 .harja-care-noticelist {
+  padding-top: 1em;
   border-top: 0.5em solid #9eb83d;
   border-bottom: 0.2em solid #c8c8c8; }
 
 .harja-maintenance-noticelist {
+  padding-top: 1em;
   border-top: 0.5em solid #f79421;
   border-bottom: 0.2em solid #c8c8c8; }
 
 .harja-faq-noticelist {
+  padding-top: 1em;
   border-top: 0.5em solid #0088ce;
   border-bottom: 0.2em solid #c8c8c8; }
 
