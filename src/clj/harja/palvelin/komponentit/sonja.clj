@@ -108,7 +108,10 @@
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
   (try
     (let [qcf (luo-connection-factory url tyyppi)
-          yhteys (.createConnection qcf kayttaja salasana)]
+          yhteys (doto (.createConnection qcf kayttaja salasana)
+                   (.setExceptionListener (reify javax.jms.ExceptionListener
+                                            (onException [_ e]
+                                              (log/error e "JMS-poikkeus: " (.getMessage e))))))]
       (.start yhteys)
       yhteys)
     (catch Exception e
