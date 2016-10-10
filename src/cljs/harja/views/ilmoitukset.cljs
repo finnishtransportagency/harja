@@ -254,12 +254,10 @@
 
 (defn- ilmoitukset* [e! ilmoitukset]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
-  (log "YHDISTÄ ALKUVALINNAT")
   (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
   (komp/luo
    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                   (log "YHDISTÄ MUUTTUNEET VALINNAT")
                                    (e! (v/->YhdistaValinnat uusi))))
    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))

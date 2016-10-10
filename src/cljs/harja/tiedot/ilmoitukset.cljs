@@ -138,7 +138,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
-    (log "   YHDISTETAAN " (pr-str valinnat))
     (hae
       ;; Kun näkymään tullaan ensimmäistä kertaa, aseta oletus aikaväliksi nykypäivästä 7 päivää taaksepäin
       (let [valinnat (if (get-in app [:valinnat :aikavali])
@@ -158,7 +157,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                #(if (empty? %) +ilmoitustyypit+ %))
                        (update :tilat
                                #(if (empty? %) (into #{} tila-filtterit) %)))]
-          (log "---- HAETAAN: " (pr-str haku))
           (tulos!
            {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))
             :taustahaku? taustahaku?}))))
