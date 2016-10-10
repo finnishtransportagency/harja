@@ -362,14 +362,14 @@
                               :palstoja 1
                               :tyyppi :checkbox
                               :teksti "Sairauspoissaolo jatkuu"})
-               {:otsikko "Vammat"
+               {:otsikko "Vamma"
                 :nimi :vammat
                 :uusi-rivi? true
                 :palstoja 1
                 :tyyppi :valinta
                 :valinnat turpodomain/vammat-avaimet-jarjestyksessa
                 :valinta-nayta #(or (turpodomain/vammat %) "- valitse -")}
-               {:otsikko "Vahingoittuneet ruumiinosat"
+               {:otsikko "Vahingoittunut ruumiinosat"
                 :nimi :vahingoittuneetruumiinosat
                 :palstoja 1
                 :tyyppi :valinta
