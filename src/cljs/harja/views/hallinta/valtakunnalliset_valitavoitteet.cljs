@@ -103,18 +103,21 @@
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      [:div
-       [suodattimet]
-       [kertaluontoiset-valitavoitteet-grid
-        tiedot/valitavoitteet
-        tiedot/kertaluontoiset-valitavoitteet]
-       [:br]
-       [toistuvat-valitavoitteet-grid
-        tiedot/valitavoitteet
-        tiedot/toistuvat-valitavoitteet]
-       [yleiset/vihje-elementti
-        [:span
-         "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
-         [:br] "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
-         [:br] "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
-         [:br] "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]])))
+      (let [nayta-valtakunnalliset? (some? (tiedot/valtakunnalliset-valitavoitteet-kaytossa
+                                             (:arvo @tiedot/valittu-urakkatyyppi)))]
+        [:div
+        [suodattimet]
+        [kertaluontoiset-valitavoitteet-grid
+         tiedot/valitavoitteet
+         tiedot/kertaluontoiset-valitavoitteet]
+        [:br]
+         (when nayta-valtakunnalliset?
+           [toistuvat-valitavoitteet-grid
+            tiedot/valitavoitteet
+            tiedot/toistuvat-valitavoitteet])
+         [yleiset/vihje-elementti
+          [:span
+           "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
+           [:br] "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
+           [:br] "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
+           [:br] "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]))))
