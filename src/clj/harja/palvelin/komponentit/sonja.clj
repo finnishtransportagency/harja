@@ -49,8 +49,7 @@
       connection-factory
       (doto connection-factory
         (.setFaultTolerant true)
-        (.setFaultTolerantReconnectTimeout (int 0))
-        (.setPingInterval (int 60))))))
+        (.setFaultTolerantReconnectTimeout (int 600))))))
 
 (defn- viestin-kasittelija [kasittelija]
   (let [ch (async/chan)]
@@ -108,10 +107,7 @@
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
   (try
     (let [qcf (luo-connection-factory url tyyppi)
-          yhteys (doto (.createConnection qcf kayttaja salasana)
-                   (.setExceptionListener (reify javax.jms.ExceptionListener
-                                            (onException [_ e]
-                                              (log/error e "JMS-poikkeus: " (.getMessage e))))))]
+          yhteys (.createConnection qcf kayttaja salasana)]
       (.start yhteys)
       yhteys)
     (catch Exception e
