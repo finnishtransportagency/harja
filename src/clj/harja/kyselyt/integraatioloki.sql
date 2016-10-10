@@ -1,11 +1,13 @@
 -- name: luo-integraatiotapahtuma<!
 -- Luo uuden hankkeen.
-INSERT INTO integraatiotapahtuma (integraatio, alkanut, ulkoinenid)
-VALUES ((SELECT id
-         FROM integraatio
-         WHERE jarjestelma = :jarjestelma AND nimi = :nimi),
-        current_timestamp,
-        :ulkoinenid);
+INSERT INTO integraatiotapahtuma (kasitteleva_palvelin, integraatio, alkanut, ulkoinenid)
+VALUES
+  (:kasittelevapalvelin,
+   (SELECT id
+    FROM integraatio
+    WHERE jarjestelma = :jarjestelma AND nimi = :nimi),
+   current_timestamp,
+   :ulkoinenid);
 
 -- name: merkitse-integraatiotapahtuma-paattyneeksi!
 -- Paivittaa hankkeen Samposta saaduilla tiedoilla
