@@ -240,10 +240,24 @@
            :tr_loppuetaisyys (:let koko-tarkastuksen-tr-osoite)
            :lahde "harja-ls-mobiili")))
 
+(defn hae-tallennettavan-tarkastuksen-sijainti
+  [db {tie :tr_numero
+       alkuosa :tr_alkuosa alkuet :tr_alkuetaisyys
+       loppuosa :tr_loppuosa loppuet :tr_loppuetaisyys}]
+  (when (and tie alkuosa alkuet)
+    (let [viiva? (and loppuosa loppuet)]
+      (:geom
+       (first (q/tr-osoitteelle-viiva
+               db
+               {:tr_numero tie
+                :tr_alkuosa alkuosa
+                :tr_alkuetaisyys alkuet
+                :tr_loppuosa (if viiva? loppuosa alkuosa)
+                :tr_loppuetaisyys (if viiva? loppuet alkuet)}))))))
+
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (let [tarkastus (luo-tallennettava-tarkastus tarkastus kayttaja)
-        geometria (:geom (first (q/tr-osoitteelle-viiva db
-                                                        tarkastus )))
+        geometria (hae-tallennettavan-tarkastuksen-sijainti db tarkastus)
         tarkastus (assoc tarkastus :sijainti geometria)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus

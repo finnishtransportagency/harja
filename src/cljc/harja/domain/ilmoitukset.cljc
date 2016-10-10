@@ -12,7 +12,7 @@
   [:vastaanotto :aloitus :lopetus :muutos :vastaus])
 
 (def tilan-selite
-  {:kuittaamaton "Kuittamaton"
+  {:kuittaamaton "Kuittaamaton"
    :vastaanotettu "Vastaanotettu"
    :aloitettu "Aloitettu"
    :lopetettu "Lopetettu"})
