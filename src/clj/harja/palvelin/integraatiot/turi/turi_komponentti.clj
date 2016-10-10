@@ -18,12 +18,15 @@
 
 (defn kasittele-turin-vastaus [db harja-turpo-id headers body]
   (q/lokita-lahetys<! db true harja-turpo-id)
-  (let [turi-id (re-find #"\d+" body)
-        status (:status body)]
-    (if (and (= status 200)
-             (integer? turi-id))
-      (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
-      (log/error "TURI:in lähettämälle turvallisuuspoikkeamalle ei saatu id:tä."))))
+  (try
+    (let [turi-id (re-find #"\d+" body)
+         status (:status body)]
+     (if (and (= status 200)
+              (integer? turi-id))
+       (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
+       (log/error "TURI:in lähettämälle turvallisuuspoikkeamalle ei saatu id:tä.")))
+    (catch Exception e
+      (log/error e "Poikkeus TURI:n palauttaman id:n parsinnassa"))))
 
 (defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
   (let [liitteet (:liitteet turvallisuuspoikkeama)]
