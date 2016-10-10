@@ -186,7 +186,7 @@
                                  (ryhmittele-hinnoitellut @tyorivit))
            :piilota-toiminnot? true
            :muokkaa-footer (fn [g]
-                             [raksiboksi {:teksti "Tallenna tulevillekin hoitokausille"
+                             [raksiboksi {:teksti "Monista kaikki yo. tiedot tulevillekin hoitokausille"
                                           :toiminto #(swap! tuleville? not)
                                           :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                           :nayta-infoteksti? @varoita-ylikirjoituksesta?}
