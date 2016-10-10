@@ -211,7 +211,7 @@
         [:div
          [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
          (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
-           (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:in epäonnistui "
+           (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:iin epäonnistui "
                                          (pvm/pvm-aika (:lahetetty @turvallisuuspoikkeama)))))
          [lomake/lomake
           {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
@@ -220,16 +220,18 @@
                                                      %)]
                        (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
-           :footer [napit/palvelinkutsu-nappi
-                    "Tallenna turvallisuuspoikkeama"
-                    #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
-                    {:luokka "nappi-ensisijainen"
-                     :ikoni (ikonit/tallenna)
-                     :kun-onnistuu #(do
-                                     (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
-                                     (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                     :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
-                     :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]}
+           :footer [:div
+                    [napit/palvelinkutsu-nappi
+                     "Tallenna turvallisuuspoikkeama"
+                     #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
+                     {:luokka "nappi-ensisijainen"
+                      :ikoni (ikonit/tallenna)
+                      :kun-onnistuu #(do
+                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
+                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                      :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
+                      :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]
+                    [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]]}
           [{:otsikko "Tapahtuman otsikko"
             :nimi :otsikko
             :tyyppi :string
