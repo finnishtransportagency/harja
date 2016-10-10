@@ -1,7 +1,10 @@
 -- name: tallenna-reittimerkinta!
 INSERT INTO tarkastusreitti (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, kitkamittaus, havainnot, lampotila, tasaisuus, lumisuus, kuvaus, kuva,
                              polyavyys, sivukaltevuus, kiinteys, laadunalitus)
-     VALUES (:id, 0, :tarkastusajo, to_timestamp(:aikaleima/1000), ST_MakePoint(:x,:y), :kitkamittaus, ARRAY[:havainnot]::integer[], :lampotila, :tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys, :sivukaltevuus, :kiinteys, :laadunalitus);
+VALUES (:id, 0, :tarkastusajo, to_timestamp(:aikaleima / 1000), ST_MakePoint(:x, :y), :kitkamittaus,
+             ARRAY [:havainnot] :: INTEGER [], :lampotila, :tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys,
+        :sivukaltevuus, :kiinteys, :laadunalitus)
+ON CONFLICT DO NOTHING;
 
 -- name: hae-tarkastusajon-reittimerkinnat
 SELECT * FROM tarkastusreitti WHERE tarkastusajo = :tarkastusajo;
