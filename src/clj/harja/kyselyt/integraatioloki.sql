@@ -70,7 +70,8 @@ FROM integraatio;
 SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnistunut,
        i.id as integraatio_id,
        i.jarjestelma as integraatio_jarjestelma,
-       i.nimi as integraatio_nimi
+       i.nimi as integraatio_nimi,
+       it.kasitteleva_palvelin as "kasitteleva-palvelin"
   FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
  WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
@@ -82,7 +83,8 @@ SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnist
 SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnistunut,
        i.id as integraatio_id,
        i.jarjestelma as integraatio_jarjestelma,
-       i.nimi as integraatio_nimi
+       i.nimi as integraatio_nimi,
+       it.kasitteleva_palvelin as "kasitteleva-palvelin"
   FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
  WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)

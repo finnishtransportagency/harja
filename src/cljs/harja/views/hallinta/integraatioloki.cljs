@@ -212,8 +212,7 @@
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
-                               @tiedot/haetut-tapahtumat))
-      }
+                               @tiedot/haetut-tapahtumat))}
 
      (vec
        (keep identity
@@ -227,11 +226,12 @@
                               [:span.integraatioloki-varoitus (ikonit/aika) " Kesken"]
                               (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
                                                   [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
-              {:otsikko "Alkanut" :nimi :alkanut :leveys 15
+              {:otsikko "Alkanut" :nimi :alkanut :leveys 13
                :hae #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
-              {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
+              {:otsikko "Päättynyt" :nimi :paattynyt :leveys 13
                :hae #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
               {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
+              {:otsikko "Solmu" :nimi :kasitteleva-palvelin :leveys 17}
               {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
 
      @tiedot/haetut-tapahtumat]]])
