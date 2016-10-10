@@ -1,0 +1,38 @@
+[
+  {
+		"title": "Kirjautuminen",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/-UrAR3Qc1IM\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Navigointi",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/w1prz7IM45Y\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Urakan yleiset tiedot",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/KJPcMLydqQo\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Urakan suunnittelutiedot",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/KJPcMLydqQo\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Raportit",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/E8rK_YtIu2w\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Tilannekuva",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/g1yyPcnyTmg\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Ilmoitusten työnkulkujen yleiskuva",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/rNr2mYUEWKU\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Ilmoitusten haku & tarkastelu",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/DCzJTwJMCe4\" frameborder=\"0\" allowfullscreen></iframe>"
+	},
+  {
+		"title": "Ilmoitustekstiviestit, -sähköposti & kuittausten tekeminen",
+		"body": "<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/S94I5ykW_h4\" frameborder=\"0\" allowfullscreen></iframe>"
+	}
+]
