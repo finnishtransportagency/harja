@@ -25,7 +25,8 @@
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka :as urakka])
+            [harja.tiedot.urakka :as urakka]
+            [harja.domain.roolit :as roolit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -198,6 +199,29 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
          (when (tietoja-annettu-fn?)
            {:validoi [[:ei-tyhja viesti]]
             :pakollinen? true})))
+
+(defn nayta-siirtymisnappi?
+  "Nappi näytetään jos laatupoikkeamalle on tarkastus JA; tarkastus on julkinen TAI käyttäjä on tilaajan edustaja"
+  [{:keys [tarkastusid nayta-tarkastus-urakoitsijalle]}]
+  (and tarkastusid
+       (or nayta-tarkastus-urakoitsijalle
+           (roolit/tilaajan-kayttaja? @istunto/kayttaja))))
+
+(defn siirtymisnapin-vihje [{:keys [nayta-tarkastus-urakoitsijalle]}]
+  (cond
+    nayta-tarkastus-urakoitsijalle
+    "Tallentaa muutokset ja avaa tarkastuksen, jonka pohjalta laatupoikkeama on tehty."
+
+    (not nayta-tarkastus-urakoitsijalle)
+    "Tallentaa muutokset ja avaa urakoitsijalta piilotetun tarkastuksen, jonka pohjalta laatupoikkeama on tehty."))
+
+(defn siirtymisnapin-teksti [{:keys [nayta-tarkastus-urakoitsijalle]}]
+  (cond
+    (not nayta-tarkastus-urakoitsijalle)
+    "Avaa piilotettu tarkastus"
+
+    nayta-tarkastus-urakoitsijalle
+    "Avaa tarkastus"))
 
 (defn laatupoikkeamalomake
   ([laatupoikkeama] (laatupoikkeamalomake laatupoikkeama {}))
@@ -421,15 +445,15 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                              #(swap! laatupoikkeama assoc :sanktiot %))
                                      sanktio-virheet
                                      paatosoikeus?])})
-                  (when (:tarkastusid @laatupoikkeama)
+                  (when (nayta-siirtymisnappi? @laatupoikkeama)
                     {:rivi? true
                      :uusi-rivi? true
                      :nimi :laatupoikkeama
-                     :vihje "Tallentaa muutokset ja avaa tarkastuksen, jonka pohjalta laatupoikkeama on tehty."
+                     :vihje (siirtymisnapin-vihje @laatupoikkeama)
                      :tyyppi :komponentti
                      :komponentti (fn [_]
                                     [napit/yleinen
-                                    "Avaa tarkastus"
+                                    (siirtymisnapin-teksti @laatupoikkeama)
                                     (fn []
                                       (tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
                                       (avaa-tarkastus (:tarkastusid @laatupoikkeama)))

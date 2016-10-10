@@ -13,7 +13,7 @@
             [harja.domain.hoitoluokat :as hoitoluokat]
             [clojure.string :as str]))
 
-(defn hae-tarkastukset [db {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero
+(defn hae-tarkastukset [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero
                                    laadunalitus]}]
   (tarkastukset-q/hae-laaduntarkastukset db
                                          {:urakka urakka-id
@@ -21,7 +21,8 @@
                                           :alku alkupvm
                                           :loppu loppupvm
                                           :tienumero tienumero
-                                          :laadunalitus laadunalitus}))
+                                          :laadunalitus laadunalitus
+                                          :kayttaja_on_urakoitsija (roolit/urakoitsija? user)}))
 
 
 (defn talvihoitomittaus [{:keys [talvihoitoluokka lumimaara tasaisuus kitka lampotila]}]
@@ -57,7 +58,7 @@
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
                                (hae-tarkastukset
-                                db {:konteksti konteksti
+                                db user {:konteksti konteksti
                                     :urakka-id urakka-id
                                     :hallintayksikko-id hallintayksikko-id
                                     :alkupvm alkupvm

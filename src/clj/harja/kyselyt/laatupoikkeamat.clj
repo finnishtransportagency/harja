@@ -24,7 +24,7 @@
                                                 (konv/sql-timestamp aika)
                                                 (when tekija (name tekija))
                                                 kohde
-                                                (if selvitys-pyydetty true false)
+                                                (boolean selvitys-pyydetty)
                                                 (:id user)
                                                 kuvaus
                                                 (when sijainti (geo/geometry (geo/clj->pg sijainti)))
@@ -44,7 +44,7 @@
                                  (konv/sql-timestamp aika)
                                  (when tekija (name tekija))
                                  kohde
-                                 (if selvitys-pyydetty true false)
+                                 (boolean selvitys-pyydetty)
                                  (:id user)
                                  kuvaus
                                  (when sijainti (geo/geometry (geo/clj->pg sijainti)))

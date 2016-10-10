@@ -128,7 +128,7 @@ FROM toteuma_materiaali
                         AND alkanut :: DATE <= :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
-  JOIN urakka ON urakka.id = toteuma.urakka
+  JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
 WHERE urakka.hallintayksikko = :hallintayksikko AND (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
 GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_materiaali.id;
 
@@ -148,7 +148,7 @@ FROM toteuma_materiaali
                         AND alkanut :: DATE <= :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
-  JOIN urakka ON urakka.id = toteuma.urakka
+  JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
   JOIN organisaatio o ON urakka.hallintayksikko = o.id
   WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
 GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, materiaalikoodi.yksikko;
