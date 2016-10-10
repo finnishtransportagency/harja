@@ -51,6 +51,9 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            :selite [nil ""]
                            :vain-myohassa? false
                            :aloituskuittauksen-ajankohta :kaikki}
+                           :aloituskuittauksen-ajankohta :kaikki
+                           :ilmoittaja-nimi ""
+                           :ilmoittaja-puhelin ""}
                 :kuittaa-monta nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
