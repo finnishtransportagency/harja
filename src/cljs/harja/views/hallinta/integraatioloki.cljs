@@ -231,7 +231,9 @@
               {:otsikko "Päättynyt" :nimi :paattynyt :leveys 13
                :hae #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
               {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
-              {:otsikko "Solmu" :nimi :kasitteleva-palvelin :leveys 17}
+              {:otsikko "Käsittelevä palvelin" :nimi :kasitteleva-palvelin :leveys 17 :fmt #(if (empty? %)
+                                                                                             "Ei tiedossa"
+                                                                                             %)}
               {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
 
      @tiedot/haetut-tapahtumat]]])
