@@ -207,8 +207,8 @@ SELECT
   (SELECT (etunimi || ' ' || sukunimi)
    FROM yhteyshenkilo
    WHERE id =
-         (SELECT kayttaja
-          FROM kayttaja_urakka_rooli
+         (SELECT yhteyshenkilo
+          FROM yhteyshenkilo_urakka
           WHERE urakka = t.urakka
                 AND rooli = 'Sampo yhteyshenkilö'
           LIMIT 1))                     AS "sampo-yhteyshenkilo",
