@@ -108,15 +108,15 @@
              [{:otsikko "Määrä yhteensä" :leveys "8%" :fmt :numero :jos-tyhja "-"
                :excel [:summa-vasen (if urakoittain? 2 1)]}
               {:otsikko "Tot-%" :leveys "8%" :fmt :prosentti :jos-tyhja "-"}
-              {:otsikko "Maksimi\u00admäärä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
+              {:otsikko "Suunniteltu määrä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
 
       (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
          (let [suunnitellut (keep :maara (filter #(nil? (:kk %)) rivit))
-               maksimi (when-not (empty? suunnitellut)
+               suunniteltu (when-not (empty? suunnitellut)
                          (reduce + suunnitellut))
                luokitellut (filter :luokka rivit)
-               materiaalirivit (filter #(not (:luokka %)) rivit)
+               materiaalirivit (remove #(nil? (:kk %)) rivit)
                kk-rivit (group-by :kk materiaalirivit)
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
                                      (assoc kk-arvot kk (reduce + 0 (keep :maara rivit))))
@@ -139,10 +139,10 @@
                            ;; Kuukausittaiset määrät
                            (map kk-arvot kuukaudet)
 
-                           ;; Yhteensä, toteumaprosentti ja maksimimäärä
+                           ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                            [yhteensa
-                            (when maksimi (/ (* 100.0 yhteensa) maksimi))
-                            maksimi]))}]
+                            (when suunniteltu (/ (* 100.0 yhteensa) suunniteltu))
+                            suunniteltu]))}]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
