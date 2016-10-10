@@ -36,24 +36,13 @@
                          (reset! valitavoitteet-atom vastaus)))))}
    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
      :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
-    {:otsikko "Urakka\u00ADtyyppi" :leveys 20 :nimi :urakkatyyppi
-     :tyyppi :valinta
-     :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
-     :valinta-nayta #(or (:nimi (first (filter
-                                         (fn [tyyppi] (= (:arvo tyyppi) %))
-                                         nav/+urakkatyypit+)))
-                         "- valitse -")
-     :fmt #(:nimi (first (filter
-                           (fn [tyyppi] (= (:arvo tyyppi) %))
-                           nav/+urakkatyypit+)))
-     :valinnat (mapv :arvo nav/+urakkatyypit+)
-     :muokattava? #(neg? (:id %))}
-
     {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                  (pvm/pvm-opt %)
                                                                  "Ei takarajaa")
      :tyyppi :pvm}]
-   (sort-by :takaraja @kertaluontoiset-valitavoitteet-atom)])
+   (sort-by :takaraja (filter #(= (:urakkatyyppi %)
+                                  (:arvo @tiedot/valittu-urakkatyyppi))
+                              @kertaluontoiset-valitavoitteet-atom))])
 
 (defn toistuvat-valitavoitteet-grid
   [valitavoitteet-atom toistuvat-valitavoitteet-atom]
@@ -74,24 +63,14 @@
                          (reset! valitavoitteet-atom vastaus)))))}
    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
      :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
-    {:otsikko "Urakka\u00ADtyyppi" :leveys 20 :nimi :urakkatyyppi
-     :tyyppi :valinta
-     :validoi [[:ei-tyhja "Valitse urakkatyyppi, jota tämä välitavoite koskee"]]
-     :valinta-nayta #(or (:nimi (first (filter
-                                         (fn [tyyppi] (= (:arvo tyyppi) %))
-                                         nav/+urakkatyypit+)))
-                         "- valitse -")
-     :fmt #(:nimi (first (filter
-                           (fn [tyyppi] (= (:arvo tyyppi) %))
-                           nav/+urakkatyypit+)))
-     :valinnat (mapv :arvo nav/+urakkatyypit+)
-     :muokattava? #(neg? (:id %))}
     {:otsikko "Taka\u00ADrajan toisto\u00ADpäi\u00ADvä" :leveys 10 :nimi :takaraja-toistopaiva
      :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 31 "Anna päivä välillä 1 - 31"]]}
     {:otsikko "Taka\u00ADrajan toisto\u00ADkuu\u00ADkausi" :leveys 10 :nimi :takaraja-toistokuukausi
      :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero nil 1 12 "Anna kuukausi välillä 1 - 12"]]}]
    (sort-by (juxt :takaraja-toistokuukausi :takaraja-toistopaiva)
-            @toistuvat-valitavoitteet-atom)])
+            (filter #(= (:urakkatyyppi %)
+                        (:arvo @tiedot/valittu-urakkatyyppi))
+                    @toistuvat-valitavoitteet-atom))])
 
 (defn- suodattimet []
   [valinnat/urakkatyyppi
@@ -105,19 +84,21 @@
     (fn []
       (let [nayta-valtakunnalliset? (some? (tiedot/valtakunnalliset-valitavoitteet-kaytossa
                                              (:arvo @tiedot/valittu-urakkatyyppi)))]
+
         [:div
-        [suodattimet]
-        [kertaluontoiset-valitavoitteet-grid
-         tiedot/valitavoitteet
-         tiedot/kertaluontoiset-valitavoitteet]
-        [:br]
-         (when nayta-valtakunnalliset?
-           [toistuvat-valitavoitteet-grid
-            tiedot/valitavoitteet
-            tiedot/toistuvat-valitavoitteet])
-         [yleiset/vihje-elementti
-          [:span
-           "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
-           [:br] "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
-           [:br] "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
-           [:br] "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]))))
+         [suodattimet]
+         (if nayta-valtakunnalliset?
+           [:div [kertaluontoiset-valitavoitteet-grid
+                  tiedot/valitavoitteet
+                  tiedot/kertaluontoiset-valitavoitteet]
+            [:br]
+            [toistuvat-valitavoitteet-grid
+             tiedot/valitavoitteet
+             tiedot/toistuvat-valitavoitteet]
+            [yleiset/vihje-elementti
+             [:span
+              "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
+              [:br] "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
+              [:br] "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
+              [:br] "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]
+        [:div "Valtakunnalliset välitavoitteet eivät ole käytössä valitussa urakkatyypissä."])]))))
