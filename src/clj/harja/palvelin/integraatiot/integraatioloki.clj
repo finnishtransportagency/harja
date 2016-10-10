@@ -4,7 +4,9 @@
             [harja.kyselyt.integraatioloki :as integraatioloki]
             [clj-time.core :refer [months ago]]
             [harja.kyselyt.konversio :as konversio]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [harja.fmt :as fmt])
+  (:import (java.net InetAddress)))
 
 (defprotocol IntegraatiolokiKirjaus
   (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti])
@@ -56,8 +58,13 @@
    :otsikko nil
    :parametrit nil})
 
-(defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit]}]
-  (integraatioloki/luo-integraatioviesti<! db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
+(defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi
+                                            sisalto otsikko parametrit]}]
+  (let [kasitteleva-palvelin (fmt/leikkaa-merkkijono 512
+                                                     (.toString (InetAddress/getLocalHost)))]
+    (integraatioloki/luo-integraatioviesti<!
+     db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi
+     sisalto otsikko parametrit kasitteleva-palvelin)))
 
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
   (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
@@ -69,9 +76,11 @@
   (let [kasitellyn-tapahtuman-id
         (if tapahtuma-id
           (do
-            (integraatioloki/merkitse-integraatiotapahtuma-paattyneeksi! db onnistunut lisatietoja tapahtuma-id)
+            (integraatioloki/merkitse-integraatiotapahtuma-paattyneeksi!
+              db onnistunut lisatietoja tapahtuma-id)
             tapahtuma-id)
-          (:id (integraatioloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<! db onnistunut lisatietoja ulkoinen-id)))]
+          (:id (integraatioloki/merkitse-integraatiotapahtuma-paattyneeksi-ulkoisella-idlla<!
+                 db onnistunut lisatietoja ulkoinen-id)))]
     (when (and viesti kasitellyn-tapahtuman-id)
       (kirjaa-viesti db kasitellyn-tapahtuman-id viesti))))
 
@@ -116,15 +125,24 @@
     this)
 
   IntegraatiolokiKirjaus
-  (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti] (luo-alkanut-integraatio (:db this) jarjestelma integraation-nimi ulkoinen-id viesti))
-  (kirjaa-onnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id] (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja true tapahtumaid ulkoinen-id))
-  (kirjaa-epaonnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id] (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja false tapahtumaid ulkoinen-id))
-  (kirjaa-jms-viesti [this tapahtuma-id viesti-id suunta sisalto jono] (lokita-jms-viesti (:db this) tapahtuma-id viesti-id suunta sisalto jono))
-  (kirjaa-rest-viesti [this tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit] (lokita-rest-viesti (:db this) tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit))
-  (kirjaa-saapunut-jms-viesti [this jarjestelma integraatio viesti-id viesti jono] (lokita-saapunut-jms-viesti this jarjestelma integraatio viesti-id viesti jono))
-  (kirjaa-lahteva-jms-kuittaus [this kuittaus tapahtuma-id onnistunut lisatietoja jono] (lokita-lahteva-jms-kuittaus this kuittaus tapahtuma-id onnistunut lisatietoja jono))
-  (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut jono] (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut jono))
-  (kirjaa-alkanut-tiedoston-haku [this jarjestelma integraatio lahde] (lokita-alkanut-tiedoston-haku this jarjestelma integraatio lahde)))
+  (kirjaa-alkanut-integraatio [this jarjestelma integraation-nimi ulkoinen-id viesti]
+    (luo-alkanut-integraatio (:db this) jarjestelma integraation-nimi ulkoinen-id viesti))
+  (kirjaa-onnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id]
+    (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja true tapahtumaid ulkoinen-id))
+  (kirjaa-epaonnistunut-integraatio [this viesti lisatietoja tapahtumaid ulkoinen-id]
+    (kirjaa-paattynyt-integraatio (:db this) viesti lisatietoja false tapahtumaid ulkoinen-id))
+  (kirjaa-jms-viesti [this tapahtuma-id viesti-id suunta sisalto jono]
+    (lokita-jms-viesti (:db this) tapahtuma-id viesti-id suunta sisalto jono))
+  (kirjaa-rest-viesti [this tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit]
+    (lokita-rest-viesti (:db this) tapahtuma-id suunta osoite sisaltotyyppi sisalto otsikko parametrit))
+  (kirjaa-saapunut-jms-viesti [this jarjestelma integraatio viesti-id viesti jono]
+    (lokita-saapunut-jms-viesti this jarjestelma integraatio viesti-id viesti jono))
+  (kirjaa-lahteva-jms-kuittaus [this kuittaus tapahtuma-id onnistunut lisatietoja jono]
+    (lokita-lahteva-jms-kuittaus this kuittaus tapahtuma-id onnistunut lisatietoja jono))
+  (kirjaa-saapunut-jms-kuittaus [this kuittaus ulkoinen-id integraatio onnistunut jono]
+    (lokita-saapunut-jms-kuittaus this kuittaus ulkoinen-id integraatio onnistunut jono))
+  (kirjaa-alkanut-tiedoston-haku [this jarjestelma integraatio lahde]
+    (lokita-alkanut-tiedoston-haku this jarjestelma integraatio lahde)))
 
 (defn lokittaja [integraatioloki db jarjestelma integraation-nimi]
   (fn [operaatio & argumentit]
