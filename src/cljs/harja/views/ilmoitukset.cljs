@@ -262,7 +262,6 @@
    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
    (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
-     (log "ILMOITUKSET: " (pr-str ilmoitukset))
      [:span
       [kartta/kartan-paikka]
       (if valittu-ilmoitus
