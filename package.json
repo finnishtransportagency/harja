@@ -3,7 +3,12 @@
   "version": "0.1.0",
   "description": "Harja Info: Liikenneviraston kunnossapidon seurannan ja raportoinnin info-sivut",
   "author": "Antti Ahola",
-  "license": "",
+  "homepage": "http://finnishtransportagency.github.io/harja/",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/finnishtransportagency/harja/tree/gh-pages"
+  },
+  "license": "EUPL-1.2",
   "devDependencies": {
     "babel-polyfill": "^6.16.0",
     "babel-preset-es2015": "^6.14.0",
@@ -21,7 +26,7 @@
   },
   "scripts": {
     "watch": "gulp --type dev watch",
-    "server": "gulp server",
+    "serve": "gulp server",
     "build": "gulp build"
   },
   "jest": {
