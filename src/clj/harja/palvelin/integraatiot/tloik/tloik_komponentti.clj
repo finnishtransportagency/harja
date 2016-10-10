@@ -13,8 +13,7 @@
              [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
              [tekstiviesti :as tekstiviesti]
              [sahkoposti :as sahkopostiviesti]]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.tyokalut.lukot :as lukko]))
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
 
 (defprotocol Ilmoitustoimenpidelahetys
   (laheta-ilmoitustoimenpide [this id]))

@@ -13,13 +13,23 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
+(defn kasittele-vain-yksi-vamma-ja-ruumiinosa [turpo]
+  ;; Aiemmin oli mahdollista kirjata useampi ruumiinosa tai vamma, nyt vain yksi
+  ;; Kantaan tukee edelleen useaa arvoa tässä
+  ;; (vanhan datan takia ja jos tulevaisuudessa halutaankin kirjata useampi).
+  ;; Palautetaan satunnainen ensimmäinen arvo.
+  (-> turpo
+      (assoc :vammat (first (:vammat turpo)))
+      (assoc :vahingoittuneetruumiinosat (first (:vahingoittuneetruumiinosat turpo)))))
+
 (defn hae-urakan-turvallisuuspoikkeamat [db user {:keys [urakka-id alku loppu]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-turvallisuus user urakka-id)
-  (konv/sarakkeet-vektoriin
-    (into []
-          q/turvallisuuspoikkeama-xf
-          (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
-    {:korjaavatoimenpide :korjaavattoimenpiteet}))
+  (let [turpot (konv/sarakkeet-vektoriin
+     (into []
+           q/turvallisuuspoikkeama-xf
+           (q/hae-urakan-turvallisuuspoikkeamat db urakka-id (konv/sql-date alku) (konv/sql-date loppu)))
+     {:korjaavatoimenpide :korjaavattoimenpiteet})]
+    (mapv kasittele-vain-yksi-vamma-ja-ruumiinosa turpot)))
 
 (defn- hae-vastuuhenkilon-tiedot [db kayttaja-id]
   (when kayttaja-id
@@ -35,6 +45,7 @@
                                                       :korjaavatoimenpide :korjaavattoimenpiteet
                                                       :liite :liitteet}))
                     turpo
+                    (kasittele-vain-yksi-vamma-ja-ruumiinosa turpo)
                     (assoc turpo :korjaavattoimenpiteet
                                  (mapv #(assoc % :vastuuhenkilo
                                                  (hae-vastuuhenkilon-tiedot db (:vastuuhenkilo %)))
@@ -126,7 +137,7 @@
                 :ammatti (some-> tyontekijanammatti name)
                 :ammatti_muu tyontekijanammattimuu
                 :kuvaus kuvaus
-                :vammat (konv/seq->array vammat)
+                :vammat (konv/seq->array [vammat])
                 :poissa sairauspoissaolopaivat
                 :sairaalassa sairaalavuorokaudet
                 :tyyppi (konv/seq->array tyyppi)
@@ -136,7 +147,7 @@
                 :toteuttaja toteuttaja
                 :tilaaja tilaaja
                 :sijainti sijainti
-                :vahingoittuneet_ruumiinosat (konv/seq->array vahingoittuneetruumiinosat)
+                :vahingoittuneet_ruumiinosat (konv/seq->array [vahingoittuneetruumiinosat])
                 :sairauspoissaolo_jatkuu sairauspoissaolojatkuu
                 :aiheutuneet_seuraukset seuraukset
                 :vaylamuoto (name vaylamuoto)

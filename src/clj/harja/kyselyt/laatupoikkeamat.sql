@@ -169,6 +169,7 @@ SELECT
   lp.tr_loppuosa,
   lp.tr_loppuetaisyys,
   tl.tarkastus                       AS tarkastusid,
+  t.nayta_urakoitsijalle AS "nayta-tarkastus-urakoitsijalle",
   ypk.id               AS "yllapitokohde_id",
   ypk.tr_numero        AS "yllapitokohde_tr-numero",
   ypk.tr_alkuosa       AS "yllapitokohde_tr-alkuosa",
@@ -180,6 +181,7 @@ SELECT
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   LEFT JOIN tarkastus_laatupoikkeama tl on lp.id = tl.laatupoikkeama
+  LEFT JOIN tarkastus t ON tl.tarkastus = t.id
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE

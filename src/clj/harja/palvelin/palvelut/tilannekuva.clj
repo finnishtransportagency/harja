@@ -229,7 +229,8 @@
                          :ymin (:ymin alue)
                          :xmax (:xmax alue)
                          :ymax (:ymax alue)
-                         :tyypit (map name (haettavat tarkastukset))})))
+                         :tyypit (map name (haettavat tarkastukset))
+                         :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
 
 (defn- hae-suljetut-tieosuudet
   [db user {:keys [yllapito alue nykytilanne?]} urakat]
