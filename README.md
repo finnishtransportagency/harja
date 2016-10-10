@@ -40,13 +40,13 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 ## Notice fields:
 
 ```
-date    : text(yyyy-mm-dd)  : optional : 	Notices are automatically arranged by date.
-																					If date field is left out the notice is pushed to the end of list
-title   : text            	: optional : 	Default title will be used if left out
-short   : text            	: optional
-body    : text/html       	: optional : 	Can be left empty but that makes no sense. Remember to escape quotes etc
-																					if you put in html like video embed codes. (eg. width="560" becomes width=\"560\")
-images  : array           	: optional : 	Array of urls pointing to either this project folder or outside source (see examples)
+| Name   | Type             | Mandatory | Comments |
+|--------|------------------|-----------|----------|
+| date   | text(yyyy-mm-dd) | optional  | Notices are automatically arranged by date. If date field is left out the notice is pushed to the end of list |
+| title  | text             | optional  | Default title will be used if left out |
+| short  | text             | optional  | |
+| body   | text/html        | optional  | Can be left empty but that makes no sense. Remember to escape quotes etc if you put in html like video embed codes. (eg. width="560" becomes width=\"560\") |
+| images | array            | optional  | Array of urls pointing to either this project folder or outside source (see examples) |
 ```
 
 
@@ -98,12 +98,13 @@ To edit content on the "Teiden hoito", "Teiden ylläpito" and "Usein kysytyt kys
 ## "Content" -file fields:
 
 ```
-category: text						: mandatory, must be one of: "care", "maintenance" or "faq"
-title   : text						: optional
-short   : text						: optional
-body    : text/html				: optional : 	Can be left empty but that makes no sense. Remember to escape quotes etc
-																				if you put in html like video embed codes. (eg. width="560" becomes width=\"560\")
-images  : array						: optional : 	Array of urls pointing to either this project folder or outside source (see examples)
+| Name | Type | Mandatory | Comments |
+|------|------|-----------|----------|
+| category | text      | mandatory (must be one of: "care", "maintenance" or "faq") | |
+| title    | text      | optional | |
+| short    | text      | optional | |
+| body     | text/html | optional | Can be left empty but that makes no sense. Remember to escape quotes etc if you put in html like video embed codes. (eg. width="560" becomes width=\"560\") |
+| images   | array     | optional | Array of urls pointing to either this project folder or outside source (see examples) |
 ```
 
 
