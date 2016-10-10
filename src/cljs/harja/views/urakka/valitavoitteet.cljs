@@ -203,7 +203,8 @@
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
-  (let [tallennus-kaynnissa (atom false)]
+  (let [tallennus-kaynnissa (atom false)
+        nayta-valtakunnalliset? (= :hoito (:tyyppi ur))]
     (komp/luo
       (komp/lippu vt/nakymassa?)
       (fn [ur]
@@ -213,10 +214,11 @@
           ur
           vt/valitavoitteet
           vt/urakan-valitavoitteet]
-         [valtakunnalliset-valitavoitteet
-          ur
-          vt/valitavoitteet
-          vt/valtakunnalliset-valitavoitteet]
+         (when nayta-valtakunnalliset?
+           [valtakunnalliset-valitavoitteet
+           ur
+           vt/valitavoitteet
+           vt/valtakunnalliset-valitavoitteet])
 
          ;; PENDING Kommentoidaan toistaiseksi tämä ylläpidon demo pois hämmentämästä
          ;; Ylläpidon välitavoitteita pohditaan myöhemmin
