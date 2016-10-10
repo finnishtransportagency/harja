@@ -177,99 +177,99 @@
     [:div {:class tyyppi} tyyppi ]))
 
 (defn ilmoitusten-paanakyma
-  [e! ilmoitukset]
+  [e! {valinnat-nyt :valinnat
+           kuittaa-monta :kuittaa-monta
+           haetut-ilmoitukset :ilmoitukset
+           ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
 
+  (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
+        valitse-ilmoitus! (when kuittaa-monta-nyt
+                            #(e! (v/->ValitseKuitattavaIlmoitus %)))]
+    [:span.ilmoitukset
+
+     [ilmoitusten-hakuehdot e! valinnat-nyt]
+     [:div
+      [kentat/tee-kentta {:tyyppi :checkbox
+                          :teksti "Äänimerkki uusista ilmoituksista"}
+       tiedot/aanimerkki-uusista-ilmoituksista?]
+
+      [pollauksen-merkki]
+      [yhdeydenottopyynnot-lihavoitu]
+      [virkaapupyynnot-korostettu]
+
+      (when-not kuittaa-monta-nyt
+        [napit/yleinen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
+         {:luokka "pull-right kuittaa-monta"}])
+
+      (when kuittaa-monta-nyt
+        [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
+
+      [grid
+       {:tyhja (if haetut-ilmoitukset
+                 "Ei löytyneitä tietoja"
+                 [ajax-loader "Haetaan ilmoutuksia"])
+        :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
+                         (or valitse-ilmoitus!
+                             #(e! (v/->ValitseIlmoitus %))))
+        :piilota-toiminnot true
+        :max-rivimaara 500
+        :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
+
+       [(when kuittaa-monta-nyt
+          {:otsikko " "
+           :tasaa :keskita
+           :tyyppi :komponentti
+           :komponentti (fn [rivi]
+                          [:input {:type "checkbox"
+                                   :checked (valitut-ilmoitukset rivi)}])
+           :leveys 1})
+        {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
+         :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+        {:otsikko "Otsikko" :nimi :otsikko :leveys 7
+         :hae #(leikkaa-otsikko %)}
+        {:otsikko "Ilmoitettu" :nimi :ilmoitettu
+         :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
+        {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
+         :tyyppi :komponentti
+         :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
+         :leveys 2}
+        {:otsikko "Sijainti" :nimi :tierekisteri
+         :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
+         :leveys 7}
+
+        {:otsikko "Selitteet" :nimi :selitteet
+         :tyyppi :komponentti
+         :komponentti it/selitelista
+         :leveys 6}
+        {:otsikko "Kuittaukset" :nimi :kuittaukset
+         :tyyppi :komponentti
+         :komponentti kuittauslista
+         :leveys 6}
+
+        {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
+       (mapv #(if (:yhteydenottopyynto %)
+                (assoc % :lihavoi true)
+                %)
+             haetut-ilmoitukset)]]]))
+
+(defn- ilmoitukset* [e! ilmoitukset]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
+  (log "YHDISTÄ ALKUVALINNAT")
   (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
   (komp/luo
-    ;; Kun jokin navigaation valinnoista muuttuu, yhdistetään ne valintoihin
-    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (e! (v/->YhdistaValinnat uusi))))
-    (fn [e! {valinnat-nyt :valinnat
-             kuittaa-monta :kuittaa-monta
-             haetut-ilmoitukset :ilmoitukset
-             ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
-      (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
-            valitse-ilmoitus! (when kuittaa-monta-nyt
-                                #(e! (v/->ValitseKuitattavaIlmoitus %)))]
-        [:span.ilmoitukset
-
-         [ilmoitusten-hakuehdot e! valinnat-nyt]
-         [:div
-          [kentat/tee-kentta {:tyyppi :checkbox
-                              :teksti "Äänimerkki uusista ilmoituksista"}
-           tiedot/aanimerkki-uusista-ilmoituksista?]
-
-          [pollauksen-merkki]
-          [yhdeydenottopyynnot-lihavoitu]
-          [virkaapupyynnot-korostettu]
-
-          (when-not kuittaa-monta-nyt
-            [napit/yleinen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
-             {:luokka "pull-right kuittaa-monta"}])
-
-          (when kuittaa-monta-nyt
-            [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
-
-          [grid
-           {:tyhja (if haetut-ilmoitukset
-                     "Ei löytyneitä tietoja"
-                     [ajax-loader "Haetaan ilmoutuksia"])
-            :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
-                             (or valitse-ilmoitus!
-                                #(e! (v/->ValitseIlmoitus %))))
-            :piilota-toiminnot true
-            :max-rivimaara 500
-            :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."}
-
-           [(when kuittaa-monta-nyt
-              {:otsikko " "
-               :tasaa :keskita
-               :tyyppi :komponentti
-               :komponentti (fn [rivi]
-                              [:input {:type "checkbox"
-                                       :checked (valitut-ilmoitukset rivi)}])
-               :leveys 1})
-            {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
-             :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-            {:otsikko "Otsikko" :nimi :otsikko :leveys 7
-             :hae #(leikkaa-otsikko %)}
-            {:otsikko "Ilmoitettu" :nimi :ilmoitettu
-             :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
-            {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
-             :tyyppi :komponentti
-             :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
-             :leveys 2}
-            {:otsikko "Sijainti" :nimi :tierekisteri
-             :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
-             :leveys 7}
-
-            {:otsikko "Selitteet" :nimi :selitteet
-             :tyyppi :komponentti
-             :komponentti it/selitelista
-             :leveys 6}
-            {:otsikko "Kuittaukset" :nimi :kuittaukset
-             :tyyppi :komponentti
-             :komponentti kuittauslista
-             :leveys 6}
-
-            {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
-           (mapv #(if (:yhteydenottopyynto %)
-                   (assoc % :lihavoi true)
-                   %)
-                 haetut-ilmoitukset)]]]))))
-
-(defn- ilmoitukset* [e! ilmoitukset]
-  (komp/luo
-    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
-    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
-    (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
-      [:span
-       [kartta/kartan-paikka]
-       (if valittu-ilmoitus
-         [ilmoituksen-tiedot e! valittu-ilmoitus]
-         [ilmoitusten-paanakyma e! ilmoitukset])])))
+   (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                   (log "YHDISTÄ MUUTTUNEET VALINNAT")
+                                   (e! (v/->YhdistaValinnat uusi))))
+   (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
+   (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
+   (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
+     (log "ILMOITUKSET: " (pr-str ilmoitukset))
+     [:span
+      [kartta/kartan-paikka]
+      (if valittu-ilmoitus
+        [ilmoituksen-tiedot e! valittu-ilmoitus]
+        [ilmoitusten-paanakyma e! ilmoitukset])])))
 
 (defn ilmoitukset []
   (komp/luo

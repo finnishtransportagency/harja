@@ -132,6 +132,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
+    (log "   YHDISTETAAN " (pr-str valinnat))
     (hae
       ;; Kun näkymään tullaan ensimmäistä kertaa, aseta oletus aikaväliksi nykypäivästä 7 päivää taaksepäin
       (let [valinnat (if (get-in app [:valinnat :aikavali])
