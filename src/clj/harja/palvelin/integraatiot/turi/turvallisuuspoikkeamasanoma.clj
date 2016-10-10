@@ -129,7 +129,7 @@
           [[:sampourakkanimi (:hanke-nimi data)]]
           [[:sampourakkaid (:urakka-sampoid data)]]
           [[:alueurakkanro (:alueurakkanro data)]]
-          (poikkeamatyypit->numerot (:tygyppi data))
+          (poikkeamatyypit->numerot (:tyyppi data))
           [[:tapahtumapvm (xml/formatoi-paivamaara (:tapahtunut data))]
            [:tapahtumaaika (xml/formatoi-kellonaika (:tapahtunut data))]
            [:kuvaus (:kuvaus data)]])))
