@@ -40,7 +40,7 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 ## Notice fields:
 
 ```
-date    : text(yy-mm-dd)  : optional : Notices are automatically arranged by date. If date field is left out notice is pushed to the end of list
+date    : text(yyyy-mm-dd)  : optional : Notices are automatically arranged by date. If date field is left out notice is pushed to the end of list
 title   : text            : optional : Default title will be used if left out
 short   : text            : optional
 body    : text/html       : optional : Can be left out but that makes no sense. Remember to escape quotes etc if you put in html like video embed codes.
