@@ -13,7 +13,8 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -98,11 +99,19 @@
      [:br]"Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
      [:br]"Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]])
 
+(defn- suodattimet []
+  [valinnat/urakkatyyppi
+   tiedot/valittu-urakkatyyppi
+   nav/+urakkatyypit+
+   #(reset! tiedot/valittu-urakkatyyppi %)])
+
 (defn valitavoitteet []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      [valitavoitteet-grid
-       tiedot/valitavoitteet
+      [:div
+       [suodattimet]
+       [valitavoitteet-grid
+        tiedot/valitavoitteet
        tiedot/kertaluontoiset-valitavoitteet
-       tiedot/toistuvat-valitavoitteet])))
+       tiedot/toistuvat-valitavoitteet]])))

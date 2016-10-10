@@ -179,8 +179,7 @@
                                          (when-not (and @tiedot/valittu-jarjestelma
                                                         (contains? (:integraatiot @tiedot/valittu-jarjestelma)
                                                                    @tiedot/valittu-integraatio))
-                                           (reset! tiedot/valittu-integraatio nil)))
-                           :class "suunnittelu-alasveto"}
+                                           (reset! tiedot/valittu-integraatio nil)))}
       (vec (concat [nil] @tiedot/jarjestelmien-integraatiot))]]
 
     (when @tiedot/valittu-jarjestelma
@@ -188,8 +187,7 @@
        [:span.alasvedon-otsikko "Integraatio"]
        [livi-pudotusvalikko {:valinta @tiedot/valittu-integraatio
                              :format-fn #(if % (str %) "Kaikki integraatiot")
-                             :valitse-fn #(reset! tiedot/valittu-integraatio %)
-                             :class "suunnittelu-alasveto"}
+                             :valitse-fn #(reset! tiedot/valittu-integraatio %)}
         (vec (concat [nil] (:integraatiot @tiedot/valittu-jarjestelma)))]])
 
 

@@ -143,8 +143,7 @@
                                               :urakassa-korjatut "Urakassa korjatut (ei enää B:tä eikä C:tä)"
                                               :korjaus-ohjelmoitava "Korjaus ohjelmoitava (D)"
                                               "Kaikki")
-                                :valitse-fn #(reset! sillat/listaus %)
-                                :class      "suunnittelu-alasveto"}
+                                :valitse-fn #(reset! sillat/listaus %)}
            [:kaikki :urakan-korjattavat :urakassa-korjatut :korjaus-ohjelmoitava]]]
          [grid/grid
           {:otsikko       "Sillat"

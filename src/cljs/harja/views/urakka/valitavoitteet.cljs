@@ -15,7 +15,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as tiedot])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -204,7 +205,8 @@
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
   (let [tallennus-kaynnissa (atom false)
-        nayta-valtakunnalliset? (= :hoito (:tyyppi ur))]
+        nayta-valtakunnalliset? (some? (tiedot/valtakunnalliset-valitavoitteet-kaytossa
+                                   (:tyyppi ur)))]
     (komp/luo
       (komp/lippu vt/nakymassa?)
       (fn [ur]
