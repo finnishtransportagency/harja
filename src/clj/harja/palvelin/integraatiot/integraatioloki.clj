@@ -64,10 +64,7 @@
     db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
 
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
-  (let [kasitteleva-palvelin (fmt/leikkaa-merkkijono 2048
-                                                     (.toString (InetAddress/getLocalHost)))
-        tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<!
-                           db kasitteleva-palvelin jarjestelma nimi ulkoinen-id))]
+  (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
     (when viesti
       (kirjaa-viesti db tapahtumaid viesti))
     tapahtumaid))
