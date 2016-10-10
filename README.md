@@ -63,7 +63,7 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sodales dui id metus semper, non viverra odio mollis. Praesent aliquet a lorem et elementum. Curabitur lectus dui, varius sit amet elementum ut, iaculis nec purus. Praesent mattis gravida purus sed interdum. Nulla tincidunt sed felis scelerisque gravida. Nullam at magna ex. Phasellus leo sapien, viverra ac ante eu, convallis hendrerit libero. Morbi nibh dolor, hendrerit in lorem id, feugiat consequat turpis. Cras in quam non elit dictum porta ut et purus. Fusce suscipit condimentum libero, et posuere nisi posuere et. Curabitur id arcu id dolor euismod aliquam. Sed auctor quis dolor eu congue.",
 		"images": ["/images/Liikennehankkeiden_vaikutukset.jpg", "/images/Tripla.jpg"]
 	},
-  {
+	{
 		"date": "2016-02-03",
 		"title": "Tiedote #2",
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -76,11 +76,11 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		"images": ["/images/Tripla.jpg", "http://www.liikennevirasto.fi/documents/20473/251256/liikennevirasto_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
 	},
-  {
+	{
 		"date": "2011-01-10",
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 	},
-  {
+	{
 		"date": "2011-02-30",
 		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		"images": ["http://www.liikennevirasto.fi/documents/20473/251256/liikennevirasto_turvalaitehankinnat_2_web.jpg/f0b8b3b4-02de-46ef-b017-62129df769df?t=1473413822133"]
@@ -112,23 +112,23 @@ To edit content on the "Teiden hoito", "Teiden ylläpito" and "Usein kysytyt kys
 	{
 		"category": "care",
 		"title": "Teiden hoito",
-    "short": "Lorem ipsum dolor sit amet",
-    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    "images": ["/images/hoidon-aikataulu-2016.png"]
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		"images": ["/images/hoidon-aikataulu-2016.png"]
 	},
-  {
+	{
 		"category": "maintenance",
 		"title": "Teiden ylläpito",
-    "short": "Lorem ipsum dolor sit amet",
-    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    "images": ["/images/yllapidon-aikataulu-2016.png"]
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		"images": ["/images/yllapidon-aikataulu-2016.png"]
 	},
-  {
-    "category": "faq",
-    "title": "Usein kysytyt kysymykset",
-    "short": "Lorem ipsum dolor sit amet",
-    "body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    "images": []
-  }
+	{
+		"category": "faq",
+		"title": "Usein kysytyt kysymykset",
+		"short": "Lorem ipsum dolor sit amet",
+		"body": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+		"images": []
+	}
 ]
 ```
