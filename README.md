@@ -39,11 +39,13 @@ New notices can be added anywhere in the list, they will be arranged by date aut
 
 ## Notice fields:
 
+```
 date    : text(yy-mm-dd)  : optional : Notices are automatically arranged by date. If date field is left out notice is pushed to the end of list
 title   : text            : optional : Default title will be used if left out
 short   : text            : optional
 body    : text/html       : optional : Can be left out but that makes no sense. Remember to escape quotes etc if you put in html like video embed codes.
 images  : array           : optional : Array of urls pointing to either this project folder or outside source (see examples)
+```
 
 
 ## Example file:
@@ -93,15 +95,18 @@ To edit content on the "Teiden hoito", "Teiden ylläpito" and "Usein kysytyt kys
 
 ## "Content" -file fields:
 
+```
 category: text						: mandatory, must be one of: "care", "maintenance" or "faq"
 title   : text            : optional
 short   : text            : optional
 body    : text/html       : optional : Can be left out but that makes no sense. Remember to escape quotes etc if you put in html like video embed codes.
 images  : array           : optional : Array of urls pointing to either this project folder or outside source (see examples)
+```
 
 
 ## Example "Content" -file:
 
+```
 [
 	{
 		"category": "care",
@@ -125,3 +130,4 @@ images  : array           : optional : Array of urls pointing to either this pro
     "images": []
   }
 ]
+```
