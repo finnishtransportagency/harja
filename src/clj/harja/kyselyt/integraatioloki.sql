@@ -1,13 +1,11 @@
 -- name: luo-integraatiotapahtuma<!
 -- Luo uuden hankkeen.
-INSERT INTO integraatiotapahtuma (kasitteleva_palvelin, integraatio, alkanut, ulkoinenid)
-VALUES
-  (:kasittelevapalvelin,
-   (SELECT id
-    FROM integraatio
-    WHERE jarjestelma = :jarjestelma AND nimi = :nimi),
-   current_timestamp,
-   :ulkoinenid);
+INSERT INTO integraatiotapahtuma (integraatio, alkanut, ulkoinenid)
+VALUES ((SELECT id
+         FROM integraatio
+         WHERE jarjestelma = :jarjestelma AND nimi = :nimi),
+        current_timestamp,
+        :ulkoinenid);
 
 -- name: merkitse-integraatiotapahtuma-paattyneeksi!
 -- Paivittaa hankkeen Samposta saaduilla tiedoilla
@@ -29,9 +27,11 @@ WHERE id = :id;
 
 -- name: luo-integraatioviesti<!
 -- Luo uuden integraatioviestin
-INSERT INTO integraatioviesti (integraatiotapahtuma, osoite, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit)
+INSERT INTO integraatioviesti (integraatiotapahtuma, osoite, suunta, sisaltotyyppi, siirtotyyppi,
+                               sisalto, otsikko, parametrit, kasitteleva_palvelin)
 VALUES
-  (:integraatiotapahtuma, :osoite, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi, :sisalto, :otsikko, :parametrit);
+  (:integraatiotapahtuma, :osoite, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi,
+   :sisalto, :otsikko, :parametrit, :kasittelevapalvelin);
 
 -- name: hae-tapahtumaid-ulkoisella-idlla
 -- Hakee tapahtuma id:n ulkoisella id:llä ja integraatiolla
@@ -70,8 +70,7 @@ FROM integraatio;
 SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnistunut,
        i.id as integraatio_id,
        i.jarjestelma as integraatio_jarjestelma,
-       i.nimi as integraatio_nimi,
-       it.kasitteleva_palvelin as "kasitteleva-palvelin"
+       i.nimi as integraatio_nimi
   FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
  WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
@@ -83,8 +82,7 @@ SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnist
 SELECT it.id, it.ulkoinenid, it.lisatietoja, it.alkanut, it.paattynyt, it.onnistunut,
        i.id as integraatio_id,
        i.jarjestelma as integraatio_jarjestelma,
-       i.nimi as integraatio_nimi,
-       it.kasitteleva_palvelin as "kasitteleva-palvelin"
+       i.nimi as integraatio_nimi
   FROM integraatiotapahtuma it
   JOIN integraatio i ON it.integraatio = i.id
  WHERE (:jarjestelma_annettu = false OR jarjestelma ILIKE :jarjestelma)
@@ -94,7 +92,17 @@ ORDER BY alkanut DESC
 
 -- name: hae-integraatiotapahtuman-viestit
 -- Hakee annetun integraatiotapahtuman viestit
-SELECT *
+SELECT
+  id,
+  integraatiotapahtuma,
+  suunta,
+  sisaltotyyppi,
+  siirtotyyppi,
+  sisalto,
+  otsikko,
+  parametrit,
+  osoite,
+  kasitteleva_palvelin as "kasitteleva-palvelin"
 FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 

@@ -60,8 +60,11 @@
 
 (defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi
                                             sisalto otsikko parametrit]}]
-  (integraatioloki/luo-integraatioviesti<!
-    db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi sisalto otsikko parametrit))
+  (let [kasitteleva-palvelin (fmt/leikkaa-merkkijono 512
+                                                     (.toString (InetAddress/getLocalHost)))]
+    (integraatioloki/luo-integraatioviesti<!
+     db tapahtumaid osoite suunta sisaltotyyppi siirtotyyppi
+     sisalto otsikko parametrit kasitteleva-palvelin)))
 
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
   (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
