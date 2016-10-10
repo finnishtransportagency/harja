@@ -29,7 +29,10 @@
                 #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet
                                          (->> %
                                               (map (fn [valitavoite]
-                                                     (assoc valitavoite :tyyppi :kertaluontoinen))))))]
+                                                     (-> valitavoite
+                                                         (assoc :tyyppi :kertaluontoinen)
+                                                         (assoc :urakkatyyppi
+                                                                (:arvo @tiedot/valittu-urakkatyyppi))))))))]
                        (if (k/virhe? vastaus)
                          (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                         :warning viesti/viestin-nayttoaika-keskipitka)
@@ -53,10 +56,12 @@
              "Ei toistuvia välitavoitteita")
     :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-valitavoitteet)
                 #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet
-                                         (<! (tiedot/tallenna-valitavoitteet
-                                               (->> %
-                                                    (map (fn [valitavoite]
-                                                           (assoc valitavoite :tyyppi :toistuva))))))))]
+                                         (->> %
+                                              (map (fn [valitavoite]
+                                                     (-> valitavoite
+                                                         (assoc :tyyppi :toistuva)
+                                                         (assoc :urakkatyyppi
+                                                                (:arvo @tiedot/valittu-urakkatyyppi))))))))]
                        (if (k/virhe? vastaus)
                          (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
                                         :warning viesti/viestin-nayttoaika-keskipitka)
@@ -101,4 +106,4 @@
               [:br] "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin ei-päättyneisiin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
               [:br] "Välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
               [:br] "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]]
-        [:div "Valtakunnalliset välitavoitteet eivät ole käytössä valitussa urakkatyypissä."])]))))
+           [:div "Valtakunnalliset välitavoitteet eivät ole käytössä valitussa urakkatyypissä."])]))))
