@@ -108,7 +108,7 @@
              :komponentti #(nayta-otsikko (:otsikko %))}
             {:otsikko "Siirtotyyppi" :nimi :siirtotyyppi :leveys 20}
             {:otsikko "Sisältötyyppi" :nimi :sisaltotyyppi :leveys 20}
-            {:otsikko "Palvelin" :nimi :kasitteleva-palvelin :leveys 30}
+            {:otsikko "Palvelin" :nimi :kasitteleva-palvelin :leveys 30 :fmt #(if (empty? %) "Ei tiedossa" %)}
             {:otsikko "Sisältö" :nimi :sisalto :leveys 30 :tyyppi :komponentti
              :komponentti #(nayta-sisalto (:sisalto %))}]
            @viestit]]]))))
