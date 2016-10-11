@@ -57,11 +57,10 @@
                                  :toimenpide "Ei tehdä mitään"})
 
 (defn yllapitokohde-id-jolla-on-paallystysilmoitus []
-  (ffirst (q (str "
-                                                           SELECT yllapitokohde.id as paallystyskohde_id
-                                                           FROM yllapitokohde
-                                                           JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
-                                                           WHERE urakka = " (hae-muhoksen-paallystysurakan-id) " AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
+  (ffirst (q (str "SELECT yllapitokohde.id as paallystyskohde_id
+                   FROM yllapitokohde
+                   JOIN paallystysilmoitus ON yllapitokohde.id = paallystysilmoitus.paallystyskohde
+                   WHERE urakka = " (hae-muhoksen-paallystysurakan-id) " AND sopimus = " (hae-muhoksen-paallystysurakan-paasopimuksen-id) ";"))))
 
 
 (deftest paallystyskohteet-haettu-oikein
