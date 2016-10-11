@@ -41,11 +41,15 @@
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
-  (let [lokita-tila #(case (.toString %)
-                      "ACTIVE" (log/info "Sonjan JMS-yhteys käynnistyi")
-                      "RECONNECTING" (log/info "Sonjan JMS uudelleen yhdistys käynnistyi")
-                      "FAILED" (log/error "Sonjan JMS-yhteys epäonnistui")
-                      "CLOSED" (log/info "Sonjan JMS-yhteys sulkeutui"))
+  (let [lokita-tila #(case %
+                      ;; ACTIVE
+                      0 (log/info "Sonjan JMS-yhteys käynnistyi")
+                      ;; RECONNECTING
+                      1 (log/info "Sonjan JMS uudelleenyhdistys käynnistyi")
+                      ;; FAILED
+                      2 (log/error "Sonjan JMS-yhteys epäonnistui")
+                      ;; CLOSED
+                      3 (log/info "Sonjan JMS-yhteys sulkeutui"))
         kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
         luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")
         instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
@@ -119,17 +123,11 @@
       (assoc-in jonot [jonon-nimi :producer] producer)
       producer)))
 
-(defn tee-jms-poikkeuskuuntelija []
-  (reify ExceptionListener
-    (onException [_ e]
-      (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e))))))
-
 (defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
   (try
     (let [qcf (luo-connection-factory url tyyppi)
           yhteys (.createConnection qcf kayttaja salasana)]
-      (.setExceptionListener yhteys (tee-jms-poikkeuskuuntelija))
       (.start yhteys)
       yhteys)
     (catch Exception e
