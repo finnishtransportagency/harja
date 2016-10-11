@@ -20,7 +20,7 @@
                     :alue   (:the_geom e)})
                  ely-propertyt))))
 
-(def lyhenteet {"Pohjois-Pohjanmaa ja Kainuu" "POP"
+(def lyhenteet {"Pohjois-Pohjanmaa" "POP"
                 "Etelä-Pohjanmaa"             "EPO"
                 "Lappi"                       "LAP"
                 "Keski-Suomi"                 "KES"
