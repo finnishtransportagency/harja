@@ -50,13 +50,12 @@
                "Ei välitavoitteita")
       :tallenna (if voi-muokata?
                   #(go (reset! tallennus-kaynnissa? true)
-                       (go
-                         (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
-                           (if (k/virhe? vastaus)
-                             (viesti/nayta! "Tallentaminen epäonnistui"
-                                            :warning viesti/viestin-nayttoaika-lyhyt)
-                             (reset! kaikki-valitavoitteet-atom vastaus)))
-                         (reset! tallennus-kaynnissa? false)))
+                       (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                         (if (k/virhe? vastaus)
+                           (viesti/nayta! "Tallentaminen epäonnistui"
+                                          :warning viesti/viestin-nayttoaika-lyhyt)
+                           (reset! kaikki-valitavoitteet-atom vastaus)))
+                       (reset! tallennus-kaynnissa? false))
                   :ei-mahdollinen)
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
@@ -116,13 +115,12 @@
                 "Ei välitavoitteita")
        :tallenna (if voi-muokata?
                    #(go (reset! tallennus-kaynnissa? true)
-                        (go
-                          (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
-                            (if (k/virhe? vastaus)
-                              (viesti/nayta! "Tallentaminen epäonnistui"
-                                             :warning viesti/viestin-nayttoaika-lyhyt)
-                              (reset! kaikki-valitavoitteet-atom vastaus)))
-                          (reset! tallennus-kaynnissa? false)))
+                        (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                          (if (k/virhe? vastaus)
+                            (viesti/nayta! "Tallentaminen epäonnistui"
+                                           :warning viesti/viestin-nayttoaika-lyhyt)
+                            (reset! kaikki-valitavoitteet-atom vastaus)))
+                        (reset! tallennus-kaynnissa? false))
                    :ei-mahdollinen)
        :tallennus-ei-mahdollinen-tooltip
        (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)
