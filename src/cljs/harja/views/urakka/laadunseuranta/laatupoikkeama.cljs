@@ -112,19 +112,19 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                            :muistutus "Muistutus"
                            "- valitse -")
           :validoi [[:ei-tyhja "Valitse laji"]]}
-         {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
-          :tyyppi :valinta
-          :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                   ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
-                   (log "VALITTIIN TYYPPI: " (pr-str tyyppi))
-                   (assoc sanktio
-                     :tyyppi tyyppi
-                     :toimenpideinstanssi
-                     (when tpk
-                       (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-          :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
+         {:otsikko       "Tyyppi" :nimi :tyyppi :leveys 3
+          :tyyppi        :valinta
+          :aseta         (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                           ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
+                           (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
+                             (if (sanktio-domain/sakko? paivitetty)
+                               (assoc paivitetty :toimenpideinstanssi
+                                                 (when tpk
+                                                   (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                               (assoc paivitetty :toimenpideinstanssi nil))))
+          :valinnat-fn   #(sanktiot/lajin-sanktiotyypit (:laji %))
           :valinta-nayta :nimi
-          :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
+          :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]}
 
          {:otsikko "Toimenpide"
           :nimi :toimenpideinstanssi
@@ -265,7 +265,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             [ajax-loader "Ladataan..."]
             [:div.laatupoikkeama
              [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
-            [lomake/lomake
+             [harja.ui.debug/debug (vals (:sanktiot @laatupoikkeama))]
+             [lomake/lomake
              {:otsikko      "Laatupoikkeaman tiedot"
               :muokkaa!     #(let [uusi-lp
                                    (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
