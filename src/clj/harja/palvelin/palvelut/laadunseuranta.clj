@@ -114,8 +114,7 @@
               (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa))
               (map konv/alaviiva->rakenne)
               (map #(konv/decimal->double % :summa))
-              (map #(assoc % :laji (keyword (:laji %))))
-              (map #(assoc % :sakko? (sanktiot-domain/sakko? %))))
+              (map #(assoc % :laji (keyword (:laji %)))))
         (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu))))
 
 (defn tallenna-laatupoikkeaman-sanktio

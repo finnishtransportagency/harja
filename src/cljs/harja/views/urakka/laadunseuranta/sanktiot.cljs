@@ -23,12 +23,11 @@
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset])
+            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
-
-(defn on-sakko? [sanktio]
-  (:sakko? sanktio))
 
 (defn sanktion-tiedot
   [optiot]
@@ -123,54 +122,25 @@
             :leveys  2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         {:otsikko       "Sanktio/muistutus"
-          :nimi          :sakko?
-          :palstoja      1
-          ;:rivi? true
-          :tyyppi        :valinta
-          :pakollinen?   true
-          :valinnat      [:sakko :muistutus]
-          :valinta-nayta #(case %
-                           :sakko "Sakko"
-                           :muistutus "Muistutus"
-                           "- valitse -")
-          :aseta         (fn [rivi arvo]
-                           (log "Valittiin " (pr-str arvo))
-                           (let [sakko? (= :sakko arvo)]
-                             (assoc rivi
-                               :sakko? sakko?
-                               :summa (when sakko? (:summa rivi))
-                               :toimenpideinstanssi (when sakko?
-                                                      (:toimenpideinstanssi rivi)))))
-          :hae           #(if (on-sakko? %) :sakko :muistutus)}
-
-         (when (on-sakko? @muokattu)
-           {:otsikko     "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
-            :pakollinen? true
-            :uusi-rivi?  true
-            :yksikko     "€"
-            :validoi     [[:ei-tyhja "Anna summa"]]})
-
-         (when (and (on-sakko? @muokattu) (urakka/indeksi-kaytossa?))
-           {:otsikko       "Indeksi" :nimi :indeksi :leveys 2
-            :tyyppi        :valinta
-            :valinnat      ["MAKU 2005" "MAKU 2010"]
-            :valinta-nayta #(or % "Ei sidota indeksiin")
-            :palstoja      1})
-
          (when-not yllapito?
-           {:otsikko       "Laji" :tyyppi :valinta
+           {:otsikko       "Laji"
+            :tyyppi        :valinta
             :pakollinen?   true
             :palstoja      1
             :uusi-rivi?    true
             :nimi          :laji
             :hae           (comp keyword :laji)
-            :aseta         #(assoc %1 :laji %2 :tyyppi nil)
-            :valinnat      [:A :B :C]
+            :aseta         (fn [rivi arvo]
+                             (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                               (if-not (sanktio-domain/sakko? paivitetty)
+                                 (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                                 paivitetty)))
+            :valinnat      [:A :B :C :muistutus]
             :valinta-nayta #(case %
                              :A "Ryhmä A"
                              :B "Ryhmä B"
                              :C "Ryhmä C"
+                             :muistutus "Muistutus"
                              "- valitse laji -")
             :validoi       [[:ei-tyhja "Valitse laji"]]})
 
@@ -189,7 +159,22 @@
             :valinnat-fn   (fn [_] (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
             :valinta-nayta #(if % (:nimi %) " - valitse tyyppi -")
             :validoi       [[:ei-tyhja "Valitse sanktiotyyppi"]]})
-         (when (and (on-sakko? @muokattu) (not yllapito?))
+
+         (when (sanktio-domain/sakko? @muokattu)
+           {:otsikko     "Summa" :nimi :summa :palstoja 1 :tyyppi :positiivinen-numero
+            :pakollinen? true
+            :uusi-rivi?  true
+            :yksikko     "€"
+            :validoi     [[:ei-tyhja "Anna summa"]]})
+
+         (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
+           {:otsikko       "Indeksi" :nimi :indeksi :leveys 2
+            :tyyppi        :valinta
+            :valinnat      ["MAKU 2005" "MAKU 2010"]
+            :valinta-nayta #(or % "Ei sidota indeksiin")
+            :palstoja      1})
+
+         (when (and (sanktio-domain/sakko? @muokattu) (not yllapito?))
            {:otsikko       "Toimenpide"
             :pakollinen?   true
             :nimi          :toimenpideinstanssi
