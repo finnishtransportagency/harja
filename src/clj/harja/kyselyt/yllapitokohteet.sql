@@ -544,6 +544,7 @@ SET
   aikataulu_paallystys_loppu = :paallystys_loppu,
   aikataulu_kohde_valmis = :kohde_valmis,
   valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  aikataulu_tiemerkinta_valmis_viimeistaan = :tiemerkinta_valmis_viimeistaan,
   aikataulu_muokattu = NOW(),
   aikataulu_muokkaaja = :muokkaaja
 WHERE id = :id;

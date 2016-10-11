@@ -7,22 +7,22 @@
     "aloituspvm": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/aloituspvm",
       "type": "string",
-      "format": "date-time"
+      "format": "date"
     },
     "valmispvm-paallystys": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/valmispvm-loppu",
       "type": "string",
-      "format": "date-time"
+      "format": "date"
     },
     "valmispvm-kohde": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/valmispvm-kohde",
       "type": "string",
-      "format": "date-time"
+      "format": "date"
     },
     "takuupvm": {
       "id": "urn:harja/urakka/sopimukset/0/sopimus/takuupvm",
       "type": "string",
-      "format": "date-time"
+      "format": "date"
     }
   }
 }
