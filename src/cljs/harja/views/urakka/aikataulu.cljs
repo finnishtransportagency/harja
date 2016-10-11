@@ -109,10 +109,10 @@
            ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
            {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 10 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) saa-muokata?)}
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?)}
            {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 10 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) saa-muokata?)
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
                        "Päällystystä ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-paallystys-alku
@@ -135,9 +135,9 @@
               :ryhman-otsikko #(case %
                                 :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
                                 :eri-hallintayksikko "Muut tiemerkintäurakat")
-              :muokattava? saa-muokata?})
+              :muokattava? (constantly saa-muokata?)})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
-            :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? saa-muokata?
+            :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
                            (if (:valmis-tiemerkintaan rivi)
                              [:span (pvm/pvm-opt (:valmis-tiemerkintaan rivi))]
@@ -180,7 +180,7 @@
                        "Valmistuminen ei voi olla ennen aloitusta."]]}
            {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
             :fmt pvm/pvm-opt
-            :muokattava? #(and (= (:nakyma optiot) :paallystys) saa-muokata?)
+            :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-loppu
                        "Tiemerkintää ei ole merkitty lopetetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
