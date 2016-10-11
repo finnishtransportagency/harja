@@ -472,4 +472,4 @@ FROM ilmoitus
 WHERE id = :id;
 
 -- name: hae-ilmoituskuittausten-urakat
-SELECT urakka FROM ilmoitus WHERE id IN (:ilmoitusidt);
+SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
