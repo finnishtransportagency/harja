@@ -300,8 +300,8 @@
 (defn- tarkista-oikeudet [db user ilmoitustoimenpiteet]
   (let [urakka-idt (mapv :urakka
                          (q/hae-ilmoituskuittausten-urakat db
-                                                       (map
-                                                         :ilmoituksen-id ilmoitustoimenpiteet)))]
+                                                           (map
+                                                             :ilmoituksen-id ilmoitustoimenpiteet)))]
     (doseq [urakka-id urakka-idt]
       (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id))))
 
