@@ -298,7 +298,8 @@
     tulos))
 
 (defn- tarkista-oikeudet [db user ilmoitustoimenpiteet]
-  (let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
+  ;; TODO Vaikuttaa aiheuttavan enemmän ongelmia kuin ratkaisee niitä
+  #_(let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
                                                      (map
                                                        :ilmoituksen-id ilmoitustoimenpiteet))]
     (doseq [urakka-id urakka-idt]
