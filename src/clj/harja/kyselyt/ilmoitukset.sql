@@ -470,3 +470,6 @@ SELECT
   tr_loppuetaisyys as "tr-loppuetaisyys"
 FROM ilmoitus
 WHERE id = :id;
+
+-- name: hae-ilmoituskuittausten-urakat
+SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
