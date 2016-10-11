@@ -20,7 +20,8 @@
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.paallystys :as paallystys-q]))
+            [harja.kyselyt.paallystys :as paallystys-q]
+            [clj-time.coerce :as c]))
 
 (defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
@@ -144,7 +145,10 @@
     (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
       db
       {:valmis_tiemerkintaan tiemerkintapvm
-       :tiemerkinta_valmis_viimeistaan (tm-domain/tiemerkinta-oltava-valmis tiemerkintapvm)
+       :tiemerkinta_valmis_viimeistaan (-> tiemerkintapvm
+                                           (c/from-date)
+                                           tm-domain/tiemerkinta-oltava-valmis
+                                           (c/to-date))
        :id kohde-id
        :urakka urakka-id})
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
