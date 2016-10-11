@@ -14,14 +14,14 @@ export default React.createClass({
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}, buttonStyle: 'large button'},
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}, buttonStyle: 'large button'},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}, buttonStyle: 'large button'},
-      {title: 'UKK', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'}
+      {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'}
     ];
 
     const normalButtonLinks = [
       {title: 'HARJA-PROJEKTI', data: {action: Events.HOME}},
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}},
-      {title: 'UKK', data: {action: Events.CATEGORY, category: Category.FAQ}}
+      {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}}
     ];
 
     return (

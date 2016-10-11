@@ -19,7 +19,7 @@ export default React.createClass({
       </div>
     );
 
-    const linkFaq = {title: "UKK", data: {action: Events.CATEGORY, category: Category.FAQ}};
+    const linkFaq = {title: "Koulutusvideot", data: {action: Events.CATEGORY, category: Category.FAQ}};
     const moreFaqEl = (
       <div className="harja-more harja-faq">
         <NavButton item={linkFaq} />
