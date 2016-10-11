@@ -53,8 +53,8 @@ export default React.createClass({
         buttonText = 'Kaikki teiden ylläpito-tiedotteet'
         break;
       case Category.FAQ:
-        titleText = 'Usein Kysytyt Kysymykset';
-        buttonText = 'Kaikki kysymykset'
+        titleText = 'Koulutusvideot';
+        buttonText = 'Kaikki koulutusvideot'
         break;
     }
 

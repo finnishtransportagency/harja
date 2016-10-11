@@ -40,7 +40,7 @@ export default React.createClass({
           buttonStyle: 'harja-breadcrumb'};
         break;
       case Category.FAQ:
-        categoryLink = {title: 'Usein Kysytyt Kysymykset',
+        categoryLink = {title: 'Koulutusvideot',
           data: {action: Events.CATEGORY, category: Category.FAQ},
           buttonStyle: 'harja-breadcrumb'}
         break;
