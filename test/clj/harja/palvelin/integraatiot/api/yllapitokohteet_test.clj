@@ -23,9 +23,14 @@
 
 (deftest tarkista-yllapitokohteiden-haku
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet"] kayttaja-paallystys portti)
-        data (cheshire/decode (:body vastaus) true)]
+        data (cheshire/decode (:body vastaus) true)
+        yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
+        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                          yllapitokohteet))]
     (is (= 200 (:status vastaus)))
-    (is (= 5 (count (:yllapitokohteet data))))))
+    (is (= 5 (count yllapitokohteet)))
+    (is (some? leppajarven-ramppi))
+    (is (some? (:tiemerkinta-takaraja (:aikataulu leppajarven-ramppi))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet" urakka] "Erkki Esimerkki" portti)]
