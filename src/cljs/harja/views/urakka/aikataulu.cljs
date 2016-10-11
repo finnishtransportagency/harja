@@ -178,7 +178,7 @@
             :muokattava? (fn [rivi]
                            (and (= (:nakyma optiot) :tiemerkinta)
                                 saa-merkita-valmiiksi?
-                                                 (:valmis-tiemerkintaan rivi)))
+                                (:valmis-tiemerkintaan rivi)))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
