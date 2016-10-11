@@ -35,7 +35,7 @@
    :aikataulu {:paallystys-aloitettu (:paallystys-alku kohde)
                :paallystys-valmis (:paallystys-loppu kohde)
                :valmis-tiemerkintaan (:valmis-tiemerkintaan kohde)
-               :tiemerkinnan-oltava-valmis (:tiemerkinta-valmis-viimeistaan kohde)
+               :aikataulu-tiemerkinta-takaraja (:tiemerkinta_takaraja kohde)
                :tiemerkinta-aloitettu (:tiemerkinta-alku kohde)
                :tiemerkinta-valmis (:tiemerkinta-loppu kohde)
                :kohde-valmis (:kohde-valmis kohde)

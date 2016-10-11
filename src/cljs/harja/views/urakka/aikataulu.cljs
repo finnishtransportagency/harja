@@ -18,7 +18,8 @@
             [harja.ui.lomake :as lomake]
             [cljs-time.core :as t]
             [harja.ui.napit :as napit]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -83,8 +84,14 @@
             sopimus-id (first @u/valittu-sopimusnumero)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
             ;; TODO TARKISTA MITEN VALMIS VIIMEISTÄÄN -OIKEUS MÄÄRÄYTYY!
-            saa-asettaa-valmis-viimeistaan? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
-            saa-merkita-valmiiksi? (oikeudet/urakat-aikataulu urakka-id "TM-valmis")
+            saa-asettaa-valmis-viimeistaan? (oikeudet/on-muu-oikeus? "TM-takaraja"
+                                                                     oikeudet/urakat-aikataulu
+                                                                     urakka-id
+                                                                     @istunto/kayttaja)
+            saa-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "TM-valmis"
+                                                            oikeudet/urakat-aikataulu
+                                                            urakka-id
+                                                            @istunto/kayttaja)
             voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi?)]
         [:div.aikataulu
          [grid/grid
@@ -154,11 +161,10 @@
                                   (some? (:suorittava-tiemerkintaurakka rivi))])
                                [:span "Ei"])))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
-            :leveys 6 :nimi :aikataulu-tiemerkinta-valmis-viimeistaan :tyyppi :pvm
+            :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? (fn [rivi]
-                           (and (= (:nakyma optiot) :paallystys)
-                                saa-asettaa-valmis-viimeistaan?
+                           (and saa-asettaa-valmis-viimeistaan?
                                 (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm

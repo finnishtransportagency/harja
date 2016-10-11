@@ -145,7 +145,7 @@
     (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
       db
       {:valmis_tiemerkintaan tiemerkintapvm
-       :tiemerkinta_valmis_viimeistaan (-> tiemerkintapvm
+       :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
                                            (c/from-date)
                                            tm-domain/tiemerkinta-oltava-valmis
                                            (c/to-date))
@@ -160,30 +160,46 @@
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   ;; Oma päivityskysely kullekin urakalle, sillä päällystysurakoitsija ja tiemerkkari
   ;; eivät saa muokata samoja asioita
-  (jdbc/with-db-transaction [db db]
-    (case (hae-urakkatyyppi db urakka-id)
-      :paallystys
-      (doseq [rivi kohteet]
-        (q/tallenna-paallystyskohteen-aikataulu!
-          db
-          {:aikataulu_paallystys_alku (:aikataulu-paallystys-alku rivi)
-           :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu rivi)
-           :aikataulu_kohde_valmis (:aikataulu-kohde-valmis rivi)
-           :aikataulu_muokkaaja (:id user)
-           :suorittava_tiemerkintaurakka (:suorittava-tiemerkintaurakka rivi)
-           :id (:id rivi)
-           :urakka urakka-id}))
-      :tiemerkinta
-      (doseq [rivi kohteet]
-        (q/tallenna-tiemerkintakohteen-aikataulu!
-          db
-          {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku rivi)
-           :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu rivi)
-           :aikataulu_muokkaaja (:id user)
-           :id (:id rivi)
-           :urakka urakka-id})))
-    (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                   :sopimus-id sopimus-id})))
+  (let [voi-tallentaa-tiemerkinnan-takarajan? (oikeudet/on-muu-oikeus? "TM-valmis"
+                                                                        oikeudet/urakat-aikataulu
+                                                                        urakka-id
+                                                                        @istunto/kayttaja)]
+    (jdbc/with-db-transaction [db db]
+     (case (hae-urakkatyyppi db urakka-id)
+       :paallystys
+       (doseq [rivi kohteet]
+         (q/tallenna-paallystyskohteen-aikataulu!
+           db
+           {:aikataulu_paallystys_alku (:aikataulu-paallystys-alku rivi)
+            :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu rivi)
+            :aikataulu_kohde_valmis (:aikataulu-kohde-valmis rivi)
+            :aikataulu_muokkaaja (:id user)
+            :suorittava_tiemerkintaurakka (:suorittava-tiemerkintaurakka rivi)
+            :id (:id rivi)
+            :urakka urakka-id})
+         (when voi-tallentaa-tiemerkinnan-takarajan?
+           (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
+             db
+             {:aikataulu_tiemerkinta_takaraja (:takaraja rivi)
+              :id (:id rivi)
+              :urakka urakka-id})))
+       :tiemerkinta
+       (doseq [rivi kohteet]
+         (q/tallenna-tiemerkintakohteen-aikataulu!
+           db
+           {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku rivi)
+            :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu rivi)
+            :aikataulu_muokkaaja (:id user)
+            :id (:id rivi)
+            :urakka urakka-id})
+         (when voi-tallentaa-tiemerkinnan-takarajan?
+           (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
+             db
+             {:aikataulu_tiemerkinta_takaraja (:takaraja rivi)
+              :id (:id rivi)
+              :urakka urakka-id}))))
+     (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                    :sopimus-id sopimus-id}))))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id
                                {:keys [kohdenumero nimi
