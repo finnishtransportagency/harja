@@ -60,7 +60,8 @@ The following keys are supported in the configuration:
                             "collapse.in"
                             "collapse")))]
     (fn [options header & items]
-      [:nav.navbar.navbar-default {:role "navigation"}
+      [:nav.navbar.navbar-default {:role "navigation"
+                                   :class (:luokka options)}
        [:div.container-fluid
 
         ;; Brand and toggle get grouped for better mobile display 

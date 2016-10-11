@@ -22,15 +22,16 @@
   ([lokittaja sonja jono viesti] (laheta-jonoon lokittaja sonja jono viesti nil))
   ([lokittaja sonja jono viesti viesti-id]
    (log/debug (format "Lähetetään JMS jonoon: %s viesti: %s." jono viesti))
-   (let [tapahtuma-id (lokittaja :alkanut nil nil)
-         virheviesti (format "Lähetys JMS jonoon: %s epäonnistui." jono)]
+   (let [tapahtuma-id (lokittaja :alkanut nil nil)]
      (try
        (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
          (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
-         (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti))
+         (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)]
+           (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti)))
        (catch Exception poikkeus
-         (log/error poikkeus "Virhe JMS lähetyksessä jonoon: " jono)
-         (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti))))))
+         (let [virheviesti(format "Tapahtui poikkeus lähettäessä JMS jonoon: %s epäonnistui." jono)]
+           (log/error poikkeus virheviesti)
+           (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti)))))))
 
 (defn jonolahettaja [lokittaja sonja jono]
   (fn [viesti viesti-id]

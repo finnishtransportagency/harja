@@ -210,6 +210,10 @@ rooleista."
   [kayttaja]
   (= :tilaaja (osapuoli kayttaja)))
 
+(defn urakoitsija?
+  [kayttaja]
+  (= :urakoitsija (osapuoli kayttaja)))
+
 (defn voi-nahda-raportit?
   "Käyttäjä voi nähdä raportit, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"
   #?(:cljs ([] (voi-nahda-raportit? @istunto/kayttaja)))

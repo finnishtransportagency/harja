@@ -97,10 +97,12 @@
     aloituskuittauksia-annetuna-ajan-valissa))
 
 (defn hae-ilmoitukset
-  [db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
+  ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
+  ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
                    kuittaustyypit aikavali hakuehto selite vain-myohassa?
                    aloituskuittauksen-ajankohta tr-numero
-                   ilmoittaja-nimi ilmoittaja-puhelin]}]
+                   ilmoittaja-nimi ilmoittaja-puhelin]}
+   max-maara]
   (let [aikavali-alku (when (first aikavali)
                         (konv/sql-date (first aikavali)))
         aikavali-loppu (when (second aikavali)
@@ -154,7 +156,8 @@
                                       :ilmoittaja-nimi (when ilmoittaja-nimi
                                                          (str "%" ilmoittaja-nimi "%"))
                                       :ilmoittaja-puhelin (when ilmoittaja-puhelin
-                                                            (str "%" ilmoittaja-puhelin "%"))}))
+                                                            (str "%" ilmoittaja-puhelin "%"))
+                                      :max-maara max-maara}))
             {:kuittaus :kuittaukset}))
         ilmoitukset (mapv
                       #(-> %
@@ -175,7 +178,7 @@
                       ilmoitukset)]
     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
-    ilmoitukset))
+    ilmoitukset)))
 
 (defn hae-ilmoitus [db user id]
   (let [kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)]
@@ -315,7 +318,7 @@
            :as this}]
     (julkaise-palvelu http :hae-ilmoitukset
                       (fn [user tiedot]
-                        (hae-ilmoitukset db user tiedot)))
+                        (hae-ilmoitukset db user tiedot 501)))
     (julkaise-palvelu http :hae-ilmoitus
                       (fn [user tiedot]
                         (hae-ilmoitus db user tiedot)))
