@@ -73,7 +73,7 @@
               {:class    "uusi-kuittaus-nappi"
                :on-click #(e! (v/->AvaaUusiKuittaus))}
               (ikonit/livicon-plus) " Uusi kuittaus"]
-             [yleiset/vihje "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia"]))))
+             [yleiset/vihje tiedot/vihje-liito]))))
 
      (when-not (empty? (:kuittaukset ilmoitus))
        [:div
