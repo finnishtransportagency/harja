@@ -18,6 +18,7 @@
             [taoensso.timbre :as log]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.kyselyt.tieverkko :as tieverkko]
+            [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paallystys :as paallystys-q]))
 
@@ -143,6 +144,7 @@
     (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
       db
       {:valmis_tiemerkintaan tiemerkintapvm
+       :tiemerkinta_valmis_viimeistaan (tm-domain/tiemerkinta-oltava-valmis tiemerkintapvm)
        :id kohde-id
        :urakka urakka-id})
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
