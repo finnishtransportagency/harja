@@ -105,9 +105,7 @@
     urakoiden-paivystykset))
 
 (defn hae-urakat-paivystystarkistukseen
-  ;; TODO Mahdollista rajaaminen usealla urakkatyypillä kun
-  ;; on useita urakkatyyppejä tuotannossa. Kun kaikki urakkatyypit
-  ;; tuotannossa, ei filtteriä enää tarvita.
+  ;; TODO Poista urakkatyyppi-filtteri kun kaikki urakat tuotannossa (joku kaunis päivä)
   ([db pvm] (hae-urakat-paivystystarkistukseen db pvm nil))
   ([db pvm urakkatyyppi]
   (yhteyshenkilot-q/hae-urakat-paivystystarkistukseen db {:pvm (c/to-sql-time pvm)
@@ -115,8 +113,7 @@
                                                                     (name urakkatyyppi))})))
 
 (defn- paivystyksien-tarkistustehtava [db fim email nykyhetki]
-  (log/info "Päivystystarkistukset disabloitu, otetaan myöhemmin käyttöön")
-  #_(let [voimassa-olevat-urakat (urakat/hae-urakat-paivystystarkistukseen db nykyhetki :hoito)
+  (let [voimassa-olevat-urakat (hae-urakat-paivystystarkistukseen db nykyhetki :hoito)
         paivystykset (hae-voimassa-olevien-urakoiden-paivystykset db nykyhetki)
         urakat-ilman-paivystysta (urakat-ilman-paivystysta paivystykset voimassa-olevat-urakat nykyhetki)]
     (ilmoita-paivystyksettomista-urakoista urakat-ilman-paivystysta fim email nykyhetki)))

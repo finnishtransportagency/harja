@@ -216,25 +216,34 @@
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi vain-laadunalitukset?]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-   (into []
-         (comp tarkastus-xf
-               (if palauta-reitti?
-                 identity
-                 (map #(dissoc % :sijainti))))
-         (tarkastukset/hae-urakan-tarkastukset
-          db urakka-id
-          (konv/sql-timestamp alkupvm)
-          (konv/sql-timestamp loppupvm)
-          (if tienumero true false) tienumero
-          (if tyyppi true false) (and tyyppi (name tyyppi))
-          vain-laadunalitukset?
-          max-rivimaara))))
+   (let [urakoitsija? (roolit/urakoitsija? user)
+         tarkastukset (into []
+                            (comp tarkastus-xf
+                                  (if palauta-reitti?
+                                    identity
+                                    (map #(dissoc % :sijainti))))
+                            (tarkastukset/hae-urakan-tarkastukset
+                              db urakka-id
+                              urakoitsija?
+                              (konv/sql-timestamp alkupvm)
+                              (konv/sql-timestamp loppupvm)
+                              (boolean tienumero) tienumero
+                              (boolean tyyppi) (and tyyppi (name tyyppi))
+                              vain-laadunalitukset?
+                              max-rivimaara))]
+     tarkastukset)))
 
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-  (let [tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus db urakka-id tarkastus-id)))]
-    (assoc tarkastus
-           :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id)))))
+  (let [urakoitsija? (roolit/urakoitsija? user)
+        tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus
+                                                 db
+                                                 urakka-id
+                                                 tarkastus-id
+                                                 urakoitsija?)))]
+    (when tarkastus
+      (assoc tarkastus
+       :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
 (def talvihoitomittauksen-kentat
   [[:lumimaara] [:hoitoluokka] [:tasaisuus] [:kitka] [:ajosuunta]
@@ -338,7 +347,8 @@
                    :alku alkupvm :loppu loppupvm
                    :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
                    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
-                   :vain_laadunalitukset vain-laadunalitukset?})))
+                   :vain_laadunalitukset vain-laadunalitukset?
+                   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 

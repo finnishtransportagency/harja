@@ -207,18 +207,11 @@
             vaaralliset-aineet-disablointi-fn (fn [valitut vaihtoehto]
                                                 (and
                                                   (= vaihtoehto :vaarallisten-aineiden-vuoto)
-                                                  (not (valitut :vaarallisten-aineiden-kuljetus))))
-            henkilovahinkojen-disablointi-fn (fn [valitut vaihtoehto]
-                                               (or (and
-                                                     (not= vaihtoehto :ei_tietoa)
-                                                     (valitut :ei_tietoa))
-                                                   (and (= vaihtoehto :ei_tietoa)
-                                                        (not (empty? valitut))
-                                                        (not (valitut :ei_tietoa)))))]
+                                                  (not (valitut :vaarallisten-aineiden-kuljetus))))]
         [:div
          [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
          (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
-           (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:n epäonnistui "
+           (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:iin epäonnistui "
                                          (pvm/pvm-aika (:lahetetty @turvallisuuspoikkeama)))))
          [lomake/lomake
           {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
@@ -227,16 +220,18 @@
                                                      %)]
                        (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
-           :footer [napit/palvelinkutsu-nappi
-                    "Tallenna turvallisuuspoikkeama"
-                    #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
-                    {:luokka "nappi-ensisijainen"
-                     :ikoni (ikonit/tallenna)
-                     :kun-onnistuu #(do
-                                     (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
-                                     (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                     :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
-                     :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]}
+           :footer [:div
+                    [napit/palvelinkutsu-nappi
+                     "Tallenna turvallisuuspoikkeama"
+                     #(tiedot/tallenna-turvallisuuspoikkeama @turvallisuuspoikkeama)
+                     {:luokka "nappi-ensisijainen"
+                      :ikoni (ikonit/tallenna)
+                      :kun-onnistuu #(do
+                                      (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
+                                      (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                      :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
+                      :disabled (not (voi-tallentaa? @turvallisuuspoikkeama @toimenpiteet-virheet))}]
+                    [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]]}
           [{:otsikko "Tapahtuman otsikko"
             :nimi :otsikko
             :tyyppi :string
@@ -369,21 +364,19 @@
                               :palstoja 1
                               :tyyppi :checkbox
                               :teksti "Sairauspoissaolo jatkuu"})
-               {:otsikko "Vammat"
+               {:otsikko "Vamma"
                 :nimi :vammat
                 :uusi-rivi? true
                 :palstoja 1
-                :tyyppi :checkbox-group
-                :disabloi henkilovahinkojen-disablointi-fn
-                :vaihtoehdot turpodomain/vammat-avaimet-jarjestyksessa
-                :vaihtoehto-nayta turpodomain/vammat}
-               {:otsikko "Vahingoittuneet ruumiinosat"
+                :tyyppi :valinta
+                :valinnat turpodomain/vammat-avaimet-jarjestyksessa
+                :valinta-nayta #(or (turpodomain/vammat %) "- valitse -")}
+               {:otsikko "Vahingoittunut ruumiinosat"
                 :nimi :vahingoittuneetruumiinosat
                 :palstoja 1
-                :tyyppi :checkbox-group
-                :disabloi henkilovahinkojen-disablointi-fn
-                :vaihtoehdot turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
-                :vaihtoehto-nayta turpodomain/vahingoittunut-ruumiinosa}))
+                :tyyppi :valinta
+                :valinnat turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
+                :valinta-nayta #(or (turpodomain/vahingoittunut-ruumiinosa %) "- valitse -")}))
            {:otsikko "Kommentit" :nimi :kommentit
             :tyyppi :komponentti
             :palstoja 2

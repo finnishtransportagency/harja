@@ -14,13 +14,13 @@ SELECT
   t.sijainti,
   t.tarkastaja,
   t.tyyppi,
-  ypk.tr_numero        AS yllapitokohde_tr_numero,
-  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
-  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
-  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
-  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
-  ypk.kohdenumero      AS yllapitokohde_numero,
-  ypk.nimi             AS yllapitokohde_nimi,
+  t.nayta_urakoitsijalle AS "nayta-urakoitsijalle",
+  ypk.tr_numero          AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa         AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys    AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa        AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys   AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero        AS yllapitokohde_numero,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
@@ -34,6 +34,7 @@ FROM tarkastus t
   LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
 WHERE t.urakka = :urakka
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
       AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
@@ -58,9 +59,10 @@ SELECT ST_Simplify(t.sijainti, :toleranssi) as reitti,
    AND t.sijainti IS NOT NULL
    AND ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
    AND (t.aika >= :alku AND t.aika <= :loppu)
+   AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
    AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
    AND (:rajaa_tyypilla = FALSE OR t.tyyppi = :tyyppi :: tarkastustyyppi)
-   AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
+   AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE);
 
 -- name: hae-tarkastus
 -- Hakee yhden urakan tarkastuksen tiedot id:llä.
@@ -80,7 +82,7 @@ SELECT
   t.laadunalitus,
   t.luoja,
   t.yllapitokohde,
-  o.nimi        AS organisaatio,
+  o.nimi                   AS organisaatio,
   k.kayttajanimi,
   k.jarjestelma,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -104,7 +106,8 @@ SELECT
   thm.lampotila_ilma   AS talvihoitomittaus_lampotila_ilma,
   thm.ajosuunta        AS talvihoitomittaus_ajosuunta,
   thm.tarkastus        AS talvihoitomittaus_tarkastus,
-  tl.laatupoikkeama    AS laatupoikkeamaid
+  tl.laatupoikkeama    AS laatupoikkeamaid,
+  t.nayta_urakoitsijalle   AS "nayta-urakoitsijalle"
 FROM tarkastus t
   LEFT JOIN kayttaja k ON t.luoja = k.id
   LEFT JOIN organisaatio o ON o.id = k.organisaatio
@@ -116,7 +119,9 @@ FROM tarkastus t
                                        t.tyyppi = 'laatu' :: tarkastustyyppi)
                                       AND thm.tarkastus = t.id)
   LEFT JOIN tarkastus_laatupoikkeama tl ON t.id = tl.tarkastus
-WHERE t.urakka = :urakka AND t.id = :id;
+WHERE t.urakka = :urakka
+      AND t.id = :id
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-tarkastuksen-liitteet
 -- Hakee annetun tarkastuksen kaikki liitteet
@@ -136,10 +141,10 @@ ORDER BY l.luotu ASC;
 INSERT
 INTO tarkastus
 (lahde, urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde)
+ sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde, nayta_urakoitsijalle)
 VALUES (:lahde::lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
                  :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
-        :havainnot, :laadunalitus, :yllapitokohde);
+        :havainnot, :laadunalitus, :yllapitokohde, :nayta_urakoitsijalle);
 
 -- name: luodun-tarkastuksen-id
 -- single?: true
@@ -150,20 +155,21 @@ SELECT currval('tarkastus_id_seq');
 -- name: paivita-tarkastus!
 -- Päivittää tarkastuksen tiedot
 UPDATE tarkastus
-SET aika           = :aika,
-  tr_numero        = :tr_numero,
-  tr_alkuosa       = :tr_alkuosa,
-  tr_alkuetaisyys  = :tr_alkuetaisyys,
-  tr_loppuosa      = :tr_loppuosa,
-  tr_loppuetaisyys = :tr_loppuetaisyys,
-  sijainti         = :sijainti,
-  tarkastaja       = :tarkastaja,
-  tyyppi           = :tyyppi :: tarkastustyyppi,
-  muokkaaja        = :muokkaaja,
-  muokattu         = current_timestamp,
-  havainnot        = :havainnot,
-  laadunalitus     = :laadunalitus,
-  yllapitokohde    = :yllapitokohde
+SET aika               = :aika,
+  tr_numero            = :tr_numero,
+  tr_alkuosa           = :tr_alkuosa,
+  tr_alkuetaisyys      = :tr_alkuetaisyys,
+  tr_loppuosa          = :tr_loppuosa,
+  tr_loppuetaisyys     = :tr_loppuetaisyys,
+  sijainti             = :sijainti,
+  tarkastaja           = :tarkastaja,
+  tyyppi               = :tyyppi :: tarkastustyyppi,
+  muokkaaja            = :muokkaaja,
+  muokattu             = current_timestamp,
+  havainnot            = :havainnot,
+  laadunalitus         = :laadunalitus,
+  yllapitokohde        = :yllapitokohde,
+  nayta_urakoitsijalle = :nayta_urakoitsijalle
 WHERE urakka = :urakka AND id = :id;
 
 -- name: luo-talvihoitomittaus<!
@@ -241,7 +247,8 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-hallintayksikon-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -273,7 +280,8 @@ WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikk
                    AND (:urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-koko-maan-tiestotarkastukset-liitteineen-raportille
 -- Hakee urakan tiestötarkastukset aikavälin perusteella raportille
@@ -303,7 +311,8 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'tiesto'::tarkastustyyppi;
+      AND t.tyyppi = 'tiesto'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-urakan-kelitarkastukset-liitteineen-raportille
 -- Hakee urakan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -339,7 +348,8 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-hallintayksikon-kelitarkastukset-liitteineen-raportille
 -- Hakee hallintayksikön kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -378,7 +388,8 @@ WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikk
                    AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-koko-maan-kelitarkastukset-liitteineen-raportille
 -- Hakee koko maan kelitarkastukset (talvihoitomittaukset) aikavälin perusteella raportille
@@ -417,7 +428,8 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'talvihoito'::tarkastustyyppi;
+      AND t.tyyppi = 'talvihoito'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-urakan-soratietarkastukset-raportille
 -- Hakee urakan soratietarkastukset aikavälin perusteella raportille
@@ -445,7 +457,8 @@ FROM tarkastus t
 WHERE t.urakka = :urakka
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'soratie'::tarkastustyyppi;
+      AND t.tyyppi = 'soratie'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-hallintayksikon-soratietarkastukset-raportille
 -- Hakee hallintayksikön soratietarkastukset aikavälin perusteella raportille
@@ -476,7 +489,8 @@ WHERE t.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikk
                    AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'soratie'::tarkastustyyppi;
+      AND t.tyyppi = 'soratie'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: hae-koko-maan-soratietarkastukset-raportille
 -- Hakee koko maan soratietarkastukset aikavälin perusteella raportille
@@ -506,7 +520,8 @@ FROM tarkastus t
 WHERE t.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi :: urakkatyyppi))
       AND (t.aika >= :alku AND t.aika <= :loppu)
       AND (:rajaa_tienumerolla = FALSE OR t.tr_numero = :tienumero)
-      AND t.tyyppi = 'soratie'::tarkastustyyppi;
+      AND t.tyyppi = 'soratie'::tarkastustyyppi
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
 
 -- name: liita-tarkastukselle-laatupoikkeama<!
 INSERT INTO tarkastus_laatupoikkeama (tarkastus, laatupoikkeama) VALUES (:tarkastus, :laatupoikkeama);
@@ -569,3 +584,4 @@ WHERE t.tyyppi = 'laatu'::tarkastustyyppi
       AND ((:urakka::integer IS NULL AND u.urakkanro IS NOT NULL) OR t.urakka = :urakka)
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (:laadunalitus::boolean IS NULL OR t.laadunalitus = :laadunalitus)
+      AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE);
