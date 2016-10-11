@@ -7,9 +7,8 @@
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str])
-  (:import (javax.jms Session ExceptionListener JMSException)
-           (progress.message.jclient ConnectionStateChangeListener)
-           (progress.message.jclient Constants))
+  (:import (javax.jms Session ExceptionListener)
+           (java.lang.reflect Proxy InvocationHandler))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def agentin-alkutila
@@ -42,13 +41,15 @@
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
-  (reify ConnectionStateChangeListener
-    (connectionStateChanged [tila]
-      (case tila
-        Constants/ACTIVE (log/info "Sonjan JMS-yhteys käynnistyi")
-        Constants/RECONNECTING (log/info "Sonjan JMS uudelleen yhdistys käynnistyi")
-        Constants/FAILED (log/error "Sonjan JMS-yhteys epäonnistui")
-        Constants/CLOSED (log/info "Sonjan JMS-yhteys sulkeutui")))))
+  (let [lokita-tila #(case (.toString %)
+                      "ACTIVE" (log/info "Sonjan JMS-yhteys käynnistyi")
+                      "RECONNECTING" (log/info "Sonjan JMS uudelleen yhdistys käynnistyi")
+                      "FAILED" (log/error "Sonjan JMS-yhteys epäonnistui")
+                      "CLOSED" (log/info "Sonjan JMS-yhteys sulkeutui"))
+        kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
+        luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")
+        instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
+    instanssi))
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
@@ -120,7 +121,7 @@
 
 (defn tee-jms-poikkeuskuuntelija []
   (reify ExceptionListener
-    (onException [e]
+    (onException [_ e]
       (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e))))))
 
 (defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
