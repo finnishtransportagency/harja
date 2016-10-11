@@ -83,7 +83,6 @@
             urakka-id (:id ur)
             sopimus-id (first @u/valittu-sopimusnumero)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
-            ;; TODO TARKISTA MITEN VALMIS VIIMEISTÄÄN -OIKEUS MÄÄRÄYTYY!
             saa-asettaa-valmis-viimeistaan? (oikeudet/on-muu-oikeus? "TM-takaraja"
                                                                      oikeudet/urakat-aikataulu
                                                                      urakka-id
