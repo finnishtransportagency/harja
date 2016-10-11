@@ -1,7 +1,10 @@
 -- name: tallenna-reittimerkinta!
 INSERT INTO tarkastusreitti (id, pistetyyppi, tarkastusajo, aikaleima, sijainti, kitkamittaus, havainnot, lampotila, tasaisuus, lumisuus, kuvaus, kuva,
                              polyavyys, sivukaltevuus, kiinteys, laadunalitus)
-     VALUES (:id, 0, :tarkastusajo, to_timestamp(:aikaleima/1000), ST_MakePoint(:x,:y), :kitkamittaus, ARRAY[:havainnot]::integer[], :lampotila, :tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys, :sivukaltevuus, :kiinteys, :laadunalitus);
+VALUES (:id, 0, :tarkastusajo, to_timestamp(:aikaleima / 1000), ST_MakePoint(:x, :y), :kitkamittaus,
+             ARRAY [:havainnot] :: INTEGER [], :lampotila, :tasaisuus, :lumisuus, :kuvaus, :kuva, :polyavyys,
+        :sivukaltevuus, :kiinteys, :laadunalitus)
+ON CONFLICT DO NOTHING;
 
 -- name: hae-tarkastusajon-reittimerkinnat
 SELECT * FROM tarkastusreitti WHERE tarkastusajo = :tarkastusajo;
@@ -36,11 +39,11 @@ INSERT INTO liite (lahde, tyyppi, koko, liite_oid, pikkukuva, luoja, luotu)
 
 -- name: hae-reitin-merkinnat-raw
 SELECT x.id, x.sijainti, x.kitkamittaus, x.lampotila, x.tasaisuus, x.lumisuus, x.kuvaus, x.kuva, x.havainnot, x.tarkastusajo,
-       x.aikaleima, x.polyavyys, x.sivukaltevuus, x.kiinteys, x.tyyppi, 
+       x.aikaleima, x.polyavyys, x.sivukaltevuus, x.kiinteys, x.tyyppi,
        (x.trosoite).tie, (x.trosoite).aosa, (x.trosoite).aet, x.laadunalitus
 FROM (SELECT t.id, t.sijainti, t.kitkamittaus, t.lampotila, t.tasaisuus, t.lumisuus, t.kuvaus, t.kuva, t.havainnot, t.tarkastusajo,
        t.aikaleima, t.polyavyys, t.sivukaltevuus, t.kiinteys, a.tyyppi,
-       CAST(tierekisteriosoite_pisteelle_noex(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite, t.laadunalitus
+       CAST(yrita_tierekisteriosoite_pisteelle2(t.sijainti, CAST(:treshold AS INTEGER)) AS tr_osoite) AS trosoite, t.laadunalitus
   FROM tarkastusreitti t
  INNER JOIN tarkastusajo a ON a.id=t.tarkastusajo
  WHERE t.tarkastusajo=:tarkastusajo

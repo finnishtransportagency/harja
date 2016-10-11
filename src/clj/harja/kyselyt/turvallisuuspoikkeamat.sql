@@ -165,6 +165,7 @@ WHERE t.id = :id AND t.urakka = :urakka;
 -- Hakee yksittäisen urakan turvallisuuspoikkeaman
 SELECT
   t.id,
+  t.turi_id                             AS "turi-id",
   t.urakka,
   t.tapahtunut,
   t.kasitelty,
@@ -203,8 +204,15 @@ SELECT
   u.urakkanro                           AS alueurakkanro,
 
   u.sampoid                             AS "urakka-sampoid",
+  (SELECT (etunimi || ' ' || sukunimi)
+   FROM yhteyshenkilo
+   WHERE id =
+         (SELECT yhteyshenkilo
+          FROM yhteyshenkilo_urakka
+          WHERE urakka = t.urakka
+                AND rooli = 'Sampo yhteyshenkilö'
+          LIMIT 1))                     AS "sampo-yhteyshenkilo",
   u.nimi                                AS "urakka-nimi",
-
   h.nimi                                AS "hanke-nimi",
 
 
@@ -543,4 +551,9 @@ WHERE (:kayttajanimi IS NULL OR lower(kayttajanimi) LIKE (CONCAT(lower(:kayttaja
 -- name: hae-turvallisuuspoikkeaman-urakka
 SELECT urakka
 FROM turvallisuuspoikkeama
+WHERE id = :id;
+
+-- name: tallenna-turvallisuuspoikkeaman-turi-id
+UPDATE turvallisuuspoikkeama SET
+  turi_id = :turi_id
 WHERE id = :id;

@@ -73,7 +73,7 @@ WHERE
    i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
 
 ORDER BY i.ilmoitettu DESC, it.kuitattu DESC
-LIMIT 501;
+LIMIT :max-maara::INTEGER;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT

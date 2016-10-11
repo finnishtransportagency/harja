@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
             [clj-time.coerce :as c]
             [clj-time.core :as t]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [clojure.string :as str]))
 
 (def kayttaja "yit-rakennus")
 
@@ -27,7 +28,7 @@
 
 (use-fixtures :once jarjestelma-fixture)
 
-(defn hae-uusin-turvallisuuspoikkeama []
+(defn hae-turvallisuuspoikkeama-ulkoisella-idlla [ulkoinen-id]
   (as-> (first (q (str "SELECT
                         id,
                         urakka,
@@ -63,8 +64,8 @@
                         vaarallisten_aineiden_kuljetus,
                         vaarallisten_aineiden_vuoto
                         FROM turvallisuuspoikkeama
-                        ORDER BY luotu DESC
-                        LIMIT 1;")))
+                        WHERE ulkoinen_id = " ulkoinen-id
+                        " LIMIT 1;")))
         turpo
         ;; Tapahtumapvm ja käsittely -> clj-time
         (assoc turpo 2 (c/from-sql-date (get turpo 2)))
@@ -74,12 +75,6 @@
                                     (.getArray arvo))))
         ;; Tyyppi -> set
         (assoc turpo 15 (into #{} (when-let [arvo (get turpo 15)]
-                                    (.getArray arvo))))
-        ;; Vammat -> set
-        (assoc turpo 19 (into #{} (when-let [arvo (get turpo 19)]
-                                    (.getArray arvo))))
-        ;; Vahingoittuneet ruumiinosat -> set
-        (assoc turpo 20 (into #{} (when-let [arvo (get turpo 20)]
                                     (.getArray arvo))))))
 
 (defn hae-korjaavat-toimenpiteet [turpo-id]
@@ -96,15 +91,16 @@
         (mapv #(assoc % 1 (c/from-sql-date (get % 1))) toimenpide)))
 
 (deftest tallenna-turvallisuuspoikkeama
-  (let [urakka (hae-oulun-alueurakan-2005-2012-id)
+  (let [ulkoinen-id 757577
+        urakka (hae-oulun-alueurakan-2005-2012-id)
         tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                                          kayttaja portti
                                          (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                                              slurp
-                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")))]
+                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                                             (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))]
     (cheshire/decode (:body vastaus) true)
-    (log/debug vastaus)
     (is (= 200 (:status vastaus)))
 
     ;; Tarkista ensin perustasolla, että turpon kirjaus onnistui ja tiedot löytyvät
@@ -118,48 +114,26 @@
       (is (number? tp-id))
       (is (number? kommentti-id)))
 
-    ;; Tiukka tarkastus, datan pitää olla kirjattu täysin oikein
-    (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
+    ;; Tarkistetaan, että data tallentui oikein
+    (let [uusin-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
           turpo-id (first uusin-tp)
           korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
-      (is (match uusin-tp [_
-                           urakka
-                           (_ :guard #(and (= (t/year %) 2016)
-                                           (= (t/month %) 1)
-                                           (= (t/day %) 30)))
-                           (_ :guard #(and (= (t/year %) 2016)
-                                           (= (t/month %) 2)
-                                           (= (t/day %) 1)))
-                           (_ :guard #(some? %))
-                           "Aura-auto suistui tieltä väistäessä jalankulkijaa."
-                           2
-                           0
-                           1234
-                           1
-                           100
-                           73
-                           20
-                           #{"henkilovahinko"}
-                           "vakava"
-                           #{"tyotapaturma", "vaaratilanne"}
-                           "muu_tyontekija"
-                           "Auraaja"
-                           "Sairaalareissu"
-                           #{"luunmurtumat"}
-                           #{"selka", "vartalo"}
-                           true
-                           "Veera"
-                           "Veistelijä"
-                           "tie"
-                           "Yritys Oy"
-                           "Paula Projektipäällikkö"
-                           "Mikko"
-                           "Meikäläinen"
-                           "Aura-auto suistui tieltä"
-                           "Liukas tie keskellä metsää."
-                           true
-                           false]
-                 true))
+      (is (t/year (nth uusin-tp 3)) 2016)
+      (is (t/month (nth uusin-tp 3)) 1)
+      (is (t/day (nth uusin-tp 3)) 30)
+      (is (= (nth uusin-tp 5) "Aura-auto suistui tieltä väistäessä jalankulkijaa."))
+      (is (= (nth uusin-tp 13) #{"henkilovahinko"}))
+      (is (= (nth uusin-tp 14) "vakava"))
+      (is (= (nth uusin-tp 15) #{"tyotapaturma" "vaaratilanne"}))
+      (is (= (nth uusin-tp 16) "muu_tyontekija"))
+      (is (= (nth uusin-tp 17) "Auraaja"))
+      (is (= (nth uusin-tp 18) "Sairaalareissu"))
+      (is (= (konv/array->set (nth uusin-tp 19)) #{"luunmurtumat"})) ;; Vain 1. vamma ja ruumiinosa tallennetaan
+      (is (= (konv/array->set (nth uusin-tp 20)) #{"selka"}))
+      (is (= (nth uusin-tp 22) "Veera"))
+      (is (= (nth uusin-tp 23) "Veistelijä"))
+      (is (= (nth uusin-tp 29) "Aura-auto suistui tieltä"))
+      (is (= (nth uusin-tp 30) "Liukas tie keskellä metsää."))
       (is (= (count korjaavat-toimenpiteet) 1))
       (is (match (first korjaavat-toimenpiteet)
                  ["Kaadetaan risteystä pimentävä pensaikko"
@@ -173,54 +147,37 @@
                  true))
 
       ;; Myös päivitys toimii
-
       (let [vanhat-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
             _ (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                                        kayttaja portti
                                        (-> "test/resurssit/api/turvallisuuspoikkeama.json"
                                            slurp
-                                           (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")))
-            uusin-tp (hae-uusin-turvallisuuspoikkeama)
-            turpo-id (first uusin-tp)
+                                           (.replace "__PAIKKA__" "Liukas tie metsän reunalla.")
+                                           (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
+            uusin-paivitetty-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
+            turpo-id (first uusin-paivitetty-tp)
             korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
 
-        (is (match uusin-tp [_
-                             urakka
-                             (_ :guard #(and (= (t/year %) 2016)
-                                             (= (t/month %) 1)
-                                             (= (t/day %) 30)))
-                             (_ :guard #(and (= (t/year %) 2016)
-                                             (= (t/month %) 2)
-                                             (= (t/day %) 1)))
-                             (_ :guard #(some? %))
-                             "Aura-auto suistui tieltä väistäessä jalankulkijaa."
-                             2
-                             0
-                             1234
-                             1
-                             100
-                             73
-                             20
-                             #{"henkilovahinko"}
-                             "vakava"
-                             #{"tyotapaturma", "vaaratilanne"}
-                             "muu_tyontekija"
-                             "Auraaja"
-                             "Sairaalareissu"
-                             #{"luunmurtumat"}
-                             #{"selka", "vartalo"}
-                             true
-                             "Veera"
-                             "Veistelijä"
-                             "tie"
-                             "Yritys Oy"
-                             "Paula Projektipäällikkö"
-                             "Mikko"
-                             "Meikäläinen"
-                             "Aura-auto suistui tieltä"
-                             "Liukas tie metsän reunalla."
-                             true
-                             false]
-                   true))
+        (is (= (nth uusin-paivitetty-tp 30) "Liukas tie metsän reunalla."))
         ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
-        (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))))
+        (is (= (count korjaavat-toimenpiteet) (+ (count vanhat-korjaavat-toimenpiteet) 1)))))
+
+    (u "DELETE FROM turvallisuuspoikkeama_kommentti WHERE turvallisuuspoikkeama =
+    (SELECT id FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ");")
+    (u "DELETE FROM turvallisuuspoikkeama_liite WHERE turvallisuuspoikkeama =
+    (SELECT id FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ");")
+    (u "DELETE FROM korjaavatoimenpide WHERE turvallisuuspoikkeama =
+    (SELECT id FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ");")
+    (u "DELETE FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ";")))
+
+(deftest tallenna-turvallisuuspoikkeama-tulevaisuuteen-kaatuu
+  (let [urakka (hae-oulun-alueurakan-2005-2012-id)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
+                                         kayttaja portti
+                                         (-> "test/resurssit/api/turvallisuuspoikkeama.json"
+                                             slurp
+                                             (.replace "__PAIKKA__" "Liukas tie keskellä metsää.")
+                                             (.replace "__TAPAHTUMAPAIVAMAARA__" "2066-10-01T00:00:00Z")))]
+    (cheshire/decode (:body vastaus) true)
+    (is (not= 200 (:status vastaus)) "Onnea 60-vuotias Harja!")
+    (is (str/includes? (:body vastaus) "Tapahtumapäivämäärä ei voi olla tulevaisuudessa"))))

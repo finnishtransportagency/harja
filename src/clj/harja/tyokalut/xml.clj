@@ -15,7 +15,8 @@
            (org.w3c.dom.ls LSResourceResolver LSInput)
            (org.xml.sax SAXParseException ErrorHandler)
            (java.text SimpleDateFormat ParseException)
-           (java.util Date)))
+           (java.util Date)
+           (hiccup.compiler HtmlRenderer)))
 
 (defn validoi-xml
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
@@ -148,3 +149,15 @@
   "Palauttaa elementin arvon raakatekstinä, jolloin mm. mukana on kaikki välimerkit"
   [data avain]
   (:content (first (z/xml1-> data avain))))
+
+(defn tee-c-data-elementti [sisalto]
+  (reify HtmlRenderer
+    (render-html [_]
+      (str "<![CDATA[" sisalto "]]>"))))
+
+(defn tee-c-data-elementti-tarvittaessa [sisalto]
+  (if (or (.contains sisalto "<")
+          (.contains sisalto ">")
+          (.contains sisalto "&"))
+    (tee-c-data-elementti sisalto)
+    sisalto))

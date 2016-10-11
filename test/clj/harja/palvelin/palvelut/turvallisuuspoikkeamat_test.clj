@@ -65,9 +65,10 @@
                          :tyontekijanammattimuu nil
                          :tyyppi #{:tyotapaturma}
                          :urakka urakka-id
-                         :vahingoittuneetruumiinosat #{}
+                         :vaaralliset-aineet #{}
+                         :vahingoittuneetruumiinosat nil
                          :vahinkoluokittelu #{}
-                         :vammat #{}}]
+                         :vammat nil}]
                true))))
 
 (defn poista-tp-taulusta
@@ -126,12 +127,6 @@
                                     (.getArray arvo))))
         ;; Tyyppi -> set
         (assoc turpo 15 (into #{} (when-let [arvo (get turpo 15)]
-                                    (.getArray arvo))))
-        ;; Vammat -> set
-        (assoc turpo 19 (into #{} (when-let [arvo (get turpo 19)]
-                                    (.getArray arvo))))
-        ;; Vahingoittuneet ruumiinosat -> set
-        (assoc turpo 20 (into #{} (when-let [arvo (get turpo 20)]
                                     (.getArray arvo))))))
 
 (defn hae-korjaavat-toimenpiteet [turpo-id]
@@ -153,7 +148,7 @@
             :tapahtunut (pvm/luo-pvm (+ 1900 105) 6 1)
             :tyontekijanammatti :kuorma-autonkuljettaja
             :kuvaus "e2e taas punaisena"
-            :vammat #{:luunmurtumat}
+            :vammat :luunmurtumat
             :sairauspoissaolopaivat 0
             :sairaalavuorokaudet 0
             :paikan-kuvaus "Metsätie"
@@ -189,46 +184,17 @@
 
     (is (= (hae-tp-maara) (+ 1 vanha-maara)))
 
-    ;; Tiukka testi, datan pitää olla tallentunut oikein
+    ;; Tarkistetaan, että data tallentui oikein
     (let [uusin-tp (hae-uusin-turvallisuuspoikkeama)
           turpo-id (first uusin-tp)
           turpon-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
-      (is (match uusin-tp [_
-                           1
-                           (_ :guard #(and (= (t/year %) 2005)
-                                           (= (t/month %) 6)
-                                           (= (t/day %) 30)))
-                           (_ :guard #(some? %))
-                           (_ :guard #(some? %))
-                           "e2e taas punaisena"
-                           0
-                           0
-                           1
-                           4
-                           2
-                           5
-                           3
-                           #{"ymparistovahinko"}
-                           "lieva"
-                           #{"tyotapaturma"}
-                           "kuorma-autonkuljettaja"
-                           nil
-                           nil
-                           #{"luunmurtumat"}
-                           #{}
-                           nil
-                           nil
-                           nil
-                           "tie"
-                           nil
-                           nil
-                           nil
-                           nil
-                           "Kävi möhösti"
-                           "Metsätie"
-                           true
-                           true]
-                 true))
+
+      (is (not (empty? uusin-tp)))
+      (is (= (nth uusin-tp 13) #{"ymparistovahinko"}))
+      (is (= (nth uusin-tp 14) "lieva"))
+      (is (= (nth uusin-tp 15) #{"tyotapaturma"}))
+      (is (= (nth uusin-tp 16) "kuorma-autonkuljettaja"))
+      (is (= (nth uusin-tp 29) "Kävi möhösti"))
       (is (= (count turpon-korjaavat-toimenpiteet) 1))
       (is (match (first turpon-korjaavat-toimenpiteet)
                  ["Ei ressata liikaa"
@@ -247,7 +213,7 @@
                                            :tapahtunut (pvm/luo-pvm (+ 1900 105) 9 1)
                                            :tyontekijanammatti :porari
                                            :kuvaus "e2e taas punaisena"
-                                           :vammat #{:sokki}
+                                           :vammat :sokki
                                            :sairauspoissaolopaivat 0
                                            :sairaalavuorokaudet 0
                                            :vakavuusaste :vakava
@@ -270,42 +236,8 @@
           turpo-id (first uusin-tp)
           turpon-korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
 
-      (is (match uusin-tp [_
-                           1
-                           (_ :guard #(and (= (t/year %) 2005)
-                                           (= (t/month %) 9)
-                                           (= (t/day %) 30)))
-                           (_ :guard #(some? %))
-                           (_ :guard #(some? %))
-                           "e2e taas punaisena"
-                           0
-                           0
-                           1
-                           4
-                           2
-                           5
-                           3
-                           #{"ymparistovahinko"}
-                           "vakava"
-                           #{"tyotapaturma"}
-                           "porari"
-                           nil
-                           nil
-                           #{"sokki"}
-                           #{}
-                           nil
-                           nil
-                           nil
-                           "tie"
-                           nil
-                           nil
-                           nil
-                           nil
-                           "Kävi tosi möhösti"
-                           "Luminen metsätie"
-                           false
-                           false]
-                 true))
+      (is (= (nth uusin-tp 29) "Kävi tosi möhösti"))
+      (is (not (empty? uusin-tp)))
       (is (= (count turpon-korjaavat-toimenpiteet) 1))
       (is (match (first turpon-korjaavat-toimenpiteet)
                  ["Ei ressata yhtään"
