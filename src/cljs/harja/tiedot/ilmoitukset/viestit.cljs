@@ -19,7 +19,7 @@
 
 (defrecord PoistaIlmoitusValinta [])
 
-;; kuittaukset
+;; Kuittaukset
 (defrecord AvaaUusiKuittaus [])
 (defrecord SuljeUusiKuittaus [])
 

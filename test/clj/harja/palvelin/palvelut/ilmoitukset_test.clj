@@ -83,6 +83,61 @@
     (is (= ilmoitusid-12347-kuittaukset-maara-suoraan-kannasta (count ilmoitusid-12347-kuittaukset)) "Ilmoitusidn 123347 kuittausten määrä")
     (is (= uusin-kuittaus-ilmoitusidlle-12347-testidatassa uusin-kuittaus-ilmoitusidlle-12347) "uusinkuittaus ilmoitukselle 12347")))
 
+(deftest tallenna-ilmoitustoimenpide
+  (let [parametrit [{:ilmoittaja-sukunimi "Vastaava"
+                     :ilmoittaja-tyopuhelin "0400123123"
+                     :ilmoittaja-etunimi "Järjestelmän"
+                     :ilmoittaja-organisaatio "Liikennevirasto"
+                     :ilmoittaja-ytunnus nil
+                     :ilmoittaja-sahkoposti "jvh@example.com"
+                     :ilmoituksen-id 1
+                     :ulkoinen-ilmoitusid 123
+                     :ilmoittaja-matkapuhelin "0400123123"
+                     :vapaatesti "TESTI123"
+                     :tyyppi :lopetus}]
+
+        ilmoitusten-maara-ennen (ffirst (q
+                                                     (str "SELECT count(*) FROM ilmoitus;")))
+        kuittausten-maara-ennen (ffirst (q
+                                                     (str "SELECT count(*) FROM ilmoitustoimenpide;")))
+        ilmoituksen-1-kuittaukset-maara-ennen
+        (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitus = 1;")))
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                                               :tallenna-ilmoitustoimenpiteet
+                                               +kayttaja-jvh+
+                                               parametrit)
+        ilmoitusten-maara-jalkeen (ffirst (q
+                                                     (str "SELECT count(*) FROM ilmoitus;")))
+        kuittausten-maara-jalkeen (ffirst (q
+                                                     (str "SELECT count(*) FROM ilmoitustoimenpide;")))
+        ilmoituksen-1-kuittaukset-maara-jalkeen
+        (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitus = 1;")))]
+
+    ;; Ilmoituksia sama määrä, kuittausten määrä kannassa nousi yhdellä
+    (is (= ilmoitusten-maara-ennen ilmoitusten-maara-jalkeen))
+    (is (= (+ kuittausten-maara-ennen 1) kuittausten-maara-jalkeen))
+    (is (= (+ ilmoituksen-1-kuittaukset-maara-ennen 1) ilmoituksen-1-kuittaukset-maara-jalkeen))
+
+    (u "DELETE FROM ilmoitustoimenpide WHERE vapaateksti = 'TESTI123';")))
+
+;; FIXME Disabloitu. Ks. HAR-3326
+#_(deftest tallenna-ilmoitustoimenpide-ilman-oikeuksia
+  (let [parametrit [{:ilmoittaja-sukunimi "Vastaava"
+                     :ilmoittaja-tyopuhelin "0400123123"
+                     :ilmoittaja-etunimi "Järjestelmän"
+                     :ilmoittaja-organisaatio "Liikennevirasto"
+                     :ilmoittaja-ytunnus nil
+                     :ilmoittaja-sahkoposti "jvh@example.com"
+                     :ilmoituksen-id 1
+                     :ulkoinen-ilmoitusid 123
+                     :ilmoittaja-matkapuhelin "0400123123"
+                     :vapaatesti "TESTI123"
+                     :tyyppi :aloitus}]]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-ilmoitustoimenpiteet
+                                           +kayttaja-tero+
+                                           parametrit)))))
+
 (deftest hae-ilmoituksia-tienumerolla
   (let [oletusparametrit {:hallintayksikko nil
                           :urakka nil
