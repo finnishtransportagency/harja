@@ -42,14 +42,10 @@
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
-                      ;; ACTIVE
-                      0 (log/info "Sonjan JMS-yhteys käynnistyi")
-                      ;; RECONNECTING
-                      1 (log/info "Sonjan JMS uudelleenyhdistys käynnistyi")
-                      ;; FAILED
-                      2 (log/error "Sonjan JMS-yhteys epäonnistui")
-                      ;; CLOSED
-                      3 (log/info "Sonjan JMS-yhteys sulkeutui"))
+                      0 (log/info "Sonja JMS yhteyden tila: ACTIVE")
+                      1 (log/info "Sonja JMS yhteyden tila: RECONNECTING")
+                      2 (log/error "Sonja JMS yhteyden tila: FAILED")
+                      3 (log/info "Sonja JMS yhteyden tila: CLOSED"))
         kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
         luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")
         instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
@@ -58,8 +54,7 @@
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
     (.setFaultTolerant true)
-    (.setFaultTolerantReconnectTimeout (int 6000))
-    (.setConnectionStateChangeListener (tee-sonic-jms-tilamuutoskuuntelija))))
+    (.setFaultTolerantReconnectTimeout (int 6000))))
 
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
@@ -128,6 +123,8 @@
   (try
     (let [qcf (luo-connection-factory url tyyppi)
           yhteys (.createConnection qcf kayttaja salasana)]
+      (when (= tyyppi :sonicmq)
+        (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija)))
       (.start yhteys)
       yhteys)
     (catch Exception e
