@@ -30,7 +30,17 @@
     (is (= 200 (:status vastaus)))
     (is (= 5 (count yllapitokohteet)))
     (is (some? leppajarven-ramppi))
-    (is (some? (:tiemerkinta-takaraja (:aikataulu leppajarven-ramppi))))))
+    (is (some? (:tiemerkinta-takaraja (:aikataulu leppajarven-ramppi))))
+    (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
+    (is (nil? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (nil? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
+    (is (nil? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:aloituspvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
+    (is (nil? (:valmispvm-paallystys (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
+    (is (nil? (:valmispvm-kohde (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
+    (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet" urakka] "Erkki Esimerkki" portti)]
