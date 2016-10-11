@@ -83,7 +83,7 @@
             urakka-id (:id ur)
             sopimus-id (first @u/valittu-sopimusnumero)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
-            saa-asettaa-valmis-viimeistaan? (oikeudet/on-muu-oikeus? "TM-takaraja"
+            saa-asettaa-valmis-takarajan? (oikeudet/on-muu-oikeus? "TM-takaraja"
                                                                      oikeudet/urakat-aikataulu
                                                                      urakka-id
                                                                      @istunto/kayttaja)
@@ -91,7 +91,7 @@
                                                             oikeudet/urakat-aikataulu
                                                             urakka-id
                                                             @istunto/kayttaja)
-            voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi?)]
+            voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi? saa-asettaa-valmis-takarajan?)]
         [:div.aikataulu
          [grid/grid
           {:otsikko "Kohteiden aikataulu"
@@ -163,7 +163,7 @@
             :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
             :fmt pvm/pvm-opt
             :muokattava? (fn [rivi]
-                           (and saa-asettaa-valmis-viimeistaan?
+                           (and saa-asettaa-valmis-takarajan?
                                 (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
