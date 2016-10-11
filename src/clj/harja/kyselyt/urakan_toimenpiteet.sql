@@ -140,3 +140,9 @@ WHERE t4.taso = 4 AND
                 WHERE urakka = :urakka) AND
       t4.poistettu = FALSE
 ORDER BY t4.jarjestys;
+
+--name: hae-tuote-kolmostason-toimenpidekoodilla
+SELECT tpk2.id, tpk2.nimi
+FROM toimenpidekoodi tpk3
+  JOIN toimenpidekoodi tpk2 ON tpk2.id = tpk3.emo
+WHERE tpk3.id = :id;
