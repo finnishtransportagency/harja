@@ -298,7 +298,7 @@
     tulos))
 
 (defn- tarkista-oikeudet [db user ilmoitustoimenpiteet]
-  ;; TODO Vaikuttaa aiheuttavan enemmän ongelmia kuin ratkaisee niitä
+  ;; FIXME Vaikuttaa aiheuttavan enemmän ongelmia kuin ratkaisee niitä. Ks. HAR-3326
   #_(let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
                                                      (map
                                                        :ilmoituksen-id ilmoitustoimenpiteet))]
