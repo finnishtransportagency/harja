@@ -48,7 +48,7 @@ export default React.createClass({
       case Category.MAINTENANCE:
         return 'Ylläpitötiedote';
       case Category.FAQ:
-        return 'Kysymys';
+        return 'Koulutusvideo';
       default:
         return 'Tiedote';
     }

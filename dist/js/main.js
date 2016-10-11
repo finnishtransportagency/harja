@@ -48292,7 +48292,7 @@ exports.default = _react2.default.createClass({
       case _enums.Category.MAINTENANCE:
         return 'Ylläpitötiedote';
       case _enums.Category.FAQ:
-        return 'Kysymys';
+        return 'Koulutusvideo';
       default:
         return 'Tiedote';
     }
@@ -49007,7 +49007,7 @@ exports.default = _react2.default.createClass({
         break;
       case _enums.Category.FAQ:
         titleText = 'Koulutusvideot';
-        buttonText = 'Kaikki kysymykset';
+        buttonText = 'Kaikki koulutusvideot';
         break;
     }
 
