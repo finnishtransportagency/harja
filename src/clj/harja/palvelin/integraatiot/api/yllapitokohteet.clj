@@ -67,7 +67,7 @@
       {:paallystys_alku (json/aika-string->java-sql-date (:paallystys-aloitettu aikataulu))
        :paallystys_loppu (json/aika-string->java-sql-date (:paallystys-valmis aikataulu))
        :valmis_tiemerkintaan (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
-       :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:aikataulu_tiemerkinta_takaraja aikataulu))
+       :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
        :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
        :muokkaaja (:id kayttaja)
        :id kohde-id})

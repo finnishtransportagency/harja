@@ -214,12 +214,13 @@
 
     (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
                                                  valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
-                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
+                                                 aikataulu_tiemerkinta_loppu, aikataulu_tiemerkinta_takaraja FROM yllapitokohde
                                                  WHERE id = " kohde)))]
       ;; Uudet päällystyksen pvm:t tallentuivat oikein
       (is (some? (get aikataulutiedot 0)))
       (is (some? (get aikataulutiedot 1)))
       (is (some? (get aikataulutiedot 2)))
+      (is (some? (get aikataulutiedot 5)))
       ;; Tiemerkinnän tiedot eivät päivity, koska kyseessä ei ole tiemerkintäurakka
       (is (= (get aikataulutiedot 3) (get vanhat-aikataulutiedot 3)))
       (is (= (get aikataulutiedot 4) (get vanhat-aikataulutiedot 4))))))
