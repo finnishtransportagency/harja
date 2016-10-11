@@ -57,7 +57,6 @@
                                                                hallintayksikko-annettu? hallintayksikko-id
                                                                toimenpide-id
                                                                alkupvm loppupvm)
-        _ (log/debug "muutos ja lisätyöt kannasta:" muutos-ja-lisatyot-kannasta)
         muutos-ja-lisatyot (reverse (sort-by (juxt (comp :id :urakka) :alkanut)
                                              (into []
                                                    (map konv/alaviiva->rakenne)
@@ -77,9 +76,9 @@
                  :viimeinen-rivi-yhteenveto? true
                  :sheet-nimi raportin-nimi}
       (keep identity [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
-                      {:leveys 4 :otsikko "Pvm"}
+                      {:leveys 5 :otsikko "Pvm"}
                       {:leveys 7 :otsikko "Tyyppi"}
-                      {:leveys 5 :otsikko "Sop. nro"}
+                      {:leveys 6 :otsikko "Sop. nro"}
                       {:leveys 12 :otsikko "Toimenpide"}
                       {:leveys 12 :otsikko "Tehtävä"}
                       {:leveys 5 :otsikko "Määrä"}
@@ -88,9 +87,8 @@
       (keep identity
             (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))
                                (pvm/pvm (:alkanut %))
-                               (get-in % [:sopimus :sampoid])
                                (tyon-tyypin-nimi (:tyyppi %))
-
+                               (get-in % [:sopimus :sampoid])
                                (get-in % [:tpi :nimi])
                                (get-in % [:tehtava :nimi])
                                (if (get-in % [:tehtava :paivanhinta])
