@@ -142,9 +142,9 @@
 
 (defn valitut-suodattimet
   "Ottaa nested map rakenteen, jossa viimeisellä tasolla avaimet ovat
-Suodatin recordeja ja arvot boolean. Palauttaa mäpin muuten samalla rakenteella,
-mutta viimeisen tason {suodatin boolean} mäpit on korvattu valittujen
-suodattimien id numeroilla."
+  Suodatin recordeja ja arvot boolean. Palauttaa mäpin muuten samalla rakenteella,
+  mutta viimeisen tason {suodatin boolean} mäpit on korvattu valittujen
+  suodattimien id numeroilla."
   [valinnat]
   (loop [m valinnat
          [[avain arvo] & loput] (seq valinnat)]
