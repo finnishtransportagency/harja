@@ -160,10 +160,11 @@
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   ;; Oma päivityskysely kullekin urakalle, sillä päällystysurakoitsija ja tiemerkkari
   ;; eivät saa muokata samoja asioita
-  (let [voi-tallentaa-tiemerkinnan-takarajan? (oikeudet/on-muu-oikeus? "TM-valmis"
-                                                                        oikeudet/urakat-aikataulu
-                                                                        urakka-id
-                                                                        user)]
+  (let [voi-tallentaa-tiemerkinnan-takarajan?
+        (oikeudet/on-muu-oikeus? "TM-valmis"
+                                 oikeudet/urakat-aikataulu
+                                 urakka-id
+                                 user)]
     (jdbc/with-db-transaction [db db]
      (case (hae-urakkatyyppi db urakka-id)
        :paallystys
@@ -180,7 +181,7 @@
          (when voi-tallentaa-tiemerkinnan-takarajan?
            (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
              db
-             {:aikataulu_tiemerkinta_takaraja (:takaraja rivi)
+             {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja rivi)
               :id (:id rivi)
               :urakka urakka-id})))
        :tiemerkinta
@@ -195,7 +196,7 @@
          (when voi-tallentaa-tiemerkinnan-takarajan?
            (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
              db
-             {:aikataulu_tiemerkinta_takaraja (:takaraja rivi)
+             {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja rivi)
               :id (:id rivi)
               :urakka urakka-id}))))
      (hae-urakan-aikataulu db user {:urakka-id urakka-id
