@@ -155,11 +155,11 @@
                                [:span "Ei"])))}
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-valmis-viimeistaan :tyyppi :pvm
+            :fmt pvm/pvm-opt
             :muokattava? (fn [rivi]
                            (and (= (:nakyma optiot) :paallystys)
                                 saa-asettaa-valmis-viimeistaan?
-                                (:valmis-tiemerkintaan rivi)))
-            :fmt pvm/pvm-opt}
+                                (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Tie\u00ADmer\u00ADkin\u00ADtä a\u00ADloi\u00ADtet\u00ADtu"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :fmt pvm/pvm-opt
