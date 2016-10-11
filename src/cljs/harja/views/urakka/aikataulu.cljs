@@ -81,10 +81,10 @@
       (let [ur @nav/valittu-urakka
             urakka-id (:id ur)
             sopimus-id (first @u/valittu-sopimusnumero)
-            saa-muokata? #(oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
+            saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
             ;; TODO TARKISTA MITEN VALMIS VIIMEISTÄÄN -OIKEUS MÄÄRÄYTYY!
-            saa-asettaa-valmis-viimeistaan? #(oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
-            saa-merkita-valmiiksi? #(oikeudet/urakat-aikataulu urakka-id "TM-valmis")
+            saa-asettaa-valmis-viimeistaan? (oikeudet/voi-kirjoittaa? oikeudet/urakat-aikataulu urakka-id)
+            saa-merkita-valmiiksi? (oikeudet/urakat-aikataulu urakka-id "TM-valmis")
             voi-tallentaa? (or saa-muokata? saa-merkita-valmiiksi?)]
         [:div.aikataulu
          [grid/grid
