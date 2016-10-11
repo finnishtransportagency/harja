@@ -163,7 +163,7 @@
   (let [voi-tallentaa-tiemerkinnan-takarajan? (oikeudet/on-muu-oikeus? "TM-valmis"
                                                                         oikeudet/urakat-aikataulu
                                                                         urakka-id
-                                                                        @istunto/kayttaja)]
+                                                                        user)]
     (jdbc/with-db-transaction [db db]
      (case (hae-urakkatyyppi db urakka-id)
        :paallystys
