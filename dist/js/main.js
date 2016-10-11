@@ -48446,7 +48446,7 @@ exports.default = _react2.default.createClass({
       _react2.default.createElement(_NavButton2.default, { item: linkMaintenance })
     );
 
-    var linkFaq = { title: "UKK", data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ } };
+    var linkFaq = { title: "Koulutusvideot", data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ } };
     var moreFaqEl = _react2.default.createElement(
       'div',
       { className: 'harja-more harja-faq' },
