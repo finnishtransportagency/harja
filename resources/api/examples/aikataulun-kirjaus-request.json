@@ -15,15 +15,16 @@
   "aikataulu": {
     "paallystys-aloitettu": "2015-01-10T12:00:00Z",
     "paallystys-valmis": "2015-01-12T12:00:00Z",
-    "valmis-tiemerkintaan": "2015-01-12T14:00:00Z",
-    "tiemerkinta-aloitettu": "2015-01-12T16:00:00Z",
-    "tiemerkinta-valmis": "2015-01-15T12:00:00Z",
-    "kohde-valmis": "2015-01-16T12:00:00Z",
+    "valmis-tiemerkintaan": "2015-01-12",
+    "tiemerkinnan-oltava-valmis": "2015-01-26",
+    "tiemerkinta-aloitettu": "2015-01-12",
+    "tiemerkinta-valmis": "2015-01-15",
+    "kohde-valmis": "2015-01-16",
     "paallystysilmoitus": {
-      "aloituspvm": "2015-01-10T12:00:00Z",
-      "valmispvm-paallystys": "2015-01-12T12:00:00Z",
-      "valmispvm-kohde": "2015-01-16T12:00:00Z",
-      "takuupvm": "2015-02-15T12:00:00Z"
+      "aloituspvm": "2015-01-10",
+      "valmispvm-paallystys": "2015-01-12",
+      "valmispvm-kohde": "2015-01-16",
+      "takuupvm": "2015-02-15"
     }
   }
 }
