@@ -89,7 +89,8 @@
 (defn- paivita-tiemerkinnan-aikataulu [db kayttaja kohde-id {:keys [aikataulu] :as data}]
   (q-yllapitokohteet/paivita-yllapitokohteen-tiemerkintaaikataulu!
     db
-    {:tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-aloitettu aikataulu))
+    {:aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:aikataulu_tiemerkinta_takaraja aikataulu))
+     :tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-aloitettu aikataulu))
      :tiemerkinta_loppu (json/pvm-string->java-sql-date (:tiemerkinta-valmis aikataulu))
      :muokkaaja (:id kayttaja)
      :id kohde-id})

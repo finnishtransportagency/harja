@@ -581,6 +581,7 @@ AND poistettu IS NOT TRUE;
 -- Päivittää ylläpitokohteen aikataulutiedot
 UPDATE yllapitokohde
 SET
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
   aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
   aikataulu_muokattu = NOW(),
