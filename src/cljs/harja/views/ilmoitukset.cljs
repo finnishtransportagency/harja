@@ -32,7 +32,8 @@
             [harja.ui.notifikaatiot :as notifikaatiot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.domain.oikeudet :as oikeudet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def selitehaku
@@ -174,13 +175,13 @@
 
 (defn ilmoitustyypin-selite [ilmoitustyyppi]
   (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
-    [:div {:class tyyppi} tyyppi ]))
+    [:div {:class tyyppi} tyyppi]))
 
 (defn ilmoitusten-paanakyma
   [e! {valinnat-nyt :valinnat
-           kuittaa-monta :kuittaa-monta
-           haetut-ilmoitukset :ilmoitukset
-           ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?  :as ilmoitukset}]
+       kuittaa-monta :kuittaa-monta
+       haetut-ilmoitukset :ilmoitukset
+       ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa? :as ilmoitukset}]
 
   (let [{valitut-ilmoitukset :ilmoitukset :as kuittaa-monta-nyt} kuittaa-monta
         valitse-ilmoitus! (when kuittaa-monta-nyt
@@ -220,8 +221,15 @@
            :tasaa :keskita
            :tyyppi :komponentti
            :komponentti (fn [rivi]
-                          [:input {:type "checkbox"
-                                   :checked (valitut-ilmoitukset rivi)}])
+                          (let [liidosta-tullut? (not (:ilmoitusid rivi))
+                                kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                                                           (:urakka rivi))]
+                            [:span (when liidosta-tullut?
+                                     {:title tiedot/vihje-liito})
+                             [:input {:type "checkbox"
+                                      :disabled (or liidosta-tullut?
+                                                    (not kirjoitusoikeus?))
+                                      :checked (valitut-ilmoitukset rivi)}]]))
            :leveys 1})
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
@@ -248,8 +256,8 @@
 
         {:otsikko "Tila" :nimi :tila :leveys 7 :hae #(tilan-selite (:tila %))}]
        (mapv #(if (:yhteydenottopyynto %)
-                (assoc % :lihavoi true)
-                %)
+               (assoc % :lihavoi true)
+               %)
              haetut-ilmoitukset)]]]))
 
 (defn- ilmoitukset* [e! ilmoitukset]
@@ -257,16 +265,16 @@
   (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
   (komp/luo
-   (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                   (e! (v/->YhdistaValinnat uusi))))
-   (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
-   (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
-   (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
-     [:span
-      [kartta/kartan-paikka]
-      (if valittu-ilmoitus
-        [ilmoituksen-tiedot e! valittu-ilmoitus]
-        [ilmoitusten-paanakyma e! ilmoitukset])])))
+    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                    (e! (v/->YhdistaValinnat uusi))))
+    (komp/sisaan #(notifikaatiot/pyyda-notifikaatiolupa))
+    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
+    (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
+      [:span
+       [kartta/kartan-paikka]
+       (if valittu-ilmoitus
+         [ilmoituksen-tiedot e! valittu-ilmoitus]
+         [ilmoitusten-paanakyma e! ilmoitukset])])))
 
 (defn ilmoitukset []
   (komp/luo
