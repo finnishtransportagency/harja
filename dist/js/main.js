@@ -749,7 +749,7 @@ module.exports = function(NAME, wrapper, methods, common, IS_MAP, IS_WEAK){
         while(index--)$instance[ADDER](index, index);
         return !$instance.has(-0);
       });
-    if(!ACCEPT_ITERABLES){
+    if(!ACCEPT_ITERABLES){ 
       C = wrapper(function(target, iterable){
         anInstance(target, C, NAME);
         var that = inheritIfRequired(new Base, target, C);
@@ -903,7 +903,7 @@ $export.P = 8;   // proto
 $export.B = 16;  // bind
 $export.W = 32;  // wrap
 $export.U = 64;  // safe
-$export.R = 128; // real proto method for `library`
+$export.R = 128; // real proto method for `library` 
 module.exports = $export;
 },{"./_core":24,"./_ctx":26,"./_global":39,"./_hide":41,"./_redefine":88}],34:[function(require,module,exports){
 var MATCH = require('./_wks')('match');
@@ -3382,7 +3382,7 @@ var $export = require('./_export')
 $export($export.S + $export.F * !($acosh
   // V8 bug: https://code.google.com/p/v8/issues/detail?id=3509
   && Math.floor($acosh(Number.MAX_VALUE)) == 710
-  // Tor Browser bug: Math.acosh(Infinity) -> NaN
+  // Tor Browser bug: Math.acosh(Infinity) -> NaN 
   && $acosh(Infinity) == Infinity
 ), 'Math', {
   acosh: function acosh(x){
@@ -3400,14 +3400,14 @@ function asinh(x){
   return !isFinite(x = +x) || x == 0 ? x : x < 0 ? -asinh(-x) : Math.log(x + Math.sqrt(x * x + 1));
 }
 
-// Tor Browser bug: Math.asinh(0) -> -0
+// Tor Browser bug: Math.asinh(0) -> -0 
 $export($export.S + $export.F * !($asinh && 1 / $asinh(0) > 0), 'Math', {asinh: asinh});
 },{"./_export":33}],153:[function(require,module,exports){
 // 20.2.2.7 Math.atanh(x)
 var $export = require('./_export')
   , $atanh  = Math.atanh;
 
-// Tor Browser bug: Math.atanh(-0) -> 0
+// Tor Browser bug: Math.atanh(-0) -> 0 
 $export($export.S + $export.F * !($atanh && 1 / $atanh(-0) < 0), 'Math', {
   atanh: function atanh(x){
     return (x = +x) == 0 ? x : Math.log((1 + x) / (1 - x)) / 2;
@@ -3845,7 +3845,7 @@ $export($export.P + $export.F * ($fails(function(){
 })), 'Number', {
   toPrecision: function toPrecision(precision){
     var that = aNumberValue(this, 'Number#toPrecision: incorrect invocation!');
-    return precision === undefined ? $toPrecision.call(that) : $toPrecision.call(that, precision);
+    return precision === undefined ? $toPrecision.call(that) : $toPrecision.call(that, precision); 
   }
 });
 },{"./_a-number-value":5,"./_export":33,"./_fails":35}],180:[function(require,module,exports){
@@ -25426,7 +25426,7 @@ https://github.com/mroderick/PubSubJS
     var PubSub = {};
     root.PubSub = PubSub;
     factory(PubSub);
-
+    
 }(( typeof window === 'object' && window ) || this, function (PubSub){
 	'use strict';
 
@@ -25584,7 +25584,7 @@ https://github.com/mroderick/PubSubJS
 	/*Public: Clear subscriptions by the topic
 	*/
 	PubSub.clearSubscriptions = function clearSubscriptions(topic){
-		var m;
+		var m; 
 		for (m in messages){
 			if (messages.hasOwnProperty(m) && m.indexOf(topic) === 0){
 				delete messages[m];
@@ -29161,7 +29161,7 @@ module.exports = HTMLDOMPropertyConfig;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule KeyEscapeUtils
- *
+ * 
  */
 
 'use strict';
@@ -36995,7 +36995,7 @@ module.exports = ReactEventListener;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactFeatureFlags
- *
+ * 
  */
 
 'use strict';
@@ -38485,7 +38485,7 @@ module.exports = ReactMultiChildUpdateTypes;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNodeTypes
- *
+ * 
  */
 
 'use strict';
@@ -39794,7 +39794,7 @@ module.exports = ReactServerRenderingTransaction;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactServerUpdateQueue
- *
+ * 
  */
 
 'use strict';
@@ -42696,7 +42696,7 @@ module.exports = ViewportMetrics;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule accumulateInto
- *
+ * 
  */
 
 'use strict';
@@ -42756,7 +42756,7 @@ module.exports = accumulateInto;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule adler32
- *
+ * 
  */
 
 'use strict';
@@ -43221,7 +43221,7 @@ module.exports = findDOMNode;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule flattenChildren
- *
+ * 
  */
 
 'use strict';
@@ -43299,7 +43299,7 @@ module.exports = flattenChildren;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule forEachAccumulated
- *
+ * 
  */
 
 'use strict';
@@ -43596,7 +43596,7 @@ module.exports = getHostComponentFromComposite;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule getIteratorFn
- *
+ * 
  */
 
 'use strict';
@@ -44032,7 +44032,7 @@ module.exports = isEventSupported;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule isTextInputElement
- *
+ * 
  */
 
 'use strict';
@@ -44152,7 +44152,7 @@ module.exports = quoteAttributeValueForBrowser;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule reactProdInvariant
- *
+ * 
  */
 'use strict';
 
@@ -45150,7 +45150,7 @@ module.exports = camelizeStyleName;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 var isTextNode = require('./isTextNode');
@@ -45405,7 +45405,7 @@ module.exports = createNodesFromMarkup;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 function makeEmptyFunction(arg) {
@@ -45919,7 +45919,7 @@ module.exports = keyOf;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  * @typechecks static-only
  */
 
@@ -46007,7 +46007,7 @@ module.exports = performanceNow;
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @typechecks
- *
+ * 
  */
 
 /*eslint-disable no-self-compare */
@@ -48364,7 +48364,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"./Home.jsx":479,"react":470,"react-dom":302,"superagent":472}],477:[function(require,module,exports){
+},{"../enums.js":487,"./Home.jsx":480,"react":470,"react-dom":302,"superagent":472}],477:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48410,6 +48410,56 @@ exports.default = _react2.default.createClass({
 });
 
 },{"react":470}],478:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _react2.default.createClass({
+  displayName: "Footer",
+  render: function render() {
+    return _react2.default.createElement(
+      "footer",
+      { id: "harja-footer" },
+      _react2.default.createElement(
+        "div",
+        { className: "row align-middle" },
+        _react2.default.createElement(
+          "div",
+          { className: "columns show-for-medium medium-4 large-4" },
+          _react2.default.createElement("img", { className: "livi-footer-logo", src: "images/livi_logo_white.png", alt: "liikennevirasto logo" })
+        ),
+        _react2.default.createElement(
+          "div",
+          { className: "columns small-12 medium-8 large-8" },
+          _react2.default.createElement(
+            "p",
+            null,
+            "T\xE4t\xE4 projektia yll\xE4pit\xE4\xE4 ",
+            _react2.default.createElement(
+              "span",
+              null,
+              _react2.default.createElement(
+                "a",
+                { href: "http://www.liikennevirasto.fi/", target: "_blank" },
+                "Liikennevirasto"
+              )
+            )
+          )
+        )
+      )
+    );
+  }
+});
+
+},{"react":470}],479:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48493,7 +48543,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"./NavButton.jsx":481,"react":470}],479:[function(require,module,exports){
+},{"../enums.js":487,"./NavButton.jsx":482,"react":470}],480:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48660,7 +48710,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"./DevLinks.jsx":477,"./Footer.jsx":486,"./Hero.jsx":478,"./Nav.jsx":480,"./NoticeList.jsx":483,"./NoticeTypeView.jsx":484,"./SingleNoticeView.jsx":485,"pubsub-js":301,"react":470}],480:[function(require,module,exports){
+},{"../enums.js":487,"./DevLinks.jsx":477,"./Footer.jsx":478,"./Hero.jsx":479,"./Nav.jsx":481,"./NoticeList.jsx":484,"./NoticeTypeView.jsx":485,"./SingleNoticeView.jsx":486,"pubsub-js":301,"react":470}],481:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48691,9 +48741,9 @@ exports.default = _react2.default.createClass({
   },
 
   render: function render() {
-    var largeButtonLinks = [{ title: 'HARJA-PROJEKTI', data: { action: _enums.Events.HOME }, buttonStyle: 'large button' }, { title: 'TEIDEN HOITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.CARE }, buttonStyle: 'large button' }, { title: 'TEIDEN YLLÄPITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.MAINTENANCE }, buttonStyle: 'large button' }, { title: 'UKK', data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ }, buttonStyle: 'large button' }];
+    var largeButtonLinks = [{ title: 'HARJA-PROJEKTI', data: { action: _enums.Events.HOME }, buttonStyle: 'large button' }, { title: 'TEIDEN HOITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.CARE }, buttonStyle: 'large button' }, { title: 'TEIDEN YLLÄPITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.MAINTENANCE }, buttonStyle: 'large button' }, { title: 'KOULUTUSVIDEOT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ }, buttonStyle: 'large button' }];
 
-    var normalButtonLinks = [{ title: 'HARJA-PROJEKTI', data: { action: _enums.Events.HOME } }, { title: 'TEIDEN HOITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.CARE } }, { title: 'TEIDEN YLLÄPITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.MAINTENANCE } }, { title: 'UKK', data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ } }];
+    var normalButtonLinks = [{ title: 'HARJA-PROJEKTI', data: { action: _enums.Events.HOME } }, { title: 'TEIDEN HOITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.CARE } }, { title: 'TEIDEN YLLÄPITO', data: { action: _enums.Events.CATEGORY, category: _enums.Category.MAINTENANCE } }, { title: 'KOULUTUSVIDEOT', data: { action: _enums.Events.CATEGORY, category: _enums.Category.FAQ } }];
 
     return _react2.default.createElement(
       'nav',
@@ -48787,7 +48837,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"./NavButton.jsx":481,"pubsub-js":301,"react":470}],481:[function(require,module,exports){
+},{"../enums.js":487,"./NavButton.jsx":482,"pubsub-js":301,"react":470}],482:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48832,7 +48882,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"pubsub-js":301,"react":470}],482:[function(require,module,exports){
+},{"../enums.js":487,"pubsub-js":301,"react":470}],483:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -48910,7 +48960,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"react":470}],483:[function(require,module,exports){
+},{"react":470}],484:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -49050,7 +49100,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"./NavButton.jsx":481,"./Notice.jsx":482,"pubsub-js":301,"react":470,"superagent":472}],484:[function(require,module,exports){
+},{"../enums.js":487,"./NavButton.jsx":482,"./Notice.jsx":483,"pubsub-js":301,"react":470,"superagent":472}],485:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -49173,7 +49223,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"./NoticeList.jsx":483,"react":470}],485:[function(require,module,exports){
+},{"../enums.js":487,"./NoticeList.jsx":484,"react":470}],486:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -49302,57 +49352,7 @@ exports.default = _react2.default.createClass({
   }
 });
 
-},{"../enums.js":487,"./NavButton.jsx":481,"./Notice.jsx":482,"./NoticeList.jsx":483,"react":470}],486:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = _react2.default.createClass({
-  displayName: "Footer",
-  render: function render() {
-    return _react2.default.createElement(
-      "footer",
-      { id: "harja-footer" },
-      _react2.default.createElement(
-        "div",
-        { className: "row align-middle" },
-        _react2.default.createElement(
-          "div",
-          { className: "columns show-for-medium medium-4 large-4" },
-          _react2.default.createElement("img", { className: "livi-footer-logo", src: "images/livi_logo_white.png", alt: "liikennevirasto logo" })
-        ),
-        _react2.default.createElement(
-          "div",
-          { className: "columns small-12 medium-8 large-8" },
-          _react2.default.createElement(
-            "p",
-            null,
-            "T\xE4t\xE4 projektia yll\xE4pit\xE4\xE4 ",
-            _react2.default.createElement(
-              "span",
-              null,
-              _react2.default.createElement(
-                "a",
-                { href: "http://www.liikennevirasto.fi/", target: "_blank" },
-                "Liikennevirasto"
-              )
-            )
-          )
-        )
-      )
-    );
-  }
-});
-
-},{"react":470}],487:[function(require,module,exports){
+},{"../enums.js":487,"./NavButton.jsx":482,"./Notice.jsx":483,"./NoticeList.jsx":484,"react":470}],487:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
