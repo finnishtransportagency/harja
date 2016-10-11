@@ -185,10 +185,18 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
-        kohteet [{:kohdenumero "L03", :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu-muokkaaja 2, :urakka 5,
-                  :aikataulu-kohde-valmis (pvm/->pvm "29.5.2016"), :nimi "Leppäjärven ramppi",
-                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2016 12:00"), :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00"),
-                  :id 1, :sopimus 8, :aikataulu-muokattu (pvm/->pvm-aika "29.5.2016 12:00"), :aikataulu-tiemerkinta-alku nil,
+        kohteet [{:kohdenumero "L03"
+                  :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00") :aikataulu-muokkaaja 2
+                  :urakka (hae-muhoksen-paallystysurakan-id),
+                  :aikataulu-kohde-valmis (pvm/->pvm "29.5.2016")
+                  :nimi "Leppäjärven ramppi",
+                  :valmis-tiemerkintaan (pvm/->pvm-aika "23.5.2016 12:00")
+                  :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00"),
+                  :id 1
+                  :sopimus (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+                  :aikataulu-muokattu (pvm/->pvm-aika "29.5.2016 12:00")
+                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2016")
+                  :aikataulu-tiemerkinta-alku nil,
                   :aikataulu-tiemerkinta-loppu (pvm/->pvm "26.5.2016")}]
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-yllapitokohteiden-aikataulu +kayttaja-jvh+ {:urakka-id urakka-id
@@ -202,6 +210,7 @@
                   :aikataulu-muokkaaja 2
                   :aikataulu-paallystys-alku (pvm/->pvm-aika "19.5.2016 12:00")
                   :aikataulu-paallystys-loppu (pvm/->pvm-aika "20.5.2016 12:00")
+                  :aikataulu-tiemerkinta-takaraja (pvm/->pvm "1.6.2016")
                   :aikataulu-tiemerkinta-alku nil
                   :aikataulu-tiemerkinta-loppu nil
                   :id 1
@@ -213,6 +222,7 @@
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
     (is (= (:aikataulu-paallystys-alku odotettu) (:aikataulu-paallystys-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-alku")
     (is (= (:aikataulu-paallystys-loppu odotettu) (:aikataulu-paallystys-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-paallystys-loppu")
+    (is (= (:aikataulu-tiemerkinta-takaraja odotettu) (:aikataulu-tiemerkinta-takaraja vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-takaraja")
     (is (= (:aikataulu-tiemerkinta-alku odotettu) (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-alku")
     (is (= (:aikataulu-tiemerkinta-loppu odotettu) (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-tiemerkinta-loppu")
     (is (= (:aikataulu-kohde-valmis odotettu) (:aikataulu-kohde-valmis vastaus-leppajarven-ramppi)) "päällystyskohteen :aikataulu-kohde-valmis")))
