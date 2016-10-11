@@ -265,7 +265,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             [ajax-loader "Ladataan..."]
             [:div.laatupoikkeama
              [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
-             [harja.ui.debug/debug (vals (:sanktiot @laatupoikkeama))]
              [lomake/lomake
              {:otsikko      "Laatupoikkeaman tiedot"
               :muokkaa!     #(let [uusi-lp
