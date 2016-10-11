@@ -129,7 +129,7 @@
   (try
     (let [qcf (luo-connection-factory url tyyppi)
           yhteys (.createConnection qcf kayttaja salasana)]
-      (.setExceptionListener (tee-jms-poikkeuskuuntelija))
+      (.setExceptionListener yhteys (tee-jms-poikkeuskuuntelija))
       (.start yhteys)
       yhteys)
     (catch Exception e
