@@ -37,12 +37,14 @@
   [laatupoikkeama]
   (not (nil? (get-in laatupoikkeama [:paatos :paatos]))))
 
+(declare sanktiotaulukon-rivit)
+
 (defn tallenna-laatupoikkeama
   "Tallentaa annetun laatupoikkeaman palvelimelle. Lukee serveriltä palautuvan laatupoikkeaman ja
    päivittää/lisää sen nykyiseen listaukseen, jos se kuuluu listauksen aikavälille."
   [laatupoikkeama nakyma]
   (let [laatupoikkeama (as-> laatupoikkeama lp
-                           (assoc lp :sanktiot (vals (:sanktiot lp)))
+                           (assoc lp :sanktiot (sanktiotaulukon-rivit lp))
                              ;; Varmistetaan, että tietyssä näkymäkontekstissa tallennetaan vain näkymän
                              ;; sisältämät asiat (esim. on mahdollista vaihtaa koko valittu urakka päällystyksestä
                              ;; hoitoon, ja emme halua että hoidon lomakkeessa tallentuu myös ylläpitokohde)
