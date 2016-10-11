@@ -26,7 +26,8 @@
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.domain.laadunseuranta.sanktiot :as sanktio-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -90,20 +91,23 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
          :ohjaus g
          :voi-muokata? paatosoikeus?
          :uusi-rivi (fn [rivi]
-                      (assoc rivi :sakko? true))}
+                      (assoc rivi :laji :A))}
 
         [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
           :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]]}
          {:otsikko "Laji" :tyyppi :valinta :leveys 0.85
           :nimi :laji
-          :aseta #(assoc %1
-                   :laji %2
-                   :tyyppi nil)
-          :valinnat [:A :B :C]
+          :aseta (fn [rivi arvo]
+                   (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                     (if-not (sanktio-domain/sakko? paivitetty)
+                       (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                       paivitetty)))
+          :valinnat [:A :B :C :muistutus]
           :valinta-nayta #(case %
                            :A "A"
                            :B "B"
                            :C "C"
+                           :muistutus "Muistutus"
                            "- valitse -")
           :validoi [[:ei-tyhja "Valitse laji"]]}
          {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
@@ -120,39 +124,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           :valinta-nayta :nimi
           :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
 
-         {:otsikko "Sakko/muistutus"
-          :nimi :sakko?
-          :tyyppi :valinta
-          :hae #(if (:sakko? %) :sakko :muistutus)
-          :aseta (fn [rivi arvo]
-                   (let [sakko? (= :sakko arvo)]
-                     (assoc rivi
-                       :sakko? sakko?
-                       :summa (when sakko? (:summa rivi))
-                       :toimenpideinstanssi (when sakko?
-                                              (:toimenpideinstanssi rivi)))))
-          :valinnat [:sakko :muistutus]
-          :valinta-nayta #(case %
-                           :sakko "Sakko"
-                           :muistutus "Muistutus")
-          :leveys 2}
-
          {:otsikko "Toimenpide"
           :nimi :toimenpideinstanssi
           :tyyppi :valinta
           :valinta-arvo :tpi_id
           :valinta-nayta :tpi_nimi
-          :valinnat-fn #(when (:sakko? %) @tiedot-urakka/urakan-toimenpideinstanssit)
+          :valinnat-fn #(when (sanktio-domain/sakko? %) @tiedot-urakka/urakan-toimenpideinstanssit)
           :leveys 3
           :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
-          :muokattava? :sakko?}
+          :muokattava? sanktio-domain/sakko?}
 
          {:otsikko "Sakko (€)"
           :tyyppi :numero
           :nimi :summa
           :leveys 1.5
           :validoi [[:ei-tyhja "Anna sakon summa euroina"]]
-          :muokattava? :sakko?}
+          :muokattava? sanktio-domain/sakko?}
 
          (when (urakka/indeksi-kaytossa?)
            {:otsikko "Indeksi"
@@ -162,13 +149,41 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             :valinnat ["MAKU 2005" "MAKU 2010"]               ;; FIXME: haetaanko indeksit tiedoista?
             :valinta-nayta #(or % "Ei sidota indeksiin")
             :palstoja 1
-            :muokattava? :sakko?})]
+            :muokattava? sanktio-domain/sakko?})]
 
         sanktiot-atom]])))
 
 (defn avaa-tarkastus [tarkastus-id]
   (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
   (reset! (reitit/valittu-valilehti-atom :laadunseuranta) :tarkastukset))
+
+(defn- sanktiotaulukon-rivit [laatupoikkeama]
+  (remove :poistettu (vals (:sanktiot laatupoikkeama))))
+
+(defn- sanktiotaulukko-tyhja? [laatupoikkeama]
+  (empty? (sanktiotaulukon-rivit laatupoikkeama)))
+
+(defn- tarkasta-sanktiorivi [sanktiorivi]
+  (let [kentat (map #(get-in sanktiorivi %)
+                    (if (sanktio-domain/sakko? sanktiorivi)
+                      [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi] [:tyyppi]]
+                      [[:laji] [:tyyppi] [:perintapvm]]))]
+    (every? some? kentat)))
+
+(defn- sanktiorivit-ok? [laatupoikkeama]
+  (cond
+    (and (not (sanktio-domain/paatos-on-sanktio? laatupoikkeama))
+         (sanktiotaulukko-tyhja? laatupoikkeama))
+    true
+
+    (and (sanktio-domain/paatos-on-sanktio? laatupoikkeama)
+         (sanktiotaulukko-tyhja? laatupoikkeama))
+    false
+
+    ;; muokkausgridiltä tulee [{id {rivi}} ..]
+    ;; Tarkasta että jokaiselle riville muokkausgridissä on jokainen vaadittava arvo
+    :default
+    (every? true? (map tarkasta-sanktiorivi (sanktiotaulukon-rivit laatupoikkeama)))))
 
 (defn- tarkasta-sanktiotiedot [vertailu-fn laatupoikkeama]
   (vertailu-fn #(not (nil? %)) (map #(get-in laatupoikkeama %)
@@ -248,7 +263,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
             [ajax-loader "Ladataan..."]
             [:div.laatupoikkeama
              [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
-
             [lomake/lomake
              {:otsikko      "Laatupoikkeaman tiedot"
               :muokkaa!     #(let [uusi-lp
@@ -275,7 +289,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                {:ikoni        (ikonit/tallenna)
                                 :disabled     (and (validoi-laatupoikkeama @laatupoikkeama))
                                 :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
-                                :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}])}
+                                :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}])
+              :footer-fn    (fn [sisalto]
+                              (when voi-kirjoittaa?
+                                [napit/palvelinkutsu-nappi
+                                 (cond
+                                   (paatos? sisalto)
+                                   "Tallenna ja lukitse laatupoikkeama"
+
+                                   :default
+                                   "Tallenna laatupoikkeama")
+                                 #(tallenna-laatupoikkeama sisalto (:nakyma optiot))
+                                 {:ikoni    (ikonit/tallenna)
+                                  :disabled (or
+                                              (not (validoi-sanktiotiedot sisalto))
+                                              (not (sanktiorivit-ok? sisalto))
+                                              (not (lomake/voi-tallentaa? sisalto)))}]))}
 
              [{:otsikko "Päivämäärä ja aika"
                :pakollinen? true
@@ -408,18 +437,22 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 
                   (sanktion-validointi
-                    {:otsikko "Päätös"
-                     :nimi :paatos-paatos
-                     :tyyppi :valinta
-                     :valinnat [:sanktio :ei_sanktiota :hylatty]
-                     :hae (comp :paatos :paatos)
-                     :aseta #(assoc-in %1 [:paatos :paatos] %2)
+                    {:otsikko       "Päätös"
+                     :nimi          :paatos-paatos
+                     :tyyppi        :valinta
+                     :valinnat      [:sanktio :ei_sanktiota :hylatty]
+                     :hae           (comp :paatos :paatos)
+                     :aseta         (fn [rivi arvo]
+                                      (let [paivitetty (assoc-in rivi [:paatos :paatos] arvo)]
+                                        (if (sanktio-domain/paatos-on-sanktio? paivitetty)
+                                          paivitetty
+                                          (assoc paivitetty :sanktiot nil))))
                      :valinta-nayta #(if % (laatupoikkeamat/kuvaile-paatostyyppi %)
                                            (if paatosoikeus?
                                              "- Valitse päätös -"
                                              ""))
-                     :palstoja 2
-                     :muokattava? (constantly (and muokattava? paatosoikeus?))}
+                     :palstoja      2
+                     :muokattava?   (constantly (and muokattava? paatosoikeus?))}
                     "Anna päätös")
 
                   (when (:paatos (:paatos @laatupoikkeama))
@@ -435,7 +468,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      :validoi [[:ei-tyhja "Anna päätöksen selitys"]]})
 
 
-                  (when (= :sanktio (:paatos (:paatos @laatupoikkeama)))
+                  (when (sanktio-domain/paatos-on-sanktio? @laatupoikkeama)
                     {:otsikko "Sanktiot"
                      :nimi :sanktiot
                      :tyyppi :komponentti
