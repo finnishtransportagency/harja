@@ -181,7 +181,7 @@
                           "Pohjois-Savo"
                           "Keski-Suomi"
                           "Etelä-Pohjanmaa"
-                          "Pohjois-Pohjanmaa ja Kainuu"
+                          "Pohjois-Pohjanmaa"
                           "Lappi"])
 
 (def urakkatyypin-otsikot {:hoito "Hoito"

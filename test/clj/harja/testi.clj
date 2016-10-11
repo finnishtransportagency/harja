@@ -234,7 +234,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa ja Kainuu'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -408,7 +408,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn oulun-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
-   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id, #{"ELY_Urakanvalvoja"}}})
 
