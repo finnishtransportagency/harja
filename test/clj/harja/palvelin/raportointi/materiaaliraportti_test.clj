@@ -107,9 +107,9 @@
                      [{:otsikko "Urakka"}
                       {:fmt :numero
                        :otsikko "Talvisuolaliuos NaCl (t)"}]
-                     [["Uusimaa"
+                     [["Pohjois-Pohjanmaa"
                        2000M]
-                       ["Pohjois-Pohjanmaa"
+                       ["Uusimaa"
                         2000M]
                        ["Yhteensä"
-                        4000M]]]]))))
+                         4000M]]]]))))
