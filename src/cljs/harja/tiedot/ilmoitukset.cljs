@@ -25,12 +25,13 @@
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
          (reaction
-           {:hallintayksikko (:id @nav/valittu-hallintayksikko)
-            :urakka (:id @nav/valittu-urakka)
-            :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
-            :urakoitsija (:id @nav/valittu-urakoitsija)
-            :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
-            :hoitokausi @u/valittu-hoitokausi}))
+          {:voi-hakea? true
+           :hallintayksikko (:id @nav/valittu-hallintayksikko)
+           :urakka (:id @nav/valittu-urakka)
+           :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
+           :urakoitsija (:id @nav/valittu-urakoitsija)
+           :urakkatyyppi (:arvo @nav/valittu-urakkatyyppi)
+           :hoitokausi @u/valittu-hoitokausi}))
 
 
 (def ^{:const true}
@@ -50,7 +51,9 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                            :hakuehto ""
                            :selite [nil ""]
                            :vain-myohassa? false
-                           :aloituskuittauksen-ajankohta :kaikki}
+                           :aloituskuittauksen-ajankohta :kaikki
+                           :ilmoittaja-nimi ""
+                           :ilmoittaja-puhelin ""}
                 :kuittaa-monta nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
@@ -113,15 +116,18 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   "Ajastaa uuden ilmoitushaun. Jos ilmoitushaku on jo ajastettu, se perutaan ja uusi ajastetaan."
   ([app] (hae app 300))
   ([app timeout] (hae app timeout false))
-  ([{haku :ilmoitushaku-id :as app} timeout taustahaku?]
-    ;; Jos seuraava haku ollaan laukaisemassa, peru se
-   (when haku
-     (.clearTimeout js/window haku))
-   (-> app
-       (assoc :ilmoitushaku-id (.setTimeout js/window
-                                            (t/send-async! v/->HaeIlmoitukset)
-                                            timeout))
-       (assoc :taustahaku? taustahaku?))))
+  ([{valinnat :valinnat haku :ilmoitushaku-id :as app} timeout taustahaku?]
+   (if-not (:voi-hakea? valinnat)
+     app
+     (do
+       ;; Jos seuraava haku ollaan laukaisemassa, peru se
+       (when haku
+         (.clearTimeout js/window haku))
+       (-> app
+           (assoc :ilmoitushaku-id (.setTimeout js/window
+                                                (t/send-async! v/->HaeIlmoitukset)
+                                                timeout))
+           (assoc :taustahaku? taustahaku?))))))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -143,17 +149,17 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (process-event [_ {valinnat :valinnat taustahaku? :taustahaku? :as app}]
     (let [tulos! (t/send-async! v/->IlmoitusHaku)]
       (go
-        (tulos!
-          {:ilmoitukset (<! (k/post! :hae-ilmoitukset
-                                     (-> valinnat
-                                         (update-in [:aikavali 0] #(and % (pvm/paivan-alussa %)))
-                                         (update-in [:aikavali 1] #(and % (pvm/paivan-lopussa %)))
-                                         ;; jos tyyppiä/tilaa ei valittu, ota kaikki
-                                         (update :tyypit
-                                                 #(if (empty? %) +ilmoitustyypit+ %))
-                                         (update :tilat
-                                                 #(if (empty? %) (into #{} tila-filtterit) %)))))
-           :taustahaku? taustahaku?})))
+        (let [haku (-> valinnat
+                       (update-in [:aikavali 0] #(and % (pvm/paivan-alussa %)))
+                       (update-in [:aikavali 1] #(and % (pvm/paivan-lopussa %)))
+                       ;; jos tyyppiä/tilaa ei valittu, ota kaikki
+                       (update :tyypit
+                               #(if (empty? %) +ilmoitustyypit+ %))
+                       (update :tilat
+                               #(if (empty? %) (into #{} tila-filtterit) %)))]
+          (tulos!
+           {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))
+            :taustahaku? taustahaku?}))))
     (if taustahaku?
       app
       (assoc app :ilmoitukset nil)))
@@ -284,3 +290,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
 (defn sulje-ilmoitus! []
   (swap! ilmoitukset assoc :valittu-ilmoitus nil))
+
+(def vihje-liito
+  "Liidosta tuoduille ilmoituksille ei voi tehdä uusia kuittauksia")

@@ -54,7 +54,7 @@
         "sukunimi": "Meikäläinen"
       },
       "otsikko": "Aura-auto suistui tieltä",
-      "tapahtumapaivamaara": "2016-01-30T12:00:00Z",
+      "tapahtumapaivamaara": "__TAPAHTUMAPAIVAMAARA__",
       "kasitelty": "2016-02-1T12:00:00Z",
       "kuvaus": "Aura-auto suistui tieltä väistäessä jalankulkijaa.",
       "paikan_kuvaus": "__PAIKKA__",
@@ -63,8 +63,8 @@
       "henkilovahinko": {
         "tyontekijanammatti": "muu_tyontekija",
         "ammatinselite": "Auraaja",
-        "aiheutuneetVammat": ["luunmurtumat"],
-        "vahingoittuneetRuumiinosat": ["selka", "vartalo"],
+        "aiheutuneetVammat": ["luunmurtumat", "sokki"],
+        "vahingoittuneetRuumiinosat": ["selka", "silmat"],
         "sairauspoissaoloJatkuu": true,
         "sairauspoissaolopaivat": 2,
         "sairaalahoitovuorokaudet": 0

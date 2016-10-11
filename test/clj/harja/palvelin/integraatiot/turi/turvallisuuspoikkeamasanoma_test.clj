@@ -88,10 +88,10 @@
     (is (= (ffirst (q "SELECT COUNT(*) FROM turvallisuuspoikkeama_liite")) 0))))
 
 (deftest sanoman-muodostus-toimii-yhdelle-turpolle
-  ;; Yksittäisen sanoman testaus helpottamaan debuggausta.
   ;; Sanomien muodostuksen testaus kaikille testidatan turpoille
-  ;; kattaa tämän.
-  (let [id (first (flatten (q "SELECT id FROM turvallisuuspoikkeama")))]
+  ;; kattaa myös tämän yksittäisen turpon, tämä on tarkoitettu lähinnä debuggaukseen
+  (let [id (first (flatten (q "SELECT id FROM turvallisuuspoikkeama
+                               WHERE tapahtuman_otsikko = 'Torni kaatui Ernon päälle';")))]
     (testaa-turpon-sanoman-muodostus id)))
 
 (deftest sanomien-muodostus-toimii-kaikille-turpoille
