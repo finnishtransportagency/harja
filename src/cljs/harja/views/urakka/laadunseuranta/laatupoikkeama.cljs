@@ -275,23 +275,6 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                               (log "muokkaa")
                               (reset! laatupoikkeama uusi-lp))
               :voi-muokata? @laatupoikkeamat/voi-kirjata?
-              :footer       (when voi-kirjoittaa?
-                              [napit/palvelinkutsu-nappi
-                               ;; Määritellään "verbi" tilan mukaan, jos päätöstä ei ole: Tallennetaan laatupoikkeama,
-                               ;; jos päätös on tässä muokkauksessa lisätty: Lukitaan laatupoikkeama
-                               (cond
-                                 (and (not (paatos? @laatupoikkeama))
-                                      (paatos? @laatupoikkeama))
-                                 "Tallenna ja lukitse laatupoikkeama"
-
-                                 :default
-                                 "Tallenna laatupoikkeama")
-
-                               #(tallenna-laatupoikkeama @laatupoikkeama (:nakyma optiot))
-                               {:ikoni        (ikonit/tallenna)
-                                :disabled     (and (validoi-laatupoikkeama @laatupoikkeama))
-                                :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
-                                :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}])
               :footer-fn    (fn [sisalto]
                               (when voi-kirjoittaa?
                                 [napit/palvelinkutsu-nappi
@@ -306,7 +289,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                   :disabled (or
                                               (not (validoi-sanktiotiedot sisalto))
                                               (not (sanktiorivit-ok? sisalto))
-                                              (not (lomake/voi-tallentaa? sisalto)))}]))}
+                                              (not (lomake/voi-tallentaa? sisalto)))
+                                  :virheviesti  "Laatupoikkeaman tallennus epäonnistui"
+                                  :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]))}
 
              [{:otsikko "Päivämäärä ja aika"
                :pakollinen? true
