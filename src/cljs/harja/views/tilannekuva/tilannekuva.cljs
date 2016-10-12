@@ -181,7 +181,7 @@
                           "Pohjois-Savo"
                           "Keski-Suomi"
                           "Etelä-Pohjanmaa"
-                          "Pohjois-Pohjanmaa ja Kainuu"
+                          "Pohjois-Pohjanmaa"
                           "Lappi"])
 
 (def urakkatyypin-otsikot {:hoito "Hoito"
@@ -204,11 +204,13 @@
         (doall
           (for [alue tilannekuvan-alueet]
             ^{:key (str tyyppi "-aluesuodatin-alueelle-" alue)}
-            [checkbox-suodatinryhma alue tiedot/suodattimet [:alueet tyyppi alue] {:luokka          "taustavari-taso3 ylaraja"
-                                                                                       :sisallon-luokka "taustavari-taso4"
-                                                                                       :otsikon-luokka  "fontti-taso3"
-                                                                                       :nayta-lkm?      true
-                                                                                       :auki-atomi?     (paneelin-tila-atomi! (str [:alueet tyyppi alue]) false)}]))]])))
+            [checkbox-suodatinryhma alue tiedot/suodattimet
+             [:alueet tyyppi alue]
+             {:luokka "taustavari-taso3 ylaraja"
+              :sisallon-luokka "taustavari-taso4"
+              :otsikon-luokka "fontti-taso3"
+              :nayta-lkm? true
+              :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi alue]) false)}]))]])))
 
 (defn- aluesuodattimet []
   (komp/luo
@@ -219,8 +221,13 @@
                             (:alueet @tiedot/suodattimet))
             ensimmainen-haku-kaynnissa? (and (empty? (:alueet @tiedot/suodattimet))
                                              (nil? @tiedot/uudet-aluesuodattimet))
-            tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))]
-        [asetuskokoelma
+            tyypit-joissa-alueita (keys (:alueet @tiedot/suodattimet))
+            alueita-valittu? (let [elyt (vals (:alueet @tiedot/suodattimet))
+                                   urakat (mapcat vals elyt)
+                                   valitut (mapcat vals urakat)]
+                               (some? (some true? valitut)))]
+        [:div
+         [asetuskokoelma
          (cond
            ensimmainen-haku-kaynnissa? "Haetaan urakoita"
            onko-alueita? "Hae urakoista"
@@ -235,7 +242,9 @@
             (doall
               (for [urakkatyyppi tyypit-joissa-alueita]
                 ^{:key (str "aluesuodattimet-tyypille-" urakkatyyppi)}
-                [tyypin-aluesuodattimet urakkatyyppi]))])]))))
+                [tyypin-aluesuodattimet urakkatyyppi]))])]
+         (when-not alueita-valittu?
+           [yleiset/vihje "Yhtään aluetta ei ole valittu."])]))))
 
 (defn- aikasuodattimet []
   (let [yleiset-asetukset {:luokka          "taustavari-taso3 ylaraja"
@@ -276,10 +285,13 @@
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
     (komp/luo
+      (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
       (fn []
-        [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus :overflow "auto"}}
+        [:div#tk-suodattimet {:style {:max-height @hallintapaneeli-max-korkeus
+                                      :overflow-x "hidden"
+                                      :overflow-y "auto"}}
          [tilan-vaihtaja]
          [aikasuodattimet]
          [aluesuodattimet]]))))

@@ -19,13 +19,28 @@
     kayttaja-paallystys
     :api-yllapitokohteet (component/using (api-yllapitokohteet/->Yllapitokohteet) [:http-palvelin :db :integraatioloki])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-yllapitokohteiden-haku
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet"] kayttaja-paallystys portti)
-        data (cheshire/decode (:body vastaus) true)]
+        data (cheshire/decode (:body vastaus) true)
+        yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
+        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                          yllapitokohteet))]
     (is (= 200 (:status vastaus)))
-    (is (= 5 (count (:yllapitokohteet data))))))
+    (is (= 5 (count yllapitokohteet)))
+    (is (some? leppajarven-ramppi))
+    (is (some? (:tiemerkinta-takaraja (:aikataulu leppajarven-ramppi))))
+    (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
+    (is (nil? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (nil? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
+    (is (nil? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:aloituspvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
+    (is (nil? (:valmispvm-paallystys (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
+    (is (nil? (:valmispvm-kohde (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))
+    (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
   (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet" urakka] "Erkki Esimerkki" portti)]
@@ -214,12 +229,13 @@
 
     (let [aikataulutiedot (first (q (str "SELECT aikataulu_paallystys_alku, aikataulu_paallystys_loppu,
                                                  valmis_tiemerkintaan, aikataulu_tiemerkinta_alku,
-                                                 aikataulu_tiemerkinta_loppu FROM yllapitokohde
+                                                 aikataulu_tiemerkinta_loppu, aikataulu_tiemerkinta_takaraja FROM yllapitokohde
                                                  WHERE id = " kohde)))]
       ;; Uudet päällystyksen pvm:t tallentuivat oikein
       (is (some? (get aikataulutiedot 0)))
       (is (some? (get aikataulutiedot 1)))
       (is (some? (get aikataulutiedot 2)))
+      (is (some? (get aikataulutiedot 5)))
       ;; Tiemerkinnän tiedot eivät päivity, koska kyseessä ei ole tiemerkintäurakka
       (is (= (get aikataulutiedot 3) (get vanhat-aikataulutiedot 3)))
       (is (= (get aikataulutiedot 4) (get vanhat-aikataulutiedot 4))))))
