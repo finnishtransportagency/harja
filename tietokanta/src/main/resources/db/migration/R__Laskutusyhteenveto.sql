@@ -92,24 +92,22 @@ DECLARE
   erilliskustannukset_laskutettu                  NUMERIC;
   erilliskustannukset_laskutettu_ind_korotettuna  NUMERIC;
   erilliskustannukset_laskutettu_ind_korotus      NUMERIC;
-  erilliskustannukset_laskutettu_rivi                  RECORD;
-  eki_laskutettu RECORD;
+  erilliskustannukset_rivi                  RECORD;
+  eki RECORD;
   erilliskustannukset_laskutetaan                  NUMERIC;
   erilliskustannukset_laskutetaan_ind_korotettuna  NUMERIC;
   erilliskustannukset_laskutetaan_ind_korotus      NUMERIC;
-  erilliskustannukset_laskutetaan_rivi                  RECORD;
-  eki_laskutetaan RECORD;
+
 
   bonukset_laskutettu NUMERIC;
   bonukset_laskutettu_ind_korotettuna NUMERIC;
   bonukset_laskutettu_ind_korotus NUMERIC;
-  bonukset_laskutettu_rivi RECORD;
-  bi_laskutettu RECORD;
+  bonukset_rivi RECORD;
+  bi RECORD;
   bonukset_laskutetaan NUMERIC;
   bonukset_laskutetaan_ind_korotettuna NUMERIC;
   bonukset_laskutetaan_ind_korotus NUMERIC;
-  bonukset_laskutetaan_rivi RECORD;
-  bi_laskutetaan RECORD;
+
 
   suolasakko_kaytossa BOOLEAN;
   lampotilat RECORD;
@@ -405,108 +403,66 @@ BEGIN
         END IF;
       END IF;
     END LOOP;
+    RAISE NOTICE 'Äkilliset hoitotyot laskutettu / laskutetaan: % / %', akilliset_hoitotyot_laskutettu, akilliset_hoitotyot_laskutetaan;
+    RAISE NOTICE 'Muutostyöt laskutettu / laskutetaan: % / %', muutostyot_laskutettu, muutostyot_laskutetaan;
 
-
-    -- ERILLISKUSTANNUKSET (muut kuin asiakastyytyväisyysbonus)
-    -- Hoitokaudella ennen aikaväliä laskutetut erilliskustannukset
+    -- ERILLISKUSTANNUKSET  hoitokaudella
+    -- bonukset lasketaan erikseen tyypin perusteella
     erilliskustannukset_laskutettu := 0.0;
     erilliskustannukset_laskutettu_ind_korotettuna := 0.0;
     erilliskustannukset_laskutettu_ind_korotus := 0.0;
-
-    FOR eki_laskutettu IN
-        SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi
-          FROM erilliskustannus ek
-         WHERE ek.tyyppi != 'asiakastyytyvaisyysbonus' AND
-	       ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur) AND
-	       ek.toimenpideinstanssi = t.tpi AND
-	       ek.pvm >= hk_alkupvm AND ek.pvm <= hk_loppupvm AND
-	       ek.pvm < aikavali_alkupvm AND
-	       ek.poistettu IS NOT TRUE
-    LOOP
-      SELECT *
-      FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki_laskutettu.pvm) :: INTEGER),
-                                          (SELECT EXTRACT(MONTH FROM eki_laskutettu.pvm) :: INTEGER),
-                                          eki_laskutettu.indeksin_nimi, eki_laskutettu.rahasumma, perusluku)
-      INTO erilliskustannukset_laskutettu_rivi;
-      erilliskustannukset_laskutettu :=  erilliskustannukset_laskutettu + COALESCE(erilliskustannukset_laskutettu_rivi.summa, 0.0);
-      erilliskustannukset_laskutettu_ind_korotettuna :=  erilliskustannukset_laskutettu_ind_korotettuna + erilliskustannukset_laskutettu_rivi.korotettuna;
-      erilliskustannukset_laskutettu_ind_korotus :=  erilliskustannukset_laskutettu_ind_korotus + erilliskustannukset_laskutettu_rivi.korotus;
-    END LOOP;
-    RAISE NOTICE 'Erilliskustannuksia laskutettu: %', erilliskustannukset_laskutettu;
-
-    -- Erilliskustannukset aikavälillä
     erilliskustannukset_laskutetaan := 0.0;
     erilliskustannukset_laskutetaan_ind_korotettuna := 0.0;
     erilliskustannukset_laskutetaan_ind_korotus := 0.0;
-    FOR eki_laskutetaan IN
-        SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi
-          FROM erilliskustannus ek
-         WHERE ek.tyyppi != 'asiakastyytyvaisyysbonus' AND
-	       ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur) AND
-	       ek.toimenpideinstanssi = t.tpi AND
-	       ek.pvm >= hk_alkupvm AND ek.pvm <= hk_loppupvm AND
-	       ek.pvm >= aikavali_alkupvm AND ek.pvm <= aikavali_loppupvm AND
-	       ek.poistettu IS NOT TRUE
-    LOOP
-      SELECT *
-      FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki_laskutetaan.pvm) :: INTEGER),
-                                          (SELECT EXTRACT(MONTH FROM eki_laskutetaan.pvm) :: INTEGER),
-                                          eki_laskutetaan.indeksin_nimi, eki_laskutetaan.rahasumma, perusluku)
-      INTO erilliskustannukset_laskutetaan_rivi;
-      erilliskustannukset_laskutetaan :=  erilliskustannukset_laskutetaan + COALESCE(erilliskustannukset_laskutetaan_rivi.summa, 0.0);
-      erilliskustannukset_laskutetaan_ind_korotettuna :=  erilliskustannukset_laskutetaan_ind_korotettuna + erilliskustannukset_laskutetaan_rivi.korotettuna;
-      erilliskustannukset_laskutetaan_ind_korotus :=  erilliskustannukset_laskutetaan_ind_korotus + erilliskustannukset_laskutetaan_rivi.korotus;
-    END LOOP;
-    RAISE NOTICE 'Erilliskustannuksia laskutetaan: %', erilliskustannukset_laskutetaan;
-
-    -- BONUKSET
-    -- Hoitokaudella ennen aikaväliä laskutetut bonukset
     bonukset_laskutettu := 0.0;
     bonukset_laskutettu_ind_korotettuna := 0.0;
     bonukset_laskutettu_ind_korotus := 0.0;
-
-    FOR bi_laskutettu IN
-        SELECT b.pvm, b.rahasumma, b.indeksin_nimi
-          FROM erilliskustannus b
-         WHERE b.tyyppi = 'asiakastyytyvaisyysbonus' AND
-	       b.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur) AND
-	       b.toimenpideinstanssi = t.tpi AND
-	       b.pvm >= hk_alkupvm AND b.pvm <= hk_loppupvm AND
-	       b.pvm < aikavali_alkupvm AND
-	       b.poistettu IS NOT TRUE
-    LOOP
-      SELECT *
-        FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutettu.pvm, ind, bi_laskutettu.rahasumma)
-        INTO bonukset_laskutettu_rivi;
-      bonukset_laskutettu :=  bonukset_laskutettu + COALESCE(bonukset_laskutettu_rivi.summa, 0.0);
-      bonukset_laskutettu_ind_korotettuna :=  bonukset_laskutettu_ind_korotettuna + bonukset_laskutettu_rivi.korotettuna;
-      bonukset_laskutettu_ind_korotus :=  bonukset_laskutettu_ind_korotus + bonukset_laskutettu_rivi.korotus;
-    END LOOP;
-    RAISE NOTICE 'Bonuksia laskutettu: %', bonukset_laskutettu;
-
-    -- Bonukset aikavälillä
     bonukset_laskutetaan := 0.0;
     bonukset_laskutetaan_ind_korotettuna := 0.0;
     bonukset_laskutetaan_ind_korotus := 0.0;
-    FOR bi_laskutetaan IN
-        SELECT b.pvm, b.rahasumma, b.indeksin_nimi
-          FROM erilliskustannus b
-         WHERE b.tyyppi = 'asiakastyytyvaisyysbonus' AND
-	       b.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur) AND
-	       b.toimenpideinstanssi = t.tpi AND
-	       b.pvm >= hk_alkupvm AND b.pvm <= hk_loppupvm AND
-	       b.pvm >= aikavali_alkupvm AND b.pvm <= aikavali_loppupvm AND
-	       b.poistettu IS NOT TRUE
-    LOOP
-      SELECT *
-        FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, bi_laskutetaan.pvm, ind, bi_laskutetaan.rahasumma)
-        INTO bonukset_laskutetaan_rivi;
-      bonukset_laskutetaan :=  bonukset_laskutetaan + COALESCE(bonukset_laskutetaan_rivi.summa, 0.0);
-      bonukset_laskutetaan_ind_korotettuna :=  bonukset_laskutetaan_ind_korotettuna + bonukset_laskutetaan_rivi.korotettuna;
-      bonukset_laskutetaan_ind_korotus :=  bonukset_laskutetaan_ind_korotus + bonukset_laskutetaan_rivi.korotus;
-    END LOOP;
-    RAISE NOTICE 'Bonuksia laskutetaan: %', bonukset_laskutetaan;
 
+    FOR eki IN
+        SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi
+          FROM erilliskustannus ek
+         WHERE ek.sopimus IN (SELECT id FROM sopimus WHERE urakka = ur) AND
+	       ek.toimenpideinstanssi = t.tpi AND
+	       ek.pvm >= hk_alkupvm AND ek.pvm <= aikavali_loppupvm AND
+	       ek.poistettu IS NOT TRUE
+    LOOP
+      IF eki.tyyppi = 'asiakastyytyvaisyysbonus' THEN
+        -- Bonus
+	SELECT *
+          FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, eki.pvm, ind, eki.rahasumma)
+          INTO bonukset_rivi;
+        IF eki.pvm < aikavali_alkupvm THEN
+          bonukset_laskutettu :=  bonukset_laskutettu + COALESCE(bonukset_rivi.summa, 0.0);
+          bonukset_laskutettu_ind_korotettuna :=  bonukset_laskutettu_ind_korotettuna + bonukset_rivi.korotettuna;
+          bonukset_laskutettu_ind_korotus :=  bonukset_laskutettu_ind_korotus + bonukset_rivi.korotus;
+        ELSE
+          bonukset_laskutetaan :=  bonukset_laskutetaan + COALESCE(bonukset_rivi.summa, 0.0);
+          bonukset_laskutetaan_ind_korotettuna :=  bonukset_laskutetaan_ind_korotettuna + bonukset_rivi.korotettuna;
+          bonukset_laskutetaan_ind_korotus :=  bonukset_laskutetaan_ind_korotus + bonukset_rivi.korotus;
+        END IF;
+      ELSE
+        -- Muu erilliskustannus kuin bonus
+        SELECT *
+          FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki.pvm) :: INTEGER),
+                                              (SELECT EXTRACT(MONTH FROM eki.pvm) :: INTEGER),
+                                              eki.indeksin_nimi, eki.rahasumma, perusluku)
+          INTO erilliskustannukset_rivi;
+        IF eki.pvm < aikavali_alkupvm THEN
+          erilliskustannukset_laskutettu :=  erilliskustannukset_laskutettu + COALESCE(erilliskustannukset_rivi.summa, 0.0);
+          erilliskustannukset_laskutettu_ind_korotettuna :=  erilliskustannukset_laskutettu_ind_korotettuna + erilliskustannukset_rivi.korotettuna;
+          erilliskustannukset_laskutettu_ind_korotus :=  erilliskustannukset_laskutettu_ind_korotus + erilliskustannukset_rivi.korotus;
+        ELSE
+          erilliskustannukset_laskutetaan :=  erilliskustannukset_laskutetaan + COALESCE(erilliskustannukset_rivi.summa, 0.0);
+          erilliskustannukset_laskutetaan_ind_korotettuna :=  erilliskustannukset_laskutetaan_ind_korotettuna + erilliskustannukset_rivi.korotettuna;
+          erilliskustannukset_laskutetaan_ind_korotus :=  erilliskustannukset_laskutetaan_ind_korotus + erilliskustannukset_rivi.korotus;
+        END IF;
+      END IF;
+    END LOOP;
+    RAISE NOTICE 'Erilliskustannuksia laskutettu / laskutetaan: % / %', erilliskustannukset_laskutettu, erilliskustannukset_laskutetaan;
+    RAISE NOTICE 'Bonuksia laskutettu / laskutetaan: % / %', bonukset_laskutettu, bonukset_laskutetaan;
 
     -- Onko suolasakko käytössä urakassa
     IF (select count(*) FROM suolasakko WHERE urakka = ur
@@ -620,7 +576,6 @@ BEGIN
     RAISE NOTICE '***** Käsitelly loppui toimenpiteelle: %  *****
 
     ', t.nimi;
-    RAISE NOTICE 'Toistuva migraatio R_Laskutusyhteenveto.sql valmis.';
 
     rivi := (t.nimi, t.tuotekoodi, t.tpi, perusluku,
              kaikki_paitsi_kht_laskutettu_ind_korotus, kaikki_laskutettu_ind_korotus,
