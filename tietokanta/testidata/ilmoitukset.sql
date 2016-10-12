@@ -10,7 +10,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Oulun alueurakka 2005-2012'), 12345, '2005-10-01 10:00:00', '2005-10-01 10:05:13', TRUE,
         'Soittakaa Sepolle', 'Voisko joku soittaa?', 'Seppo Savela on pulassa ja kaipaa, että joku soittaa hänelle',
         ST_MakePoint(452935, 7186873) :: GEOMETRY, 6, 6, 6, 6, 6, 'kysely' :: ilmoitustyyppi,
-        ARRAY ['saveaTiella', 'vettaTiella'] :: ilmoituksenselite [],
+        ARRAY ['saveaTiella', 'vettaTiella'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2005-2012'),
@@ -89,7 +89,7 @@ Nam molestie nec tortor. Donec placerat leo sit amet velit. Vestibulum id justo 
 
 Vivamus placerat lacus vel vehicula scelerisque, dui enim adipiscing lacus sit amet sagittis, libero enim vitae mi. In neque magna posuere, euismod ac tincidunt tempor est. Ut suscipit nisi eu purus. Proin ut pede mauris eget ipsum. Integer vel quam nunc commodo consequat. Integer ac eros eu tellus dignissim viverra. Maecenas erat aliquam erat volutpat. Ut venenatis ipsum quis turpis. Integer cursus scelerisque lorem. Sed nec mauris id quam blandit consequat. Cras nibh mi hendrerit vitae, dapibus et aliquam et magna. Nulla vitae elit. Mauris consectetuer odio vitae augue.',
         ST_MakePoint(435847, 7216217) :: GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto' :: ilmoitustyyppi,
-        ARRAY ['kaivonKansiRikki', 'vettaTiella'] :: ilmoituksenselite [],
+        ARRAY ['kaivonKansiRikki', 'vettaTiella'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2005-2012'),
@@ -149,7 +149,7 @@ Veljesten nimet vanhimmasta nuorimpaan ovat: Juhani, Tuomas, Aapo, Simeoni, Timo
 
 Heidän isäänsä, joka oli ankaran innokas metsämies, kohtasi hänen parhaassa iässään äkisti surma, kun hän tappeli äkeän karhun kanssa. Molemmat silloin, niin metsän kontio kuin mies, löyttiin kuolleina, toinen toisensa rinnalla maaten verisellä tanterella. Pahoin oli mies haavoitettu, mutta pedonkin sekä kurkku että kylki nähtiin puukon viiltämänä ja hänen rintansa kiväärin tuiman luodin lävistämänä. Niin lopetti päivänsä roteva mies, joka oli kaatanut enemmän kuin viisikymmentä karhua. ­ Mutta näiden metsäretkiensä kautta löi hän laimin työn ja toimen talossansa, joka vähitellen, ilman esimiehen johtoa, joutui rappiolle. Eivät kyenneet hänen poikansakaan kyntöön ja kylvöön; sillä olivatpa he perineet isältänsä saman voimallisen innon metsäotusten pyyntöön. He rakentelivat satimia, loukkuja, ansaita ja teerentarhoja surmaksi linnuille ja jäniksille. Niin viettivät he poikuutensa ajat, kunnes rupesivat käsittelemään tuliluikkua ja rohkenivat lähestyä otsoa korvessa.',
         ST_MakePoint(499687, 7248153) :: GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto' :: ilmoitustyyppi,
-        ARRAY ['kuoppiaTiessa', 'vettaTiella'] :: ilmoituksenselite [],
+        ARRAY ['kuoppiaTiessa', 'vettaTiella'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Pudasjärven alueurakka 2007-2012'),
@@ -240,7 +240,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES (12348, '2005-02-13 00:00:00', '2005-02-13 00:01:00', FALSE, 'Täällä joku pommi räjähti!!',
         ST_MakePoint(249863, 6723867) :: GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus' :: ilmoitustyyppi,
-        ARRAY ['virkaApupyynto'] :: ilmoituksenselite [],
+        ARRAY ['virkaApupyynto'],
         'George', 'Doe', '05079163872', '05079163872', '', 'tienkayttaja' :: ilmoittajatyyppi,
         'Mika', 'Vaihdemies', '085612567', 'vaihde@valityspalvelu.fi');
 
@@ -257,7 +257,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Oulun alueurakka 2014-2019'), 12372, '2015-11-26 06:05:32', '2015-11-26 06:06:32', TRUE,
         'Voimakas lumipyry nelostiellä Ristisuon kohdalla ja tiet auraamatta.',
         ST_MakePoint(430716, 7200111) :: GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto' :: ilmoitustyyppi,
-        ARRAY ['auraustarve'] :: ilmoituksenselite [],
+        ARRAY ['auraustarve'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
@@ -294,7 +294,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Oulun alueurakka 2014-2019'), 14372, '2015-12-26 06:05:32', '2015-12-26 06:06:32', TRUE,
         'Tiedoksi että este on tiellä..',
         ST_MakePoint(430716, 7200111) :: GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus' :: ilmoitustyyppi,
-        ARRAY ['tiellaOnEste'] :: ilmoituksenselite [],
+        ARRAY ['tiellaOnEste'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
@@ -321,7 +321,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Oulun alueurakka 2014-2019'), 12373, '2015-10-26 06:05:32', '2015-10-26 06:06:32', TRUE,
         'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
         ST_MakePoint(430100, 7197493) :: GEOMETRY, NULL, NULL, NULL, NULL, NULL, 'toimenpidepyynto' :: ilmoitustyyppi,
-        ARRAY ['auraustarve'] :: ilmoituksenselite [],
+        ARRAY ['auraustarve'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
@@ -349,7 +349,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Oulun alueurakka 2014-2019'), 12374, '2014-11-26 06:05:32', '2014-11-26 06:06:32', TRUE,
         'Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.',
         ST_MakePoint(430716, 7200111) :: GEOMETRY, NULL, NULL, NULL, NULL, NULL, 'tiedoitus' :: ilmoitustyyppi,
-        ARRAY ['tiellaOnEste'] :: ilmoituksenselite [],
+        ARRAY ['tiellaOnEste'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
@@ -376,7 +376,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Oulun alueurakka 2014-2019'), 12375, '2014-10-26 06:05:32', '2014-10-26 06:06:32', TRUE,
         'Täysin jäätävä keli, muttei ole suolattu yhtään.',
         ST_MakePoint(427898, 7188532) :: GEOMETRY, NULL, NULL, NULL, NULL, NULL, 'toimenpidepyynto' :: ilmoitustyyppi,
-        ARRAY ['auraustarve'] :: ilmoituksenselite [],
+        ARRAY ['auraustarve'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
@@ -402,7 +402,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12600, '2015-09-26 06:05:32', '2015-09-26 06:06:32', true, 'Voimakas lumipyry nelostiellä Ristisuon kohdalla ja tiet auraamatta.',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                              ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                              ARRAY['auraustarve'],
                                                                                                                               (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                               'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -422,7 +422,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12601, '2015-9-26 06:05:32', '2015-9-26 06:06:32', true, 'Tiedoksi että este on tiellä..',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus'::ilmoitustyyppi,
-                                                                                                                              ARRAY['tiellaOnEste']::ilmoituksenselite[],
+                                                                                                                              ARRAY['tiellaOnEste'],
                                                                                                                               (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                               'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -442,7 +442,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12602, '2015-8-26 06:05:32', '2015-8-26 06:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(430100, 7197493)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -463,7 +463,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12603, '2015-6-26 06:05:32', '2015-6-26 06:06:32', true, 'Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, null, null, null, null, null, 'tiedoitus'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['tiellaOnEste']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['tiellaOnEste'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -483,7 +483,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12604, '2015-6-26 12:05:32', '2015-6-26 12:06:32', true, 'Onhan varmasti tarpeeksi kalustoa vesakonraivaukseen?',
                                                                          ST_MakePoint(427898, 7188532)::GEOMETRY, null, null, null, null, null, 'kysely'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -503,7 +503,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12605, '2015-6-26 06:05:32', '2015-6-26 06:06:32', true, 'Onhan varmasti kalustoa poppeleiden hoitoon?',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi,
-                                                                                                                              ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                              ARRAY['auraustarve'],
                                                                                                                               (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                               'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -523,7 +523,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12606, '2015-4-26 06:05:32', '2015-4-26 06:06:32', true, 'Tiedoksi että este on tiellä..',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus'::ilmoitustyyppi,
-                                                                                                                              ARRAY['tiellaOnEste']::ilmoituksenselite[],
+                                                                                                                              ARRAY['tiellaOnEste'],
                                                                                                                               (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                               'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -543,7 +543,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12607, '2015-3-26 06:05:32', '2015-3-26 06:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(430100, 7197493)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -564,7 +564,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12608, '2015-2-26 06:05:32', '2015-2-26 06:06:32', true, 'Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, null, null, null, null, null, 'tiedoitus'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['tiellaOnEste']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['tiellaOnEste'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -584,7 +584,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12609, '2015-2-26 06:05:32', '2015-2-26 06:06:32', true, 'Täysin jäätävä keli, muttei ole suolattu yhtään.',
                                                                          ST_MakePoint(427898, 7188532)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -603,7 +603,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12610, '2015-1-26 06:05:32', '2015-1-26 06:06:32', true, 'Voimakas lumipyry nelostiellä Ristisuon kohdalla ja tiet auraamatta.',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                              ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                              ARRAY['auraustarve'],
                                                                                                                               (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                               'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -623,7 +623,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12611, '2015-01-26 06:05:32', '2015-01-26 06:06:32', true, 'Tiedoksi että este on tiellä..',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus'::ilmoitustyyppi,
-                                                                                                                              ARRAY['tiellaOnEste']::ilmoituksenselite[],
+                                                                                                                              ARRAY['tiellaOnEste'],
                                                                                                                               (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                               'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -643,7 +643,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12612, '2014-12-26 06:05:32', '2014-12-26 06:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(430100, 7197493)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -664,7 +664,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12613, '2014-11-26 06:05:32', '2014-11-26 06:06:32', true, 'Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, null, null, null, null, null, 'tiedoitus'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['tiellaOnEste']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['tiellaOnEste'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -684,7 +684,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12614, '2014-10-26 06:05:32', '2014-10-26 06:06:32', true, 'Täysin jäätävä keli, muttei ole suolattu yhtään.',
                                                                          ST_MakePoint(427898, 7188532)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -704,7 +704,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12615, '2015-1-26 16:05:32', '2015-1-26 16:06:32', true, 'Onhan varmasti kalustoa poppeleiden hoitoon?',
                                                                          ST_MakePoint(430716, 7200111)::GEOMETRY, 6, 6, 6, 6, 6, 'kysely'::ilmoitustyyppi,
-                                                                                                                              ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                              ARRAY['auraustarve'],
                                                                                                                               (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                               'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -725,7 +725,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12616, '2015-3-22 16:05:32', '2015-3-22 16:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(430100, 7197493)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -745,7 +745,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 12617, '2015-3-16 11:05:32', '2015-3-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(430100, 7197493)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -770,7 +770,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Kajaanin alueurakka 2014-2019'), 22372, '2015-11-26 06:05:32', '2015-11-26 06:06:32', TRUE,
                                                      'Voimakas lumipyry nelostiellä lähellä prikaatia kohdalla ja tiet auraamatta.',
                                                      ST_MakePoint(533601, 7119368) :: GEOMETRY, 6, 6, 6, 6, 6, 'toimenpidepyynto' :: ilmoitustyyppi,
-                                                                                                            ARRAY ['auraustarve'] :: ilmoituksenselite [],
+                                                                                                            ARRAY ['auraustarve'],
                                                                                                             (SELECT tyyppi
                                                                                                              FROM urakka
                                                                                                              WHERE nimi = 'Kajaanin alueurakka 2014-2019'),
@@ -796,7 +796,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 12618, '2012-8-16 11:05:32', '2012-8-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(496694, 7243835)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -816,7 +816,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 12619, '2012-7-16 11:05:32', '2012-7-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(496694, 7243835)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -836,7 +836,7 @@ INSERT INTO ilmoitus
  lahettaja_etunimi, lahettaja_sukunimi, lahettaja_puhelinnumero, lahettaja_sahkoposti)
 VALUES ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), 12620, '2012-3-16 11:05:32', '2012-3-16 11:06:32', true, 'Voimakas lumipyry nelostiellä tiet taas auraamatta.',
                                                                          ST_MakePoint(496694, 7243835)::GEOMETRY, null, null, null, null, null, 'toimenpidepyynto'::ilmoitustyyppi,
-                                                                                                                                          ARRAY['auraustarve']::ilmoituksenselite[],
+                                                                                                                                          ARRAY['auraustarve'],
                                                                                                                                           (SELECT tyyppi FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'),
                                                                                                                                           'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu'::ilmoittajatyyppi,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
@@ -862,7 +862,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Porin alueurakka 2007-2012'), 12376, '2010-10-26 06:05:32', '2010-10-26 06:06:32', TRUE,
         'Täysin jäätävä keli, muttei ole suolattu yhtään.',
         ST_MakePoint(227110, 6820660) :: GEOMETRY, NULL, NULL, NULL, NULL, NULL, 'toimenpidepyynto' :: ilmoitustyyppi,
-        ARRAY ['auraustarve'] :: ilmoituksenselite [],
+        ARRAY ['auraustarve'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Porin alueurakka 2007-2012'),
@@ -889,7 +889,7 @@ VALUES ((SELECT id
          WHERE nimi = 'Porin alueurakka 2007-2012'), 12377, '2011-10-26 06:05:32', '2011-10-26 06:06:32', TRUE,
         'Tiedotus: Kuorma-auton rengas keskellä tietä, en tohtinut poimia kyytiin.',
         ST_MakePoint(224238, 6834028) :: GEOMETRY, NULL, NULL, NULL, NULL, NULL, 'tiedoitus' :: ilmoitustyyppi,
-        ARRAY ['tiellaOnEste'] :: ilmoituksenselite [],
+        ARRAY ['tiellaOnEste'],
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Porin alueurakka 2007-2012'),

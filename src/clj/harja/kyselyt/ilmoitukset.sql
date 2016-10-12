@@ -59,7 +59,7 @@ WHERE
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.paikankuvaus LIKE :teksti OR i.lisatieto LIKE :teksti)) AND
 
   -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite])) AND
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite])) AND
 
   -- Rajaa tienumerolla
   (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND

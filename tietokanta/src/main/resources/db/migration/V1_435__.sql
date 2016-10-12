@@ -1,110 +1,57 @@
-ALTER TYPE ilmoituksenselite
-RENAME TO ilmoituksenselite_temp;
+-- Tee funktio, jolla voidaan muuttaa vanhat ilmoituksen selitteet tekstiarrayhyn
 
-CREATE TYPE ilmoituksenselite AS ENUM (
-  'tyomaajarjestelyihinLiittyvaIlmoitus',
-  'kuoppiaTiessa',
-  'kelikysely',
-  'soratienKuntoHuono',
-  'saveaTiella',
-  'liikennettaVaarantavaEsteTiella',
-  'irtokiviaTiella',
-  'kevyenLiikenteenVaylaanLiittyvaIlmoitus',
-  'raivausJaKorjaustoita',
-  'auraustarve',
-  'yliauraus',
-  'kaivonKansiRikki',
-  'kevyenLiikenteenVaylatOvatLiukkaita',
-  'routaheitto',
-  'avattavatPuomit',
-  'tievalaistusVioittunutOnnettomuudessa',
-  'muuKyselyTaiNeuvonta',
-  'soratienTasaustarve',
-  'tieTaiTienReunaOnPainunut',
-  'siltaanLiittyvaIlmoitus',
-  'polynsidontatarve',
-  'liikennevalotEivatToimi',
-  'kunnossapitoJaHoitotyo',
-  'vettaTiella',
-  'aurausvallitNakemaesteena',
-  'ennakoivaVaroitus',
-  'levahdysalueeseenLiittyvaIlmoitus',
-  'sohjonPoisto',
-  'liikennekeskusKuitannutLoppuneeksi',
-  'muuToimenpidetarve',
-  'hiekoitustarve',
-  'tietOvatJaatymassa',
-  'jaatavaaSadetta',
-  'tienvarsilaitteisiinLiittyvaIlmoitus',
-  'oljyaTiella',
-  'sahkojohtoOnPudonnutTielle',
-  'tieOnSortunut',
-  'tievalaistusVioittunut',
-  'testilahetys',
-  'tievalaistuksenLamppujaPimeana',
-  'virkaApupyynto',
-  'tiemerkintoihinLiittyvaIlmoitus',
-  'tulvavesiOnNoussutTielle',
-  'niittotarve',
-  'kuormaOnLevinnytTielle',
-  'tieOnLiukas',
-  'tiellaOnEste',
-  'harjaustarve',
-  'hoylaystarve',
-  'tietyokysely',
-  'paallystevaurio',
-  'rikkoutunutAjoneuvoTiella',
-  'mustaaJaataTiella',
-  'kevyenLiikenteenVaylillaOnLunta',
-  'hirviaitaVaurioitunut',
-  'korvauskysely',
-  'puitaOnKaatunutTielle',
-  'rumpuunLiittyvaIlmoitus',
-  'lasiaTiella',
-  'liukkaudentorjuntatarve',
-  'alikulkukaytavassaVetta',
-  'kevyenliikenteenAlikulkukaytavassaVetta',
-  'tievalaistuksenLamppuPimeana',
-  'kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita',
-  'kuoppa',
-  'toimenpidekysely',
-  'pysakkiinLiittyvaIlmoitus',
-  'nakemaalueenRaivaustarve',
-  'vesakonraivaustarve',
-  'muuttuvatOpasteetEivatToimi',
-  'tievalaistus',
-  'vesiSyovyttanytTienReunaa',
-  'raskasAjoneuvoJumissa',
-  'myrskyvaurioita',
-  'kaidevaurio',
-  'liikennemerkkeihinLiittyvaIlmoitus',
-  'siirrettavaAjoneuvo',
-  'tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta',
-  'tapahtumaOhi',
-  'kevyenLiikenteenVaylatOvatjaatymassa',
-  'tietOvatjaisiaJamarkia',
-  'kiertotienKunnossapito'
-);
+CREATE OR REPLACE FUNCTION mappaa_selitteet(vanhat_selitteet ilmoituksenselite [])
+  RETURNS TEXT [] AS
+$$
+DECLARE
+  uudet_selitteet TEXT [];
+  uusi_selite     TEXT;
+  vanha_selite    ilmoituksenselite;
+BEGIN
+  FOREACH vanha_selite IN ARRAY vanhat_selitteet
+  LOOP
+    IF vanha_selite = 'tielleOnVuotanutNestettäLiikkuvastaAjoneuvosta' :: ilmoituksenselite
+    THEN
+      uusi_selite := 'tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta' :: ilmoituksenselite;
+    ELSEIF vanha_selite = 'tietOvatjaisiäJamarkia'
+      THEN
+        uusi_selite := 'tietOvatjaisiaJamarkia';
+    ELSE
+      uusi_selite := vanha_selite :: TEXT :: ilmoituksenselite;
+    END IF;
+    uudet_selitteet := uudet_selitteet || uusi_selite;
+  END LOOP;
+  RETURN uudet_selitteet;
+END;
+$$
+LANGUAGE plpgsql;
 
+-- Tee uusi sarake ja nimeä vanha uudestaan
 ALTER TABLE ilmoitus
   RENAME COLUMN selitteet TO selitteet_temp;
 ALTER TABLE asiakaspalauteluokka
   RENAME COLUMN selitteet TO selitteet_temp;
 ALTER TABLE ilmoitus
-  ADD selitteet ilmoituksenselite [];
+  ADD selitteet TEXT [];
 ALTER TABLE asiakaspalauteluokka
-  ADD selitteet ilmoituksenselite [];
+  ADD selitteet TEXT [];
+
+-- Päivitä arvot
 
 UPDATE ilmoitus
 SET
-  selitteet = selitteet_temp :: TEXT :: ilmoituksenselite [];
+  selitteet = mappaa_selitteet(selitteet_temp);
 
 UPDATE asiakaspalauteluokka
-SET selitteet = selitteet_temp :: TEXT :: ilmoituksenselite [];
+SET selitteet = mappaa_selitteet(selitteet_temp);
+
+-- Pudota vanhat sarakkeet ja tyyppi
 
 ALTER TABLE ilmoitus
   DROP COLUMN selitteet_temp;
 ALTER TABLE asiakaspalauteluokka
   DROP COLUMN selitteet_temp;
 
-DROP TYPE ilmoituksenselite_temp CASCADE;
+DROP FUNCTION mappaa_selitteet (vanhat_selitteet ilmoituksenselite []);
+
+DROP TYPE ilmoituksenselite;
