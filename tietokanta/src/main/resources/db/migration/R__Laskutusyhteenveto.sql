@@ -98,7 +98,6 @@ DECLARE
   erilliskustannukset_laskutetaan_ind_korotettuna  NUMERIC;
   erilliskustannukset_laskutetaan_ind_korotus      NUMERIC;
 
-
   bonukset_laskutettu NUMERIC;
   bonukset_laskutettu_ind_korotettuna NUMERIC;
   bonukset_laskutettu_ind_korotus NUMERIC;
@@ -107,7 +106,6 @@ DECLARE
   bonukset_laskutetaan NUMERIC;
   bonukset_laskutetaan_ind_korotettuna NUMERIC;
   bonukset_laskutetaan_ind_korotus NUMERIC;
-
 
   suolasakko_kaytossa BOOLEAN;
   lampotilat RECORD;
