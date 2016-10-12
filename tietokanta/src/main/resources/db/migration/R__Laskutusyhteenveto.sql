@@ -382,8 +382,8 @@ BEGIN
         SELECT mhti.mht_summa AS summa, mhti.mth_summa AS korotettuna, 0 as korotus
 	  INTO muutostyot_rivi;
       END IF;
-      IF tot.tyyppi = 'akillinen-hoitotyo' THEN
-        IF tot.alkanut < aikavali_alkupvm THEN
+      IF mhti.tyyppi = 'akillinen-hoitotyo' THEN
+        IF mhti.tot_alkanut < aikavali_alkupvm THEN
 	  akilliset_hoitotyot_laskutettu := akilliset_hoitotyot_laskutettu + COALESCE(muutostyot_rivi.summa, 0.0);
 	  akilliset_hoitotyot_laskutettu_ind_korotettuna := akilliset_hoitotyot_laskutettu_ind_korotettuna + muutostyot_rivi.korotettuna;
 	  akilliset_hoitotyot_laskutettu_ind_korotus := akilliset_hoitotyot_laskutettu_ind_korotus + muutostyot_rivi.korotus;
@@ -393,7 +393,7 @@ BEGIN
 	  akilliset_hoitotyot_laskutetaan_ind_korotus := akilliset_hoitotyot_laskutetaan_ind_korotus + muutostyot_rivi.korotus;
 	END IF;
       ELSE
-        IF tot.alkanut < aikavali_alkupvm THEN
+        IF mhti.tot_alkanut < aikavali_alkupvm THEN
           muutostyot_laskutettu :=  muutostyot_laskutettu + COALESCE(muutostyot_rivi.summa, 0.0);
           muutostyot_laskutettu_ind_korotettuna :=  muutostyot_laskutettu_ind_korotettuna + muutostyot_rivi.korotettuna;
           muutostyot_laskutettu_ind_korotus :=  muutostyot_laskutettu_ind_korotus + muutostyot_rivi.korotus;
