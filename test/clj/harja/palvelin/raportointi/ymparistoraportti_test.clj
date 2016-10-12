@@ -100,7 +100,7 @@
                                                       :loppupvm     (c/to-date (t/local-date 2016 9 30))
                                                       :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa ja Kainuu, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+    (let [otsikko "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Materiaali"}

@@ -63,7 +63,7 @@
     (if (xml/validi-xml? +xsd-polku+ "nikuxog_product.xsd" maksuera-xml)
       maksuera-xml
       (do
-        (log/error "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi.")
+        (log/error (str "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi. XML:" maksuera-xml))
         nil))))
 
 (defn tee-makseuran-nimi [toimenpiteen-nimi maksueratyyppi]

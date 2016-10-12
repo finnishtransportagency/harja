@@ -94,7 +94,7 @@
                                  :parametrit {:vuosi 2007}})]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Siltatarkastusraportti")
-    (let [otsikko "Siltatarkastusraportti, Pohjois-Pohjanmaa ja Kainuu 2007"
+    (let [otsikko "Siltatarkastusraportti, Pohjois-Pohjanmaa 2007"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-otsikko taulukko otsikko)
       (apurit/tarkista-taulukko-sarakkeet taulukko

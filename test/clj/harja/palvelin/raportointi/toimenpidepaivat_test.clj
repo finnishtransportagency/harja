@@ -183,7 +183,7 @@
                                    {:sarakkeita 8
                                     :teksti     "10 Etelä-Pohjanmaa"}
                                    {:sarakkeita 8
-                                    :teksti     "12 Pohjois-Pohjanmaa ja Kainuu"}
+                                    :teksti     "12 Pohjois-Pohjanmaa"}
                                    {:sarakkeita 8
                                     :teksti     "14 Lappi"}]}
                      [{:otsikko "Teh­tä­vä"}

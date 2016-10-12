@@ -9,12 +9,18 @@
             [harja.atom :refer [paivita!]]
             [cljs-time.core :as t]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
 (def nakymassa? (atom false))
+
+(def valittu-urakkatyyppi (atom (first nav/+urakkatyypit+)))
+
+(def valtakunnalliset-valitavoitteet-kaytossa
+  #{:hoito})
 
 (defn hae-valitavoitteet []
   (k/post! :hae-valtakunnalliset-valitavoitteet {}))

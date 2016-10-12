@@ -199,8 +199,8 @@
             (re-find #"Etelä-Pohjanmaa " nimi)
             (str/replace nimi #"Etelä-Pohjanmaa " "")
 
-            (re-find #"Pohjois-Pohjanmaa ja Kainuu " nimi)
-            (str/replace nimi #"Pohjois-Pohjanmaa ja Kainuu " "")
+            (re-find #"Pohjois-Pohjanmaa " nimi)
+            (str/replace nimi #"Pohjois-Pohjanmaa " "")
 
             (re-find #"Lappi " nimi)
             (str/replace nimi #"Lappi " "")
