@@ -39,7 +39,7 @@
 
 (deftest tarkista-hallintayksikon-asettaminen
   (tuo-urakka)
-  (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Pohjanmaa ja Kainuu") "Urakan hallintayksiköksi on asetettu Pohjois-Pohjanmaan ELY")
+  (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Pohjanmaa") "Urakan hallintayksiköksi on asetettu Pohjois-Pohjanmaan ELY")
   (poista-urakka))
 
 (deftest tarkista-alueurakkanumeron-purku

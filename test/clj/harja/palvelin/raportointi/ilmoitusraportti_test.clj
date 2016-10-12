@@ -54,7 +54,7 @@
                                           {:otsikko "TUR (Tiedoksi)"}
                                           {:otsikko "URK (Kysely)"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "Pohjois-Pohjanmaa ja Kainuu"}
+                                      {:otsikko "Pohjois-Pohjanmaa"}
                                       ["Oulun alueurakka 2014-2019" 10 7 3]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -68,7 +68,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa ja Kainuu, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "Pohjois-Pohjanmaa, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
