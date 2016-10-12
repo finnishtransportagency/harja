@@ -83,6 +83,7 @@ SELECT
   ypk.aikataulu_paallystys_alku         AS "paallystys-alku",
   ypk.aikataulu_paallystys_loppu        AS "paallystys-loppu",
   ypk.valmis_tiemerkintaan              AS "valmis-tiemerkintaan",
+  ypk.aikataulu_tiemerkinta_takaraja    AS "tiemerkinta-takaraja",
   ypk.aikataulu_tiemerkinta_alku        AS "tiemerkinta-alku",
   ypk.aikataulu_tiemerkinta_loppu       AS "tiemerkinta-loppu",
   ypk.aikataulu_kohde_valmis            AS "kohde-valmis",
@@ -331,23 +332,24 @@ SELECT
   nimi,
   urakka,
   sopimus,
-  aikataulu_paallystys_alku    AS "aikataulu-paallystys-alku",
-  aikataulu_paallystys_loppu   AS "aikataulu-paallystys-loppu",
-  aikataulu_tiemerkinta_alku   AS "aikataulu-tiemerkinta-alku",
-  aikataulu_tiemerkinta_loppu  AS "aikataulu-tiemerkinta-loppu",
-  aikataulu_kohde_valmis       AS "aikataulu-kohde-valmis",
-  aikataulu_muokattu           AS "aikataulu-muokattu",
-  aikataulu_muokkaaja          AS "aikataulu-muokkaaja",
-  valmis_tiemerkintaan         AS "valmis-tiemerkintaan",
-  tr_numero                    AS "tr-numero",
-  tr_alkuosa                   AS "tr-alkuosa",
-  tr_alkuetaisyys              AS "tr-alkuetaisyys",
-  tr_loppuosa                  AS "tr-loppuosa",
-  tr_loppuetaisyys             AS "tr-loppuetaisyys",
-  tr_ajorata                   AS "tr-ajorata",
-  tr_kaista                    AS "tr-kaista",
+  aikataulu_paallystys_alku      AS "aikataulu-paallystys-alku",
+  aikataulu_paallystys_loppu     AS "aikataulu-paallystys-loppu",
+  aikataulu_tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
+  aikataulu_tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
+  aikataulu_tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  aikataulu_kohde_valmis         AS "aikataulu-kohde-valmis",
+  aikataulu_muokattu             AS "aikataulu-muokattu",
+  aikataulu_muokkaaja            AS "aikataulu-muokkaaja",
+  valmis_tiemerkintaan           AS "valmis-tiemerkintaan",
+  tr_numero                      AS "tr-numero",
+  tr_alkuosa                     AS "tr-alkuosa",
+  tr_alkuetaisyys                AS "tr-alkuetaisyys",
+  tr_loppuosa                    AS "tr-loppuosa",
+  tr_loppuetaisyys               AS "tr-loppuetaisyys",
+  tr_ajorata                     AS "tr-ajorata",
+  tr_kaista                      AS "tr-kaista",
   yllapitoluokka,
-  suorittava_tiemerkintaurakka AS "suorittava-tiemerkintaurakka"
+  suorittava_tiemerkintaurakka   AS "suorittava-tiemerkintaurakka"
 FROM yllapitokohde
 WHERE
   urakka = :urakka
@@ -362,21 +364,22 @@ SELECT
   nimi,
   urakka,
   sopimus,
-  aikataulu_paallystys_alku   AS "aikataulu-paallystys-alku",
-  aikataulu_paallystys_loppu  AS "aikataulu-paallystys-loppu",
-  aikataulu_tiemerkinta_alku  AS "aikataulu-tiemerkinta-alku",
-  aikataulu_tiemerkinta_loppu AS "aikataulu-tiemerkinta-loppu",
-  aikataulu_kohde_valmis      AS "aikataulu-kohde-valmis",
-  aikataulu_muokattu          AS "aikataulu-muokattu",
-  aikataulu_muokkaaja         AS "aikataulu-muokkaaja",
-  valmis_tiemerkintaan        AS "valmis-tiemerkintaan",
-  tr_numero                   AS "tr-numero",
-  tr_alkuosa                  AS "tr-alkuosa",
-  tr_alkuetaisyys             AS "tr-alkuetaisyys",
-  tr_loppuosa                 AS "tr-loppuosa",
-  tr_loppuetaisyys            AS "tr-loppuetaisyys",
-  tr_ajorata                  AS "tr-ajorata",
-  tr_kaista                   AS "tr-kaista",
+  aikataulu_paallystys_alku      AS "aikataulu-paallystys-alku",
+  aikataulu_paallystys_loppu     AS "aikataulu-paallystys-loppu",
+  aikataulu_tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
+  aikataulu_tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
+  aikataulu_tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  aikataulu_kohde_valmis         AS "aikataulu-kohde-valmis",
+  aikataulu_muokattu             AS "aikataulu-muokattu",
+  aikataulu_muokkaaja            AS "aikataulu-muokkaaja",
+  valmis_tiemerkintaan           AS "valmis-tiemerkintaan",
+  tr_numero                      AS "tr-numero",
+  tr_alkuosa                     AS "tr-alkuosa",
+  tr_alkuetaisyys                AS "tr-alkuetaisyys",
+  tr_loppuosa                    AS "tr-loppuosa",
+  tr_loppuetaisyys               AS "tr-loppuetaisyys",
+  tr_ajorata                     AS "tr-ajorata",
+  tr_kaista                      AS "tr-kaista",
   yllapitoluokka
 FROM yllapitokohde
 WHERE
@@ -410,10 +413,27 @@ SET
 WHERE id = :id
       AND urakka = :urakka;
 
+-- name: tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
+-- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
+UPDATE yllapitokohde
+SET
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+WHERE id = :id
+      AND urakka = :urakka;
+
+-- name: tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
+-- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
+UPDATE yllapitokohde
+SET
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+WHERE id = :id
+      AND suorittava_tiemerkintaurakka = :urakka;
+
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohde
 SET
-  valmis_tiemerkintaan = :valmis_tiemerkintaan
+  valmis_tiemerkintaan           = :valmis_tiemerkintaan,
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -537,12 +557,13 @@ WHERE id = :id;
 -- Päivittää ylläpitokohteen aikataulutiedot
 UPDATE yllapitokohde
 SET
-  aikataulu_paallystys_alku = :paallystys_alku,
-  aikataulu_paallystys_loppu = :paallystys_loppu,
-  aikataulu_kohde_valmis = :kohde_valmis,
-  valmis_tiemerkintaan = :valmis_tiemerkintaan,
-  aikataulu_muokattu = NOW(),
-  aikataulu_muokkaaja = :muokkaaja
+  aikataulu_paallystys_alku      = :paallystys_alku,
+  aikataulu_paallystys_loppu     = :paallystys_loppu,
+  aikataulu_kohde_valmis         = :kohde_valmis,
+  valmis_tiemerkintaan           = :valmis_tiemerkintaan,
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
+  aikataulu_muokattu             = NOW(),
+  aikataulu_muokkaaja            = :muokkaaja
 WHERE id = :id;
 
 -- name: paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<!
