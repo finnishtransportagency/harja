@@ -230,9 +230,12 @@
       (mapv (fn [eka toka]
               (testi/tarkista-map-arvot eka toka))
             haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita)
-      (testi/tarkista-map-arvot odotetut-talvihoito haetut-tiedot-oulu-talvihoito)
-      (testi/tarkista-map-arvot odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto)
-      (testi/tarkista-map-arvot odotetut-soratiet haetut-tiedot-oulu-soratiet))))
+      (testing "Talvihoito"
+        (testi/tarkista-map-arvot odotetut-talvihoito haetut-tiedot-oulu-talvihoito))
+      (testing "Liikenneympäristön hoito"
+        (testi/tarkista-map-arvot odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto))
+      (testing "Soratien hoito"
+        (testi/tarkista-map-arvot odotetut-soratiet haetut-tiedot-oulu-soratiet)))))
 
 
 ;; HAR-1959: Laskutusyhteenveto ottaa talvisuolasakon väärään hoitokauteen loka-joulukuussa
