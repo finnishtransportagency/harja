@@ -296,9 +296,13 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT
-INTO toteuma_tehtava
-(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta)
-VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta);
+  INTO toteuma_tehtava
+       (toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi)
+VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta,
+        CASE WHEN :paivanhinta IS NULL
+	     THEN TRUE
+	     ELSE FALSE
+	END);
 
 -- name: poista-toteuman-tehtavat!
 UPDATE toteuma_tehtava
@@ -361,8 +365,13 @@ WHERE id = :id;
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava
-SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu, paivan_hinta = :paivanhinta
-WHERE id = :id;
+   SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
+       paivan_hinta = :paivanhinta,
+       indeksi = CASE WHEN :paivanhinta IS NULL
+                      THEN TRUE
+		      ELSE FALSE
+		 END
+ WHERE id = :id;
 
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän
@@ -422,8 +431,13 @@ WHERE toteuma = :id;
 
 -- name: luo-toteuma_tehtava<!
 -- Luo uuden toteuman tehtävän
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta, lisatieto)
-VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto);
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta,
+                             lisatieto, indeksi)
+VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto,
+        CASE WHEN :paivan_hinta IS NULL
+	     THEN TRUE
+	     ELSE FALSE
+	END);
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
@@ -650,7 +664,7 @@ FROM reittipiste rp
 WHERE
   rp.toteuma = :toteuma_id
 ORDER BY rp.aika ASC;
-  
+
 -- name: hae-toteuman-reitti-ja-tr-osoite
 SELECT
   tr_numero,
