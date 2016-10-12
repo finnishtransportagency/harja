@@ -114,7 +114,7 @@
     (if (xml/validi-xml? +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
       kustannussuunnitelma-xml
       (do
-        (log/error "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi.")
+        (log/error (str "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi. XML:" xml))
         nil))))
 
 (defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
