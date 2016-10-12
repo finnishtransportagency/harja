@@ -393,6 +393,7 @@ BEGIN
 	  akilliset_hoitotyot_laskutetaan_ind_korotus := akilliset_hoitotyot_laskutetaan_ind_korotus + muutostyot_rivi.korotus;
 	END IF;
       ELSE
+        RAISE NOTICE 'mht tyyppiä %, alkanut %, summa %', mhti.tyyppi, mhti.tot_alkanut, muutostyot_rivi.summa;
         IF mhti.tot_alkanut < aikavali_alkupvm THEN
           muutostyot_laskutettu :=  muutostyot_laskutettu + COALESCE(muutostyot_rivi.summa, 0.0);
           muutostyot_laskutettu_ind_korotettuna :=  muutostyot_laskutettu_ind_korotettuna + muutostyot_rivi.korotettuna;
