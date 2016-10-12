@@ -299,10 +299,10 @@ INSERT
   INTO toteuma_tehtava
        (toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi)
 VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta,
-        CASE WHEN :paivanhinta IS NULL
-	     THEN TRUE
-	     ELSE FALSE
-	END);
+        (CASE WHEN :paivanhinta::NUMERIC IS NULL
+	      THEN TRUE
+	      ELSE FALSE
+	 END));
 
 -- name: poista-toteuman-tehtavat!
 UPDATE toteuma_tehtava
@@ -367,10 +367,10 @@ WHERE id = :id;
 UPDATE toteuma_tehtava
    SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
        paivan_hinta = :paivanhinta,
-       indeksi = CASE WHEN :paivanhinta IS NULL
-                      THEN TRUE
-		      ELSE FALSE
-		 END
+       indeksi = (CASE WHEN :paivanhinta::NUMERIC IS NULL
+                       THEN TRUE
+		       ELSE FALSE
+		  END)
  WHERE id = :id;
 
 -- name: poista-toteuman-tehtava!
@@ -434,10 +434,10 @@ WHERE toteuma = :id;
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta,
                              lisatieto, indeksi)
 VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto,
-        CASE WHEN :paivan_hinta IS NULL
-	     THEN TRUE
-	     ELSE FALSE
-	END);
+        (CASE WHEN :paivan_hinta::NUMERIC IS NULL
+	      THEN TRUE
+	      ELSE FALSE
+	 END));
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
