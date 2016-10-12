@@ -59,7 +59,7 @@ WHERE
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.paikankuvaus LIKE :teksti OR i.lisatieto LIKE :teksti)) AND
 
   -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite])) AND
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: TEXT])) AND
 
   -- Rajaa tienumerolla
   (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
@@ -287,7 +287,7 @@ VALUES
     :paikankuvaus,
     :lisatieto,
     :ilmoitustyyppi :: ilmoitustyyppi,
-    :selitteet :: ilmoituksenselite [],
+    :selitteet :: TEXT [],
     :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
@@ -303,7 +303,7 @@ SET
   paikankuvaus        = :paikankuvaus,
   lisatieto        = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
-  selitteet          = :selitteet :: ilmoituksenselite [],
+  selitteet          = :selitteet :: TEXT [],
   muokattu           = NOW()
 WHERE id = :id;
 
