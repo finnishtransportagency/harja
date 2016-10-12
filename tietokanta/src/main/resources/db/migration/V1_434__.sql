@@ -5,3 +5,7 @@
 
 ALTER TABLE toteuma_tehtava
   ADD COLUMN indeksi BOOLEAN DEFAULT TRUE;
+
+
+-- Poistetaan kaikki cachet, koska laskutusyhteenveto muuttunut
+DELETE FROM laskutusyhteenveto_cache;
