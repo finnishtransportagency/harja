@@ -141,6 +141,23 @@
   (jdbc/with-db-transaction [db db]
     (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot db {:suorittava_tiemerkintaurakka urakka-id})))
 
+(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
+  (assert urakka-id "anna urakka-id")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
+  (log/debug "Tallennetaan yksikköhintaiset työt (" kohteet ") tiemerkintäurakalle: " urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (doseq [{:keys [hinta hintatyyppi muutospvm yllapitokohde-id] :as kohde} kohteet]
+      (if-let [tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot db yllapitokohde-id))]
+         (q/paivita-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
+                                                                  :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                                  :muutospvm muutospvm
+                                                                  :yllapitokohde yllapitokohde-id})
+         (q/luo-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
+                                                              :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                              :muutospvm muutospvm
+                                                              :yllapitokohde yllapitokohde-id}))
+       (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id}))))
+
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
@@ -410,7 +427,7 @@
       (julkaise-palvelu http :hae-tiemerkinnan-yksikkohintaiset-tyot
                         (fn [user tiedot]
                           (hae-tiemerkinnan-yksikkohintaiset-tyot db user tiedot)))
-      #_(julkaise-palvelu http :tallenna-tiemerkinnan-yksikkohintaiset-tyot
+      (julkaise-palvelu http :tallenna-tiemerkinnan-yksikkohintaiset-tyot
                         (fn [user tiedot]
                           (tallenna-tiemerkinnan-yksikkohintaiset-tyot db user tiedot)))
       this))
@@ -425,6 +442,5 @@
       :hae-aikataulut
       :tallenna-yllapitokohteiden-aikataulu
       :hae-tiemerkinnan-yksikkohintaiset-tyot
-      ;:tallenna-tiemerkinnan-yksikkohintaiset-tyot
-      )
+      :tallenna-tiemerkinnan-yksikkohintaiset-tyot)
     this))

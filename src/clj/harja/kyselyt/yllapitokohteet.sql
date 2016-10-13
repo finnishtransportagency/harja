@@ -610,3 +610,18 @@ FROM yllapitokohde
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND poistettu IS NOT TRUE;
+
+-- name: paivita-tiemerkintaurakan-yksikkohintaiset-tyot<!
+UPDATE yllapitokohde_tiemerkinta SET
+  hinta = :hinta,
+  hintatyyppi = :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi,
+  muutospvm = :muutospvm
+WHERE yllapitokohde = :yllapitokohde;
+
+-- name: luo-tiemerkintaurakan-yksikkohintaiset-tyot<!
+INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm) VALUES
+  (:hinta, :hintatyyppi, :muutospvm, :yllapitokohde);
+
+-- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
+SELECT id FROM yllapitokohde_tiemerkinta
+WHERE yllapitokohde = :yllapitokohde;

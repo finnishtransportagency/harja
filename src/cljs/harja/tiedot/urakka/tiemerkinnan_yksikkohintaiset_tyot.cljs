@@ -19,9 +19,8 @@
               (when (and valittu-urakka-id nakymassa?)
                 (hae-yksikkohintaiset-tyot valittu-urakka-id))))
 
-(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [urakka-id sopimus-id kohteet]
+(defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [urakka-id kohteet]
   (k/post! :tallenna-tiemerkinnan-yksikkohintaiset-tyot
            {:urakka-id urakka-id
-            :sopimus-id sopimus-id
             :kohteet kohteet}))
 

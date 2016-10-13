@@ -14,15 +14,17 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.paallystysilmoitus :as pot])
+            [harja.domain.paallystysilmoitus :as pot]
+            [harja.ui.viesti :as viesti]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn yksikkohintaiset-tyot
-  [urakka sopimus-id]
+  [urakka]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (fn [urakka sopimus-id]
+    (fn [urakka]
       (let [urakka-id (:id urakka)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot urakka-id)]
         [:div
@@ -32,9 +34,11 @@
            :voi-lisata? false
            :piilota-toiminnot? true
            :tallenna (if saa-muokata?
-                       #(tiedot/tallenna-tiemerkinnan-yksikkohintaiset-tyot urakka-id
-                                                                            sopimus-id
-                                                                            %)
+                       #(go (let [vastaus (<! (tiedot/tallenna-tiemerkinnan-yksikkohintaiset-tyot urakka-id %))]
+                              (if (k/virhe? vastaus)
+                                (viesti/nayta! "Tallentaminen epäonnistui"
+                                               :warning viesti/viestin-nayttoaika-lyhyt)
+                                (reset! tiedot/yksikkohintaiset-tyot vastaus))))
                        :ei-mahdollinen)}
           [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
@@ -75,5 +79,19 @@
             :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
-            :muokattava? (constantly false)}]
+            :muokattava? (constantly false)}
+           {:otsikko "Hinta"
+            :nimi :hinta :tyyppi :numero :leveys 3
+            :muokattava? (constantly saa-muokata?)}
+           {:otsikko "Hintatyyppi"
+            :nimi :hintatyyppi :tyyppi :valinta :leveys 5
+            :valinnat [:suunnitelma :toteuma]
+            :valinta-nayta #(case %
+                             :suunnitelma "Suunnitelma"
+                             :toteuma "Toteuma"
+                             "- valitse -")
+            :muokattava? (constantly saa-muokata?)}
+           {:otsikko "Muutospvm"
+            :nimi :muutospvm :tyyppi :pvm :leveys 4
+            :muokattava? (constantly saa-muokata?)}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/yksikkohintaiset-tyot)]]))))

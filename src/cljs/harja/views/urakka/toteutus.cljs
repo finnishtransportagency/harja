@@ -32,7 +32,7 @@
           :yksikkohintaiset
           (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
             ^{:key "yksikkohintaiset-tyot"}
-            [yks-hint-tiemerkinta/yksikkohintaiset-tyot ur (first @u/valittu-sopimusnumero)])
+            [yks-hint-tiemerkinta/yksikkohintaiset-tyot ur])
 
           "Muut työt"
           :muut
