@@ -375,7 +375,7 @@ BEGIN
                                               ind, mhti.mht_summa, perusluku)
           INTO muutostyot_rivi;
       ELSE
-        SELECT mhti.mht_summa AS summa, mhti.mth_summa AS korotettuna, 0 as korotus
+        SELECT mhti.mht_summa AS summa, mhti.mht_summa AS korotettuna, 0 as korotus
 	  INTO muutostyot_rivi;
       END IF;
       IF mhti.tyyppi = 'akillinen-hoitotyo' THEN
