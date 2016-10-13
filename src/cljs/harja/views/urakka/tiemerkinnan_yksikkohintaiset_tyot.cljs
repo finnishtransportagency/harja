@@ -16,7 +16,9 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.ui.viesti :as viesti]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -81,10 +83,16 @@
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
            {:otsikko "Hinta"
-            :nimi :hinta :tyyppi :numero :leveys 3
+            :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
+            :tasaa :oikea
             :muokattava? (constantly saa-muokata?)}
            {:otsikko "Hintatyyppi"
             :nimi :hintatyyppi :tyyppi :valinta :leveys 5
+            :valinta-arvo identity
+            :fmt #(case %
+                   :suunnitelma "Suunnitelma"
+                   :toteuma "Toteuma"
+                   "")
             :valinnat [:suunnitelma :toteuma]
             :valinta-nayta #(case %
                              :suunnitelma "Suunnitelma"
@@ -93,5 +101,6 @@
             :muokattava? (constantly saa-muokata?)}
            {:otsikko "Muutospvm"
             :nimi :muutospvm :tyyppi :pvm :leveys 4
+            :fmt pvm/pvm-opt
             :muokattava? (constantly saa-muokata?)}]
           (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/yksikkohintaiset-tyot)]]))))

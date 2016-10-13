@@ -1,7 +1,7 @@
 (ns harja.tiedot.urakka.tiemerkinnan-yksikkohintaiset-tyot
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log tarkkaile!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav])
   (:require-macros [harja.atom :refer [reaction<!]]

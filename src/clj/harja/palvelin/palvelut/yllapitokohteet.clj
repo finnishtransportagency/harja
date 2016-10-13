@@ -139,24 +139,28 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
-    (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot db {:suorittava_tiemerkintaurakka urakka-id})))
+    (into []
+          (map #(konv/string->keyword % :hintatyyppi))
+          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot db {:suorittava_tiemerkintaurakka urakka-id}))))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
   (assert urakka-id "anna urakka-id")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
-  (log/debug "Tallennetaan yksikköhintaiset työt (" kohteet ") tiemerkintäurakalle: " urakka-id)
+  (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [hinta hintatyyppi muutospvm yllapitokohde-id] :as kohde} kohteet]
-      (if-let [tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot db yllapitokohde-id))]
+    (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
+      (if-let [tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
+                               db
+                               {:yllapitokohde id}))]
          (q/paivita-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
                                                                   :hintatyyppi (when hintatyyppi (name hintatyyppi))
                                                                   :muutospvm muutospvm
-                                                                  :yllapitokohde yllapitokohde-id})
+                                                                  :yllapitokohde id})
          (q/luo-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
                                                               :hintatyyppi (when hintatyyppi (name hintatyyppi))
                                                               :muutospvm muutospvm
-                                                              :yllapitokohde yllapitokohde-id}))
-       (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id}))))
+                                                              :yllapitokohde id})))
+    (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.

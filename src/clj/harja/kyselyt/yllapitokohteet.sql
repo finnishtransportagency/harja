@@ -593,7 +593,7 @@ WHERE yllapitokohde = :id;
 
 -- name: hae-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT
-  id,
+  ypk.id,
   kohdenumero,
   nimi,
   urakka,
@@ -605,8 +605,12 @@ SELECT
   tr_loppuetaisyys               AS "tr-loppuetaisyys",
   tr_ajorata                     AS "tr-ajorata",
   tr_kaista                      AS "tr-kaista",
+  hinta,
+  hintatyyppi,
+  muutospvm,
   yllapitoluokka
-FROM yllapitokohde
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohde_tiemerkinta yt ON yt.yllapitokohde = ypk.id
 WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND poistettu IS NOT TRUE;
@@ -620,7 +624,7 @@ WHERE yllapitokohde = :yllapitokohde;
 
 -- name: luo-tiemerkintaurakan-yksikkohintaiset-tyot<!
 INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm) VALUES
-  (:hinta, :hintatyyppi, :muutospvm, :yllapitokohde);
+  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id FROM yllapitokohde_tiemerkinta

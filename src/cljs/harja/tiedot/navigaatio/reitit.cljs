@@ -10,6 +10,7 @@
          :urakat :yleiset
          :suunnittelu :kokonaishintaiset
          :toteumat :kokonaishintaiset-tyot
+         :toteutus :kokonaishintaiset-tyot
          :laskutus :laskutusyhteenveto
          :hallinta :indeksit
          :laadunseuranta :tarkastukset

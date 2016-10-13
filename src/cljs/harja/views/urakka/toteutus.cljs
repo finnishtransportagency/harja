@@ -20,7 +20,7 @@
 
         [:span.suunnittelu
          [bs/tabs {:style :tabs :classes "tabs-taso2"
-                   :active (nav/valittu-valilehti-atom :suunnittelu)}
+                   :active (nav/valittu-valilehti-atom :toteutus)}
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
