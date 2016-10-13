@@ -3,6 +3,7 @@
             [harja.ui.bootstrap :as bs]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
+            [harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot :as yks-hint-tiemerkinta]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.loki :refer [log]]
@@ -27,12 +28,11 @@
             ^{:key "kokonaishintaiset-tyot"}
             [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset])
 
-          ;; TODO Korvataan tiemerkinnän omalla suunnittelunäkymällä
-          ;"Yksikköhintaiset työt"
-          ;:yksikkohintaiset
-          ;(when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
-          ;  ^{:key "yksikkohintaiset-tyot"}
-          ;  [yksikkohintaiset-tyot/yksikkohintaiset-tyot-view ur valitun-hoitokauden-yks-hint-kustannukset])
+          "Yksikköhintaiset työt"
+          :yksikkohintaiset
+          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
+            ^{:key "yksikkohintaiset-tyot"}
+            [yks-hint-tiemerkinta/yksikkohintaiset-tyot ])
 
           "Muut työt"
           :muut
