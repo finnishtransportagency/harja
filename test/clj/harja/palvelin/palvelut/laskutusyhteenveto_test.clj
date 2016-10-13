@@ -75,12 +75,12 @@
                                :erilliskustannukset_laskutettu_ind_korotus      -9.57548675390999745000M
                                :kaikki_laskutetaan                              6597.111
                                :kaikki_laskutetaan_ind_korotus                  97.111
-                               :kaikki_laskutettu                               39229.07756144270691680200M
-                               :kaikki_laskutettu_ind_korotus                   129.07756144270691680200M
+                               :kaikki_laskutettu                               39030.1M
+                               :kaikki_laskutettu_ind_korotus                   130.1M
                                :kaikki_paitsi_kht_laskutetaan                   3097.111
                                :kaikki_paitsi_kht_laskutetaan_ind_korotus       37.90
-                               :kaikki_paitsi_kht_laskutettu                    4229.07756144270691680200M
-                               :kaikki_paitsi_kht_laskutettu_ind_korotus        12.89498882859880851200M
+                               :kaikki_paitsi_kht_laskutettu                    4030.1M
+                               :kaikki_paitsi_kht_laskutettu_ind_korotus        13.92M
                                :kht_laskutetaan                                 3500.0M
                                :kht_laskutetaan_ind_korotettuna                 3559.2084264283435000M
                                :kht_laskutetaan_ind_korotus                     59.2084264283435000M
@@ -99,9 +99,9 @@
                                :sakot_laskutetaan                               0.0M
                                :sakot_laskutetaan_ind_korotettuna               0.0M
                                :sakot_laskutetaan_ind_korotus                   0.0M
-                               :sakot_laskutettu                                100.0M
-                               :sakot_laskutettu_ind_korotettuna                99.48930737312480054200M
-                               :sakot_laskutettu_ind_korotus                    -0.51069262687519945800M
+                               :sakot_laskutettu                                -100.0M
+                               :sakot_laskutettu_ind_korotettuna                -99.48930737312480054200M
+                               :sakot_laskutettu_ind_korotus                    0.51069262687519945800M
                                :tpi                                             4
                                :tuotekoodi                                      "23100"
                                :yht_laskutetaan                                 0.0M
@@ -112,8 +112,8 @@
                                :yht_laskutettu_ind_korotus                      8.93712097031600542000M}
 
           odotetut-liikenneymparisto {:akilliset_hoitotyot_laskutetaan                 2000.0M
-                                      :akilliset_hoitotyot_laskutetaan_ind_korotettuna 2016.91669326524100000M
-                                      :akilliset_hoitotyot_laskutetaan_ind_korotus     16.91669326524100000M
+                                      :akilliset_hoitotyot_laskutetaan_ind_korotettuna 2033.83M
+                                      :akilliset_hoitotyot_laskutetaan_ind_korotus     33.83M
                                       :akilliset_hoitotyot_laskutettu                  1000.0M
                                       :akilliset_hoitotyot_laskutettu_ind_korotettuna  1014.04404723906800000M
                                       :akilliset_hoitotyot_laskutettu_ind_korotus      14.04404723906800000M
@@ -129,14 +129,14 @@
                                       :erilliskustannukset_laskutettu                  0.0M
                                       :erilliskustannukset_laskutettu_ind_korotettuna  0.0M
                                       :erilliskustannukset_laskutettu_ind_korotus      0.0M
-                                      :kaikki_laskutetaan                              13101.50015959144600000M
-                                      :kaikki_laskutetaan_ind_korotus                  101.50015959144600000M
-                                      :kaikki_laskutettu                               6226.65177146504950542000M
-                                      :kaikki_laskutettu_ind_korotus                   26.65177146504950542000M
-                                      :kaikki_paitsi_kht_laskutetaan                   13101.50015959144600000M
-                                      :kaikki_paitsi_kht_laskutetaan_ind_korotus       101.50015959144600000M
-                                      :kaikki_paitsi_kht_laskutettu                    6226.65177146504950542000M
-                                      :kaikki_paitsi_kht_laskutettu_ind_korotus        26.65177146504950542000M
+                                      :kaikki_laskutetaan                              10169.17M
+                                      :kaikki_laskutetaan_ind_korotus                  169.16
+                                      :kaikki_laskutettu                               2833.35M
+                                      :kaikki_laskutettu_ind_korotus                   33.35M
+                                      :kaikki_paitsi_kht_laskutetaan                   10169.17M
+                                      :kaikki_paitsi_kht_laskutetaan_ind_korotus       169.17M
+                                      :kaikki_paitsi_kht_laskutettu                    2833.35M
+                                      :kaikki_paitsi_kht_laskutettu_ind_korotus        33.35M
                                       :kht_laskutetaan                                 0.0M
                                       :kht_laskutetaan_ind_korotettuna                 0.0M
                                       :kht_laskutetaan_ind_korotus                     0.0M
@@ -144,20 +144,20 @@
                                       :kht_laskutettu_ind_korotettuna                  0.0M
                                       :kht_laskutettu_ind_korotus                      0.0M
                                       :lampotila_puuttuu                               false
-                                      :muutostyot_laskutetaan                          8000.0M
-                                      :muutostyot_laskutetaan_ind_korotettuna          8033.83338653048200000M
-                                      :muutostyot_laskutetaan_ind_korotus              33.83338653048200000M
-                                      :muutostyot_laskutettu                           3000.0M
-                                      :muutostyot_laskutettu_ind_korotettuna           3014.04404723906800000M
-                                      :muutostyot_laskutettu_ind_korotus               14.04404723906800000M
+                                      :muutostyot_laskutetaan                          5000.0M
+                                      :muutostyot_laskutetaan_ind_korotettuna          5084.58M
+                                      :muutostyot_laskutetaan_ind_korotus              84.583M
+                                      :muutostyot_laskutettu                           2000.0M
+                                      :muutostyot_laskutettu_ind_korotettuna           2028.09M
+                                      :muutostyot_laskutettu_ind_korotus               28.09M
                                       :nimi                                            "Liikenneympäristön hoito"
                                       :perusluku                                       104.4333333333333333M
                                       :sakot_laskutetaan                               0.0M
                                       :sakot_laskutetaan_ind_korotettuna               0.0M
                                       :sakot_laskutetaan_ind_korotus                   0.0M
-                                      :sakot_laskutettu                                1200.0M
-                                      :sakot_laskutettu_ind_korotettuna                1203.6706032556655000M
-                                      :sakot_laskutettu_ind_korotus                    3.6706032556655000M
+                                      :sakot_laskutettu                                -1200.0M
+                                      :sakot_laskutettu_ind_korotettuna                -1203.67M
+                                      :sakot_laskutettu_ind_korotus                    -3.67M
                                       :tpi                                             5
                                       :tuotekoodi                                      "23110"
                                       :yht_laskutetaan                                 3000.0M
@@ -185,12 +185,12 @@
                              :erilliskustannukset_laskutettu                  0.0M
                              :erilliskustannukset_laskutettu_ind_korotettuna  0.0M
                              :erilliskustannukset_laskutettu_ind_korotus      0.0M
-                             :kaikki_laskutetaan                              11999.6169805298438000M
-                             :kaikki_laskutetaan_ind_korotus                  199.6169805298438000M
+                             :kaikki_laskutetaan                              8338.72M
+                             :kaikki_laskutetaan_ind_korotus                  138.72M
                              :kaikki_laskutettu                               100331.95020746888030940000M
                              :kaikki_laskutettu_ind_korotus                   331.95020746888030940000M
-                             :kaikki_paitsi_kht_laskutetaan                   1999.6169805298438000M
-                             :kaikki_paitsi_kht_laskutetaan_ind_korotus       30.4500478774338000M
+                             :kaikki_paitsi_kht_laskutetaan                   -1661.28M
+                             :kaikki_paitsi_kht_laskutetaan_ind_korotus       -30.45M
                              :kaikki_paitsi_kht_laskutettu                    331.95020746888030940000M
                              :kaikki_paitsi_kht_laskutettu_ind_korotus        0.0M
                              :kht_laskutetaan                                 10000.0M
@@ -208,9 +208,9 @@
                              :muutostyot_laskutettu_ind_korotus               0.0M
                              :nimi                                            "Soratien hoito"
                              :perusluku                                       104.4333333333333333M
-                             :sakot_laskutetaan                               1800.0M
-                             :sakot_laskutetaan_ind_korotettuna               1830.4500478774338000M
-                             :sakot_laskutetaan_ind_korotus                   30.4500478774338000M
+                             :sakot_laskutetaan                               -1800.0M
+                             :sakot_laskutetaan_ind_korotettuna               -1830.45M
+                             :sakot_laskutetaan_ind_korotus                   -30.45M
                              :sakot_laskutettu                                0.0M
                              :sakot_laskutettu_ind_korotettuna                0.0M
                              :sakot_laskutettu_ind_korotus                    0.0M
@@ -230,9 +230,12 @@
       (mapv (fn [eka toka]
               (testi/tarkista-map-arvot eka toka))
             haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita)
-      (testi/tarkista-map-arvot odotetut-talvihoito haetut-tiedot-oulu-talvihoito)
-      (testi/tarkista-map-arvot odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto)
-      (testi/tarkista-map-arvot odotetut-soratiet haetut-tiedot-oulu-soratiet))))
+      (testing "Talvihoito"
+        (testi/tarkista-map-arvot odotetut-talvihoito haetut-tiedot-oulu-talvihoito))
+      (testing "Liikenneympäristön hoito"
+        (testi/tarkista-map-arvot odotetut-liikenneymparisto haetut-tiedot-oulu-liikenneymparisto))
+      (testing "Soratien hoito"
+        (testi/tarkista-map-arvot odotetut-soratiet haetut-tiedot-oulu-soratiet)))))
 
 
 ;; HAR-1959: Laskutusyhteenveto ottaa talvisuolasakon väärään hoitokauteen loka-joulukuussa
