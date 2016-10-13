@@ -110,7 +110,7 @@
             :muokattava? (constantly false)}
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
             :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
-            :muokattava? (constantly true)}
+            :muokattava? (constantly false)}
            {:otsikko "Ajo\u00ADrata"
             :nimi :tr-ajorata
             :muokattava? (constantly false)
