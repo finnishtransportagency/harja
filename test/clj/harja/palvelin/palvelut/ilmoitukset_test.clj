@@ -120,7 +120,8 @@
 
     (u "DELETE FROM ilmoitustoimenpide WHERE vapaateksti = 'TESTI123';")))
 
-(deftest tallenna-ilmoitustoimenpide-ilman-oikeuksia
+;; FIXME Disabloitu. Ks. HAR-3326
+#_(deftest tallenna-ilmoitustoimenpide-ilman-oikeuksia
   (let [parametrit [{:ilmoittaja-sukunimi "Vastaava"
                      :ilmoittaja-tyopuhelin "0400123123"
                      :ilmoittaja-etunimi "Järjestelmän"

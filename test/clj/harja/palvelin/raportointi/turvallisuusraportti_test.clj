@@ -77,7 +77,7 @@
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
-    (let [otsikko (str "Pohjois-Pohjanmaa ja Kainuu, "
+    (let [otsikko (str "Pohjois-Pohjanmaa, "
                        "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-otsikko taulukko otsikko)

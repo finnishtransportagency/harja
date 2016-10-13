@@ -97,7 +97,6 @@
             [:span.alasvedon-otsikko "Aikaväli"]
             [livi-pudotusvalikko {:valinta    @valinta
                                   :format-fn  first
-                                  :class      "suunnittelu-alasveto"
                                   :valitse-fn (partial valitse urakka)}
              aikavali-valinnat]]
            (when @vapaa-aikavali?

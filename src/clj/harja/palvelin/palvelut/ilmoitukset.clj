@@ -298,7 +298,8 @@
     tulos))
 
 (defn- tarkista-oikeudet [db user ilmoitustoimenpiteet]
-  (let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
+  ;; FIXME Vaikuttaa aiheuttavan enemmän ongelmia kuin ratkaisee niitä. Ks. HAR-3326
+  #_(let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
                                                      (map
                                                        :ilmoituksen-id ilmoitustoimenpiteet))]
     (doseq [urakka-id urakka-idt]

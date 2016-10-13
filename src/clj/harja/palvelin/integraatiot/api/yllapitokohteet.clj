@@ -64,10 +64,11 @@
   (let [kohteella-paallystysilmoitus? (q-yllapitokohteet/onko-olemassa-paallystysilmoitus? db kohde-id)]
     (q-yllapitokohteet/paivita-yllapitokohteen-paallystysaikataulu!
       db
-      {:paallystys_alku (json/pvm-string->java-sql-date (:paallystys-aloitettu aikataulu))
-       :paallystys_loppu (json/pvm-string->java-sql-date (:paallystys-valmis aikataulu))
-       :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
+      {:paallystys_alku (json/aika-string->java-sql-date (:paallystys-aloitettu aikataulu))
+       :paallystys_loppu (json/aika-string->java-sql-date (:paallystys-valmis aikataulu))
        :valmis_tiemerkintaan (json/pvm-string->java-sql-date (:valmis-tiemerkintaan aikataulu))
+       :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
+       :kohde_valmis (json/pvm-string->java-sql-date (:kohde-valmis aikataulu))
        :muokkaaja (:id kayttaja)
        :id kohde-id})
       (if kohteella-paallystysilmoitus?

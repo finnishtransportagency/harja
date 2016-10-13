@@ -511,7 +511,7 @@ documentation:
           /aikataulu:
              post:
                is: [secured]
-               description: Aikataulutietojen kirjaus päällystys- ja tiemerkintäurakoille. Päällystyksen ja kohteen valmistumisen aikataulutiedot voidaan kirjata vain siihen urakkaan, johon ylläpitokohde kuuluu. Tiemerkinnän aikataulu voidaan päivittää siihen urakkaan, joka on merkitty kohteelle suorittajaksi. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
+               description: Aikataulutietojen kirjaus päällystys- ja tiemerkintäurakoille. Päällystyksen aikataulutiedot ja tiemerkinnän takaraja kirjataan vain siihen urakkaan, johon ylläpitokohde kuuluu. Tiemerkinnän aikataulutiedot kirjataan vain siihen urakkaan, joka on merkitty kohteelle suorittajaksi. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
                body:
                  application/json:
                    example: !include examples/aikataulun-kirjaus-request.json
