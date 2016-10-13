@@ -38,7 +38,12 @@ FROM (SELECT
            tpk4.emo           AS tehtava_emo,
            tpk4.nimi          AS tehtava_nimi
          FROM toteuma_tehtava tt
-           JOIN toteuma t ON tt.toteuma = t.id
+           JOIN toteuma t ON (tt.toteuma = t.id AND
+                              t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
+                                           'lisatyo' :: toteumatyyppi,
+                                           'muutostyo' :: toteumatyyppi,
+                                           'vahinkojen-korjaukset' :: toteumatyyppi) AND
+                              t.poistettu IS NOT TRUE)
            JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
            JOIN toimenpideinstanssi tpi
              ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
@@ -46,14 +51,9 @@ FROM (SELECT
              ON (mht.tehtava = tt.toimenpidekoodi AND mht.urakka = t.urakka AND
                  mht.sopimus = t.sopimus)
            JOIN sopimus s ON t.sopimus = s.id
-                             AND tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                            'lisatyo' :: toteumatyyppi,
-                                            'muutostyo' :: toteumatyyppi,
-                                            'vahinkojen-korjaukset' :: toteumatyyppi)
-                             AND tt.poistettu IS NOT TRUE
-                             AND t.poistettu IS NOT TRUE
            JOIN urakka u ON t.urakka = u.id
          WHERE
+           tt.poistettu IS NOT TRUE AND
            ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
            AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
                                             (:urakkatyyppi :: urakkatyyppi IS NULL OR
