@@ -242,7 +242,7 @@ BEGIN
         -- Indeksi ei käytössä, annetaan summa sellaisenaan
         SELECT yhti.yht_summa AS summa,
 	       yhti.yht_summa AS korotettuna,
-	       0 as korotus
+	       0::NUMERIC as korotus
 	  INTO yht_rivi;
       END IF;
 
@@ -375,7 +375,7 @@ BEGIN
                                               ind, mhti.mht_summa, perusluku)
           INTO muutostyot_rivi;
       ELSE
-        SELECT mhti.mht_summa AS summa, mhti.mht_summa AS korotettuna, 0 as korotus
+        SELECT mhti.mht_summa AS summa, mhti.mht_summa AS korotettuna, 0::NUMERIC as korotus
 	  INTO muutostyot_rivi;
       END IF;
       IF mhti.tyyppi = 'akillinen-hoitotyo' THEN
