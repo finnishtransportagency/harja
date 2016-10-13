@@ -83,8 +83,87 @@
   <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
   </lahettaja>
   <seliteet>
+  <selite>tyomaajarjestelyihinLiittyvaIlmoitus</selite>
+  <selite>kuoppiaTiessa</selite>selite>
+  <selite>kelikysely</selite>
+  <selite>soratienKuntoHuono</selite>
+  <selite>saveaTiella</selite>
+  <selite>liikennettaVaarantavaEsteTiella</selite>
+  <selite>irtokiviaTiella</selite>
+  <selite>kevyenLiikenteenVaylaanLiittyvaIlmoitus</selite>
+  <selite>raivausJaKorjaustoita</selite>
   <selite>auraustarve</selite>
+  <selite>yliauraus</selite>
+  <selite>kaivonKansiRikki</selite>
+  <selite>kevyenLiikenteenVaylatOvatLiukkaita</selite>
+  <selite>routaheitto</selite>
+  <selite>avattavatPuomit</selite>
+  <selite>tievalaistusVioittunutOnnettomuudessa</selite>
+  <selite>muuKyselyTaiNeuvonta</selite>
+  <selite>soratienTasaustarve</selite>
+  <selite>tieTaiTienReunaOnPainunut</selite>
+  <selite>siltaanLiittyvaIlmoitus</selite>
+  <selite>polynsidontatarve</selite>
+  <selite>liikennevalotEivatToimi</selite>
+  <selite>kunnossapitoJaHoitotyo</selite>
+  <selite>vettaTiella</selite>
   <selite>aurausvallitNakemaesteena</selite>
+  <selite>ennakoivaVaroitus</selite>
+  <selite>levahdysalueeseenLiittyvaIlmoitus</selite>
+  <selite>sohjonPoisto</selite>
+  <selite>liikennekeskusKuitannutLoppuneeksi</selite>
+  <selite>muuToimenpidetarve</selite>
+  <selite>hiekoitustarve</selite>
+  <selite>tietOvatJaatymassa</selite>
+  <selite>jaatavaaSadetta</selite>
+  <selite>tienvarsilaitteisiinLiittyvaIlmoitus</selite>
+  <selite>oljyaTiella</selite>
+  <selite>sahkojohtoOnPudonnutTielle</selite>
+  <selite>tieOnSortunut</selite>
+  <selite>tievalaistusVioittunut</selite>
+  <selite>testilahetys</selite>
+  <selite>tievalaistuksenLamppujaPimeana</selite>
+  <selite>virkaApupyynto</selite>
+  <selite>tiemerkintoihinLiittyvaIlmoitus</selite>
+  <selite>tulvavesiOnNoussutTielle</selite>
+  <selite>niittotarve</selite>
+  <selite>kuormaOnLevinnytTielle</selite>
+  <selite>tieOnLiukas</selite>
+  <selite>tiellaOnEste</selite>
+  <selite>harjaustarve</selite>
+  <selite>hoylaystarve</selite>
+  <selite>tietyokysely</selite>
+  <selite>paallystevaurio</selite>
+  <selite>rikkoutunutAjoneuvoTiella</selite>
+  <selite>mustaaJaataTiella</selite>
+  <selite>kevyenLiikenteenVaylillaOnLunta</selite>
+  <selite>hirviaitaVaurioitunut</selite>
+  <selite>korvauskysely</selite>
+  <selite>puitaOnKaatunutTielle</selite>
+  <selite>rumpuunLiittyvaIlmoitus</selite>
+  <selite>lasiaTiella</selite>
+  <selite>liukkaudentorjuntatarve</selite>
+  <selite>alikulkukaytavassaVetta</selite>
+  <selite>kevyenliikenteenAlikulkukaytavassaVetta</selite>
+  <selite>tievalaistuksenLamppuPimeana</selite>
+  <selite>kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita</selite>
+  <selite>kuoppa</selite>
+  <selite>toimenpidekysely</selite>
+  <selite>pysakkiinLiittyvaIlmoitus</selite>
+  <selite>nakemaalueenRaivaustarve</selite>
+  <selite>vesakonraivaustarve</selite>
+  <selite>muuttuvatOpasteetEivatToimi</selite>
+  <selite>tievalaistus</selite>
+  <selite>vesiSyovyttanytTienReunaa</selite>
+  <selite>raskasAjoneuvoJumissa</selite>
+  <selite>myrskyvaurioita</selite>
+  <selite>kaidevaurio</selite>
+  <selite>liikennemerkkeihinLiittyvaIlmoitus</selite>
+  <selite>siirrettavaAjoneuvo</selite>
+  <selite>tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta</selite>
+  <selite>tapahtumaOhi</selite>
+  <selite>kevyenLiikenteenVaylatOvatjaatymassa</selite>
+  <selite>tietOvatjaisiaJamarkia</selite>
   </seliteet>
   </harja:ilmoitus>")
 
