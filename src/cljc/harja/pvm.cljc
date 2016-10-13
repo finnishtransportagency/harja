@@ -329,6 +329,12 @@
               :clj Exception) e
       nil)))
 
+(defn ->pvm-aika-opt [teksti]
+  "Jäsentää tekstistä d.M.yyyy H:mm tai d.M.yyyy H muodossa olevan päivämäärän ja ajan.
+  Jos tekstistä puuttuu kellonaika, yritä parsia pelkkänä päivämääränä.
+  Jos teksti ei ole oikeaa muotoa, palauta nil."
+  (or (->pvm-aika teksti) (->pvm teksti)))
+
 (defn kuukauden-nimi [kk]
   (case kk
     1 "tammikuu"
