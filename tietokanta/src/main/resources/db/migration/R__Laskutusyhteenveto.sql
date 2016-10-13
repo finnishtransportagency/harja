@@ -242,7 +242,7 @@ BEGIN
         -- Indeksi ei käytössä, annetaan summa sellaisenaan
         SELECT yhti.yht_summa AS summa,
 	       yhti.yht_summa AS korotettuna,
-	       0 as korotus
+	       0::NUMERIC as korotus
 	  INTO yht_rivi;
       END IF;
 
@@ -359,13 +359,12 @@ BEGIN
 			   tot.poistettu IS NOT TRUE)
                   JOIN toimenpidekoodi tpk4 ON tt.toimenpidekoodi = tpk4.id
                   JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-                  JOIN muutoshintainen_tyo mht
+                  LEFT JOIN muutoshintainen_tyo mht
 		       ON (tt.toimenpidekoodi = mht.tehtava AND
-		           mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut AND
- 			   mht.poistettu IS NOT TRUE AND
-			   tpk3.id = t.tpk3_id)
-                 WHERE mht.urakka = ur AND
- 		       tot.urakka = ur AND
+		           mht.urakka = tot.urakka AND
+			   mht.sopimus = tot.sopimus)
+                 WHERE tot.urakka = ur AND
+		       tpk3.id = t.tpk3_id AND
 		       tot.alkanut >= hk_alkupvm AND tot.alkanut <= aikavali_loppupvm
     LOOP
       IF mhti.indeksi = TRUE THEN
@@ -375,7 +374,7 @@ BEGIN
                                               ind, mhti.mht_summa, perusluku)
           INTO muutostyot_rivi;
       ELSE
-        SELECT mhti.mht_summa AS summa, mhti.mht_summa AS korotettuna, 0 as korotus
+        SELECT mhti.mht_summa AS summa, mhti.mht_summa AS korotettuna, 0::NUMERIC as korotus
 	  INTO muutostyot_rivi;
       END IF;
       IF mhti.tyyppi = 'akillinen-hoitotyo' THEN
