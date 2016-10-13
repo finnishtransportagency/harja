@@ -233,7 +233,7 @@
                   {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
 
           [:div.summa.summa-toimenpiteen-hoitokausi
-           "Toimenpiteen hoitokausi yhteensä "
+           "Yksikköhintaisten töiden toimenpiteen hoitokausi yhteensä "
            [:span (fmt/euro @toimenpiteen-kustannukset)]]
           [:div.summa.summa-hoitokausi
            "Yksikkohintaisten töiden hoitokausi yhteensä "
