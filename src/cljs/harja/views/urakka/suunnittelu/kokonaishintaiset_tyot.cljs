@@ -102,7 +102,7 @@
                {"Kokonaishintaiset" kok-hint-yhteensa "Yksikkohintaiset" yks-hint-yhteensa}]]))]]
 
    [:div.summa.summa-toimenpiteen-hoitokausi
-    "Toimenpiteen hoitokausi yhteensä "
+    "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
     [:span (fmt/euro valitun-hoitokauden-ja-tpin-kustannukset)]]
 
    [:div.summa.summa-toimenpiteiden-hoitokaudet
