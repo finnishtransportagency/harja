@@ -13,17 +13,17 @@
 
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.tierekisteri :as tr-domain])
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.paallystysilmoitus :as pot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(defn aikataulu
-  [urakka optiot]
+(defn yksikkohintaiset-tyot
+  [urakka sopimus-id]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (fn [urakka optiot]
+    (fn [urakka sopimus-id]
       (let [urakka-id (:id urakka)
-            sopimus-id (:id sopimus)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot urakka-id)]
         [:div
          [grid/grid
