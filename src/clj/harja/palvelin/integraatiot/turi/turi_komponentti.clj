@@ -19,7 +19,7 @@
 (defn kasittele-turin-vastaus [db harja-turpo-id headers body]
   (q/lokita-lahetys<! db true harja-turpo-id)
   (try
-    (let [turi-id (re-find #"\d+" body)
+    (let [turi-id (.Integer (re-find #"\d+" body))
          status (:status body)]
      (if (and (= status 200)
               (integer? turi-id))
