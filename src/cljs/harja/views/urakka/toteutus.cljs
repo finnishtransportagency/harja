@@ -5,13 +5,11 @@
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
-            [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
-            [harja.views.urakka.suunnittelu.suola :as suola]
-            [harja.views.urakka.suunnittelu.materiaalit :as mat]
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp]))
+            [harja.ui.komponentti :as komp]
+            [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]))
 
 
 (defn toteutus [ur]
@@ -38,6 +36,6 @@
 
           "Muut työt"
           :muut
-          (when (oikeudet/urakat-suunnittelu-muutos-ja-lisatyot id)
+          (when (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
             ^{:key "muut-tyot"}
-            [muut-tyot/muut-tyot ur])]]))))
+            [muut-tyot/muut-tyot-toteumat])]]))))
