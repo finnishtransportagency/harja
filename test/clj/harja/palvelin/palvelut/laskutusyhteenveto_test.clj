@@ -75,12 +75,12 @@
                                :erilliskustannukset_laskutettu_ind_korotus      -9.57548675390999745000M
                                :kaikki_laskutetaan                              6597.111
                                :kaikki_laskutetaan_ind_korotus                  97.111
-                               :kaikki_laskutettu                               39229.07756144270691680200M
-                               :kaikki_laskutettu_ind_korotus                   129.07756144270691680200M
+                               :kaikki_laskutettu                               39030.1M
+                               :kaikki_laskutettu_ind_korotus                   130.1M
                                :kaikki_paitsi_kht_laskutetaan                   3097.111
                                :kaikki_paitsi_kht_laskutetaan_ind_korotus       37.90
-                               :kaikki_paitsi_kht_laskutettu                    4229.07756144270691680200M
-                               :kaikki_paitsi_kht_laskutettu_ind_korotus        12.89498882859880851200M
+                               :kaikki_paitsi_kht_laskutettu                    4030.1M
+                               :kaikki_paitsi_kht_laskutettu_ind_korotus        13.92M
                                :kht_laskutetaan                                 3500.0M
                                :kht_laskutetaan_ind_korotettuna                 3559.2084264283435000M
                                :kht_laskutetaan_ind_korotus                     59.2084264283435000M
@@ -99,9 +99,9 @@
                                :sakot_laskutetaan                               0.0M
                                :sakot_laskutetaan_ind_korotettuna               0.0M
                                :sakot_laskutetaan_ind_korotus                   0.0M
-                               :sakot_laskutettu                                100.0M
-                               :sakot_laskutettu_ind_korotettuna                99.48930737312480054200M
-                               :sakot_laskutettu_ind_korotus                    -0.51069262687519945800M
+                               :sakot_laskutettu                                -100.0M
+                               :sakot_laskutettu_ind_korotettuna                -99.48930737312480054200M
+                               :sakot_laskutettu_ind_korotus                    0.51069262687519945800M
                                :tpi                                             4
                                :tuotekoodi                                      "23100"
                                :yht_laskutetaan                                 0.0M
@@ -131,12 +131,12 @@
                                       :erilliskustannukset_laskutettu_ind_korotus      0.0M
                                       :kaikki_laskutetaan                              10169.17M
                                       :kaikki_laskutetaan_ind_korotus                  169.16
-                                      :kaikki_laskutettu                               5240.696M
-                                      :kaikki_laskutettu_ind_korotus                   40.696M
+                                      :kaikki_laskutettu                               2833.35M
+                                      :kaikki_laskutettu_ind_korotus                   33.35M
                                       :kaikki_paitsi_kht_laskutetaan                   10169.17M
                                       :kaikki_paitsi_kht_laskutetaan_ind_korotus       169.17M
-                                      :kaikki_paitsi_kht_laskutettu                    5240.696M
-                                      :kaikki_paitsi_kht_laskutettu_ind_korotus        40.696M
+                                      :kaikki_paitsi_kht_laskutettu                    2833.35M
+                                      :kaikki_paitsi_kht_laskutettu_ind_korotus        33.35M
                                       :kht_laskutetaan                                 0.0M
                                       :kht_laskutetaan_ind_korotettuna                 0.0M
                                       :kht_laskutetaan_ind_korotus                     0.0M
@@ -155,9 +155,9 @@
                                       :sakot_laskutetaan                               0.0M
                                       :sakot_laskutetaan_ind_korotettuna               0.0M
                                       :sakot_laskutetaan_ind_korotus                   0.0M
-                                      :sakot_laskutettu                                1200.0M
-                                      :sakot_laskutettu_ind_korotettuna                1203.6706032556655000M
-                                      :sakot_laskutettu_ind_korotus                    3.6706032556655000M
+                                      :sakot_laskutettu                                -1200.0M
+                                      :sakot_laskutettu_ind_korotettuna                -1203.67M
+                                      :sakot_laskutettu_ind_korotus                    -3.67M
                                       :tpi                                             5
                                       :tuotekoodi                                      "23110"
                                       :yht_laskutetaan                                 3000.0M
@@ -185,12 +185,12 @@
                              :erilliskustannukset_laskutettu                  0.0M
                              :erilliskustannukset_laskutettu_ind_korotettuna  0.0M
                              :erilliskustannukset_laskutettu_ind_korotus      0.0M
-                             :kaikki_laskutetaan                              11999.6169805298438000M
-                             :kaikki_laskutetaan_ind_korotus                  199.6169805298438000M
+                             :kaikki_laskutetaan                              8338.72M
+                             :kaikki_laskutetaan_ind_korotus                  138.72M
                              :kaikki_laskutettu                               100331.95020746888030940000M
                              :kaikki_laskutettu_ind_korotus                   331.95020746888030940000M
-                             :kaikki_paitsi_kht_laskutetaan                   1999.6169805298438000M
-                             :kaikki_paitsi_kht_laskutetaan_ind_korotus       30.4500478774338000M
+                             :kaikki_paitsi_kht_laskutetaan                   -1661.28M
+                             :kaikki_paitsi_kht_laskutetaan_ind_korotus       -30.45M
                              :kaikki_paitsi_kht_laskutettu                    331.95020746888030940000M
                              :kaikki_paitsi_kht_laskutettu_ind_korotus        0.0M
                              :kht_laskutetaan                                 10000.0M
@@ -208,9 +208,9 @@
                              :muutostyot_laskutettu_ind_korotus               0.0M
                              :nimi                                            "Soratien hoito"
                              :perusluku                                       104.4333333333333333M
-                             :sakot_laskutetaan                               1800.0M
-                             :sakot_laskutetaan_ind_korotettuna               1830.4500478774338000M
-                             :sakot_laskutetaan_ind_korotus                   30.4500478774338000M
+                             :sakot_laskutetaan                               -1800.0M
+                             :sakot_laskutetaan_ind_korotettuna               -1830.45M
+                             :sakot_laskutetaan_ind_korotus                   -30.45M
                              :sakot_laskutettu                                0.0M
                              :sakot_laskutettu_ind_korotettuna                0.0M
                              :sakot_laskutettu_ind_korotus                    0.0M
