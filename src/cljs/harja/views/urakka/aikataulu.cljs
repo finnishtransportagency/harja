@@ -19,7 +19,8 @@
             [cljs-time.core :as t]
             [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.paallystysilmoitus :as pot])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -107,16 +108,47 @@
             :pituus-max 128 :muokattava? (constantly false)}
            {:otsikko "Koh\u00ADteen nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? (constantly false)}
-           {:otsikko "TR-osoite" :leveys 10 :nimi :tr-osoite :tyyppi :string
-            :muokattava? (constantly false) :hae tr-domain/tierekisteriosoite-tekstina}
+           {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
+            :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
+            :muokattava? (constantly true)}
+           {:otsikko "Ajo\u00ADrata"
+            :nimi :tr-ajorata
+            :muokattava? (constantly false)
+            :tyyppi :string
+            :tasaa :oikea
+            :fmt (fn [arvo] (:koodi (first (filter #(= (:koodi %) arvo) pot/+ajoradat+))))
+            :leveys 3}
+           {:otsikko "Kais\u00ADta"
+            :muokattava? (constantly false)
+            :nimi :tr-kaista
+            :tyyppi :string
+            :tasaa :oikea
+            :fmt (fn [arvo] (:nimi (first (filter #(= (:koodi %) arvo) pot/+kaistat+))))
+            :leveys 3}
+           {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
+           {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
            ; FIXME Tallennus (ja validointi) epäonnistuu jos kellonaikaa ei anna
-           {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 10 :nimi :aikataulu-paallystys-alku
+           {:otsikko "Pääl\u00ADlys\u00ADtys a\u00ADloi\u00ADtet\u00ADtu" :leveys 8 :nimi :aikataulu-paallystys-alku
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))}
-           {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 10 :nimi :aikataulu-paallystys-loppu
+           {:otsikko "Pääl\u00ADlys\u00ADtys val\u00ADmis" :leveys 8 :nimi :aikataulu-paallystys-loppu
             :tyyppi :pvm-aika :fmt pvm/pvm-aika-opt
             :muokattava? #(and (= (:nakyma optiot) :paallystys) (constantly saa-muokata?))
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
