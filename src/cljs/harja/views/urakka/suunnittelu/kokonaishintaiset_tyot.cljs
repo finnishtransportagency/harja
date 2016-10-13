@@ -67,10 +67,11 @@
               (concat [(grid/otsikko otsikko)] rivit))
             (seq otsikon-mukaan))))
 
-(defn kustannukset [valitun-hoitokauden-ja-tpin-kustannukset
-                    valitun-hoitokauden-kaikkien-tpin-kustannukset
-                    kaikkien-hoitokausien-taman-tpin-kustannukset
-                    yks-kustannukset]
+(defn hoidon-kustannusyhteenveto
+  [valitun-hoitokauden-ja-tpin-kustannukset
+   valitun-hoitokauden-kaikkien-tpin-kustannukset
+   kaikkien-hoitokausien-taman-tpin-kustannukset
+   yks-kustannukset]
   [:div.col-md-6.hoitokauden-kustannukset
    [:div.piirakka-hoitokauden-kustannukset-per-kaikki
     [:div.piirakka
@@ -294,9 +295,9 @@
              @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
              @u/valittu-toimenpideinstanssi]])
 
-         ;; Näytetään kustannusten summat ja piirakkadiagrammit
-         [kustannukset
-          @valitun-hoitokauden-ja-tpin-kustannukset
-          @s/valitun-hoitokauden-kok-hint-kustannukset
-          @kaikkien-hoitokausien-taman-tpin-kustannukset
-          @valitun-hoitokauden-yks-hint-kustannukset]]]))))
+         (when (not= (:tyyppi @urakka) :tiemerkinta)
+           [hoidon-kustannusyhteenveto
+            @valitun-hoitokauden-ja-tpin-kustannukset
+            @s/valitun-hoitokauden-kok-hint-kustannukset
+            @kaikkien-hoitokausien-taman-tpin-kustannukset
+            @valitun-hoitokauden-yks-hint-kustannukset])]]))))
