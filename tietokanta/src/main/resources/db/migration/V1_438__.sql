@@ -8,6 +8,9 @@ DECLARE
   uusi_selite     TEXT;
   vanha_selite    ilmoituksenselite;
 BEGIN
+  IF vanhat_selitteet IS NULL THEN
+    RETURN NULL:
+  END IF;
   FOREACH vanha_selite IN ARRAY vanhat_selitteet
   LOOP
     IF vanha_selite = 'tielleOnVuotanutNestettäLiikkuvastaAjoneuvosta' :: ilmoituksenselite
