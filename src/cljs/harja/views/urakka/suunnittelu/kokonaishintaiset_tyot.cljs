@@ -296,6 +296,8 @@
                @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
                @u/valittu-toimenpideinstanssi])])
 
+         ;; TODO Jos on tiemerkintä, niin pitäisi näyttää kok. hint. yhteensä, yks. hint yhteensä ja muut yhteensä,
+         ;; myös muilla välilehdillä
          (when (not= (:tyyppi @urakka) :tiemerkinta)
            [hoidon-kustannusyhteenveto
             @valitun-hoitokauden-ja-tpin-kustannukset
