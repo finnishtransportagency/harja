@@ -9,7 +9,9 @@
             [clj-time.local :as l]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.domain.toimenpidekoodit :as toimenpidekoodit]))
+
 
 (defn hae-laskutusyhteenvedon-tiedot
   [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
@@ -20,13 +22,16 @@
                                    (pvm/paivamaaran-hoitokausi alkupvm)
                                    [alkupvm loppupvm])]
     (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
-    (into []
-          (laskutus-q/hae-laskutusyhteenvedon-tiedot db
-                                                     (konv/sql-date hk-alkupvm)
-                                                     (konv/sql-date hk-loppupvm)
-                                                     (konv/sql-date alkupvm)
-                                                     (konv/sql-date loppupvm)
-                                                     urakka-id))))
+
+    (vec
+     (sort-by (juxt (comp toimenpidekoodit/tuotteen-jarjestys :tuotekoodi) :nimi)
+              (into []
+                    (laskutus-q/hae-laskutusyhteenvedon-tiedot db
+                                                               (konv/sql-date hk-alkupvm)
+                                                               (konv/sql-date hk-loppupvm)
+                                                               (konv/sql-date alkupvm)
+                                                               (konv/sql-date loppupvm)
+                                                               urakka-id))))))
 
 (defn laske-asiakastyytyvaisyysbonus
   [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]

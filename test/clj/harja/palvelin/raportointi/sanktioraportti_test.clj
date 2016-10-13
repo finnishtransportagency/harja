@@ -70,7 +70,7 @@
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 48417.66))
-    (let [otsikko "Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
+    (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
@@ -93,7 +93,7 @@
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 8097.66))
-    (let [otsikko "Pohjois-Pohjanmaa ja Kainuu, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
+    (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
@@ -125,6 +125,6 @@
                                           {:otsikko "08 Pohjois-Savo"}
                                           {:otsikko "09 Keski-Suomi"}
                                           {:otsikko "10 Etelä-Pohjanmaa"}
-                                          {:otsikko "12 Pohjois-Pohjanmaa ja Kainuu"}
+                                          {:otsikko "12 Pohjois-Pohjanmaa"}
                                           {:otsikko "14 Lappi"}
                                           {:otsikko "Yh\u00ADteen\u00ADsä"}))))
