@@ -136,7 +136,7 @@
 
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
   (assert urakka-id "anna urakka-id")
-  (oikeudet/vaadi-lukuoikeus urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot db {:suorittava_tiemerkintaurakka urakka-id})))
