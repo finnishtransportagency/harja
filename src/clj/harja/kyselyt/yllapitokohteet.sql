@@ -608,5 +608,5 @@ SELECT
   yllapitoluokka
 FROM yllapitokohde
 WHERE
-  yllapitokohde.suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND poistettu IS NOT TRUE;

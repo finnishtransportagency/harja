@@ -10,7 +10,7 @@
 (defonce nakymassa? (atom false))
 
 (defn hae-yksikkohintaiset-tyot [urakka-id]
-  (k/post! :hae-aikataulut {:urakka-id  urakka-id}))
+  (k/post! :hae-tiemerkinnan-yksikkohintaiset-tyot {:urakka-id  urakka-id}))
 
 (def yksikkohintaiset-tyot
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
