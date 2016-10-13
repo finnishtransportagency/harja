@@ -78,28 +78,31 @@
       (keep identity [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
                       {:leveys 5 :otsikko "Pvm"}
                       {:leveys 7 :otsikko "Tyyppi"}
-                      {:leveys 6 :otsikko "Sop. nro"}
                       {:leveys 12 :otsikko "Toimenpide"}
                       {:leveys 12 :otsikko "Tehtävä"}
                       {:leveys 5 :otsikko "Määrä"}
-                      {:leveys 5 :otsikko "Summa €" :fmt :raha}])
+                      {:leveys 5 :otsikko "Summa €" :fmt :raha}
+                      {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}])
+
 
       (keep identity
             (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))
                                (pvm/pvm (:alkanut %))
                                (tyon-tyypin-nimi (:tyyppi %))
-                               (get-in % [:sopimus :sampoid])
                                (get-in % [:tpi :nimi])
                                (get-in % [:tehtava :nimi])
                                (if (get-in % [:tehtava :paivanhinta])
                                  "Päivän hinta"
                                  (get-in % [:tehtava :maara]))
-                               (or (get-in % [:tehtava :summa])  [:info "Ei rahasummaa"]))
+                               (or (get-in % [:tehtava :summa])  [:info "Ei rahasummaa"])
+                               (or (:korotus %)  [:info "Ei rahasummaa"]))
                         muutos-ja-lisatyot)
                   (when (not (empty? muutos-ja-lisatyot))
                     (keep identity (flatten [(if (not= konteksti :urakka) ["Yhteensä" ""]
                                                                           ["Yhteensä"])
-                                             "" "" "" "" ""
-                                             (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))])))))]]))
+                                             "" "" "" ""
+                                             (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
+                                             (reduce + (keep :korotus muutos-ja-lisatyot))])))))]
+     [:teksti (str "Summat ja indeksit yhteensä " (fmt/euro-opt (reduce + (keep :korotettuna muutos-ja-lisatyot))))]]))
 
 

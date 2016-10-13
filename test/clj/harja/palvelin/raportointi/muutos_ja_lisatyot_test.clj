@@ -59,7 +59,8 @@
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
                                           {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}))))
+                                          {:otsikko "Summa €"}
+                                          {:otsikko "Ind.korotus €"}))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
@@ -85,7 +86,8 @@
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
                                           {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}))))
+                                          {:otsikko "Summa €"}
+                                          {:otsikko "Ind.korotus €"}))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
@@ -111,4 +113,5 @@
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
                                           {:otsikko "Määrä"}
-                                          {:otsikko "Summa €"}))))
+                                          {:otsikko "Summa €"}
+                                          {:otsikko "Ind.korotus €"}))))
