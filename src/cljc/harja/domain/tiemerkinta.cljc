@@ -18,6 +18,6 @@
 
 (def tiemerkinnan-suoritusaika-paivina (t/days 14))
 
-(defn tiemerkinta-oltava-valmis [aloituspvm]
-  (when (some? aloituspvm)
-    (t/plus aloituspvm tiemerkinnan-suoritusaika-paivina)))
+(defn tiemerkinta-oltava-valmis [tiemerkintapvm]
+  (when (some? tiemerkintapvm)
+    (t/plus tiemerkintapvm tiemerkinnan-suoritusaika-paivina)))

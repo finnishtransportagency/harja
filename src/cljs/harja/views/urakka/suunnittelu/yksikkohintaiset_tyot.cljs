@@ -150,7 +150,9 @@
 
         tyorivit-joilla-hinta (reaction
                                 (keep #(if (:yksikkohinta %)
-                                        (identity %)) @tyorivit))]
+                                        (identity %)) @tyorivit))
+
+        toimenpiteen-kustannukset (reaction (reduce + 0 (keep :yhteensa @tyorivit-joilla-hinta)))]
 
     (hae-urakan-tiedot ur)
     (komp/luo
@@ -230,6 +232,8 @@
                   {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
                   {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
 
+          [:div.summa "Toimenpiteen hoitokausi yhteensä "
+           [:span (fmt/euro @toimenpiteen-kustannukset)]]
           [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
            [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
           [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "

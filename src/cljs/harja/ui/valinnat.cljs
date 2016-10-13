@@ -19,10 +19,18 @@
    [livi-pudotusvalikko {:valinta    @valittu-sopimusnumero-atom
                          :format-fn  second
                          :valitse-fn valitse-fn
-                         :class      "suunnittelu-alasveto"
                          :li-luokka-fn #(when (= (first %) (:paasopimus ur))
                                           "bold")}
     (:sopimukset ur)]])
+
+(defn urakkatyyppi
+  [valittu-urakkatyyppi-atom urakkatyypit valitse-fn]
+  [:div.label-ja-alasveto.urakkatyyppi
+   [:span.alasvedon-otsikko "Urakkatyyppi"]
+   [livi-pudotusvalikko {:valinta    @valittu-urakkatyyppi-atom
+                         :format-fn  :nimi
+                         :valitse-fn valitse-fn}
+    urakkatyypit]])
 
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
@@ -30,9 +38,7 @@
    [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
                          :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
-                         :valitse-fn valitse-fn
-                         :class      "suunnittelu-alasveto"
-                         }
+                         :valitse-fn valitse-fn}
     @hoitokaudet]])
 
 (defn hoitokausi
@@ -46,8 +52,7 @@
     [livi-pudotusvalikko {:valinta    @valittu-hoitokausi-atom
                           :disabled disabled
                           :format-fn  #(if % (fmt/pvm-vali-opt %) "Valitse")
-                          :valitse-fn valitse-fn
-                          :class      "suunnittelu-alasveto"}
+                          :valitse-fn valitse-fn}
      hoitokaudet]]))
 
 (defn kuukausi [{:keys [disabled nil-valinta]} kuukaudet valittu-kuukausi-atom]
@@ -60,8 +65,7 @@
                                              kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
                                          (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
                                        (or nil-valinta "Kaikki"))
-                         :valitse-fn #(reset! valittu-kuukausi-atom %)
-                         :class      "suunnittelu-alasveto"}
+                         :valitse-fn #(reset! valittu-kuukausi-atom %)}
     kuukaudet]])
 
 (defn hoitokauden-kuukausi
@@ -74,8 +78,7 @@
                                              kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
                                          (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
                                        "Koko hoitokausi")
-                         :valitse-fn valitse-fn
-                         :class      "suunnittelu-alasveto"}
+                         :valitse-fn valitse-fn}
     hoitokauden-kuukaudet]])
 
 (defn urakan-hoitokausi-ja-kuukausi

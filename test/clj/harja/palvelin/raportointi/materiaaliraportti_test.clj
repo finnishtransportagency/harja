@@ -75,7 +75,7 @@
     (is (= vastaus [:raportti
                     {:nimi "Materiaaliraportti"}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015"
+                     {:otsikko "Pohjois-Pohjanmaa, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015"
                       :sheet-nimi "Materiaaliraportti"
                       :viimeinen-rivi-yhteenveto? true}
                      [{:otsikko "Urakka"}
@@ -107,9 +107,9 @@
                      [{:otsikko "Urakka"}
                       {:fmt :numero
                        :otsikko "Talvisuolaliuos NaCl (t)"}]
-                     [["Uusimaa"
+                     [["Pohjois-Pohjanmaa"
                        2000M]
-                       ["Pohjois-Pohjanmaa ja Kainuu"
+                       ["Uusimaa"
                         2000M]
                        ["Yhteensä"
-                        4000M]]]]))))
+                         4000M]]]]))))

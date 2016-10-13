@@ -130,7 +130,7 @@
                      :orientaatio :landscape}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{}
-                      :otsikko                    "Pohjois-Pohjanmaa ja Kainuu, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :otsikko                    "Pohjois-Pohjanmaa, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
                       :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
                       :tyhja                      nil
                       :viimeinen-rivi-yhteenveto? true}
