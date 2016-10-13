@@ -362,9 +362,9 @@ BEGIN
                   LEFT JOIN muutoshintainen_tyo mht
 		       ON (tt.toimenpidekoodi = mht.tehtava AND
 		           mht.urakka = tot.urakka AND
-			   mht.sopimus = tot.sopimus AND
- 			   tpk3.id = t.tpk3_id)
+			   mht.sopimus = tot.sopimus)
                  WHERE tot.urakka = ur AND
+		       tpk3.id = t.tpk3_id AND
 		       tot.alkanut >= hk_alkupvm AND tot.alkanut <= aikavali_loppupvm
     LOOP
       IF mhti.indeksi = TRUE THEN
