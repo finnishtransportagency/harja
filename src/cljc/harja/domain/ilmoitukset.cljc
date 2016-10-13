@@ -4,7 +4,7 @@
     #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.core :as t])
     #?(:clj [clj-time.core :as t])
-    [clojure.string :as string]))
+            [clojure.string :as string]))
 
 (def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
 
@@ -127,6 +127,7 @@
    :kevyenLiikenteenVaylaanLiittyvaIlmoitus "Kevyen liikenteen väylä"
    :raivausJaKorjaustoita "Raivaus ja korjaustöitä"
    :auraustarve "Auraustarve"
+   :yliauraus "Yliauraus"
    :kaivonKansiRikki "Kaivon kansi rikki"
    :kevyenLiikenteenVaylatOvatLiukkaita "Kevyen liikenteen väylät ovat liukkaita"
    :routaheitto "Routaheitto"
@@ -177,6 +178,7 @@
    :lasiaTiella "Lasia tiellä"
    :liukkaudentorjuntatarve "Liukkaudentorjuntatarve"
    :alikulkukaytavassaVetta "Alikulkukäytävässä vetta"
+   :kevyenliikenteenAlikulkukaytavassaVetta "Kevyenliikenteen alikulkukaytavassa vettä"
    :tievalaistuksenLamppuPimeana "Tievalaistuksen lamppu pimeänä"
    :kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita "Kevyen liikenteen väylät ovat jäisiä ja liukkaita"
    :kuoppa "Kuoppa"
@@ -192,10 +194,10 @@
    :kaidevaurio "Kaidevaurio"
    :liikennemerkkeihinLiittyvaIlmoitus "Liikennemerkkeihin liittyvä ilmoitus"
    :siirrettavaAjoneuvo "Siirrettävä ajoneuvo"
-   :tielleOnVuotanutNestettäLiikkuvastaAjoneuvosta "Tielle on vuotanut nestettä liikkuvasta ajoneuvosta"
+   :tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta "Tielle on vuotanut nestettä liikkuvasta ajoneuvosta"
    :tapahtumaOhi "Tapahtuma ohi"
    :kevyenLiikenteenVaylatOvatjaatymassa "Kevyenliikenteen vaylat ovat jäätymässä"
-   :tietOvatjaisiäJamarkia "Tiet ovat jäisia ja märkiä"
+   :tietOvatjaisiaJamarkia "Tiet ovat jäisia ja märkiä"
    :kiertotienKunnossapito "Kiertotien kunnossapito"})
 
 (defn parsi-selitteet [selitteet]
