@@ -590,3 +590,23 @@ WHERE id = :id;
 -- name: poista-yllapitokohteen-kohdeosat!
 DELETE FROM yllapitokohdeosa
 WHERE yllapitokohde = :id;
+
+-- name: hae-tiemerkintaurakan-yksikkohintaiset-tyot
+SELECT
+  id,
+  kohdenumero,
+  nimi,
+  urakka,
+  sopimus,
+  tr_numero                      AS "tr-numero",
+  tr_alkuosa                     AS "tr-alkuosa",
+  tr_alkuetaisyys                AS "tr-alkuetaisyys",
+  tr_loppuosa                    AS "tr-loppuosa",
+  tr_loppuetaisyys               AS "tr-loppuetaisyys",
+  tr_ajorata                     AS "tr-ajorata",
+  tr_kaista                      AS "tr-kaista",
+  yllapitoluokka
+FROM yllapitokohde
+WHERE
+  yllapitokohde.suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  AND poistettu IS NOT TRUE;
