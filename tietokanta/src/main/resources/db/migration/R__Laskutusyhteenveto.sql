@@ -363,9 +363,7 @@ BEGIN
 		       ON (tt.toimenpidekoodi = mht.tehtava AND
 		           mht.urakka = tot.urakka AND
 			   mht.sopimus = tot.sopimus AND
-		           mht.alkupvm <= tot.alkanut AND mht.loppupvm >= tot.alkanut AND
- 			   mht.poistettu IS NOT TRUE AND
-			   tpk3.id = t.tpk3_id)
+ 			   tpk3.id = t.tpk3_id)
                  WHERE tot.urakka = ur AND
 		       tot.alkanut >= hk_alkupvm AND tot.alkanut <= aikavali_loppupvm
     LOOP
