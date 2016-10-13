@@ -38,7 +38,7 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest raportin-suoritus-urakalle-toimii
+(deftest raportin-suoritus-urakka-hoitokausi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
@@ -46,16 +46,15 @@
                                  :konteksti  "urakka"
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))}})
-        nurkkasumma (last (last (last (last vastaus))))]
+                                              :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 16000.00))
     (let [otsikko "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-yhteensa taulukko 5)
+      (apurit/tarkista-taulukko-yhteensa taulukko 6)
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Pvm"}
                                           {:otsikko "Tyyppi"}
-                                          {:otsikko "Sop. nro"}
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
                                           {:otsikko "Määrä"}
@@ -63,7 +62,7 @@
                                           {:otsikko "Ind.korotus €"}))))
 
 
-(deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
+(deftest raportin-suoritus-hallintayksikolle-hoitokausi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
@@ -72,17 +71,16 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi "hoito"}})
-        nurkkasumma (last (last (last (last vastaus))))]
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 32000.00))
-    (let [otsikko "Pohjois-Pohjanmaa ja Kainuu, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
+    (let [otsikko "Pohjois-Pohjanmaa, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-yhteensa taulukko 6)
+      (apurit/tarkista-taulukko-yhteensa taulukko 7)
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Urakka"}
                                           {:otsikko "Pvm"}
                                           {:otsikko "Tyyppi"}
-                                          {:otsikko "Sop. nro"}
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
                                           {:otsikko "Määrä"}
@@ -90,26 +88,24 @@
                                           {:otsikko "Ind.korotus €"}))))
 
 
-(deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
+(deftest raportin-suoritus-kokomaa-hoitokausi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :muutos-ja-lisatyot
                                  :konteksti          "koko maa"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi "hoito"}})
-        nurkkasumma (last (last (last (last vastaus))))]
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 64000.00))
     (let [otsikko "KOKO MAA, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-yhteensa taulukko 6)
+      (apurit/tarkista-taulukko-yhteensa taulukko 7)
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Urakka"}
                                           {:otsikko "Pvm"}
                                           {:otsikko "Tyyppi"}
-                                          {:otsikko "Sop. nro"}
                                           {:otsikko "Toimenpide"}
                                           {:otsikko "Tehtävä"}
                                           {:otsikko "Määrä"}
