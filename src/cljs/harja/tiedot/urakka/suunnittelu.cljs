@@ -144,3 +144,8 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
     (mapv #(assoc % :yhteensa (when-let [hinta (:yksikkohinta %)]
                                 (* (or (:maara %) 0) hinta)))
           rivit)))
+
+(defn monista-tuleville-teksti [urakkatyyppi]
+  (if (= urakkatyyppi :hoito)
+    "Monista kaikki yo. tiedot tulevillekin hoitokausille"
+    "Monista kaikki yo. tiedot tulevillekin sopimuskausille"))

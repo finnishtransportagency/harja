@@ -249,7 +249,7 @@
               :voi-poistaa? (constantly false)
               :muokkaa-footer (fn [g]
                                 [:div.kok-hint-muokkaa-footer
-                                 [raksiboksi {:teksti "Monista kaikki yo. tiedot tulevillekin hoitokausille"
+                                 [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
                                               :toiminto #(swap! tuleville? not)
                                               :info-teksti  [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                               :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
@@ -291,9 +291,10 @@
                                   (assoc tama-rivi :maksupvm maksu-pvm)))}]
              @tyorivit]
 
-            [kokonaishintaiset-tyot-tehtavalista
-             @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-             @u/valittu-toimenpideinstanssi]])
+            (when (not= (:tyyppi @urakka) :tiemerkinta)
+              [kokonaishintaiset-tyot-tehtavalista
+               @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
+               @u/valittu-toimenpideinstanssi])])
 
          (when (not= (:tyyppi @urakka) :tiemerkinta)
            [hoidon-kustannusyhteenveto
