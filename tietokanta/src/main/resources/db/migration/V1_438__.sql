@@ -15,12 +15,12 @@ BEGIN
   LOOP
     IF vanha_selite = 'tielleOnVuotanutNestettäLiikkuvastaAjoneuvosta' :: ilmoituksenselite
     THEN
-      uusi_selite := 'tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta' :: ilmoituksenselite;
-    ELSEIF vanha_selite = 'tietOvatjaisiäJamarkia'
+      uusi_selite := 'tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta';
+    ELSEIF vanha_selite = 'tietOvatjaisiäJamarkia' :: ilmoituksenselite
       THEN
         uusi_selite := 'tietOvatjaisiaJamarkia';
     ELSE
-      uusi_selite := vanha_selite :: TEXT :: ilmoituksenselite;
+      uusi_selite := vanha_selite :: TEXT;
     END IF;
     uudet_selitteet := uudet_selitteet || uusi_selite;
   END LOOP;
