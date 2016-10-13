@@ -101,10 +101,12 @@
                {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
                {"Kokonaishintaiset" kok-hint-yhteensa "Yksikkohintaiset" yks-hint-yhteensa}]]))]]
 
-   [:div.summa "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
+   [:div.summa.summa-toimenpiteen-hoitokausi
+    "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
     [:span (fmt/euro valitun-hoitokauden-ja-tpin-kustannukset)]]
 
-   [:div.summa "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
+   [:div.summa.summa-toimenpiteiden-hoitokaudet
+    "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
     [:span (fmt/euro kaikkien-hoitokausien-taman-tpin-kustannukset)]]])
 
 (defn kokonaishintaiset-tyot-tehtavalista [tehtavat tpi]
