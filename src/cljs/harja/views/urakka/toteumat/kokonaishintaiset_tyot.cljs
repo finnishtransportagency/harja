@@ -137,22 +137,23 @@
           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-kokonaishintainen-toteuma nil)]
 
           [lomake/lomake
-           {:otsikko (if (:id @muokattu)
-                       "Muokkaa kokonaishintaista toteumaa"
-                       "Luo uusi kokonaishintainen toteuma")
-            :muokkaa! #(do (reset! muokattu %))
+           {:otsikko      (if (:id @muokattu)
+                            "Muokkaa kokonaishintaista toteumaa"
+                            "Luo uusi kokonaishintainen toteuma")
+            :muokkaa!     #(do (reset! muokattu %))
             :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))
-            :footer [napit/palvelinkutsu-nappi
-                     "Tallenna toteuma"
-                     #(tiedot/tallenna-kokonaishintainen-toteuma! @muokattu)
-                     {:luokka "nappi-ensisijainen"
-                      :ikoni (ikonit/tallenna)
-                      :kun-onnistuu #(do
-                                      (tiedot/toteuman-tallennus-onnistui %)
-                                      (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
-                      :disabled (or (not (lomake/voi-tallentaa? @muokattu))
-                                    jarjestelman-lisaama-toteuma?
-                                    (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}]}
+            :footer-fn    (fn [toteuma]
+                            [napit/palvelinkutsu-nappi
+                             "Tallenna toteuma"
+                             #(tiedot/tallenna-kokonaishintainen-toteuma! toteuma)
+                             {:luokka       "nappi-ensisijainen"
+                              :ikoni        (ikonit/tallenna)
+                              :kun-onnistuu #(do
+                                              (tiedot/toteuman-tallennus-onnistui %)
+                                              (reset! tiedot/valittu-kokonaishintainen-toteuma nil))
+                              :disabled     (or (not (lomake/voi-tallentaa? toteuma))
+                                                jarjestelman-lisaama-toteuma?
+                                                (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}
            ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
            ;; reitti!
            [(when jarjestelman-lisaama-toteuma?
@@ -171,7 +172,8 @@
                           (assoc :paattynyt arvo)
                           (assoc :alkanut arvo)))
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
-             :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
+             :aika-vapaaehtoinen? true
+             :validoi     [[:ei-tyhja "Valitse vähintään päivämäärä"]]
              :huomauta     [[:urakan-aikana-ja-hoitokaudella]]}
            (if (:jarjestelma @muokattu)
               {:tyyppi :string
