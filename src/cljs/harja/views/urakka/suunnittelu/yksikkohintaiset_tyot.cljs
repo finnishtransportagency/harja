@@ -232,9 +232,12 @@
                   {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
                   {"Yksikköhintaiset" yks-hint-yhteensa "Kokonaishintaiset" kok-hint-yhteensa}]]))]]
 
-          [:div.summa "Toimenpiteen hoitokausi yhteensä "
+          [:div.summa.summa-toimenpiteen-hoitokausi
+           "Yksikköhintaisten töiden toimenpiteen hoitokausi yhteensä "
            [:span (fmt/euro @toimenpiteen-kustannukset)]]
-          [:div.summa "Yksikkohintaisten töiden hoitokausi yhteensä "
+          [:div.summa.summa-hoitokausi
+           "Yksikkohintaisten töiden hoitokausi yhteensä "
            [:span (fmt/euro @valitun-hoitokauden-yks-hint-kustannukset)]]
-          [:div.summa "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
+          [:div.summa.summa-hoitokaudet
+           "Yksikköhintaisten töiden kaikki hoitokaudet yhteensä "
            [:span (fmt/euro @kaikkien-hoitokausien-kustannukset)]]]]))))
