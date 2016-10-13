@@ -7,14 +7,15 @@
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str])
-  (:import (javax.jms Session))
+  (:import (javax.jms Session ExceptionListener)
+           (java.lang.reflect Proxy InvocationHandler))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def agentin-alkutila
   {:yhteys nil :istunto nil :kuuntelijat [] :jonot {}})
 
-(def ei-jms-yhteytta {:type    :jms-yhteysvirhe
-                      :virheet [{:koodi  :ei-yhteytta
+(def ei-jms-yhteytta {:type :jms-yhteysvirhe
+                      :virheet [{:koodi :ei-yhteytta
                                  :viesti "Sonja yhteyttä ei saatu. Viestiä ei voida lähettää."}]})
 (defprotocol LuoViesti
   (luo-viesti [x istunto]))
@@ -39,6 +40,22 @@
 (def jms-driver-luokka {:activemq "org.apache.activemq.ActiveMQConnectionFactory"
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
 
+(defn tee-sonic-jms-tilamuutoskuuntelija []
+  (let [lokita-tila #(case %
+                      0 (log/info "Sonja JMS yhteyden tila: ACTIVE")
+                      1 (log/info "Sonja JMS yhteyden tila: RECONNECTING")
+                      2 (log/error "Sonja JMS yhteyden tila: FAILED")
+                      3 (log/info "Sonja JMS yhteyden tila: CLOSED"))
+        kasittelija (reify InvocationHandler (invoke [_ _ _ args] (lokita-tila (first args))))
+        luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")
+        instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
+    instanssi))
+
+(defn konfiguroi-sonic-jms-connection-factory [connection-factory]
+  (doto connection-factory
+    (.setFaultTolerant true)
+    (.setFaultTolerantReconnectTimeout (int 6000))))
+
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
                                jms-driver-luokka
@@ -47,9 +64,7 @@
                                (.newInstance (into-array Object [url])))]
     (if (= tyyppi :activemq)
       connection-factory
-      (doto connection-factory
-        (.setFaultTolerant true)
-        (.setFaultTolerantReconnectTimeout (int 6000))))))
+      (konfiguroi-sonic-jms-connection-factory connection-factory))))
 
 (defn- viestin-kasittelija [kasittelija]
   (let [ch (async/chan)]
@@ -108,6 +123,8 @@
   (try
     (let [qcf (luo-connection-factory url tyyppi)
           yhteys (.createConnection qcf kayttaja salasana)]
+      (when (= tyyppi :sonicmq)
+        (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija)))
       (.start yhteys)
       yhteys)
     (catch Exception e
@@ -174,7 +191,7 @@
         (some-> tila :istunto .close)
         (some-> tila :yhteys .close)))
     (assoc this
-           :tila nil))
+      :tila nil))
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
