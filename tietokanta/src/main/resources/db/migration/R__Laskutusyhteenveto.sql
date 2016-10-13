@@ -268,7 +268,7 @@ BEGIN
     sakot_laskutetaan_ind_korotettuna := 0.0;
     sakot_laskutetaan_ind_korotus := 0.0;
 
-    FOR sanktiorivi IN SELECT maara, perintapvm, indeksi, perintapvm
+    FOR sanktiorivi IN SELECT -maara AS maara, perintapvm, indeksi, perintapvm
                          FROM sanktio s
                         WHERE s.toimenpideinstanssi = t.tpi AND
 			      s.perintapvm >= hk_alkupvm AND
