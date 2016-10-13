@@ -1,8 +1,10 @@
-<b>Nykyinen versio: 1.0.1</b>
-<b>Julkaistu: 5.10.2016</b>
+<b>Nykyinen versio: 1.0.2</b>
+<b>Julkaistu: 11.10.2016</b>
 
 <b>Versiohistoria:</b>
 
+- Versionumero: 1.0.2 Julkaistu: 11.10.2016:
+    - Päällystys-/tiemerkintäurakan aikataulun kirjaukseen lisätty uusi kenttä: tiemerkinta-takaraja. Aiemmin tämä laskettin automaattisesti kahden viikon päähän siitä hetkestä kun tiemerkinnän saa aloittaa, nyt syötetään käsin.
 - Versionumero: 1.0.1 Julkaistu: 5.10.2016:
     - Turvallisuuspoikkeaman kirjauksessa kentistä "aiheutuneet_vammat" ja "vahingoittuneet_ruumiinosat" tallennetaan vain ensimmäinen arvo. TURI vastaanottaa näistä vain yhden arvon, joten myös Harjaan kirjataan jatkossa vain yksi arvo (EU-standardin mukaisesti). Itse rajapinta pysyy samana kuin ennenkin, muutos on pelkästään sisäinen.
     - Estetty turvallisuuspoikkeaman tapahtumapäivämäärän kirjaaminen tulevaisuuteen API:n kautta.

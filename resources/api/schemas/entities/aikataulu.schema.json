@@ -19,8 +19,8 @@
       "type": "string",
       "format": "date-time"
     },
-    "tiemerkinnan-oltava-valmis": {
-      "id": "urn:harja/urakka/sopimukset/0/sopimus/tiemerkinnan-oltava-valmis",
+    "tiemerkinta-takaraja": {
+      "id": "urn:harja/urakka/sopimukset/0/sopimus/aikataulu-tiemerkinta-takaraja",
       "type": "string",
       "format": "date-time"
     },
