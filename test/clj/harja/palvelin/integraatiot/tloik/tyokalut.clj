@@ -1,15 +1,15 @@
 (ns harja.palvelin.integraatiot.tloik.tyokalut
   (:require [taoensso.timbre :as log]
-            [clojure.test :refer [deftest is use-fixtures]]
-            [clojure.xml :refer [parse]]
-            [clojure.zip :refer [xml-zip]]
-            [hiccup.core :refer [html]]
-            [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-sonja]]
-            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
-            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
+[clojure.test :refer [deftest is use-fixtures]]
+[clojure.xml :refer [parse]]
+[clojure.zip :refer [xml-zip]]
+[hiccup.core :refer [html]]
+[harja.testi :refer :all]
+[harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
+[harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
+[harja.jms-test :refer [feikki-sonja]]
+[harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
+[harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
 
 
 (def +xsd-polku+ "xsd/tloik/")
@@ -48,43 +48,8 @@
   <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
   </lahettaja>
   <seliteet>
-  <selite>auraustarve</selite>
-  <selite>aurausvallitNakemaesteena</selite>
-  </seliteet>
-  </harja:ilmoitus>")
-(def +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
-  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
-  <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
-  <ilmoitusId>123456789</ilmoitusId>
-  <versionumero>1</versionumero>
-  <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
-  <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
-  <urakkatyyppi>hoito</urakkatyyppi>
-  <otsikko>Korkeat vallit</otsikko>
-  <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
-  <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
-  <yhteydenottopyynto>false</yhteydenottopyynto>
-  <sijainti>
-  <tienumero>4</tienumero>
-  <x>452935</x>
-  <y>7186873</y>
-  </sijainti>
-  <ilmoittaja>
-  <etunimi>Uuno</etunimi>
-  <sukunimi>Urakoitsija</sukunimi>
-  <matkapuhelin>08023394852</matkapuhelin>
-  <sahkoposti>uuno.urakoitsija@example.com</sahkoposti>
-  <tyyppi>tienkayttaja</tyyppi>
-  </ilmoittaja>
-  <lahettaja>
-  <etunimi>Pekka</etunimi>
-  <sukunimi>Päivystäjä</sukunimi>
-  <matkapuhelin>929304449282</matkapuhelin>
-  <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
-  </lahettaja>
-  <seliteet>
   <selite>tyomaajarjestelyihinLiittyvaIlmoitus</selite>
-  <selite>kuoppiaTiessa</selite>selite>
+  <selite>kuoppiaTiessa</selite>
   <selite>kelikysely</selite>
   <selite>soratienKuntoHuono</selite>
   <selite>saveaTiella</selite>
@@ -164,6 +129,41 @@
   <selite>tapahtumaOhi</selite>
   <selite>kevyenLiikenteenVaylatOvatjaatymassa</selite>
   <selite>tietOvatjaisiaJamarkia</selite>
+  </seliteet>\n</harja:ilmoitus>")
+
+(def +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
+  "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+  <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
+  <ilmoitusId>123456789</ilmoitusId>
+  <versionumero>1</versionumero>
+  <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+  <ilmoitettu>2015-09-29T14:49:45</ilmoitettu>
+  <urakkatyyppi>hoito</urakkatyyppi>
+  <otsikko>Korkeat vallit</otsikko>
+  <paikanKuvaus>Jossain kentällä.</paikanKuvaus>
+  <lisatieto>Vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
+  <yhteydenottopyynto>false</yhteydenottopyynto>
+  <sijainti>
+  <tienumero>4</tienumero>
+  <x>452935</x>
+  <y>7186873</y>
+  </sijainti>
+  <ilmoittaja>
+  <etunimi>Uuno</etunimi>
+  <sukunimi>Urakoitsija</sukunimi>
+  <matkapuhelin>08023394852</matkapuhelin>
+  <sahkoposti>uuno.urakoitsija@example.com</sahkoposti>
+  <tyyppi>tienkayttaja</tyyppi>
+  </ilmoittaja>
+  <lahettaja>
+  <etunimi>Pekka</etunimi>
+  <sukunimi>Päivystäjä</sukunimi>
+  <matkapuhelin>929304449282</matkapuhelin>
+  <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+  </lahettaja>
+  <seliteet>
+  <selite>auraustarve</selite>
+  <selite>aurausvallitNakemaesteena</selite>
   </seliteet>
   </harja:ilmoitus>")
 
@@ -240,9 +240,9 @@
 
 (defn luo-tloik-komponentti []
   (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
-            :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
-            :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
-            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
+:ilmoituskuittausjono +tloik-ilmoituskuittausjono+
+:toimenpidejono +tloik-ilmoitustoimenpideviestijono+
+:toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
 
 (def +ilmoitus-ruotsissa+
   (clojure.string/replace
@@ -255,9 +255,9 @@
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
-                                       "<urakkatyyppi>hoito</urakkatyyppi>"
-                                       "<urakkatyyppi>paallystys</urakkatyyppi>")
-        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+   "<urakkatyyppi>hoito</urakkatyyppi>"
+   "<urakkatyyppi>paallystys</urakkatyyppi>")
+  ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn tuo-valaistusilmoitus []
@@ -272,8 +272,8 @@
 
 (defn hae-ilmoitustoimenpide []
   (q "SELECT kuittaustyyppi
-      FROM ilmoitustoimenpide
-      WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
+FROM ilmoitustoimenpide
+WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
 
 (defn hae-paivystaja []
   (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;")))
@@ -281,7 +281,7 @@
 (defn tee-testipaivystys []
   (let [yhteyshenkilo (hae-paivystaja)]
     (u (format "INSERT INTO paivystys (alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
-                VALUES (now() - interval '1' day, now() + interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
+    VALUES (now() - interval '1' day, now() + interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
     yhteyshenkilo))
 
 (defn poista-ilmoitus []
