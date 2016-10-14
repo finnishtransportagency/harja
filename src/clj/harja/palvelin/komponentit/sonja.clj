@@ -152,21 +152,26 @@
           (recur (min (* 2 aika) 600000)))))))
 
 (defn poista-kuuntelija [tila jonon-nimi kuuntelija-fn]
-  (update-in tila [:jonot jonon-nimi :kuuntelijat] disj kuuntelija-fn))
+  (update-in tila [:jonot jonon-nimi] (fn [{:keys [consumer kuuntelijat] :as jono}]
+                                        (let [kuuntelijat (disj kuuntelijat kuuntelija-fn)]
+                                          (if (empty? kuuntelijat)
+                                            (do
+                                              (.close consumer)
+                                              nil)
+                                            (assoc jono :kuuntelijat kuuntelijat))))))
 
 (defn yhdista-kuuntelija [{:keys [istunto] :as tila} jonon-nimi kuuntelija-fn]
   (log/debug (format "Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
   (update-in tila [:jonot jonon-nimi]
              (fn [{:keys [consumer kuuntelijat] :as jonon-tiedot}]
-               (let [kuuntelijat (or kuuntelijat (atom []))]
-                 (swap! kuuntelijat conj kuuntelija-fn)
+               (let [kuuntelijat (or kuuntelijat #{})]
                  (assoc jonon-tiedot
                    :consumer (or consumer
                                  (luo-jonon-kuuntelija istunto jonon-nimi
                                                        #(doseq [kuuntelija @kuuntelijat]
                                                          (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
                                                          (kuuntelija %))))
-                   :kuuntelijat kuuntelijat)))))
+                   :kuuntelijat (conj kuuntelijat kuuntelija-fn))))))
 
 (defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
   (if istunto
