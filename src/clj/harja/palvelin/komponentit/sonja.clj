@@ -7,7 +7,7 @@
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
             [clojure.string :as str])
-  (:import (javax.jms Session ExceptionListener)
+  (:import (javax.jms Session ExceptionListener JMSException)
            (java.lang.reflect Proxy InvocationHandler))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -50,6 +50,12 @@
         luokka (Class/forName "progress.message.jclient.ConnectionStateChangeListener")
         instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
     instanssi))
+
+(defn tee-jms-poikkeuskuuntelija [tila]
+  (reify ExceptionListener
+    (onException [_ e]
+      (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e)))
+      #_(send tila uudelleenyhdista))))
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
@@ -118,13 +124,14 @@
       (assoc-in jonot [jonon-nimi :producer] producer)
       producer)))
 
-(defn- yhdista [{:keys [url kayttaja salasana tyyppi]}]
+(defn- yhdista [tila {:keys [url kayttaja salasana tyyppi]}]
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
   (try
     (let [qcf (luo-connection-factory url tyyppi)
           yhteys (.createConnection qcf kayttaja salasana)]
       (when (= tyyppi :sonicmq)
         (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija)))
+      (.setExceptionListener yhteys (tee-jms-poikkeuskuuntelija tila))
       (.start yhteys)
       yhteys)
     (catch Exception e
@@ -133,7 +140,7 @@
 
 (defn aloita-yhdistaminen [tila asetukset yhteys-ok?]
   (loop [aika 10000]
-    (let [yhteys (yhdista asetukset)]
+    (let [yhteys (yhdista tila asetukset)]
       (if yhteys
         (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
           (log/debug "Saatiin yhteys Sonjan JMS-brokeriin.")
@@ -199,8 +206,7 @@
     (log/debug (format "Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
     (send tila
           (fn [tila]
-            (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)
-            tila))
+            (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)))
     #(send tila poista-kuuntelija jonon-nimi kuuntelija-fn))
 
   (laheta [this jonon-nimi viesti {:keys [correlation-id]}]
