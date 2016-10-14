@@ -1,6 +1,6 @@
 ALTER TABLE ilmoitus
   RENAME COLUMN ilmoittaja_tyyppi TO ilmoittaja_tyyppi_temp;
-ALTER TABLE ilmoittaja_tyyppi
+ALTER TABLE ilmoitus
   ADD ilmoittaja_tyyppi TEXT;
 
 UPDATE ilmoitus
