@@ -9,9 +9,11 @@
     (str (or tie "-") " / " (or aosa "-") " / " (or aet "-"))))
 
 (defn logo []
-  [:img {:class "logo"
-         :on-click #(set! (.-location js/window) asetukset/+harja-url+)
-         :src kuvat/+harja-logo+}])
+  [:div.logo
+   (when (utils/kehitysymparistossa?)
+     [:span#testiharja "TESTI"])
+   [:img {:on-click #(set! (.-location js/window) asetukset/+harja-url+)
+         :src kuvat/+harja-logo+}]])
 
 (defn kaynnistyspainike [tallennus-kaynnissa tallennustilaa-muutetaan disabloi?]
   [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")
@@ -34,22 +36,19 @@
                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
                                     palvelinvirhe]}]
   [:div.ylapalkki {:class (when (utils/kehitysymparistossa?) "testiharja")}
-   (when (utils/kehitysymparistossa?)
-     [:span#testiharja "TESTI"])
    [logo]
    (when-not @tallennus-kaynnissa
      [keskityspainike keskita-ajoneuvoon])
-   [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
-   [:div.ylapalkin-metatiedot
-
-    [:div.urakkanimi {:on-click #(println "TODO: tästäkin vaihtuu urakka")}
-     (if @valittu-urakka
-       (utils/lyhennetty-urakan-nimi (:nimi @valittu-urakka))
-       "")]
-    [:div.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
-    [:div.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]
    [:div.ylapalkki-button.kiinteistorajat.livicon-home {:on-click #(swap! kiinteistorajat not)}]
    [:div.ylapalkki-button.ortokuva.livicon-eye {:on-click #(swap! ortokuva not)}]
    [:div.ylapalkki-button.infonappi.livicon-circle-info {:on-click #(swap! tiedot-nakyvissa not)}]
+   [:div.tr-osoite (formatoi-tr-osoite @tr-osoite)]
+   [:div.ylapalkin-metatiedot
+    [:div.ylapalkin-metatieto.urakkanimi {:on-click #(println "TODO: tästäkin vaihtuu urakka")}
+     (if @valittu-urakka
+       (utils/lyhennetty-urakan-nimi (:nimi @valittu-urakka))
+       "")]
+    [:div.ylapalkin-metatieto.soratiehoitoluokka (str "SHL: " (or @soratiehoitoluokka "-"))]
+    [:div.ylapalkin-metatieto.talvihoitoluokka (str "THL: " (or @hoitoluokka "-"))]]
    [kaynnistyspainike tallennus-kaynnissa tallennustilaa-muutetaan disabloi-kaynnistys?]
    (when @palvelinvirhe [:div.palvelinvirhe "Palvelinvirhe: " @palvelinvirhe])])

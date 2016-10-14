@@ -1,87 +1,111 @@
+@ylapalkin-korkeus: 70px;
+@ylapalkin-ikonin-koko: 30px;
+@ylapalkin-nappien-valinen-tila: 10px;
+@viiva-nappien-valissa: 1px solid rgb(40,40,40);
+
 .ylapalkki {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 70px;
+    display: flex;
+    flex-wrap: wrap;
+    height: @ylapalkin-korkeus;
     background-color: rgb(19,19,20);
-    font-size: 20px;
-    line-height: 70px;
     z-index: 1000;
 }
 
-.ylapalkki > .tr-osoite {
-    border-left: 1px solid rgb(40,40,40);
-    position: absolute;
-    color: white;
-    font-size: 23px;
-    font-weight: normal;
-    padding-left: 10px;
-    left: 470px;
-}
+.ylapalkki > .logo {
+    position: relative;
+    padding: 12px;
+    width: 150px;
 
-.ylapalkin-metatiedot {
-    position: absolute;
-    border-left: 1px solid rgb(40,40,40);
-    top: 0;
-    left: 680px;
-    padding-left: 10px;
-    color: white;
-    width: 100%;
-    height: 70px;
-    line-height: 20px;
-}
-.ylapalkin-metatiedot > div {
-    display: block;
-    margin: 3px 0;
-    padding-top: 0;
-    width: 190px;
-    font-size: 15px;
-    height: 19px;
-    line-height: 20px;
-}
-.ylapalkin-metatiedot > .urakkanimi {
-    display: block;
-    padding-top: 0;
-    width: 190px;
-    font-size: 10px;
-    height: 19px;
-    line-height: 10px;
-    overflow-x: hidden;
-    word-break: break-all;
+    & #testiharja {
+        background-color: white;
+        color: #dd0000;
+        font-size: 10px;
+        font-weight: bold;
+        line-height: 10px;
+        padding: 2px;
+        position: absolute;
+        top: 5px;
+        left: 66px;
+        text-decoration: none;
+    }
+
+    & img {
+        width: 100%;
+    }
 }
 
 .ylapalkki-button {
-    border-left: 1px solid rgb(40,40,40);
-    position: absolute;
-    top: 0;
+    border-left: @viiva-nappien-valissa;
     width: 50px;
-    height: 100%;
-    padding-left: 10px;
+    padding-left: @ylapalkin-nappien-valinen-tila;
     box-sizing: border-box;
     color: white;
-    font-size: 30px;
+    font-size: @ylapalkin-ikonin-koko;
     line-height: 70px;
 }
 
-.ylapalkki-button img {
-    padding-top: 10px;
-    width: 50px;
-    height: 50px;
+.ylapalkki > .tr-osoite {
+    border-left: @viiva-nappien-valissa;
+    color: white;
+    font-size: 1.4em;
+    font-weight: normal;
+    line-height: 70px;
+    padding-left: @ylapalkin-nappien-valinen-tila;
+    padding-right: @ylapalkin-nappien-valinen-tila;
+}
+
+.ylapalkin-metatiedot {
+    border-left: @viiva-nappien-valissa;
+    top: 0;
+    padding-left: @ylapalkin-nappien-valinen-tila;
+    font-size: @ylapalkin-ikonin-koko;
+    line-height: 70px;
+    color: white;
+
+    > .ylapalkin-metatieto {
+        display: block;
+        margin: 3px 0;
+        padding-top: 0;
+        width: 190px;
+        font-size: 15px;
+        height: 19px;
+        line-height: 20px;
+    }
+
+    > .urakkanimi {
+        display: block;
+        padding-top: 0;
+        width: 190px;
+        font-size: 10px;
+        height: 19px;
+        line-height: 10px;
+        overflow-x: hidden;
+        word-break: break-all;
+    }
+}
+
+.kaynnistyspainike {
+    width: 220px;
+    height: 70px;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 70px;
+    color: white;
+    background-color: rgb(86,198,84);
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: center;
+}
+
+.kaynnistyspainike span {
+    margin-right: 10px;
+}
+
+.kaynnissa {
+    background-color: rgb(208, 0, 5);
 }
 
 
-.ylapalkki .infonappi {
-    left: 420px;
-}
-
-.ylapalkki .kiinteistorajat {
-    left: 320px;
-}
-
-.ylapalkki .ortokuva {
-    left: 370px;
-}
 .ylapalkki > .palvelinvirhe {
     background-color: white;
     border: 1px solid gray;
@@ -98,6 +122,7 @@
     z-index: 10000;
 }
 
-.keskityspainike {
-    left: 270px;
+.ylapalkki.testiharja {
+    border: 1px solid #dd0000;
+    background: red;
 }
