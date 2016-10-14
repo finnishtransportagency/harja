@@ -1,13 +1,16 @@
-@ylapalkin-vakiokorkeus: 70px;
-@ylapalkin-ikonin-vakiokoko: 30px;
-@ylapalkin-nappien-valinen-tyhja-tila: 10px;
+@ylapalkin-korkeus: 70px;
+@ylapalkin-korkeus-pienempi: 50px;
+@ylapalkin-ikonin-koko: 30px;
+@ylapalkin-ikonin-koko-pienempi: 25px;
+@ylapalkin-nappien-valinen-tyhja-tila: 8px;
+@ylapalkin-nappien-valinen-tyhja-tila-pienempi: 6px;
 @viiva-nappien-valissa: 1px solid rgb(40,40,40);
 
 
 .ylapalkki {
     display: flex;
     justify-content: space-between;
-    min-height: @ylapalkin-vakiokorkeus;
+    min-height: @ylapalkin-korkeus;
     background-color: rgb(19,19,20);
     z-index: 1000;
 }
@@ -42,11 +45,12 @@
 
 .ylapalkki-button {
     border-left: @viiva-nappien-valissa;
-    width: 50px;
+    text-align: center;
     padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
+    padding-right: @ylapalkin-nappien-valinen-tyhja-tila;
     box-sizing: border-box;
     color: white;
-    font-size: @ylapalkin-ikonin-vakiokoko;
+    font-size: @ylapalkin-ikonin-koko;
     line-height: 70px;
 }
 
@@ -64,7 +68,7 @@
     border-left: @viiva-nappien-valissa;
     top: 0;
     padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
-    font-size: @ylapalkin-ikonin-vakiokoko;
+    font-size: @ylapalkin-ikonin-koko;
     line-height: 70px;
     max-width: 190px;
     color: white;
@@ -91,7 +95,7 @@
 
 .kaynnistyspainike {
     width: 220px;
-    height: @ylapalkin-vakiokorkeus;
+    height: @ylapalkin-korkeus;
     font-weight: normal;
     font-size: 16px;
     line-height: 70px;
@@ -125,4 +129,42 @@
 
 .ylapalkki.testiharja {
     background: red;
+}
+
+
+@media (max-width: 640px) {
+    .ylapalkki .logo {
+        padding: 7px;
+        width: 100px;
+    }
+
+    .ylapalkki-button {
+        font-size: @ylapalkin-ikonin-koko-pienempi;
+        padding-left: @ylapalkin-nappien-valinen-tyhja-tila-pienempi;
+        padding-right: @ylapalkin-nappien-valinen-tyhja-tila-pienempi;
+        line-height: 50px;
+    }
+
+    .kaynnistyspainike {
+        width: 170px;
+        height: @ylapalkin-korkeus-pienempi;
+        line-height: 50px;
+
+        & .kaynnispainike-nuoli {
+            margin-right: 5px;
+
+        }
+    }
+}
+
+@media (max-width: 490px) {
+    .kaynnistyspainike {
+        width: 50px;
+        height: @ylapalkin-korkeus-pienempi;
+        line-height: 50px;
+    }
+
+    .kaynnistyspainike > .kaynnistyspainike-teksti {
+        display: none;
+    }
 }

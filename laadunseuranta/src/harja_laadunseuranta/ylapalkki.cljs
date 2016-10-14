@@ -22,9 +22,10 @@
                                          (reset! tallennustilaa-muutetaan true)
                                          (reset! tallennus-kaynnissa false)))}
    [:span.kaynnistyspainike-nuoli.livicon-arrow-start]
-   (if @tallennus-kaynnissa
+   [:span.kaynnistyspainike-teksti
+    (if @tallennus-kaynnissa
      "Pysäytä tarkastus"
-     "Käynnistä tarkastus")])
+     "Käynnistä tarkastus")]])
 
 (defn keskityspainike [keskita-ajoneuvoon]
   [:div.ylapalkki-button.keskityspainike.livicon-crosshairs {:on-click #(do (swap! keskita-ajoneuvoon not)
