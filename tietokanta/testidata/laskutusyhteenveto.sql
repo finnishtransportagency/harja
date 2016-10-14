@@ -129,17 +129,17 @@ INSERT INTO toteuma_tehtava (poistettu, toteuma, luotu, toimenpidekoodi, maara)
 VALUES
   (TRUE, (SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 02:20.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10);
 
-INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta)
+INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta, indeksi)
 VALUES
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000);
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false);
 
 --Erilliskustannukset
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja)
