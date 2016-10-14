@@ -374,7 +374,7 @@ WHERE lahetysid = :lahetysid;
 -- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe!
 UPDATE ilmoitustoimenpide
 SET tila = 'virhe'
-WHERE id = :id;
+WHERE lahetysid = :lahetysid;
 
 -- name: onko-ilmoitukselle-vastaanottokuittausta
 SELECT id
