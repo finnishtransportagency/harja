@@ -14,7 +14,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2005-2012'),
-        'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas' :: ilmoittajatyyppi,
+        'Seppo', 'Savela', '0441231234', '0441231234', 'seppo.savela@eiole.fi', 'asukas' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
 
 INSERT INTO ilmoitustoimenpide
@@ -93,7 +93,7 @@ Vivamus placerat lacus vel vehicula scelerisque, dui enim adipiscing lacus sit a
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2005-2012'),
-        'Yrjö', 'Mestari', '0441271234', '0441233424', 'tyonvalvonta@isoveli.com', 'muu' :: ilmoittajatyyppi,
+        'Yrjö', 'Mestari', '0441271234', '0441233424', 'tyonvalvonta@isoveli.com', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@isoveli.com');
 
 INSERT INTO ilmoitustoimenpide
@@ -154,7 +154,7 @@ Heidän isäänsä, joka oli ankaran innokas metsämies, kohtasi hänen parhaass
          FROM urakka
          WHERE nimi = 'Pudasjärven alueurakka 2007-2012'),
         'Paavo', 'Poliisimies', '086727461', '0448261234', 'paavo.poliisimies@poliisi.fi',
-        'viranomainen' :: ilmoittajatyyppi,
+        'viranomainen' ,
         'Mika', 'Vaihdemies', '085612567', 'vaihde@valituspalvelu.fi');
 
 INSERT INTO ilmoitustoimenpide
@@ -241,7 +241,7 @@ INSERT INTO ilmoitus
 VALUES (12348, '2005-02-13 00:00:00', '2005-02-13 00:01:00', FALSE, 'Täällä joku pommi räjähti!!',
         ST_MakePoint(249863, 6723867) :: GEOMETRY, 6, 6, 6, 6, 6, 'tiedoitus' :: ilmoitustyyppi,
         ARRAY ['virkaApupyynto'],
-        'George', 'Doe', '05079163872', '05079163872', '', 'tienkayttaja' :: ilmoittajatyyppi,
+        'George', 'Doe', '05079163872', '05079163872', '', 'tienkayttaja' ,
         'Mika', 'Vaihdemies', '085612567', 'vaihde@valityspalvelu.fi');
 
 
@@ -261,7 +261,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
@@ -298,7 +298,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
@@ -325,7 +325,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
@@ -353,7 +353,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
@@ -380,7 +380,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
@@ -774,7 +774,7 @@ VALUES ((SELECT id
                                                                                                             (SELECT tyyppi
                                                                                                              FROM urakka
                                                                                                              WHERE nimi = 'Kajaanin alueurakka 2014-2019'),
-                                                                                                            'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+                                                                                                            'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
@@ -866,7 +866,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Porin alueurakka 2007-2012'),
-        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
@@ -893,7 +893,7 @@ VALUES ((SELECT id
         (SELECT tyyppi
          FROM urakka
          WHERE nimi = 'Porin alueurakka 2007-2012'),
-        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' :: ilmoittajatyyppi,
+        'Pekka', 'Porinmatti', '0501234567', '0502234567', 'tyonvalvonta@example.org', 'muu' ,
         'Mari', 'Marttala', '085674567', 'mmarttala@example.org');
 
 INSERT INTO ilmoitustoimenpide
