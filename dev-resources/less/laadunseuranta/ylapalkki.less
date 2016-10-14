@@ -1,4 +1,4 @@
-@ylapalkin-korkeus: 70px;
+@ylapalkin-vakiokorkeus: 70px;
 @ylapalkin-ikonin-koko: 30px;
 @ylapalkin-nappien-valinen-tila: 10px;
 @viiva-nappien-valissa: 1px solid rgb(40,40,40);
@@ -6,12 +6,18 @@
 .ylapalkki {
     display: flex;
     flex-wrap: wrap;
-    height: @ylapalkin-korkeus;
+    justify-content: space-between;
+    min-height: @ylapalkin-vakiokorkeus;
     background-color: rgb(19,19,20);
     z-index: 1000;
 }
 
-.ylapalkki > .logo {
+.ylapalkki-vasen, .ylapalkki-oikea {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.ylapalkki .logo {
     position: relative;
     padding: 12px;
     width: 150px;
@@ -44,7 +50,7 @@
     line-height: 70px;
 }
 
-.ylapalkki > .tr-osoite {
+.ylapalkki .tr-osoite {
     border-left: @viiva-nappien-valissa;
     color: white;
     font-size: 1.4em;
@@ -86,7 +92,7 @@
 
 .kaynnistyspainike {
     width: 220px;
-    height: 70px;
+    max-height: @ylapalkin-vakiokorkeus;
     font-weight: normal;
     font-size: 16px;
     line-height: 70px;
@@ -95,10 +101,10 @@
     padding-left: 10px;
     padding-right: 10px;
     text-align: center;
-}
 
-.kaynnistyspainike span {
-    margin-right: 10px;
+   & .kaynnispainike-nuoli {
+     margin-right: 10px;
+   }
 }
 
 .kaynnissa {
@@ -106,7 +112,7 @@
 }
 
 
-.ylapalkki > .palvelinvirhe {
+.palvelinvirhe {
     background-color: white;
     border: 1px solid gray;
     color: red;
