@@ -40,6 +40,7 @@
    [:div.ylapalkki {:class (when (utils/kehitysymparistossa?) "testiharja")}
     [:div.ylapalkki-vasen
      [logo]
+     [:div#karttakontrollit]
      (when-not @tallennus-kaynnissa
        [keskityspainike keskita-ajoneuvoon])
      [:div.ylapalkki-button.kiinteistorajat.livicon-home {:on-click #(swap! kiinteistorajat not)}]

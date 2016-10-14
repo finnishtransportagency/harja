@@ -43,6 +43,25 @@
     }
 }
 
+.ol-zoom {
+    height: @ylapalkin-korkeus;
+    z-index: 1001;
+    box-sizing: border-box;
+}
+
+.ol-zoom button {
+    background-color: rgb(19,19,20);
+    color: white;
+    margin: 0;
+    padding: 0;
+    width: 45px;
+    font-size: 2em;
+    height: @ylapalkin-korkeus;
+    outline-width: 0;
+    border-left: 1px solid rgb(40,40,40);
+    box-sizing: border-box;
+}
+
 .ylapalkki-button {
     border-left: @viiva-nappien-valissa;
     text-align: center;
@@ -132,10 +151,18 @@
 }
 
 
-@media (max-width: 640px) {
+@media (max-width: 700px) {
     .ylapalkki .logo {
         padding: 7px;
         width: 100px;
+    }
+
+    .ol-zoom {
+        height: @ylapalkin-korkeus-pienempi;
+    }
+
+    .ol-zoom button {
+        height: @ylapalkin-korkeus-pienempi;
     }
 
     .ylapalkki-button {
@@ -157,7 +184,7 @@
     }
 }
 
-@media (max-width: 490px) {
+@media (max-width: 570px) {
     .kaynnistyspainike {
         width: 50px;
         height: @ylapalkin-korkeus-pienempi;
