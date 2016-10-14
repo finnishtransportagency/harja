@@ -44,13 +44,14 @@
          yhdista-kuuntelija
          tee-jms-poikkeuskuuntelija)
 
-(defn yhdista-uudelleen [agentti {:keys [yhteys jonot] :as asetukset} yhteys-ok?]
+(defn yhdista-uudelleen [{:keys [yhteys jonot] :as tila} agentti asetukset  yhteys-ok?]
   (log/info "Yritetään yhdistään JMS-yhteys uudelleen")
   (when yhteys
     (try
       (.close yhteys)
       (catch Exception e
         (log/error e ("JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e))))))
+  ;; todo: tarkista miksi jonokuuntelijat eivät yhdisty uudelleen
   (loop [tila (aloita-yhdistaminen agentti asetukset (tee-jms-poikkeuskuuntelija agentti asetukset yhteys-ok?) yhteys-ok?)
          [[jonon-nimi kuuntelija] & kuuntelijat]
          (mapcat (fn [[jonon-nimi {kuuntelijat :kuuntelijat}]]
@@ -136,7 +137,7 @@
       (try
         (loop [viesti (.receive consumer)]
           (if-not viesti
-            (log/info ("JMS jonon: %s consumer suljettu. Lopetetaan kuuntelu." jonon-nimi))
+            (log/info (format "JMS jonon: %s consumer suljettu. Lopetetaan kuuntelu." jonon-nimi))
             (do
               (log/debug "Vastaanotettu viesti Sonja jonosta: " jonon-nimi)
               (try
