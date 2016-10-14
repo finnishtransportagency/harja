@@ -1,7 +1,8 @@
 @ylapalkin-vakiokorkeus: 70px;
-@ylapalkin-ikonin-koko: 30px;
-@ylapalkin-nappien-valinen-tila: 10px;
+@ylapalkin-ikonin-vakiokoko: 30px;
+@ylapalkin-nappien-valinen-tyhja-tila: 10px;
 @viiva-nappien-valissa: 1px solid rgb(40,40,40);
+
 
 .ylapalkki {
     display: flex;
@@ -42,10 +43,10 @@
 .ylapalkki-button {
     border-left: @viiva-nappien-valissa;
     width: 50px;
-    padding-left: @ylapalkin-nappien-valinen-tila;
+    padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
     box-sizing: border-box;
     color: white;
-    font-size: @ylapalkin-ikonin-koko;
+    font-size: @ylapalkin-ikonin-vakiokoko;
     line-height: 70px;
 }
 
@@ -55,23 +56,23 @@
     font-size: 1.4em;
     font-weight: normal;
     line-height: 70px;
-    padding-left: @ylapalkin-nappien-valinen-tila;
-    padding-right: @ylapalkin-nappien-valinen-tila;
+    padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
+    padding-right: @ylapalkin-nappien-valinen-tyhja-tila;
 }
 
 .ylapalkin-metatiedot {
     border-left: @viiva-nappien-valissa;
     top: 0;
-    padding-left: @ylapalkin-nappien-valinen-tila;
-    font-size: @ylapalkin-ikonin-koko;
+    padding-left: @ylapalkin-nappien-valinen-tyhja-tila;
+    font-size: @ylapalkin-ikonin-vakiokoko;
     line-height: 70px;
+    max-width: 190px;
     color: white;
 
     > .ylapalkin-metatieto {
         display: block;
         margin: 3px 0;
         padding-top: 0;
-        width: 190px;
         font-size: 15px;
         height: 19px;
         line-height: 20px;
@@ -80,7 +81,6 @@
     > .urakkanimi {
         display: block;
         padding-top: 0;
-        width: 190px;
         font-size: 10px;
         height: 19px;
         line-height: 10px;
@@ -91,7 +91,7 @@
 
 .kaynnistyspainike {
     width: 220px;
-    max-height: @ylapalkin-vakiokorkeus;
+    height: @ylapalkin-vakiokorkeus;
     font-weight: normal;
     font-size: 16px;
     line-height: 70px;
@@ -110,24 +110,19 @@
     background-color: rgb(208, 0, 5);
 }
 
-
 .palvelinvirhe {
     background-color: white;
     border: 1px solid gray;
     color: red;
-    font-size: 10px;
+    font-size: 0.7em;
     left: 0;
     line-height: 10px;
     overflow-y: hidden;
     padding: 1px;
     max-height: 40px;
-    position: absolute;
-    right: 240px;
-    top: 70px;
     z-index: 10000;
 }
 
 .ylapalkki.testiharja {
-    border: 1px solid #dd0000;
     background: red;
 }
