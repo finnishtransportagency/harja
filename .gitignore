@@ -46,6 +46,8 @@ tietokanta/restored_prod_dump.sql
 tietokanta/harja_stg_dump
 tietokanta/restored_stg_dump.sql
 tietokanta/*.csv
-resources/public/laadunseuranta/js/compiled/
 out/
 resources/private/
+
+resources/public/laadunseuranta/js/compiled/
+resources/public/laadunseuranta/css
