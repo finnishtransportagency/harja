@@ -371,10 +371,15 @@ UPDATE ilmoitustoimenpide
 SET lahetetty = current_timestamp, tila = 'lahetetty'
 WHERE lahetysid = :lahetysid;
 
--- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe!
+-- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla!
 UPDATE ilmoitustoimenpide
 SET tila = 'virhe'
 WHERE id = :id;
+
+-- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe-lahetysidlla!
+UPDATE ilmoitustoimenpide
+SET tila = 'virhe'
+WHERE lahetysid = :lahetysid;
 
 -- name: onko-ilmoitukselle-vastaanottokuittausta
 SELECT id
