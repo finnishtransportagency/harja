@@ -95,7 +95,7 @@
                                  "Päivän hinta"
                                  (get-in % [:tehtava :maara]))
                                (or (get-in % [:tehtava :summa])  [:info "Ei rahasummaa"])
-                               (or (:korotus %)  [:info "Ei rahasummaa"]))
+                               (or (:korotus %)  [:info "Indeksi puuttuu"]))
                         muutos-ja-lisatyot)
                   (when (not (empty? muutos-ja-lisatyot))
                     (keep identity (flatten [(if (not= konteksti :urakka) ["Yhteensä" ""]
@@ -103,6 +103,9 @@
                                              "" "" "" ""
                                              (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
                                              (reduce + (keep :korotus muutos-ja-lisatyot))])))))]
-     [:teksti (str "Summat ja indeksit yhteensä " (fmt/euro-opt (reduce + (keep :korotettuna muutos-ja-lisatyot))))]]))
+     [:teksti (str "Summat ja indeksit yhteensä "
+                   (fmt/euro-opt (+
+                                   (reduce + (keep #(get-in % [:tehtava :summa]) muutos-ja-lisatyot))
+                                   (reduce + (keep :korotus muutos-ja-lisatyot)))))]]))
 
 
