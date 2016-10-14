@@ -1,34 +1,33 @@
 -- name: hae-muutos-ja-lisatyot-raportille
 -- Hakee muutos-, lisä- ja äkilliset hoitotyötoteumat raportille
 SELECT
-  y.*,
-  (y.ind).korotettuna,
-  (y.ind).korotus
-FROM (SELECT
-        x.*,
-        laske_kuukauden_indeksikorotus(
-            (SELECT EXTRACT(YEAR FROM x.alkanut) :: INTEGER),
-            (SELECT EXTRACT(MONTH FROM x.alkanut) :: INTEGER),
-            (SELECT indeksi
-             FROM urakka
-             WHERE id = x.urakka_id),
-            x.tehtava_summa,
-            hoitourakan_indeksilaskennan_perusluku(x.urakka_id)) AS ind
-      FROM
-        (SELECT
+  x.*,
+  (x.ind).korotettuna,
+  (x.ind).korotus
+FROM    (SELECT
+           t.tyyppi,
+           t.alkanut,
            tt.id              AS tehtava_id,
            tt.toteuma         AS toteuma_id,
            tt.toimenpidekoodi AS tehtava_toimenpidekoodi,
            tt.maara           AS tehtava_maara,
            tt.lisatieto       AS tehtava_lisatieto,
            tt.paivan_hinta    AS tehtava_paivanhinta,
+           tt.indeksi         AS tehtava_indeksi,
            mht.yksikkohinta   AS tehtava_yksikkohinta,
-           CASE WHEN tt.paivan_hinta IS NOT NULL
-             THEN tt.paivan_hinta
-           ELSE tt.maara * mht.yksikkohinta
-           END                AS tehtava_summa,
-           t.tyyppi,
-           t.alkanut,
+           COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta) AS tehtava_summa,
+           laske_kuukauden_indeksikorotus(
+               (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
+               (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
+               CASE WHEN tt.indeksi IS TRUE
+                 THEN (SELECT indeksi
+                       FROM urakka
+                       WHERE id = u.id)
+               ELSE
+                 NULL
+               END,
+               COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
+               hoitourakan_indeksilaskennan_perusluku(u.id)) AS ind,
            u.id               AS urakka_id,
            u.nimi             AS urakka_nimi,
            tpi.id             AS tpi_id,
@@ -66,4 +65,4 @@ FROM (SELECT
            AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
                                                              FROM toimenpidekoodi tpk
                                                              WHERE tpk.emo = :tpi))
-           AND t.alkanut :: DATE BETWEEN :alku AND :loppu) x) y;
+           AND t.alkanut :: DATE BETWEEN :alku AND :loppu) x;
