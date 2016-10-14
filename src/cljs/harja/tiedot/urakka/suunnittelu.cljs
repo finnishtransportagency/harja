@@ -107,6 +107,15 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
                           (:alkupvm %) hk-alku)
                       @kaikki-sopimuksen-kok-hint-rivit))))
 
+(defn valitun-hoitokauden-yks-hint-kustannukset [urakka]
+  (reaction (transduce (map #(* (:maara %) (:yksikkohinta %)))
+                       + 0
+                       (get (u/ryhmittele-hoitokausittain (into []
+                                                                (filter (fn [t]
+                                                                          (= (:sopimus t) (first @u/valittu-sopimusnumero))))
+                                                                @u/urakan-yks-hint-tyot)
+                                                          (u/hoitokaudet urakka)) @u/valittu-hoitokausi))))
+
 (def valitun-hoitokauden-kok-hint-kustannukset
     (reaction (toiden-kustannusten-summa
                   @kaikki-sopimuksen-ja-hoitokauden-kok-hint-rivit
@@ -135,3 +144,8 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
     (mapv #(assoc % :yhteensa (when-let [hinta (:yksikkohinta %)]
                                 (* (or (:maara %) 0) hinta)))
           rivit)))
+
+(defn monista-tuleville-teksti [urakkatyyppi]
+  (if (= urakkatyyppi :hoito)
+    "Monista kaikki yo. tiedot tulevillekin hoitokausille"
+    "Monista kaikki yo. tiedot tulevillekin sopimuskausille"))

@@ -67,10 +67,11 @@
               (concat [(grid/otsikko otsikko)] rivit))
             (seq otsikon-mukaan))))
 
-(defn kustannukset [valitun-hoitokauden-ja-tpin-kustannukset
-                    valitun-hoitokauden-kaikkien-tpin-kustannukset
-                    kaikkien-hoitokausien-taman-tpin-kustannukset
-                    yks-kustannukset]
+(defn hoidon-kustannusyhteenveto
+  [valitun-hoitokauden-ja-tpin-kustannukset
+   valitun-hoitokauden-kaikkien-tpin-kustannukset
+   kaikkien-hoitokausien-taman-tpin-kustannukset
+   yks-kustannukset]
   [:div.col-md-6.hoitokauden-kustannukset
    [:div.piirakka-hoitokauden-kustannukset-per-kaikki
     [:div.piirakka
@@ -248,7 +249,7 @@
               :voi-poistaa? (constantly false)
               :muokkaa-footer (fn [g]
                                 [:div.kok-hint-muokkaa-footer
-                                 [raksiboksi {:teksti "Monista kaikki yo. tiedot tulevillekin hoitokausille"
+                                 [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
                                               :toiminto #(swap! tuleville? not)
                                               :info-teksti  [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                               :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
@@ -290,13 +291,16 @@
                                   (assoc tama-rivi :maksupvm maksu-pvm)))}]
              @tyorivit]
 
-            [kokonaishintaiset-tyot-tehtavalista
-             @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-             @u/valittu-toimenpideinstanssi]])
+            (when (not= (:tyyppi @urakka) :tiemerkinta)
+              [kokonaishintaiset-tyot-tehtavalista
+               @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
+               @u/valittu-toimenpideinstanssi])])
 
-         ;; Näytetään kustannusten summat ja piirakkadiagrammit
-         [kustannukset
-          @valitun-hoitokauden-ja-tpin-kustannukset
-          @s/valitun-hoitokauden-kok-hint-kustannukset
-          @kaikkien-hoitokausien-taman-tpin-kustannukset
-          @valitun-hoitokauden-yks-hint-kustannukset]]]))))
+         ;; TODO Jos on tiemerkintä, niin pitäisi näyttää kok. hint. yhteensä, yks. hint yhteensä ja muut yhteensä,
+         ;; myös muilla välilehdillä
+         (when (not= (:tyyppi @urakka) :tiemerkinta)
+           [hoidon-kustannusyhteenveto
+            @valitun-hoitokauden-ja-tpin-kustannukset
+            @s/valitun-hoitokauden-kok-hint-kustannukset
+            @kaikkien-hoitokausien-taman-tpin-kustannukset
+            @valitun-hoitokauden-yks-hint-kustannukset])]]))))
