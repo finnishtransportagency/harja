@@ -59,7 +59,7 @@
 
   ;; Less CSS käännös tuotantoa varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["../dev-resources/less/laadunseuranta/application"]
-         :target-path  "resources/public/laadunseuranta/css/"}
+         :target-path  "../resources/public/laadunseuranta/css/"}
 
   :cljsbuild {:test-commands {"unit" ["phantomjs"
                                       "--local-storage-path=./tmp/"
