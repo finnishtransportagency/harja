@@ -27,7 +27,7 @@
        [:link {:href "//fonts.googleapis.com/css?family=Open+Sans:400,700" :rel "stylesheet" :type "text/css"}]
        [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
        [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
-       [:script {:type "text/javascript" :src "js/less-2.5.0.js"}]]
+       [:script {:type "text/javascript" :src "js/less-2.7.1-9.js"}]]
       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
        [:div#app]
        [:script {:src "js/out/goog/base.js" :type "text/javascript"}]
