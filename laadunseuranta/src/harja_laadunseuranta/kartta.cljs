@@ -23,14 +23,14 @@
 
 (defn- wmts-source [url layer]
   (ol.source.WMTS. #js {:attributions [(ol.Attribution. #js {:html "MML"})]
-                        :url          url
-                        :layer        layer
-                        :matrixSet    "ETRS-TM35FIN"
-                        :format       (if (= "ortokuva" layer) "image/jpeg" "image/png")
-                        :projection   projektiot/projektio
-                        :tileGrid     (ol.tilegrid.WMTS. (clj->js (projektiot/tilegrid 16)))
-                        :style        "default"
-                        :wrapX        true}))
+                        :url url
+                        :layer layer
+                        :matrixSet "ETRS-TM35FIN"
+                        :format (if (= "ortokuva" layer) "image/jpeg" "image/png")
+                        :projection projektiot/projektio
+                        :tileGrid (ol.tilegrid.WMTS. (clj->js (projektiot/tilegrid 16)))
+                        :style "default"
+                        :wrapX true}))
 
 (defn- wmts-source-taustakartta [url]
   (wmts-source url "taustakartta"))
@@ -43,24 +43,24 @@
 
 (defn- tile-layer [source]
   (ol.layer.Tile.
-   #js {;:preload asetukset/+preload-taso+
-        :source source}))
+    #js {;:preload asetukset/+preload-taso+
+         :source source}))
 
 (defn- tee-ikoni [suunta kuva]
-  (ol.style.Icon. #js {:anchor       #js [0.5 0.5]
+  (ol.style.Icon. #js {:anchor #js [0.5 0.5]
                        :anchorXUnits "fraction"
                        :anchorYUnits "fraction"
-                       :opacity      1
-                       :rotation     suunta
-                       :src          kuva}))
+                       :opacity 1
+                       :rotation suunta
+                       :src kuva}))
 
 (defn- tee-offset-ikoni [offset kuva]
-  (ol.style.Icon. #js {:anchor       (clj->js offset)
+  (ol.style.Icon. #js {:anchor (clj->js offset)
                        :anchorXUnits "pixels"
                        :anchorYUnits "pixels"
-                       :opacity      1
-                       :rotation     0
-                       :src          kuva}))
+                       :opacity 1
+                       :rotation 0
+                       :src kuva}))
 
 (defn- nuoli-ikoni-tyyli [suunta]
   (ol.style.Style. #js {:image (tee-ikoni suunta kuvat/+autonuoli+)}))
@@ -107,15 +107,15 @@
   (mapv tee-ikoni-feature ikonit))
 
 (defn nakyma [{:keys [lat lon zoom]}]
-  (ol/View. (clj->js {:center     [lon lat]
+  (ol/View. (clj->js {:center [lon lat]
                       :projection projektiot/projektio
-                      :zoom       (or zoom asetukset/+oletuszoom+)})))
+                      :zoom (or zoom asetukset/+oletuszoom+)})))
 
 (defn- luo-interaktiot []
   (ol-interaction/defaults #js {:mouseWheelZoom false
-                                :dragPan        false
-                                :pinchRotate    false
-                                :pinchZoom      false}))
+                                :dragPan false
+                                :pinchRotate false
+                                :pinchZoom false}))
 
 (defn- tee-vektorilahde [features]
   (ol.source.Vector. #js {:features (clj->js features)}))
@@ -124,8 +124,8 @@
   (ol.layer.Vector. #js {:source lahde}))
 
 (defn- luo-kontrollit []
-  (ol-control/defaults #js {:zoom        true
-                            :rotate      false
+  (ol-control/defaults #js {:zoom true
+                            :rotate false
                             :attribution false}))
 
 (defn- luo-optiot [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva
@@ -204,47 +204,57 @@
   (and (not= 0 lon)
        (not= 0 lat)))
 
+(defn- siirra-kontrollit-ylapalkkiin
+  "OpenLayers osaa mountata kontrollit vain karttaan, joten
+   siirretään ne käsin yläpalkkiin"
+  []
+  (let [kontrollien-paikka (.getElementById js/document "karttakontrollit")
+        kontrollit (-> (.getElementsByClassName js/document "ol-zoom")
+                       (.item 0))]
+    (.appendChild kontrollien-paikka kontrollit)))
+
 (defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
                         ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
   (let [alustava-sijainti-saatu? (cljs.core/atom false)
         map-element (reagent/dom-node this)
-        
+
         ajoneuvo (tee-piste-feature @ajoneuvon-sijainti-atomi)
         ajettu-reitti (tee-viiva-featuret @reittipisteet-atomi)
         kirjatut-pisteet (tee-ikoni-featuret @kirjatut-pisteet-atomi)
-        
+
         ajoneuvokerros (vector-layer (tee-vektorilahde [ajoneuvo]))
         reittikerros (vector-layer (tee-vektorilahde ajettu-reitti))
         ikonikerros (vector-layer (tee-vektorilahde kirjatut-pisteet))
-        
+
         kartta (ol/Map. (clj->js (luo-optiot wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva @keskipiste-atomi
                                              map-element ajoneuvokerros reittikerros ikonikerros)))]
-    
+
     ;; instanssi talteen DOMiin testausta varten
-    (set! (.-openlayers map-element) kartta)  
+    (set! (.-openlayers map-element) kartta)
+    (siirra-kontrollit-ylapalkkiin)
 
     (run!
-     (when (and (not @alustava-sijainti-saatu?) (sijainti-ok? @keskipiste-atomi))
-       (paivita-kartan-keskipiste kartta @keskipiste-atomi)
-       (reset! alustava-sijainti-saatu? true)))
-    
+      (when (and (not @alustava-sijainti-saatu?) (sijainti-ok? @keskipiste-atomi))
+        (paivita-kartan-keskipiste kartta @keskipiste-atomi)
+        (reset! alustava-sijainti-saatu? true)))
+
     ;; reagoidaan kartan ja ajoneuvon sijainnin muutokseen
     (run!
-     (if (:seuraa-sijaintia @optiot)
-       (do
-         (kytke-dragpan kartta false)
-         (paivita-kartan-keskipiste kartta @keskipiste-atomi))
-       (kytke-dragpan kartta true)))
+      (if (:seuraa-sijaintia @optiot)
+        (do
+          (kytke-dragpan kartta false)
+          (paivita-kartan-keskipiste kartta @keskipiste-atomi))
+        (kytke-dragpan kartta true)))
 
     (run!
-     (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat @optiot)))
+      (kytke-kiinteistorajat kartta (:nayta-kiinteistorajat @optiot)))
 
     (run!
-     (kytke-ortokuva kartta (:nayta-ortokuva @optiot)))
-    
+      (kytke-ortokuva kartta (:nayta-ortokuva @optiot)))
+
     ;; reagoidaan ajoneuvon sijainnin muutokseen
     (run! (paivita-ajoneuvon-sijainti kartta ajoneuvo ajoneuvokerros @ajoneuvon-sijainti-atomi))
-    
+
     ;; reagoidaan reittipisteiden muutokseen
     (run! (paivita-ajettu-reitti kartta ajettu-reitti reittikerros @reittipisteet-atomi))
 
@@ -255,15 +265,17 @@
 (defn karttakomponentti [{:keys [wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva sijainti-atomi
                                  ajoneuvon-sijainti-atomi reittipisteet-atomi kirjauspisteet-atomi optiot]}]
   (reagent/create-class {:reagent-render kartta-render
-                         :component-did-mount #(kartta-did-mount %
-                                                                 wmts-url
-                                                                 wmts-url-kiinteistorajat
-                                                                 wmts-url-ortokuva
-                                                                 sijainti-atomi
-                                                                 ajoneuvon-sijainti-atomi
-                                                                 reittipisteet-atomi
-                                                                 kirjauspisteet-atomi
-                                                                 optiot)}))
+                         :component-did-mount
+                         #(kartta-did-mount
+                           %
+                           wmts-url
+                           wmts-url-kiinteistorajat
+                           wmts-url-ortokuva
+                           sijainti-atomi
+                           ajoneuvon-sijainti-atomi
+                           reittipisteet-atomi
+                           kirjauspisteet-atomi
+                           optiot)}))
 
 ;; devcards
 
@@ -282,31 +294,31 @@
   (str "http://localhost:8000" url))
 
 (defcard kartta-card
-  "Karttakomponentti"
-  (fn [sijainti _]
-    (reagent/as-element
-     [:div {:style {:width "100%"
-                    :height "800px"}}
-      [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
-                          :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
-                          :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
-                          :sijainti-atomi sijainti
-                          :ajoneuvon-sijainti-atomi sijainti
-                          :reittipisteet-atomi test-reittipisteet
-                          :kirjauspisteet-atomi test-ikonit
-                          :optiot testioptiot}]]))
-  test-sijainti  
-  {:inspect-data true
-   :watch-atom true})
+         "Karttakomponentti"
+         (fn [sijainti _]
+           (reagent/as-element
+             [:div {:style {:width "100%"
+                            :height "800px"}}
+              [karttakomponentti {:wmts-url (paikallinen asetukset/+wmts-url+)
+                                  :wmts-url-kiinteistorajat (paikallinen asetukset/+wmts-url-kiinteistojaotus+)
+                                  :wmts-url-ortokuva (paikallinen asetukset/+wmts-url-ortokuva+)
+                                  :sijainti-atomi sijainti
+                                  :ajoneuvon-sijainti-atomi sijainti
+                                  :reittipisteet-atomi test-reittipisteet
+                                  :kirjauspisteet-atomi test-ikonit
+                                  :optiot testioptiot}]]))
+         test-sijainti
+         {:inspect-data true
+          :watch-atom true})
 
 (defcard kartan-ohjaus
-  "Siirrä karttaa muuttamalla sijaintiatomia. Autonuolen pitäisi liikkua kartalla, ei jäädä paikalleen"
-  (fn [sijainti _]
-    (reagent/as-element
-     [:div
-      [:button {:on-click #(swap! sijainti update-in [:lat] (fn [x] (+ x 100)))}
-       "Siirrä"]
-      [:button {:on-click #(swap! sijainti update-in [:heading] (fn [suunta] (+ suunta 10)))}
-       "Suuntaa"]]))
-  test-sijainti
-  {:watch-atom true})
+         "Siirrä karttaa muuttamalla sijaintiatomia. Autonuolen pitäisi liikkua kartalla, ei jäädä paikalleen"
+         (fn [sijainti _]
+           (reagent/as-element
+             [:div
+              [:button {:on-click #(swap! sijainti update-in [:lat] (fn [x] (+ x 100)))}
+               "Siirrä"]
+              [:button {:on-click #(swap! sijainti update-in [:heading] (fn [suunta] (+ suunta 10)))}
+               "Suuntaa"]]))
+         test-sijainti
+         {:watch-atom true})
