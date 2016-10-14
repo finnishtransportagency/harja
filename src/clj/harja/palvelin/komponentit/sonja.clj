@@ -41,18 +41,19 @@
                         :sonicmq "progress.message.jclient.QueueConnectionFactory"})
 
 (declare aloita-yhdistaminen
-         yhdista-kuuntelija)
+         yhdista-kuuntelija
+         tee-jms-poikkeuskuuntelija)
 
-(defn yhdista-uudelleen [{:keys [yhteys jonot] :as tila} asetukset yhteys-ok?]
+(defn yhdista-uudelleen [agentti {:keys [yhteys jonot] :as asetukset} yhteys-ok?]
   (when yhteys
     (try
       (.close yhteys)
       (catch Exception e
         (log/error e ("JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e))))))
-  (loop [tila (aloita-yhdistaminen tila asetukset yhteys-ok?)
+  (loop [tila (aloita-yhdistaminen agentti asetukset (tee-jms-poikkeuskuuntelija agentti asetukset yhteys-ok?) yhteys-ok?)
          [[jonon-nimi kuuntelija] & kuuntelijat]
          (mapcat (fn [[jonon-nimi {kuuntelijat :kuuntelijat}]]
-                   (map (fn [k] [jonon-nimi k]) kuuntelijat)) jonot)]
+                   (map (fn [k] [jonon-nimi k]) @kuuntelijat)) jonot)]
     (recur (yhdista-kuuntelija tila jonon-nimi kuuntelija) kuuntelijat)))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
@@ -66,11 +67,11 @@
         instanssi (Proxy/newProxyInstance (.getClassLoader luokka) (into-array Class [luokka]) kasittelija)]
     instanssi))
 
-(defn tee-jms-poikkeuskuuntelija [tila asetukset yhteys-ok?]
+(defn tee-jms-poikkeuskuuntelija [agentti asetukset yhteys-ok?]
   (reify ExceptionListener
     (onException [_ e]
       (log/error e (str "Tapahtui JMS-poikkeus: " (.getMessage e)))
-      (send tila yhdista-uudelleen asetukset yhteys-ok?))))
+      (send-off agentti yhdista-uudelleen agentti asetukset yhteys-ok?))))
 
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
@@ -95,23 +96,23 @@
             (recur (<! ch)))))
     ch))
 
-(defn- yhdista [tila {:keys [url kayttaja salasana tyyppi] :as asetukset} yhteys-ok?]
+(defn- yhdista [{:keys [url kayttaja salasana tyyppi]} poikkeuskuuntelija]
   (log/info "Yhdistetään " (if (= tyyppi :activemq) "ActiveMQ" "Sonic") " JMS-brokeriin URL:lla:" url)
   (try
     (let [qcf (luo-connection-factory url tyyppi)
           yhteys (.createConnection qcf kayttaja salasana)]
       (when (= tyyppi :sonicmq)
         (.setConnectionStateChangeListener yhteys (tee-sonic-jms-tilamuutoskuuntelija)))
-      (.setExceptionListener yhteys (tee-jms-poikkeuskuuntelija tila asetukset yhteys-ok?))
+      (.setExceptionListener yhteys poikkeuskuuntelija)
       (.start yhteys)
       yhteys)
     (catch Exception e
       (log/error "JMS brokeriin yhdistäminen epäonnistui: " e)
       nil)))
 
-(defn aloita-yhdistaminen [tila asetukset yhteys-ok?]
+(defn aloita-yhdistaminen [tila asetukset poikkeuskuuntelija yhteys-ok?]
   (loop [aika 10000]
-    (let [yhteys (yhdista tila asetukset yhteys-ok?)]
+    (let [yhteys (yhdista asetukset poikkeuskuuntelija)]
       (if yhteys
         (let [istunto (.createSession yhteys false Session/AUTO_ACKNOWLEDGE)]
           (log/debug "Saatiin yhteys Sonjan JMS-brokeriin.")
@@ -166,29 +167,28 @@
       (assoc-in jonot [jonon-nimi :producer] producer)
       producer)))
 
-
-
 (defn poista-kuuntelija [tila jonon-nimi kuuntelija-fn]
   (update-in tila [:jonot jonon-nimi] (fn [{:keys [consumer kuuntelijat] :as jono}]
-                                        (let [kuuntelijat (disj kuuntelijat kuuntelija-fn)]
-                                          (if (empty? kuuntelijat)
-                                            (do
-                                              (.close consumer)
-                                              nil)
-                                            (assoc jono :kuuntelijat kuuntelijat))))))
+                                        (swap! kuuntelijat disj kuuntelija-fn)
+                                        (if (empty? @kuuntelijat)
+                                          (do
+                                            (.close consumer)
+                                            nil)
+                                          jono))))
 
 (defn yhdista-kuuntelija [{:keys [istunto] :as tila} jonon-nimi kuuntelija-fn]
   (log/debug (format "Yhdistetään kuuntelija jonoon: %s. Tila: %s." jonon-nimi tila))
   (update-in tila [:jonot jonon-nimi]
              (fn [{:keys [consumer kuuntelijat] :as jonon-tiedot}]
-               (let [kuuntelijat (or kuuntelijat #{})]
+               (let [kuuntelijat (or kuuntelijat (atom #{}))]
+                 (swap! kuuntelijat conj kuuntelija-fn)
                  (assoc jonon-tiedot
                    :consumer (or consumer
                                  (luo-jonon-kuuntelija istunto jonon-nimi
                                                        #(doseq [kuuntelija @kuuntelijat]
                                                          (log/debug (format "Vastaanotettiin viesti jonosta: %s." jonon-nimi))
                                                          (kuuntelija %))))
-                   :kuuntelijat (conj kuuntelijat kuuntelija-fn))))))
+                   :kuuntelijat kuuntelijat)))))
 
 (defn laheta-viesti [istunto jonot jonon-nimi viesti correlation-id]
   (if istunto
@@ -208,8 +208,9 @@
   component/Lifecycle
   (start [this]
     (let [agentti (agent agentin-alkutila)
-          yhteys-ok? (atom false)]
-      (send-off agentti aloita-yhdistaminen asetukset yhteys-ok?)
+          yhteys-ok? (atom false)
+          poikkeus-kuuntelija (tee-jms-poikkeuskuuntelija agentti asetukset yhteys-ok?)]
+      (send-off agentti aloita-yhdistaminen asetukset poikkeus-kuuntelija yhteys-ok?)
       (assoc this
         :tila agentti
         :yhteys-ok? yhteys-ok?)))
