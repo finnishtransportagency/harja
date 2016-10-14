@@ -114,8 +114,8 @@
 
           odotetut-liikenneymparisto
           {:akilliset_hoitotyot_laskutetaan                 2000.0M
-           :akilliset_hoitotyot_laskutetaan_ind_korotettuna 2033.83M
-           :akilliset_hoitotyot_laskutetaan_ind_korotus     33.83M
+           :akilliset_hoitotyot_laskutetaan_ind_korotettuna 2016.9M
+           :akilliset_hoitotyot_laskutetaan_ind_korotus     16.91M
            :akilliset_hoitotyot_laskutettu                  1000.0M
            :akilliset_hoitotyot_laskutettu_ind_korotettuna  1014.04404723906800000M
            :akilliset_hoitotyot_laskutettu_ind_korotus      14.04404723906800000M
@@ -131,14 +131,14 @@
            :erilliskustannukset_laskutettu                  0.0M
            :erilliskustannukset_laskutettu_ind_korotettuna  0.0M
            :erilliskustannukset_laskutettu_ind_korotus      0.0M
-           :kaikki_laskutetaan                              13219.92M
-           :kaikki_laskutetaan_ind_korotus                  219.92M
-           :kaikki_laskutettu                               3847.4M
-           :kaikki_laskutettu_ind_korotus                   47.4M
-           :kaikki_paitsi_kht_laskutetaan                   13219.92M
-           :kaikki_paitsi_kht_laskutetaan_ind_korotus       219.92M
-           :kaikki_paitsi_kht_laskutettu                    3847.4M
-           :kaikki_paitsi_kht_laskutettu_ind_korotus        47.4M
+           :kaikki_laskutetaan                              13101.5M
+           :kaikki_laskutetaan_ind_korotus                  101.5M
+           :kaikki_laskutettu                               3819.31M
+           :kaikki_laskutettu_ind_korotus                   19.31M
+           :kaikki_paitsi_kht_laskutetaan                   13101.5M
+           :kaikki_paitsi_kht_laskutetaan_ind_korotus       101.5M
+           :kaikki_paitsi_kht_laskutettu                    3819.31M
+           :kaikki_paitsi_kht_laskutettu_ind_korotus        19.31M
            :kht_laskutetaan                                 0.0M
            :kht_laskutetaan_ind_korotettuna                 0.0M
            :kht_laskutetaan_ind_korotus                     0.0M
@@ -147,11 +147,11 @@
            :kht_laskutettu_ind_korotus                      0.0M
            :lampotila_puuttuu                               false
            :muutostyot_laskutetaan                          8000.0M
-           :muutostyot_laskutetaan_ind_korotettuna          8135.33M
-           :muutostyot_laskutetaan_ind_korotus              135.33M
+           :muutostyot_laskutetaan_ind_korotettuna          8033.83M
+           :muutostyot_laskutetaan_ind_korotus              33.83M
            :muutostyot_laskutettu                           3000.0M
-           :muutostyot_laskutettu_ind_korotettuna           3042.13M
-           :muutostyot_laskutettu_ind_korotus               42.13M
+           :muutostyot_laskutettu_ind_korotettuna           3014.04M
+           :muutostyot_laskutettu_ind_korotus               14.04M
            :nimi                                            "Liikenneympäristön hoito"
            :perusluku                                       104.4333333333333333M
            :sakot_laskutetaan                               0.0M
