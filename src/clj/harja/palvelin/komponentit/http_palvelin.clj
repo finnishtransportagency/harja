@@ -29,8 +29,12 @@
   "Reititä sisääntuleva pyyntö käsittelijöille."
   [req kasittelijat]
   (apply compojure/routing
-         (if (= "/" (:uri req))
+         (cond
+           (= "/" (:uri req))
            (assoc req :uri "/index.html")
+           (= "/laadunseuranta" (:uri req))
+           (assoc req :uri "/laadunseuranta/")
+           :default
            req)
          (remove nil? kasittelijat)))
 
@@ -163,6 +167,17 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                                     :max-age   36000000}}
        :body    (index/tee-paasivu token kehitysmoodi)})))
 
+(defn ls-index-kasittelija [kehitysmoodi req]
+  (let [uri (:uri req)]
+    (when (or (= uri "/laadunseuranta/")
+              (= uri "/harja/laadunseuranta/"))
+      {:status  200
+       :headers {"Content-Type"  "text/html"
+                 "Cache-Control" "no-cache, no-store, must-revalidate"
+                 "Pragma"        "no-cache"
+                 "Expires"       "0"}
+       :body    (index/tee-ls-paasivu kehitysmoodi)})))
+
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
   [f anti-csrf-kaytossa?]
@@ -210,6 +225,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija kehitysmoodi))
+                                          (conj (partial ls-index-kasittelija kehitysmoodi))
                                           (conj uikasittelija)))))
                        (catch [:virhe :todennusvirhe] _
                          {:status 403 :body "Todennusvirhe"}))))
