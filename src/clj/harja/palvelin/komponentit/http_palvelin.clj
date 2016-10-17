@@ -170,6 +170,9 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
         oikea-kohde (if harjan-alla?
                       "/harja/laadunseuranta/"
                       "/laadunseuranta/")]
+    (log/info "[LS-BUG] REQ:" (pr-str req))
+    (log/info "[LS-BUG] URI:" (pr-str uri))
+    (log/info "[LS-BUG] HARJAN ALLA?:" (pr-str (str/starts-with? uri "/harja")))
     (cond
       (or (= uri "/laadunseuranta") (= uri "/harja/laadunseuranta"))
       {:status 301
@@ -187,7 +190,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                  "Expires"       "0"}
        :body    (index/tee-ls-paasivu kehitysmoodi)}
       :default
-      nil)))
+       nil)))
 
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
