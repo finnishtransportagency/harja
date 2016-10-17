@@ -166,23 +166,17 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn ls-index-kasittelija [kehitysmoodi req]
   (let [uri (:uri req)
-        harjan-alla? (str/starts-with? uri "/harja")
-        oikea-kohde (if harjan-alla?
-                      "/harja/laadunseuranta/"
-                      "/laadunseuranta/")]
-    (log/info "[LS-BUG] REQ:" (pr-str req))
-    (log/info "[LS-BUG] URI:" (pr-str uri))
-    (log/info "[LS-BUG] HARJAN ALLA?:" (pr-str (str/starts-with? uri "/harja")))
+        oikea-kohde "/harja/laadunseuranta/"]
     (cond
-      (or (= uri "/laadunseuranta") (= uri "/harja/laadunseuranta"))
+      (= uri "/laadunseuranta")
       {:status 301
        :headers {"Location" oikea-kohde}}
 
-      (or (= uri "/laadunseuranta/index.html") (= uri "/harja/laadunseuranta/index.html"))
+      (= uri "/laadunseuranta/index.html")
       {:status 301
        :headers {"Location" oikea-kohde}}
 
-      (or (= uri "/laadunseuranta/") (= uri "/harja/laadunseuranta/"))
+      (= uri "/laadunseuranta/")
       {:status  200
        :headers {"Content-Type"  "text/html"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
