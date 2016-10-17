@@ -121,7 +121,7 @@
   [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 10 metrin thesholdilla
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y 10))]
-    (if (empty urakka-idt)
+    (if (empty? urakka-idt)
       (if (= "hoito" urakkatyyppi)
         ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
         (map :id (q/hae-lahin-hoidon-alueurakka db x y 10000))

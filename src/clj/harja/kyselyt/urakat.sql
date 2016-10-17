@@ -446,7 +446,6 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
                FROM paallystyspalvelusopimus pps
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
                      st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
-
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
