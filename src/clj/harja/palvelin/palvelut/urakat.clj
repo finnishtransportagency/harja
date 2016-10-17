@@ -128,8 +128,8 @@
       (let [hoidon-urakkaidt (map :id (q/hae-urakka-sijainnilla db "hoito" x y 10))]
         (if hoidon-urakkaidt
           hoidon-urakkaidt
-          ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka
-          (map :id (q/hae-lahin-hoidon-alueurakka db x y))))
+          ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
+          (map :id (q/hae-lahin-hoidon-alueurakka db x y 10000))))
       urakka-idt)))
 
 (defn- pura-sopimukset [{jdbc-array :sopimukset :as urakka}]

@@ -536,13 +536,21 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
 
 -- name: hae-lahin-hoidon-alueurakka
 SELECT
-  u.id,
-  st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
-FROM urakka u
-  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
-WHERE
-  u.alkupvm <= now() AND
-  u.loppupvm > now()
-ORDER BY etaisyys ASC
+  id,
+  etaisyys
+FROM (SELECT
+        u.id,
+        st_distance(au.alue, st_makepoint(:x,:y)) AS etaisyys
+      FROM urakka u
+        JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+      WHERE
+        u.alkupvm <= now() AND
+        u.loppupvm > now()
+      ORDER BY etaisyys ASC)
+     urakat
+WHERE etaisyys <= :maksimietaisyys
 LIMIT 1;
+
+
+
 
