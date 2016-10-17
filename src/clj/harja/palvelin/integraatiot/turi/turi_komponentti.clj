@@ -16,8 +16,17 @@
 (defn tee-lokittaja [this]
   (integraatioloki/lokittaja (:integraatioloki this) (:db this) "turi" "laheta-turvallisuuspoikkeama"))
 
-(defn kasittele-turin-vastaus [db id _]
-  (q/lokita-lahetys<! db true id))
+(defn kasittele-turin-vastaus [db harja-turpo-id headers body]
+  (q/lokita-lahetys<! db true harja-turpo-id)
+  (try
+    (let [turi-id (.Integer (re-find #"\d+" body))
+         status (:status body)]
+     (if (and (= status 200)
+              (integer? turi-id))
+       (q/tallenna-turvallisuuspoikkeaman-turi-id db turi-id harja-turpo-id)
+       (log/error "TURI:in lähettämälle turvallisuuspoikkeamalle ei saatu id:tä.")))
+    (catch Exception e
+      (log/error e "Poikkeus TURI:n palauttaman id:n parsinnassa"))))
 
 (defn hae-liitteiden-sisallot [liitteiden-hallinta turvallisuuspoikkeama]
   (let [liitteet (:liitteet turvallisuuspoikkeama)]
@@ -58,17 +67,20 @@
       (integraatiotapahtuma/suorita-integraatio
         db integraatioloki "turi" "laheta-turvallisuuspoikkeama" nil
         (fn [konteksti]
-          (->> id
-               (hae-turvallisuuspoikkeama liitteiden-hallinta db)
-               sanoma/muodosta
-               (integraatiotapahtuma/laheta
-                 konteksti :http {:metodi :POST
-                                  :url url
-                                  :kayttajatunnus kayttajatunnus
-                                  :salasana salasana
-                                  :otsikot {"Content-Type" "text/xml"}})
-               (kasittele-turin-vastaus db id)))
-        {:virhekasittelija (fn [_ _] (q/lokita-lahetys<! db false id))})
+          (let [sanoma (->> id
+                            (hae-turvallisuuspoikkeama liitteiden-hallinta db)
+                            sanoma/muodosta)
+                {body :body headers :headers}
+                (integraatiotapahtuma/laheta
+                  konteksti :http {:metodi :POST
+                                   :url url
+                                   :kayttajatunnus kayttajatunnus
+                                   :salasana salasana
+                                   :otsikot {"Content-Type" "text/xml"}}
+                  sanoma)]
+            (kasittele-turin-vastaus db id headers body)))
+        {:virhekasittelija (fn [_ _]
+                             (q/lokita-lahetys<! db false id))})
       (catch Throwable t
         (log/error t (format "Turvallisuuspoikkeaman (id: %s) lähetyksessä TURI:n tapahtui poikkeus" id))))))
 

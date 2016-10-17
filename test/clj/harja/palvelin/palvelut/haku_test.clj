@@ -42,7 +42,7 @@
         kayttajat-3 (filter #(= (:tyyppi %) :kayttaja) tulokset-terotori)
         kayttaja-tero-toripolliisi (first (filter #(= "Toripolliisi" (:sukunimi %)) kayttajat))
         organisaatiot (filter #(= (:tyyppi %) :organisaatio) tulokset-pohj)
-        pop-ely (first (filter #(= "Pohjois-Pohjanmaa ja Kainuu" (:nimi %)) organisaatiot))]
+        pop-ely (first (filter #(= "Pohjois-Pohjanmaa" (:nimi %)) organisaatiot))]
 
     (is (> (count urakat) 0) "haku: urakoiden määrä")
     (is (= "Oulun alueurakka 2014-2019" (:nimi oulun-kaynnissaoleva-urakka)) "haku: urakan nimi")
@@ -59,15 +59,15 @@
     (is (= "Tero" (:etunimi kayttaja-tero-toripolliisi)) "haku: käyttäjän etunimi")
     (is (= "Toripolliisi" (:sukunimi kayttaja-tero-toripolliisi)) "haku: käyttäjän sukunimi")
     (is (= "tero" (:kayttajanimi kayttaja-tero-toripolliisi)) "haku: käyttäjän käyttäjänimi")
-    (is (= "Pohjois-Pohjanmaa ja Kainuu" (:org_nimi kayttaja-tero-toripolliisi)) "haku: käyttäjän org_nimi")
-    (is (= "Tero Toripolliisi, Pohjois-Pohjanmaa ja Kainuu" (:hakusanat kayttaja-tero-toripolliisi)) "haku: käyttäjän hakusanat")
+    (is (= "Pohjois-Pohjanmaa" (:org_nimi kayttaja-tero-toripolliisi)) "haku: käyttäjän org_nimi")
+    (is (= "Tero Toripolliisi, Pohjois-Pohjanmaa" (:hakusanat kayttaja-tero-toripolliisi)) "haku: käyttäjän hakusanat")
     (is (number? (:id kayttaja-tero-toripolliisi)) "haku: käyttäjän id")
 
 
     (is (> (count organisaatiot) 0) "haku: organisaatioiden määrä")
     (is (= :organisaatio (:tyyppi pop-ely)) "haku: org tyyppi")
     (is (= "hallintayksikko" (:organisaatiotyyppi pop-ely)) "haku: org organisaatiotyyppi")
-    (is (= "POP Pohjois-Pohjanmaa ja Kainuu, hallintayksikko" (:hakusanat pop-ely)) "haku: org organisaatiotyyppi")
+    (is (= "POP Pohjois-Pohjanmaa, hallintayksikko" (:hakusanat pop-ely)) "haku: org organisaatiotyyppi")
     (is (number? (:id pop-ely)) "haku: urakan hallintayksikkö")))
 
 

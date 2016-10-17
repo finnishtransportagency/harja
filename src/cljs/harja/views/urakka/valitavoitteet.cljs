@@ -15,7 +15,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as tiedot])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -49,13 +50,12 @@
                "Ei välitavoitteita")
       :tallenna (if voi-muokata?
                   #(go (reset! tallennus-kaynnissa? true)
-                       (go
-                         (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
-                           (if (k/virhe? vastaus)
-                             (viesti/nayta! "Tallentaminen epäonnistui"
-                                            :warning viesti/viestin-nayttoaika-lyhyt)
-                             (reset! kaikki-valitavoitteet-atom vastaus)))
-                         (reset! tallennus-kaynnissa? false)))
+                       (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                         (if (k/virhe? vastaus)
+                           (viesti/nayta! "Tallentaminen epäonnistui"
+                                          :warning viesti/viestin-nayttoaika-lyhyt)
+                           (reset! kaikki-valitavoitteet-atom vastaus)))
+                       (reset! tallennus-kaynnissa? false))
                   :ei-mahdollinen)
       :tallennus-ei-mahdollinen-tooltip
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
@@ -115,13 +115,12 @@
                 "Ei välitavoitteita")
        :tallenna (if voi-muokata?
                    #(go (reset! tallennus-kaynnissa? true)
-                        (go
-                          (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
-                            (if (k/virhe? vastaus)
-                              (viesti/nayta! "Tallentaminen epäonnistui"
-                                             :warning viesti/viestin-nayttoaika-lyhyt)
-                              (reset! kaikki-valitavoitteet-atom vastaus)))
-                          (reset! tallennus-kaynnissa? false)))
+                        (let [vastaus (<! (vt/tallenna-valitavoitteet! (:id urakka) %))]
+                          (if (k/virhe? vastaus)
+                            (viesti/nayta! "Tallentaminen epäonnistui"
+                                           :warning viesti/viestin-nayttoaika-lyhyt)
+                            (reset! kaikki-valitavoitteet-atom vastaus)))
+                        (reset! tallennus-kaynnissa? false))
                    :ei-mahdollinen)
        :tallennus-ei-mahdollinen-tooltip
        (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)
@@ -203,7 +202,9 @@
 (defn valitavoitteet
   "Urakan välitavoitteet näkymä. Ottaa parametrinä urakan ja hakee välitavoitteet sille."
   [ur]
-  (let [tallennus-kaynnissa (atom false)]
+  (let [tallennus-kaynnissa (atom false)
+        nayta-valtakunnalliset? (some? (tiedot/valtakunnalliset-valitavoitteet-kaytossa
+                                   (:tyyppi ur)))]
     (komp/luo
       (komp/lippu vt/nakymassa?)
       (fn [ur]
@@ -213,10 +214,11 @@
           ur
           vt/valitavoitteet
           vt/urakan-valitavoitteet]
-         [valtakunnalliset-valitavoitteet
-          ur
-          vt/valitavoitteet
-          vt/valtakunnalliset-valitavoitteet]
+         (when nayta-valtakunnalliset?
+           [valtakunnalliset-valitavoitteet
+           ur
+           vt/valitavoitteet
+           vt/valtakunnalliset-valitavoitteet])
 
          ;; PENDING Kommentoidaan toistaiseksi tämä ylläpidon demo pois hämmentämästä
          ;; Ylläpidon välitavoitteita pohditaan myöhemmin

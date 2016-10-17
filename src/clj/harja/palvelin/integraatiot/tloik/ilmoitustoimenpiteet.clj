@@ -18,7 +18,7 @@
       (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id))
       (catch Exception e
         (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n epäonnistui." id))
-        (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id)))))
+        (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla! db id)))))
 
 (defn laheta-ilmoitustoimenpide [jms-lahettaja db id]
   (log/debug (format "Lähetetään ilmoitustoimenpide (id: %s) T-LOIK:n." id))
@@ -26,7 +26,7 @@
     (lukko/aja-lukon-kanssa db "tloik-ilm.toimenpidelahetys" (fn [] (laheta jms-lahettaja db id)))
     (catch Exception e
       (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
-      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db id)
+      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla! db id)
       (throw e))))
 
 (defn laheta-lahettamattomat-ilmoitustoimenpiteet [jms-lahettaja db]
@@ -50,7 +50,7 @@
 
     (do
       (log/error (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
-      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe! db viesti-id))))
+      (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-lahetysidlla! db viesti-id))))
 
 (defn tallenna-ilmoitustoimenpide [db ilmoitus ilmoitusid vapaateksti toimenpide paivystaja]
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!

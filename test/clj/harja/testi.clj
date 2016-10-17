@@ -181,39 +181,6 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
       (.getLocalPort s)
       (finally (.close s)))))
 
-;; Määritellään käyttäjiä, joita testeissä voi käyttää
-;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
-
-;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-tero+ {:id 1 :etunimi "Tero" :sukunimi "Toripolliisi" :kayttajanimi "LX123456789"
-                      :organisaatio {:id 9 :tyyppi :hallintayksikko :nimi "Pop"}
-                      :roolit #{"ELY_Urakanvalvoja"}
-                      :organisaation-urakat #{}})
-
-;; id:2 Järjestelmävastuuhenkilö
-(def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
-                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
-                     :etunimi "Jalmari" :urakka-roolit []
-                     :organisaatio {:id 1 :nimi "Liikennevirasto",
-                                    :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
-                     :organisaation-urakat #{}
-                     :urakkaroolit {}})
-
-;; id:1 Tero Toripolliisi, POP ELY aluevastaava
-(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
-                          :organisaatio {:id 11 :nimi "YIT" :tyyppi "urakoitsija"}
-                          :roolit #{}
-                          :urakkaroolit {}
-                          :organisaatioroolit {11 #{"Kayttaja"}}
-                          :organisaation-urakat #{1 4 20 22}})
-
-(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
-                      :organisaatio {:id 13 :nimi "Destia Oy" :tyyppi "urakoitsija"}
-                      :roolit #{}
-                      :urakkaroolit {}
-                      :organisaatioroolit {13 #{"Kayttaja"}}
-                      :organisaation-urakat #{2 21}})
-
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
@@ -267,7 +234,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa ja Kainuu'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -358,6 +325,57 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
+;; Määritellään käyttäjiä, joita testeissä voi käyttää
+;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
+
+;; id:1 Tero Toripolliisi, POP ELY aluevastaava
+(def +kayttaja-tero+ {:id 1
+                      :etunimi "Tero"
+                      :sukunimi "Toripolliisi"
+                      :kayttajanimi "LX123456789"
+                      :organisaatio {:id 9 :tyyppi :hallintayksikko :nimi "Pop"}
+                      :roolit #{"ELY_Urakanvalvoja"}
+                      :organisaation-urakat #{}})
+
+;; id:2 Järjestelmävastuuhenkilö
+(def +kayttaja-jvh+ {:sahkoposti "jalmari@example.com" :kayttajanimi "jvh"
+                     :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}, :id 2
+                     :etunimi "Jalmari" :urakka-roolit []
+                     :organisaatio {:id 1 :nimi "Liikennevirasto",
+                                    :tyyppi :liikennevirasto :lyhenne nil :ytunnus nil}
+                     :organisaation-urakat #{}
+                     :urakkaroolit {}})
+
+(def +kayttaja-urakan-vastuuhenkilo+
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]
+    {:organisaation-urakat #{urakka-id}
+     :sahkoposti nil
+     :kayttajanimi "yit_uuvh"
+     :puhelin nil
+     :sukunimi "Vastuuhenkilö"
+     :roolit #{}
+     :organisaatioroolit {}
+     :id 7
+     :etunimi "Yitin"
+     :organisaatio {:id 11
+                    :nimi "YIT Rakennus Oy"
+                    :tyyppi "urakoitsija"}
+     :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
+
+(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
+                          :organisaatio {:id 11 :nimi "YIT" :tyyppi "urakoitsija"}
+                          :roolit #{}
+                          :urakkaroolit {}
+                          :organisaatioroolit {11 #{"Kayttaja"}}
+                          :organisaation-urakat #{1 4 20 22}})
+
+(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
+                      :organisaatio {:id 13 :nimi "Destia Oy" :tyyppi "urakoitsija"}
+                      :roolit #{}
+                      :urakkaroolit {}
+                      :organisaatioroolit {13 #{"Kayttaja"}}
+                      :organisaation-urakat #{2 21}})
+
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
   (luo-kannat-uudelleen)
@@ -390,7 +408,7 @@ Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
 (defn oulun-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
-   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa ja Kainuu", :tyyppi "hallintayksikko"},
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id, #{"ELY_Urakanvalvoja"}}})
 

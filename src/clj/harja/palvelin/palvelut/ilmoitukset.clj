@@ -12,7 +12,8 @@
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
             [harja.domain.oikeudet :as oikeudet]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str])
   (:import (java.util Date)))
 
 (def ilmoitus-xf
@@ -153,9 +154,9 @@
                                       :selite_annettu selite-annettu?
                                       :selite selite
                                       :tr-numero tr-numero
-                                      :ilmoittaja-nimi (when ilmoittaja-nimi
+                                      :ilmoittaja-nimi (when-not (str/blank? ilmoittaja-nimi)
                                                          (str "%" ilmoittaja-nimi "%"))
-                                      :ilmoittaja-puhelin (when ilmoittaja-puhelin
+                                      :ilmoittaja-puhelin (when-not (str/blank? ilmoittaja-puhelin)
                                                             (str "%" ilmoittaja-puhelin "%"))
                                       :max-maara max-maara}))
             {:kuittaus :kuittaukset}))
@@ -264,11 +265,13 @@
         ilmoitustoimenpiteet [(when (and (= tyyppi :aloitus)
                                          (not (q/ilmoitukselle-olemassa-vastaanottokuittaus? db ulkoinen-ilmoitusid)))
                                 (let [aloitus-kuittaus (tallenna "vastaanotto" "Vastaanotettu" nil)]
-                                  (tloik/laheta-ilmoitustoimenpide tloik (:id aloitus-kuittaus))
+                                  (when tloik
+                                    (tloik/laheta-ilmoitustoimenpide tloik (:id aloitus-kuittaus)))
                                   aloitus-kuittaus))
 
                               (let [kuittaus (tallenna (name tyyppi) vapaateksti vakiofraasi)]
-                                (tloik/laheta-ilmoitustoimenpide tloik (:id kuittaus))
+                                (when tloik
+                                  (tloik/laheta-ilmoitustoimenpide tloik (:id kuittaus)))
                                 kuittaus)]]
 
     (vec (remove nil? ilmoitustoimenpiteet))))
@@ -295,7 +298,16 @@
     (log/debug "Löydettiin tiedot " (count tulos) " ilmoitukselle.")
     tulos))
 
+(defn- tarkista-oikeudet [db user ilmoitustoimenpiteet]
+  ;; FIXME Vaikuttaa aiheuttavan enemmän ongelmia kuin ratkaisee niitä. Ks. HAR-3326
+  #_(let [urakka-idt (q/hae-ilmoituskuittausten-urakat db
+                                                     (map
+                                                       :ilmoituksen-id ilmoitustoimenpiteet))]
+    (doseq [urakka-id urakka-idt]
+      (oikeudet/vaadi-kirjoitusoikeus oikeudet/ilmoitukset-ilmoitukset user urakka-id))))
+
 (defn tallenna-ilmoitustoimenpiteet [db tloik user ilmoitustoimenpiteet]
+  (tarkista-oikeudet db user ilmoitustoimenpiteet)
   (vec
     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))

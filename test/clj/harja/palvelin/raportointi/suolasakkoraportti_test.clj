@@ -114,7 +114,7 @@
     (let [elementit (apurit/tarkista-raportti vastaus "Suolasakkoraportti")
           taulukko (apurit/taulukko-otsikolla
                     vastaus
-                    "Pohjois-Pohjanmaa ja Kainuu, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")]
+                    "Pohjois-Pohjanmaa, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")]
 
       (tarkista-sarakkeet taulukko)
 

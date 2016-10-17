@@ -12,7 +12,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -38,970 +39,115 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(defn tarkistusfunktio [sisalto]
+  (let [rivi (:rivi sisalto)
+        materiaali (first rivi)
+        [yhteensa prosentti suunniteltu] (take-last 3 rivi)
+        hoitokaudet (drop-last 3 (rest rivi))]
+    (and (= (count rivi) 16)
+         (string? materiaali)
+         (every? #(or (nil? %) (number? %)) hoitokaudet)
+         (or (nil? yhteensa) (number? yhteensa))
+         (or (nil? suunniteltu) (number? suunniteltu))
+         (or (nil? prosentti) (string? prosentti))
+         (or (and (every? nil? hoitokaudet) (nil? yhteensa))
+             (= (reduce (fnil + 0 0) hoitokaudet) yhteensa))
+         (or
+           (nil? prosentti) (nil? yhteensa) (nil? suunniteltu)
+           (= (/ (* 100.0 yhteensa) suunniteltu)
+              (Integer/parseInt (re-find #"\d+" prosentti)))))))
+
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :ymparistoraportti
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
+                                {:nimi       :ymparistoraportti
+                                 :konteksti  "urakka"
+                                 :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
+                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 9 30))}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Ympäristöraportti"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:oikealle-tasattavat-kentat #{1
-                                                    10
-                                                    11
-                                                    12
-                                                    13
-                                                    14
-                                                    15
-                                                    2
-                                                    3
-                                                    4
-                                                    5
-                                                    6
-                                                    7
-                                                    8
-                                                    9}
-                      :otsikko "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
-                      :sheet-nimi "Ympäristöraportti"}
-                     [{:leveys "16%"
-                       :otsikko "Materiaali"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "10/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "11/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "12/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "01/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "02/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "03/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "04/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "05/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "06/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "07/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "08/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "09/16"}
-                      {:excel [:summa-vasen
-                               1]
-                       :fmt :numero
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Määrä yhteensä"}
-                      {:fmt :prosentti
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Tot-%"}
-                      {:fmt :numero
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Maksimi­määrä"}]
-                     [{:lihavoi? true
-                       :rivi ["Talvisuola"
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              0
-                              nil
-                              nil]}
-                       {:lihavoi? true
-                        :rivi ["Talvisuolaliuos CaCl2"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Talvisuolaliuos NaCl"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet NaCl"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet NaCl-liuos"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kaliumformiaatti"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Hiekoitushiekan suola"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kesäsuola (pölynsidonta)"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kesäsuola (sorateiden kevätkunnostus)"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Hiekoitushiekka"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               500M
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               500M
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Jätteet kaatopaikalle"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Murskeet"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Rikkaruohojen torjunta-aineet"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet CaCl2-liuos"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}]]]))))
+    (let [otsikko "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "10/15"}
+                                          {:otsikko "11/15"}
+                                          {:otsikko "12/15"}
+                                          {:otsikko "01/16"}
+                                          {:otsikko "02/16"}
+                                          {:otsikko "03/16"}
+                                          {:otsikko "04/16"}
+                                          {:otsikko "05/16"}
+                                          {:otsikko "06/16"}
+                                          {:otsikko "07/16"}
+                                          {:otsikko "08/16"}
+                                          {:otsikko "09/16"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :ymparistoraportti
-                                 :konteksti "hallintayksikko"
+                                {:nimi               :ymparistoraportti
+                                 :konteksti          "hallintayksikko"
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm            (c/to-date (t/local-date 2015 10 1))
-                                              :loppupvm           (c/to-date (t/local-date 2016 9 30))
-                                              :urakkatyyppi "hoito"}})]
+                                 :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 10 1))
+                                                      :loppupvm     (c/to-date (t/local-date 2016 9 30))
+                                                      :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Ympäristöraportti"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:oikealle-tasattavat-kentat #{1
-                                                    10
-                                                    11
-                                                    12
-                                                    13
-                                                    14
-                                                    15
-                                                    2
-                                                    3
-                                                    4
-                                                    5
-                                                    6
-                                                    7
-                                                    8
-                                                    9}
-                      :otsikko "Pohjois-Pohjanmaa ja Kainuu, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
-                      :sheet-nimi "Ympäristöraportti"}
-                     [{:leveys "16%"
-                       :otsikko "Materiaali"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "10/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "11/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "12/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "01/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "02/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "03/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "04/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "05/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "06/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "07/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "08/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "09/16"}
-                      {:excel [:summa-vasen
-                               1]
-                       :fmt :numero
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Määrä yhteensä"}
-                      {:fmt :prosentti
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Tot-%"}
-                      {:fmt :numero
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Maksimi­määrä"}]
-                     [{:lihavoi? true
-                       :rivi ["Talvisuola"
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              0
-                              nil
-                              nil]}
-                       {:lihavoi? true
-                        :rivi ["Talvisuolaliuos CaCl2"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Talvisuolaliuos NaCl"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet NaCl"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet NaCl-liuos"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kaliumformiaatti"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Hiekoitushiekan suola"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kesäsuola (pölynsidonta)"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kesäsuola (sorateiden kevätkunnostus)"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Hiekoitushiekka"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               500M
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               500M
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Jätteet kaatopaikalle"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Murskeet"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Rikkaruohojen torjunta-aineet"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet CaCl2-liuos"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}]]]))))
+    (let [otsikko "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "10/15"}
+                                          {:otsikko "11/15"}
+                                          {:otsikko "12/15"}
+                                          {:otsikko "01/16"}
+                                          {:otsikko "02/16"}
+                                          {:otsikko "03/16"}
+                                          {:otsikko "04/16"}
+                                          {:otsikko "05/16"}
+                                          {:otsikko "06/16"}
+                                          {:otsikko "07/16"}
+                                          {:otsikko "08/16"}
+                                          {:otsikko "09/16"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi      :ymparistoraportti
-                                 :konteksti "koko maa"
-                                 :parametrit {:alkupvm  (c/to-date (t/local-date 2015 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2016 9 30))
+                                {:nimi       :ymparistoraportti
+                                 :konteksti  "koko maa"
+                                 :parametrit {:alkupvm      (c/to-date (t/local-date 2015 10 1))
+                                              :loppupvm     (c/to-date (t/local-date 2016 9 30))
                                               :urakkatyyppi "hoito"}})]
     (is (vector? vastaus))
-    (is (= vastaus [:raportti
-                    {:nimi "Ympäristöraportti"
-                     :orientaatio :landscape}
-                    [:taulukko
-                     {:oikealle-tasattavat-kentat #{1
-                                                    10
-                                                    11
-                                                    12
-                                                    13
-                                                    14
-                                                    15
-                                                    2
-                                                    3
-                                                    4
-                                                    5
-                                                    6
-                                                    7
-                                                    8
-                                                    9}
-                      :otsikko "KOKO MAA, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
-                      :sheet-nimi "Ympäristöraportti"}
-                     [{:leveys "16%"
-                       :otsikko "Materiaali"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "10/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "11/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "12/15"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "01/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "02/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "03/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "04/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "05/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "06/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "07/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "08/16"}
-                      {:fmt :numero
-                       :leveys "5%"
-                       :otsikko "09/16"}
-                      {:excel [:summa-vasen
-                               1]
-                       :fmt :numero
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Määrä yhteensä"}
-                      {:fmt :prosentti
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Tot-%"}
-                      {:fmt :numero
-                       :jos-tyhja "-"
-                       :leveys "8%"
-                       :otsikko "Maksimi­määrä"}]
-                     [{:lihavoi? true
-                       :rivi ["Talvisuola"
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              nil
-                              0
-                              nil
-                              nil]}
-                       {:lihavoi? true
-                        :rivi ["Talvisuolaliuos CaCl2"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Talvisuolaliuos NaCl"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet NaCl"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet NaCl-liuos"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kaliumformiaatti"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Hiekoitushiekan suola"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kesäsuola (pölynsidonta)"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Kesäsuola (sorateiden kevätkunnostus)"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Hiekoitushiekka"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               500M
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               500M
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Jätteet kaatopaikalle"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Murskeet"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Rikkaruohojen torjunta-aineet"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}
-                       {:lihavoi? true
-                        :rivi ["Erityisalueet CaCl2-liuos"
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               nil
-                               0
-                               nil
-                               nil]}]]]))))
+    (let [otsikko "KOKO MAA, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (apurit/tarkista-taulukko-sarakkeet taulukko
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "10/15"}
+                                          {:otsikko "11/15"}
+                                          {:otsikko "12/15"}
+                                          {:otsikko "01/16"}
+                                          {:otsikko "02/16"}
+                                          {:otsikko "03/16"}
+                                          {:otsikko "04/16"}
+                                          {:otsikko "05/16"}
+                                          {:otsikko "06/16"}
+                                          {:otsikko "07/16"}
+                                          {:otsikko "08/16"}
+                                          {:otsikko "09/16"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))

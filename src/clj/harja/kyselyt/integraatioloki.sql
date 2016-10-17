@@ -27,9 +27,11 @@ WHERE id = :id;
 
 -- name: luo-integraatioviesti<!
 -- Luo uuden integraatioviestin
-INSERT INTO integraatioviesti (integraatiotapahtuma, osoite, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit)
+INSERT INTO integraatioviesti (integraatiotapahtuma, osoite, suunta, sisaltotyyppi, siirtotyyppi,
+                               sisalto, otsikko, parametrit, kasitteleva_palvelin)
 VALUES
-  (:integraatiotapahtuma, :osoite, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi, :sisalto, :otsikko, :parametrit);
+  (:integraatiotapahtuma, :osoite, :suunta :: integraatiosuunta, :sisaltotyyppi, :siirtotyyppi,
+   :sisalto, :otsikko, :parametrit, :kasittelevapalvelin);
 
 -- name: hae-tapahtumaid-ulkoisella-idlla
 -- Hakee tapahtuma id:n ulkoisella id:llä ja integraatiolla
@@ -90,7 +92,17 @@ ORDER BY alkanut DESC
 
 -- name: hae-integraatiotapahtuman-viestit
 -- Hakee annetun integraatiotapahtuman viestit
-SELECT *
+SELECT
+  id,
+  integraatiotapahtuma,
+  suunta,
+  sisaltotyyppi,
+  siirtotyyppi,
+  sisalto,
+  otsikko,
+  parametrit,
+  osoite,
+  kasitteleva_palvelin as "kasitteleva-palvelin"
 FROM integraatioviesti
 WHERE integraatiotapahtuma = :integraatiotapahtumaid;
 

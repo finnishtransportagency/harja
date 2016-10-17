@@ -72,19 +72,19 @@
                        :otsikko "Ajo­suun­ta"}
                       {:leveys 5
                        :otsikko "Hoi­to­luok­ka"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Ta­sai­suus (cm)"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Kit­ka"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Ilman läm­pö­ti­la"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Tien läm­pö­ti­la"}
                       {:leveys 5
@@ -131,6 +131,25 @@
                        -3.00M
                        "Matti"
                        "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
+                       "Ei"
+                       [:liitteet
+                        []]]
+                      ["02.01.2016"
+                       "16:02"
+                       4
+                       364
+                       8012
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       "Matti"
+                       "Tämä tarkastus näkyy myös urakoitsijalle"
                        "Ei"
                        [:liitteet
                         []]]
@@ -283,7 +302,7 @@
                     {:nimi "Kelitarkastusraportti"
                      :orientaatio :landscape}
                     [:taulukko
-                     {:otsikko "Pohjois-Pohjanmaa ja Kainuu, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
+                     {:otsikko "Pohjois-Pohjanmaa, Kelitarkastusraportti ajalta 01.10.2015 - 01.10.2016"
                       :sheet-nimi "Kelitarkastusraportti"
                       :tyhja nil}
                      [{:leveys 10
@@ -304,19 +323,19 @@
                        :otsikko "Ajo­suun­ta"}
                       {:leveys 5
                        :otsikko "Hoi­to­luok­ka"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Ta­sai­suus (cm)"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Kit­ka"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Ilman läm­pö­ti­la"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Tien läm­pö­ti­la"}
                       {:leveys 5
@@ -364,6 +383,25 @@
                        -3.00M
                        "Matti"
                        "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
+                       "Ei"
+                       [:liitteet
+                        []]]
+                      ["02.01.2016"
+                       "16:02"
+                       4
+                       364
+                       8012
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       "Matti"
+                       "Tämä tarkastus näkyy myös urakoitsijalle"
                        "Ei"
                        [:liitteet
                         []]]
@@ -536,19 +574,19 @@
                        :otsikko "Ajo­suun­ta"}
                       {:leveys 5
                        :otsikko "Hoi­to­luok­ka"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Lu­mi­mää­rä (cm)"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Ta­sai­suus (cm)"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Kit­ka"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Ilman läm­pö­ti­la"}
-                      {:fmt     :numero
+                      {:fmt :numero
                        :leveys 5
                        :otsikko "Tien läm­pö­ti­la"}
                       {:leveys 5
@@ -596,6 +634,25 @@
                        -3.00M
                        "Matti"
                        "Urakoitsija on kirjannut tämän tarkastuksen Harjaan käsin"
+                       "Ei"
+                       [:liitteet
+                        []]]
+                      ["02.01.2016"
+                       "16:02"
+                       4
+                       364
+                       8012
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       nil
+                       "Matti"
+                       "Tämä tarkastus näkyy myös urakoitsijalle"
                        "Ei"
                        [:liitteet
                         []]]

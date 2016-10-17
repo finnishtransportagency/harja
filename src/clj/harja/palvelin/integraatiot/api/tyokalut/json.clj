@@ -4,16 +4,25 @@
             [harja.geo :as geo]
             [clj-time.format :as format]
             [taoensso.timbre :as log]
-            [clj-time.coerce :as coerce])
+            [clj-time.coerce :as coerce]
+            [clj-time.coerce :as c])
   (:import (java.text SimpleDateFormat)))
 
 (defn aika-string->java-sql-date [paivamaara]
   (when paivamaara
     (konv/sql-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))))
 
+(defn aika-string->java-util-date [paivamaara]
+  (when paivamaara
+    (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara)))
+
 (defn aika-string->java-sql-timestamp [paivamaara]
   (when paivamaara
     (konv/sql-timestamp (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") paivamaara))))
+
+(defn aika-string->joda-time [paivamaara]
+  (when paivamaara
+    (c/from-date (aika-string->java-util-date paivamaara))))
 
 (defn pvm-string->java-sql-date [paivamaara]
   (when paivamaara

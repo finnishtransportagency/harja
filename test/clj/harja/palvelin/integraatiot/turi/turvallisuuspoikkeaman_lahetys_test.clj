@@ -32,18 +32,18 @@
                        (is (= +turi-url+ (:url opts)) "Kutsu tehdään oikeaan osoitteeseen")
                        (is (= (first (:basic-auth opts)) "kayttajatunnus") "Autentikaatiossa käytetään oikeaa käyttäjätunnusta")
                        (is (= (second (:basic-auth opts)) "salasana") "Autentikaatiossa käytetään oikeaa salasanaa")
-                       200)]
-                    (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
-                    (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
-                      (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
-                      (is (true? (:lahetys_onnistunut tila))) "Lähetys on merkitty onnistuneeksi")
-                    (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id))))
+                       {:status 200 :body "id: 1"})]
+      (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
+      (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
+        (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
+        (is (true? (:lahetys_onnistunut tila))) "Lähetys on merkitty onnistuneeksi")
+      (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id))))
 
 (deftest tarkista-turvallisuuspoikkeaman-epaonnistunut-lahetys
   (let [turpo-id 1]
     (with-fake-http [{:url +turi-url+ :method :post} 500]
-                    (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
-                    (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
-                      (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
-                      (is (false? (:lahetys_onnistunut tila)) "Lähetys on merkitty epäonnistuneeksi")
-                      (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id)))))
+      (turi/laheta-turvallisuuspoikkeama (:turi jarjestelma) turpo-id)
+      (let [tila (hae-turvallisuuspoikkeaman-tila turpo-id)]
+        (is (not (nil? (:lahetetty tila))) "Lähetysaika on merkitty")
+        (is (false? (:lahetys_onnistunut tila)) "Lähetys on merkitty epäonnistuneeksi")
+        (tyhjenna-turvallisuuspoikkeaman-lahetystiedot turpo-id)))))
