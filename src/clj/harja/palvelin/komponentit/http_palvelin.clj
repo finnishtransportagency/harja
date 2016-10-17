@@ -29,12 +29,9 @@
   "Reititä sisääntuleva pyyntö käsittelijöille."
   [req kasittelijat]
   (apply compojure/routing
-         (cond
+         (if
            (= "/" (:uri req))
            (assoc req :uri "/index.html")
-           (= "/laadunseuranta" (:uri req))
-           (assoc req :uri "/laadunseuranta/")
-           :default
            req)
          (remove nil? kasittelijat)))
 
@@ -169,14 +166,20 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn ls-index-kasittelija [kehitysmoodi req]
   (let [uri (:uri req)]
-    (when (or (= uri "/laadunseuranta/")
-              (= uri "/harja/laadunseuranta/"))
+    (cond
+      (= uri "/laadunseuranta")
+      {:status 301
+       :headers {"Location" "/laadunseuranta/"}}
+
+      (= uri "/laadunseuranta/")
       {:status  200
        :headers {"Content-Type"  "text/html"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma"        "no-cache"
                  "Expires"       "0"}
-       :body    (index/tee-ls-paasivu kehitysmoodi)})))
+       :body    (index/tee-ls-paasivu kehitysmoodi)}
+      :default
+      nil)))
 
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
