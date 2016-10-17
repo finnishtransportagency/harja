@@ -196,14 +196,7 @@
      :headers {"Content-Type" "text/plain"}
      :body (str id)}))
 
-(defn ohjaa-index-html []
-  (redirect "/harja/laadunseuranta/index.html"))
-
 (defn luo-routet [db http]
-  ;; Ohjaa /laadunseuranta(/) index.html sivulle
-  (http-palvelin/julkaise-reitti http :ls-juuri-1 (GET "/laadunseuranta" [] (ohjaa-index-html)))
-  (http-palvelin/julkaise-reitti http :ls-juuri-2 (GET "/laadunseuranta/" [] (ohjaa-index-html)))
-
   ;; Reitti liitteen tallennukseen
   (http-palvelin/julkaise-palvelu
    http :ls-tallenna-liite

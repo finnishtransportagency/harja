@@ -1,15 +1,15 @@
 (ns harja.palvelin.integraatiot.tloik.tyokalut
   (:require [taoensso.timbre :as log]
-            [clojure.test :refer [deftest is use-fixtures]]
-            [clojure.xml :refer [parse]]
-            [clojure.zip :refer [xml-zip]]
-            [hiccup.core :refer [html]]
-            [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-sonja]]
-            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
-            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
+[clojure.test :refer [deftest is use-fixtures]]
+[clojure.xml :refer [parse]]
+[clojure.zip :refer [xml-zip]]
+[hiccup.core :refer [html]]
+[harja.testi :refer :all]
+[harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
+[harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
+[harja.jms-test :refer [feikki-sonja]]
+[harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
+[harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]))
 
 
 (def +xsd-polku+ "xsd/tloik/")
@@ -48,10 +48,89 @@
   <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
   </lahettaja>
   <seliteet>
+  <selite>tyomaajarjestelyihinLiittyvaIlmoitus</selite>
+  <selite>kuoppiaTiessa</selite>
+  <selite>kelikysely</selite>
+  <selite>soratienKuntoHuono</selite>
+  <selite>saveaTiella</selite>
+  <selite>liikennettaVaarantavaEsteTiella</selite>
+  <selite>irtokiviaTiella</selite>
+  <selite>kevyenLiikenteenVaylaanLiittyvaIlmoitus</selite>
+  <selite>raivausJaKorjaustoita</selite>
   <selite>auraustarve</selite>
+  <selite>yliauraus</selite>
+  <selite>kaivonKansiRikki</selite>
+  <selite>kevyenLiikenteenVaylatOvatLiukkaita</selite>
+  <selite>routaheitto</selite>
+  <selite>avattavatPuomit</selite>
+  <selite>tievalaistusVioittunutOnnettomuudessa</selite>
+  <selite>muuKyselyTaiNeuvonta</selite>
+  <selite>soratienTasaustarve</selite>
+  <selite>tieTaiTienReunaOnPainunut</selite>
+  <selite>siltaanLiittyvaIlmoitus</selite>
+  <selite>polynsidontatarve</selite>
+  <selite>liikennevalotEivatToimi</selite>
+  <selite>kunnossapitoJaHoitotyo</selite>
+  <selite>vettaTiella</selite>
   <selite>aurausvallitNakemaesteena</selite>
-  </seliteet>
-  </harja:ilmoitus>")
+  <selite>ennakoivaVaroitus</selite>
+  <selite>levahdysalueeseenLiittyvaIlmoitus</selite>
+  <selite>sohjonPoisto</selite>
+  <selite>liikennekeskusKuitannutLoppuneeksi</selite>
+  <selite>muuToimenpidetarve</selite>
+  <selite>hiekoitustarve</selite>
+  <selite>tietOvatJaatymassa</selite>
+  <selite>jaatavaaSadetta</selite>
+  <selite>tienvarsilaitteisiinLiittyvaIlmoitus</selite>
+  <selite>oljyaTiella</selite>
+  <selite>sahkojohtoOnPudonnutTielle</selite>
+  <selite>tieOnSortunut</selite>
+  <selite>tievalaistusVioittunut</selite>
+  <selite>testilahetys</selite>
+  <selite>tievalaistuksenLamppujaPimeana</selite>
+  <selite>virkaApupyynto</selite>
+  <selite>tiemerkintoihinLiittyvaIlmoitus</selite>
+  <selite>tulvavesiOnNoussutTielle</selite>
+  <selite>niittotarve</selite>
+  <selite>kuormaOnLevinnytTielle</selite>
+  <selite>tieOnLiukas</selite>
+  <selite>tiellaOnEste</selite>
+  <selite>harjaustarve</selite>
+  <selite>hoylaystarve</selite>
+  <selite>tietyokysely</selite>
+  <selite>paallystevaurio</selite>
+  <selite>rikkoutunutAjoneuvoTiella</selite>
+  <selite>mustaaJaataTiella</selite>
+  <selite>kevyenLiikenteenVaylillaOnLunta</selite>
+  <selite>hirviaitaVaurioitunut</selite>
+  <selite>korvauskysely</selite>
+  <selite>puitaOnKaatunutTielle</selite>
+  <selite>rumpuunLiittyvaIlmoitus</selite>
+  <selite>lasiaTiella</selite>
+  <selite>liukkaudentorjuntatarve</selite>
+  <selite>alikulkukaytavassaVetta</selite>
+  <selite>kevyenliikenteenAlikulkukaytavassaVetta</selite>
+  <selite>tievalaistuksenLamppuPimeana</selite>
+  <selite>kevyenLiikenteenVaylatOvatJaisiaJaLiukkaita</selite>
+  <selite>kuoppa</selite>
+  <selite>toimenpidekysely</selite>
+  <selite>pysakkiinLiittyvaIlmoitus</selite>
+  <selite>nakemaalueenRaivaustarve</selite>
+  <selite>vesakonraivaustarve</selite>
+  <selite>muuttuvatOpasteetEivatToimi</selite>
+  <selite>tievalaistus</selite>
+  <selite>vesiSyovyttanytTienReunaa</selite>
+  <selite>raskasAjoneuvoJumissa</selite>
+  <selite>myrskyvaurioita</selite>
+  <selite>kaidevaurio</selite>
+  <selite>liikennemerkkeihinLiittyvaIlmoitus</selite>
+  <selite>siirrettavaAjoneuvo</selite>
+  <selite>tielleOnVuotanutNestettaLiikkuvastaAjoneuvosta</selite>
+  <selite>tapahtumaOhi</selite>
+  <selite>kevyenLiikenteenVaylatOvatjaatymassa</selite>
+  <selite>tietOvatjaisiaJamarkia</selite>
+  </seliteet>\n</harja:ilmoitus>")
+
 (def +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
   <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
@@ -161,9 +240,9 @@
 
 (defn luo-tloik-komponentti []
   (->Tloik {:ilmoitusviestijono +tloik-ilmoitusviestijono+
-            :ilmoituskuittausjono +tloik-ilmoituskuittausjono+
-            :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
-            :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
+:ilmoituskuittausjono +tloik-ilmoituskuittausjono+
+:toimenpidejono +tloik-ilmoitustoimenpideviestijono+
+:toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+}))
 
 (def +ilmoitus-ruotsissa+
   (clojure.string/replace
@@ -176,9 +255,9 @@
 
 (defn tuo-paallystysilmoitus []
   (let [sanoma (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+
-                                       "<urakkatyyppi>hoito</urakkatyyppi>"
-                                       "<urakkatyyppi>paallystys</urakkatyyppi>")
-        ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
+   "<urakkatyyppi>hoito</urakkatyyppi>"
+   "<urakkatyyppi>paallystys</urakkatyyppi>")
+  ilmoitus (ilmoitussanoma/lue-viesti sanoma)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
 
 (defn tuo-valaistusilmoitus []
@@ -193,8 +272,8 @@
 
 (defn hae-ilmoitustoimenpide []
   (q "SELECT kuittaustyyppi
-      FROM ilmoitustoimenpide
-      WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
+FROM ilmoitustoimenpide
+WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
 
 (defn hae-paivystaja []
   (first (q "select id, matkapuhelin from yhteyshenkilo limit 1;")))
@@ -202,7 +281,7 @@
 (defn tee-testipaivystys []
   (let [yhteyshenkilo (hae-paivystaja)]
     (u (format "INSERT INTO paivystys (alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo)
-                VALUES (now() - interval '1' day, now() + interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
+    VALUES (now() - interval '1' day, now() + interval '1' day, 4, %s, false, true)" (first yhteyshenkilo)))
     yhteyshenkilo))
 
 (defn poista-ilmoitus []

@@ -29,7 +29,8 @@
   "Reititä sisääntuleva pyyntö käsittelijöille."
   [req kasittelijat]
   (apply compojure/routing
-         (if (= "/" (:uri req))
+         (if
+           (= "/" (:uri req))
            (assoc req :uri "/index.html")
            req)
          (remove nil? kasittelijat)))
@@ -163,6 +164,29 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                                     :max-age   36000000}}
        :body    (index/tee-paasivu token kehitysmoodi)})))
 
+(defn ls-index-kasittelija [kehitysmoodi req]
+  (let [uri (:uri req)
+        ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
+        oikea-kohde "/harja/laadunseuranta/"]
+    (cond
+      (= uri "/laadunseuranta")
+      {:status 301
+       :headers {"Location" oikea-kohde}}
+
+      (= uri "/laadunseuranta/index.html")
+      {:status 301
+       :headers {"Location" oikea-kohde}}
+
+      (= uri "/laadunseuranta/")
+      {:status  200
+       :headers {"Content-Type"  "text/html"
+                 "Cache-Control" "no-cache, no-store, must-revalidate"
+                 "Pragma"        "no-cache"
+                 "Expires"       "0"}
+       :body    (index/tee-ls-paasivu kehitysmoodi)}
+      :default
+       nil)))
+
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
   [f anti-csrf-kaytossa?]
@@ -202,7 +226,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                     (try+
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
-                             uikasittelija (-> (apply compojure/routes ui-kasittelijat)
+                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                (wrap-anti-forgery anti-csrf-kaytossa?))]
 
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
@@ -210,7 +234,8 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija kehitysmoodi))
-                                          (conj uikasittelija)))))
+                                          (conj (partial ls-index-kasittelija kehitysmoodi))
+                                          (conj ui-kasittelija)))))
                        (catch [:virhe :todennusvirhe] _
                          {:status 403 :body "Todennusvirhe"}))))
 
