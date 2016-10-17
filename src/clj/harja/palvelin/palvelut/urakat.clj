@@ -115,10 +115,10 @@
                              (:urakat au))))
        aluekokonaisuudet))))
 
-(defn
+(defn hae-urakka-idt-sijainnilla
   "Hakee annetun tyyppisen urakan sijainnilla. Mikäli tyyppiä vastaavaa urakkaa ei löydy, haetaan alueella toimiva
   hoidon alueurakka. Mikäli alueelta ei löydy alueurakkaa, haetaan lähin hoidon alueurakka"
-  hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
+  [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 10 metrin thesholdilla
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y 10))]
     (if (and (empty? urakka-idt)
@@ -129,7 +129,7 @@
         (if hoidon-urakkaidt
           hoidon-urakkaidt
           ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka
-          (q/hae-lahin-hoidon-alueurakka db x y)))
+          (map :id (q/hae-lahin-hoidon-alueurakka db x y))))
       urakka-idt)))
 
 (defn- pura-sopimukset [{jdbc-array :sopimukset :as urakka}]
