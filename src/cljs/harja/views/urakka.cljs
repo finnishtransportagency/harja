@@ -7,6 +7,7 @@
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
+            [harja.views.urakka.toteutus :as toteutus]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.urakka.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
             [harja.views.urakka.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
@@ -28,8 +29,15 @@
   (case valilehti
     :yleiset true
     ;; voidaan siistiä tekemällä välitasoja kuten oikeudet-suunnittelu ja oikeudet-toteumat. Nyt otetaan first
-    :suunnittelu (and (oikeudet/urakat-suunnittelu id) (not= sopimustyyppi :kokonaisurakka))
-    :toteumat (and (oikeudet/urakat-toteumat id) (not= sopimustyyppi :kokonaisurakka))
+    :suunnittelu (and (oikeudet/urakat-suunnittelu id)
+                      (not= sopimustyyppi :kokonaisurakka)
+                      (not= tyyppi :tiemerkinta))
+    :toteumat (and (oikeudet/urakat-toteumat id)
+                   (not= sopimustyyppi :kokonaisurakka)
+                   (not= tyyppi :tiemerkinta))
+    :toteutus (and (oikeudet/urakat-suunnittelu id)
+                   (not= sopimustyyppi :kokonaisurakka)
+                   (= tyyppi :tiemerkinta))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
                                                        (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (or (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
@@ -83,6 +91,11 @@
        ^{:key "toteumat"}
        [toteumat/toteumat ur])
 
+     "Toteutus"
+     :toteutus
+     (when (valilehti-mahdollinen? :toteutus ur)
+       ^{:key "toteutus"}
+       [toteutus/toteutus ur])
 
      "Aikataulu"
      :aikataulu
