@@ -2,20 +2,26 @@
   (:require [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(defn paattele-yllapidon-tyyppi [tyypit]
-  (if (< 2 (count tyypit))
+(defn paattele-alityyppi [tyypit]
+  (when (< 2 (count tyypit))
     (let [tunniste (str/upper-case (subs tyypit 2 3))]
       (case tunniste
         "V" "valaistus"
         "P" "paallystys"
         "T" "tiemerkinta"
         "S" "siltakorjaus"
-        (do
-          (log/error "Samposta luettiin sisään ylläpidon urakka tuntemattomalla alityypillä")
-          "paallystys")))
-    (do
-      (log/error "Samposta luettiin sisään ylläpidon urakka ilman alityyppiä")
-      "paallystys")))
+        nil))))
+
+(defn paattele-yllapidon-alityyppi [tyypit]
+  (if-let [alityyppi (paattele-alityyppi tyypit)]
+    alityyppi
+    (do (log/error "Samposta luettiin sisään ylläpidon urakka tuntemattomalla alityypillä")
+        "paallystys")))
+
+(defn paattele-hoidon-alityyppi [tyypit]
+  (if-let [alityyppi (paattele-alityyppi tyypit)]
+    alityyppi
+    "hoito"))
 
 (defn paattele-urakkatyyppi [tyypit]
   ;; Ensimmäinen kirjain kertoo yläkategorian (tie, rata, vesi)
@@ -24,8 +30,8 @@
   (if (< 1 (count tyypit))
     (let [tunniste (str/upper-case (subs tyypit 1 2))]
       (case tunniste
-        "H" "hoito"
-        "Y" (paattele-yllapidon-tyyppi tyypit)
+        "H" (paattele-hoidon-alityyppi tyypit)
+        "Y" (paattele-yllapidon-alityyppi tyypit)
         "hoito"))
     "hoito"))
 

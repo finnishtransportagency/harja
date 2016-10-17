@@ -43,9 +43,22 @@
   (poista-urakka))
 
 (deftest tarkista-alueurakkanumeron-purku
-  (let [osat (urakat/pura-alueurakkanro "TYS-0666")]
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "TYS-0666")]
     (is (= "TYS" (:tyypit osat)) "Tyypit on purettu oikein")
     (is (= "0666" (:alueurakkanro osat)) "Alueurakkanumero on purettu oikein"))
-  (let [osat (urakat/pura-alueurakkanro "TYS0666")]
+
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "TYS0666")]
     (is (nil? (:tyypit osat)) "Tyyppiä ei ole päätelty")
-    (is (= "TYS0666" (:alueurakkanro osat)) "Alueurakkanumero on purettu oikein")))
+    (is (nil? (:alueurakkanro osat)) "Alueurakkanumeroa ei ole otettu"))
+
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "TYS-!0666")]
+    (is (= "TYS" (:tyypit osat)) "Tyyppi on päätelty oikein ")
+    (is (nil? (:alueurakkanro osat)) "Alueurakkanumeroa ei ole otettu"))
+
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "THS-0666")]
+    (is (= "THS" (:tyypit osat)) "Tyyppi on päätelty oikein ")
+    (is (= "0666" (:alueurakkanro osat))   "Alueurakkanumero on purettu oikein"))
+
+  (let [osat (urakat/pura-alueurakkanro "TESTI" "T--0FF666")]
+    (is (nil? (:tyypit osat)) "Tyyppiä ei ole päätelty")
+    (is (nil? (:alueurakkanro osat)) "Alueurakkanumeroa ei ole otettu")))
