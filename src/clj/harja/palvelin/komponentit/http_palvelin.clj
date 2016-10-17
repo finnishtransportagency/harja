@@ -166,6 +166,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn ls-index-kasittelija [kehitysmoodi req]
   (let [uri (:uri req)
+        ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
         oikea-kohde "/harja/laadunseuranta/"]
     (cond
       (= uri "/laadunseuranta")
