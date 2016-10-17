@@ -87,7 +87,7 @@
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
     (.setFaultTolerant true)
-    (.setFaultTolerantReconnectTimeout (int 5))))
+    (.setFaultTolerantReconnectTimeout (int 300))))
 
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
