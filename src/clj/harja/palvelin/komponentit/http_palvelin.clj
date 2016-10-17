@@ -171,7 +171,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                       "/harja/laadunseuranta/"
                       "/laadunseuranta/")]
     (cond
-      (or (= uri "/laadunseuranta") (= uri "harja/laadunseuranta"))
+      (or (= uri "/laadunseuranta") (= uri "/harja/laadunseuranta"))
       {:status 301
        :headers {"Location" oikea-kohde}}
 
