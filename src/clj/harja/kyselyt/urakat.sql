@@ -533,3 +533,17 @@ WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 -- name: luo-paallystyspalvelusopimus<!
 INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
+
+-- name: hae-lahin-hoidon-alueurakka
+SELECT u.id
+FROM urakka u
+WHERE
+  u.alkupvm <= now() AND
+  u.loppupvm > now() AND
+  u.urakkanro = (SELECT au.alueurakkanro
+                 FROM alueurakka au
+                 WHERE st_distance(au.alue, st_makepoint(:x, :y)) =
+                       (SELECT min(st_distance(alue, st_makepoint(:x, :y)))
+                        FROM alueurakka)
+                 LIMIT 1)
+LIMIT 1;
