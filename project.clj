@@ -271,7 +271,7 @@
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less/application"
-                        "dev-resources/less/laadunseuranta/leinapplication"]
+                        "dev-resources/less/laadunseuranta/application"]
          :target-path  "resources/public/css/"}
 
 
