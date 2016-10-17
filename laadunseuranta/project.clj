@@ -76,7 +76,7 @@
                 :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
 
                 :compiler {:main harja-laadunseuranta.dev-core
-                           :asset-path "js/compiled/out"
+                           :asset-path "laadunseuranta/js/compiled/out"
                            :output-to "resources/public/js/compiled/harja_laadunseuranta.js"
                            :output-dir "resources/public/js/compiled/out"
                            :source-map-timestamp true}}
@@ -90,7 +90,7 @@
                            }
 
                 :compiler {:main harja-laadunseuranta.devcards-core
-                           :asset-path "js/compiled/devcards_out"
+                           :asset-path "laadunseuranta/js/compiled/devcards_out"
                            :output-to "resources/public/js/compiled/harja_laadunseuranta_devcards.js"
                            :output-dir "resources/public/js/compiled/devcards_out"
                            :source-map-timestamp true}}
