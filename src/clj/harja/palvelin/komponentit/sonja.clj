@@ -44,20 +44,28 @@
          yhdista-kuuntelija
          tee-jms-poikkeuskuuntelija)
 
-(defn yhdista-uudelleen [{:keys [yhteys jonot] :as tila} agentti asetukset  yhteys-ok?]
+(defn- poista-consumerit [{jonot :jonot :as tila}]
+  (reduce (fn [tila jono]
+            (assoc-in tila [:jonot jono :consumer] nil))
+          tila
+          (keys jonot)))
+
+(defn yhdista-uudelleen [{:keys [yhteys jonot] :as tila} agentti asetukset yhteys-ok?]
   (log/info "Yritetään yhdistään JMS-yhteys uudelleen")
   (when yhteys
     (try
       (.close yhteys)
       (catch Exception e
         (log/error e ("JMS-yhteyden sulkemisessa tapahtui poikkeus: " (.getMessage e))))))
-  ;; todo: tarkista miksi jonokuuntelijat eivät yhdisty uudelleen
-  (loop [tila (aloita-yhdistaminen agentti asetukset (tee-jms-poikkeuskuuntelija agentti asetukset yhteys-ok?) yhteys-ok?)
+  (loop [tila (aloita-yhdistaminen (poista-consumerit tila) asetukset (tee-jms-poikkeuskuuntelija agentti asetukset yhteys-ok?) yhteys-ok?)
          [[jonon-nimi kuuntelija] & kuuntelijat]
          (mapcat (fn [[jonon-nimi {kuuntelijat :kuuntelijat}]]
                    (log/info (format "Yhdistetään uudestaan kuuntelijat jonoon: %s" jonon-nimi))
                    (map (fn [k] [jonon-nimi k]) @kuuntelijat)) jonot)]
-    (recur (yhdista-kuuntelija tila jonon-nimi kuuntelija) kuuntelijat)))
+    (if (not jonon-nimi)
+      tila
+      (recur (yhdista-kuuntelija tila jonon-nimi kuuntelija)
+             kuuntelijat))))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija []
   (let [lokita-tila #(case %
@@ -79,7 +87,7 @@
 (defn konfiguroi-sonic-jms-connection-factory [connection-factory]
   (doto connection-factory
     (.setFaultTolerant true)
-    (.setFaultTolerantReconnectTimeout (int 6000))))
+    (.setFaultTolerantReconnectTimeout (int 5))))
 
 (defn- luo-connection-factory [url tyyppi]
   (let [connection-factory (-> tyyppi
