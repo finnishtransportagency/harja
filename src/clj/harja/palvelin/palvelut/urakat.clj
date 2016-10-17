@@ -25,43 +25,43 @@
   ([db user oikeus urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
    (konv/sarakkeet-vektoriin
      (into []
-          (comp
-            (filter (fn [{:keys [urakka_id]}]
-                      (oikeudet/voi-lukea? oikeus urakka_id user)))
-            (map #(assoc % :tyyppi (keyword (:tyyppi %))))
-            (map konv/alaviiva->rakenne))
+           (comp
+             (filter (fn [{:keys [urakka_id]}]
+                       (oikeudet/voi-lukea? oikeus urakka_id user)))
+             (map #(assoc % :tyyppi (keyword (:tyyppi %))))
+             (map konv/alaviiva->rakenne))
 
-          (let [alku (or alku (pvm/nyt))
-                loppu (or loppu (pvm/nyt))
-                hallintayksikot (cond
-                                  (nil? hallintayksikot) nil
-                                  (vector? hallintayksikot) hallintayksikot
-                                  :else [hallintayksikot])]
-            (cond
-              (not (nil? urakka-id))
-              (q/hae-urakoiden-organisaatiotiedot db urakka-id)
+           (let [alku (or alku (pvm/nyt))
+                 loppu (or loppu (pvm/nyt))
+                 hallintayksikot (cond
+                                   (nil? hallintayksikot) nil
+                                   (vector? hallintayksikot) hallintayksikot
+                                   :else [hallintayksikot])]
+             (cond
+               (not (nil? urakka-id))
+               (q/hae-urakoiden-organisaatiotiedot db urakka-id)
 
-              #_(roolit/lukuoikeus-kaikkiin-urakoihin? user)
-              ;; Haetaan vaan kaikki urakat, näistä filtteröidään joka tapauksessa
-              ;; pois sellaiset, johon käyttäjällä ei ole oikeutta
-              :else
-              (q/hae-kaikki-urakat-aikavalilla
-                db (konv/sql-date alku) (konv/sql-date loppu)
-                (when urakoitsija urakoitsija)
-                (when urakkatyyppi (name urakkatyyppi)) hallintayksikot)
-
-              ;:else
-              #_(do
-                (log/debug "Hae käyttäjän urakat aikaväliltä")
-                (log/debug (:id user))
-                (log/debug (konv/sql-date alku) (konv/sql-date loppu))
-                (log/debug urakoitsija urakkatyyppi hallintayksikot)
-                (kayttajat-q/hae-kayttajan-urakat-aikavalilta
-                 db (:id user)
-                 (konv/sql-date alku) (konv/sql-date loppu)
+               #_(roolit/lukuoikeus-kaikkiin-urakoihin? user)
+               ;; Haetaan vaan kaikki urakat, näistä filtteröidään joka tapauksessa
+               ;; pois sellaiset, johon käyttäjällä ei ole oikeutta
+               :else
+               (q/hae-kaikki-urakat-aikavalilla
+                 db (konv/sql-date alku) (konv/sql-date loppu)
                  (when urakoitsija urakoitsija)
-                 (when urakkatyyppi (name urakkatyyppi))
-                 hallintayksikot)))))
+                 (when urakkatyyppi (name urakkatyyppi)) hallintayksikot)
+
+               ;:else
+               #_(do
+                   (log/debug "Hae käyttäjän urakat aikaväliltä")
+                   (log/debug (:id user))
+                   (log/debug (konv/sql-date alku) (konv/sql-date loppu))
+                   (log/debug urakoitsija urakkatyyppi hallintayksikot)
+                   (kayttajat-q/hae-kayttajan-urakat-aikavalilta
+                     db (:id user)
+                     (konv/sql-date alku) (konv/sql-date loppu)
+                     (when urakoitsija urakoitsija)
+                     (when urakkatyyppi (name urakkatyyppi))
+                     hallintayksikot)))))
      {:urakka :urakat}
      (juxt :tyyppi (comp :id :hallintayksikko)))))
 
@@ -79,13 +79,13 @@
   [db user oikeus urakka-idt toleranssi]
   (when-not (empty? urakka-idt)
     (into []
-         (comp
-           (filter (fn [{:keys [urakka_id]}]
-                     (oikeudet/voi-lukea? oikeus urakka_id user)))
-           (harja.geo/muunna-pg-tulokset :urakka_alue)
-           (harja.geo/muunna-pg-tulokset :alueurakka_alue)
-           (map konv/alaviiva->rakenne))
-         (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt))))
+          (comp
+            (filter (fn [{:keys [urakka_id]}]
+                      (oikeudet/voi-lukea? oikeus urakka_id user)))
+            (harja.geo/muunna-pg-tulokset :urakka_alue)
+            (harja.geo/muunna-pg-tulokset :alueurakka_alue)
+            (map konv/alaviiva->rakenne))
+          (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt))))
 
 (defn kayttajan-urakat-aikavalilta-alueineen
   "Tekee saman kuin kayttajan-urakat-aikavalilta, mutta liittää urakoihin mukaan niiden geometriat."
@@ -99,14 +99,14 @@
                                                          urakoitsija urakkatyyppi
                                                          hallintayksikot alku loppu)
          urakka-idt (mapcat
-                     (fn [aluekokonaisuus]
-                       (map :id (:urakat aluekokonaisuus)))
-                     aluekokonaisuudet)
+                      (fn [aluekokonaisuus]
+                        (map :id (:urakat aluekokonaisuus)))
+                      aluekokonaisuudet)
          urakat-alueineen (into {} (map
-                                    (fn [ur]
-                                      [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
-                                                                     (get-in ur [:alueurakka :alue]))])
-                                    (urakoiden-alueet db user oikeus urakka-idt toleranssi)))]
+                                     (fn [ur]
+                                       [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
+                                                                      (get-in ur [:alueurakka :alue]))])
+                                     (urakoiden-alueet db user oikeus urakka-idt toleranssi)))]
      (mapv
        (fn [au]
          (assoc au :urakat (mapv
@@ -115,13 +115,21 @@
                              (:urakat au))))
        aluekokonaisuudet))))
 
-(defn hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
+(defn
+  "Hakee annetun tyyppisen urakan sijainnilla. Mikäli tyyppiä vastaavaa urakkaa ei löydy, haetaan alueella toimiva
+  hoidon alueurakka. Mikäli alueelta ei löydy alueurakkaa, haetaan lähin hoidon alueurakka"
+  hae-urakka-idt-sijainnilla [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 10 metrin thesholdilla
   (let [urakka-idt (map :id (q/hae-urakka-sijainnilla db urakkatyyppi x y 10))]
     (if (and (empty? urakka-idt)
              (not= "hoito" urakkatyyppi))
-      ;; Jos ei löytynyt urakoita eri tyypillä, kokeillaan hoido urakoita
-      (map :id (q/hae-urakka-sijainnilla db "hoito" x y 10))
+
+      ;; Jos ei löytynyt urakkaa annetulla tyypillä, haetaan alueella toimiva hoidon alueurakka
+      (let [hoidon-urakkaidt (map :id (q/hae-urakka-sijainnilla db "hoito" x y 10))]
+        (if hoidon-urakkaidt
+          hoidon-urakkaidt
+          ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka
+          (q/hae-lahin-hoidon-alueurakka db x y)))
       urakka-idt)))
 
 (defn- pura-sopimukset [{jdbc-array :sopimukset :as urakka}]
@@ -130,16 +138,16 @@
          [s & ss] (when jdbc-array (seq (.getArray jdbc-array)))]
     (if-not s
       (assoc urakka
-             :sopimukset sopimukset
-             :paasopimus paasopimus)
+        :sopimukset sopimukset
+        :paasopimus paasopimus)
       (let [[id sampoid] (str/split s #"=")
             paasopimus? (str/starts-with? id "*")
             id (Long/parseLong
-                (if paasopimus?
-                  (subs id 1)
-                  id))]
+                 (if paasopimus?
+                   (subs id 1)
+                   id))]
         (recur (assoc sopimukset
-                      id sampoid)
+                 id sampoid)
                (if paasopimus?
                  id
                  paasopimus)
@@ -150,10 +158,10 @@
 
         ;; Jos alueurakan alue on olemassa, käytetään sitä alueena
         (map #(if-let [alueurakka (:alueurakan_alue %)]
-                (-> %
-                    (dissoc :alueurakan_alue)
-                    (assoc  :alue alueurakka))
-                (dissoc % :alueurakan_alue)))
+               (-> %
+                   (dissoc :alueurakan_alue)
+                   (assoc :alue alueurakka))
+               (dissoc % :alueurakan_alue)))
 
         (map #(assoc % :urakoitsija {:id (:urakoitsija_id %)
                                      :nimi (:urakoitsija_nimi %)
@@ -173,8 +181,8 @@
                                          :nimi (:hallintayksikko_nimi %)
                                          :lyhenne (:hallintayksikko_lyhenne %)}))
         (map #(assoc %
-                :tyyppi (keyword (:tyyppi %))
-                :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
+               :tyyppi (keyword (:tyyppi %))
+               :sopimustyyppi (and (:sopimustyyppi %) (keyword (:sopimustyyppi %)))))
 
         ;; Käsitellään päällystysurakan tiedot
 
@@ -232,7 +240,7 @@
 (defn hae-urakan-organisaatio [db user urakka-id]
   (log/debug "Haetaan organisaatio urakalle: " urakka-id)
   (let [organisaatio (first (into []
-        (q/hae-urakan-organisaatio db urakka-id)))]
+                                  (q/hae-urakan-organisaatio db urakka-id)))]
     (log/debug "Urakan organisaatio saatu: " (pr-str organisaatio))
     organisaatio))
 
@@ -242,12 +250,12 @@
 (defn hae-urakan-tyyppi [db user urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db urakka-id)))))
 
-(defn tallenna-urakan-sopimustyyppi [db user {:keys  [urakka-id sopimustyyppi]}]
+(defn tallenna-urakan-sopimustyyppi [db user {:keys [urakka-id sopimustyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/tallenna-urakan-sopimustyyppi! db (name sopimustyyppi) urakka-id)
   (hae-urakan-sopimustyyppi db user urakka-id))
 
-(defn tallenna-urakan-tyyppi [db user {:keys  [urakka-id urakkatyyppi]}]
+(defn tallenna-urakan-tyyppi [db user {:keys [urakka-id urakkatyyppi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (q/tallenna-urakan-tyyppi! db urakkatyyppi urakka-id)
   (hae-urakan-tyyppi db user urakka-id))
@@ -256,8 +264,8 @@
   (log/debug "Hae yksittäinen urakka id:llä: " urakka-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (first (into []
-                urakka-xf
-                (q/hae-yksittainen-urakka db urakka-id))))
+               urakka-xf
+               (q/hae-yksittainen-urakka db urakka-id))))
 
 (defn aseta-takuun-loppupvm [db user {:keys [urakka-id takuu]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
@@ -280,42 +288,42 @@
   (start [{http :http-palvelin
            db :db :as this}]
     (julkaise-palvelut
-     http
-     :hallintayksikon-urakat
-     (fn [user hallintayksikko]
-       (hallintayksikon-urakat db user hallintayksikko))
+      http
+      :hallintayksikon-urakat
+      (fn [user hallintayksikko]
+        (hallintayksikon-urakat db user hallintayksikko))
 
-     :hae-urakka
-     (fn [user urakka-id]
-       (hae-yksittainen-urakka db user urakka-id))
+      :hae-urakka
+      (fn [user urakka-id]
+        (hae-yksittainen-urakka db user urakka-id))
 
-     :hae-urakoita
-     (fn [user teksti]
-       (hae-urakoita db user teksti))
+      :hae-urakoita
+      (fn [user teksti]
+        (hae-urakoita db user teksti))
 
-     :hae-organisaation-urakat
-     (fn [user organisaatio-id]
-       (hae-organisaation-urakat db user organisaatio-id))
+      :hae-organisaation-urakat
+      (fn [user organisaatio-id]
+        (hae-organisaation-urakat db user organisaatio-id))
 
-     :hae-urakan-organisaatio
-     (fn [user urakka-id]
-       (hae-urakan-organisaatio db user urakka-id))
+      :hae-urakan-organisaatio
+      (fn [user urakka-id]
+        (hae-urakan-organisaatio db user urakka-id))
 
-     :tallenna-urakan-sopimustyyppi
-     (fn [user tiedot]
-       (tallenna-urakan-sopimustyyppi db user tiedot))
+      :tallenna-urakan-sopimustyyppi
+      (fn [user tiedot]
+        (tallenna-urakan-sopimustyyppi db user tiedot))
 
-     :tallenna-urakan-tyyppi
-     (fn [user tiedot]
-       (tallenna-urakan-tyyppi db user tiedot))
+      :tallenna-urakan-tyyppi
+      (fn [user tiedot]
+        (tallenna-urakan-tyyppi db user tiedot))
 
-     :aseta-takuun-loppupvm
-     (fn [user tiedot]
-       (aseta-takuun-loppupvm db user tiedot))
+      :aseta-takuun-loppupvm
+      (fn [user tiedot]
+        (aseta-takuun-loppupvm db user tiedot))
 
-     :poista-indeksi-kaytosta
-     (fn [user tiedot]
-       (poista-indeksi-kaytosta db user tiedot)))
+      :poista-indeksi-kaytosta
+      (fn [user tiedot]
+        (poista-indeksi-kaytosta db user tiedot)))
     this)
 
   (stop [{http :http-palvelin :as this}]
