@@ -220,7 +220,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                     (try+
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
-                             uikasittelija (-> (apply compojure/routes ui-kasittelijat)
+                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                (wrap-anti-forgery anti-csrf-kaytossa?))]
 
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
@@ -229,7 +229,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija kehitysmoodi))
                                           (conj (partial ls-index-kasittelija kehitysmoodi))
-                                          (conj uikasittelija)))))
+                                          (conj ui-kasittelija)))))
                        (catch [:virhe :todennusvirhe] _
                          {:status 403 :body "Todennusvirhe"}))))
 
