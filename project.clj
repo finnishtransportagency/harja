@@ -247,8 +247,7 @@
                            [{:file "resources/public/laadunseuranta/js/proj4.js"
                              :provides ["proj4"]}
                             {:file "resources/public/laadunseuranta/js/epsg3067.js"
-                             :provides ["epsg3067"]}]
-                           }}
+                             :provides ["epsg3067"]}]}}
 
                ;; This next build is an compressed minified build for
                ;; production. You can build this with:
@@ -264,16 +263,15 @@
                            :language-out :ecmascript5
                            :externs ["laadunseuranta/externs.js"]
                            :parallel-build true
-                           :pretty-print false}}
-
-               ]}
+                           :pretty-print false}}]}
 
   :clean-targets #^{:protect false} ["dev-resources/js/out" "target"
                                      "resources/public/js/harja.js"
                                      "resource/public/js/harja"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
-  :less {:source-paths ["dev-resources/less/application"]
+  :less {:source-paths ["dev-resources/less/application"
+                        "dev-resources/less/laadunseuranta/application"]
          :target-path  "resources/public/css/"}
 
 
@@ -325,8 +323,7 @@
             "tuotanto-notest"     ["do" "compile,"
                                    "cljsbuild" "once" "prod,"
                                    "cljsbuild" "once" "laadunseuranta-min,"
-                                   "less" "once," "uberjar"]
-            }
+                                   "less" "once," "uberjar"]}
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
