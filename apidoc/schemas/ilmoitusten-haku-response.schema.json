@@ -59,7 +59,7 @@
               "selitteet": {
                 "id": "urn:harja/ilmoitukset/0/ilmoitus/seliteet",
                 "type": "array",
-                "maxItems": 10,
+                "maxItems": 100,
                 "additionalProperties": false,
                 "items": [
                   {
