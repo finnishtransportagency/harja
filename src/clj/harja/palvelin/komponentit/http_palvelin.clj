@@ -176,24 +176,21 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
     (cond
       (or (= uri "/laadunseuranta") (= uri "/harja/laadunseuranta"))
       {:status 301
-       :headers {"Location" oikea-kohde
-                 "DEBUG URI " uri}}
+       :headers {"Location" oikea-kohde}}
 
       (or (= uri "/laadunseuranta/index.html") (= uri "/harja/laadunseuranta/index.html"))
       {:status 301
-       :headers {"Location" oikea-kohde
-                 "DEBUG URI " uri}}
+       :headers {"Location" oikea-kohde}}
 
       (or (= uri "/laadunseuranta/") (= uri "/harja/laadunseuranta/"))
       {:status  200
        :headers {"Content-Type"  "text/html"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma"        "no-cache"
-                 "Expires"       "0"
-                 "DEBUG URI " uri}
+                 "Expires"       "0"}
        :body    (index/tee-ls-paasivu kehitysmoodi)}
       :default
-      nil)))
+       nil)))
 
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
