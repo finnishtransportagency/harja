@@ -171,6 +171,10 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
       {:status 301
        :headers {"Location" "/laadunseuranta/"}}
 
+      (= uri "/laadunseuranta/index.html")
+      {:status 301
+       :headers {"Location" "/laadunseuranta/"}}
+
       (= uri "/laadunseuranta/")
       {:status  200
        :headers {"Content-Type"  "text/html"
