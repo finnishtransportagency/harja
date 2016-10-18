@@ -65,3 +65,8 @@ FROM maksuera m
                                    yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera
 GROUP BY Extract(YEAR FROM yht.alkupvm);
+
+-- name: onko-olemassa
+SELECT exists(SELECT maksuera
+              FROM kustannussuunnitelma
+              WHERE maksuera = :numero :: BIGINT);

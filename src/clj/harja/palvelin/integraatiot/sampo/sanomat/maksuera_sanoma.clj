@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util Date Calendar)))
 

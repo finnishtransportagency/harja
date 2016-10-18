@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms])
+            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID Calendar TimeZone)))
 
@@ -111,19 +112,24 @@
 
 (defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
   (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
-  (if (lukitse-kustannussuunnitelma db numero)
-    (let [viesti-id (str (UUID/randomUUID))
-          jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
-          maksuera (hae-maksueran-tiedot db numero)
-          muodosta-xml #(kustannussuunitelma-sanoma/muodosta maksuera)]
-      (try
-        (jms-lahettaja muodosta-xml viesti-id)
-        (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
-        (log/error (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
-        (catch Exception e
-          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-          (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
-    (log/warn ("Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero))))
+  (if (kustannussuunnitelmat/onko-olemassa? db numero)
+    (if (lukitse-kustannussuunnitelma db numero)
+      (let [viesti-id (str (UUID/randomUUID))
+           jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+           maksuera (hae-maksueran-tiedot db numero)
+           muodosta-xml #(kustannussuunitelma-sanoma/muodosta maksuera)]
+       (try
+         (jms-lahettaja muodosta-xml viesti-id)
+         (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
+         (log/error (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
+         (catch Exception e
+           (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+           (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
+     (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
+    (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
+      (log/error virheviesti)
+      (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+
+              :virheet [{:koodi :tuntematon-kustannussuunnitelma :viesti virheviesti}]}))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]

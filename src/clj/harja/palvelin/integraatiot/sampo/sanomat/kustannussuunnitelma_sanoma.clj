@@ -5,8 +5,11 @@
             [clj-time.periodic :as time-period]
             [clj-time.coerce :as coerce]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [try+ throw+]]))
+
+(def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn muodosta-maksueranumero [numero]
   (str/join "" ["HA" numero]))
@@ -76,13 +79,12 @@
          (muodosta-custom-information "vv_vat_code" "L024")]]
        (muodosta-custom-information "vv_purpose" "5")]]]))
 
-
 (defn muodosta [maksuera]
   (let[xml (xml/tee-xml-sanoma (tee-data maksuera))]
     (if (xml/validi-xml? +xsd-polku+ "nikuxog_costPlan.xsd" xml)
       xml
       (let [virheviesti (format "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi. XML: %s"
-                    kustannussuunnitelma-xml)]
+                    xml)]
         (log/error virheviesti)
         (throw+ {:type virheet/+invalidi-xml+
                  :virheet [{:koodi :invalidi-kustannussuunnitelma-xml :viesti virheviesti}]})))))

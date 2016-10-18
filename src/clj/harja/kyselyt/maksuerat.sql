@@ -205,3 +205,8 @@ WHERE tyyppi = :tyyppi :: maksueratyyppi;
 -- Luo uuden maksuerän.
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi, likainen, luotu)
 VALUES (:toimenpideinstanssi, :tyyppi :: maksueratyyppi, :nimi, TRUE, current_timestamp);
+
+-- name: onko-olemassa
+SELECT exists(SELECT numero
+              FROM maksuera
+              WHERE numero = :numero :: BIGINT);

@@ -9,7 +9,9 @@
             [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms])
+            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID)))
 
 (def maksueratyypit ["kokonaishintainen" "yksikkohintainen" "lisatyo" "indeksi" "bonus" "sakko" "akillinen-hoitotyo" "muu"])
@@ -82,23 +84,27 @@
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "maksuera-lahetys") sonja jono))
 
 (defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero]
-  (log/debug "Lähetetään maksuera (numero: " numero ") Sampoon.")
+  (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
+  (if (maksuerat/onko-olemassa? db numero)
+    (if (lukitse-maksuera db numero)
+      (let [viesti-id (str (UUID/randomUUID))
+            jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+            maksuera (hae-maksueran-tiedot db numero)
+            muodosta-xml #(maksuera-sanoma/muodosta maksuera)]
+        (try
+          (jms-lahettaja muodosta-xml viesti-id)
+          (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
+          (log/error (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
 
-  (if (lukitse-maksuera db numero)
-    (let [viesti-id (str (UUID/randomUUID))
-          jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
-          maksuera (hae-maksueran-tiedot db numero)
-          muodosta-xml #(maksuera-sanoma/muodosta maksuera)]
-      (try
-        (jms-lahettaja muodosta-xml viesti-id)
-        (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-        (log/error (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
+          (catch Exception e
+            (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+            (merkitse-maksueralle-lahetysvirhe db numero))))
 
-        (catch Exception e
-          (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-          (merkitse-maksueralle-lahetysvirhe db numero))))
-
-    (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero))))
+      (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
+    (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
+      (log/error virheviesti)
+      (throw+ {:type virheet/+tuntematon-maksuera+
+               :virheet [{:koodi :tuntematon-maksuera :viesti virheviesti}]}))))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]
