@@ -231,7 +231,9 @@
 
     ;; instanssi talteen DOMiin testausta varten
     (set! (.-openlayers map-element) kartta)
-    (siirra-kontrollit-ylapalkkiin)
+    (when (or (nil? (:siirra-kontrollit-ylapalkkiin @optiot))
+              (true? (:siirra-kontrollit-ylapalkkiin @optiot)))
+      (siirra-kontrollit-ylapalkkiin))
 
     (run!
       (when (and (not @alustava-sijainti-saatu?) (sijainti-ok? @keskipiste-atomi))
