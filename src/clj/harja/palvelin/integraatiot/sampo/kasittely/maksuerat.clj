@@ -98,7 +98,8 @@
 
           (catch Exception e
             (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-            (merkitse-maksueralle-lahetysvirhe db numero))))
+            (merkitse-maksueralle-lahetysvirhe db numero)
+            (throw e))))
 
       (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
     (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]

@@ -13,7 +13,9 @@
             [harja.fmt :as fmt]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
@@ -110,9 +112,12 @@
               samana-pysyneet (rakenna-samana-pysyneet-maksuerat lahetettavat-maksueranumerot @maksuerat/maksuerat)
               uudet-maksuerat (rakenna-uudet-maksuerat samana-pysyneet paivittyneet-maksuerat)
               uudet-kuittausta-odottavat (rakenna-uudet-kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot @kuittausta-odottavat-maksuerat)]
-          (if vastaus
-            (kasittele-onnistunut-siirto uudet-maksuerat)
-            (kasittele-epaonnistunut-siirto lahetettavat-maksueranumerot uudet-kuittausta-odottavat))))))
+          (log "----> " (pr-str vastaus))
+          (if (k/virhe? vastaus)
+            (do
+              (kasittele-epaonnistunut-siirto lahetettavat-maksueranumerot uudet-kuittausta-odottavat)
+              (viesti/nayta! "Lähetys epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt))
+            (kasittele-onnistunut-siirto uudet-maksuerat))))))
 
 (defn- pollaa-kantaa
   "Jos on olemassa maksueriä tai kustannussuunnitelmia, jotka odottavat kuittausta, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."

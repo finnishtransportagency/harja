@@ -121,10 +121,11 @@
        (try
          (jms-lahettaja muodosta-xml viesti-id)
          (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
-         (log/error (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
+         (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
          (catch Exception e
            (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-           (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
+           (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
+           (throw e))))
      (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)
