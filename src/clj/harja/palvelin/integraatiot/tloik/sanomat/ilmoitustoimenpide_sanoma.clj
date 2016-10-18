@@ -1,7 +1,9 @@
 (ns harja.palvelin.integraatiot.tloik.sanomat.ilmoitustoimenpide-sanoma
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
-            [hiccup.core :refer [html]])
+            [hiccup.core :refer [html]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]])
   (:import (java.text SimpleDateFormat)
            (java.util TimeZone)))
 
@@ -53,6 +55,8 @@
         xml (xml/tee-xml-sanoma sisalto)]
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
-      (do
-        (log/error (format "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia. XML: %s." xml))
-        nil))))
+      (let [virheviesti (format "Ilmoitustoimenpidettä ei voida lähettää. XML ei ole validia. XML: %s." xml)]
+        (log/error virheviesti)
+        (throw+ {:type virheet/+invalidi-xml+
+                 :virheet [{:koodi :invalidi-ilmoitustoimenpide-xml
+                            :viesti virheviesti}]})))))
