@@ -1,8 +1,13 @@
 (ns harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma
   (:require [hiccup.core :refer [html]]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util Date Calendar)))
+
+(def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn muodosta-kulu-id []
   (str/join "" ["kulu"
@@ -33,7 +38,7 @@
     "akillinen-hoitotyo" 10
     99))
 
-(defn muodosta [maksuera]
+(defn tee-data [maksuera]
   (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto talousosastopolku tuotepolku sampoid]} (:toimenpideinstanssi maksuera)
         maksueranumero (muodosta-maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
@@ -89,3 +94,15 @@
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
                                                          "name"                 "Laskutus- ja maksutiedot"})])]]]))
+
+(defn muodosta [maksuera]
+  (let[xml (xml/tee-xml-sanoma (tee-data maksuera))]
+    (if (xml/validi-xml? +xsd-polku+ "nikuxog_product.xsd" xml)
+      xml
+      (let [virheviesti (format "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi. XML: %s" xml)]
+        (log/error virheviesti)
+        (throw+ {:type virheet/+invalidi-xml+
+                 :virheet [{:koodi :invalidi-maksuera-xml :viesti virheviesti}]})))))
+
+
+

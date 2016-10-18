@@ -4,7 +4,8 @@
             [clj-time.core :as time]
             [clj-time.periodic :as time-period]
             [clj-time.coerce :as coerce]
-            [harja.tyokalut.xml :as xml])
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn muodosta-maksueranumero [numero]
@@ -42,7 +43,7 @@
   (let [vuosi (time/year (coerce/from-sql-date pvm))]
     (str "1.1." vuosi "-31.12." vuosi)))
 
-(defn muodosta [maksuera]
+(defn tee-data [maksuera]
   (let [{:keys [alkupvm loppupvm]} (:toimenpideinstanssi maksuera)
         maksueranumero (muodosta-maksueranumero (:numero maksuera))
         kustannussuunnitelmanumero (muodosta-kustannussuunnitelmanumero (:numero maksuera))]
@@ -74,3 +75,14 @@
           (muodosta-grouping-attribute "role_id" (:lkp-tilinumero maksuera))]
          (muodosta-custom-information "vv_vat_code" "L024")]]
        (muodosta-custom-information "vv_purpose" "5")]]]))
+
+
+(defn muodosta [maksuera]
+  (let[xml (xml/tee-xml-sanoma (tee-data maksuera))]
+    (if (xml/validi-xml? +xsd-polku+ "nikuxog_costPlan.xsd" xml)
+      xml
+      (let [virheviesti (format "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi. XML: %s"
+                    kustannussuunnitelma-xml)]
+        (log/error virheviesti)
+        (throw+ {:type virheet/+invalidi-xml+
+                 :virheet [{:koodi :invalidi-kustannussuunnitelma-xml :viesti virheviesti}]})))))

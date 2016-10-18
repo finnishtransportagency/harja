@@ -2,7 +2,6 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [hiccup.core :refer [html]]
-            [harja.tyokalut.xml :as xml]
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [harja.pvm :as pvm]
@@ -10,15 +9,10 @@
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID Calendar TimeZone)))
-
-(def +xsd-polku+ "xsd/sampo/outbound/")
-
-(defn tee-xml-sanoma [sisalto]
-  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (html sisalto)))
 
 (defn hae-kustannussuunnitelman-maksuera [db lahetys-id]
   (:maksuera (first (kustannussuunnitelmat/hae-maksuera-lahetys-idlla db lahetys-id))))
@@ -105,51 +99,31 @@
                      :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
                                 :viesti viesti}]})))))))
 
-(defn muodosta-kustannussuunnitelma [db numero]
+(defn hae-maksueran-tiedot [db numero]
   (let [maksueran-tiedot (maksuera/hae-maksuera db numero)
         vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
         lkp-tilinnumero (valitse-lkp-tilinumero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
-        maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)
-        kustannussuunnitelma-xml (tee-xml-sanoma (kustannussuunitelma-sanoma/muodosta maksueran-tiedot))]
-    (if (xml/validi-xml? +xsd-polku+ "nikuxog_costPlan.xsd" kustannussuunnitelma-xml)
-      kustannussuunnitelma-xml
-      (do
-        (log/error (str "Kustannussuunnitelmaa ei voida lähettää. Kustannussuunnitelma XML ei ole validi. XML:" kustannussuunnitelma-xml))
-        nil))))
+        maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)]
+    maksueran-tiedot))
+
+(defn tee-kustannusuunnitelma-jms-lahettaja [sonja integraatioloki db jono]
+  (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "kustannussuunnitelma-lahetys") sonja jono))
 
 (defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
-  (log/debug "Lähetetään kustannussuunnitelma (numero: " numero ") Sampoon.")
-  (let [tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "sampo" "kustannussuunnitelma-lahetys" nil nil)]
-    (try
-      (if (lukitse-kustannussuunnitelma db numero)
-        (if-let [kustannussuunnitelma-xml (muodosta-kustannussuunnitelma db numero)]
-          (if-let [viesti-id (sonja/laheta sonja lahetysjono-ulos kustannussuunnitelma-xml)]
-            (do
-              (integraatioloki/kirjaa-jms-viesti integraatioloki tapahtuma-id viesti-id "ulos" kustannussuunnitelma-xml lahetysjono-ulos)
-              (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id))
-            (do
-              (log/error "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.")
-              (integraatioloki/kirjaa-epaonnistunut-integraatio
-                integraatioloki (str "Kustannussuunnitelman (numero: " numero ") lähetys Sonjaan epäonnistui.") nil tapahtuma-id nil)
-              (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-              {:virhe :sonja-lahetys-epaonnistui}))
-          (do
-            (log/warn "Kustannussuunnitelman (numero: " numero ") sanoman muodostus epäonnistui.")
-            (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-            {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
-        (do
-          (log/warn "Kustannussuunnitelman (numero: " numero ") lukitseminen epäonnistui.")
-          {:virhe :kustannussuunnitelman-lukitseminen-epaonnistui}))
-      (catch Exception e
-        (log/error e "Sampo maksuerälähetyksessä tapahtui poikkeus.")
-        (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)
-        (integraatioloki/kirjaa-epaonnistunut-integraatio
-          integraatioloki
-          "Sampo kustannussuunnitelmalähetyksessä tapahtui poikkeus"
-          (str "Poikkeus: " (.getMessage e))
-          tapahtuma-id
-          nil)
-        {:virhe :poikkeus}))))
+  (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
+  (if (lukitse-kustannussuunnitelma db numero)
+    (let [viesti-id (str (UUID/randomUUID))
+          jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+          maksuera (hae-maksueran-tiedot db numero)
+          muodosta-xml #(kustannussuunitelma-sanoma/muodosta maksuera)]
+      (try
+        (jms-lahettaja muodosta-xml viesti-id)
+        (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
+        (log/error (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
+        (catch Exception e
+          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+          (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
+    (log/warn ("Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero))))
 
 (defn kasittele-kustannussuunnitelma-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]
