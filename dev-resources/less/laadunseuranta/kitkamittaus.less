@@ -1,0 +1,94 @@
+/* ---------- kitkamittauskomponentti ---------- */
+.kitkamittaus {
+    position: relative;
+    width: 240px;
+    height: 305px;
+    padding-left: 1px;
+    padding-top: 6px;
+    margin-bottom: 4px;
+    background-color: #eee;
+}
+
+.kitkamittaus .syottokentta {
+    width: 100%;
+    height: 70px;
+    line-height: 60px;
+    font-size: 60px;
+    text-align: left;
+}
+
+.kitkamittaus .nappaimisto button {
+    width: 75px;
+    height: 55px;
+    font-size: 35px;
+    margin: 2px;
+    color: white;
+    background-color: #0066cc;
+    border: none;
+    outline: none;
+}
+
+.nappaimisto #delbtn {
+    color: white;
+}
+
+.nappaimisto #okbtn {
+    background-color: rgb(21,158,4);
+    color: white;
+}
+
+.syottokentta .kursori {
+    position: absolute;
+    top: 5px;
+    background-color: black;
+    margin: 2px;
+    width: 40px;
+    height: 60px;
+}
+
+.kitkamittaus-container {
+    position: absolute;
+    background: #aaa;
+    z-index: 2000;
+    height: 470px;
+    top: 220px;
+    left: 550px;
+    border: 1px solid gray;
+    box-shadow: 5px 5px 2px 2px #999;
+}
+
+.kameranappi {
+    display: inline-block;
+    border: 1px solid blue;
+    width: 120px;
+    height: 112px;
+    padding-left: 2px;
+    padding-top: 10px;
+    margin-left: 10px;
+    box-sizing: border-box;
+}
+
+.kameranappi .kamera-eikuvaa {
+    color: blue;
+    text-align: center;
+}
+
+.kameranappi img {
+    float: left;
+    display: inline-block;
+    height: 90px;
+}
+
+.kameranappi img:nth-of-type(2) {
+    margin-left: 20px;
+    height: 110px;
+    image-orientation: from-image;
+}
+
+.spinner {
+    z-index: 2000;
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    color: black;
+}
