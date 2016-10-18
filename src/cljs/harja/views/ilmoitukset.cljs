@@ -233,6 +233,7 @@
            :leveys 1})
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+        {:otsikko "Id" :nimi :ilmoitusid :leveys 7}
         {:otsikko "Otsikko" :nimi :otsikko :leveys 7
          :hae #(leikkaa-otsikko %)}
         {:otsikko "Ilmoitettu" :nimi :ilmoitettu
