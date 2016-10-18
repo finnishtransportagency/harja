@@ -208,7 +208,7 @@
       [grid
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
-                 [ajax-loader "Haetaan ilmoutuksia"])
+                 [ajax-loader "Haetaan ilmoituksia"])
         :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
                          (or valitse-ilmoitus!
                              #(e! (v/->ValitseIlmoitus %))))
