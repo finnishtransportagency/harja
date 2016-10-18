@@ -12,8 +12,10 @@
   [:div.logo
    (when (utils/kehitysymparistossa?)
      [:span#testiharja "TESTI"])
-   [:img {:on-click #(set! (.-location js/window) asetukset/+harja-url+)
-          :src kuvat/+harja-logo+}]])
+   [:picture {:on-click #(set! (.-location js/window) asetukset/+harja-url+)}
+    [:source {:srcSet kuvat/+harja-logo-ilman-tekstia+ :type "image/svg+xml"
+                            :media "(max-width: 700px)"}]
+    [:img {:src kuvat/+harja-logo+ :alt ""}]]])
 
 (defn kaynnistyspainike [tallennus-kaynnissa tallennustilaa-muutetaan disabloi?]
   [:div.kaynnistyspainike {:class (when @tallennus-kaynnissa "kaynnissa")

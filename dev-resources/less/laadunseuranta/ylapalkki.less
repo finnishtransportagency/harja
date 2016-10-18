@@ -21,9 +21,15 @@
 }
 
 .ylapalkki .logo {
+    box-sizing: border-box;
     position: relative;
-    padding: 12px;
-    width: 150px;
+
+    & img {
+        padding: @ylapalkin-nappien-valinen-tyhja-tila;
+        padding-top: 15px;
+        width: 150px;
+        height: auto;
+    }
 
     & #testiharja {
         background-color: white;
@@ -36,10 +42,6 @@
         top: 5px;
         left: 66px;
         text-decoration: none;
-    }
-
-    & img {
-        width: 100%;
     }
 }
 
@@ -153,8 +155,12 @@
 
 @media (max-width: 700px) {
     .ylapalkki .logo {
-        padding: 7px;
-        width: 100px;
+        & img {
+            padding: 4px;
+            padding-top: 6px;
+            width: auto;
+            height: 36px;
+        }
     }
 
     .ol-zoom {
