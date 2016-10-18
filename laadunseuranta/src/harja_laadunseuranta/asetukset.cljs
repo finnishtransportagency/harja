@@ -1,10 +1,9 @@
 (ns harja-laadunseuranta.asetukset
-  (:require [clojure.string :as s]))
+  (:require [clojure.string :as s]
+            [harja-laadunseuranta.utils :as utils]))
 
 (defn- prefix []
-  (if (#{"localhost:8000" "localhost:3000"
-         "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
-         "harja-test.solitaservices.fi"} (.-host js/location))
+  (if (utils/kehitysymparistossa?)
     ""
     "harja/"))
 

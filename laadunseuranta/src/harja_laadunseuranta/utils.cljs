@@ -161,7 +161,7 @@
   "Tarkistaa ollaanko kehitysympäristössä"
   (let [host (.-host js/location)]
     (or (gstr/startsWith host "10.10.")
-        (#{"localhost" "localhost:3000" "localhost:8000"
+        (#{"localhost" "localhost:3000" "localhost:8000" "192.168.43.22:8000"
            "harja-test.solitaservices.fi"
            "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
            "testiextranet.liikennevirasto.fi"} host))))
