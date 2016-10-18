@@ -17,7 +17,7 @@
   [:div.logo
    (when (utils/kehitysymparistossa?)
      [:span#testiharja "TESTI"])
-   [:picture {:on-click logo-klikattu)}
+   [:picture {:on-click logo-klikattu}
     [:source {:srcSet kuvat/+harja-logo-ilman-tekstia+ :type "image/svg+xml"
                             :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
