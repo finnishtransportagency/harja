@@ -194,10 +194,7 @@
                  (let [alku (:alku rivi)]
                    (when (and alku loppu
                               (t/before? loppu alku))
-                     "Loppupvm ei voi olla alkua ennen.")))]}
-    {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
-     :leveys 10
-     :fmt fmt/totuus :tasaa :keskita}]
+                     "Loppupvm ei voi olla alkua ennen.")))]}]
    paivystajat])
 
 (defn paivystajat [ur]
