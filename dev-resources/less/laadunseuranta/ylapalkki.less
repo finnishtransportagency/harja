@@ -150,11 +150,16 @@
 
 .ylapalkki.testiharja {
     background: red;
-}
 
+    & .ol-zoom-in, .ol-zoom-out {
+        background: red;
+    }
+}
 
 @media (max-width: 700px) {
     .ylapalkki .logo {
+        // Jos selain ei tue <picture> elementtiä, näytetään aina default img
+        // Varmista aina, että näyttää hyvältä (esim. kommentoimalla <source> testiksi)
         & img {
             padding: 4px;
             padding-top: 6px;
