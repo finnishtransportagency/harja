@@ -2,17 +2,22 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.asetukset :as asetukset]
             [harja-laadunseuranta.kuvat :as kuvat]
-            [harja-laadunseuranta.utils :as utils]))
+            [harja-laadunseuranta.utils :as utils]
+            [harja-laadunseuranta.sovellus :as s]))
 
 (defn- formatoi-tr-osoite [tr-osoite]
   (let [{:keys [tie aosa aet]} tr-osoite]
     (str (or tie "-") " / " (or aosa "-") " / " (or aet "-"))))
 
+(defn- logo-klikattu []
+  (when-not @s/tallennus-kaynnissa
+    (set! (.-location js/window) asetukset/+harja-url+)))
+
 (defn logo []
   [:div.logo
    (when (utils/kehitysymparistossa?)
      [:span#testiharja "TESTI"])
-   [:picture {:on-click #(set! (.-location js/window) asetukset/+harja-url+)}
+   [:picture {:on-click logo-klikattu)}
     [:source {:srcSet kuvat/+harja-logo-ilman-tekstia+ :type "image/svg+xml"
                             :media "(max-width: 700px)"}]
     [:img {:src kuvat/+harja-logo+ :alt ""}]]])
