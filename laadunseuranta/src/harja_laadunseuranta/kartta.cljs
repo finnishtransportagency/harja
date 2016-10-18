@@ -211,7 +211,8 @@
   (let [kontrollien-paikka (.getElementById js/document "karttakontrollit")
         kontrollit (-> (.getElementsByClassName js/document "ol-zoom")
                        (.item 0))]
-    (.appendChild kontrollien-paikka kontrollit)))
+    (when (and kontrollien-paikka kontrollit)
+      (.appendChild kontrollien-paikka kontrollit))))
 
 (defn kartta-did-mount [this wmts-url wmts-url-kiinteistorajat wmts-url-ortokuva keskipiste-atomi
                         ajoneuvon-sijainti-atomi reittipisteet-atomi kirjatut-pisteet-atomi optiot]
@@ -231,9 +232,7 @@
 
     ;; instanssi talteen DOMiin testausta varten
     (set! (.-openlayers map-element) kartta)
-    (when (or (nil? (:siirra-kontrollit-ylapalkkiin @optiot))
-              (true? (:siirra-kontrollit-ylapalkkiin @optiot)))
-      (siirra-kontrollit-ylapalkkiin))
+    (siirra-kontrollit-ylapalkkiin)
 
     (run!
       (when (and (not @alustava-sijainti-saatu?) (sijainti-ok? @keskipiste-atomi))

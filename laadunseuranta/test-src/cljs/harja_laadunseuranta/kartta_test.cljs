@@ -45,8 +45,7 @@
                         :ajoneuvon-sijainti-atomi ajoneuvon-sijainti
                         :reittipisteet-atomi reittipisteet
                         :kirjauspisteet-atomi kirjauspisteet
-                        :optiot (atom {:seuraa-sijaintia true
-                                       :siirra-kontrollit-ylapalkkiin false})}]
+                        :optiot (atom {:seuraa-sijaintia true})}]
         (let [kartta-div (sel1 [:div.map])]
           (is (not (nil? kartta-div)))
 
