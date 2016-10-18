@@ -2,7 +2,7 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi +erheen-vari+]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
@@ -47,24 +47,57 @@
 (defn- kuukausi [date]
   (.format (java.text.SimpleDateFormat. "MMMM") date))
 
+(defn- naytetty-indeksiton-summa?
+  [kentta]
+  (#{:kaikki_paitsi_kht_laskutettu_ilman_korotuksia :kaikki_laskutettu_ilman_korotuksia
+     :kaikki_paitsi_kht_laskutetaan_ilman_korotuksia :kaikki_laskutetaan_ilman_korotuksia} kentta))
+
 (defn- taulukko
   ([otsikko otsikko-jos-tyhja
     laskutettu-teksti laskutettu-kentta
     laskutetaan-teksti laskutetaan-kentta
     yhteenveto-teksti kyseessa-kk-vali?
     tiedot summa-fmt]
-  (let [laskutettu-kentat (map laskutettu-kentta tiedot)
+  (let [laskutettu-kentta (if (some nil? (map laskutettu-kentta tiedot))
+                            (case laskutettu-kentta
+                              :kaikki_paitsi_kht_laskutettu
+                              :kaikki_paitsi_kht_laskutettu_ilman_korotuksia
+
+                              :kaikki_laskutettu
+                              :kaikki_laskutettu_ilman_korotuksia
+
+                              laskutettu-kentta)
+                            laskutettu-kentta)
+        laskutetaan-kentta (if (some nil? (map laskutetaan-kentta tiedot))
+                             (case laskutetaan-kentta
+                               :kaikki_paitsi_kht_laskutetaan
+                               :kaikki_paitsi_kht_laskutetaan_ilman_korotuksia
+
+                               :kaikki_laskutetaan
+                               :kaikki_laskutetaan_ilman_korotuksia
+
+                               laskutetaan-kentta)
+                             laskutetaan-kentta)
+        laskutettu-kentat (map laskutettu-kentta tiedot)
         laskutetaan-kentat (map laskutetaan-kentta tiedot)
         kaikkien-toimenpiteiden-summa (fn [kentat]
-                                              (if (some nil? kentat) nil (reduce + kentat)))
+                                        (if (some nil? kentat)
+                                          (reduce + (keep identity kentat))
+                                          (reduce + kentat)))
         laskutettu-yht (kaikkien-toimenpiteiden-summa laskutettu-kentat)
         laskutetaan-yht (kaikkien-toimenpiteiden-summa laskutetaan-kentat)
+        laskutettu-summasta-puuttuu-indeksi? (naytetty-indeksiton-summa? laskutettu-kentta)
+        laskutetaan-summasta-puuttuu-indeksi? (naytetty-indeksiton-summa? laskutetaan-kentta)
         yhteenveto (rivi "Toimenpiteet yhteensä"
-                         (when kyseessa-kk-vali? (summa-fmt laskutettu-yht))
-                         (when kyseessa-kk-vali? (summa-fmt laskutetaan-yht))
-                         (summa-fmt (if (and laskutettu-yht laskutetaan-yht)
-                                                    (+ laskutettu-yht laskutetaan-yht)
-                                                    nil)))
+                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu-yht)
+                                                                      :vari (when laskutettu-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan-yht)
+                                                                      :vari (when laskutetaan-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                         (if (and laskutettu-yht laskutetaan-yht)
+                           [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu-yht laskutetaan-yht))
+                                                :vari (when (or laskutettu-summasta-puuttuu-indeksi?
+                                                                laskutetaan-summasta-puuttuu-indeksi?) +erheen-vari+)}]
+                           nil))
         taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
                                   (not (and (= 0.0M laskutettu)
                                             (= 0.0M laskutetaan))))
@@ -84,11 +117,15 @@
                (map (fn [[nimi laskutettu laskutetaan]]
                       (rivi
                         nimi
-                        (when kyseessa-kk-vali? (summa-fmt laskutettu))
-                        (when kyseessa-kk-vali? (summa-fmt laskutetaan))
-                        (summa-fmt (if (and laskutettu laskutetaan)
-                                                   (+ laskutettu laskutetaan)
-                                                   nil)))) taulukon-tiedot)
+                        (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu)
+                                                                     :vari (when laskutettu-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                        (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan)
+                                                                     :vari (when laskutetaan-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                        (if (and laskutettu laskutetaan)
+                          [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu laskutetaan))
+                                               :vari (when (or laskutettu-summasta-puuttuu-indeksi?
+                                                               laskutetaan-summasta-puuttuu-indeksi?) +erheen-vari+)}]
+                          (summa-fmt nil)))) taulukon-tiedot)
                [yhteenveto]))]))))
 
 (defn- aseta-sheet-nimi [[ensimmainen & muut]]
