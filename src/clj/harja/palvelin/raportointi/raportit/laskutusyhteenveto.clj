@@ -58,27 +58,7 @@
     laskutetaan-teksti laskutetaan-kentta
     yhteenveto-teksti kyseessa-kk-vali?
     tiedot summa-fmt]
-  (let [laskutettu-kentta (if (some nil? (map laskutettu-kentta tiedot))
-                            (case laskutettu-kentta
-                              :kaikki_paitsi_kht_laskutettu
-                              :kaikki_paitsi_kht_laskutettu_ilman_korotuksia
-
-                              :kaikki_laskutettu
-                              :kaikki_laskutettu_ilman_korotuksia
-
-                              laskutettu-kentta)
-                            laskutettu-kentta)
-        laskutetaan-kentta (if (some nil? (map laskutetaan-kentta tiedot))
-                             (case laskutetaan-kentta
-                               :kaikki_paitsi_kht_laskutetaan
-                               :kaikki_paitsi_kht_laskutetaan_ilman_korotuksia
-
-                               :kaikki_laskutetaan
-                               :kaikki_laskutetaan_ilman_korotuksia
-
-                               laskutetaan-kentta)
-                             laskutetaan-kentta)
-        laskutettu-kentat (map laskutettu-kentta tiedot)
+  (let [laskutettu-kentat (map laskutettu-kentta tiedot)
         laskutetaan-kentat (map laskutetaan-kentta tiedot)
         kaikkien-toimenpiteiden-summa (fn [kentat]
                                         (if (some nil? kentat)
@@ -261,9 +241,20 @@
                   [" Kaikki indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
                    :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot])
                 [" Kaikki paitsi kok.hint. työt yhteensä " " Ei kustannuksia "
-                 :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
+                 (if (some nil? (map :kaikki_paitsi_kht_laskutettu tiedot))
+                   :kaikki_paitsi_kht_laskutettu_ilman_korotuksia
+                   :kaikki_paitsi_kht_laskutettu)
+                 (if (some nil? (map :kaikki_paitsi_kht_laskutetaan tiedot))
+                   :kaikki_paitsi_kht_laskutetaan_ilman_korotuksia
+                   :kaikki_paitsi_kht_laskutetaan)
+                 tiedot]
                 [" Kaikki yhteensä " " Ei kustannuksia "
-                 :kaikki_laskutettu :kaikki_laskutetaan tiedot]]))]
+                 (if (some nil? (map :kaikki_laskutettu tiedot))
+                   :kaikki_laskutettu_ilman_korotuksia
+                   :kaikki_laskutettu)
+                 (if (some nil? (map :kaikki_laskutetaan tiedot))
+                   :kaikki_laskutetaan_ilman_korotuksia
+                   :kaikki_laskutetaan) tiedot]]))]
 
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}
