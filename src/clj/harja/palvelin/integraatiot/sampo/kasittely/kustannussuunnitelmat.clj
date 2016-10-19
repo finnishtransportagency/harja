@@ -117,7 +117,7 @@
       (let [viesti-id (str (UUID/randomUUID))
            jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
            maksuera (hae-maksueran-tiedot db numero)
-           muodosta-xml #(kustannussuunitelma-sanoma/muodosta maksuera)]
+           muodosta-xml #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml maksuera)]
        (try
          (jms-lahettaja muodosta-xml viesti-id)
          (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)

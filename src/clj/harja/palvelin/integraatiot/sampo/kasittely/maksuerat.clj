@@ -90,7 +90,7 @@
       (let [viesti-id (str (UUID/randomUUID))
             jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
             maksuera (hae-maksueran-tiedot db numero)
-            muodosta-xml #(maksuera-sanoma/muodosta maksuera)]
+            muodosta-xml #(maksuera-sanoma/maksuera-xml maksuera)]
         (try
           (jms-lahettaja muodosta-xml viesti-id)
           (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
