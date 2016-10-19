@@ -17,13 +17,6 @@ DECLARE
   kaikki_paitsi_kht_laskutetaan NUMERIC;
   kaikki_laskutetaan NUMERIC;
 
-  kaikki_paitsi_kht_laskutettu_ilman_korotuksia NUMERIC;
-  kaikki_laskutettu_ilman_korotuksia NUMERIC;
-
-  kaikki_paitsi_kht_laskutetaan_ilman_korotuksia NUMERIC;
-  kaikki_laskutetaan_ilman_korotuksia NUMERIC;
-
-
   kht_laskutettu                         NUMERIC;
   kht_laskutettu_ind_korotettuna         NUMERIC;
   kht_laskutettu_ind_korotus             NUMERIC;
@@ -122,22 +115,22 @@ DECLARE
   rivi laskutusyhteenveto_rivi;
 BEGIN
 
-  -- Katsotaan löytyykö laskutusyhteenveto jo cachesta
-  SELECT
-    INTO cache rivit
-    FROM laskutusyhteenveto_cache c
-   WHERE c.urakka = ur
-     AND c.alkupvm = aikavali_alkupvm
-     AND c.loppupvm = aikavali_loppupvm;
-
-  IF cache IS NOT NULL THEN
-    RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
-    FOREACH rivi IN ARRAY cache
-    LOOP
-      RETURN NEXT rivi;
-    END LOOP;
-    RETURN;
-  END IF;
+-- Katsotaan löytyykö laskutusyhteenveto jo cachesta
+--   SELECT
+--     INTO cache rivit
+--     FROM laskutusyhteenveto_cache c
+--    WHERE c.urakka = ur
+--      AND c.alkupvm = aikavali_alkupvm
+--      AND c.loppupvm = aikavali_loppupvm;
+--
+--   IF cache IS NOT NULL THEN
+--     RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
+--     FOREACH rivi IN ARRAY cache
+--     LOOP
+--       RETURN NEXT rivi;
+--     END LOOP;
+--     RETURN;
+--   END IF;
 
   cache := ARRAY[]::laskutusyhteenveto_rivi[];
 
@@ -509,13 +502,9 @@ BEGIN
     -- Kustannusten kokonaissummat
     kaikki_paitsi_kht_laskutettu := 0.0;
     kaikki_laskutettu := 0.0;
-    kaikki_paitsi_kht_laskutettu_ilman_korotuksia := 0.0;
-    kaikki_laskutettu_ilman_korotuksia := 0.0;
 
     kaikki_paitsi_kht_laskutetaan := 0.0;
     kaikki_laskutetaan := 0.0;
-    kaikki_paitsi_kht_laskutetaan_ilman_korotuksia := 0.0;
-    kaikki_laskutetaan_ilman_korotuksia := 0.0;
 
     kaikki_paitsi_kht_laskutettu := yht_laskutettu_ind_korotettuna + sakot_laskutettu_ind_korotettuna +
                                     COALESCE(suolasakot_laskutettu_ind_korotettuna, 0.0) + muutostyot_laskutettu_ind_korotettuna +
@@ -525,11 +514,6 @@ BEGIN
                                     + kht_laskutettu_ind_korotus;
 
     kaikki_laskutettu := kaikki_paitsi_kht_laskutettu + kht_laskutettu;
-    kaikki_paitsi_kht_laskutettu_ilman_korotuksia := yht_laskutettu + sakot_laskutettu +
-                                                     COALESCE(suolasakot_laskutettu, 0.0) + muutostyot_laskutettu +
-                                                     akilliset_hoitotyot_laskutettu + erilliskustannukset_laskutettu +
-                                                     bonukset_laskutettu;
-    kaikki_laskutettu_ilman_korotuksia := kaikki_paitsi_kht_laskutettu_ilman_korotuksia + kht_laskutettu;
 
     kaikki_paitsi_kht_laskutetaan := yht_laskutetaan_ind_korotettuna + sakot_laskutetaan_ind_korotettuna +
                                      COALESCE(suolasakot_laskutetaan_ind_korotettuna, 0.0) + muutostyot_laskutetaan_ind_korotettuna +
@@ -538,12 +522,6 @@ BEGIN
                                      --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
                                      + kht_laskutetaan_ind_korotus;
     kaikki_laskutetaan := kaikki_paitsi_kht_laskutetaan + kht_laskutetaan;
-
-    kaikki_paitsi_kht_laskutetaan_ilman_korotuksia := yht_laskutetaan + sakot_laskutetaan +
-                                                        COALESCE(suolasakot_laskutetaan, 0.0) + muutostyot_laskutetaan +
-                                                        akilliset_hoitotyot_laskutetaan + erilliskustannukset_laskutetaan +
-                                                        bonukset_laskutetaan;
-    kaikki_laskutetaan_ilman_korotuksia := kaikki_paitsi_kht_laskutetaan_ilman_korotuksia + kht_laskutetaan;
 
 
     RAISE NOTICE '
@@ -621,9 +599,7 @@ BEGIN
  	     erilliskustannukset_laskutetaan, erilliskustannukset_laskutetaan_ind_korotettuna, erilliskustannukset_laskutetaan_ind_korotus,
  	     bonukset_laskutettu, bonukset_laskutettu_ind_korotettuna, bonukset_laskutettu_ind_korotus,
  	     bonukset_laskutetaan, bonukset_laskutetaan_ind_korotettuna, bonukset_laskutetaan_ind_korotus,
- 	     suolasakko_kaytossa, lampotila_puuttuu,
-       kaikki_paitsi_kht_laskutettu_ilman_korotuksia, kaikki_laskutettu_ilman_korotuksia,
-       kaikki_paitsi_kht_laskutetaan_ilman_korotuksia, kaikki_laskutetaan_ilman_korotuksia
+ 	     suolasakko_kaytossa, lampotila_puuttuu
     );
 
     cache := cache || rivi;
