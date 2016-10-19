@@ -72,6 +72,16 @@
               maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 
+(defn tarkista-maksueran-tiedot [{:keys [toimenpideinstanssi numero]}]
+  (when-not (:talousosastopolku toimenpideinstanssi)
+    (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu talousosastopolku. Maksuerää ei voi lähettää." numero)]
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi :puuttuva-talousosastopolku :viesti virheviesti}]})))
+  (when-not (:tuotepolku toimenpideinstanssi)
+    (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu tuotepolku. Maksuerää ei voi lähettää." numero)]
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi :puuttuva-tuotepolku :viesti virheviesti}]}))))
+
 (defn hae-maksueran-tiedot [db numero]
   (let [maksueran-tiedot (hae-maksuera db numero)
         ;; Sakot lähetetään Sampoon negatiivisena
@@ -90,7 +100,9 @@
       (let [viesti-id (str (UUID/randomUUID))
             jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
             maksuera (hae-maksueran-tiedot db numero)
-            muodosta-xml #(maksuera-sanoma/maksuera-xml maksuera)]
+            muodosta-xml (fn []
+                           (tarkista-maksueran-tiedot maksuera)
+                           (maksuera-sanoma/maksuera-xml maksuera))]
         (try
           (jms-lahettaja muodosta-xml viesti-id)
           (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
