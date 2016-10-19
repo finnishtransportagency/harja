@@ -206,7 +206,8 @@ WHERE tyyppi = :tyyppi :: maksueratyyppi;
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi, likainen, luotu)
 VALUES (:toimenpideinstanssi, :tyyppi :: maksueratyyppi, :nimi, TRUE, current_timestamp);
 
--- name: onko-olemassa
+-- name: onko-olemassa?
+-- single?: true
 SELECT exists(SELECT numero
               FROM maksuera
               WHERE numero = :numero :: BIGINT);

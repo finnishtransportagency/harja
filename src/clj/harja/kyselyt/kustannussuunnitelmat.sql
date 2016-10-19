@@ -66,7 +66,8 @@ FROM maksuera m
 WHERE m.numero = :maksuera
 GROUP BY Extract(YEAR FROM yht.alkupvm);
 
--- name: onko-olemassa
+-- name: onko-olemassa?
+-- single?: true
 SELECT exists(SELECT maksuera
               FROM kustannussuunnitelma
               WHERE maksuera = :numero :: BIGINT);
