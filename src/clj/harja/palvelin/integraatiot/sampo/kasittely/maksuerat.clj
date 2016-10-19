@@ -10,7 +10,8 @@
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID)))
 
@@ -73,11 +74,11 @@
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 
 (defn tarkista-maksueran-tiedot [{:keys [toimenpideinstanssi numero]}]
-  (when-not (:talousosastopolku toimenpideinstanssi)
+  (when (str/blank? (:talousosastopolku toimenpideinstanssi))
     (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu talousosastopolku. Maksuerää ei voi lähettää." numero)]
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-talousosastopolku :viesti virheviesti}]})))
-  (when-not (:tuotepolku toimenpideinstanssi)
+  (when (str/blank?(:tuotepolku toimenpideinstanssi))
     (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu tuotepolku. Maksuerää ei voi lähettää." numero)]
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-tuotepolku :viesti virheviesti}]}))))
@@ -106,7 +107,7 @@
         (try
           (jms-lahettaja muodosta-xml viesti-id)
           (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-          (log/error (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
+          (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
 
           (catch Exception e
             (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
