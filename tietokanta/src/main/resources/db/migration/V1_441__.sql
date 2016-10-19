@@ -1,5 +1,0 @@
-DELETE FROM laskutusyhteenveto_cache;
-ALTER TYPE laskutusyhteenveto_rivi ADD ATTRIBUTE kaikki_paitsi_kht_laskutettu_ilman_korotuksia NUMERIC;
-ALTER TYPE laskutusyhteenveto_rivi ADD ATTRIBUTE kaikki_laskutettu_ilman_korotuksia NUMERIC;
-ALTER TYPE laskutusyhteenveto_rivi ADD ATTRIBUTE kaikki_paitsi_kht_laskutetaan_ilman_korotuksia NUMERIC;
-ALTER TYPE laskutusyhteenveto_rivi ADD ATTRIBUTE kaikki_laskutetaan_ilman_korotuksia NUMERIC;
