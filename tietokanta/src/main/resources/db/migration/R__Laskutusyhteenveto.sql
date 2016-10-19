@@ -115,22 +115,22 @@ DECLARE
   rivi laskutusyhteenveto_rivi;
 BEGIN
 
-  -- Katsotaan löytyykö laskutusyhteenveto jo cachesta
-  SELECT
-    INTO cache rivit
-    FROM laskutusyhteenveto_cache c
-   WHERE c.urakka = ur
-     AND c.alkupvm = aikavali_alkupvm
-     AND c.loppupvm = aikavali_loppupvm;
-
-  IF cache IS NOT NULL THEN
-    RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
-    FOREACH rivi IN ARRAY cache
-    LOOP
-      RETURN NEXT rivi;
-    END LOOP;
-    RETURN;
-  END IF;
+-- Katsotaan löytyykö laskutusyhteenveto jo cachesta
+--   SELECT
+--     INTO cache rivit
+--     FROM laskutusyhteenveto_cache c
+--    WHERE c.urakka = ur
+--      AND c.alkupvm = aikavali_alkupvm
+--      AND c.loppupvm = aikavali_loppupvm;
+--
+--   IF cache IS NOT NULL THEN
+--     RAISE NOTICE 'Käytetään muistettua laskutusyhteenvetoa urakalle % aikavälillä % - %', ur, aikavali_alkupvm, aikavali_loppupvm;
+--     FOREACH rivi IN ARRAY cache
+--     LOOP
+--       RETURN NEXT rivi;
+--     END LOOP;
+--     RETURN;
+--   END IF;
 
   cache := ARRAY[]::laskutusyhteenveto_rivi[];
 
@@ -271,8 +271,10 @@ BEGIN
     FOR sanktiorivi IN SELECT -maara AS maara, perintapvm, indeksi, perintapvm
                          FROM sanktio s
                         WHERE s.toimenpideinstanssi = t.tpi AND
-			      s.perintapvm >= hk_alkupvm AND
-			      s.perintapvm <= aikavali_loppupvm
+                              s.maara IS NOT NULL AND
+                              s.perintapvm >= hk_alkupvm AND
+                              s.perintapvm <= aikavali_loppupvm
+
     LOOP
       SELECT *
         FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM sanktiorivi.perintapvm) :: INTEGER),
@@ -500,6 +502,7 @@ BEGIN
     -- Kustannusten kokonaissummat
     kaikki_paitsi_kht_laskutettu := 0.0;
     kaikki_laskutettu := 0.0;
+
     kaikki_paitsi_kht_laskutetaan := 0.0;
     kaikki_laskutetaan := 0.0;
 
@@ -519,6 +522,7 @@ BEGIN
                                      --Aurasta: myös kok.hint. töiden indeksitarkistus laskettava tähän mukaan
                                      + kht_laskutetaan_ind_korotus;
     kaikki_laskutetaan := kaikki_paitsi_kht_laskutetaan + kht_laskutetaan;
+
 
     RAISE NOTICE '
     Yhteenveto:';
@@ -610,5 +614,133 @@ BEGIN
   INSERT INTO laskutusyhteenveto_cache (urakka, alkupvm, loppupvm, rivit)
   VALUES (ur, aikavali_alkupvm, aikavali_loppupvm, cache);
 
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- Laskutusyhteenveto cachen käsittely
+
+-- Poista hoitokauden muistetut laskutusyhteenvedot
+CREATE OR REPLACE FUNCTION poista_hoitokauden_muistetut_laskutusyht(ur INTEGER, pvm DATE)
+  RETURNS void AS $$
+DECLARE
+  alku DATE;
+  loppu DATE;
+  vuosi INTEGER;
+  kk INTEGER;
+BEGIN
+  vuosi = EXTRACT(YEAR FROM pvm);
+  kk = EXTRACT(MONTH FROM pvm);
+
+  IF kk >= 10 THEN
+    alku := make_date(vuosi, 10, 1);
+    loppu := make_date(vuosi+1, 9, 30);
+  ELSE
+    alku := make_date(vuosi-1, 10, 1);
+    loppu := make_date(vuosi, 9, 30);
+  END IF;
+  RAISE NOTICE 'Poistetaan urakan % muistetut laskutusyhteenvedot % - %', ur, alku, loppu;
+  DELETE FROM laskutusyhteenveto_cache
+  WHERE urakka = ur AND alkupvm >= alku AND loppupvm <= loppu;
+
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Poista muistetut laskutusyhteenvedot kun indeksejä muokataan
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_ind() RETURNS trigger AS $$
+DECLARE
+  alku DATE;
+  loppu DATE;
+BEGIN
+  IF NEW.kuukausi >= 10 THEN
+    -- Jos kuukausi on: loka - joulu, poista tästä seuraavan vuoden
+    -- syyskuuhun asti (nykyisen hoitokauden loppuun)
+    alku := make_date(NEW.vuosi, 10, 1);
+    loppu := make_date(NEW.vuosi+1, 9, 30);
+  ELSE
+    -- Jos kuukausi on: tammi - syys, poista edellisen vuoden
+    -- lokakuusta tämän vuoden syyskuuhun asti
+    alku := make_date(NEW.vuosi-1, 10, 1);
+    loppu := make_date(NEW.vuosi, 9, 30);
+  END IF;
+  RAISE NOTICE 'Poistetaan muistetut laskutusyhteenvedot % - %', alku, loppu;
+  DELETE FROM laskutusyhteenveto_cache
+  WHERE alkupvm >= alku
+        AND loppupvm <= loppu;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Poista muistetut laskutusyhteenvedot kun toteuma muuttuu.
+-- Kun toteuma, joka ei ole kokonaishintaista työtä, muuttuu,
+-- poista sen toteumakuukauden laskutusyhteenveto.
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_tot() RETURNS trigger AS $$
+BEGIN
+  PERFORM poista_hoitokauden_muistetut_laskutusyht(NEW.urakka, NEW.alkanut::DATE);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Kun sanktio muuttuu, poista sen perintäpäivän kuukauden laskutusyhteenveto
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_sanktio() RETURNS trigger AS $$
+DECLARE
+  ur INTEGER;
+BEGIN
+  SELECT INTO ur urakka
+  FROM toimenpideinstanssi tpi
+  WHERE tpi.id = NEW.toimenpideinstanssi;
+
+  PERFORM poista_hoitokauden_muistetut_laskutusyht(ur, NEW.perintapvm);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Kun kokonaishintaisen työn suunnitelma muuttuu, poista muistetut
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_kht() RETURNS trigger AS $$
+DECLARE
+  maksupvm DATE;
+  ur INTEGER;
+  tpi_id INTEGER;
+BEGIN
+  IF TG_OP != 'DELETE' THEN
+    maksupvm := NEW.maksupvm;
+    tpi_id := NEW.toimenpideinstanssi;
+  ELSE
+    maksupvm := OLD.maksupvm;
+    tpi_id := OLD.toimenpideinstanssi;
+  END IF;
+
+  IF maksupvm IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT INTO ur urakka
+  FROM toimenpideinstanssi tpi
+  WHERE tpi.id = tpi_id;
+
+  PERFORM poista_hoitokauden_muistetut_laskutusyht(ur, maksupvm);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Jos suolasakon parametrit muuttuvat, poistetaan hoitokauden laskutusyhteenvedot
+CREATE OR REPLACE FUNCTION poista_muistetut_laskutusyht_suola() RETURNS trigger AS $$
+DECLARE
+  alku DATE;
+  loppu DATE;
+BEGIN
+  alku := make_date(NEW.hoitokauden_alkuvuosi, 10, 1);
+  loppu := make_date(NEW.hoitokauden_alkuvuosi+1, 9, 30);
+  DELETE
+  FROM laskutusyhteenveto_cache
+  WHERE urakka = NEW.urakka
+        AND alkupvm >= alku
+        AND loppupvm <= loppu;
+  RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
