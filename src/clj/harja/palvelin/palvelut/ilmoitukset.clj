@@ -182,14 +182,13 @@
     ilmoitukset)))
 
 (defn hae-ilmoitus [db user id]
-  (let [kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)]
-    (first
-      (konv/sarakkeet-vektoriin
-        (into []
-              ilmoitus-xf
-              (q/hae-ilmoitus db {:id id
-                                  :urakat kayttajan-urakat}))
-        {:kuittaus :kuittaukset}))))
+  (let [tulos (first
+                (konv/sarakkeet-vektoriin
+                  (into []
+                        ilmoitus-xf
+                        (q/hae-ilmoitus db {:id id}))
+                  {:kuittaus :kuittaukset}))]
+    (when (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset (:urakka tulos) user) tulos)))
 
 (defn tallenna-ilmoitustoimenpide [db tloik _
                                    {:keys [ilmoituksen-id
