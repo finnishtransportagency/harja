@@ -112,7 +112,7 @@
   ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
   [bs/panel
    {:class "kuittaus-viesti"}
-   (capitalize (name (:kuittaustyyppi kuittaus)))
+   (apurit/kuittaustyypin-otsikko (:kuittaustyyppi kuittaus))
    [:span
 
     ^{:key "kuitattu"}

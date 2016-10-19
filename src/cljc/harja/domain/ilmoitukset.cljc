@@ -11,11 +11,22 @@
 (def kuittaustyypit
   [:vastaanotto :aloitus :lopetus :muutos :vastaus])
 
+(defn valitysviesti? [kuittaus]
+  (#{:valitys} (:kuittaustyyppi kuittaus)))
+
 (def tilan-selite
   {:kuittaamaton "Kuittaamaton"
    :vastaanotettu "Vastaanotettu"
    :aloitettu "Aloitettu"
    :lopetettu "Lopetettu"})
+
+(def kuittaustyypin-otsikko
+  {:vastaanotto "Vastaanotto"
+   :aloitus "Aloitus"
+   :lopetus "Lopetus"
+   :muutos "Muutos"
+   :vastaus "Vastaus"
+   :valitys "Välitys"})
 
 (def kuittaustyypin-selite
   {:kuittaamaton "Kuittaamaton"
