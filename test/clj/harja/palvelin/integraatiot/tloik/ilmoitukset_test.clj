@@ -153,8 +153,22 @@
 (deftest tarkista-ilmoituksen-lahettaminen-valaistusurakalle
   "Tarkistaa että ilmoitus ohjataan oikein valaistusurakalle"
   (tuo-valaistusilmoitus)
-
   (is (= (first (q "select id from urakka where nimi = 'Oulun valaistuksen palvelusopimus 2013-2018';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 987654321;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
   (poista-valaistusilmoitus))
+
+(deftest tarkista-urakan-paattely-kun-alueella-ei-hoidon-urakkaa
+  "Tarkistaa että ilmoitukselle saadaan pääteltyä urakka, kun ilmoitus on 10 km säteellä lähimmästä alueurakasta"
+  (let [sanoma +ilmoitus-hailuodon-jaatiella+
+        viestit (atom [])]
+    (sonja/kuuntele (:sonja jarjestelma) +tloik-ilmoituskuittausjono+
+                    #(swap! viestit conj (.getText %)))
+    (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ sanoma)
+
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+
+    (is (= (first (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+           (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
+        "Urakka on asetettu tyypin ja sijainnin mukaan oikein käynnissäolevaksi Oulun alueurakaksi 2014-2019.")
+    (poista-ilmoitus)))

@@ -12,7 +12,7 @@
 
 (defn luo-tai-paivita-tarkastus
   "Luo uuden tai päivittää tarkastuksen ja palauttaa id:n."
-  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti
+  [db user urakka-id {:keys [id lahde aika tr tyyppi tarkastaja sijainti
                              ulkoinen-id havainnot laadunalitus yllapitokohde
                              nayta-urakoitsijalle] :as tarkastus}]
   (log/debug "Tallenna tai päivitä urakan " urakka-id " tarkastus: " tarkastus)
@@ -26,7 +26,7 @@
       (do
         (log/debug "Luodaan uusi tarkastus")
         (luo-tarkastus<! db
-                         "harja-ui"
+                         lahde
                          urakka-id (konv/sql-timestamp aika)
                          (:numero tr) (:alkuosa tr) (:alkuetaisyys tr)
                          (:loppuosa tr) (:loppuetaisyys tr)
