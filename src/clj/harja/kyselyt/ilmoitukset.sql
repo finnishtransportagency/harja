@@ -147,6 +147,8 @@ SELECT
   it.vakiofraasi                           AS kuittaus_vakiofraasi,
   it.vapaateksti                           AS kuittaus_vapaateksti,
   it.kuittaustyyppi                        AS kuittaus_kuittaustyyppi,
+  it.kanava                                AS kuittaus_kanava,
+  it.suunta                                AS kuittaus_suunta,
 
   it.kuittaaja_henkilo_etunimi             AS kuittaus_kuittaaja_etunimi,
   it.kuittaaja_henkilo_sukunimi            AS kuittaus_kuittaaja_sukunimi,

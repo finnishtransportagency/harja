@@ -21,6 +21,8 @@
     (harja.geo/muunna-pg-tulokset :sijainti)
     (map konv/alaviiva->rakenne)
     (map #(konv/string->keyword % :tila))
+    (map #(konv/string->keyword % [:kuittaus :suunta]))
+    (map #(konv/string->keyword % [:kuittaus :kanava]))
     (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
     (map #(konv/array->vec % :selitteet))
     (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
