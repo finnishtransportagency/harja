@@ -211,7 +211,8 @@
                 [:button.nappi-ensisijainen.nappi-grid
                  (merge
                    (when (and (contains? kuittausta-odottavat maksueranumero)
-                              (not maksuera-odottanut-liian-kauan))
+                              (not maksuera-odottanut-liian-kauan)
+                              (not kustannussuunnitelma-odottanut-liian-kauan))
                      {:disabled true})
                    {:type "button"
                     :on-click #(laheta-maksuerat #{maksueranumero})})
