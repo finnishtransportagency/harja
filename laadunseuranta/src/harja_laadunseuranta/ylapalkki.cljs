@@ -15,7 +15,8 @@
 
 (defn logo []
   [:div.logo
-   (when (utils/kehitysymparistossa?)
+   (when (or (utils/kehitysymparistossa?)
+             (utils/stg-ymparistossa?))
      [:span#testiharja "TESTI"])
    [:picture {:on-click logo-klikattu}
     [:source {:srcSet kuvat/+harja-logo-ilman-tekstia+ :type "image/svg+xml"
@@ -44,7 +45,8 @@
                                     keskita-ajoneuvoon disabloi-kaynnistys? valittu-urakka
                                     palvelinvirhe]}]
   [:div
-   [:div.ylapalkki {:class (when (utils/kehitysymparistossa?) "testiharja")}
+   [:div.ylapalkki {:class (when (or (utils/kehitysymparistossa?)
+                                     (utils/stg-ymparistossa?)) "testiharja")}
     [:div.ylapalkki-vasen
      [logo]
      [:div#karttakontrollit]
