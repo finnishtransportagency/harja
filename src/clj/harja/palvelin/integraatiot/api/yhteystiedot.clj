@@ -11,22 +11,24 @@
             [harja.palvelin.komponentit.fim :as fim]
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
-            [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
+            [harja.kyselyt.kayttajat :as kayttajat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
-(defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
-  ;; tarkista, että käyttäjän organisaatio on Liikennevirasto, jos ei heitä poikkeus
-
-  (when-not (yhteyshenkilot/liikenneviraston-jarjestelma? db (:kayttajatunnus kayttaja)))
-  (if-let [{id :id sampoid :sampoid} (urakat/hae-urakka-urakkanumerolla db urakkanro)]
-    (let [fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim sampoid)
-          harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db id)])
+(defn tarkista-kutsu [db kayttaja urakkanro]
+  (when-not (kayttajat/liikenneviraston-jarjestelma? db (:kayttajatunnus kayttaja))
+    (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+}))
+  (when-not (urakat/onko-olemassa-urakkanro? db urakkanro)
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+tuntematon-urakka-koodi+
                         :viesti (format "Urakkanumerolla: %s ei löydy urakkaa Harjassa." urakkanro)}]})))
 
-
+(defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
+  (tarkista-kutsu db kayttaja urakkanro )
+  (let [{id :id sampoid :sampoid} (urakat/hae-urakka-urakkanumerolla db urakkanro)
+        fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim sampoid)
+        harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db id)]
+    ))
 
 (defrecord Yhteystiedot []
   component/Lifecycle

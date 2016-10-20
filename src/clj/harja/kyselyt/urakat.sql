@@ -557,5 +557,10 @@ WHERE urakkanro = :urakkanro AND
       alkupvm <= now() AND
       loppupvm > now();
 
+-- name: onko-olemassa-urakkanro?
+-- single?: true
+SELECT exists(SELECT id
+              FROM urakka
+              WHERE urakkanro = :urakkanro);
 
 
