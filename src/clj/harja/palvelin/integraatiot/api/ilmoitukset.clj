@@ -29,28 +29,31 @@
 (defn tee-onnistunut-ilmoitustoimenpidevastaus []
   (tee-kirjausvastauksen-body {:ilmoitukset "Ilmoitustoimenpide kirjattu onnistuneesti"}))
 
-(defn luo-ilmoitustoimenpide [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi vapaateksti]
+(defn luo-ilmoitustoimenpide
+  [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi vapaateksti suunta kanava]
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
-         {:ilmoitus id
-          :ilmoitusid ilmoitusid
-          :kuitattu (aika-string->java-sql-date (:aika ilmoitustoimenpide))
-          :vakiofraasi nil
-          :vapaateksti vapaateksti
-          :kuittaustyyppi kuittaustyyppi
-          :kuittaaja_henkilo_etunimi (get-in ilmoittaja [:henkilo :etunimi])
-          :kuittaaja_henkilo_sukunimi (get-in ilmoittaja [:henkilo :sukunimi])
-          :kuittaaja_henkilo_matkapuhelin (get-in ilmoittaja [:henkilo :matkapuhelin])
-          :kuittaaja_henkilo_tyopuhelin (get-in ilmoittaja [:henkilo :tyopuhelin])
-          :kuittaaja_henkilo_sahkoposti (get-in ilmoittaja [:henkilo :sahkoposti])
-          :kuittaaja_organisaatio_nimi (get-in ilmoittaja [:organisaatio :nimi])
-          :kuittaaja_organisaatio_ytunnus (get-in ilmoittaja [:organisaatio :ytunnus])
-          :kasittelija_henkilo_etunimi (get-in kasittelija [:henkilo :etunimi])
-          :kasittelija_henkilo_sukunimi (get-in kasittelija [:henkilo :sukunimi])
+         {:ilmoitus                         id
+          :ilmoitusid                       ilmoitusid
+          :kuitattu                         (aika-string->java-sql-date (:aika ilmoitustoimenpide))
+          :vakiofraasi                      nil
+          :vapaateksti                      vapaateksti
+          :kuittaustyyppi                   kuittaustyyppi
+          :suunta                           suunta
+          :kanava                           kanava
+          :kuittaaja_henkilo_etunimi        (get-in ilmoittaja [:henkilo :etunimi])
+          :kuittaaja_henkilo_sukunimi       (get-in ilmoittaja [:henkilo :sukunimi])
+          :kuittaaja_henkilo_matkapuhelin   (get-in ilmoittaja [:henkilo :matkapuhelin])
+          :kuittaaja_henkilo_tyopuhelin     (get-in ilmoittaja [:henkilo :tyopuhelin])
+          :kuittaaja_henkilo_sahkoposti     (get-in ilmoittaja [:henkilo :sahkoposti])
+          :kuittaaja_organisaatio_nimi      (get-in ilmoittaja [:organisaatio :nimi])
+          :kuittaaja_organisaatio_ytunnus   (get-in ilmoittaja [:organisaatio :ytunnus])
+          :kasittelija_henkilo_etunimi      (get-in kasittelija [:henkilo :etunimi])
+          :kasittelija_henkilo_sukunimi     (get-in kasittelija [:henkilo :sukunimi])
           :kasittelija_henkilo_matkapuhelin (get-in kasittelija [:henkilo :matkapuhelin])
-          :kasittelija_henkilo_tyopuhelin (get-in kasittelija [:henkilo :tyopuhelin])
-          :kasittelija_henkilo_sahkoposti (get-in kasittelija [:henkilo :sahkoposti])
-          :kasittelija_organisaatio_nimi (get-in kasittelija [:organisaatio :nimi])
+          :kasittelija_henkilo_tyopuhelin   (get-in kasittelija [:henkilo :tyopuhelin])
+          :kasittelija_henkilo_sahkoposti   (get-in kasittelija [:henkilo :sahkoposti])
+          :kasittelija_organisaatio_nimi    (get-in kasittelija [:organisaatio :nimi])
           :kasittelija_organisaatio_ytunnus (get-in kasittelija [:organisaatio :ytunnus])})))
 
 (defn kirjaa-ilmoitustoimenpide [db tloik parametrit
@@ -62,11 +65,11 @@
 
     (when (and (= tyyppi "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
       (let [aloitus-kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija
-                                                        "vastaanotto" "Vastaanotettu")]
+                                                        "vastaanotto" "Vastaanotettu" "sisaan" "ulkoinen jarjestelma")]
         (tloik/laheta-ilmoitustoimenpide tloik aloitus-kuittaus-id)))
 
     (let [kuittaus-id (luo-ilmoitustoimenpide db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija tyyppi
-                                              vapaateksti)]
+                                              vapaateksti "sisaan" "ulkoinen jarjestelma")]
       (tloik/laheta-ilmoitustoimenpide tloik kuittaus-id))
 
     (tee-onnistunut-ilmoitustoimenpidevastaus)))
