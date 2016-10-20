@@ -111,15 +111,19 @@
 (defn kuittauksen-tiedot [kuittaus]
   ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
   [bs/panel
-   {:class "kuittaus-viesti"}
-   (apurit/kuittaustyypin-otsikko (:kuittaustyyppi kuittaus))
+   {:class (if (apurit/valitysviesti? kuittaus) "valitys-viesti" "kuittaus-viesti")}
+   [:span (str (apurit/kuittaustyypin-otsikko (:kuittaustyyppi kuittaus)) " ") (if (apurit/valitysviesti? kuittaus)
+                                                                 (ikonit/livicon-upload)
+                                                                 (ikonit/livicon-download))]
    [:span
 
     ^{:key "kuitattu"}
     [yleiset/tietoja {}
      "Kuitattu: " (pvm/pvm-aika-sek (:kuitattu kuittaus))
      "Vakiofraasi: " (:vakiofraasi kuittaus)
-     "Vapaateksti: " (:vapaateksti kuittaus)]
+     ;; Välitysviestien tapauksessa vapaatekstissä on viestin määrämittainen raakadata, eli sähköpostin tapauksessa
+     ;; HTML:ää. Ei näytetä sitä turhaan, tärkeää on joka tapauksessa tieto, kenelle välitysviesti on lähtenyt
+     "Vapaateksti: " (when-not (apurit/valitysviesti? kuittaus) (:vapaateksti kuittaus))]
     [:br]
     ^{:key "kuittaaja"}
     [yleiset/tietoja {}
