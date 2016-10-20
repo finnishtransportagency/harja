@@ -55,6 +55,9 @@
 (defmethod erikoiskentta :arvo-ja-osuus [arvo-ja-osuus]
   (:arvo (second arvo-ja-osuus)))
 
+(defmethod erikoiskentta :varillinen-teksti [arvo-ja-vari]
+  (:arvo (second arvo-ja-vari)))
+
 (defmethod erikoiskentta :info [solu] (raportti-domain/virheen-viesti solu))
 (defmethod erikoiskentta :varoitus [solu] (raportti-domain/virheen-viesti solu))
 (defmethod erikoiskentta :virhe [solu] (raportti-domain/virheen-viesti solu))
