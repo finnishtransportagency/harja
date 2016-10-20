@@ -72,7 +72,9 @@
   (try
     (let [nimi (:otsikko optiot)
           aiempi-sheet (last (excel/sheet-seq workbook))
-          [sheet nolla] (if (and (nil? nimi) aiempi-sheet)
+          [sheet nolla] (if (and (nil? (:sheet-nimi optiot))
+                                 (nil? nimi)
+                                 aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName

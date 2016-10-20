@@ -1,0 +1,59 @@
+/* ---------- kuvan esikatselu ---------- */
+.kaynnistyspainike {
+    position: absolute;
+    right: 0;
+    top: 0px;
+    width: 220px;
+    height: 70px;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 70px;
+    color: white;
+    background-color: rgb(86,198,84);
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: center;
+}
+
+.kaynnistyspainike span {
+    margin-right: 10px;
+}
+
+.kaynnissa {
+    background-color: rgb(208,0,5);
+}
+
+@keyframes nappula-flash {
+    0% { background-color: red; }
+    100%   { background-color: #000; }
+}
+
+@-webkit-keyframes nappula-flash {
+    0% { background-color: red; }
+    100%   { background-color: #000; }
+}
+
+.blink {
+    animation-name: nappula-flash;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    -webkit-animation-name: nappula-flash;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: ease-in-out;
+}
+
+.pikavalinta-footer {
+    position: absolute;
+    bottom: 65px;
+    padding-top: 5px;
+    height: 70px;
+    z-index: 2000;
+    right: 0;
+}
+
+.logo {
+    padding: 12px;
+    width: 150px;
+}

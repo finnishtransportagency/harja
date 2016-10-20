@@ -95,8 +95,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                    (str uusien-toimenpidepyyntojen-maara " uutta toimenpidepyyntöä\n")))
                (when (> uusien-tiedoituksien-maara 0)
                  (if (= uusien-tiedoituksien-maara 1)
-                   "1 uusi tiedoitus\n"
-                   (str uusien-tiedoituksien-maara " uutta tiedoitusta\n")))
+                   "1 uusi tiedotus\n"
+                   (str uusien-tiedoituksien-maara " uutta tiedotusta\n")))
                (when (> uusien-kyselyjen-maara 0)
                  (if (= uusien-kyselyjen-maara 1)
                    "1 uusi kysely\n"
