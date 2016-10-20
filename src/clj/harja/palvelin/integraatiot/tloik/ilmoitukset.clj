@@ -48,6 +48,8 @@
                                         :vakiofraasi nil
                                         :vapaateksti nil
                                         :kuittaustyyppi "vastaanotto"
+                                        :suunta "sisaan"
+                                        :kanava "harja"
                                         :kuittaaja_henkilo_etunimi nil
                                         :kuittaaja_henkilo_sukunimi nil
                                         :kuittaaja_henkilo_matkapuhelin nil
