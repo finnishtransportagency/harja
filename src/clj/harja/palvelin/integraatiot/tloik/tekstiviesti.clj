@@ -86,7 +86,9 @@
                        ilmoitusid
                        vapaateksti
                        toimenpide
-                       paivystaja))]
+                       paivystaja
+                       "sisaan"
+                       "sms"))]
 
       (when (and (= toimenpide "aloitus") (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitusid)))
         (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
@@ -159,7 +161,17 @@
         (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
                              db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
               viesti (ilmoitus-tekstiviesti ilmoitus viestinumero)]
-          (sms/laheta sms puhelinnumero viesti)))
+          (sms/laheta sms puhelinnumero viesti)
+
+          (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
+            db
+            (:id ilmoitus)
+            (:ilmoitus-id ilmoitus)
+            viesti
+            "valitys"
+            paivystaja
+            "ulos"
+            "sms")))
       (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
     (catch Exception e
       (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))
