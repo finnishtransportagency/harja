@@ -39,6 +39,7 @@ schemas:
  - aikataulun-kirjaus-request: !include schemas/aikataulun-kirjaus-request.schema.json
  - suljetun-tieosuuden-kirjaus-request: !include schemas/suljetun-tieosuuden-kirjaus-request.schema.json
  - suljetun-tieosuuden-poisto-request: !include schemas/suljetun-tieosuuden-poisto-request.schema.json
+ - urakan-yhteystietojen-haku-response: !include schemas/urakan-yhteystietojen-haku-response.schema.json
 
 securitySchemes:
  - basic:
@@ -579,6 +580,29 @@ documentation:
                     application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
+  /yhteystiedot:
+    /{alueurakkanumero}:
+      get:
+        is: [secured]
+        description: Urakan yhteystietojen haku alueurakkanumerolla. Palauttaa urakan yhteystiedot sekä yhteyshenkiöt
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/urakan-yhteystietojen-haku-response.json
+                schema: urakan-yhteystietojen-haku-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+
+
 /varusteet:
   is: [secured]
   /haku:
