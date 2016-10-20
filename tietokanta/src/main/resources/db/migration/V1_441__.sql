@@ -5,8 +5,8 @@ CREATE TYPE viestisuunta AS ENUM (
 CREATE TYPE viestikanava AS ENUM (
   'sahkoposti',
   'sms',
-  'harja-api',
-  'harja-ui'
+  'ulkoinen jarjestelma',
+  'harja'
 );
 
 ALTER TYPE kuittaustyyppi RENAME TO kuittaustyyppi_;
