@@ -6,7 +6,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.asiakas.tapahtumat :as t]))
 
-(def sahkoposti "harja.palaute@solita.fi")
+(def sahkoposti "harjapalaute@solita.fi")
 
 ;; Huomaa että rivinvaihto tulee mukaan tekstiin
 (def palaute-otsikko

@@ -1,8 +1,14 @@
 (ns harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma
   (:require [hiccup.core :refer [html]]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tyokalut.xml :as xml]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [taoensso.timbre :as log])
+  (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util Date Calendar)))
+
+(def +xsd-polku+ "xsd/sampo/outbound/")
 
 (defn muodosta-kulu-id []
   (str/join "" ["kulu"
@@ -10,19 +16,19 @@
                   (.setTime calendar (Date.))
                   (.get calendar Calendar/YEAR))]))
 
-(defn muodosta-maksueranumero [numero]
+(defn maksueranumero [numero]
   (str/join "" ["HA" numero]))
 
-(defn muodosta-instance-code [numero]
+(defn instance-code [numero]
   (str/join "" ["AL" numero]))
 
-(defn luo-custom-information [values & content]
+(defn custom-information [values & content]
   [:CustomInformation
    (for [[key value] values]
      [:ColumnValue {:name key} value])
    content])
 
-(defn paattele-tyyppi [tyyppi]
+(defn maksueratyyppi [tyyppi]
   (case tyyppi
     "yksikkohintainen" 6
     "kokonaishintainen" 2
@@ -33,11 +39,11 @@
     "akillinen-hoitotyo" 10
     99))
 
-(defn muodosta [maksuera]
+(defn maksuera-hiccup [maksuera]
   (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto talousosastopolku tuotepolku sampoid]} (:toimenpideinstanssi maksuera)
-        maksueranumero (muodosta-maksueranumero (:numero maksuera))
+        maksueranumero (maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
-        instance-code (muodosta-instance-code (:numero maksuera))]
+        instance-code (instance-code (:numero maksuera))]
 
     [:NikuDataBus
      [:Header {:objectType "product" :action "write" :externalSource "NIKU" :version "8.0"}]
@@ -71,21 +77,33 @@
                              :name     "Sijainti"}]
         [:OBSAssoc#tuote2013 {:unitPath tuotepolku
                               :name     "Tuoteryhma/Tuote"}]]
-       (luo-custom-information {"vv_tilaus"      (:sampoid (:sopimus maksuera))
+       (custom-information {"vv_tilaus"      (:sampoid (:sopimus maksuera))
                                 "vv_inst_no"     (:numero maksuera)
                                 "vv_code"        maksueranumero
-                                "vv_me_type"     (paattele-tyyppi (:tyyppi (:maksuera maksuera)))
+                                "vv_me_type"     (maksueratyyppi (:tyyppi (:maksuera maksuera)))
                                 "vv_type"        "me"
                                 "vv_status"      "2"
                                 "travel_cost_ok" "false"}
-                               [:instance {:parentInstanceCode maksueranumero
+                           [:instance {:parentInstanceCode maksueranumero
                                            :parentObjectCode   "Product"
                                            :objectCode         "vv_invoice_receipt"
                                            :instanceCode       instance-code}
-                                (luo-custom-information {"code"                 instance-code
+                                (custom-information {"code"                 instance-code
                                                          ;; PENDING: Taloushallinnosta pitää kertoa mikä on oikea maksupäivä.
                                                          ;; Nyt maksuerät ovat koko urakan ajan kestoisia.
                                                          "vv_payment_date"      (pvm/aika-iso8601 (Date.))
                                                          "vv_paym_sum"          (:summa (:maksuera maksuera))
                                                          "vv_paym_sum_currency" "EUR"
                                                          "name"                 "Laskutus- ja maksutiedot"})])]]]))
+
+(defn maksuera-xml [maksuera]
+  (let[xml (xml/tee-xml-sanoma (maksuera-hiccup maksuera))]
+    (if (xml/validi-xml? +xsd-polku+ "nikuxog_product.xsd" xml)
+      xml
+      (let [virheviesti (format "Maksuerää ei voida lähettää. Maksuerä XML ei ole validi. XML: %s" xml)]
+        (log/error virheviesti)
+        (throw+ {:type virheet/+invalidi-xml+
+                 :virheet [{:koodi :invalidi-maksuera-xml :viesti virheviesti}]})))))
+
+
+

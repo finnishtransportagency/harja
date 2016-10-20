@@ -30,6 +30,11 @@
    [:span " "]
    [:span.osuus (str "(" (:osuus arvo-ja-osuus) "%)")]])
 
+(defmethod muodosta-html :varillinen-teksti [[_ arvo-ja-vari]]
+  [:span.varillinen-teksti
+   [:span.arvo {:style {:color (or (:vari arvo-ja-vari) "rgb(25,25,25)")}}
+    (:arvo arvo-ja-vari)]])
+
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                tyhja
@@ -53,30 +58,29 @@
                 :piilota-toiminnot? true}
      (into []
            (map-indexed (fn [i sarake]
-                          (merge
-                            {:hae                #(get % i)
-                             :leveys             (:leveys sarake)
-                             :otsikko            (:otsikko sarake)
-                             :reunus             (:reunus sarake)
-                             :pakota-rivitys?    (:pakota-rivitys? sarake)
-                             :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                                      (case (:tasaa-otsikko sarake)
-                                                        :keskita " grid-header-keskita"
-                                                        :oikea " grid-header-oikea"
-                                                        ""))
-                             :nimi               (str "sarake" i)
-                             :fmt                (formatter sarake)
-                             ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                             :tyyppi             (if (:tyyppi sarake)
-                                                   :komponentti
-                                                   :string)
-                             :tasaa              (if (oikealle-tasattavat-kentat i)
-                                                   :oikea
-                                                   (:tasaa sarake))}
-                            (when (:tyyppi sarake)
-                              {:komponentti (fn [rivi]
-                                              (let [elementti (get rivi i)]
-                                                (muodosta-html elementti)))})))
+                          {:hae                #(get % i)
+                           :leveys             (:leveys sarake)
+                           :otsikko            (:otsikko sarake)
+                           :reunus             (:reunus sarake)
+                           :pakota-rivitys?    (:pakota-rivitys? sarake)
+                           :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
+                                                    (case (:tasaa-otsikko sarake)
+                                                      :keskita " grid-header-keskita"
+                                                      :oikea " grid-header-oikea"
+                                                      ""))
+                           :nimi               (str "sarake" i)
+                           :fmt                (formatter sarake)
+                           ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
+                           :tyyppi :komponentti
+                           :tasaa              (if (oikealle-tasattavat-kentat i)
+                                                 :oikea
+                                                 (:tasaa sarake))
+
+                           :komponentti        (fn [rivi]
+                                                 (let [elementti (get rivi i)]
+                                                   (if (vector? elementti)
+                                                     (muodosta-html elementti)
+                                                     (str elementti))))})
                         sarakkeet))
      (if (empty? data)
        [(grid/otsikko (or tyhja "Ei tietoja"))]

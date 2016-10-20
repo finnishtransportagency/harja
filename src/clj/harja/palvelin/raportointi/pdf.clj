@@ -50,6 +50,13 @@
      [:fo:inline " "]
      [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " (:osuus tiedot) "%)")]]))
 
+(defmethod muodosta-pdf :varillinen-teksti [arvo-ja-vari]
+  (let [tiedot (second arvo-ja-vari)]
+    [:fo:inline
+     [:fo:inline {:color (or (:vari tiedot) "black")}
+      (:arvo tiedot)]]))
+
+
 (def alareuna
   {:border-bottom reunan-tyyli})
 
