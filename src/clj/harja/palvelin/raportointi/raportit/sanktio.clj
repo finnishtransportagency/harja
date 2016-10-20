@@ -248,10 +248,10 @@
                                                     (str (:elynumero alue) " " (:nimi alue))
                                                     (:nimi alue))
                                          :leveys 15
-                                         :fmt :numero})
+                                         :fmt :raha})
                                       naytettavat-alueet)
                                     (when yhteensa-sarake?
-                                      [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :numero}])))
+                                      [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :raha}])))
         raportin-rivit (when (> (count naytettavat-alueet) 0)
                          (raporttirivit sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?}))
         raportin-nimi "Sanktioiden yhteenveto"
