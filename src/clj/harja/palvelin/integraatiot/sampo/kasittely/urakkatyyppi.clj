@@ -17,7 +17,7 @@
   ;; Ensimmäinen kirjain kertoo yläkategorian (tie, rata, vesi)
   ;; Toinen kirjain määrittää kuuluuko urakka hoitoon vai ylläpitoon
   ;; Kolmas kirjain määrittää lopulta palautettavan urakkatyypin (hoito, päällystys, tiemerkintä...)
-  (if (< 1 (count tyypite))
+  (if (< 1 (count tyypit))
     (let [tunniste (str/upper-case (subs tyypit 1 2))
           virhe (format "Samposta luettiin sisään ylläpidon urakka tuntemattomalla alityypillä. Tyypit: %s." tyypit)]
       (case tunniste
