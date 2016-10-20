@@ -11,7 +11,6 @@
             [harja.geo :as geo]
             [harja.fmt :as fmt]))
 
-
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
   otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 
