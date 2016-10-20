@@ -166,20 +166,18 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
 
 (defn ls-index-kasittelija [kehitysmoodi req]
   (let [uri (:uri req)
-        harjan-alla? (str/starts-with? uri "/harja")
-        oikea-kohde (if harjan-alla?
-                      "/harja/laadunseuranta/"
-                      "/laadunseuranta/")]
+        ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
+        oikea-kohde "/harja/laadunseuranta/"]
     (cond
-      (or (= uri "/laadunseuranta") (= uri "/harja/laadunseuranta"))
+      (= uri "/laadunseuranta")
       {:status 301
        :headers {"Location" oikea-kohde}}
 
-      (or (= uri "/laadunseuranta/index.html") (= uri "/harja/laadunseuranta/index.html"))
+      (= uri "/laadunseuranta/index.html")
       {:status 301
        :headers {"Location" oikea-kohde}}
 
-      (or (= uri "/laadunseuranta/") (= uri "/harja/laadunseuranta/"))
+      (= uri "/laadunseuranta/")
       {:status  200
        :headers {"Content-Type"  "text/html"
                  "Cache-Control" "no-cache, no-store, must-revalidate"
@@ -187,7 +185,7 @@ Valinnainen optiot parametri on mäppi, joka voi sisältää seuraavat keywordit
                  "Expires"       "0"}
        :body    (index/tee-ls-paasivu kehitysmoodi)}
       :default
-      nil)))
+       nil)))
 
 (defn wrap-anti-forgery
   "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"

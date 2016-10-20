@@ -50,6 +50,7 @@
                    id (tarkastukset/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
                        {:id          tarkastus-id
+                        :lahde       "harja-api"
                         :ulkoinen-id ulkoinen-id
                         :tyyppi      tyyppi
                         :aika        aika
@@ -64,7 +65,8 @@
                         :laadunalitus (let [alitus (:laadunalitus tarkastus)]
                                         (if (nil? alitus)
                                           (not (str/blank? (:havainnot tarkastus)))
-                                          alitus))})
+                                          alitus))
+                        :nayta-urakoitsijalle true})
                    liitteet (:liitteet tarkastus)]
 
                (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)

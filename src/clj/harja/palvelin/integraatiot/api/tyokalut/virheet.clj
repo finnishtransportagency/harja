@@ -21,6 +21,8 @@
 (def +urakkaan-kuulumaton-yllapitokohde+ "urakkaan-kuulumaton-yllapitokohde")
 (def +viallinen-yllapitokohteen-tai-alikohteen-sijainti+ "viallinen-yllapitokohteen-tai-alikohteen-sijainti")
 (def +tietokanta-yhteys-poikki+ "tietokanta-yhteys-poikki")
+(def +tuntematon-kustannussuunnitelma+ "tuntematon-kustannussuunnitelma")
+(def +tuntematon-maksuera+ "tuntematon-maksuera")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")
