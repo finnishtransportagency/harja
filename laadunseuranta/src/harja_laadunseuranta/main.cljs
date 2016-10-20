@@ -49,7 +49,7 @@
 (defn- lisaa-kirjausikoni [teksti]
   (swap! s/kirjauspisteet
          conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-                     :label teksti)))
+                :label teksti)))
 
 (defn- peruuta-pikavalinta []
   (reset! s/pikavalinta nil)
@@ -78,13 +78,13 @@
      [havaintolomake/havaintolomake asetukset/+wmts-url+ asetukset/+wmts-url-kiinteistojaotus+ asetukset/+wmts-url-ortokuva+
       model
       #(do
-         (peruuta-pikavalinta)
-         (reitintallennus/kirjaa-kertakirjaus @s/idxdb % @s/tarkastusajo)
-         (lisaa-kirjausikoni "!")
-         (tallennettu-fn))
+        (peruuta-pikavalinta)
+        (reitintallennus/kirjaa-kertakirjaus @s/idxdb % @s/tarkastusajo)
+        (lisaa-kirjausikoni "!")
+        (tallennettu-fn))
       #(do
-         (peruuta-pikavalinta)
-         (peruutettu-fn))]]))
+        (peruuta-pikavalinta)
+        (peruutettu-fn))]]))
 
 (defn- spinneri [lahettamattomia]
   (when (> @lahettamattomia 0)
@@ -162,74 +162,77 @@
   (let [alivalikot (atom {})]
     (fn []
       [:div.toplevel
-       [ylapalkki/ylapalkkikomponentti {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
-                                        :hoitoluokka s/hoitoluokka
-                                        :soratiehoitoluokka s/soratiehoitoluokka
-                                        :tr-osoite s/tr-osoite
-                                        :kiinteistorajat s/nayta-kiinteistorajat
-                                        :ortokuva s/nayta-ortokuva
-                                        :tallennus-kaynnissa s/tallennus-kaynnissa
-                                        :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
-                                        :keskita-ajoneuvoon s/keskita-ajoneuvoon
-                                        :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
-                                        :valittu-urakka s/valittu-urakka
-                                        :palvelinvirhe s/palvelinvirhe}]
+       [ylapalkki/ylapalkkikomponentti
+        {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
+         :hoitoluokka s/hoitoluokka
+         :soratiehoitoluokka s/soratiehoitoluokka
+         :tr-osoite s/tr-osoite
+         :kiinteistorajat s/nayta-kiinteistorajat
+         :ortokuva s/nayta-ortokuva
+         :tallennus-kaynnissa s/tallennus-kaynnissa
+         :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
+         :keskita-ajoneuvoon s/keskita-ajoneuvoon
+         :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
+         :valittu-urakka s/valittu-urakka
+         :palvelinvirhe s/palvelinvirhe}]
 
-       [kartta/karttakomponentti
-        {:wmts-url asetukset/+wmts-url+
-         :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
-         :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
-         :sijainti-atomi s/kartan-keskipiste
-         :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
-         :reittipisteet-atomi s/reittipisteet
-         :kirjauspisteet-atomi s/kirjauspisteet
-         :optiot s/karttaoptiot}]
+       [:div.paasisalto-container
+        [kartta/karttakomponentti
+         {:wmts-url asetukset/+wmts-url+
+          :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
+          :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
+          :sijainti-atomi s/kartan-keskipiste
+          :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
+          :reittipisteet-atomi s/reittipisteet
+          :kirjauspisteet-atomi s/kirjauspisteet
+          :optiot s/karttaoptiot}]
 
-       [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
+        [:div.paasisalto
+         [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
 
-       (when @s/kirjaamassa-havaintoa
-         [havaintolomake sulje-havaintodialogi sulje-havaintodialogi])
+         (when @s/kirjaamassa-havaintoa
+           [havaintolomake sulje-havaintodialogi sulje-havaintodialogi])
 
-       (when @s/kirjaamassa-yleishavaintoa
-         [havaintolomake yleishavainto-kirjattu sulje-yleishavaintodialogi])
+         (when @s/kirjaamassa-yleishavaintoa
+           [havaintolomake yleishavainto-kirjattu sulje-yleishavaintodialogi])
 
-       (when @s/tarkastusajo-luotava
-         [:div.tarkastusajon-luonti-dialog-container
-          [tarkastusajon-luonti/tarkastusajon-luontidialogi luo-ajo luonti-peruttu]])
+         (when @s/tarkastusajo-luotava
+           [:div.tarkastusajon-luonti-dialog-container
+            [tarkastusajon-luonti/tarkastusajon-luontidialogi luo-ajo luonti-peruttu]])
 
-       (when @s/tarkastusajo-paattymassa
-         [:div.tarkastusajon-luonti-dialog-container
-          [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia paata-ajo paattaminen-peruttu]])
+         (when @s/tarkastusajo-paattymassa
+           [:div.tarkastusajon-luonti-dialog-container
+            [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia paata-ajo paattaminen-peruttu]])
 
-       (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
-         [:div.tarkastusajon-luonti-dialog-container
-          [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi jatka-ajoa pakota-ajon-lopetus]])
+         (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
+           [:div.tarkastusajon-luonti-dialog-container
+            [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi jatka-ajoa pakota-ajon-lopetus]])
 
-       [spinneri s/lahettamattomia]
+         [spinneri s/lahettamattomia]
 
-       [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
+         [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
 
-       (when @s/nayta-sivupaneeli
-         [:div
-          [:div.sivupaneeli-container
-           [pikavalinnat/pikavalintapaneeli s/tr-osoite s/tarkastustyyppi s/havainnot alivalikot
-            laheta-kitkamittaus laheta-kertakirjaus laheta-yleishavainto laheta-lumisuus laheta-tasaisuus laheta-soratiehavainto
-            s/kitkan-keskiarvo s/lumimaara s/tasaisuus s/kiinteys s/polyavyys]]
-          [:div.pikavalinta-footer
-           (when-not (or @s/kirjaamassa-yleishavaintoa
-                         @s/kirjaamassa-havaintoa)
-             [pikavalinnat/lisaa-havainto @s/yleishavainto-kaynnissa
-              #(if %
-                 (do
-                   (reset! s/tr-loppu @s/tr-osoite)
-                   (reset! s/kirjaamassa-yleishavaintoa true))
-                 (reset! s/kirjaamassa-havaintoa true))
-              #(do
-                 (reset! s/tr-alku @s/tr-osoite)
-                 (reset! s/yleishavainto-kaynnissa true))])]])])))
+         (when @s/nayta-sivupaneeli
+           [:div
+            [:div.sivupaneeli-container
+             [pikavalinnat/pikavalintapaneeli s/tr-osoite s/tarkastustyyppi s/havainnot alivalikot
+              laheta-kitkamittaus laheta-kertakirjaus laheta-yleishavainto laheta-lumisuus laheta-tasaisuus laheta-soratiehavainto
+              s/kitkan-keskiarvo s/lumimaara s/tasaisuus s/kiinteys s/polyavyys]]
+            [:div.pikavalinta-footer
+             (when-not (or @s/kirjaamassa-yleishavaintoa
+                           @s/kirjaamassa-havaintoa)
+               [pikavalinnat/lisaa-havainto @s/yleishavainto-kaynnissa
+                #(if %
+                  (do
+                    (reset! s/tr-loppu @s/tr-osoite)
+                    (reset! s/kirjaamassa-yleishavaintoa true))
+                  (reset! s/kirjaamassa-havaintoa true))
+                #(do
+                  (reset! s/tr-alku @s/tr-osoite)
+                  (reset! s/yleishavainto-kaynnissa true))])]])]]])))
 
 (defn main []
   (if @s/sovellus-alustettu
     [paanakyma]
     [alustus/alustuskomponentti s/gps-tuettu s/idxdb
-                                s/tarkastustyyppi s/tarkastusajo s/kayttajanimi]))
+     s/tarkastustyyppi s/tarkastusajo s/kayttajanimi]))
