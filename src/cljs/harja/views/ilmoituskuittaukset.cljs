@@ -107,36 +107,43 @@
                     :tyyppi     :string})]
     kuittaus]])
 
+(defn kanavan-ikoni [kuittaus]
+  (case (:kanava kuittaus)
+    :sms (ikonit/phone)
+    :sahkoposti (ikonit/envelope)
+    :ulkoinen_jarjestelma (ikonit/livicon-download)
+    :harja (ikonit/pencil)
+    nil))
 
 (defn kuittauksen-tiedot [kuittaus]
-  ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
-  [bs/panel
-   {:class (if (apurit/valitysviesti? kuittaus) "valitys-viesti" "kuittaus-viesti")}
-   [:span (str (apurit/kuittaustyypin-otsikko (:kuittaustyyppi kuittaus)) " ") (if (apurit/valitysviesti? kuittaus)
-                                                                 (ikonit/livicon-upload)
-                                                                 (ikonit/livicon-download))]
-   [:span
-
-    ^{:key "kuitattu"}
-    [yleiset/tietoja {}
-     "Kuitattu: " (pvm/pvm-aika-sek (:kuitattu kuittaus))
-     "Vakiofraasi: " (:vakiofraasi kuittaus)
-     ;; Välitysviestien tapauksessa vapaatekstissä on viestin määrämittainen raakadata, eli sähköpostin tapauksessa
-     ;; HTML:ää. Ei näytetä sitä turhaan, tärkeää on joka tapauksessa tieto, kenelle välitysviesti on lähtenyt
-     "Vapaateksti: " (when-not (apurit/valitysviesti? kuittaus) (:vapaateksti kuittaus))]
-    [:br]
-    ^{:key "kuittaaja"}
-    [yleiset/tietoja {}
-     "Kuittaaja: " (apurit/nayta-henkilo (:kuittaaja kuittaus))
-     "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
-     "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
-    [:br]
-    (when (:kasittelija kuittaus)
-      ^{:key "kasittelija"}
+  (let [valitys? (apurit/valitysviesti? kuittaus)]
+    ^{:key (str "kuittaus-paneeli-" (:id kuittaus))}
+    [bs/panel
+     {:class (if valitys? "valitys-viesti" "kuittaus-viesti")}
+     [:span (str (apurit/kuittaustyypin-otsikko (:kuittaustyyppi kuittaus)) " ") (kanavan-ikoni kuittaus)]
+     [:span
+      ^{:key "kuitattu"}
       [yleiset/tietoja {}
-       "Käsittelijä: " (apurit/nayta-henkilo (:kasittelija kuittaus))
-       "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
-       "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]])
+       (if valitys? "Lähetetty: " "Kuitattu: ") (pvm/pvm-aika-sek (:kuitattu kuittaus))
+       "Vakiofraasi: " (:vakiofraasi kuittaus)
+
+       ;; Välitysviestien tapauksessa vapaatekstissä on viestin määrämittainen raakadata, eli sähköpostin tapauksessa
+       ;; HTML:ää. Ei näytetä sitä turhaan, tärkeää on joka tapauksessa tieto, kenelle välitysviesti on lähtenyt
+       "Vapaateksti: " (when-not valitys? (:vapaateksti kuittaus))
+       "Kanava: " (apurit/kanavan-otsikko (:kanava kuittaus))]
+      [:br]
+      ^{:key "kuittaaja"}
+      [yleiset/tietoja {}
+       (if valitys? "Vastaanottaja: " "Kuittaaja: ") (apurit/nayta-henkilo (:kuittaaja kuittaus))
+       "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kuittaaja kuittaus))
+       "Sähköposti: " (get-in kuittaus [:kuittaaja :sahkoposti])]
+      [:br]
+      (when (:kasittelija kuittaus)
+        ^{:key "kasittelija"}
+        [yleiset/tietoja {}
+         "Käsittelijä: " (apurit/nayta-henkilo (:kasittelija kuittaus))
+         "Puhelinnumero: " (apurit/parsi-puhelinnumero (:kasittelija kuittaus))
+         "Sähköposti: " (get-in kuittaus [:kasittelija :sahkoposti])])]]))
 
 (defn kuittaa-monta-lomake [e! {:keys [ilmoitukset tyyppi vapaateksti tallennus-kaynnissa?]
                                 :as data}]

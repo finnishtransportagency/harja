@@ -28,6 +28,12 @@
    :vastaus "Vastaus"
    :valitys "Välitys"})
 
+(def kanavan-otsikko
+  {:sahkoposti "Sähköposti"
+   :sms "Tekstiviesti"
+   :ulkoinen_jarjestelma "Ulkoinen järjestelmä"
+   :harja "HARJA"})
+
 (def kuittaustyypin-selite
   {:kuittaamaton "Kuittaamaton"
    :vastaanotto "Vastaanotettu"
@@ -80,19 +86,21 @@
   "Palauttaa merkkijonon mallia 'Etunimi Sukunimi, Organisaatio Y1234'"
   [henkilo]
   (when henkilo
-    (str
-      (:etunimi henkilo)
-      (when (and (:etunimi henkilo) (:sukunimi henkilo)) " ")
-      (:sukunimi henkilo)
-      (when
-        (and
-          (or (:etunimi henkilo) (:sukunimi henkilo))
-          (or (:organisaatio henkilo) (:ytunnus henkilo)))
+    (let [tulos
+          (str
+            (:etunimi henkilo)
+            (when (and (:etunimi henkilo) (:sukunimi henkilo)) " ")
+            (:sukunimi henkilo)
+            (when
+              (and
+                (or (:etunimi henkilo) (:sukunimi henkilo))
+                (or (:organisaatio henkilo) (:ytunnus henkilo)))
 
-        ", ")
-      (:organisaatio henkilo)
-      (when (and (:ytunnus henkilo) (:organisaatio henkilo)) " ")
-      (:ytunnus henkilo))))
+              ", ")
+            (:organisaatio henkilo)
+            (when (and (:ytunnus henkilo) (:organisaatio henkilo)) " ")
+            (:ytunnus henkilo))]
+      (when-not (empty? tulos) tulos))))
 
 (defn parsi-puhelinnumero
   [henkilo]
