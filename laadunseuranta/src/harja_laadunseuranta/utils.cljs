@@ -158,7 +158,7 @@
                                   (println nimi ": " (pr-str vanha) " => " (pr-str uusi)))))
 
 (defn stg-ymparistossa? []
-  "Tarkistaa ollaanko stg-ymparistossa"
+  "Tarkistaa ollaanko stg-ympäristössä"
   (let [host (.-host js/location)]
     (#{"testiextranet.liikennevirasto.fi"} host)))
 
