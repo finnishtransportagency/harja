@@ -5,7 +5,7 @@ CREATE TYPE viestisuunta AS ENUM (
 CREATE TYPE viestikanava AS ENUM (
   'sahkoposti',
   'sms',
-  'ulkoinen jarjestelma',
+  'ulkoinen_jarjestelma',
   'harja'
 );
 
