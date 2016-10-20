@@ -223,6 +223,8 @@
                                       :vakiofraasi vakiofraasi
                                       :vapaateksti vapaateksti
                                       :kuittaustyyppi tyyppi
+                                      :suunta "sisaan"
+                                      :kanava "harja"
                                       :kuittaaja_henkilo_etunimi ilmoittaja-etunimi
                                       :kuittaaja_henkilo_sukunimi ilmoittaja-sukunimi
                                       :kuittaaja_henkilo_matkapuhelin ilmoittaja-matkapuhelin
