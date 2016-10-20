@@ -546,6 +546,16 @@ WHERE
 ORDER BY etaisyys ASC
 LIMIT 1;
 
+-- name: hae-urakka-urakkanumerolla
+-- single? : true
+SELECT
+  id,
+  sampoid,
+  nimi
+FROM urakka
+WHERE urakkanro = :urakkanro AND
+      alkupvm <= now() AND
+      loppupvm > now();
 
 
 
