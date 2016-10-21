@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.kamera-test
+(ns harja-laadunseuranta.ui.kamera-test
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [harja-laadunseuranta.ui.kamera :as kamera]))
 
