@@ -17,11 +17,20 @@
 (defn pudota-etunollat [alueurakkanumero]
   (str/replace alueurakkanumero #"^0+" ""))
 
-(defn pura-alueurakkanro [alueurakkanro]
-  (let [osat (str/split alueurakkanro #"-")]
+(defn pura-alueurakkanro [urakka-sampoid alueurakkanro]
+  (let [tarkista-alueurakkanro #(if (merkkijono/kokonaisluku? %)
+                                 %
+                                 (log/error (format "Sampon urakan (id: %s) alueurakkanumero (%s) ei ole validi numero.
+                                                    Alueurakkanumero täytyy korjata Sampoon."
+                                                    urakka-sampoid alueurakkanro)))
+        osat (str/split alueurakkanro #"-")]
     (if (= 2 (count osat))
-      {:tyypit (first osat) :alueurakkanro (second osat)}
-      {:tyypit nil :alueurakkanro alueurakkanro})))
+      {:tyypit (first osat) :alueurakkanro (tarkista-alueurakkanro (second osat))}
+      (do
+        (log/error (format "Sampon urakan (id: %s) alueurakkanumeroa (%s) ei voitu parsia.
+                            Alueurakkanumero täytyy korjata Sampoon."
+                           urakka-sampoid alueurakkanro))
+        {:tyypit nil :alueurakkanro (tarkista-alueurakkanro alueurakkanro)}))))
 
 (defn- paivita-urakka [db nimi alkupvm loppupvm hanke-sampo-id urakka-id alueurakkanro urakkatyyppi sopimustyyppi
                        hallintayksikko]
@@ -87,7 +96,7 @@
                                    ely-hash alueurakkanro]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
   (try
-    (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro alueurakkanro)
+    (let [tyyppi-ja-alueurakkanro (pura-alueurakkanro sampo-id alueurakkanro)
           tyypit (:tyypit tyyppi-ja-alueurakkanro)
           alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
           urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)
