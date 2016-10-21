@@ -12,7 +12,8 @@
             [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.kayttajat :as kayttajat]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.api.sanomat.yhteystiedot :as yhteyshenkilot-vastaus])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-kutsu [db kayttaja urakkanro]
@@ -24,11 +25,11 @@
                         :viesti (format "Urakkanumerolla: %s ei löydy urakkaa Harjassa." urakkanro)}]})))
 
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
-  (tarkista-kutsu db kayttaja urakkanro )
-  (let [{id :id sampoid :sampoid} (urakat/hae-urakka-urakkanumerolla db urakkanro)
-        fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim sampoid)
-        harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db id)]
-    ))
+  (tarkista-kutsu db kayttaja urakkanro)
+  (let [urakan-tiedot (first (urakat/hae-kaynnissaoleva-urakka-urakkanumerolla db urakkanro))
+        fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))
+        harja-yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db (:id urakan-tiedot))]
+    (yhteyshenkilot-vastaus/urakan-yhteystiedot urakan-tiedot fim-yhteyshenkilot harja-yhteyshenkilot)))
 
 (defrecord Yhteystiedot []
   component/Lifecycle
@@ -36,15 +37,15 @@
     (julkaise-reitti
       http :hae-yhteystiedot
       (GET "/api/urakat/yhteystiedot/:urakkanro" request
-           (kasittele-kutsu-async
-             db
-             integraatioloki
-             :hae-yhteystiedot
-             request
-             nil
-             json-skeemat/urakan-yhteystietojen-haku-vastaus
-             (fn [parametit _ kayttaja db]
-               (hae-urakan-yhteystiedot db fim parametit kayttaja)))))
+        (kasittele-kutsu-async
+          db
+          integraatioloki
+          :hae-yhteystiedot
+          request
+          nil
+          json-skeemat/urakan-yhteystietojen-haku-vastaus
+          (fn [parametit _ kayttaja db]
+            (hae-urakan-yhteystiedot db fim parametit kayttaja)))))
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-yhteystiedot)

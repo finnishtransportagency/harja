@@ -546,13 +546,24 @@ WHERE
 ORDER BY etaisyys ASC
 LIMIT 1;
 
--- name: hae-urakka-urakkanumerolla
+-- name: hae-kaynnissaoleva-urakka-urakkanumerolla
 -- single? : true
 SELECT
-  id,
-  sampoid,
-  nimi
-FROM urakka
+  u.id,
+  u.sampoid,
+  u.urakkanro,
+  u.nimi,
+  u.alkupvm,
+  u.loppupvm,
+  e.nimi        AS "elynimi",
+  e.elynumero,
+  o.nimi        AS "urakoitsija-nimi",
+  o.ytunnus     AS "urakoitsija-ytunnus",
+  o.katuosoite  AS "urakoitsija-katuosoite",
+  o.postinumero AS "urakoitsija-postinumero"
+FROM urakka u
+  JOIN organisaatio e ON e.id = u.hallintayksikko
+  JOIN organisaatio o ON o.id = u.urakoitsija
 WHERE urakkanro = :urakkanro AND
       alkupvm <= now() AND
       loppupvm > now();

@@ -2,6 +2,7 @@
   "urakka": {
     "alueurakkanro": "1234",
     "elynro": 1,
+    "elynimi": "Uusimaa",
     "nimi": "testiurakka",
     "sampoid": "1121",
     "alkupvm": "2016-10-1T12:00:00Z",
@@ -18,37 +19,43 @@
           "rooli": "urakoitsijan-vastuuhenkilo",
           "nimi": "Urho Urakoitsija",
           "puhelinnumero": "589883920",
-          "email": "urho@exmaple.com"
+          "sahkoposti": "urho@exmaple.com",
+          "organisaatio": "testiorganisaatio"
         },
         "yhteyshenkilo": {
           "rooli": "ely-urakan-valvoja",
           "nimi": "Eija Elyläinen",
           "puhelinnumero": "345344534534",
-          "email": "eija@exmaple.com"
+          "sahkoposti": "eija@exmaple.com",
+          "organisaatio": "testiorganisaatio"
         },
         "yhteyshenkilo": {
           "rooli": "sillanvalvoja",
           "nimi": "Seija Sillanvalvoja",
           "puhelinnumero": "3453453453",
-          "email": "seija@exmaple.com"
+          "sahkoposti": "seija@exmaple.com",
+          "organisaatio": "testiorganisaatio"
         },
         "yhteyshenkilo": {
           "rooli": "kunnossapitopaaallikko",
           "nimi": "Kimmo Kunnossapitäjä",
           "puhelinnumero": "3453453453",
-          "email": "kimmo@exmaple.com"
+          "sahkoposti": "kimmo@exmaple.com",
+          "organisaatio": "testiorganisaatio"
         },
         "yhteyshenkilo": {
           "rooli": "kelikeskus",
           "nimi": "Testikelikeskus",
           "puhelinnumero": "3453453453",
-          "email": "kelikeskus@exmaple.com"
+          "sahkoposti": "kelikeskus@exmaple.com",
+          "organisaatio": "testiorganisaatio"
         },
         "yhteyshenkilo": {
           "rooli": "tieliikennekeskus",
           "nimi": "Testitieliikennekeskus",
           "puhelinnumero": "3453453453",
-          "email": "tieliikennekeskus@exmaple.com"
+          "sahkoposti": "tieliikennekeskus@exmaple.com",
+          "organisaatio": "testiorganisaatio"
         }
       }
     ]

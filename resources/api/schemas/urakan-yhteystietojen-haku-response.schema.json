@@ -24,6 +24,11 @@
           "id": "urn:harja/urakka/elynro",
           "required": false
         },
+        "elynimi": {
+          "type": "string",
+          "id": "urn:harja/urakka/elynimi",
+          "required": false
+        },
         "loppupvm": {
           "type": "string",
           "id": "urn:harja/urakka/loppupvm",
@@ -80,7 +85,7 @@
                 "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo",
                 "required": false,
                 "properties": {
-                  "email": {
+                  "sahkoposti": {
                     "type": "string",
                     "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/email",
                     "required": false
@@ -96,6 +101,11 @@
                     "required": false
                   },
                   "rooli": {
+                    "type": "string",
+                    "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
+                    "required": false
+                  },
+                  "organisaatio": {
                     "type": "string",
                     "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
                     "required": false
