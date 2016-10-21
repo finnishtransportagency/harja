@@ -18,13 +18,16 @@
 
 (defn tarkista-kutsu [db kayttaja urakkanro]
   (when-not (kayttajat/liikenneviraston-jarjestelma? db (:kayttajatunnus kayttaja))
+    (log/error (format "Kayttajatunnuksela: %s ei ole oikeutta hakea urakan yhteystietoja." (:kayttajatunnus kayttaja)))
     (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+}))
   (when-not (urakat/onko-olemassa-urakkanro? db urakkanro)
+    (log/error (format "Yritettiin hakea yhteystiedot tuntemattomalle urakalle: %s." urakkanro))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+tuntematon-urakka-koodi+
                         :viesti (format "Urakkanumerolla: %s ei löydy urakkaa Harjassa." urakkanro)}]})))
 
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
+  (log/debug (format "Haetaan urakan (urakkanro: %s) tiedot käyttäjälle: %s." urakkanro kayttaja))
   (tarkista-kutsu db kayttaja urakkanro)
   (let [urakan-tiedot (first (urakat/hae-kaynnissaoleva-urakka-urakkanumerolla db urakkanro))
         fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))

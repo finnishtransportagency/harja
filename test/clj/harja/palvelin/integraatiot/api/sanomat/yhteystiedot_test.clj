@@ -6,7 +6,6 @@
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]))
 
-
 (def testiurakan-tiedot
   {:urakoitsija-ytunnus "1565583-5"
    :loppupvm #inst"2019-09-29T21:00:00.000-00:00"
@@ -53,10 +52,7 @@
     :tyopuhelin nil
     :organisaatio_nimi "YIT Rakennus Oy"}])
 
-
-
 (deftest tarkista-sanoman-muodostus
-
   (let [odotettu-data {:urakka
                        {:elynro 12
                         :alueurakkanro "1238"
