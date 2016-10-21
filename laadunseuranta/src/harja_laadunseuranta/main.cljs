@@ -14,7 +14,7 @@
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.utils :as utils]
             [harja-laadunseuranta.ui.havaintolomake :as havaintolomake]
-            [harja-laadunseuranta.tiedotreitintallennus :as reitintallennus]
+            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [harja-laadunseuranta.ui.tarkastusajon-luonti :as tarkastusajon-luonti]
             [harja-laadunseuranta.utils :refer [flip erota-mittaukset erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])

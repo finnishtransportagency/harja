@@ -1,9 +1,9 @@
-(ns harja-laadunseuranta.tiedot.tiedotreitintallennus-test
+(ns harja-laadunseuranta.tiedot.reitintallennus-test
   (:require [cljs.test :as t :refer-macros [deftest is testing run-tests async]]
             [reagent.core :as reagent :refer [atom dispose!]]
-            [harja-laadunseuranta.indexeddb :as idb]
+            [harja-laadunseuranta.tiedot.indexeddb :as idb]
             [cljs.core.async :as async :refer [<! >! put! chan close!]]
-            [harja-laadunseuranta.tiedotreitintallennus :as r]
+            [harja-laadunseuranta.tiedot.reitintallennus :as r]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja-laadunseuranta.tiedot.indexeddb-macros :refer [with-transaction-to-store with-cursor with-all-items]]

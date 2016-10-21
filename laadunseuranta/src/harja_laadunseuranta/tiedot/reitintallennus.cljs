@@ -1,7 +1,7 @@
-(ns harja-laadunseuranta.tiedotreitintallennus
+(ns harja-laadunseuranta.tiedot.reitintallennus
   (:require [reagent.core :as reagent :refer [atom]]
             [reagent.ratom :as ratom]
-            [harja-laadunseuranta.indexeddb :as idb]
+            [harja-laadunseuranta.tiedot.indexeddb :as idb]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]
             [harja-laadunseuranta.utils :as utils :refer [erota-mittaukset erota-havainnot]]

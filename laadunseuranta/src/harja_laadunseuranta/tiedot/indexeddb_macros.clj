@@ -49,7 +49,7 @@
        (swap! c# #(conj % v#))
        (if (= ~n (count (deref c#)))
          (fin# (deref c#))
-         (harja-laadunseuranta.indexeddb/cursor-continue cursor#))
+         (harja-laadunseuranta.tiedot.indexeddb/cursor-continue cursor#))
        :finally
        (fin# (deref c#)))))
 
@@ -57,7 +57,7 @@
   `(let [c# (cljs.core/atom [])]
      (with-cursor ~store cursor# v#
        (swap! c# #(conj % v#))
-       (harja-laadunseuranta.indexeddb/cursor-continue cursor#)
+       (harja-laadunseuranta.tiedot.indexeddb/cursor-continue cursor#)
        :finally
        (let [~value-var (deref c#)]
          ~@body))))

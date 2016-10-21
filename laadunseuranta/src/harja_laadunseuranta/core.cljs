@@ -9,7 +9,7 @@
             [harja-laadunseuranta.ui.tr-haku :as tr-haku]
             [harja-laadunseuranta.tiedot.puhe :as puhe]
             [cljs.core.async :as async :refer [<!]]
-            [harja-laadunseuranta.tiedotreitintallennus :as reitintallennus]
+            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [run!]]
                    [cljs.core.async.macros :refer [go]]
