@@ -611,9 +611,11 @@ BEGIN
   -- Tallenna cacheen ajettu laskutusyhteenveto
   -- Jos indeksit tai urakan toteumat muuttuvat, pitää niiden transaktioiden
   -- poistaa myös cache
-  INSERT INTO laskutusyhteenveto_cache (urakka, alkupvm, loppupvm, rivit)
-  VALUES (ur, aikavali_alkupvm, aikavali_loppupvm, cache);
-
+  INSERT
+    INTO laskutusyhteenveto_cache (urakka, alkupvm, loppupvm, rivit)
+  VALUES (ur, aikavali_alkupvm, aikavali_loppupvm, cache)
+      ON CONFLICT ON CONSTRAINT uniikki_urakka_aika
+      DO UPDATE SET rivit = cache;
 END;
 $$ LANGUAGE plpgsql;
 
