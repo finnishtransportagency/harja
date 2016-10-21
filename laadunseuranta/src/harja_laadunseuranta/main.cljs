@@ -234,5 +234,4 @@
 (defn main []
   (if @s/sovellus-alustettu
     [paanakyma]
-    [alustus/alustuskomponentti s/gps-tuettu s/idxdb
-     s/tarkastustyyppi s/tarkastusajo s/kayttajanimi]))
+    [alustus/alustuskomponentti s/gps-tuettu s/idxdb s/kayttajanimi]))

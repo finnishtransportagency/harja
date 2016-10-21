@@ -9,7 +9,7 @@
          :width 36
          :height 36}])
 
-(defn alustuskomponentti [gps-tuettu idxdb-tuettu tarkastustyyppi tarkastusajo kayttaja]
+(defn alustuskomponentti [gps-tuettu idxdb-tuettu kayttaja]
   [:div.alustuskomponentticontainer
    [:div.alustuskomponentti
     [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
