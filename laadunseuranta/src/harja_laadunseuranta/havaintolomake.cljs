@@ -139,16 +139,6 @@
         reittipisteet (atom [])]
     (fn [_ _ _ _ tallenna-fn peruuta-fn]
       [:div.havaintolomake
-       [:div.lomake-kartta-container
-        [kartta/karttakomponentti {:wmts-url wmts-url
-                                   :wmts-url-kiinteistorajat wmts-url-kiinteistorajat
-                                   :wmts-url-ortokuva wmts-url-ortokuva
-                                   :sijainti-atomi sijainti
-                                   :ajoneuvon-sijainti-atomi sijainti
-                                   :reittipisteet-atomi reittipisteet
-                                   :kirjauspisteet-atomi reittipisteet
-                                   :optiot karttaoptiot}]]
-       
        [:div.lomake-container
         [:div.lomake-title "Uuden havainnon perustiedot"]
         

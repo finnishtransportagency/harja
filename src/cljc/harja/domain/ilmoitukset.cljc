@@ -4,7 +4,7 @@
     #?(:cljs [harja.loki :refer [log]])
     #?(:cljs [cljs-time.core :as t])
     #?(:clj [clj-time.core :as t])
-    [clojure.string :as string]))
+            [clojure.string :as string]))
 
 (def +ilmoitustyypit+ #{:kysely :toimenpidepyynto :tiedoitus})
 

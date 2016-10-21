@@ -42,6 +42,7 @@
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.0-3" :exclusions [org.clojure/clojure]]
             [jonase/eastwood "0.2.3"]
+            [lein-less "1.7.5"]
             [cider/cider-nrepl "0.10.2"]]
 
   :source-paths ["clj-src" "cljc-src"]
@@ -55,6 +56,10 @@
                  :port 52510}
   
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"]
+
+  ;; Less CSS käännös tuotantoa varten (dev modessa selain tekee less->css muunnoksen)
+  :less {:source-paths ["../dev-resources/less/laadunseuranta/application"]
+         :target-path  "../resources/public/laadunseuranta/css/"}
 
   :cljsbuild {:test-commands {"unit" ["phantomjs"
                                       "--local-storage-path=./tmp/"
@@ -71,7 +76,7 @@
                 :figwheel {:on-jsload "harja-laadunseuranta.dev-core/on-js-reload"}
 
                 :compiler {:main harja-laadunseuranta.dev-core
-                           :asset-path "js/compiled/out"
+                           :asset-path "laadunseuranta/js/compiled/out"
                            :output-to "resources/public/js/compiled/harja_laadunseuranta.js"
                            :output-dir "resources/public/js/compiled/out"
                            :source-map-timestamp true}}
@@ -85,7 +90,7 @@
                            }
 
                 :compiler {:main harja-laadunseuranta.devcards-core
-                           :asset-path "js/compiled/devcards_out"
+                           :asset-path "laadunseuranta/js/compiled/devcards_out"
                            :output-to "resources/public/js/compiled/harja_laadunseuranta_devcards.js"
                            :output-dir "resources/public/js/compiled/devcards_out"
                            :source-map-timestamp true}}
@@ -115,7 +120,10 @@
                            :parallel-build true
                            :pretty-print false}}]}
 
-  :aliases {"tuotanto" ["do" "clean," "cljsbuild" "once" "min," "uberjar"]}
+  :aliases {"tuotanto" ["do" "clean,"
+                        "cljsbuild" "once" "min,"
+                        "less" "once,"
+                        "uberjar"]}
 
   :auto-clean false
   
