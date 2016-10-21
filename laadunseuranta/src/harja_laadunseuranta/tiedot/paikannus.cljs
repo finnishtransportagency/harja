@@ -1,7 +1,7 @@
 (ns harja-laadunseuranta.tiedot.paikannus
   (:require [reagent.core :as reagent :refer [atom]]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
-            [harja-laadunseuranta.kalman :as kalman]
+            [harja-laadunseuranta.tiedot.kalman :as kalman]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
             [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
 

@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.kalman)
+(ns harja-laadunseuranta.tiedot.kalman)
 
 (def state {:lat 0
             :lon 0
