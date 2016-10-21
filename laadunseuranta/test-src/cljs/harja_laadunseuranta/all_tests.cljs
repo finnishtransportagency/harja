@@ -1,17 +1,17 @@
 (ns ^:figwheel-always harja-laadunseuranta.all-tests
   (:require [doo.runner :refer-macros [doo-tests]]
-            [harja-laadunseuranta.projektiot-test]
-            [harja-laadunseuranta.paikannus-test]
-            [harja-laadunseuranta.ilmoitukset-test]
-            [harja-laadunseuranta.kartta-test]
-            [harja-laadunseuranta.reitintallennus-test]
+            [harja-laadunseuranta.tiedot.projektiot-test]
+            [harja-laadunseuranta.tiedot.paikannus-test]
+            [harja-laadunseuranta.ui.ilmoitukset-test]
+            [harja-laadunseuranta.ui.kartta-test]
+            [harja-laadunseuranta.tiedot.reitintallennus-test]
             [harja-laadunseuranta.kaynnistyspainike-test]
             [harja-laadunseuranta.core-test]
-            [harja-laadunseuranta.kamera-test]
+            [harja-laadunseuranta.ui.kamera-test]
             [harja-laadunseuranta.utils-test]
             [harja-laadunseuranta.ylapalkki-test]
-            [harja-laadunseuranta.kitkamittaus-test]
-            [harja-laadunseuranta.sovellus-test]
+            [harja-laadunseuranta.ui.kitkamittaus-test]
+            [harja-laadunseuranta.tiedot.sovellus-test]
             [harja-laadunseuranta.mock.geolocation :as geolocation]
 
             ;; External javascriptit proj4 kirjastolle
@@ -23,15 +23,15 @@
 
 (geolocation/setup-mock-geolocation!)
 
-(doo-tests 'harja-laadunseuranta.projektiot-test
-           'harja-laadunseuranta.paikannus-test
-           'harja-laadunseuranta.ilmoitukset-test
-           'harja-laadunseuranta.kartta-test
-           'harja-laadunseuranta.reitintallennus-test
-           'harja-laadunseuranta.kaynnistyspainike-test
+(doo-tests 'harja-laadunseuranta.tiedot.projektiot-test
+           'harja-laadunseuranta.tiedot.paikannus-test
+           'harja-laadunseuranta.ui.ilmoitukset-test
+           'harja-laadunseuranta.ui.kartta-test
+           'harja-laadunseuranta.tiedot.reitintallennus-test
+           'harja-laadunseuranta.ui.kaynnistyspainike-test
            'harja-laadunseuranta.core-test
-           'harja-laadunseuranta.kamera-test
+           'harja-laadunseuranta.ui.kamera-test
            'harja-laadunseuranta.utils-test
            'harja-laadunseuranta.ylapalkki-test
-           'harja-laadunseuranta.kitkamittaus-test
-           'harja-laadunseuranta.sovellus-test)
+           'harja-laadunseuranta.ui.kitkamittaus-test
+           'harja-laadunseuranta.tiedot.sovellus-test)
