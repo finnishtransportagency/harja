@@ -244,6 +244,10 @@
                                       :kasittelija_organisaatio_ytunnus kasittelija-ytunnus}))]
 
                       (-> toimenpide
+                          (assoc :tila (keyword (:tila toimenpide)))
+                          (assoc :suunta (keyword (:suunta toimenpide)))
+                          (assoc :kanava (keyword (:kanava toimenpide)))
+                          (assoc :kuittaustyyppi (keyword (:kuittaustyyppi toimenpide)))
                           (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
                           (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi toimenpide))
                           (assoc-in [:kuittaaja :matkapuhelin] (:kuittaaja_henkilo_matkapuhelin toimenpide))
