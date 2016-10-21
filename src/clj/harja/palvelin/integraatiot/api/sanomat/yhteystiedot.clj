@@ -50,7 +50,8 @@
   (vec (concat (yhteyshenkilot-fimissa fim-yhteyshenkilot)
                (yhteyshenkilot-harjassa harja-yhteyshenkilot))))
 
-(defn urakan-yhteystiedot [{:keys [urakkanro elynumero
+(defn urakan-yhteystiedot [{:keys [urakkanro
+                                   elynumero
                                    elynimi
                                    nimi
                                    sampoid
