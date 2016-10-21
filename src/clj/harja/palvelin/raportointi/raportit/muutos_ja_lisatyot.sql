@@ -89,9 +89,7 @@ SELECT
        hoitourakan_indeksilaskennan_perusluku(u.id))))   AS korotus,
   hy.id                                                  AS hallintayksikko_id,
   hy.nimi                                                AS hallintayksikko_nimi,
-  lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero,
-  tpi.id                                                 AS tpi_id,
-  tpi.nimi                                               AS tpi_nimi
+  lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
 FROM toteuma_tehtava tt
   JOIN toteuma t ON (tt.toteuma = t.id AND
                      t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
@@ -123,4 +121,4 @@ WHERE
                                                     FROM toimenpidekoodi tpk
                                                     WHERE tpk.emo = :tpi))
   AND t.alkanut :: DATE BETWEEN :alku AND :loppu
-GROUP BY hy.id, t.tyyppi, tpi.id;
+GROUP BY hy.id, t.tyyppi;

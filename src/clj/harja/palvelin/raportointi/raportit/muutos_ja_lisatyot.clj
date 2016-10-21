@@ -61,12 +61,10 @@
 
 (defn tyyppikohtaiset-rivit
   [tyot]
-  (sort-by (fn [rivi] (get-in rivi [:tpi :nimi]))
-           (mapv #(rivi
-                   (get-in % [:tpi :nimi])
-                   (tyon-tyypin-nimi (:tyyppi %))
-                   (or (get-in % [:tehtava :summa]) [:info "Ei rahasummaa"])
-                   (or (:korotus %) [:info "Indeksi puuttuu"])) tyot)))
+  (mapv #(rivi
+          (tyon-tyypin-nimi (:tyyppi %))
+          (or (get-in % [:tehtava :summa]) [:info "Ei rahasummaa"])
+          (or (:korotus %) [:info "Indeksi puuttuu"])) tyot))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
@@ -110,8 +108,7 @@
                   raportin-nimi alkupvm loppupvm)
 
         otsikot (if kayta-ryhmittelya?
-                  [{:leveys 12 :otsikko "Toimenpide"}
-                   {:leveys 7 :otsikko "Tyyppi"}
+                  [{:leveys 7 :otsikko "Tyyppi"}
                    {:leveys 5 :otsikko "Summa €" :fmt :raha}
                    {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}]
                   [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
@@ -154,7 +151,7 @@
                                                        (str (get-in (first hyn-tyot) [:urakka :nimi]) " yhteensä")
                                                        (str (:nimi hy) " yhteensä"))
                                        kentat (if kayta-ryhmittelya?
-                                                (keep identity [alueen-teksti "" summat-yht korotukset-yht])
+                                                (keep identity [alueen-teksti summat-yht korotukset-yht])
                                                 (if (or (not urakoittain?) (= :urakka konteksti))
                                                  (keep identity [alueen-teksti "" "" "" "" summat-yht korotukset-yht])
                                                  (keep identity [alueen-teksti "" "" "" "" "" summat-yht korotukset-yht])))]
