@@ -234,7 +234,7 @@ DECLARE
 BEGIN
   osoite := yrita_tierekisteriosoite_pisteelle2(piste, treshold);
   IF osoite IS NULL THEN
-    RAISE EXCEPTION 'pisteelle ei löydy tietä';
+    RAISE EXCEPTION 'pisteelle % ei löydy tietä', piste;
   ELSE
     RETURN osoite;
   END IF;
