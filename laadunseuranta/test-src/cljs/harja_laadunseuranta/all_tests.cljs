@@ -5,7 +5,7 @@
             [harja-laadunseuranta.ui.ilmoitukset-test]
             [harja-laadunseuranta.ui.kartta-test]
             [harja-laadunseuranta.tiedot.reitintallennus-test]
-            [harja-laadunseuranta.kaynnistyspainike-test]
+            [harja-laadunseuranta.ui.kaynnistyspainike-test]
             [harja-laadunseuranta.core-test]
             [harja-laadunseuranta.ui.kamera-test]
             [harja-laadunseuranta.utils-test]

@@ -1,7 +1,7 @@
-(ns harja-laadunseuranta.indexeddb
+(ns harja-laadunseuranta.tiedot.indexeddb
   (:require [cljs.core.async :as async :refer [<! >! chan close!]])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [harja-laadunseuranta.indexeddb-macros :refer [with-transaction with-objectstore with-cursor]]))
+                   [harja-laadunseuranta.tiedot.indexeddb-macros :refer [with-transaction with-objectstore with-cursor]]))
 
 (defn- indexed-db []
   (or (.-indexedDB js/window)

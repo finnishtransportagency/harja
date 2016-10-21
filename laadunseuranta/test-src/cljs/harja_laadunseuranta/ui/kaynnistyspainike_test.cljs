@@ -1,4 +1,4 @@
-(ns harja-laadunseuranta.kaynnistyspainike-test
+(ns harja-laadunseuranta.ui.kaynnistyspainike-test
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [reagent.core :as reagent :refer [atom]]
             [dommy.core :as dommy]
