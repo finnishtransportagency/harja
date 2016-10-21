@@ -61,10 +61,12 @@
 
 (defn tyyppikohtaiset-rivit
   [tyot]
-  (mapv #(rivi (tyon-tyypin-nimi (:tyyppi %))
-               (get-in % [:tpi :nimi])
-               (or (get-in % [:tehtava :summa]) [:info "Ei rahasummaa"])
-               (or (:korotus %) [:info "Indeksi puuttuu"])) tyot))
+  (sort-by (fn [rivi] (get-in rivi [:tpi :nimi]))
+           (mapv #(rivi
+                   (get-in % [:tpi :nimi])
+                   (tyon-tyypin-nimi (:tyyppi %))
+                   (or (get-in % [:tehtava :summa]) [:info "Ei rahasummaa"])
+                   (or (:korotus %) [:info "Indeksi puuttuu"])) tyot)))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id toimenpide-id
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
@@ -108,8 +110,8 @@
                   raportin-nimi alkupvm loppupvm)
 
         otsikot (if kayta-ryhmittelya?
-                  [{:leveys 7 :otsikko "Tyyppi"}
-                   {:leveys 12 :otsikko "Toimenpide"}
+                  [{:leveys 12 :otsikko "Toimenpide"}
+                   {:leveys 7 :otsikko "Tyyppi"}
                    {:leveys 5 :otsikko "Summa €" :fmt :raha}
                    {:leveys 5 :otsikko "Ind.korotus €" :fmt :raha}]
                   [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
@@ -138,12 +140,13 @@
                                               (str (:elynumero hy) " " (:nimi hy))
                                               "Ilmoitukset ilman urakkaa")}])
 
-                               (when (or urakoittain? (= :urakka konteksti))
+                               (if kayta-ryhmittelya?
                                  (apply concat
                                         (for [[urakka tyot] (group-by :urakka hyn-tyot)]
-                                          (if urakoittain?
-                                            (yksittaiset-tyorivit konteksti tyot)
-                                            (tyyppikohtaiset-rivit tyot)))))
+                                          (tyyppikohtaiset-rivit tyot)))
+                                 (apply concat
+                                        (for [[urakka tyot] (group-by :urakka hyn-tyot)]
+                                          (yksittaiset-tyorivit konteksti tyot))))
                                (when-not (empty? hyn-tyot)
                                  (let [summat-yht (reduce + (keep #(get-in % [:tehtava :summa]) hyn-tyot))
                                        korotukset-yht (reduce + (keep :korotus hyn-tyot))
