@@ -31,7 +31,6 @@
    :polyavyys nil
    :alustus {:alustettu false
              :gps-tuettu false
-             :gps-sallittu false
              :ensimmainen-sijainti nil ; alustusta varten
              :verkkoyhteys (.-onLine js/navigator)
              :selain-tuettu (utils/tuettu-selain?)}
@@ -84,7 +83,6 @@
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
                                 (and (get-in sovellus [:alustus :gps-tuettu])
-                                     (get-in sovellus [:alustus :gps-sallittu])
                                      (get-in sovellus [:alustus :ensimmainen-sijainti])
                                      (get-in sovellus [:alustus :verkkoyhteys])
                                      (get-in sovellus [:alustus :selain-tuettu])
@@ -95,7 +93,6 @@
 (def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys]))
 (def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu]))
 (def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
-(def gps-sallittu (reagent/cursor sovellus [:alustus :gps-sallittu]))
 (def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))

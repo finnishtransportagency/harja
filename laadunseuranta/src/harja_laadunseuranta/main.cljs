@@ -235,8 +235,7 @@
   (if @s/sovellus-alustettu
     [paanakyma]
     [alustus/alustuskomponentti
-     {:gps-sallittu s/gps-sallittu
-      :gps-tuettu s/gps-tuettu
+     {:gps-tuettu s/gps-tuettu
       :ensimmainen-sijainti s/ensimmainen-sijainti
       :idxdb-tuettu s/idxdb
       :kayttaja s/kayttajanimi
