@@ -39,6 +39,7 @@
           :vakiofraasi                      nil
           :vapaateksti                      vapaateksti
           :kuittaustyyppi                   kuittaustyyppi
+          :tila (when (= "valitys" kuittaustyyppi) "lahetetty")
           :suunta                           suunta
           :kanava                           kanava
           :kuittaaja_henkilo_etunimi        (get-in ilmoittaja [:henkilo :etunimi])

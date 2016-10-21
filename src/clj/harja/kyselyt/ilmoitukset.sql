@@ -402,6 +402,7 @@ INSERT INTO ilmoitustoimenpide
  kuittaustyyppi,
  suunta,
  kanava,
+ tila,
  kuittaaja_henkilo_etunimi,
  kuittaaja_henkilo_sukunimi,
  kuittaaja_henkilo_matkapuhelin,
@@ -425,6 +426,7 @@ VALUES
     :kuittaustyyppi :: kuittaustyyppi,
     :suunta :: viestisuunta,
     :kanava :: viestikanava,
+    :tila :: lahetyksen_tila,
     :kuittaaja_henkilo_etunimi,
     :kuittaaja_henkilo_sukunimi,
     :kuittaaja_henkilo_matkapuhelin,
@@ -470,7 +472,9 @@ GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
 -- name: hae-lahettamattomat-ilmoitustoimenpiteet
 SELECT id
 FROM ilmoitustoimenpide
-WHERE tila IS NULL OR tila = 'virhe';
+WHERE
+  (tila IS NULL OR tila = 'virhe') AND
+  kuittaustyyppi != 'valitys'::kuittaustyyppi;
 
 -- name: hae-ilmoituksen-tieosoite
 SELECT

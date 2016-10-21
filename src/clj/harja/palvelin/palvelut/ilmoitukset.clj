@@ -225,6 +225,7 @@
                                       :vakiofraasi vakiofraasi
                                       :vapaateksti vapaateksti
                                       :kuittaustyyppi tyyppi
+                                      :tila (when (= tyyppi "valitys") "lahetetty")
                                       :suunta "sisaan"
                                       :kanava "harja"
                                       :kuittaaja_henkilo_etunimi ilmoittaja-etunimi
