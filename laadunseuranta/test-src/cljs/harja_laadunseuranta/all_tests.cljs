@@ -9,7 +9,7 @@
             [harja-laadunseuranta.core-test]
             [harja-laadunseuranta.ui.kamera-test]
             [harja-laadunseuranta.utils-test]
-            [harja-laadunseuranta.ylapalkki-test]
+            [harja-laadunseuranta.ui.ylapalkki-test]
             [harja-laadunseuranta.ui.kitkamittaus-test]
             [harja-laadunseuranta.tiedot.sovellus-test]
             [harja-laadunseuranta.mock.geolocation :as geolocation]
@@ -32,6 +32,6 @@
            'harja-laadunseuranta.core-test
            'harja-laadunseuranta.ui.kamera-test
            'harja-laadunseuranta.utils-test
-           'harja-laadunseuranta.ylapalkki-test
+           'harja-laadunseuranta.ui.ylapalkki-test
            'harja-laadunseuranta.ui.kitkamittaus-test
            'harja-laadunseuranta.tiedot.sovellus-test)
