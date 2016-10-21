@@ -194,3 +194,24 @@ button:disabled {
     font-weight: bold;
     margin-left: 2%;
 }
+
+@keyframes nappula-flash {
+    0% { background-color: red; }
+    100%   { background-color: #000; }
+}
+
+@-webkit-keyframes nappula-flash {
+    0% { background-color: red; }
+    100%   { background-color: #000; }
+}
+
+.blink {
+    animation-name: nappula-flash;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    -webkit-animation-name: nappula-flash;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: ease-in-out;
+}

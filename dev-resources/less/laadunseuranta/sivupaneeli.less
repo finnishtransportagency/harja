@@ -5,6 +5,9 @@
     width: 240px;
     right: 0;
     top: 0;
+    max-height: 100%;
+    z-index: 1000;
+    overflow: auto;
 }
 
 .sidepanel-box {
@@ -23,7 +26,6 @@
 }
 
 .sidepanel {
-    position: absolute;
     box-sizing: border-box;
     transition-property: right;
     transition-duration: 0.2s;
@@ -78,4 +80,11 @@
 }
 
 .painike-aktiivinen {
+}
+
+.pikavalinta-footer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 900;
 }
