@@ -9,13 +9,16 @@
          :width 36
          :height 36}])
 
-(defn alustuskomponentti [gps-tuettu idxdb-tuettu kayttaja]
+(defn alustuskomponentti [{:keys [gps-tuettu gps-sallittu ensimmainen-sijainti idxdb-tuettu
+                                  kayttaja selain-tuettu verkkoyhteys]}]
   [:div.alustuskomponentticontainer
    [:div.alustuskomponentti
     [:div.liikenneturvallisuusmuistutus "Muista aina liikenne\u00ADturvallisuus tarkastuksia tehdessäsi."]
     [:p "Tarkastetaan..."]
-    [:div [checkmark (utils/tuettu-selain?)] "Selain tuettu"]
-    [:div [checkmark (.-onLine js/navigator)] "Verkkoyhteys"]
+    [:div [checkmark selain-tuettu] "Selain tuettu"]
+    [:div [checkmark verkkoyhteys] "Verkkoyhteys"]
     [:div [checkmark @gps-tuettu] "GPS-tuki"]
+    [:div [checkmark @gps-sallittu] "GPS sallittu"]
+    [:div [checkmark @ensimmainen-sijainti] "GPS-sijainti määritetty"]
     [:div [checkmark @idxdb-tuettu] "Selaintietokanta-tuki"]
     [:div [checkmark @kayttaja] "Käyttäjä tunnistettu"]]])

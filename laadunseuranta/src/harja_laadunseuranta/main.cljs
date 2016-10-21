@@ -234,4 +234,11 @@
 (defn main []
   (if @s/sovellus-alustettu
     [paanakyma]
-    [alustus/alustuskomponentti s/gps-tuettu s/idxdb s/kayttajanimi]))
+    [alustus/alustuskomponentti
+     {:gps-sallittu s/gps-sallittu
+      :gps-tuettu s/gps-tuettu
+      :ensimmainen-sijainti s/ensimmainen-sijainti
+      :idxdb-tuettu s/idxdb
+      :kayttaja s/kayttajanimi
+      :verkkoyhteys s/verkkoyhteys
+      :selain-tuettu s/selain-tuettu}]))

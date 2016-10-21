@@ -18,7 +18,7 @@
    :kirjaamassa-havaintoa false
    :kirjaamassa-yleishavaintoa false
    :reittipisteet []
-   :kirjauspisteet []  ;; ikoneita varten
+   :kirjauspisteet [] ; ikoneita varten
    :lahettamattomia 0
    :pikavalinta nil
    :kuva nil
@@ -29,8 +29,12 @@
    :tasaisuus nil
    :kiinteys nil
    :polyavyys nil
-   :alustettu false
-   :gps-tuettu false
+   :alustus {:alustettu false
+             :gps-tuettu false
+             :gps-sallittu false
+             :ensimmainen-sijainti nil ; alustusta varten
+             :verkkoyhteys (.-onLine js/navigator)
+             :selain-tuettu (utils/tuettu-selain?)}
    :nayta-kiinteistorajat false
    :nayta-ortokuva false
    :tr-tiedot-nakyvissa false
@@ -74,19 +78,25 @@
 (def kirjaamassa-havaintoa (reagent/cursor sovellus [:kirjaamassa-havaintoa]))
 (def kirjaamassa-yleishavaintoa (reagent/cursor sovellus [:kirjaamassa-yleishavaintoa]))
 
-(def gps-tuettu (reagent/cursor sovellus [:gps-tuettu]))
-
 (def tr-osoite (reagent/cursor sovellus [:tr-tiedot :tr-osoite]))
 
 (def pikavalinta (reagent/cursor sovellus [:pikavalinta]))
 
 (def alustus-valmis (reaction (let [sovellus @sovellus]
-                                (and (utils/tuettu-selain?)
-                                     (:gps-tuettu sovellus)
+                                (and (get-in sovellus [:alustus :gps-tuettu])
+                                     (get-in sovellus [:alustus :gps-sallittu])
+                                     (get-in sovellus [:alustus :ensimmainen-sijainti])
+                                     (get-in sovellus [:alustus :verkkoyhteys])
+                                     (get-in sovellus [:alustus :selain-tuettu])
                                      (:idxdb sovellus)
                                      (:kayttajanimi sovellus)))))
 
-(def sovellus-alustettu (reagent/cursor sovellus [:alustettu]))
+(def sovellus-alustettu (reagent/cursor sovellus [:alustus :alustettu]))
+(def verkkoyhteys (reagent/cursor sovellus [:alustus :verkkoyhteys]))
+(def selain-tuettu (reagent/cursor sovellus [:alustus :selain-tuettu]))
+(def gps-tuettu (reagent/cursor sovellus [:alustus :gps-tuettu]))
+(def gps-sallittu (reagent/cursor sovellus [:alustus :gps-sallittu]))
+(def ensimmainen-sijainti (reagent/cursor sovellus [:alustus :ensimmainen-sijainti]))
 
 (def kirjauspisteet (reagent/cursor sovellus [:kirjauspisteet]))
 

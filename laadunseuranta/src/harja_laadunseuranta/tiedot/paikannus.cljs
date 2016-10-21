@@ -56,16 +56,22 @@
                       :heading (:heading uusi-sijainti)
                       :timestamp ts)}))
 
-(defn kaynnista-paikannus [sijainti-atomi]
+(defn kaynnista-paikannus [ensimmainen-sijainti-atom sijainti-atomi]
   (when (geolokaatio-tuettu?)
     (.log js/console "Paikannus käynnistetään")
-    (js/setInterval (fn []
-                      (.getCurrentPosition (geolocation-api)
-                                           #(swap! sijainti-atomi (fn [entinen]
-                                                                    (paivita-sijainti entinen (konvertoi-latlon %) (timestamp))))
-                                           #(swap! sijainti-atomi identity)
-                                           paikannusoptiot))
-                    +paikan-raportointivali+)))
+    (js/setInterval
+      (fn []
+        (let [sijainti-saatu #(do
+                               (when (nil? @ensimmainen-sijainti-atom)
+                                 (reset! ensimmainen-sijainti-atom (konvertoi-latlon %)))
+                               (swap! sijainti-atomi (fn [entinen]
+                                                       (paivita-sijainti entinen (konvertoi-latlon %) (timestamp)))))
+              sijainti-epaonnistui #(swap! sijainti-atomi identity)]
+          (.getCurrentPosition (geolocation-api)
+                               sijainti-saatu
+                               sijainti-epaonnistui
+                               paikannusoptiot)))
+      +paikan-raportointivali+)))
 
 (defn aseta-testisijainti
   "HUOM: testikäyttöön. Asettaa nykyisen sijainnin koordinaatit. Oikean geolocation pollerin tulisi

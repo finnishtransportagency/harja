@@ -31,9 +31,11 @@
 (defn main []
   (sovelluksen-alustusviive)
 
-  (reset! paikannus-id (paikannus/kaynnista-paikannus sovellus/sijainti))
+  (reset! paikannus-id (paikannus/kaynnista-paikannus
+                         sovellus/ensimmainen-sijainti
+                         sovellus/sijainti))
 
-  (if @paikannus-id
+  (if (paikannus/geolokaatio-tuettu?)
     (reset! sovellus/gps-tuettu true))
 
   (go

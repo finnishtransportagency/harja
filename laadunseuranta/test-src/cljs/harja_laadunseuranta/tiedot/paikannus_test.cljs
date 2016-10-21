@@ -33,7 +33,7 @@
           :accuracy 10
           :speed 30})))
 
-(def fake-location {:lat 65
+(def fake-location {:lat 65[HAR-3439] Laadunseurantatyökalun korjauksia (GPS yms)
                     :lon 25
                     :heading 0
                     :accuracy 10
