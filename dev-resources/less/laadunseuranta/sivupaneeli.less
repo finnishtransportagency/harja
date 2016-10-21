@@ -7,7 +7,11 @@
     top: 0;
     max-height: 100%;
     z-index: 1000;
-    overflow: auto;
+    /* FIXME Elementti on leveämpi kuin viewport, joten sallitaan scrollaus vain y-akselilla
+       Pitäisi korjata poistamalla elementin hardcoodattu leveys ja antamalla sisällön
+       määrittää leveys. Tämän jälkeen toimii overflow: auto;*/
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidepanel-box {
