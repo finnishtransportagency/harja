@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.sanomat.paallystysilmoitus :as paallystysilmoitus]
             [cheshire.core :as cheshire]
+            [harja.kyselyt.konversio :as konv]
             [harja.domain.skeema :as skeema]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]))
 

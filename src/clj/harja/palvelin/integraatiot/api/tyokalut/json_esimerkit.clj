@@ -51,5 +51,3 @@
 (def +suljetun-tieosuuden-kirjaus+ "api/examples/suljetun-tieosuuden-kirjaus-request.json")
 (def +suljetun-tieosuuden-poisto+ "api/examples/suljetun-tieosuuden-poisto-request.json")
 
-(def +urakan-yhteystietoje-hakuvastaus+ "api/examples/urakan-yhteystietojen-haku-response.json")
-
