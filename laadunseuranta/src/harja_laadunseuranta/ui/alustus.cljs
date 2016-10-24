@@ -18,6 +18,6 @@
     [:div [checkmark selain-tuettu] "Selain tuettu"]
     [:div [checkmark verkkoyhteys] "Verkkoyhteys"]
     [:div [checkmark @gps-tuettu] "GPS-tuki"]
-    [:div [checkmark @ensimmainen-sijainti] "GPS-sijainti määritetty"]
+    [:div [checkmark @ensimmainen-sijainti] "Laite paikannettu"]
     [:div [checkmark @idxdb-tuettu] "Selaintietokanta-tuki"]
     [:div [checkmark @kayttaja] "Käyttäjä tunnistettu"]]])
