@@ -17,9 +17,11 @@
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-kutsu [db kayttaja urakkanro]
-  (when-not (kayttajat/liikenneviraston-jarjestelma? db (:kayttajatunnus kayttaja))
+  (when-not (kayttajat/liikenneviraston-jarjestelma? db (:kayttajanimi kayttaja))
     (log/error (format "Kayttajatunnuksela: %s ei ole oikeutta hakea urakan yhteystietoja." (:kayttajatunnus kayttaja)))
-    (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+}))
+    (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
+             :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
+                        :viesti (format "Käyttäjällä ei oikeuksia urakkaan: %s" urakkanro)}]}))
   (when-not (urakat/onko-olemassa-urakkanro? db urakkanro)
     (log/error (format "Yritettiin hakea yhteystiedot tuntemattomalle urakalle: %s." urakkanro))
     (throw+ {:type virheet/+viallinen-kutsu+
