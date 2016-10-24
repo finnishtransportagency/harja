@@ -66,9 +66,9 @@
              :viimeinen-rivi-yhteenveto? true}
   (rivi
     {:otsikko otsikko :leveys 36}
-    (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29})
-    (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24})
-    {:otsikko yhteenveto-teksti :leveys 29})
+    (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
+    (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti})
+    {:otsikko yhteenveto-teksti :leveys 29 :tyyppi :varillinen-teksti})
 
   (into []
         (concat
@@ -84,7 +84,8 @@
                      [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu laskutetaan))
                                           :vari (when (or laskutettu-ind-puuttui? laskutetaan-ind-puuttui?)
                                                   +erheen-vari+)}]
-                     (summa-fmt nil)))) taulukon-tiedot)
+                     [:varillinen-teksti {:arvo (summa-fmt nil)
+                                          :vari +erheen-vari+}]))) taulukon-tiedot)
           [yhteenveto]))])
 
 (defn- summaa-korotetut

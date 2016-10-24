@@ -50,6 +50,7 @@
                    id (tarkastukset/luo-tai-paivita-tarkastus
                        db kayttaja urakka-id
                        {:id          tarkastus-id
+                        :lahde       "harja-api"
                         :ulkoinen-id ulkoinen-id
                         :tyyppi      tyyppi
                         :aika        aika

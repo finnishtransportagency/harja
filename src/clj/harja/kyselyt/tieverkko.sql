@@ -52,7 +52,7 @@ SELECT paivita_tr_taulut();
 -- name: tierekisteriosoite-viivaksi
 -- single?: true
 -- hakee geometrian annetulle tierekisteriosoitteelle
-SELECT * FROM tr_osoitteelle_viiva3(
+SELECT * FROM tierekisteriosoitteelle_viiva(
    CAST(:tie AS INTEGER),
    CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER),
    CAST(:losa AS INTEGER), CAST(:loppuet AS INTEGER));
