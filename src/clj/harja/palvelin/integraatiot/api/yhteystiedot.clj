@@ -36,7 +36,7 @@
 
 (defrecord Yhteystiedot []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :fim fim :integraatioloki :as this}]
+§  (start [{http :http-palvelin db :db integraatioloki :integraatioloki fim :fim :as this}]
     (julkaise-reitti
       http :hae-yhteystiedot
       (GET "/api/urakat/yhteystiedot/:urakkanro" request
