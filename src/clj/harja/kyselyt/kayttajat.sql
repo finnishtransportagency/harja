@@ -7,14 +7,14 @@ SELECT
   k.sukunimi,
   k.sahkoposti,
   k.puhelin,
-  o.id     AS organisaatio_id,
-  o.nimi   AS organisaatio_nimi,
-  o.tyyppi AS organisaatio_tyyppi,
+  o.id                                                     AS organisaatio_id,
+  o.nimi                                                   AS organisaatio_nimi,
+  o.tyyppi                                                 AS organisaatio_tyyppi,
   (SELECT array_agg(u.id)
-     FROM urakka u
-    WHERE u.urakoitsija = o.id OR u.hallintayksikko = o.id) as "organisaation-urakat"
+   FROM urakka u
+   WHERE u.urakoitsija = o.id OR u.hallintayksikko = o.id) AS "organisaation-urakat"
 FROM kayttaja k
-     LEFT JOIN organisaatio o ON k.organisaatio = o.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE k.kayttajanimi = :koka
       AND k.poistettu = FALSE
 
@@ -22,24 +22,29 @@ WHERE k.kayttajanimi = :koka
 -- single?: true
 -- Varmistaa että KOKA käyttäjä on tietokannassa
 INSERT
-  INTO kayttaja (kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, organisaatio, luotu)
-  VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio, NOW())
-ON CONFLICT ON CONSTRAINT uniikki_kayttajanimi DO
+INTO kayttaja (kayttajanimi, etunimi, sukunimi, sahkoposti, puhelin, organisaatio, luotu)
+VALUES (:kayttajanimi, :etunimi, :sukunimi, :sahkoposti, :puhelin, :organisaatio, NOW())
+ON CONFLICT ON CONSTRAINT uniikki_kayttajanimi
+  DO
   UPDATE SET etunimi = :etunimi, sukunimi = :sukunimi,
-             sahkoposti = :sahkoposti, puhelin = :puhelin,
-             organisaatio = :organisaatio, muokattu = NOW()
+    sahkoposti       = :sahkoposti, puhelin = :puhelin,
+    organisaatio     = :organisaatio, muokattu = NOW()
 RETURNING id
 
 -- name: hae-ely-numerolla
 -- Hakee ELY-keskuksen organisaation ELY numeron perusteella
-SELECT id,nimi,tyyppi FROM organisaatio
- WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
+SELECT
+  id,
+  nimi,
+  tyyppi
+FROM organisaatio
+WHERE tyyppi = 'hallintayksikko' AND elynumero = :elynumero
 
 -- name: hae-organisaation-urakat
 -- Palauttaa organisaation (hallintayksikkö tai urakoitsija) omien urakoiden id:t
 SELECT u.id
-  FROM urakka u
- WHERE u.urakoitsija = :org OR u.hallintayksikko = :org
+FROM urakka u
+WHERE u.urakoitsija = :org OR u.hallintayksikko = :org
 
 
 -- name: hae-kayttajat
@@ -56,8 +61,7 @@ SELECT
   o.nimi         AS org_nimi,
   o.tyyppi       AS org_tyyppi,
   array_cat(
-      (SELECT
-  array_agg(rooli)
+      (SELECT array_agg(rooli)
        FROM
          kayttaja_rooli
        WHERE
@@ -66,8 +70,7 @@ SELECT
          AND
          poistettu
          = FALSE),
-      (SELECT
-  array_agg(rooli)
+      (SELECT array_agg(rooli)
        FROM
          kayttaja_urakka_rooli
        WHERE
@@ -128,8 +131,7 @@ SELECT
   o.nimi         AS org_nimi,
   o.tyyppi       AS org_tyyppi,
   array_cat(
-      (SELECT
-  array_agg(rooli)
+      (SELECT array_agg(rooli)
        FROM
          kayttaja_rooli
        WHERE
@@ -138,8 +140,7 @@ SELECT
          AND
          poistettu
          = FALSE),
-      (SELECT
-  array_agg(rooli)
+      (SELECT array_agg(rooli)
        FROM
          kayttaja_urakka_rooli
        WHERE
@@ -175,11 +176,11 @@ WHERE kayttaja = :kayttaja AND poistettu = FALSE
 
 -- name: hae-kayttajan-urakat-aikavalilta
 SELECT
-  urakka AS urakka_id,
-  u.nimi AS urakka_nimi,
+  urakka   AS urakka_id,
+  u.nimi   AS urakka_nimi,
   u.tyyppi AS urakka_tyyppi,
-  o.id AS hallintayksikko_id,
-  o.nimi AS hallintayksikko_nimi
+  o.id     AS hallintayksikko_id,
+  o.nimi   AS hallintayksikko_nimi
 FROM kayttaja_urakka_rooli
   LEFT JOIN urakka u ON urakka = u.id
   JOIN organisaatio o ON u.hallintayksikko = o.id
@@ -189,7 +190,6 @@ WHERE kayttaja = :kayttaja AND
       (:urakoitsija :: INTEGER IS NULL OR :urakoitsija = u.urakoitsija) AND
       (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi :: TEXT = :urakkatyyppi) AND
       (:hallintayksikko :: INTEGER IS NULL OR u.hallintayksikko IN (:hallintayksikko));
-
 
 -- name: lisaa-urakka-rooli<!
 -- Lisää annetulle käyttäjälle roolin urakkaan.
@@ -204,19 +204,21 @@ WHERE kayttaja = :kayttaja AND urakka = :urakka AND rooli = :rooli :: kayttajaro
 
 -- name: hae-kayttajan-roolit
 -- Palauttaa kaikki käyttäjän roolit (sekä urakka että tavalliset).
-SELECT array_cat((SELECT array_agg(rooli)
-                  FROM kayttaja_rooli
-                  WHERE kayttaja = :kayttaja AND poistettu = FALSE),
-                 (SELECT
-                    array_agg(rooli)
-                  FROM kayttaja_urakka_rooli
-                  WHERE kayttaja = :kayttaja AND poistettu = FALSE)) AS roolit
+SELECT
+  array_cat((SELECT array_agg(rooli)
+             FROM kayttaja_rooli
+             WHERE kayttaja = :kayttaja AND poistettu = FALSE),
+            (SELECT array_agg(rooli)
+             FROM kayttaja_urakka_rooli
+             WHERE kayttaja = :kayttaja AND poistettu = FALSE)) AS roolit
 
 
--- name: poista-rooli!
--- Poista käyttäjältä rooli.
-UPDATE kayttaja_rooli
-SET poistettu = TRUE, muokkaaja = :muokkaaja, muokattu = NOW()
+  -- name: poista-rooli!
+  -- Poista käyttäjältä rooli.
+  UPDATE kayttaja_rooli
+  SET poistettu = TRUE,
+  muokkaaja = :muokkaaja,
+  muokattu = NOW()
 WHERE kayttaja = :kayttaja AND rooli = :rooli :: kayttajarooli
 
 -- name: poista-urakka-roolit!
@@ -248,11 +250,21 @@ WHERE lower(o.nimi) = lower(:nimi)
 
 -- name: hae-organisaatio-idlla
 -- Hakee organisaation id:n, nimen ja tyypin id:n perusteella.
-SELECT id,nimi,tyyppi FROM organisaatio WHERE id = :id
+SELECT
+  id,
+  nimi,
+  tyyppi
+FROM organisaatio
+WHERE id = :id
 
 -- name: hae-organisaatio-y-tunnuksella
 -- Hakee organisaation id:n, nimen ja tyypin Y-tunnuksen perusteella.
-SELECT id,nimi,tyyppi FROM organisaatio WHERE ytunnus = :y-tunnus
+SELECT
+  id,
+  nimi,
+  tyyppi
+FROM organisaatio
+WHERE ytunnus = :y - tunnus
 
 -- name: hae-organisaatioita
 -- Käyttäjän organisaatiohaku nimen osalla.
@@ -279,14 +291,14 @@ SELECT
   k.etunimi,
   k.sukunimi,
   k.jarjestelma AS jarjestelmasta,
-  o.id     AS org_id,
-  o.nimi   AS org_nimi,
-  o.tyyppi AS org_tyyppi
+  o.id          AS org_id,
+  o.nimi        AS org_nimi,
+  o.tyyppi      AS org_tyyppi
 FROM kayttaja k LEFT JOIN organisaatio o ON k.organisaatio = o.id
 WHERE (k.kayttajanimi ILIKE :hakutermi
-       OR k.etunimi ILIKE  :hakutermi
-       OR k.sukunimi ILIKE  :hakutermi
-      OR (CONCAT(k.etunimi, ' ' , k.sukunimi) ILIKE :hakutermi))
+       OR k.etunimi ILIKE :hakutermi
+       OR k.sukunimi ILIKE :hakutermi
+       OR (CONCAT(k.etunimi, ' ', k.sukunimi) ILIKE :hakutermi))
       AND k.poistettu = FALSE
 LIMIT 11;
 
@@ -303,8 +315,7 @@ SELECT
   o.nimi         AS org_nimi,
   o.tyyppi       AS org_tyyppi,
   array_cat(
-      (SELECT
-  array_agg(rooli)
+      (SELECT array_agg(rooli)
        FROM
          kayttaja_rooli
        WHERE
@@ -313,8 +324,7 @@ SELECT
          AND
          poistettu
          = FALSE),
-      (SELECT
-  array_agg(rooli)
+      (SELECT array_agg(rooli)
        FROM
          kayttaja_urakka_rooli
        WHERE
@@ -345,8 +355,8 @@ SELECT exists(
     SELECT o.id
     FROM organisaatio o
       JOIN kayttaja k ON k.organisaatio = o.id
-      AND o.ytunnus = :ytunnus
-      AND k.id = :kayttaja_id);
+                         AND o.ytunnus = :ytunnus
+                         AND k.id = :kayttaja_id);
 
 -- name: onko-kayttaja-nimella-urakan-organisaatiossa
 (SELECT EXISTS(SELECT id
@@ -357,22 +367,40 @@ SELECT exists(
                      AND etunimi = :etunimi
                      AND sukunimi = :sukunimi));
 
-
 -- name: hae-urakan-id-sampo-idlla
 -- single?: true
 -- Hae urakan id Sampo ID:llä, sähke oikeuksien hakua varten
-SELECT id FROM urakka WHERE sampoid = :sampoid
+SELECT id
+FROM urakka
+WHERE sampoid = :sampoid
 
 -- name: hae-urakoitsijan-id-ytunnuksella
 -- single?: true
-SELECT id FROM organisaatio WHERE tyyppi='urakoitsija' AND ytunnus=:ytunnus
+SELECT id
+FROM organisaatio
+WHERE tyyppi = 'urakoitsija' AND ytunnus = :ytunnus
 
 -- name: hae-kayttajan-yleisin-urakkatyyppi
 -- single?: true
-SELECT tyyppi FROM urakka WHERE id IN (:idt) GROUP BY tyyppi ORDER BY count(id) DESC LIMIT 1;
+SELECT tyyppi
+FROM urakka
+WHERE id IN (:idt)
+GROUP BY tyyppi
+ORDER BY count(id) DESC
+LIMIT 1;
 
 -- name: onko-jarjestelma?
 -- single?: true
 SELECT jarjestelma
 FROM kayttaja
 WHERE kayttajanimi = :kayttajanimi;
+
+-- name: liikenneviraston-jarjestelma?
+-- single?: true
+SELECT exists(
+    SELECT k.id
+    FROM kayttaja k
+      JOIN organisaatio o ON k.organisaatio = o.id
+    WHERE k.kayttajanimi = :kayttajanimi AND
+          k.jarjestelma IS TRUE AND
+          o.tyyppi = 'liikennevirasto');
