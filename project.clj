@@ -63,7 +63,7 @@
                  [com.draines/postal "1.11.3"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
-                 [org.apache.activemq/activemq-client "5.11.1"]
+                 [org.apache.activemq/activemq-client "5.14.1"]
 
 
                  ;; Asiakas
