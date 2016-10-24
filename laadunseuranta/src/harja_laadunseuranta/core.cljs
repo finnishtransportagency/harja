@@ -32,8 +32,8 @@
   (sovelluksen-alustusviive)
 
   (reset! paikannus-id (paikannus/kaynnista-paikannus
-                         sovellus/ensimmainen-sijainti
-                         sovellus/sijainti))
+                         sovellus/sijainti
+                         sovellus/ensimmainen-sijainti))
 
   (if (paikannus/geolokaatio-tuettu?)
     (reset! sovellus/gps-tuettu true))
