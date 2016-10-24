@@ -2,7 +2,7 @@
   "Laskutusyhteenveto"
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [rivi +erheen-vari+]]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.pvm :as pvm]
@@ -47,6 +47,98 @@
 (defn- kuukausi [date]
   (.format (java.text.SimpleDateFormat. "MMMM") date))
 
+
+(defn- korotettuna-jos-indeksi-saatavilla
+  [rivi avain]
+
+  (let [avain-ind-korototettuna (keyword (str avain "_ind_korotettuna"))]
+    (if-let [ind-korotettuna (avain-ind-korototettuna rivi)]
+      {:tulos            ind-korotettuna
+       :indeksi-puuttui? false}
+      {:tulos            ((keyword avain) rivi)
+       :indeksi-puuttui? true})))
+
+(defn taulukko-elementti
+  [otsikko taulukon-tiedot kyseessa-kk-vali?
+   laskutettu-teksti laskutetaan-teksti
+   yhteenveto yhteenveto-teksti summa-fmt]
+  [:taulukko {:oikealle-tasattavat-kentat #{1 2 3}
+             :viimeinen-rivi-yhteenveto? true}
+  (rivi
+    {:otsikko otsikko :leveys 36}
+    (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti})
+    (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24 :tyyppi :varillinen-teksti})
+    {:otsikko yhteenveto-teksti :leveys 29 :tyyppi :varillinen-teksti})
+
+  (into []
+        (concat
+          (map (fn [[nimi {laskutettu :tulos laskutettu-ind-puuttui? :indeksi-puuttui?}
+                     {laskutetaan :tulos laskutetaan-ind-puuttui? :indeksi-puuttui?}]]
+                 (rivi
+                   nimi
+                   (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu)
+                                                                :vari (when laskutettu-ind-puuttui? +erheen-vari+)}])
+                   (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan)
+                                                                :vari (when laskutetaan-ind-puuttui? +erheen-vari+)}])
+                   (if (and laskutettu laskutetaan)
+                     [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu laskutetaan))
+                                          :vari (when (or laskutettu-ind-puuttui? laskutetaan-ind-puuttui?)
+                                                  +erheen-vari+)}]
+                     [:varillinen-teksti {:arvo (summa-fmt nil)
+                                          :vari +erheen-vari+}]))) taulukon-tiedot)
+          [yhteenveto]))])
+
+(defn- summaa-korotetut
+  [rivit]
+  (reduce
+    (fn [{summa :tulos
+          ind-puuttui? :indeksi-puuttui?}
+         {tulos :tulos indeksi-puuttui? :indeksi-puuttui?}]
+      {:tulos (+ summa (or tulos 0.0)) :indeksi-puuttui? (or ind-puuttui? indeksi-puuttui?)})
+    {:tulos 0 :indeksi-puuttui? false}
+    rivit))
+
+(defn- indeksi-puuttuu-jos-nil
+  [tulos]
+  {:tulos tulos
+   :indeksi-puuttui? (nil? tulos)})
+
+(defn- summataulukko
+  [otsikko avaimet
+   laskutettu-teksti laskutetaan-teksti
+   yhteenveto-teksti kyseessa-kk-vali?
+   tiedot summa-fmt lisaa-kht-ind-korotus?]
+  (let [taulukon-rivit (for [rivi tiedot
+                             :let [nimi (:nimi rivi)
+                                   laskutetut-arvot (map #(korotettuna-jos-indeksi-saatavilla rivi (str % "_laskutettu"))
+                                                         avaimet)
+
+                                   laskutettu (summaa-korotetut (if lisaa-kht-ind-korotus?
+                                                                  (conj laskutetut-arvot (indeksi-puuttuu-jos-nil (:kht_laskutettu_ind_korotus rivi)))
+                                                                  laskutetut-arvot))
+                                   laskutetaan-arvot (map #(korotettuna-jos-indeksi-saatavilla rivi (str % "_laskutetaan"))
+                                                          avaimet)
+                                   laskutetaan (summaa-korotetut (if lisaa-kht-ind-korotus?
+                                                                   (conj laskutetaan-arvot (indeksi-puuttuu-jos-nil (:kht_laskutetaan_ind_korotus rivi)))
+                                                                   laskutetaan-arvot))
+                                   summa (summaa-korotetut [laskutettu laskutetaan])]]
+                         [nimi laskutettu laskutetaan summa])
+        laskutettu-yht (summaa-korotetut (map second taulukon-rivit))
+        laskutetaan-yht (summaa-korotetut (map #(nth % 2) taulukon-rivit))
+        yhteensa (summaa-korotetut [laskutettu-yht laskutetaan-yht])
+        yhteenveto (rivi "Toimenpiteet yhteensä"
+                        (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt (:tulos laskutettu-yht))
+                                                                     :vari (when (:indeksi-puuttui? laskutettu-yht) +erheen-vari+)}])
+                        (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt (:tulos laskutetaan-yht))
+                                                                     :vari (when (:indeksi-puuttui? laskutetaan-yht) +erheen-vari+)}])
+
+                         [:varillinen-teksti {:arvo (summa-fmt (:tulos yhteensa))
+                                              :vari (when (:indeksi-puuttui? yhteensa) +erheen-vari+)}])]
+    (when-not (empty? taulukon-rivit)
+      (taulukko-elementti otsikko taulukon-rivit kyseessa-kk-vali?
+                          laskutettu-teksti laskutetaan-teksti
+                          yhteenveto yhteenveto-teksti summa-fmt))))
+
 (defn- taulukko
   ([otsikko otsikko-jos-tyhja
     laskutettu-teksti laskutettu-kentta
@@ -56,40 +148,36 @@
   (let [laskutettu-kentat (map laskutettu-kentta tiedot)
         laskutetaan-kentat (map laskutetaan-kentta tiedot)
         kaikkien-toimenpiteiden-summa (fn [kentat]
-                                              (if (some nil? kentat) nil (reduce + kentat)))
+                                        (reduce + (keep identity kentat)))
         laskutettu-yht (kaikkien-toimenpiteiden-summa laskutettu-kentat)
         laskutetaan-yht (kaikkien-toimenpiteiden-summa laskutetaan-kentat)
+        laskutettu-summasta-puuttuu-indeksi? (some nil? laskutettu-kentat)
+        laskutetaan-summasta-puuttuu-indeksi? (some nil? laskutetaan-kentat)
         yhteenveto (rivi "Toimenpiteet yhteensä"
-                         (when kyseessa-kk-vali? (summa-fmt laskutettu-yht))
-                         (when kyseessa-kk-vali? (summa-fmt laskutetaan-yht))
-                         (summa-fmt (if (and laskutettu-yht laskutetaan-yht)
-                                                    (+ laskutettu-yht laskutetaan-yht)
-                                                    nil)))
+                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutettu-yht)
+                                                                      :vari (when laskutettu-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                         (when kyseessa-kk-vali? [:varillinen-teksti {:arvo (summa-fmt laskutetaan-yht)
+                                                                      :vari (when laskutetaan-summasta-puuttuu-indeksi? +erheen-vari+)}])
+                         (if (and laskutettu-yht laskutetaan-yht)
+                           [:varillinen-teksti {:arvo (summa-fmt (+ laskutettu-yht laskutetaan-yht))
+                                                :vari (when (or laskutettu-summasta-puuttuu-indeksi?
+                                                                laskutetaan-summasta-puuttuu-indeksi?) +erheen-vari+)}]
+                           nil))
         taulukon-tiedot (filter (fn [[_ laskutettu laskutetaan]]
-                                  (not (and (= 0.0M laskutettu)
-                                            (= 0.0M laskutetaan))))
-                                (map (juxt :nimi laskutettu-kentta laskutetaan-kentta)
+                                  (not (and (= 0.0M (:tulos laskutettu))
+                                            (= 0.0M (:tulos laskutetaan)))))
+                                (map (juxt :nimi
+                                           (fn [rivi]
+                                             {:tulos (laskutettu-kentta rivi)
+                                              :indeksi-puuttui? laskutettu-summasta-puuttuu-indeksi?})
+                                           (fn [rivi]
+                                             {:tulos (laskutetaan-kentta rivi)
+                                              :indeksi-puuttui? laskutetaan-summasta-puuttuu-indeksi?}))
                                      tiedot))]
     (when-not (empty? taulukon-tiedot)
-      [:taulukko {:oikealle-tasattavat-kentat #{1 2 3}
-                  :viimeinen-rivi-yhteenveto? true}
-       (rivi
-         {:otsikko otsikko :leveys 36}
-         (when kyseessa-kk-vali? {:otsikko laskutettu-teksti :leveys 29})
-         (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 24})
-         {:otsikko yhteenveto-teksti :leveys 29})
-
-       (into []
-             (concat
-               (map (fn [[nimi laskutettu laskutetaan]]
-                      (rivi
-                        nimi
-                        (when kyseessa-kk-vali? (summa-fmt laskutettu))
-                        (when kyseessa-kk-vali? (summa-fmt laskutetaan))
-                        (summa-fmt (if (and laskutettu laskutetaan)
-                                                   (+ laskutettu laskutetaan)
-                                                   nil)))) taulukon-tiedot)
-               [yhteenveto]))]))))
+      (taulukko-elementti otsikko taulukon-tiedot kyseessa-kk-vali?
+                          laskutettu-teksti laskutetaan-teksti
+                          yhteenveto yhteenveto-teksti summa-fmt)))))
 
 (defn- aseta-sheet-nimi [[ensimmainen & muut]]
   (when ensimmainen
@@ -164,69 +252,85 @@
                                 varoitus-lampotilojen-puuttumisesta
                                 vain-jvh-voi-muokata-tietoja-viesti)])
 
+        kentat-kaikki-paitsi-kht #{"yht" "sakot" "suolasakot" "muutostyot" "akilliset_hoitotyot"
+                                   "bonukset" "erilliskustannukset"}
+        kentat-kaikki (conj kentat-kaikki-paitsi-kht "kht")
         taulukot
         (aseta-sheet-nimi
-         (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt :as taulukko-rivi]]
-                 (when taulukko-rivi
-                   (taulukko otsikko tyhja
-                             laskutettu-teksti laskutettu
-                             laskutetaan-teksti laskutetaan
-                             yhteenveto-teksti kyseessa-kk-vali?
-                             tiedot (or summa-fmt
-                                        (if indeksi-kaytossa?
-                                          fmt/luku-indeksikorotus
-                                          fmt/euro-opt)))))
-               [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
-                 :kht_laskutettu :kht_laskutetaan tiedot]
-                [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
-                 :yht_laskutettu :yht_laskutetaan tiedot]
-                [" Sanktiot " " Ei sanktioita "
-                 :sakot_laskutettu :sakot_laskutetaan tiedot]
-                (when talvisuolasakko-kaytossa?
-                  [" Talvisuolasakko (autom. laskettu) " " Ei talvisuolasakkoa "
-                   :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
-                [" Muutos- ja lisätyöt sekä vahinkojen korjaukset " " Ei muutos- ja lisätöitä "
-                 :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
-                [" Äkilliset hoitotyöt " " Ei äkillisiä hoitotöitä "
-                 :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
-                [" Bonukset " " Ei bonuksia "
-                 :bonukset_laskutettu :bonukset_laskutetaan tiedot]
-                [" Erilliskustannukset (muut kuin bonukset) " " Ei erilliskustannuksia "
-                 :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
-                (when indeksi-kaytossa?
-                  [" Kokonaishintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                   :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot])
-                (when indeksi-kaytossa?
-                  [" Yksikköhintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                   :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot])
-                (when indeksi-kaytossa?
-                  [" Sanktioiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                   :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot])
-                (when (and indeksi-kaytossa? talvisuolasakko-kaytossa?)
-                  [" Talvisuolasakon indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
-                   :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
-                (when indeksi-kaytossa?
-                  [" Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "
-                   :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot])
-                (when indeksi-kaytossa?
-                  [" Äkillisten hoitotöiden indeksitarkistukset " " Ei indeksitarkistuksia "
-                   :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot])
-                (when indeksi-kaytossa?
-                  [" Bonusten indeksitarkistukset " " Ei indeksitarkistuksia "
-                   :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus tiedot])
-                (when indeksi-kaytossa?
-                  [" Erilliskustannusten indeksitarkistukset (muut kuin bonukset) " " Ei indeksitarkistuksia "
-                   :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot])
-                (when indeksi-kaytossa?
-                  [" Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
-                   :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot])
-                (when indeksi-kaytossa?
-                  [" Kaikki indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
-                   :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot])
-                [" Kaikki paitsi kok.hint. työt yhteensä " " Ei kustannuksia "
-                 :kaikki_paitsi_kht_laskutettu :kaikki_paitsi_kht_laskutetaan tiedot]
-                [" Kaikki yhteensä " " Ei kustannuksia "
-                 :kaikki_laskutettu :kaikki_laskutetaan tiedot]]))]
+          (concat
+            (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt :as taulukko-rivi]]
+                    (when taulukko-rivi
+                      (taulukko otsikko tyhja
+                                laskutettu-teksti laskutettu
+                                laskutetaan-teksti laskutetaan
+                                yhteenveto-teksti kyseessa-kk-vali?
+                                tiedot (or summa-fmt
+                                           (if indeksi-kaytossa?
+                                             fmt/luku-indeksikorotus
+                                             fmt/euro-opt)))))
+                  [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
+                    :kht_laskutettu :kht_laskutetaan tiedot]
+                   [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
+                    :yht_laskutettu :yht_laskutetaan tiedot]
+                   [" Sanktiot " " Ei sanktioita "
+                    :sakot_laskutettu :sakot_laskutetaan tiedot]
+                   (when talvisuolasakko-kaytossa?
+                     [" Talvisuolasakko (autom. laskettu) " " Ei talvisuolasakkoa "
+                      :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
+                   [" Muutos- ja lisätyöt sekä vahinkojen korjaukset " " Ei muutos- ja lisätöitä "
+                    :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+                   [" Äkilliset hoitotyöt " " Ei äkillisiä hoitotöitä "
+                    :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
+                   [" Bonukset " " Ei bonuksia "
+                    :bonukset_laskutettu :bonukset_laskutetaan tiedot]
+                   [" Erilliskustannukset (muut kuin bonukset) " " Ei erilliskustannuksia "
+                    :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
+                   (when indeksi-kaytossa?
+                     [" Kokonaishintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                      :kht_laskutettu_ind_korotus :kht_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Yksikköhintaisten töiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                      :yht_laskutettu_ind_korotus :yht_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Sanktioiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                      :sakot_laskutettu_ind_korotus :sakot_laskutetaan_ind_korotus tiedot])
+                   (when (and indeksi-kaytossa? talvisuolasakko-kaytossa?)
+                     [" Talvisuolasakon indeksitarkistus (autom. laskettu) " " Ei indeksitarkistuksia "
+                      :suolasakot_laskutettu_ind_korotus :suolasakot_laskutetaan_ind_korotus tiedot fmt/euro-ei-voitu-laskea])
+                   (when indeksi-kaytossa?
+                     [" Muutos- ja lisätöiden sekä vahinkojen korjausten indeksitarkistukset " " Ei indeksitarkistuksia "
+                      :muutostyot_laskutettu_ind_korotus :muutostyot_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Äkillisten hoitotöiden indeksitarkistukset " " Ei indeksitarkistuksia "
+                      :akilliset_hoitotyot_laskutettu_ind_korotus :akilliset_hoitotyot_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Bonusten indeksitarkistukset " " Ei indeksitarkistuksia "
+                      :bonukset_laskutettu_ind_korotus :bonukset_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Erilliskustannusten indeksitarkistukset (muut kuin bonukset) " " Ei indeksitarkistuksia "
+                      :erilliskustannukset_laskutettu_ind_korotus :erilliskustannukset_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Muiden kuin kok.hint. töiden indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
+                      :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot])
+                   (when indeksi-kaytossa?
+                     [" Kaikki indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
+                      :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot])])
+
+            [(summataulukko " Kaikki paitsi kok.hint. työt yhteensä " kentat-kaikki-paitsi-kht
+                            laskutettu-teksti laskutetaan-teksti
+                            yhteenveto-teksti kyseessa-kk-vali?
+                            tiedot
+                            (if indeksi-kaytossa?
+                              fmt/luku-indeksikorotus
+                              fmt/euro-opt) true)
+
+             (summataulukko " Kaikki yhteensä " kentat-kaikki
+                            laskutettu-teksti laskutetaan-teksti
+                            yhteenveto-teksti kyseessa-kk-vali?
+                            tiedot
+                            (if indeksi-kaytossa?
+                              fmt/luku-indeksikorotus
+                              fmt/euro-opt) false)]))]
 
     (vec (keep identity
                [:raportti {:nimi "Laskutusyhteenveto"}

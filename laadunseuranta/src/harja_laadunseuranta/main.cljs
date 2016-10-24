@@ -1,21 +1,21 @@
 (ns harja-laadunseuranta.main
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs-time.local :as l]
-            [harja-laadunseuranta.kartta :as kartta]
-            [harja-laadunseuranta.pikavalintapaneeli :as pikavalinnat]
-            [harja-laadunseuranta.kuvat :as kuvat]
-            [harja-laadunseuranta.sovellus :as s]
-            [harja-laadunseuranta.ilmoitukset :as ilmoitukset]
-            [harja-laadunseuranta.alustus :as alustus]
-            [harja-laadunseuranta.ylapalkki :as ylapalkki]
-            [harja-laadunseuranta.asetukset :as asetukset]
-            [harja-laadunseuranta.comms :as comms]
-            [harja-laadunseuranta.tr-haku :as tr-haku]
-            [harja-laadunseuranta.puhe :as puhe]
+            [harja-laadunseuranta.ui.kartta :as kartta]
+            [harja-laadunseuranta.ui.pikavalintapaneeli :as pikavalinnat]
+            [harja-laadunseuranta.tiedot.asetukset.kuvat :as kuvat]
+            [harja-laadunseuranta.tiedot.sovellus :as s]
+            [harja-laadunseuranta.ui.ilmoitukset :as ilmoitukset]
+            [harja-laadunseuranta.ui.alustus :as alustus]
+            [harja-laadunseuranta.ui.ylapalkki :as ylapalkki]
+            [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset]
+            [harja-laadunseuranta.tiedot.comms :as comms]
+            [harja-laadunseuranta.ui.tr-haku :as tr-haku]
+            [harja-laadunseuranta.tiedot.puhe :as puhe]
             [harja-laadunseuranta.utils :as utils]
-            [harja-laadunseuranta.havaintolomake :as havaintolomake]
-            [harja-laadunseuranta.reitintallennus :as reitintallennus]
-            [harja-laadunseuranta.tarkastusajon-luonti :as tarkastusajon-luonti]
+            [harja-laadunseuranta.ui.havaintolomake :as havaintolomake]
+            [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
+            [harja-laadunseuranta.ui.tarkastusajon-luonti :as tarkastusajon-luonti]
             [harja-laadunseuranta.utils :refer [flip erota-mittaukset erota-havainnot]]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
@@ -49,7 +49,7 @@
 (defn- lisaa-kirjausikoni [teksti]
   (swap! s/kirjauspisteet
          conj (assoc (select-keys (:nykyinen @s/sijainti) [:lat :lon])
-                     :label teksti)))
+                :label teksti)))
 
 (defn- peruuta-pikavalinta []
   (reset! s/pikavalinta nil)
@@ -78,13 +78,13 @@
      [havaintolomake/havaintolomake asetukset/+wmts-url+ asetukset/+wmts-url-kiinteistojaotus+ asetukset/+wmts-url-ortokuva+
       model
       #(do
-         (peruuta-pikavalinta)
-         (reitintallennus/kirjaa-kertakirjaus @s/idxdb % @s/tarkastusajo)
-         (lisaa-kirjausikoni "!")
-         (tallennettu-fn))
+        (peruuta-pikavalinta)
+        (reitintallennus/kirjaa-kertakirjaus @s/idxdb % @s/tarkastusajo)
+        (lisaa-kirjausikoni "!")
+        (tallennettu-fn))
       #(do
-         (peruuta-pikavalinta)
-         (peruutettu-fn))]]))
+        (peruuta-pikavalinta)
+        (peruutettu-fn))]]))
 
 (defn- spinneri [lahettamattomia]
   (when (> @lahettamattomia 0)
@@ -162,74 +162,76 @@
   (let [alivalikot (atom {})]
     (fn []
       [:div.toplevel
-       [ylapalkki/ylapalkkikomponentti {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
-                                        :hoitoluokka s/hoitoluokka
-                                        :soratiehoitoluokka s/soratiehoitoluokka
-                                        :tr-osoite s/tr-osoite
-                                        :kiinteistorajat s/nayta-kiinteistorajat
-                                        :ortokuva s/nayta-ortokuva
-                                        :tallennus-kaynnissa s/tallennus-kaynnissa
-                                        :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
-                                        :keskita-ajoneuvoon s/keskita-ajoneuvoon
-                                        :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
-                                        :valittu-urakka s/valittu-urakka
-                                        :palvelinvirhe s/palvelinvirhe}]
+       [ylapalkki/ylapalkkikomponentti
+        {:tiedot-nakyvissa s/tr-tiedot-nakyvissa
+         :hoitoluokka s/hoitoluokka
+         :soratiehoitoluokka s/soratiehoitoluokka
+         :tr-osoite s/tr-osoite
+         :kiinteistorajat s/nayta-kiinteistorajat
+         :ortokuva s/nayta-ortokuva
+         :tallennus-kaynnissa s/tallennus-kaynnissa
+         :tallennustilaa-muutetaan s/tallennustilaa-muutetaan
+         :keskita-ajoneuvoon s/keskita-ajoneuvoon
+         :disabloi-kaynnistys? (or @s/kirjaamassa-havaintoa @s/kirjaamassa-yleishavaintoa s/palautettava-tarkastusajo)
+         :valittu-urakka s/valittu-urakka
+         :palvelinvirhe s/palvelinvirhe}]
 
-       [kartta/karttakomponentti
-        {:wmts-url asetukset/+wmts-url+
-         :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
-         :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
-         :sijainti-atomi s/kartan-keskipiste
-         :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
-         :reittipisteet-atomi s/reittipisteet
-         :kirjauspisteet-atomi s/kirjauspisteet
-         :optiot s/karttaoptiot}]
+       [:div.paasisalto-container
+        [kartta/karttakomponentti
+         {:wmts-url asetukset/+wmts-url+
+          :wmts-url-kiinteistorajat asetukset/+wmts-url-kiinteistojaotus+
+          :wmts-url-ortokuva asetukset/+wmts-url-ortokuva+
+          :sijainti-atomi s/kartan-keskipiste
+          :ajoneuvon-sijainti-atomi s/ajoneuvon-sijainti
+          :reittipisteet-atomi s/reittipisteet
+          :kirjauspisteet-atomi s/kirjauspisteet
+          :optiot s/karttaoptiot}]
 
-       [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
+        [:div.paasisalto
+         [ilmoitukset/ilmoituskomponentti s/ilmoitukset]
 
-       (when @s/kirjaamassa-havaintoa
-         [havaintolomake sulje-havaintodialogi sulje-havaintodialogi])
+         (when @s/kirjaamassa-havaintoa
+           [havaintolomake sulje-havaintodialogi sulje-havaintodialogi])
 
-       (when @s/kirjaamassa-yleishavaintoa
-         [havaintolomake yleishavainto-kirjattu sulje-yleishavaintodialogi])
+         (when @s/kirjaamassa-yleishavaintoa
+           [havaintolomake yleishavainto-kirjattu sulje-yleishavaintodialogi])
 
-       (when @s/tarkastusajo-luotava
-         [:div.tarkastusajon-luonti-dialog-container
-          [tarkastusajon-luonti/tarkastusajon-luontidialogi luo-ajo luonti-peruttu]])
+         (when @s/tarkastusajo-luotava
+           [:div.tarkastusajon-luonti-dialog-container
+            [tarkastusajon-luonti/tarkastusajon-luontidialogi luo-ajo luonti-peruttu]])
 
-       (when @s/tarkastusajo-paattymassa
-         [:div.tarkastusajon-luonti-dialog-container
-          [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia paata-ajo paattaminen-peruttu]])
+         (when @s/tarkastusajo-paattymassa
+           [:div.tarkastusajon-luonti-dialog-container
+            [tarkastusajon-luonti/tarkastusajon-paattamisdialogi s/lahettamattomia paata-ajo paattaminen-peruttu]])
 
-       (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
-         [:div.tarkastusajon-luonti-dialog-container
-          [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi jatka-ajoa pakota-ajon-lopetus]])
+         (when (and @s/palautettava-tarkastusajo (not (= "?relogin=true" js/window.location.search)))
+           [:div.tarkastusajon-luonti-dialog-container
+            [tarkastusajon-luonti/tarkastusajon-jatkamisdialogi jatka-ajoa pakota-ajon-lopetus]])
 
-       [spinneri s/lahettamattomia]
+         [spinneri s/lahettamattomia]
 
-       [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
+         [tr-haku/tr-selailukomponentti s/tr-tiedot-nakyvissa s/tr-tiedot]
 
-       (when @s/nayta-sivupaneeli
-         [:div
-          [:div.sivupaneeli-container
-           [pikavalinnat/pikavalintapaneeli s/tr-osoite s/tarkastustyyppi s/havainnot alivalikot
-            laheta-kitkamittaus laheta-kertakirjaus laheta-yleishavainto laheta-lumisuus laheta-tasaisuus laheta-soratiehavainto
-            s/kitkan-keskiarvo s/lumimaara s/tasaisuus s/kiinteys s/polyavyys]]
-          [:div.pikavalinta-footer
-           (when-not (or @s/kirjaamassa-yleishavaintoa
-                         @s/kirjaamassa-havaintoa)
-             [pikavalinnat/lisaa-havainto @s/yleishavainto-kaynnissa
-              #(if %
-                 (do
-                   (reset! s/tr-loppu @s/tr-osoite)
-                   (reset! s/kirjaamassa-yleishavaintoa true))
-                 (reset! s/kirjaamassa-havaintoa true))
-              #(do
-                 (reset! s/tr-alku @s/tr-osoite)
-                 (reset! s/yleishavainto-kaynnissa true))])]])])))
+         (when @s/nayta-sivupaneeli
+           [:div
+            [:div.sivupaneeli-container
+             [pikavalinnat/pikavalintapaneeli s/tr-osoite s/tarkastustyyppi s/havainnot alivalikot
+              laheta-kitkamittaus laheta-kertakirjaus laheta-yleishavainto laheta-lumisuus laheta-tasaisuus laheta-soratiehavainto
+              s/kitkan-keskiarvo s/lumimaara s/tasaisuus s/kiinteys s/polyavyys]]
+            [:div.pikavalinta-footer
+             (when-not (or @s/kirjaamassa-yleishavaintoa
+                           @s/kirjaamassa-havaintoa)
+               [pikavalinnat/lisaa-havainto @s/yleishavainto-kaynnissa
+                #(if %
+                  (do
+                    (reset! s/tr-loppu @s/tr-osoite)
+                    (reset! s/kirjaamassa-yleishavaintoa true))
+                  (reset! s/kirjaamassa-havaintoa true))
+                #(do
+                  (reset! s/tr-alku @s/tr-osoite)
+                  (reset! s/yleishavainto-kaynnissa true))])]])]]])))
 
 (defn main []
   (if @s/sovellus-alustettu
     [paanakyma]
-    [alustus/alustuskomponentti s/gps-tuettu s/idxdb
-                                s/tarkastustyyppi s/tarkastusajo s/kayttajanimi]))
+    [alustus/alustuskomponentti s/gps-tuettu s/idxdb s/kayttajanimi]))
