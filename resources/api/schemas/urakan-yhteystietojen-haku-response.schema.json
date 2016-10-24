@@ -103,7 +103,23 @@
                   "rooli": {
                     "type": "string",
                     "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/rooli",
-                    "required": false
+                    "required": true,
+                    "enum": [
+                      "Urakan vastuuhenkilö",
+                      "ELY urakanvalvoja",
+                      "ELY laadunvalvoja",
+                      "ELY turvallisuusvastaava",
+                      "ELY paakayttaja",
+                      "Tilaajan asiantuntija",
+                      "Tilaajan kayttaja",
+                      "Tilaajan urakanvalvoja",
+                      "Tilaajan laadunvalvoja",
+                      "Tilaajan turvallisuusvastaava",
+                      "Sampo yhteyshenkilö",
+                      "Kunnossapitopäällikkö",
+                      "Sillanvalvoja",
+                      "Kelikeskus",
+                      "Tieliikennekeskus"]
                   },
                   "organisaatio": {
                     "type": "string",
