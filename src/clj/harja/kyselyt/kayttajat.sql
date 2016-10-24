@@ -376,3 +376,13 @@ SELECT tyyppi FROM urakka WHERE id IN (:idt) GROUP BY tyyppi ORDER BY count(id) 
 SELECT jarjestelma
 FROM kayttaja
 WHERE kayttajanimi = :kayttajanimi;
+
+-- name: liikenneviraston-jarjestelma?
+-- single?: true
+SELECT exists(
+    SELECT k.id
+    FROM kayttaja k
+      JOIN organisaatio o ON k.organisaatio = o.id
+    WHERE k.kayttajanimi = :kayttajanimi AND
+          k.jarjestelma IS TRUE AND
+          o.tyyppi = 'liikennevirasto');
