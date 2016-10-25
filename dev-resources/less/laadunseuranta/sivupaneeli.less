@@ -5,6 +5,13 @@
     width: 240px;
     right: 0;
     top: 0;
+    max-height: 100%;
+    z-index: 1000;
+    /* FIXME Elementti on leveämpi kuin viewport, joten sallitaan scrollaus vain y-akselilla
+       Pitäisi korjata poistamalla elementin hardcoodattu leveys ja antamalla sisällön
+       määrittää leveys. Tämän jälkeen toimii overflow: auto;*/
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidepanel-box {
@@ -23,7 +30,6 @@
 }
 
 .sidepanel {
-    position: absolute;
     box-sizing: border-box;
     transition-property: right;
     transition-duration: 0.2s;
@@ -78,4 +84,11 @@
 }
 
 .painike-aktiivinen {
+}
+
+.pikavalinta-footer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 900;
 }
