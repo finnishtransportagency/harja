@@ -5,12 +5,15 @@
     "ELY urakanvalvoja"
     "ELY laadunvalvoja"
     "ELY turvallisuusvastaava"
-    "ELY paakayttaja"
     "Tilaajan asiantuntija"
-    "Tilaajan kayttaja"
     "Tilaajan urakanvalvoja"
     "Tilaajan laadunvalvoja"
-    "Tilaajan turvallisuusvastaava"})
+    "Tilaajan turvallisuusvastaava"
+    "Tiemerkitsija"
+    "Paivystaja"
+    "Laatupaallikko"
+    "Turvallisuusvastaava"
+    "Laadunvalvoja"})
 
 (def harja-roolit
   #{"Sampo yhteyshenkilö"

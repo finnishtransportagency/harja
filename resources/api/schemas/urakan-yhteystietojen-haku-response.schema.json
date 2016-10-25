@@ -109,17 +109,21 @@
                       "ELY urakanvalvoja",
                       "ELY laadunvalvoja",
                       "ELY turvallisuusvastaava",
-                      "ELY paakayttaja",
                       "Tilaajan asiantuntija",
-                      "Tilaajan kayttaja",
                       "Tilaajan urakanvalvoja",
                       "Tilaajan laadunvalvoja",
                       "Tilaajan turvallisuusvastaava",
+                      "Tiemerkitsija",
+                      "Paivystaja",
+                      "Laatupaallikko",
+                      "Turvallisuusvastaava",
+                      "Laadunvalvoja",
                       "Sampo yhteyshenkilö",
                       "Kunnossapitopäällikkö",
                       "Sillanvalvoja",
                       "Kelikeskus",
-                      "Tieliikennekeskus"]
+                      "Tieliikennekeskus"
+                    ]
                   },
                   "organisaatio": {
                     "type": "string",
