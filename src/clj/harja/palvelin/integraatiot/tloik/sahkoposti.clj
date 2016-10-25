@@ -11,7 +11,6 @@
             [harja.geo :as geo]
             [harja.fmt :as fmt]))
 
-
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
   otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 
@@ -74,7 +73,8 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html
    [:div
     [:table
-     (for [[kentta arvo] [["Ilmoitettu" (:ilmoitettu ilmoitus)]
+     (for [[kentta arvo] [["Urakka" (:urakkanimi ilmoitus)]
+                          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
                           ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
                           ["Otsikko" (:otsikko ilmoitus)]
                           ["Paikan kuvaus" (:paikankuvaus ilmoitus)]

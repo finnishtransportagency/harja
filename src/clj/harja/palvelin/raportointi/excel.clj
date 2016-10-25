@@ -55,6 +55,9 @@
 (defmethod erikoiskentta :arvo-ja-osuus [arvo-ja-osuus]
   (:arvo (second arvo-ja-osuus)))
 
+(defmethod erikoiskentta :varillinen-teksti [arvo-ja-vari]
+  (:arvo (second arvo-ja-vari)))
+
 (defmethod erikoiskentta :info [solu] (raportti-domain/virheen-viesti solu))
 (defmethod erikoiskentta :varoitus [solu] (raportti-domain/virheen-viesti solu))
 (defmethod erikoiskentta :virhe [solu] (raportti-domain/virheen-viesti solu))
@@ -72,7 +75,9 @@
   (try
     (let [nimi (:otsikko optiot)
           aiempi-sheet (last (excel/sheet-seq workbook))
-          [sheet nolla] (if (and (nil? nimi) aiempi-sheet)
+          [sheet nolla] (if (and (nil? (:sheet-nimi optiot))
+                                 (nil? nimi)
+                                 aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName

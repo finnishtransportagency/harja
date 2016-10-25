@@ -446,7 +446,6 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
                FROM paallystyspalvelusopimus pps
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
                      st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
-
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
@@ -533,3 +532,20 @@ WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 -- name: luo-paallystyspalvelusopimus<!
 INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
+
+-- name: hae-lahin-hoidon-alueurakka
+SELECT
+  u.id,
+  st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
+FROM urakka u
+  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+WHERE
+  u.alkupvm <= now() AND
+  u.loppupvm > now() AND
+  st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+ORDER BY etaisyys ASC
+LIMIT 1;
+
+
+
+
