@@ -73,7 +73,8 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html
    [:div
     [:table
-     (for [[kentta arvo] [["Ilmoitettu" (:ilmoitettu ilmoitus)]
+     (for [[kentta arvo] [["Urakka" (:urakkanimi ilmoitus)]
+                          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
                           ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
                           ["Otsikko" (:otsikko ilmoitus)]
                           ["Paikan kuvaus" (:paikankuvaus ilmoitus)]

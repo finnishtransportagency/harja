@@ -68,14 +68,14 @@
   (if (empty? paivystajat)
     (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
     (doseq [paivystaja paivystajat]
-      (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id)
-                                paivystaja))))
+      (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
 
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
    ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja]
-  (let [urakka-id (:id urakka)
+  (let [ilmoitus (assoc ilmoitus :urakkanimi (:nimi urakka))
+        urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)
         paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka

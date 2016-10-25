@@ -105,7 +105,8 @@
          :toimenpidepyynto "Toimenpidepyyntö"
          :tiedoitus "Tiedotus"
          (str/capitalize (name (:ilmoitustyyppi tapahtuma))))
-       [["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
+       [["Id" (:ilmoitusid tapahtuma)]
+        ["Ilmoitettu" (pvm/pvm-aika-sek (:ilmoitettu tapahtuma))]
         ["Otsikko" (:otsikko tapahtuma)]
         ["Paikan kuvaus" (:paikankuvaus tapahtuma)]
         ["Lisätietoja" (:lisatieto tapahtuma)]
