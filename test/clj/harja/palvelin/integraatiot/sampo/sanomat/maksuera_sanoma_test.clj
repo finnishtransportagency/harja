@@ -32,7 +32,7 @@
                  :sopimus             {:sampoid "00LZM-0033600"}})
 
 (deftest tarkista-maksueran-validius
-  (let [maksuera (html (maksuera_sanoma/muodosta +maksuera+))
+  (let [maksuera (html (maksuera_sanoma/maksuera-xml +maksuera+))
         xsd "nikuxog_product.xsd"]
     (is (xml/validi-xml? +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
@@ -40,7 +40,7 @@
   (str "kulu" (pvm/vuosi (pvm/nyt))))
 
 (deftest tarkista-maksueran-sisalto
-  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera_sanoma/muodosta +maksuera+)) "UTF-8"))))]
+  (let [maksuera-xml (xml-zip (parse (ByteArrayInputStream. (.getBytes (html (maksuera_sanoma/maksuera-xml +maksuera+)) "UTF-8"))))]
     (is (= "2015-12-12T00:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :start))))
     (is (= "2017-01-01T17:00:00.0" (z/xml1-> maksuera-xml :Products :Product (z/attr :finish))))
     (is (= "A009717" (z/xml1-> maksuera-xml :Products :Product (z/attr :managerUserName))))

@@ -30,6 +30,11 @@
    [:span " "]
    [:span.osuus (str "(" (:osuus arvo-ja-osuus) "%)")]])
 
+(defmethod muodosta-html :varillinen-teksti [[_ arvo-ja-vari]]
+  [:span.varillinen-teksti
+   [:span.arvo {:style {:color (or (:vari arvo-ja-vari) "rgb(25,25,25)")}}
+    (:arvo arvo-ja-vari)]])
+
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                tyhja

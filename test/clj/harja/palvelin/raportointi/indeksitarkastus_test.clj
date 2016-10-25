@@ -54,21 +54,28 @@
     ;; Kaikki yhteensä
     (let [otsikko "Kaikki yhteensä"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (log/debug "vastaus" vastaus)
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Kuukausi"}
-                                          {:otsikko "Kokonaishintaiset työt"}
-                                          {:otsikko "Yksikköhintaiset työt"}
+                                          {:otsikko "Kokonais\u00ADhintaiset työt"}
+                                          {:otsikko "Yksikkö\u00ADhintaiset työt"}
+                                          {:otsikko "Erillis\u00ADkustannukset"}
+                                          {:otsikko "Bonus"}
+                                          {:otsikko "Muutos- ja lisä\u00ADtyöt"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Suolabonukset ja -sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
                                                    suolabonus yhteensa :as rivi]]
-                                               (and (= (count rivi) 7)
+                                               (and (= (count rivi) 10)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
+                                                    (number? er-kust)
+                                                    (number? bonus)
+                                                    (number? muutos)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? suolabonus)
@@ -79,19 +86,25 @@
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Kuukausi"}
-                                          {:otsikko "Kokonaishintaiset työt"}
-                                          {:otsikko "Yksikköhintaiset työt"}
+                                          {:otsikko "Kokonais\u00ADhintaiset työt"}
+                                          {:otsikko "Yksikkö\u00ADhintaiset työt"}
+                                          {:otsikko "Erillis\u00ADkustannukset"}
+                                          {:otsikko "Bonus"}
+                                          {:otsikko "Muutos- ja lisä\u00ADtyöt"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Suolabonukset ja -sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
                                                    suolabonus yhteensa :as rivi]]
-                                               (and (= (count rivi) 7)
+                                               (and (= (count rivi) 10)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
+                                                    (number? er-kust)
+                                                    (number? bonus)
+                                                    (number? muutos)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? suolabonus)
@@ -102,18 +115,24 @@
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Kuukausi"}
-                                          {:otsikko "Kokonaishintaiset työt"}
-                                          {:otsikko "Yksikköhintaiset työt"}
+                                          {:otsikko "Kokonais\u00ADhintaiset työt"}
+                                          {:otsikko "Yksikkö\u00ADhintaiset työt"}
+                                          {:otsikko "Erillis\u00ADkustannukset"}
+                                          {:otsikko "Bonus"}
+                                          {:otsikko "Muutos- ja lisä\u00ADtyöt"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
                                                    yhteensa :as rivi]]
-                                               (and (= (count rivi) 6)
+                                               (and (= (count rivi) 9)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
+                                                    (number? er-kust)
+                                                    (number? bonus)
+                                                    (number? muutos)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? yhteensa)))))
@@ -123,18 +142,24 @@
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Kuukausi"}
-                                          {:otsikko "Kokonaishintaiset työt"}
-                                          {:otsikko "Yksikköhintaiset työt"}
+                                          {:otsikko "Kokonais\u00ADhintaiset työt"}
+                                          {:otsikko "Yksikkö\u00ADhintaiset työt"}
+                                          {:otsikko "Erillis\u00ADkustannukset"}
+                                          {:otsikko "Bonus"}
+                                          {:otsikko "Muutos- ja lisä\u00ADtyöt"}
                                           {:otsikko "Äkillinen hoitotyö"}
                                           {:otsikko "Sanktiot"}
                                           {:otsikko "Yhteensä (€)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[kuukausi kok-hint yks-hint akilliset-hoitotyot sanktiot
+                                             (fn [[kuukausi kok-hint yks-hint er-kust bonus muutos akilliset-hoitotyot sanktiot
                                                    yhteensa :as rivi]]
-                                               (and (= (count rivi) 6)
+                                               (and (= (count rivi) 9)
                                                     (string? kuukausi)
                                                     (number? kok-hint)
                                                     (number? yks-hint)
+                                                    (number? er-kust)
+                                                    (number? bonus)
+                                                    (number? muutos)
                                                     (number? akilliset-hoitotyot)
                                                     (number? sanktiot)
                                                     (number? yhteensa)))))))

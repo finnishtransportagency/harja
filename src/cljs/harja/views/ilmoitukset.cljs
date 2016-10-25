@@ -168,10 +168,10 @@
                              arvo))})]
    valinnat-nyt])
 
-(defn leikkaa-otsikko [{:keys [otsikko]}]
-  (if (> (count otsikko) 30)
-    (str (fmt/leikkaa-merkkijono 30 otsikko) "...")
-    otsikko))
+(defn leikkaa-sisalto-pituuteen [pituus sisalto]
+  (if (> (count sisalto) pituus)
+    (str (fmt/leikkaa-merkkijono pituus sisalto) "...")
+    sisalto))
 
 (defn ilmoitustyypin-selite [ilmoitustyyppi]
   (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
@@ -208,7 +208,7 @@
       [grid
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
-                 [ajax-loader "Haetaan ilmoutuksia"])
+                 [ajax-loader "Haetaan ilmoituksia"])
         :rivi-klikattu (when-not ilmoituksen-haku-kaynnissa?
                          (or valitse-ilmoitus!
                              #(e! (v/->ValitseIlmoitus %))))
@@ -233,8 +233,11 @@
            :leveys 1})
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
+        {:otsikko "Id" :nimi :ilmoitusid :leveys 3}
         {:otsikko "Otsikko" :nimi :otsikko :leveys 7
-         :hae #(leikkaa-otsikko %)}
+         :hae #(leikkaa-sisalto-pituuteen 30 (:otsikko %))}
+        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 7
+         :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
         {:otsikko "Ilmoitettu" :nimi :ilmoitettu
          :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi

@@ -249,6 +249,11 @@
     (clojure.string/replace +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+ "452935" "319130")
     "7186873" "7345904"))
 
+(def +ilmoitus-hailuodon-jaatiella+
+  (clojure.string/replace
+    (clojure.string/replace +testi-ilmoitus-sanoma+ "319130" "7186873")
+    "414212" "7211797"))
+
 (defn tuo-ilmoitus []
   (let [ilmoitus (ilmoitussanoma/lue-viesti +testi-ilmoitus-sanoma-jossa-ilmoittaja-urakoitsija+)]
     (ilmoitus/tallenna-ilmoitus (:db jarjestelma) ilmoitus)))
