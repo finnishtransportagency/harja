@@ -19,7 +19,7 @@
                       :salasana ""}
  :fim {:url
        ;; ohjaa: ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg
-       "https://localhost:6666/FIM/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"}
+       "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        ;; :hipchat {:taso     :warn
