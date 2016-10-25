@@ -18,8 +18,8 @@
   (tloik-tekstiviesti/laheta-ilmoitus-tekstiviestilla sms db ilmoitus paivystaja))
 
 (defn laheta [{sms :sms :as ilmoitusasetukset} db ilmoitus paivystaja]
-  (when (and (= "toimenpidepyynto" (:ilmoitustyyppi ilmoitus))
+  (when (and sms
              (:vastuuhenkilo paivystaja)
-             sms)
+             (= "toimenpidepyynto" (:ilmoitustyyppi ilmoitus)))
     (laheta-ilmoitus-tekstiviestilla sms db ilmoitus paivystaja))
   (laheta-ilmoitus-sahkopostilla ilmoitusasetukset ilmoitus paivystaja))
