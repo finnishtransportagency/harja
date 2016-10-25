@@ -8,6 +8,7 @@ SELECT
   i.valitetty,
   i.yhteydenottopyynto,
   i.otsikko,
+  i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
