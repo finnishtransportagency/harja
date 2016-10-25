@@ -174,7 +174,7 @@
                              :loppu (Date. (.getTime (:loppu p)))
                              :urakka urakka-id
                              :varahenkilo (not (:vastuuhenkilo p))
-                             :vastuuhenkilo true}]]
+                             :vastuuhenkilo (:vastuuhenkilo p)}]]
       (if (< (:id p) 0)
         ;; Luodaan uusi yhteyshenkilö
         (let [yht (q/luo-yhteyshenkilo<! c yhteyshenkilo)]
