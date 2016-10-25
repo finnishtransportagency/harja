@@ -55,7 +55,7 @@
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)]
-      (jms-lahettaja viesti viesti-id)))
+      (jms-lahettaja viesti)))
 
   (vastausosoite [this]
     vastausosoite))
