@@ -63,7 +63,7 @@
                  [com.draines/postal "1.11.3"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
-                 [org.apache.activemq/activemq-client "5.11.1"]
+                 [org.apache.activemq/activemq-client "5.14.1"]
 
 
                  ;; Asiakas
@@ -147,7 +147,7 @@
                                    [org.seleniumhq.selenium/selenium-firefox-driver "2.44.0"]]}}
 
   :repositories [["harja-data" "http://185.26.50.104/mvn/"]
-                 ["osgeo" "http://download.osgeo.org/webdav/geotools/"] ;; FIXME: move artifacts to mvn.solita.fi
+                 ["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]]
 
 

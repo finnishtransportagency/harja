@@ -16,6 +16,7 @@
 
 (def +ilmoitusviesti+
   (str "Uusi toimenpidepyyntö %s: %s (id: %s, viestinumero: %s).\n\n"
+       "Urakka: %s\n\n"
        "Yhteydenottopyyntö: %s\n\n"
        "Paikka: %s\n\n"
        "TR-osoite: %s\n\n"
@@ -139,6 +140,7 @@
               otsikko
               ilmoitus-id
               viestinumero
+              (:urakkanimi ilmoitus)
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
               paikankuvaus
               tr-osoite
