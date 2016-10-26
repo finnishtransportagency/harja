@@ -21,6 +21,7 @@
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]))
 
 (defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
@@ -134,14 +135,38 @@
   (log/debug "Haetaan tiemerkinnän suorittavat urakat.")
   (q/hae-tiemerkinnan-suorittavat-urakat db))
 
+(defn lisaa-yllapitokohteelle-kohteen-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]
+  (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
+                                                       :aosa tr-alkuosa
+                                                       :losa tr-loppuosa})
+        pituus (tr/laske-tien-pituus osien-pituudet kohde)]
+    (assoc kohde :tr-pituus pituus)))
+
+(defn- maarittele-hinnan-kohde [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                        tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
+       tr-loppuosa " / " tr-loppuetaisyys))
+
+(defn- lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta [kohde]
+  (let [hinnan-kohde-eri-kuin-nykyinen-osoite?
+        (and (:hinta-kohteelle kohde)
+             (not= (maarittele-hinnan-kohde kohde)
+                   (:hinta-kohteelle kohde)))]
+    (assoc kohde :hinnan-kohde-muuttunut? hinnan-kohde-eri-kuin-nykyinen-osoite?)))
+
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
   (assert urakka-id "anna urakka-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
-    (into []
-          (map #(konv/string->keyword % :hintatyyppi))
-          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot db {:suorittava_tiemerkintaurakka urakka-id}))))
+    (let [kohteet (into []
+                        (map #(konv/string->keyword % :hintatyyppi))
+                        (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
+                          db
+                          {:suorittava_tiemerkintaurakka urakka-id}))
+          kohteet (mapv (partial lisaa-yllapitokohteelle-kohteen-pituus db) kohteet)
+          kohteet (mapv lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta kohteet)]
+      kohteet)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
   (assert urakka-id "anna urakka-id")
@@ -149,17 +174,23 @@
   (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
-      (if-let [tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
-                               db
-                               {:yllapitokohde id}))]
-         (q/paivita-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
-                                                                  :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                                                                  :muutospvm muutospvm
-                                                                  :yllapitokohde id})
-         (q/luo-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
-                                                              :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                                                              :muutospvm muutospvm
-                                                              :yllapitokohde id})))
+      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
+            tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
+                            db
+                            {:yllapitokohde id}))]
+        (if tiedot
+         (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                                 :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                                 :muutospvm muutospvm
+                                                                 :hinta_kohteelle (when hinta
+                                                                                    hinta-osoitteelle)
+                                                                 :yllapitokohde id})
+         (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                             :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                             :muutospvm muutospvm
+                                                             :hinta_kohteelle (when hinta
+                                                                                hinta-osoitteelle)
+                                                             :yllapitokohde id}))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
