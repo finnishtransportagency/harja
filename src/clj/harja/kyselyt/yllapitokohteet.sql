@@ -621,13 +621,13 @@ UPDATE yllapitokohde_tiemerkinta SET
   hinta = :hinta,
   hintatyyppi = :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi,
   muutospvm = :muutospvm,
-  hinta_osoitteelle = :hinta_osoitteelle
+  hinta_kohteelle = :hinta_kohteelle
 WHERE yllapitokohde = :yllapitokohde;
 
 -- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
-INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_osoitteelle) VALUES
+INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
   (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm,
-  :hinta_osoitteelle);
+  :hinta_kohteelle);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id FROM yllapitokohde_tiemerkinta

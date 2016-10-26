@@ -144,14 +144,15 @@
 
 (defn- maarittele-hinnan-kohde [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
                                         tr-loppuosa tr-loppuetaisyys] :as kohde}]
-  (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/"
-       tr-loppuosa "/" tr-loppuetaisyys))
+  (str tr-numero " / " tr-alkuosa " / " tr-alkuetaisyys " / "
+       tr-loppuosa " / " tr-loppuetaisyys))
 
 (defn- lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta [kohde]
-  (let [hinnan-kohde-sama-kuin-nykyinen-osoite?
-        (= (maarittele-hinnan-kohde kohde)
-           (:hinnan-kohde kohde))]
-    (assoc kohde :hinnan-kohde-muuttunut (not hinnan-kohde-sama-kuin-nykyinen-osoite?))))
+  (let [hinnan-kohde-eri-kuin-nykyinen-osoite?
+        (and (:hinta-kohteelle kohde)
+             (not= (maarittele-hinnan-kohde kohde)
+                   (:hinta-kohteelle kohde)))]
+    (assoc kohde :hinnan-kohde-muuttunut? hinnan-kohde-eri-kuin-nykyinen-osoite?)))
 
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
   (assert urakka-id "anna urakka-id")
@@ -181,14 +182,14 @@
          (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
                                                                  :hintatyyppi (when hintatyyppi (name hintatyyppi))
                                                                  :muutospvm muutospvm
-                                                                 :hinta_osoitteelle (when hinta
-                                                                                      hinta-osoitteelle)
+                                                                 :hinta_kohteelle (when hinta
+                                                                                    hinta-osoitteelle)
                                                                  :yllapitokohde id})
          (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
                                                              :hintatyyppi (when hintatyyppi (name hintatyyppi))
                                                              :muutospvm muutospvm
-                                                             :hinta_osoitteelle (when hinta
-                                                                                  hinta-osoitteelle)
+                                                             :hinta_kohteelle (when hinta
+                                                                                hinta-osoitteelle)
                                                              :yllapitokohde id}))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
