@@ -79,6 +79,10 @@
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
+           {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
