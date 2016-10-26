@@ -142,6 +142,11 @@
         pituus (tr/laske-tien-pituus osien-pituudet kohde)]
     (assoc kohde :tr-pituus pituus)))
 
+(defn- maarittele-hinnan-kohde [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys
+                                        tr-loppuosa tr-loppuetaisyys] :as kohde}]
+  (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/"
+       tr-loppuosa "/" tr-loppuetaisyys))
+
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
   (assert urakka-id "anna urakka-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
@@ -160,18 +165,25 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
-      (if-let [tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
-                               db
-                               {:yllapitokohde id}))]
-         (q/paivita-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
-                                                                  :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                                                                  :muutospvm muutospvm
-                                                                  :yllapitokohde id})
-         (q/luo-tiemerkintaurakan-yksikkohintaiset-tyot<! db {:hinta hinta
-                                                              :hintatyyppi (when hintatyyppi (name hintatyyppi))
-                                                              :muutospvm muutospvm
-                                                              :yllapitokohde id})))
+    (doseq [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                    hinta hintatyyppi muutospvm id] :as kohde} kohteet]
+      (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
+            tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
+                            db
+                            {:yllapitokohde id}))]
+        (if tiedot
+         (q/paivita-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                                 :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                                 :muutospvm muutospvm
+                                                                 :hinta_osoitteelle (when hinta
+                                                                                      hinta-osoitteelle)
+                                                                 :yllapitokohde id})
+         (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<! db {:hinta hinta
+                                                             :hintatyyppi (when hintatyyppi (name hintatyyppi))
+                                                             :muutospvm muutospvm
+                                                             :hinta_osoitteelle (when hinta
+                                                                                  hinta-osoitteelle)
+                                                             :yllapitokohde id}))))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
