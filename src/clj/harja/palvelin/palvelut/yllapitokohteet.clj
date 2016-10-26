@@ -139,8 +139,7 @@
   (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
                                                        :aosa tr-alkuosa
                                                        :losa tr-loppuosa})
-        pituus (tr/laske-tien-pituus kohde osien-pituudet)]
-    (log/debug "Kohdeosan pituus: " (pr-str pituus))
+        pituus (tr/laske-tien-pituus osien-pituudet kohde)]
     (assoc kohde :tr-pituus pituus)))
 
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
