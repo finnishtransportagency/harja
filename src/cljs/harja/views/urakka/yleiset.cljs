@@ -435,11 +435,13 @@
         paallystys-tai-paikkausurakka? (or (= (:tyyppi ur) :paallystys)
                                            (= (:tyyppi ur) :paikkaus))
         paallystys-tai-paikkausurakka-sidottu? (some? (:yhatiedot ur))
-        sidonta-lukittu? (get-in ur [:yhatiedot :sidonta-lukittu?])]
+        sidonta-lukittu? (get-in ur [:yhatiedot :sidonta-lukittu?])
+        palvelusopimus? (= :palvelusopimus (:sopimustyyppi ur))]
     (when (and yha-tuontioikeus?
                paallystys-tai-paikkausurakka?
                (not paallystys-tai-paikkausurakka-sidottu?)
-               (not sidonta-lukittu?))
+               (not sidonta-lukittu?)
+               (not palvelusopimus?))
       (yha/nayta-tuontidialogi ur))))
 
 (defn yleiset [ur]
