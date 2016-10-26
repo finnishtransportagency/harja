@@ -88,9 +88,10 @@
   (let [max-odotusaika (t/hours 1)
         lahetyksessa? (= (:tila lahetystiedot) :odottaa_vastausta)
         lahetetty (:lahetetty lahetystiedot)]
+
     (if (and lahetyksessa? lahetetty)
-      (t/after? (t/now)
-                (t/plus lahetetty max-odotusaika))
+      (t/after? (pvm/aika-suomessa)
+                 (t/plus lahetetty max-odotusaika))
       false)))
 
 (defn- hae-lahetettavat-maksueranumerot [maksuerat kuittausta-odottavat-maksuerat]

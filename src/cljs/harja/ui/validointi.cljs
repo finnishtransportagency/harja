@@ -99,7 +99,7 @@
     viesti))
 
 (defmethod validoi-saanto :ei-tulevaisuudessa [_ nimi data _ _ & [viesti]]
-  (when (and data (t/after? data (t/now)))
+  (when (and data (t/after? data (pvm/aika-suomessa)))
     viesti))
 
 (defmethod validoi-saanto :ei-avoimia-korjaavia-toimenpiteitä [_ nimi data lomake _ & [viesti]]
