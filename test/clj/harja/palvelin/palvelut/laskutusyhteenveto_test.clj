@@ -242,10 +242,6 @@
 
       (is (= (count haetut-tiedot-oulu-ilman-tpita)
              (count haetut-tiedot-kajaani-ilman-tpita)))
-      (log/debug "haetut oulu ilman tpita" (map #(select-keys % [:suolasakot_laskutetaan :suolasakot_laskutetaan_ind_korotus :suolasakot_laskutetaan_ind_korotettuna]
-                                                              ) haetut-tiedot-oulu-ilman-tpita))
-      (log/debug "haetut kajaani ilman tpita" (map #(select-keys % [:suolasakot_laskutetaan :suolasakot_laskutetaan_ind_korotus :suolasakot_laskutetaan_ind_korotettuna]
-                                                                 ) haetut-tiedot-kajaani-ilman-tpita))
       (mapv (fn [eka toka]
               (testi/tarkista-map-arvot eka toka))
             haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita)
