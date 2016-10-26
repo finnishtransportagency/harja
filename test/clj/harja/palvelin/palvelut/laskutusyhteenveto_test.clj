@@ -39,14 +39,19 @@
                                   {:urakka-id @kajaanin-alueurakan-2014-2019-id
                                    :alkupvm   (pvm/->pvm "1.8.2015")
                                    :loppupvm  (pvm/->pvm "31.8.2015")})
-          poista-tpi-ja-suola (fn [tiedot]
+          poista-tpi (fn [tiedot]
                                 (map #(dissoc %
-                                              :tpi
+                                              :tpi) tiedot))
+          poista-suolasakot (fn [tiedot]
+                                (map #(dissoc %
+                                              :suolasakot_laskutettu
+                                              :suolasakot_laskutettu_ind_korotus
+                                              :suolasakot_laskutettu_ind_korotettuna
                                               :suolasakot_laskutetaan
                                               :suolasakot_laskutetaan_ind_korotus
                                               :suolasakot_laskutetaan_ind_korotettuna) tiedot))
-          haetut-tiedot-oulu-ilman-tpita (poista-tpi-ja-suola haetut-tiedot-oulu)
-          haetut-tiedot-kajaani-ilman-tpita (poista-tpi-ja-suola haetut-tiedot-kajaani)
+          haetut-tiedot-oulu-ilman-tpita (poista-tpi haetut-tiedot-oulu)
+          haetut-tiedot-kajaani-ilman-tpita (poista-tpi haetut-tiedot-kajaani)
 
           haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))
           haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))
@@ -74,12 +79,12 @@
            :erilliskustannukset_laskutettu                  1000.0M
            :erilliskustannukset_laskutettu_ind_korotettuna  990.42451324609000255000M
            :erilliskustannukset_laskutettu_ind_korotus      -9.57548675390999745000M
-           :kaikki_laskutetaan                              6597.111
-           :kaikki_laskutetaan_ind_korotus                  97.111
+           :kaikki_laskutetaan                              -23257.88M
+           :kaikki_laskutetaan_ind_korotus                  2.122M
            :kaikki_laskutettu                               39030.1M
            :kaikki_laskutettu_ind_korotus                   130.1M
-           :kaikki_paitsi_kht_laskutetaan                   3097.111
-           :kaikki_paitsi_kht_laskutetaan_ind_korotus       37.90
+           :kaikki_paitsi_kht_laskutetaan                   -26757.88M
+           :kaikki_paitsi_kht_laskutetaan_ind_korotus       -57.085
            :kaikki_paitsi_kht_laskutettu                    4030.1M
            :kaikki_paitsi_kht_laskutettu_ind_korotus        13.92M
            :kht_laskutetaan                                 3500.0M
@@ -103,6 +108,13 @@
            :sakot_laskutettu                                -100.0M
            :sakot_laskutettu_ind_korotettuna                -99.48930737312480054200M
            :sakot_laskutettu_ind_korotus                    0.51069262687519945800M
+           :suolasakko_kaytossa                             true
+           :suolasakot_laskutetaan                          -29760.0M
+           :suolasakot_laskutetaan_ind_korotettuna          -29854.989M
+           :suolasakot_laskutetaan_ind_korotus              -94.9888
+           :suolasakot_laskutettu                           0.0M
+           :suolasakot_laskutettu_ind_korotettuna           0.0M
+           :suolasakot_laskutettu_ind_korotus               0.0M
            :tpi                                             4
            :tuotekoodi                                      "23100"
            :yht_laskutetaan                                 0.0M
@@ -230,6 +242,10 @@
 
       (is (= (count haetut-tiedot-oulu-ilman-tpita)
              (count haetut-tiedot-kajaani-ilman-tpita)))
+      (log/debug "haetut oulu ilman tpita" (map #(select-keys % [:suolasakot_laskutetaan :suolasakot_laskutetaan_ind_korotus :suolasakot_laskutetaan_ind_korotettuna]
+                                                              ) haetut-tiedot-oulu-ilman-tpita))
+      (log/debug "haetut kajaani ilman tpita" (map #(select-keys % [:suolasakot_laskutetaan :suolasakot_laskutetaan_ind_korotus :suolasakot_laskutetaan_ind_korotettuna]
+                                                                 ) haetut-tiedot-kajaani-ilman-tpita))
       (mapv (fn [eka toka]
               (testi/tarkista-map-arvot eka toka))
             haetut-tiedot-oulu-ilman-tpita haetut-tiedot-kajaani-ilman-tpita)
