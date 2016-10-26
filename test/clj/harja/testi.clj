@@ -68,7 +68,7 @@
 
 (defn odota-arvo
   "Odottaa, että annetuun atomiin on tullut arvo. Palauttaa arvon.
-Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
+   Ottaa optionaalisesti maksimiajan, joka odotetaan (oletus 5 sekuntia)."
   ([atom] (odota-arvo atom 5000))
   ([atom max-aika]
    (odota #(not (nil? @atom)) "Atomiin on tullut ei-nil arvo" max-aika)
