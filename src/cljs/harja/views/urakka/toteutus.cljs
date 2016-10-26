@@ -36,6 +36,6 @@
 
           "Muut työt"
           :muut
-          (when (oikeudet/urakat-toteutus-muut-tyot id)
+          (when (oikeudet/urakat-toteutus-muuttyot id)
             ^{:key "muut-tyot"}
             [muut-tyot/muut-tyot-toteumat ur])]]))))
