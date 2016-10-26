@@ -35,7 +35,7 @@
     :toteumat (and (oikeudet/urakat-toteumat id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (not= tyyppi :tiemerkinta))
-    :toteutus (and (oikeudet/urakat-suunnittelu id)
+    :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
