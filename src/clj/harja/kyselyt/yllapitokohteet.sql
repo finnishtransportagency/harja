@@ -606,6 +606,7 @@ SELECT
   tr_ajorata                     AS "tr-ajorata",
   tr_kaista                      AS "tr-kaista",
   hinta,
+  hinta_kohteelle                AS "hinta-kohteelle",
   hintatyyppi,
   muutospvm,
   yllapitoluokka

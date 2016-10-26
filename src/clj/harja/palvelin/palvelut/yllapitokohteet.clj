@@ -147,6 +147,12 @@
   (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/"
        tr-loppuosa "/" tr-loppuetaisyys))
 
+(defn- lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta [kohde]
+  (let [hinnan-kohde-sama-kuin-nykyinen-osoite?
+        (= (maarittele-hinnan-kohde kohde)
+           (:hinnan-kohde kohde))]
+    (assoc kohde :hinnan-kohde-muuttunut (not hinnan-kohde-sama-kuin-nykyinen-osoite?))))
+
 (defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
   (assert urakka-id "anna urakka-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
@@ -157,7 +163,8 @@
                         (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                           db
                           {:suorittava_tiemerkintaurakka urakka-id}))
-          kohteet (mapv (partial lisaa-yllapitokohteelle-kohteen-pituus db) kohteet)]
+          kohteet (mapv (partial lisaa-yllapitokohteelle-kohteen-pituus db) kohteet)
+          kohteet (mapv lisaa-yllapitokohteelle-tieto-hinnan-muuttumisesta kohteet)]
       kohteet)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id kohteet]}]
@@ -165,8 +172,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (log/debug "Tallennetaan yksikköhintaiset työt " kohteet " tiemerkintäurakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                    hinta hintatyyppi muutospvm id] :as kohde} kohteet]
+    (doseq [{:keys [hinta hintatyyppi muutospvm id] :as kohde} kohteet]
       (let [hinta-osoitteelle (maarittele-hinnan-kohde kohde)
             tiedot (first (q/hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
                             db
