@@ -271,3 +271,21 @@
       (is (= (:suolasakot_laskutetaan haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
       (is (= (:suolasakot_laskutetaan_ind_korotettuna haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
       (is (= (:suolasakot_laskutetaan_ind_korotus haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa"))))
+
+(deftest suolasakko-oikein-hoitokauden-laskutusyhteenvedossa ;HAR-3477
+  (testing "suolasakko-oikein-hoitokauden-laskutusyhteenvedossa"
+    (let [haetut-tiedot-oulu (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                               (:db jarjestelma)
+                               +kayttaja-jvh+
+                               {:urakka-id @oulun-alueurakan-2014-2019-id
+                                :alkupvm   (pvm/->pvm "1.10.2014")
+                                :loppupvm (pvm/->pvm "30.9.2015")})
+          haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu))]
+
+      (is (= (:suolasakko_kaytossa haetut-tiedot-oulu-talvihoito) true) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutettu haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutettu_ind_korotettuna haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (= (:suolasakot_laskutettu_ind_korotus haetut-tiedot-oulu-talvihoito) 0.0M) "suolasakko laskutusyhteenvedossa")
+      (is (=marginaalissa? (:suolasakot_laskutetaan haetut-tiedot-oulu-talvihoito) -29760.0M) "suolasakko laskutusyhteenvedossa")
+      (is (=marginaalissa? (:suolasakot_laskutetaan_ind_korotettuna haetut-tiedot-oulu-talvihoito) -29854.989M) "suolasakko laskutusyhteenvedossa")
+      (is (=marginaalissa? (:suolasakot_laskutetaan_ind_korotus haetut-tiedot-oulu-talvihoito) -94.99M) "suolasakko laskutusyhteenvedossa"))))
