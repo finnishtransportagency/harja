@@ -201,7 +201,7 @@
       :fmt fmt/totuus :tasaa :keskita}]
     paivystajat]
    [yleiset/vihje "Kaikista ilmoituksista lähetetään aina kaikille vuorossaoleville päivystäjille tieto sähköpostilla.
-   Uusista toimenpidepyynnöistä lähetetään tekstiviestin vain vuorossaoleville vastuuhenkilöille"]])
+   Uusista toimenpidepyynnöistä lähetetään tekstiviesti vain vuorossaoleville vastuuhenkilöille"]])
 
 (defn paivystajat [ur]
   (let [paivystajat (atom nil)
