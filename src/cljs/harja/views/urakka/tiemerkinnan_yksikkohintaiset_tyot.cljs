@@ -79,13 +79,23 @@
             :tyyppi :positiivinen-numero
             :tasaa :oikea
             :muokattava? (constantly false)}
+           {:otsikko "Pit. (m)" :nimi :tr-pituus :leveys 3
+            :tyyppi :positiivinen-numero
+            :tasaa :oikea
+            :muokattava? (constantly false)}
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :tyyppi :numero :leveys 4
             :muokattava? (constantly false)}
            {:otsikko "Hinta"
             :nimi :hinta :tyyppi :positiivinen-numero :fmt fmt/euro-opt :leveys 3
             :tasaa :oikea
-            :muokattava? (constantly saa-muokata?)}
+            :muokattava? (constantly saa-muokata?)
+            :huomio (fn [rivi]
+                      (when (:hinnan-kohde-muuttunut? rivi)
+                        {:tyyppi :varoitus
+                        :teksti (str "Koh\u00ADteen oso\u00ADite on muut\u00ADtunut.\n
+                                      Hin\u00ADta on annet\u00ADtu koh\u00ADteen vanhal\u00ADle osoit\u00ADteelle:\n"
+                                     (:hinta-kohteelle rivi))}))}
            {:otsikko "Hintatyyppi"
             :nimi :hintatyyppi :tyyppi :valinta :leveys 5
             :valinta-arvo identity

@@ -88,8 +88,7 @@
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
       (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
       (laheta-ilmoitus-paivystajille db
-                                     (assoc ilmoitus :sijainti
-                                                     (merge (:sijainti ilmoitus) tieosoite))
+                                     (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
                                      paivystajat urakka-id ilmoitusasetukset))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
