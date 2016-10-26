@@ -54,24 +54,6 @@
      [joda-time]
      (t/to-time-zone joda-time suomen-aikavyohyke)))
 
-#?(:cljs
-   (defn paikallinen-aika
-     "Palauttaa käyttäjän laitteen paikallisen ajan."
-     []
-     (let [offset (- (.getTimezoneOffset (js/Date.)))
-           utc0 (t/now)
-           paikallinen-aika (t/plus utc0 (t/minutes offset))]
-       paikallinen-aika)))
-
-#?(:cljs
-   (defn aika-suomessa []
-     ;; Tällä hetkellä palauttaa suoraan käyttäjän laitteen paikallisen ajan, jonka pitäisi
-     ;; kuitenkin käytännössä aina olla Suomen aika.
-
-     ;; Jos kuitenkin vaaditaan luotettavampi tapa kysyä Suomen aika,
-     ;; pitäisi aika kysyä kokonaisuudessaan palvelimelta.
-     (paikallinen-aika)))
-
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
      (goog.date.DateTime.
@@ -134,7 +116,7 @@
        (tc/from-sql-time dt))))
 
 (defn nyt
-  "Frontissa palauttaa goog.date.Datetimen
+  "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
   []
   #?(:cljs (DateTime.)

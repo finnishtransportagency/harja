@@ -253,7 +253,7 @@
       :kun-onnistuu (fn [_]
                       (log "[YHA] Kohdeluettelo päivitetty")
                       (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc-in [:yhatiedot :kohdeluettelo-paivitetty]
-                                                  (pvm/aika-suomessa)))}]))
+                                                  (pvm/nyt)))}]))
 
 (defn kohdeluettelo-paivitetty [urakka]
   (if @yha-kohteiden-paivittaminen-kaynnissa?

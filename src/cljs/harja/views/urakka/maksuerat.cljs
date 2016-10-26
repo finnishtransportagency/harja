@@ -89,9 +89,10 @@
         lahetyksessa? (= (:tila lahetystiedot) :odottaa_vastausta)
         lahetetty (:lahetetty lahetystiedot)]
 
+
     (if (and lahetyksessa? lahetetty)
-      (t/after? (pvm/aika-suomessa)
-                 (t/plus lahetetty max-odotusaika))
+      (t/after? (pvm/nyt)
+                (t/plus lahetetty max-odotusaika))
       false)))
 
 (defn- hae-lahetettavat-maksueranumerot [maksuerat kuittausta-odottavat-maksuerat]

@@ -72,11 +72,11 @@
   vanhoja hoitokausia."
   [urakat n]
   (let [ensimmainen-vuosi (pvm/vuosi (t/earliest (map :alkupvm urakat)))
-        viimeinen-vuosi (t/year (pvm/aika-suomessa))
-        ensimmainen-vuosi (if (>= (- (t/year (pvm/aika-suomessa))
+        viimeinen-vuosi (t/year (pvm/nyt))
+        ensimmainen-vuosi (if (>= (- (t/year (pvm/nyt))
                                      ensimmainen-vuosi)
                                   n)
-                            (- (t/year (pvm/aika-suomessa)) n)
+                            (- (t/year (pvm/nyt)) n)
                             ensimmainen-vuosi)]
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
@@ -87,8 +87,8 @@
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
   ([n] (edelliset-hoitokaudet n false))
   ([n nykyinenkin?]
-   (let [ensimmainen-vuosi (- (t/year (pvm/aika-suomessa)) n)
-         viimeinen-vuosi (+ (t/year (pvm/aika-suomessa))
+   (let [ensimmainen-vuosi (- (t/year (pvm/nyt)) n)
+         viimeinen-vuosi (+ (t/year (pvm/nyt))
                             (if nykyinenkin? 1 0))]
     (mapv (fn [vuosi]
             [(pvm/hoitokauden-alkupvm vuosi)
