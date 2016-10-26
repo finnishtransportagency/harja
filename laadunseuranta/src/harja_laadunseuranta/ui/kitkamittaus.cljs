@@ -30,17 +30,17 @@
    [:div.syottokentta (str (:desimaalit @model))
     [:div.kursori {:style {:left (laske-kursorin-paikka (:desimaalit @model))}}]]
    [:div.nappaimisto
-    [:button [:span#btn7 {:on-click (numeropainike model 7)} "7"]]
-    [:button [:span#btn8 {:on-click (numeropainike model 8)} "8"]]
-    [:button [:span#btn9 {:on-click (numeropainike model 9)} "9"]]
-    [:button [:span#btn4 {:on-click (numeropainike model 4)} "4"]]
-    [:button [:span#btn5 {:on-click (numeropainike model 5)} "5"]]
-    [:button [:span#btn6 {:on-click (numeropainike model 6)} "6"]]
-    [:button [:span#btn1 {:on-click (numeropainike model 1)} "1"]]
-    [:button [:span#btn2 {:on-click (numeropainike model 2)} "2"]]
-    [:button [:span#btn3 {:on-click (numeropainike model 3)} "3"]]
-    [:button#delbtn [:span#del {:on-click (tyhjennyspainike model)} [:span.livicon-undo]]]
-    [:button [:span#btn0 {:on-click (numeropainike model 0)} "0"]]
+    [:button {:on-click (numeropainike model 7)} [:span#btn7 "7"]]
+    [:button {:on-click (numeropainike model 8)} [:span#btn8 "8"]]
+    [:button {:on-click (numeropainike model 9)} [:span#btn9 "9"]]
+    [:button {:on-click (numeropainike model 4)} [:span#btn4 "4"]]
+    [:button {:on-click (numeropainike model 5)} [:span#btn5 "5"]]
+    [:button {:on-click (numeropainike model 6)} [:span#btn6 "6"]]
+    [:button {:on-click (numeropainike model 1)} [:span#btn1 "1"]]
+    [:button {:on-click (numeropainike model 2)} [:span#btn2 "2"]]
+    [:button {:on-click (numeropainike model 3)} [:span#btn3 "3"]]
+    [:button#delbtn {:on-click (tyhjennyspainike model)} [:span#del  [:span.livicon-undo]]]
+    [:button {:on-click (numeropainike model 0)} [:span#btn0  "0"]]
     [:button#okbtn {:disabled (empty? (:desimaalit @model))}
      [:span#ok {:on-click #(when-not (empty? (:desimaalit @model))
                              (mittaus-valmis (muunna-arvoksi (:desimaalit @model)))
