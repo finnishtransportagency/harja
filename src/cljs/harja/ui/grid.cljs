@@ -329,7 +329,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                               :varoitus (ikonit/livicon-warning-sign)
                               (ikonit/livicon-info))
                       teksti (:teksti huomion-tiedot)]
-                  [yleiset/tooltip {} [:span ikoni]
+                  [yleiset/tooltip {} [:span {:class (str "grid-huomio-"
+                                                          (name (:tyyppi huomion-tiedot)))}
+                                       ikoni]
                    teksti])))]])))
     skeema)
    (when (and (not piilota-toiminnot?)
