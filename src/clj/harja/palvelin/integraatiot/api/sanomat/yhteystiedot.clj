@@ -9,7 +9,6 @@
     "Tilaajan urakanvalvoja"
     "Tilaajan laadunvalvoja"
     "Tilaajan turvallisuusvastaava"
-    "Tiemerkitsija"
     "Paivystaja"
     "Laatupaallikko"
     "Turvallisuusvastaava"

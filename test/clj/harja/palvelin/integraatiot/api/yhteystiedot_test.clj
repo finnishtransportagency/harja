@@ -60,7 +60,6 @@
           data (walk/keywordize-keys (cheshire/decode (:body vastaus)))
           yhteyshenkilot (get-in data [:urakka :yhteyshenkilot])]
       (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla")
-      (println vastaus)
       (is (= odotettu-vastaus (:body vastaus)))
       (is (= 4 (count yhteyshenkilot)))
       (is (sisaltaa-roolin? yhteyshenkilot "Sillanvalvoja"))
