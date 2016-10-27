@@ -123,5 +123,30 @@ INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshe
 INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (true, false, '2015-12-01 00:00:00.000000', '2020-12-06 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Muhoksen päällystysurakka'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'kyostiyit@example.org'));
 
 -- Päivystäjätekstiviestit
+INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES (0, (SELECT id FROM ilmoitus WHERE otsikko = 'Soittakaa Sepolle'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'));
 
-INSERT INTO paivystajatekstiviesti (viestinumero, ilmoitus, yhteyshenkilo) VALUES (0, (SELECT id FROM ilmoitus WHERE otsikko = 'Soittakaa Sepolle'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'))
+
+-- Urakan yhteyshenkilöt
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Oulun alueurakka 2014-2019'),
+        'Kunnossapitopäällikkö',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Jouko' AND
+           sukunimi = 'Kasslin'
+         LIMIT 1));
+INSERT INTO yhteyshenkilo_urakka (urakka, rooli, yhteyshenkilo)
+VALUES ((SELECT id
+         FROM urakka
+         WHERE nimi = 'Oulun alueurakka 2014-2019'),
+        'Sillanvalvoja',
+        (SELECT id
+         FROM yhteyshenkilo
+         WHERE
+           etunimi = 'Tiina' AND
+           sukunimi = 'Frösén'
+         LIMIT 1));
+
