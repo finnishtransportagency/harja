@@ -9,6 +9,7 @@
             [harja.fmt :as fmt]
             [harja.tyokalut.html :as html-tyokalut]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.kyselyt.yllapitokohteet :as q]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim])
