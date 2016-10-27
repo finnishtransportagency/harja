@@ -72,7 +72,8 @@
                           tiemerkintaurakka-id))))
     (catch Object e
       (log/error (format "Sähköpostia ei voitu lähettää kohteen %s tiemerkitsijälle: %s %s"
-                         kohde-id e (.printStackTrace e))))))
+                         kohde-id e (when (instance? java.lang.Throwable e)
+                                      (.printStackTrace e)))))))
 
 
 (defn- viesti-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
@@ -129,4 +130,5 @@
                           paallystysurakka-id))))
     (catch Object e
       (log/error (format "Sähköpostia ei voitu lähettää kohteen %s päällystäjälle: %s %s"
-                         kohde-id e (.printStackTrace e))))))
+                         kohde-id e (when (instance? java.lang.Throwable e)
+                                      (.printStackTrace e)))))))
