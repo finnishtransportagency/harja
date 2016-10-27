@@ -24,18 +24,18 @@
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
-          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot id)
+          (when (oikeudet/urakat-toteutus-kokonaishintaisettyot id)
             ^{:key "kokonaishintaiset-tyot"}
             [kokonaishintaiset-tyot/kokonaishintaiset-tyot ur valitun-hoitokauden-yks-hint-kustannukset])
 
           "Yksikköhintaiset työt"
           :yksikkohintaiset
-          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot id)
+          (when (oikeudet/urakat-toteutus-yksikkohintaisettyot id)
             ^{:key "yksikkohintaiset-tyot"}
             [yks-hint-tiemerkinta/yksikkohintaiset-tyot ur])
 
           "Muut työt"
           :muut
-          (when (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
+          (when (oikeudet/urakat-toteutus-muuttyot id)
             ^{:key "muut-tyot"}
-            [muut-tyot/muut-tyot-toteumat])]]))))
+            [muut-tyot/muut-tyot-toteumat ur])]]))))

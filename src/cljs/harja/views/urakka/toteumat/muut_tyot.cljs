@@ -117,7 +117,7 @@
 
 (defn toteutuneen-muun-tyon-muokkaus
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
-  []
+  [urakka]
   (komp/luo
    (let [muokattu (reaction-writable
                    (if (get-in @muut-tyot/valittu-toteuma [:toteuma :id])
@@ -145,9 +145,11 @@
              tehtavat (map #(nth % 3) tehtavat-tasoineen)
              toimenpideinstanssit @u/urakan-toimenpideinstanssit
              jarjestelman-lisaama-toteuma? (:jarjestelmasta @muokattu)
-             urakka-id (:id @nav/valittu-urakka)
-             kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-muutos-ja-lisatyot
-                                                        urakka-id)
+             urakka-id (:id urakka)
+             oikeus (if (= (:tyyppi urakka) :tiemerkinta)
+                      oikeudet/urakat-toteutus-muuttyot
+                      oikeudet/urakat-toteumat-muutos-ja-lisatyot)
+             kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeus urakka-id)
              lomaketta-voi-muokata? (and
                                      kirjoitusoikeus?
                                      (not jarjestelman-lisaama-toteuma?))
@@ -383,14 +385,15 @@
 
 (defn muut-tyot-toteumalistaus
   "Muiden töiden toteumat"
-  []
-  (let [urakka @nav/valittu-urakka
-
-        valitut-muut-tyot (reaction (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
+  [urakka]
+  (let [valitut-muut-tyot (reaction (let [toimenpideinstanssi @u/valittu-toimenpideinstanssi
                                           muut-tyot-hoitokaudella @u/muut-tyot-hoitokaudella]
                                       (reverse (sort-by :alkanut (filter #(= (get-in % [:tehtava :emo])
                                                                              (:id toimenpideinstanssi))
                                                                          muut-tyot-hoitokaudella)))))
+        oikeus (if (= (:tyyppi urakka) :tiemerkinta)
+                 oikeudet/urakat-toteutus-muuttyot
+                 oikeudet/urakat-toteumat-muutos-ja-lisatyot)
         tyorivit
         (reaction
           (let [muutoshintaiset-tyot @u/muutoshintaiset-tyot
@@ -412,16 +415,13 @@
       (fn []
         (reset! muut-tyot/haetut-muut-tyot @tyorivit)
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
-              oikeus? (oikeudet/voi-kirjoittaa?
-                       oikeudet/urakat-toteumat-muutos-ja-lisatyot
-                       (:id @nav/valittu-urakka))]
+              oikeus? (oikeudet/voi-kirjoittaa? oikeus (:id @nav/valittu-urakka))]
           [:div.muut-tyot-toteumat
            [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
            (yleiset/wrap-if
             (not oikeus?)
             [yleiset/tooltip {} :%
-             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                             oikeudet/urakat-toteumat-muutos-ja-lisatyot)]
+             (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeus)]
             [napit/uusi "Lisää toteuma" #(reset! muut-tyot/valittu-toteuma
                                                  {:alkanut (pvm/nyt)
                                                   :paattynyt (pvm/nyt)})
@@ -470,7 +470,7 @@
 
 
 
-(defn muut-tyot-toteumat []
+(defn muut-tyot-toteumat [ur]
   (komp/luo
     (komp/lippu muut-tyot-kartalla/karttataso-muut-tyot)
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
@@ -479,5 +479,5 @@
       [:span
        [kartta/kartan-paikka]
        (if @muut-tyot/valittu-toteuma
-         [toteutuneen-muun-tyon-muokkaus]
-         [muut-tyot-toteumalistaus])])))
+         [toteutuneen-muun-tyon-muokkaus ur]
+         [muut-tyot-toteumalistaus ur])])))
