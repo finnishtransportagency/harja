@@ -232,7 +232,7 @@
                                             :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
                                             :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
       (catch Object e
-        (log/error (format "Päällystysurakoitsija merkitsi kohteen %s valmiiksi, mutta sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: "
+        (log/error (format "Päällystysurakoitsija merkitsi kohteen %s valmiiksi, mutta sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: %s"
                            kohde-id
                            tiemerkintaurakka-id
                            e))))
