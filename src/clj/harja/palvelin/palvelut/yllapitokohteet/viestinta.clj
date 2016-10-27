@@ -78,8 +78,8 @@
                                       (.printStackTrace e)))))))
 
 
-(defn- viesti-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
-                                          tiemerkinta-valmis ilmoittaja] :as tiedot}]
+(defn- viesti-tiemerkinta-valmis [{:keys [kohde-nimi kohde-osoite
+                                          tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
      [:p (format "Kohteen '%s' tiemerkintä on valmistunut %s."
@@ -93,7 +93,7 @@
                               ["Ilmoittaja" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
                                                  (when-let [puhelin (:puhelin ilmoittaja)]
                                                    (str " (" puhelin ")")))]
-                              ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
+                              ["Ilmoittajan urakka" tiemerkintaurakka-nimi]])]))
 
 (defn sahkoposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
@@ -102,8 +102,8 @@
   (log/debug (format "Lähetetään sähköposti: ylläpitokohteen %s tiemerkintä valmis" kohde-id))
   (try+
     (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                   paallystysurakka-sampo-id paallystysurakka-nimi
-                   paallystysurakka-id]}
+                   paallystysurakka-sampo-id
+                   paallystysurakka-id tiemerkintaurakka-nimi]}
            (first (q/hae-kohteen-tiedot-sahkopostilahetykseen
                     db
                     {:id kohde-id}))
@@ -125,7 +125,7 @@
             (format "Harja: Kohteen '%s' tiemerkintä on valmistunut %s"
                     (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                     (fmt/pvm tiemerkinta-valmis-pvm))
-            (viesti-tiemerkinta-valmis {:paallystysurakka-nimi paallystysurakka-nimi
+            (viesti-tiemerkinta-valmis {:tiemerkintaurakka-nimi tiemerkintaurakka-nimi
                                         :kohde-nimi kohde-nimi
                                         :kohde-osoite kohde-osoite
                                         :tiemerkinta-valmis tiemerkinta-valmis-pvm
