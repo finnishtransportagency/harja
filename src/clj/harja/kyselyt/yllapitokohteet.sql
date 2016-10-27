@@ -452,7 +452,7 @@ SELECT
   tu.sampoid as "tiemerkintaurakka-sampo-id"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
-  JOIN urakka tu ON ypk.urakka = tu.id
+  JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
 WHERE ypk.id = :id;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
