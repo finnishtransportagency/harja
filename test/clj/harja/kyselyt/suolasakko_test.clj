@@ -12,7 +12,7 @@
 (deftest laske-urakan-suolasakko
   (let [ur @oulun-alueurakan-2014-2019-id]
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
-      (is (== 0
+      (is (== -29760.0M
               (ffirst (q (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')"))))))))
 
 (defn suolasakko [ur lampotila lampotila-pitka sakko-per-tonni sallittu-maara kaytetty-maara]
