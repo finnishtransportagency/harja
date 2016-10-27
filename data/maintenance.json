@@ -1,11 +1,5 @@
 [
   {
-    "date": "2016-10-27",
-    "title": "Muutoksia ilmoitusten käsittelyssä",
-    "short": "Muutoksia tieliikennekeskusten ilmoitusten käsittelyssä",
-    "body": "Jatkossa tekstiviestit uusista toimenpidepyynnöistä tullaan lähettämään vain urakan vuorossaoleville vastuullisille päivystäjille. Sähköpostit lähtevät yhä kaikista ilmoituksista kaikille urakan vuorossaoleville päivystäjille. Sähköposteihin & tekstiviesteihin on nyt lisätty tierekisteriosoite & ilmoittajan yhteystiedot."
-  },
-  {
     "date": "2016-07-04",
     "title": "Ylläpidon rajapintojen toteutus aloitettu",
     "body": "Ylläpidon rajapintojen toteutus aloitettu. Ensimmäinen toteutettava rajapinta on ylläpitourakan kohdeluettelon haku."

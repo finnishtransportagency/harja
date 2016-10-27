@@ -1,11 +1,17 @@
 [
-	{
-		"date": "2016-07-04",
-		"title": "Varusterajapintojen muutos siirtyy",
-		"body": "Varusterajapintojen yksinkertaistaminen siirtyy todennäköisesti tehtäväksi lomien jälkeen elokuussa."
-	},
-	{
-		"date": "2016-07-01",
-		"body": "Liikenneviraston tekemä lista urakoissa seurattavista reaaliaikaseurannan ja toteumien yksikkö- sekä kokonaishintaisista tehtävistä viety staginging ympäristöön käyttöön."
-	}
+  {
+    "date": "2016-10-27",
+    "title": "Muutoksia ilmoitusten käsittelyssä",
+    "short": "Tekstiviestit vain vastuullisille päivystäjille. Tekstiviestien ja sähköpostien sisältöä laajennettu.",
+    "body": "Jatkossa tekstiviestit uusista toimenpidepyynnöistä tullaan lähettämään vain urakan vuorossaoleville vastuullisille päivystäjille. Sähköpostit lähtevät yhä kaikista ilmoituksista kaikille urakan vuorossaoleville päivystäjille. Sähköposteihin & tekstiviesteihin on nyt lisätty tierekisteriosoite & ilmoittajan yhteystiedot."
+  },
+  {
+    "date": "2016-07-04",
+    "title": "Varusterajapintojen muutos siirtyy",
+    "body": "Varusterajapintojen yksinkertaistaminen siirtyy todennäköisesti tehtäväksi lomien jälkeen elokuussa."
+  },
+  {
+    "date": "2016-07-01",
+    "body": "Liikenneviraston tekemä lista urakoissa seurattavista reaaliaikaseurannan ja toteumien yksikkö- sekä kokonaishintaisista tehtävistä viety staginging ympäristöön käyttöön."
+  }
 ]

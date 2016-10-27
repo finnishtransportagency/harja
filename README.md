@@ -3,6 +3,13 @@
 
 > Liikenneviraston kunnossapidon seurannan ja raportoinnin info-sivut
 
+## Install
+
+Install NPM dependencies
+
+```bash
+$ npm install
+```
 
 ## Building project
 
