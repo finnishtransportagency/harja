@@ -233,7 +233,7 @@
          :id (:id rivi)
          :urakka urakka-id}))))
 
-(defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user urakka-id kohteet
+(defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet
                                                         paallystysurakka-nimi kohde-nimi
                                                         kohde-osoite tiemerkinta-valmis
                                                         voi-tallentaa-tiemerkinnan-takarajan?
@@ -245,13 +245,13 @@
        :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu kohde)
        :aikataulu_muokkaaja (:id user)
        :id (:id kohde)
-       :urakka urakka-id})
+       :urakka paallystysurakka-id})
     (when voi-tallentaa-tiemerkinnan-takarajan?
       (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
         db
         {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
          :id (:id kohde)
-         :urakka urakka-id}))
+         :urakka paallystysurakka-id}))
 
     (viestinta/sahkoposti-paallystysurakkaan-tiemerkinta-valmis
         {:fim fim
@@ -282,21 +282,16 @@
         :paallystys
         (tallenna-paallystyskohteiden-aikataulu db user kohteet urakka-id voi-tallentaa-tiemerkinnan-takarajan?)
         :tiemerkinta
-        (tallenna-tiemerkintakohteiden-aikataulu {:fim fim :email email
-                                                  :paallystysurakka-nimi paallystysurakka-nimi
-                                                  :kohde-nimi kohde-nimi
-                                                  :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
-                                                                   (when-let [puhelin (:puhelin user)]
-                                                                     (str " (" puhelin ")")))
-                                                  :kohde-osoite {:tr-numero tr-numero
-                                                                 :tr-alkuosa tr-alkuosa
-                                                                 :tr-alkuetaisyys tr-alkuetaisyys
-                                                                 :tr-loppuosa tr-loppuosa
-                                                                 :tr-loppuetaisyys tr-loppuetaisyys}
-                                                  :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
-                                                  :tiemerkintaurakka-id tiemerkintaurakka-id
-                                                  :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
-                                                  :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
+        (tallenna-tiemerkintakohteiden-aikataulu
+          {:fim fim :email email :db db :user user
+           :kohteet kohteet
+           :paallystysurakka-nimi paallystysurakka-nimi
+           :kohde-nimi kohde-nimi
+           :kohde-osoite kohde-osoite
+           :tiemerkinta-valmis tiemerkinta-valmis
+           :voi-tallentaa-tiemerkinnan-takarajan? voi-tallentaa-tiemerkinnan-takarajan?
+           :paallystysurakka-id paallystysurakka-id
+           :paallystysurakka-sampo-id paallystysurakka-sampo-id})
         (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                        :sopimus-id sopimus-id})))))
 

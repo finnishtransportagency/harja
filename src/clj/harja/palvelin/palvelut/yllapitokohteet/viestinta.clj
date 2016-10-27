@@ -2,8 +2,6 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
-            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :refer :all]
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
             [com.stuartsierra.component :as component]
