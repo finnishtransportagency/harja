@@ -7,7 +7,12 @@
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+            [harja.tyokalut.html :as html-tyokalut]
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [harja.palvelin.komponentit.fim :as fim]))
 
 (defn- viesti-kohde-valmis-merkintaan [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                               kohde-valmis-tiemerkintaan-pvm ilmoittaja
