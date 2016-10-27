@@ -16,7 +16,8 @@
    [cljs.core.async :refer [<! >!]]
    [cljs-react-test.simulate :as sim]
    [schema.core :as s]
-   [harja.domain.paallystysilmoitus :as pot])
+   [harja.domain.paallystysilmoitus :as pot]
+   [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
