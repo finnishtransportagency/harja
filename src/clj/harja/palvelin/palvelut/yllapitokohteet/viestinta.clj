@@ -10,6 +10,7 @@
             [harja.tyokalut.html :as html-tyokalut]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [hiccup.core :refer [html]]
             [harja.palvelin.komponentit.fim :as fim])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
