@@ -38,14 +38,8 @@
 
 (defn hae-ilmoituksen-saajat [fim sampo-id]
   (let [urakan-kayttajat (fim/hae-urakan-kayttajat fim sampo-id)
-        ilmoituksen-saajat (filter
-                             (fn [kayttaja]
-                               (let [roolit (:roolit kayttaja)]
-                                 ;; Tarkka match roolit-excelin roolin nimestä
-                                 (some #(or (= (str/lower-case %) "ely urakanvalvoja")
-                                            (= (str/lower-case %) "urakan vastuuhenkilö"))
-                                       roolit)))
-                             urakan-kayttajat)]
+        ilmoituksen-saajat (fim/suodata-kayttajaroolit urakan-kayttajat
+                                                       #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
     ilmoituksen-saajat))
 
 (defn- ilmoita-paivystyksettomasta-urakasta [urakka fim email pvm]
