@@ -181,7 +181,7 @@
                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                  (fmt/pvm kohde-valmis-tiemerkintaan-pvm))]
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
-                              ["Kohteen osoite" (tierekisteri/tierekisteriosoite-tekstina
+                              ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                                   {:teksti-tie false}
                                                   kohde-osoite)]
                               ["Valmis tiemerkintään" (fmt/pvm kohde-valmis-tiemerkintaan-pvm)]
@@ -251,7 +251,7 @@
                                             :kohde-nimi kohde-nimi
                                             :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
                                                              (when-let [puhelin (:puhelin user)]
-                                                               " (" puhelin ")"))
+                                                               (str " (" puhelin ")")))
                                             :kohde-osoite {:tr-numero tr-numero
                                                            :tr-alkuosa tr-alkuosa
                                                            :tr-alkuetaisyys tr-alkuetaisyys
