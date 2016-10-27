@@ -28,7 +28,7 @@
                                              kohde-osoite
                                              {:teksti-tie? false})]
                               ["Valmis tiemerkintään" (fmt/pvm tiemerkintapvm)]
-                              ["Tiemerkinnän suorittaja" tiemerkintaurakka-nimi]
+                              ["Tiemerkintäurakka" tiemerkintaurakka-nimi]
                               ["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
                                                  (when-let [puhelin (:puhelin ilmoittaja)]
                                                    (str " (" puhelin ")")))]
@@ -82,7 +82,7 @@
                                           tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
-     [:p (format "Kohteen '%s' tiemerkintä on merkitty valmiiksi %s."
+     [:p (format "Kohteen '%s' tiemerkintä on valmistunut %s."
                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                  (fmt/pvm tiemerkinta-valmis))]
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
