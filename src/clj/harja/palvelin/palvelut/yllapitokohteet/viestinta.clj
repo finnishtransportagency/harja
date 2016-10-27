@@ -29,7 +29,9 @@
                                              {:teksti-tie? false})]
                               ["Valmis tiemerkintään" (fmt/pvm tiemerkintapvm)]
                               ["Tiemerkinnän suorittaja" tiemerkintaurakka-nimi]
-                              ["Ilmoittaja" ilmoittaja]
+                              ["Ilmoittaja" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
+                                                 (when-let [puhelin (:puhelin ilmoittaja)]
+                                                   (str " (" puhelin ")")))]
                               ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
 
 (defn sahkoposti-kohde-valmis-merkintaan
@@ -88,7 +90,9 @@
                                              kohde-osoite
                                              {:teksti-tie? false})]
                               ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
-                              ["Ilmoittaja" ilmoittaja]
+                              ["Ilmoittaja" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
+                                                 (when-let [puhelin (:puhelin ilmoittaja)]
+                                                   (str " (" puhelin ")")))]
                               ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
 
 (defn sahkoposti-tiemerkinta-valmis
