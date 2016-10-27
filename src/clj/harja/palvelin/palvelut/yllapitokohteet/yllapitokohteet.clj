@@ -23,12 +23,11 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paallystys :as paallystys-q]
             [clj-time.coerce :as c]
-            [harja.palvelin.komponentit.fim :as fim]
-            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.pvm :as pvm]
             [clojure.java.io :as io]
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.tyokalut.html :as html-tyokalut])
   (:use [slingshot.slingshot :only [try+ throw+]]
         org.httpkit.fake))
@@ -172,50 +171,6 @@
                                                              :yllapitokohde id})))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
-(defn- tiemerkinnan-sahkopostiviesti [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
-                                              kohde-valmis-tiemerkintaan-pvm ilmoittaja
-                                              tiemerkintaurakka-nimi] :as tiedot}]
-  (html
-    [:div
-     [:p (format "Kohde '%s' on ilmoitettu olevan valmis tiemerkintään %s."
-                 (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                 (fmt/pvm kohde-valmis-tiemerkintaan-pvm))]
-     (html-tyokalut/taulukko [["Kohde" kohde-nimi]
-                              ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                             kohde-osoite
-                                             {:teksti-tie? false})]
-                              ["Valmis tiemerkintään" (fmt/pvm kohde-valmis-tiemerkintaan-pvm)]
-                              ["Tiemerkinnän suorittaja" tiemerkintaurakka-nimi]
-                              ["Ilmoittaja" ilmoittaja]
-                              ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
-
-(defn- laheta-sahkoposti-tiemerkitsijoille [{:keys [fim email
-                                                    paallystysurakka-nimi kohde-nimi kohde-osoite
-                                                    kohde-valmis-tiemerkintaan-pvm ilmoittaja
-                                                    tiemerkintaurakka-id tiemerkintaurakka-nimi
-                                                    tiemerkintaurakka-sampo-id] :as tiedot}]
-  (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
-                             fim
-                             tiemerkintaurakka-sampo-id
-                             #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
-    (if-not (empty? ilmoituksen-saajat)
-      (doseq [henkilo ilmoituksen-saajat]
-        (sahkoposti/laheta-viesti!
-          email
-          (sahkoposti/vastausosoite email)
-          (:sahkoposti henkilo)
-          (format "Harja: Kohteen '%s' tiemerkinnän voi aloittaa %s"
-                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                  (fmt/pvm kohde-valmis-tiemerkintaan-pvm))
-          (tiemerkinnan-sahkopostiviesti {:paallystysurakka-nimi paallystysurakka-nimi
-                                          :kohde-nimi kohde-nimi
-                                          :kohde-osoite kohde-osoite
-                                          :kohde-valmis-tiemerkintaan-pvm kohde-valmis-tiemerkintaan-pvm
-                                          :ilmoittaja ilmoittaja
-                                          :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})))
-      (log/warn (format "Tiemerkintäurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa kohteen valmiudesta tiemerkintään."
-                        tiemerkintaurakka-id)))))
-
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
@@ -241,22 +196,22 @@
          :urakka urakka-id}))
 
     (try+
-      (laheta-sahkoposti-tiemerkitsijoille {:fim fim
-                                            :email email
-                                            :paallystysurakka-nimi paallystysurakka-nimi
-                                            :kohde-nimi kohde-nimi
-                                            :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
-                                                             (when-let [puhelin (:puhelin user)]
-                                                               (str " (" puhelin ")")))
-                                            :kohde-osoite {:tr-numero tr-numero
-                                                           :tr-alkuosa tr-alkuosa
-                                                           :tr-alkuetaisyys tr-alkuetaisyys
-                                                           :tr-loppuosa tr-loppuosa
-                                                           :tr-loppuetaisyys tr-loppuetaisyys}
-                                            :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
-                                            :tiemerkintaurakka-id tiemerkintaurakka-id
-                                            :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
-                                            :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
+      (viestinta/sahkoposti-tiemerkintaurakkaan-kohde-valmis-merkintaan
+        {:fim fim :email email
+         :paallystysurakka-nimi paallystysurakka-nimi
+         :kohde-nimi kohde-nimi
+         :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
+                          (when-let [puhelin (:puhelin user)]
+                            (str " (" puhelin ")")))
+         :kohde-osoite {:tr-numero tr-numero
+                        :tr-alkuosa tr-alkuosa
+                        :tr-alkuetaisyys tr-alkuetaisyys
+                        :tr-loppuosa tr-loppuosa
+                        :tr-loppuetaisyys tr-loppuetaisyys}
+         :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
+         :tiemerkintaurakka-id tiemerkintaurakka-id
+         :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
+         :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
       (catch Object e
         (log/error (format "Päällystysurakoitsija merkitsi kohteen %s valmiiksi, mutta sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: %s %s"
                            kohde-id
@@ -267,47 +222,6 @@
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
-
-(defn- paallystyksen-sahkopostiviesti [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
-                                              tiemerkinta-valmis ilmoittaja] :as tiedot}]
-  (html
-    [:div
-     [:p (format "Kohteen '%s' tiemerkintä on valmistunut %s."
-                 (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                 (fmt/pvm kohde-valmis-tiemerkintaan-pvm))]
-     (html-tyokalut/taulukko [["Kohde" kohde-nimi]
-                              ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                             kohde-osoite
-                                             {:teksti-tie? false})]
-                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
-                              ["Ilmoittaja" ilmoittaja]
-                              ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
-
-(defn- laheta-sahkoposti-paallystajille [{:keys [fim email
-                                                 paallystysurakka-nimi kohde-nimi kohde-osoite
-                                                 tiemerkinta-valmis ilmoittaja
-                                                 tiemerkintaurakka-id
-                                                 paallystysurakka-sampo-id] :as tiedot}]
-  (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
-                             fim
-                             paallystysurakka-sampo-id
-                             #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
-    (if-not (empty? ilmoituksen-saajat)
-      (doseq [henkilo ilmoituksen-saajat]
-        (sahkoposti/laheta-viesti!
-          email
-          (sahkoposti/vastausosoite email)
-          (:sahkoposti henkilo)
-          (format "Harja: Kohteen '%s' tiemerkintä on valmistunut %s"
-                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                  (fmt/pvm tiemerkinta-valmis))
-          (paallystyksen-sahkopostiviesti {:paallystysurakka-nimi paallystysurakka-nimi
-                                          :kohde-nimi kohde-nimi
-                                          :kohde-osoite kohde-osoite
-                                          :tiemerkinta-valmis tiemerkinta-valmis
-                                          :ilmoittaja ilmoittaja})))
-      (log/warn (format "Tiemerkintäurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa kohteen valmiudesta tiemerkintään."
-                        tiemerkintaurakka-id)))))
 
 (defn- tallenna-paallystyskohteiden-aikataulu [db user kohteet urakka-id voi-tallentaa-tiemerkinnan-takarajan?]
   (doseq [rivi kohteet]
@@ -337,22 +251,23 @@
        :id (:id rivi)
        :urakka urakka-id})
     (try+
-      (laheta-sahkoposti-paallystajille {:fim fim
-                                         :email email
-                                         :paallystysurakka-nimi paallystysurakka-nimi
-                                         :kohde-nimi kohde-nimi
-                                         :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
-                                                          (when-let [puhelin (:puhelin user)]
-                                                            (str " (" puhelin ")")))
-                                         :kohde-osoite {:tr-numero tr-numero
-                                                        :tr-alkuosa tr-alkuosa
-                                                        :tr-alkuetaisyys tr-alkuetaisyys
-                                                        :tr-loppuosa tr-loppuosa
-                                                        :tr-loppuetaisyys tr-loppuetaisyys}
-                                         :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
-                                         :tiemerkintaurakka-id tiemerkintaurakka-id
-                                         :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
-                                         :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
+      (viestinta/sahkoposti-paallystysurakkaan-tiemerkinta-valmis
+        {:fim fim
+         :email email
+         :paallystysurakka-nimi paallystysurakka-nimi
+         :kohde-nimi kohde-nimi
+         :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
+                          (when-let [puhelin (:puhelin user)]
+                            (str " (" puhelin ")")))
+         :kohde-osoite {:tr-numero tr-numero
+                        :tr-alkuosa tr-alkuosa
+                        :tr-alkuetaisyys tr-alkuetaisyys
+                        :tr-loppuosa tr-loppuosa
+                        :tr-loppuetaisyys tr-loppuetaisyys}
+         :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
+         :tiemerkintaurakka-id tiemerkintaurakka-id
+         :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
+         :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
       (catch Object e
         (log/error (format "Päällystysurakoitsija merkitsi kohteen %s valmiiksi, mutta sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: %s %s"
                            kohde-id
@@ -383,8 +298,8 @@
         (tallenna-paallystyskohteiden-aikataulu db user kohteet urakka-id voi-tallentaa-tiemerkinnan-takarajan)
         :tiemerkinta
         (tallenna-tiemerkintakohteiden-aikataulu db user kohteet urakka-id voi-tallentaa-tiemerkinnan-takarajan)
-      (hae-urakan-aikataulu db user {:urakka-id urakka-id
-                                     :sopimus-id sopimus-id})))))
+        (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                       :sopimus-id sopimus-id})))))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id
                                {:keys [kohdenumero nimi
