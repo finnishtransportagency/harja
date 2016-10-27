@@ -195,21 +195,21 @@
          :urakka urakka-id}))
 
     (viestinta/sahkoposti-tiemerkintaurakkaan-kohde-valmis-merkintaan
-        {:fim fim :email email
-         :paallystysurakka-nimi paallystysurakka-nimi
-         :kohde-nimi kohde-nimi
-         :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
-                          (when-let [puhelin (:puhelin user)]
-                            (str " (" puhelin ")")))
-         :kohde-osoite {:tr-numero tr-numero
-                        :tr-alkuosa tr-alkuosa
-                        :tr-alkuetaisyys tr-alkuetaisyys
-                        :tr-loppuosa tr-loppuosa
-                        :tr-loppuetaisyys tr-loppuetaisyys}
-         :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
-         :tiemerkintaurakka-id tiemerkintaurakka-id
-         :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
-         :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
+      {:fim fim :email email
+       :paallystysurakka-nimi paallystysurakka-nimi
+       :kohde-nimi kohde-nimi
+       :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
+                        (when-let [puhelin (:puhelin user)]
+                          (str " (" puhelin ")")))
+       :kohde-osoite {:tr-numero tr-numero
+                      :tr-alkuosa tr-alkuosa
+                      :tr-alkuetaisyys tr-alkuetaisyys
+                      :tr-loppuosa tr-loppuosa
+                      :tr-loppuetaisyys tr-loppuetaisyys}
+       :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
+       :tiemerkintaurakka-id tiemerkintaurakka-id
+       :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
+       :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
 
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
@@ -254,17 +254,17 @@
          :urakka paallystysurakka-id}))
 
     (viestinta/sahkoposti-paallystysurakkaan-tiemerkinta-valmis
-        {:fim fim
-         :email email
-         :paallystysurakka-nimi paallystysurakka-nimi
-         :kohde-nimi kohde-nimi
-         :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
-                          (when-let [puhelin (:puhelin user)]
-                            (str " (" puhelin ")")))
-         :kohde-osoite kohde-osoite
-         :tiemerkinta-valmis tiemerkinta-valmis
-         :paallystysurakka-id paallystysurakka-id
-         :paallystysurakka-sampo-id paallystysurakka-sampo-id}))
+      {:fim fim
+       :email email
+       :paallystysurakka-nimi paallystysurakka-nimi
+       :kohde-nimi kohde-nimi
+       :ilmoittaja (str (:etunimi user) " " (:sukunimi user)
+                        (when-let [puhelin (:puhelin user)]
+                          (str " (" puhelin ")")))
+       :kohde-osoite kohde-osoite
+       :tiemerkinta-valmis tiemerkinta-valmis
+       :paallystysurakka-id paallystysurakka-id
+       :paallystysurakka-sampo-id paallystysurakka-sampo-id})))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
