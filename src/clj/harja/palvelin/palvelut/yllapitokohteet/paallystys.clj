@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.paallystys
+(ns harja.palvelin.palvelut.yllapitokohteet.paallystys
   "Päällystyksen palvelut"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -15,7 +15,7 @@
             [harja.domain.skeema :as skeema]
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]))
+            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]))
 
 (defn tyot-tyyppi-string->avain [json avainpolku]
   (-> json

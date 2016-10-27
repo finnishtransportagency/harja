@@ -1,8 +1,8 @@
-(ns harja.palvelin.palvelut.paikkaus-test
+(ns harja.palvelin.palvelut.yllapitokohteet.paikkaus-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.paikkaus :refer :all]
+            [harja.palvelin.palvelut.yllapitokohteet.paikkaus :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
