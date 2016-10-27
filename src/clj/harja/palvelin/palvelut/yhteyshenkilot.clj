@@ -156,7 +156,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [c db]
 
-    (log/debug "SAATIIN päivystäjät: " paivystajat)
+    (log/debug "Päivystäjät: " paivystajat)
     (doseq [id poistettu]
       (q/poista-paivystaja! c id urakka-id))
 
@@ -174,7 +174,7 @@
                              :loppu (Date. (.getTime (:loppu p)))
                              :urakka urakka-id
                              :varahenkilo (not (:vastuuhenkilo p))
-                             :vastuuhenkilo true}]]
+                             :vastuuhenkilo (:vastuuhenkilo p)}]]
       (if (< (:id p) 0)
         ;; Luodaan uusi yhteyshenkilö
         (let [yht (q/luo-yhteyshenkilo<! c yhteyshenkilo)]

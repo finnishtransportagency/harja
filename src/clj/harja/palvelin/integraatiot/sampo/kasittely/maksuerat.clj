@@ -78,7 +78,7 @@
     (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu talousosastopolku. Maksuerää ei voi lähettää." numero)]
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-talousosastopolku :viesti virheviesti}]})))
-  (when (str/blank?(:tuotepolku toimenpideinstanssi))
+  (when (str/blank? (:tuotepolku toimenpideinstanssi))
     (let [virheviesti (format "Maksuerältä (numero: %s) puuttuu tuotepolku. Maksuerää ei voi lähettää." numero)]
       (throw+ {:type virheet/+viallinen-kutsu+
                :virheet [{:koodi :puuttuva-tuotepolku :viesti virheviesti}]}))))
@@ -98,16 +98,15 @@
   (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
   (if (maksuerat/onko-olemassa? db numero)
     (if (lukitse-maksuera db numero)
-      (let [viesti-id (str (UUID/randomUUID))
-            jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+      (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
             maksuera (hae-maksueran-tiedot db numero)
             muodosta-xml (fn []
                            (tarkista-maksueran-tiedot maksuera)
                            (maksuera-sanoma/maksuera-xml maksuera))]
         (try
-          (jms-lahettaja muodosta-xml viesti-id)
-          (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-          (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
+          (let [viesti-id (jms-lahettaja muodosta-xml)]
+            (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
+            (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero)))
 
           (catch Exception e
             (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
