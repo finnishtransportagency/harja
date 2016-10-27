@@ -23,12 +23,8 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paallystys :as paallystys-q]
             [clj-time.coerce :as c]
-            [harja.fmt :as fmt]
-            [harja.domain.tierekisteri :as tierekisteri]
-            [harja.pvm :as pvm]
             [clojure.java.io :as io]
-            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
-            [harja.tyokalut.html :as html-tyokalut])
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta])
   (:use org.httpkit.fake))
 
 (defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
