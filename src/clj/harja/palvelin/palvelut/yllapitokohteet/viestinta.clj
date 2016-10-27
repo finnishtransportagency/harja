@@ -20,7 +20,7 @@
                                                tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
-     [:p (format "Kohde '%s' on merkitty olevan valmis tiemerkintään %s."
+     [:p (format "Kohde '%s' on valmis tiemerkintään %s."
                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                  (fmt/pvm tiemerkintapvm))]
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
