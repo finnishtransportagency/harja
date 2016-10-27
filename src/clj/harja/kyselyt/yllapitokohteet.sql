@@ -448,8 +448,7 @@ SELECT
   pu.id as "paallystysurakka-id",
   pu.nimi as "paallystysurakka-nimi",
   tu.id as "tiemerkintaurakka-id",
-  tu.nimi as "tiemerkintaurakka-nimi",
-  valmis_tiemerkintaan as "valmis-tiemerkintaan",
+  tu.nimi as "tiemerkintaurakka-nimi"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
   JOIN urakka tu ON ypk.urakka = tu.id
