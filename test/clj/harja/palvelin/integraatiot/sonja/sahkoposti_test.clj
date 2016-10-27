@@ -15,16 +15,16 @@
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
-   "jvh"
-   :sonja (feikki-sonja)
-   :sonja-sahkoposti (component/using
-                      (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                        :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
-                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                      [:sonja :db :integraatioloki])
-   ))
+    "jvh"
+    :sonja (feikki-sonja)
+    :sonja-sahkoposti (component/using
+                        (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
+                                                         {:sahkoposti-sisaan-jono "email-to-harja"
+                                                          :sahkoposti-sisaan-kuittausjono "email-to-harja-ack"
+                                                          :sahkoposti-ulos-jono "harja-to-email"
+                                                          :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                        [:sonja :db :integraatioloki])
+    ))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -54,16 +54,14 @@
     ;; Varmistetaan, että viesti on saapunut oikein kuuntelijalle ja, että kuittaus
     ;; on lähetetty takaisin kuittausjonoon
     (is (= (:otsikko @saapunut) "Testiviesti"))
-    (is (=  (:viesti-id @saapunut) (:viesti-id @kuittaus)))
+    (is (= (:viesti-id @saapunut) (:viesti-id @kuittaus)))
 
     (poista-kuuntelija-fn)
     (poista-kuittaus-kuuntelija)))
 
 (deftest sahkopostin-lahetys
-  (let [viesti-xml (slurp +sahkoposti-esimerkki+)
-        lahetetty (atom nil)
-        poista-kuuntelija-fn (sonja/kuuntele (:sonja jarjestelma) "harja-to-email"
-                                             #(reset! lahetetty (sanomat/lue-sahkoposti (.getText %))))]
+  (let [lahetetty (atom nil)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" #(reset! lahetetty (sanomat/lue-sahkoposti (.getText %))))
 
     ;; Lähetetään viesti ja odotetaan, että se on mennyt jonoon
     (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma)
@@ -76,16 +74,25 @@
     (is (= (:lahettaja @lahetetty) "lasse.lahettaja@example.com"))
 
     (let [db (:db jarjestelma)
-          integraatio (integraatiot/integraation-id db "sonja" "sahkoposti-lahetys")]
+          integraatio (integraatiot/integraation-id db "sonja" "sahkoposti-lahetys")
+          viesti-id (ffirst
+                      (q "SELECT ulkoinenid
+                          FROM integraatioviesti iv
+                          JOIN integraatiotapahtuma it ON iv.integraatiotapahtuma = it.id
+                          JOIN integraatio i ON i.id = it.integraatio
+                          WHERE i.jarjestelma = 'sonja' AND
+                                i.nimi = 'sahkoposti-lahetys' AND
+                                iv.suunta = 'ulos'
+                          ORDER BY it.alkanut
+                          LIMIT 1; "))]
 
       ;; Varmistetaan että integraatiotapahtuma on auki
-      (is (not (integraatiot/integraatiotapahtuma-paattynyt? db integraatio
-                                                             (:viesti-id @lahetetty))))
-      
+      (is (not (integraatiot/integraatiotapahtuma-paattynyt? db integraatio viesti-id)))
+
       ;; Lähetetään kuittaus ja varmistetaan, että integraatiotapahtuma on merkitty päättyneeksi
-      (sonja/laheta (:sonja jarjestelma) "harja-to-email-ack"
-                    (xml/tee-xml-sanoma (sanomat/kuittaus @lahetetty nil)))
-      
-      (odota-ehdon-tayttymista #(integraatiot/integraatiotapahtuma-paattynyt?
-               db integraatio (:viesti-id @lahetetty))
-                               "Odota, että integraatiotapahtuma päätetään" 500))))
+      (let [kuittaus-xml (xml/tee-xml-sanoma (sanomat/kuittaus {:viesti-id viesti-id} nil))]
+        (sonja/laheta (:sonja jarjestelma) "harja-to-email-ack" kuittaus-xml)
+
+        (odota-ehdon-tayttymista #(integraatiot/integraatiotapahtuma-paattynyt? db integraatio viesti-id)
+                                 "Odota, että integraatiotapahtuma päätetään"
+                                 500)))))

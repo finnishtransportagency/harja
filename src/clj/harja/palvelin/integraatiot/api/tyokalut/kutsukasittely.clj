@@ -217,6 +217,8 @@
       (kasittele-sisainen-kasittelyvirhe virheet resurssi))
     (catch [:type virheet/+tuntematon-kayttaja+] {:keys [virheet]}
       (kasittele-sisainen-autentikaatio-virhe virheet resurssi))
+    (catch [:type virheet/+kayttajalla-puutteelliset-oikeudet+] {:keys [virheet]}
+      (kasittele-sisainen-autentikaatio-virhe virheet resurssi))
     (catch #(get % :virheet) poikkeus
       (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus) resurssi))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):

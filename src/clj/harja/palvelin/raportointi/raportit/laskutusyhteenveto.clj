@@ -214,10 +214,12 @@
 
         perusluku-puuttuu? (not (:perusluku (first tiedot)))
         talvisuolasakko-kaytossa? (some :suolasakko_kaytossa tiedot)
+        _ (log/debug "talvisuolasakko käytössä?" talvisuolasakko-kaytossa?)
         suolasakkojen-laskenta-epaonnistui? (some
                                               #(nil? (val %))
                                               (select-keys (first (filter #(= "Talvihoito" (:nimi %)) tiedot))
                                                            [:suolasakot_laskutetaan :suolasakot_laskutettu]))
+        _ (log/debug "suolasakkojen-laskenta-epaonnistui?" suolasakkojen-laskenta-epaonnistui?)
         nayta-etta-lampotila-puuttuu? (when (and talvisuolasakko-kaytossa? suolasakkojen-laskenta-epaonnistui?)
                                         (first (keep #(true? (:lampotila_puuttuu %))
                                                      tiedot)))
