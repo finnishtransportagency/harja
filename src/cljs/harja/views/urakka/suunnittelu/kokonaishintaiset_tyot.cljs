@@ -67,10 +67,11 @@
               (concat [(grid/otsikko otsikko)] rivit))
             (seq otsikon-mukaan))))
 
-(defn kustannukset [valitun-hoitokauden-ja-tpin-kustannukset
-                    valitun-hoitokauden-kaikkien-tpin-kustannukset
-                    kaikkien-hoitokausien-taman-tpin-kustannukset
-                    yks-kustannukset]
+(defn hoidon-kustannusyhteenveto
+  [valitun-hoitokauden-ja-tpin-kustannukset
+   valitun-hoitokauden-kaikkien-tpin-kustannukset
+   kaikkien-hoitokausien-taman-tpin-kustannukset
+   yks-kustannukset]
   [:div.col-md-6.hoitokauden-kustannukset
    [:div.piirakka-hoitokauden-kustannukset-per-kaikki
     [:div.piirakka
@@ -101,10 +102,12 @@
                {:width 230 :height 150 :radius 60 :show-text :percent :show-legend true}
                {"Kokonaishintaiset" kok-hint-yhteensa "Yksikkohintaiset" yks-hint-yhteensa}]]))]]
 
-   [:div.summa "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
+   [:div.summa.summa-toimenpiteen-hoitokausi
+    "Kokonaishintaisten töiden toimenpiteen hoitokausi yhteensä "
     [:span (fmt/euro valitun-hoitokauden-ja-tpin-kustannukset)]]
 
-   [:div.summa "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
+   [:div.summa.summa-toimenpiteiden-hoitokaudet
+    "Kokonaishintaisten töiden toimenpiteiden kaikki hoitokaudet yhteensä "
     [:span (fmt/euro kaikkien-hoitokausien-taman-tpin-kustannukset)]]])
 
 (defn kokonaishintaiset-tyot-tehtavalista [tehtavat tpi]
@@ -199,7 +202,11 @@
                                                   #(pvm/sama-pvm?
                                                     (:alkupvm %) hk-alku)
                                                   @kaikki-sopimuksen-ja-tpin-rivit))
-                                               :summa))]
+                                               :summa))
+        tarkistettava-oikeus (fn []
+                               (if (= (:tyyppi @urakka) :tiemerkinta)
+                                 oikeudet/urakat-toteutus-kokonaishintaisettyot
+                                 oikeudet/urakat-suunnittelu-kokonaishintaisettyot))]
 
       (hae-urakan-tiedot ur)
 
@@ -233,12 +240,12 @@
              {:otsikko (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
               :piilota-toiminnot? true
               :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-              :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+              :tallenna (if (oikeudet/voi-kirjoittaa? (tarkistettava-oikeus) (:id ur))
                           #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?)
                           :ei-mahdollinen)
               :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
                                                  :kirjoitus
-                                                 oikeudet/urakat-suunnittelu-kokonaishintaisettyot)
+                                                 (tarkistettava-oikeus))
               :tallenna-vain-muokatut false
               :peruuta #(reset! tuleville? false)
               :tunniste #((juxt :vuosi :kuukausi) %)
@@ -246,7 +253,7 @@
               :voi-poistaa? (constantly false)
               :muokkaa-footer (fn [g]
                                 [:div.kok-hint-muokkaa-footer
-                                 [raksiboksi {:teksti "Monista kaikki yo. tiedot tulevillekin hoitokausille"
+                                 [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
                                               :toiminto #(swap! tuleville? not)
                                               :info-teksti  [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                                               :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
@@ -288,13 +295,16 @@
                                   (assoc tama-rivi :maksupvm maksu-pvm)))}]
              @tyorivit]
 
-            [kokonaishintaiset-tyot-tehtavalista
-             @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
-             @u/valittu-toimenpideinstanssi]])
+            (when (not= (:tyyppi @urakka) :tiemerkinta)
+              [kokonaishintaiset-tyot-tehtavalista
+               @u/urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat-tehtavat
+               @u/valittu-toimenpideinstanssi])])
 
-         ;; Näytetään kustannusten summat ja piirakkadiagrammit
-         [kustannukset
-          @valitun-hoitokauden-ja-tpin-kustannukset
-          @s/valitun-hoitokauden-kok-hint-kustannukset
-          @kaikkien-hoitokausien-taman-tpin-kustannukset
-          @valitun-hoitokauden-yks-hint-kustannukset]]]))))
+         ;; TODO Jos on tiemerkintä, niin pitäisi näyttää kok. hint. yhteensä, yks. hint yhteensä ja muut yhteensä,
+         ;; myös muilla välilehdillä
+         (when (not= (:tyyppi @urakka) :tiemerkinta)
+           [hoidon-kustannusyhteenveto
+            @valitun-hoitokauden-ja-tpin-kustannukset
+            @s/valitun-hoitokauden-kok-hint-kustannukset
+            @kaikkien-hoitokausien-taman-tpin-kustannukset
+            @valitun-hoitokauden-yks-hint-kustannukset])]]))))

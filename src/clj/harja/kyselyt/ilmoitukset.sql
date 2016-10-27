@@ -8,6 +8,7 @@ SELECT
   i.valitetty,
   i.yhteydenottopyynto,
   i.otsikko,
+  i.lisatieto,
   i.ilmoitustyyppi,
   i.selitteet,
   i.urakkatyyppi,
@@ -59,7 +60,7 @@ WHERE
   (:teksti_annettu IS FALSE OR (i.otsikko LIKE :teksti OR i.paikankuvaus LIKE :teksti OR i.lisatieto LIKE :teksti)) AND
 
   -- Tarkasta selitehakuehto
-  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: ilmoituksenselite])) AND
+  (:selite_annettu IS FALSE OR (i.selitteet @> ARRAY [:selite :: TEXT])) AND
 
   -- Rajaa tienumerolla
   (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
@@ -287,7 +288,7 @@ VALUES
     :paikankuvaus,
     :lisatieto,
     :ilmoitustyyppi :: ilmoitustyyppi,
-    :selitteet :: ilmoituksenselite [],
+    :selitteet :: TEXT [],
     :urakkatyyppi :: urakkatyyppi);
 
 -- name: paivita-ilmoitus!
@@ -303,7 +304,7 @@ SET
   paikankuvaus        = :paikankuvaus,
   lisatieto        = :lisatieto,
   ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
-  selitteet          = :selitteet :: ilmoituksenselite [],
+  selitteet          = :selitteet :: TEXT [],
   muokattu           = NOW()
 WHERE id = :id;
 
@@ -315,7 +316,7 @@ SET
   ilmoittaja_tyopuhelin   = :ilmoittaja_tyopuhelin,
   ilmoittaja_matkapuhelin = :ilmoittaja_matkapuhelin,
   ilmoittaja_sahkoposti   = :ilmoittaja_sahkoposti,
-  ilmoittaja_tyyppi       = :ilmoittaja_tyyppi :: ilmoittajatyyppi
+  ilmoittaja_tyyppi       = :ilmoittaja_tyyppi
 WHERE id = :id;
 
 -- name: paivita-lahettaja-ilmoitukselle!
@@ -371,10 +372,15 @@ UPDATE ilmoitustoimenpide
 SET lahetetty = current_timestamp, tila = 'lahetetty'
 WHERE lahetysid = :lahetysid;
 
--- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe!
+-- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla!
 UPDATE ilmoitustoimenpide
 SET tila = 'virhe'
 WHERE id = :id;
+
+-- name: merkitse-ilmoitustoimenpidelle-lahetysvirhe-lahetysidlla!
+UPDATE ilmoitustoimenpide
+SET tila = 'virhe'
+WHERE lahetysid = :lahetysid;
 
 -- name: onko-ilmoitukselle-vastaanottokuittausta
 SELECT id

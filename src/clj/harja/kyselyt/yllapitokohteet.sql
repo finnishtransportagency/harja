@@ -590,3 +590,45 @@ WHERE id = :id;
 -- name: poista-yllapitokohteen-kohdeosat!
 DELETE FROM yllapitokohdeosa
 WHERE yllapitokohde = :id;
+
+-- name: hae-tiemerkintaurakan-yksikkohintaiset-tyot
+SELECT
+  ypk.id,
+  kohdenumero,
+  nimi,
+  urakka,
+  sopimus,
+  tr_numero                      AS "tr-numero",
+  tr_alkuosa                     AS "tr-alkuosa",
+  tr_alkuetaisyys                AS "tr-alkuetaisyys",
+  tr_loppuosa                    AS "tr-loppuosa",
+  tr_loppuetaisyys               AS "tr-loppuetaisyys",
+  tr_ajorata                     AS "tr-ajorata",
+  tr_kaista                      AS "tr-kaista",
+  hinta,
+  hinta_kohteelle                AS "hinta-kohteelle",
+  hintatyyppi,
+  muutospvm,
+  yllapitoluokka
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohde_tiemerkinta yt ON yt.yllapitokohde = ypk.id
+WHERE
+  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  AND poistettu IS NOT TRUE;
+
+-- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
+UPDATE yllapitokohde_tiemerkinta SET
+  hinta = :hinta,
+  hintatyyppi = :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi,
+  muutospvm = :muutospvm,
+  hinta_kohteelle = :hinta_kohteelle
+WHERE yllapitokohde = :yllapitokohde;
+
+-- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
+INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
+  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm,
+  :hinta_kohteelle);
+
+-- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
+SELECT id FROM yllapitokohde_tiemerkinta
+WHERE yllapitokohde = :yllapitokohde;

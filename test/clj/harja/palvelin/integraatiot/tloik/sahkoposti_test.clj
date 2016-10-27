@@ -61,7 +61,7 @@
           vastaanottaja (:vastaanottaja saapunut)
           viesti (str (UUID/randomUUID))]
       ;; Tarkista että viesti lähtee päivystäjälle
-      (is (= (:otsikko saapunut) "#[4/123456789] Toimenpide­pyyntö"))
+      (is (= (:otsikko saapunut) "#[4/123456789] Toimenpide­pyyntö (VIRKA-APUPYYNTÖ)"))
 
       ;; Lähetä aloitettu kuittaus
       (sonja/laheta (:sonja jarjestelma) "email-to-harja"

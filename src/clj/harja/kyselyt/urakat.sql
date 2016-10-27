@@ -446,7 +446,6 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
                FROM paallystyspalvelusopimus pps
                WHERE pps.paallystyspalvelusopimusnro = u.urakkanro AND
                      st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))))
-
 ORDER BY id ASC;
 
 -- name: luo-alueurakka<!
@@ -533,3 +532,44 @@ WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 -- name: luo-paallystyspalvelusopimus<!
 INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
+
+-- name: hae-lahin-hoidon-alueurakka
+SELECT
+  u.id,
+  st_distance(au.alue, st_makepoint(:x, :y)) AS etaisyys
+FROM urakka u
+  JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
+WHERE
+  u.alkupvm <= now() AND
+  u.loppupvm > now() AND
+  st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
+ORDER BY etaisyys ASC
+LIMIT 1;
+
+-- name: hae-kaynnissaoleva-urakka-urakkanumerolla
+-- single? : true
+SELECT
+  u.id,
+  u.sampoid,
+  u.urakkanro,
+  u.nimi,
+  u.alkupvm,
+  u.loppupvm,
+  e.nimi        AS "elynimi",
+  e.elynumero,
+  o.nimi        AS "urakoitsija-nimi",
+  o.ytunnus     AS "urakoitsija-ytunnus",
+  o.katuosoite  AS "urakoitsija-katuosoite",
+  o.postinumero AS "urakoitsija-postinumero"
+FROM urakka u
+  JOIN organisaatio e ON e.id = u.hallintayksikko
+  JOIN organisaatio o ON o.id = u.urakoitsija
+WHERE urakkanro = :urakkanro AND
+      alkupvm <= now() AND
+      loppupvm > now();
+
+-- name: onko-olemassa-urakkanro?
+-- single?: true
+SELECT exists(SELECT id
+              FROM urakka
+              WHERE urakkanro = :urakkanro);

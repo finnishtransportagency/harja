@@ -42,14 +42,23 @@ SELECT
   u.nimi         AS urakka_nimi
 FROM urakka u
 WHERE
+  -- Urakalla oltava tietty id, jos annettu
   (:urakka :: INTEGER IS NULL OR u.id = :urakka)
+  -- Urakan kuuluttava hallintayksikköön, jos annettu
   AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
+  -- Urakan täytyy vastata hakuehtoja, ellei haettu juuri tiettyä urakkaa
   AND (:urakka :: INTEGER IS NOT NULL OR
-       (:urakka :: INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
-                                        u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
-  AND (:urakka :: INTEGER IS NOT NULL OR :urakka :: INTEGER IS NULL AND ((alkupvm :: DATE BETWEEN :alku AND :loppu)
+       (:urakka :: INTEGER IS NULL AND ((:urakkatyyppi :: urakkatyyppi IS NULL OR
+                                        u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+                                        AND
+                                        -- Ei testiurakoita
+                                        urakkanro IS NOT NULL
+                                        AND
+                                        -- Urakka on aktiivinen aikarajan sisällä
+                                        ((alkupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (loppupvm :: DATE BETWEEN :alku AND :loppu)
-                                                                         OR (:alku >= alkupvm AND :loppu <= loppupvm)))
+                                                                         OR (:alku >= alkupvm AND :loppu <= loppupvm)))))
+
 ORDER BY urakka_nimi;
 
 -- name: hae-kontekstin-hallintayksikot

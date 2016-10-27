@@ -81,7 +81,7 @@
                                   (:pitkakeskilampotila rivi)
                                   (:sallittu_suolankaytto rivi)
                                   (:suolankayton_sakkoraja rivi)
-                                  (or (:kerroin rivi) [:virhe "Indeksi puuttuu!"])
+                                  (or (:kerroin rivi) [:virhe "Lämpötila puuttuu"])
                                   (:sakkoraja rivi)
                                   (:suolankaytto rivi)
                                   (:erotus rivi)

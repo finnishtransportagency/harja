@@ -29,13 +29,13 @@
         (and takaraja valmispvm)
         "Valmistunut"
 
-        (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (t/now) takaraja))
-        (let [paivia-valissa (pvm/paivia-valissa (t/now) takaraja)]
+        (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
+        (let [paivia-valissa (pvm/paivia-valissa (pvm/nyt) takaraja)]
           (str "Ei valmis" (when (pos? paivia-valissa)
                              (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) " jäljellä)"))))
 
-        (and takaraja (nil? valmispvm) (t/after? (t/now) takaraja))
-        (let [paivia-valissa (pvm/paivia-valissa takaraja (t/now))]
+        (and takaraja (nil? valmispvm) (t/after? (pvm/nyt) takaraja))
+        (let [paivia-valissa (pvm/paivia-valissa takaraja (pvm/nyt))]
           (str "Myöhässä" (when (pos? paivia-valissa)
                             (str " (" (fmt/kuvaile-paivien-maara paivia-valissa) ")"))))))
 

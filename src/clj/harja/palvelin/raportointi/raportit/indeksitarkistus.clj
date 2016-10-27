@@ -16,18 +16,24 @@
   (let [summa-kk (memoize (fn [kk kentta]
                             (summa (laskutusyhteenvedot-kk kk) kentta)))
         suola? (#{"Kaikki yhteensä" "Talvihoito"} nimi)
-        kentat [:kht_laskutettu_ind_korotus
+        kentat [:kht_laskutetaan_ind_korotus
                 :yht_laskutetaan_ind_korotus
-                :akilliset_hoitotyot_laskutettu_ind_korotus
-                :sakot_laskutettu_ind_korotus]
+                :erilliskustannukset_laskutetaan_ind_korotus
+                :bonukset_laskutetaan_ind_korotus
+                :muutostyot_laskutetaan_ind_korotus
+                :akilliset_hoitotyot_laskutetaan_ind_korotus
+                :sakot_laskutetaan_ind_korotus]
         kentat (if suola?
-                 (conj kentat :suolasakot_laskutettu_ind_korotus)
+                 (conj kentat :suolasakot_laskutetaan_ind_korotus)
                  kentat)]
     [:taulukko {:otsikko nimi
                 :viimeinen-rivi-yhteenveto? true}
      (into [{:otsikko "Kuukausi" :leveys 2}
-            {:otsikko "Kokonaishintaiset työt" :leveys 2 :fmt :raha :tasaa :oikea}
-            {:otsikko "Yksikköhintaiset työt" :leveys 2 :fmt :raha :tasaa :oikea}
+            {:otsikko "Kokonais\u00ADhintaiset työt" :leveys 2 :fmt :raha :tasaa :oikea}
+            {:otsikko "Yksikkö\u00ADhintaiset työt" :leveys 2 :fmt :raha :tasaa :oikea}
+            {:otsikko "Erillis\u00ADkustannukset" :leveys 2 :fmt :raha :tasaa :oikea}
+            {:otsikko "Bonus" :leveys 2 :fmt :raha :tasaa :oikea}
+            {:otsikko "Muutos- ja lisä\u00ADtyöt" :leveys 2 :fmt :raha :tasaa :oikea}
             {:otsikko "Äkillinen hoitotyö" :leveys 2 :fmt :raha :tasaa :oikea}
             {:otsikko "Sanktiot" :leveys 2 :fmt :raha :tasaa :oikea}]
            (concat

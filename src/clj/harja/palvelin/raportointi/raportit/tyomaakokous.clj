@@ -5,6 +5,7 @@
     [harja.palvelin.raportointi.raportit.erilliskustannukset :as erilliskustannukset]
     [harja.palvelin.raportointi.raportit.laatupoikkeama :as laatupoikkeamat]
     [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+    [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot :as muutos-ja-lisatyot]
     [harja.palvelin.raportointi.raportit.ilmoitus :as ilmoitus]
     [harja.palvelin.raportointi.raportit.sanktio :as sanktiot]
     [harja.palvelin.raportointi.raportit.kelitarkastus :as kelitarkastukset]
@@ -32,9 +33,6 @@
   [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
    (mapcat (fn [[aja-parametri otsikko raportti-fn]]
              (do
-               (log/debug "aja parametri " aja-parametri)
-               (log/debug "otsikko " otsikko)
-               (log/debug "raportti-fn " raportti-fn)
                (when (get tiedot aja-parametri)
                 (concat [[:otsikko otsikko]]
                         (osat (raportti-fn db user tiedot))))))
@@ -46,6 +44,7 @@
             [:laatupoikkeamaraportti "Laatupoikkeamat" laatupoikkeamat/suorita]
             [:laskutusyhteenveto "Laskutusyhteenveto" laskutusyhteenveto/suorita]
             [:materiaaliraportti "Materiaaliraportti" materiaalit/suorita]
+            [:muutos-ja-lisatyot "Muutos- ja lisätyöt" muutos-ja-lisatyot/suorita]
             [:sanktioraportti "Sanktioiden yhteenveto" sanktiot/suorita]
             [:soratietarkastusraportti "Soratietarkastukset" soratietarkastukset/suorita]
             [:tiestotarkastusraportti "Tiestötarkastukset" tiestotarkastukset/suorita]

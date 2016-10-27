@@ -261,6 +261,7 @@
                                      talvihoitomittauksen-kentat)
             soratiemittaus? (some #(get-in (:soratiemittaus tarkastus) %)
                                      soratiemittauksen-kentat)
+            tarkastus (assoc tarkastus :lahde "harja-ui")
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
         (when (and (or

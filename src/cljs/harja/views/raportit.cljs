@@ -358,6 +358,7 @@
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
    "Materiaaliraportti" :materiaaliraportti
+   "Muutos- ja lisätyöt" :muutos-ja-lisatyot
    "Sanktioiden yhteenveto" :sanktioraportti
    "Soratietarkastukset" :soratietarkastusraportti
    "Tiestötarkastukset" :tiestotarkastusraportti

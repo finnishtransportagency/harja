@@ -180,13 +180,13 @@ WHERE numero = :numero AND (lukko IS NULL OR
 -- name: merkitse-maksuera-odottamaan-vastausta!
 -- Merkitsee maksuerän lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
 UPDATE maksuera
-SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE
+SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE, lahetetty = CURRENT_TIMESTAMP
 WHERE numero = :numero;
 
 -- name: merkitse-maksuera-lahetetyksi!
 -- Merkitsee maksuerän lähetetyksi
 UPDATE maksuera
-SET lahetetty = current_timestamp, tila = 'lahetetty'
+SET tila = 'lahetetty'
 WHERE numero = :numero;
 
 -- name: merkitse-maksueralle-lahetysvirhe!
@@ -205,3 +205,9 @@ WHERE tyyppi = :tyyppi :: maksueratyyppi;
 -- Luo uuden maksuerän.
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi, likainen, luotu)
 VALUES (:toimenpideinstanssi, :tyyppi :: maksueratyyppi, :nimi, TRUE, current_timestamp);
+
+-- name: onko-olemassa?
+-- single?: true
+SELECT exists(SELECT numero
+              FROM maksuera
+              WHERE numero = :numero :: BIGINT);

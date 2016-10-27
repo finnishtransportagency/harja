@@ -34,7 +34,7 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest yrita-laheta-maksuera-jota-ei-ole-olemassa
-  (is (= {:virhe :maksueran-lukitseminen-epaonnistui} (:maksuera (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 666)))))
+  (is (thrown? Exception (sampo/laheta-maksuera-sampoon (:sampo jarjestelma) 666)) "Tuntematon maksuerä jäi kiinni"))
 
 (deftest laheta-maksuera
   (let [viestit (atom [])]
