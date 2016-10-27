@@ -199,21 +199,21 @@
                                                        voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
   (log/debug "Tallennetaan päällystysurakan " paallystysurakka-id " ylläpitokohteiden aikataulutiedot.")
   (jdbc/with-db-transaction [db db]
-    (doseq [rivi kohteet]
+    (doseq [kohde kohteet]
       (q/tallenna-paallystyskohteen-aikataulu!
         db
-        {:aikataulu_paallystys_alku (:aikataulu-paallystys-alku rivi)
-         :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu rivi)
-         :aikataulu_kohde_valmis (:aikataulu-kohde-valmis rivi)
+        {:aikataulu_paallystys_alku (:aikataulu-paallystys-alku kohde)
+         :aikataulu_paallystys_loppu (:aikataulu-paallystys-loppu kohde)
+         :aikataulu_kohde_valmis (:aikataulu-kohde-valmis kohde)
          :aikataulu_muokkaaja (:id user)
-         :suorittava_tiemerkintaurakka (:suorittava-tiemerkintaurakka rivi)
-         :id (:id rivi)
+         :suorittava_tiemerkintaurakka (:suorittava-tiemerkintaurakka kohde)
+         :id (:id kohde)
          :urakka paallystysurakka-id})
       (when voi-tallentaa-tiemerkinnan-takarajan?
         (q/tallenna-yllapitokohteen-valmis-viimeistaan-paallystysurakasta!
           db
-          {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja rivi)
-           :id (:id rivi)
+          {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
+           :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
 (defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet paallystysurakka-id
@@ -233,10 +233,11 @@
           db
           {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
            :id (:id kohde)
-           :urakka paallystysurakka-id})))
+           :urakka paallystysurakka-id}))))
 
+  (doseq [kohde kohteet]
     (viestinta/sahkoposti-tiemerkinta-valmis db fim email
-                                               (:id kohde) (:aikataulu-tiemerkinta-loppu kohde) user)))
+                                             (:id kohde) (:aikataulu-tiemerkinta-loppu kohde) user)))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
