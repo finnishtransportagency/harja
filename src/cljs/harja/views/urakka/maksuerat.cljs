@@ -207,8 +207,6 @@
             (fn [rivi]
               (let [maksuera-odottanut-liian-kauan (odottanut-vastausta-liian-kauan? (:maksuera rivi))
                     kustannussuunnitelma-odottanut-liian-kauan (odottanut-vastausta-liian-kauan? (:kustannussuunnitelma rivi))
-                    maksuera-tila (get-in rivi [:maksuera :tila])
-                    kustannussuunnitelma-tila (get-in rivi [:kustannussuunnitelma :tila])
                     maksueranumero (:numero rivi)]
                 [:button.nappi-ensisijainen.nappi-grid
                  (merge
@@ -218,12 +216,7 @@
                      {:disabled true})
                    {:type "button"
                     :on-click #(laheta-maksuerat #{maksueranumero})})
-                 (if (or maksuera-odottanut-liian-kauan
-                         kustannussuunnitelma-odottanut-liian-kauan
-                         (= maksuera-tila :virhe)
-                         (= kustannussuunnitelma-tila :virhe))
-                   "Lähetä uudestaan"
-                   "Lähetä")]))
+                 "Lähetä"]))
             :leveys "10%"}]
           maksuerarivit]
 
