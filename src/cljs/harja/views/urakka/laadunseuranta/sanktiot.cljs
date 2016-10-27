@@ -49,17 +49,15 @@
          :luokka       :horizontal
          :muokkaa!     #(reset! muokattu %)
          :voi-muokata? voi-muokata?
-         :footer-fn (fn [tarkastus]
-                      [napit/palvelinkutsu-nappi
-                       "Tallenna sanktio"
-                       #(tiedot/tallenna-sanktio @muokattu)
-                       {:luokka       "nappi-ensisijainen"
-                        :ikoni        (ikonit/tallenna)
-                        :kun-onnistuu #(do
-                                        (tiedot/sanktion-tallennus-onnistui % @muokattu)
-                                        (reset! tiedot/valittu-sanktio nil))
-                        :disabled     (or (not voi-muokata?)
-                                          (not (lomake/voi-tallentaa? tarkastus)))}])}
+         :footer-fn    (fn [tarkastus]
+                         [napit/palvelinkutsu-nappi
+                          "Tallenna sanktio"
+                          #(tiedot/tallenna-sanktio @muokattu)
+                          {:luokka   "nappi-ensisijainen"
+                           :ikoni    (ikonit/tallenna)
+                           :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
+                           :disabled (or (not voi-muokata?)
+                                         (not (lomake/voi-tallentaa? tarkastus)))}])}
         [{:otsikko     "Tekijä" :nimi :tekijanimi
           :hae         (comp :tekijanimi :laatupoikkeama)
           :aseta       (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
@@ -211,7 +209,8 @@
        {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
        {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3}
        {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
-       {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea}]
+       {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
+        :hae     #(or (:summa %) "Muistutus")}]
       sanktiot]]))
 
 (defn sanktiot [optiot]

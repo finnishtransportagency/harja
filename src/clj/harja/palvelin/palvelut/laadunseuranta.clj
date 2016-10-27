@@ -293,10 +293,10 @@
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
 
-(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka]
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
-  (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
+  (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
 
@@ -317,10 +317,8 @@
                                             (name kasittelytapa) muukasittelytapa
                                             (:id user)
                                             id))
-
-      ;; Frontilla oletetaan että palvelu palauttaa tallennetun sanktion id:n
-      ;; Jos tämä muuttuu, pitää frontillekin tehdä muutokset.
-      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
+      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
+      (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
   (let [{:keys [vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
@@ -399,7 +397,8 @@
       :tallenna-suorasanktio
       (fn [user tiedot]
         (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot)
-                               (get-in tiedot [:laatupoikkeama :urakka])))
+                               (get-in tiedot [:laatupoikkeama :urakka])
+                               (:hoitokausi tiedot)))
 
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
