@@ -24,7 +24,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.domain.tierekisteri :as tierekisteri]))
 
 (defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
@@ -182,20 +183,25 @@
                   kohde-nimi
                   (fmt/pvm kohde-valmis-tiemerkintaan-pvm))
           (format "Urakan '%s' päällystyskohteelle '%s' (%s) on ilmoitettu päivämäärä %s, jolloin kohde on valmis tiemerkintään. Tiemerkinnän suorittajaksi on merkitty '%s'."
-                  paallystysurakka-nimi kohde-nimi kohde-osoite kohde-valmis-tiemerkintaan-pvm tiemerkintaurakka-nimi)))
+                  paallystysurakka-nimi kohde-nimi
+                  (tierekisteri/tierekisteriosoite-tekstina kohde-osoite {:teksti-tie? false})
+                  (fmt/pvm kohde-valmis-tiemerkintaan-pvm) tiemerkintaurakka-nimi)))
       (log/warn (format "Tiemerkintäurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa kohteen valmiudesta tiemerkintään."
                         tiemerkintaurakka-id)))))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
-  [db user
+  [{:keys [db fim sonja-sahkoposti] :as this} user
    {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
-  (let [tiemerkintaurakka-id (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+  (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                tiemerkintaurakka-sampo-id paallystysurakka-nimi
+                tiemerkintaurakka-id tiemerkintaurakka-nimi
+                valmis-tiemerkintaan]} (first (q/hae-kohteen-tiedot-sahkopostilahetykseen
                                            db
-                                           {:id kohde-id})))]
+                                           {:id kohde-id}))]
     (jdbc/with-db-transaction [db db]
       (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
         db
@@ -208,7 +214,19 @@
          :urakka urakka-id}))
 
     (try
-      (laheta-sahkoposti-tiemerkitsijoille tiemerkintaurakka-id)
+      (laheta-sahkoposti-tiemerkitsijoille {:fim fim
+                                            :email sonja-sahkoposti
+                                            :paallystysurakka-nimi paallystysurakka-nimi
+                                            :kohde-nimi kohde-nimi
+                                            :kohde-osoite {:tr-numero tr-numero
+                                                           :tr-alkuosa tr-alkuosa
+                                                           :tr-alkuetaisyys tr-alkuetaisyys
+                                                           :tr-loppuosa tr-loppuosa
+                                                           :tr-loppuetaisyys tr-loppuetaisyys}
+                                            :kohde-valmis-tiemerkintaan-pvm valmis-tiemerkintaan
+                                            :tiemerkintaurakka-id tiemerkintaurakka-id
+                                            :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
+                                            :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
       (catch Exception e
         (log/error (format "Päällystysurakoitsija merkitsi kohteen %s valmiiksi, mutta sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: "
                            kohde-id

@@ -437,6 +437,24 @@ SET
 WHERE id = :id
       AND urakka = :urakka;
 
+-- name: hae-kohteen-tiedot-sahkopostilahetykseen
+SELECT
+  ypk.nimi as "kohde-nimi",
+  ypk.tr_numero as "tr-numero",
+  ypk.tr_alkuosa as "tr-alkuosa",
+  ypk.tr_alkuetaisyys as "tr-alkuetaisyys",
+  ypk.tr_loppuosa as "tr-loppuosa",
+  ypk.tr_loppuetaisyys as "tr-loppuetaisyys",
+  pu.id as "paallystysurakka-id",
+  pu.nimi as "paallystysurakka-nimi",
+  tu.id as "tiemerkintaurakka-id",
+  tu.nimi as "tiemerkintaurakka-nimi",
+  valmis_tiemerkintaan as "valmis-tiemerkintaan",
+FROM yllapitokohde ypk
+  JOIN urakka pu ON ypk.urakka = pu.id
+  JOIN urakka tu ON ypk.urakka = tu.id
+WHERE ypk.id = :id;
+
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
