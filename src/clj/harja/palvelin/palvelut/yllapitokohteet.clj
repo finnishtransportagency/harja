@@ -183,7 +183,7 @@
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
                               ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                              kohde-osoite
-                                             {:teksti-tie false})]
+                                             {:teksti-tie? false})]
                               ["Valmis tiemerkintään" (fmt/pvm kohde-valmis-tiemerkintaan-pvm)]
                               ["Tiemerkinnän suorittaja" tiemerkintaurakka-nimi]
                               ["Ilmoittaja" ilmoittaja]
