@@ -9,7 +9,8 @@
             [harja.domain.ilmoitukset :as ilm]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.domain.tierekisteri :as tierekisteri]))
 
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
   otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
@@ -77,11 +78,12 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
                           ["Ilmoitettu" (:ilmoitettu ilmoitus)]
                           ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
                           ["Otsikko" (:otsikko ilmoitus)]
+                          ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus))]
                           ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
                           ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-                          ["Ilmoittaja" (apurit/nayta-henkilo (:ilmoittaja ilmoitus))]]]
+                          ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]]]
        [:tr
-        [:td [:b kentta]]
+        [:td [:b kentta]]                                                 cd
         [:td arvo]])]
     [:blockquote (:lisatieto ilmoitus)]
     (when-let [sijainti (:sijainti ilmoitus)]
