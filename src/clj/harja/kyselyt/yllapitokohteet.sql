@@ -625,6 +625,7 @@ SELECT
   tr_ajorata                     AS "tr-ajorata",
   tr_kaista                      AS "tr-kaista",
   hinta,
+  hinta_kohteelle                AS "hinta-kohteelle",
   hintatyyppi,
   muutospvm,
   yllapitoluokka
@@ -634,16 +635,18 @@ WHERE
   suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND poistettu IS NOT TRUE;
 
--- name: paivita-tiemerkintaurakan-yksikkohintaiset-tyot<!
+-- name: paivita-tiemerkintaurakan-yksikkohintainen-tyo<!
 UPDATE yllapitokohde_tiemerkinta SET
   hinta = :hinta,
   hintatyyppi = :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi,
-  muutospvm = :muutospvm
+  muutospvm = :muutospvm,
+  hinta_kohteelle = :hinta_kohteelle
 WHERE yllapitokohde = :yllapitokohde;
 
--- name: luo-tiemerkintaurakan-yksikkohintaiset-tyot<!
-INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm) VALUES
-  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm);
+-- name: luo-tiemerkintaurakan-yksikkohintainen-tyo<!
+INSERT INTO yllapitokohde_tiemerkinta(yllapitokohde, hinta, hintatyyppi, muutospvm, hinta_kohteelle) VALUES
+  (:yllapitokohde, :hinta, :hintatyyppi::yllapitokohde_tiemerkinta_hintatyyppi, :muutospvm,
+  :hinta_kohteelle);
 
 -- name: hae-yllapitokohteen-tiemerkintaurakan-yksikkohintaiset-tyot
 SELECT id FROM yllapitokohde_tiemerkinta

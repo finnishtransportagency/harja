@@ -81,7 +81,7 @@ INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, 
              'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', 'Y123', 'VAN-LYV-toteuma');
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
     VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-LYV-toteuma'), '2015-02-19 10:23:54+02',
-            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1000);
+            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 2000);
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'),
@@ -182,7 +182,7 @@ INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskila
 
 -- Suolasakon suuruus ja sidottava indeksi
 INSERT INTO suolasakko (maara, hoitokauden_alkuvuosi, maksukuukausi, indeksi, urakka, talvisuolaraja)
-     VALUES (30.0, 2014, 8, 'MAKU 2010', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), 800);
+     VALUES (30.0, 2014, 8, 'MAKU 2005', (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2014-2019'), 800);
 
 -- Maksuerät
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Vantaa Talvihoito TP 2014-2019'), 'kokonaishintainen', 'Vantaa Talvihoito TP ME 2014-2019' );

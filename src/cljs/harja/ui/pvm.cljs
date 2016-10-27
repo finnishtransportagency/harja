@@ -70,7 +70,7 @@ Seuraavat optiot ovat mahdollisia:
   [optiot]
   (let [pakota-suunta (:pakota-suunta optiot)
         sijainti-atom (atom (or pakota-suunta nil))
-        nyt (or (:pvm optiot) (t/now))
+        nyt (or (:pvm optiot) (pvm/nyt))
         nayta (atom [(.getYear nyt) (.getMonth nyt)])
         scroll-kuuntelija (fn [this _]
                             (selvita-kalenterin-suunta this sijainti-atom))]

@@ -16,7 +16,8 @@
    [cljs.core.async :refer [<! >!]]
    [cljs-react-test.simulate :as sim]
    [schema.core :as s]
-   [harja.domain.paallystysilmoitus :as pot])
+   [harja.domain.paallystysilmoitus :as pot]
+   [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -153,7 +154,7 @@
                                                                                5 400}))
         _ (fake-palvelukutsu :hae-lukko-idlla (constantly :ei-lukittu))
         _ (fake-palvelukutsu :lukitse (constantly {:id "paallystysilmoitus_777",
-                                                   :kayttaja 2, :aikaleima (t/now)}))
+                                                   :kayttaja 2, :aikaleima (pvm/nyt)}))
         tallennus (fake-palvelukutsu :tallenna-paallystysilmoitus identity)]
     (async
      done

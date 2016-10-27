@@ -2,7 +2,7 @@
   "Harjan käyttöön soveltuva geneerinen muokattava ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as y]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje vihje] :as y]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
@@ -290,7 +290,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                         (reset! valittu-rivi rivi))))}
    (map-indexed
     (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
-                   solu-klikattu solun-luokka
+                   solu-klikattu solun-luokka huomio
                    pakota-rivitys? reunus]}]
       (let [haettu-arvo (if hae
                           (hae rivi)
@@ -299,6 +299,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
           ^{:key (str "vetolaatikontila" id)}
           [vetolaatikon-tila ohjaus vetolaatikot id]
           ^{:key (str i nimi)}
+          ;; Solu
           [:td {:on-click (when solu-klikattu
                             #(do
                               (.preventDefault %)
@@ -314,12 +315,25 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                            nil)
                          (when solun-luokka
                            (solun-luokka haettu-arvo rivi)))}
-           (if (= tyyppi :komponentti)
-             (komponentti rivi {:index index
-                                :muokataan? false})
-             (if fmt
-               (fmt haettu-arvo)
-               [nayta-arvo skeema (vain-luku-atomina haettu-arvo)]))]))) skeema)
+           ;; Solun sisältö
+           [:span
+            (if (= tyyppi :komponentti)
+              (komponentti rivi {:index index
+                                 :muokataan? false})
+              (if fmt
+                (fmt haettu-arvo)
+                [nayta-arvo skeema (vain-luku-atomina haettu-arvo)]))
+            (when huomio
+              (when-let [huomion-tiedot (huomio rivi)]
+                (let [ikoni (case (:tyyppi huomion-tiedot)
+                              :varoitus (ikonit/livicon-warning-sign)
+                              (ikonit/livicon-info))
+                      teksti (:teksti huomion-tiedot)]
+                  [yleiset/tooltip {} [:span {:class (str "grid-huomio-"
+                                                          (name (:tyyppi huomion-tiedot)))}
+                                       ikoni]
+                   teksti])))]])))
+    skeema)
    (when (and (not piilota-toiminnot?)
               tallenna) [:td.toiminnot])])
 

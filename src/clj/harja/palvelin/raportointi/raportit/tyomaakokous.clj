@@ -33,9 +33,6 @@
   [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
    (mapcat (fn [[aja-parametri otsikko raportti-fn]]
              (do
-               (log/debug "aja parametri " aja-parametri)
-               (log/debug "otsikko " otsikko)
-               (log/debug "raportti-fn " raportti-fn)
                (when (get tiedot aja-parametri)
                 (concat [[:otsikko otsikko]]
                         (osat (raportti-fn db user tiedot))))))
