@@ -241,9 +241,6 @@
          :urakka urakka-id}))
 
     (try+
-      (with-fake-http
-        ["https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
-         (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
       (laheta-sahkoposti-tiemerkitsijoille {:fim fim
                                             :email email
                                             :paallystysurakka-nimi paallystysurakka-nimi
@@ -259,7 +256,7 @@
                                             :kohde-valmis-tiemerkintaan-pvm tiemerkintapvm
                                             :tiemerkintaurakka-id tiemerkintaurakka-id
                                             :tiemerkintaurakka-sampo-id tiemerkintaurakka-sampo-id
-                                            :tiemerkintaurakka-nimi tiemerkintaurakka-nimi}))
+                                            :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})
       (catch Object e
         (log/error (format "Päällystysurakoitsija merkitsi kohteen %s valmiiksi, mutta sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: %s %s"
                            kohde-id
