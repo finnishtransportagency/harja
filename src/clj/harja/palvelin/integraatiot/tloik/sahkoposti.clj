@@ -13,35 +13,35 @@
             [harja.domain.tierekisteri :as tierekisteri]))
 
 (def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
-  otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
+otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 
 (def ^{:doc "Kuittaustyypit, joita sähköpostilla voi ilmoittaa" :const true :private true}
-  kuittaustyypit [["Vastaanotettu" :vastaanotettu]
-                  ["Aloitettu" :aloitettu]
-                  ["Lopetettu" :lopetettu]
-                  ["Muutettu" :muutettu]
-                  ["Vastattu" :vastattu]])
+kuittaustyypit [["Vastaanotettu" :vastaanotettu]
+                ["Aloitettu" :aloitettu]
+                ["Lopetettu" :lopetettu]
+                ["Muutettu" :muutettu]
+                ["Vastattu" :vastattu]])
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
-  kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
+kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu)\]")
 
 (def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
-  +virheellinen-toimenpide-viesti+
++virheellinen-toimenpide-viesti+
   {:otsikko "Virheellinen kuittausviesti"
    :sisalto "Lähettämäsi viestistä ei voitu päätellä kuittauksen tietoja."})
 
 (def ^{:doc "Viesti, joka lähetetään jos päivystäjätietoja tai ilmoitustietoja ei voida päätellä" :private true}
-  +ilmoitustoimenpiteen-tallennus-epaonnistui+
++ilmoitustoimenpiteen-tallennus-epaonnistui+
   {:otsikko "Kuittausta ei voitu käsitellä"
    :sisalto "Varmista, että vastaat samalla sähköpostiosoitteella, johon ilmoitustiedot toimitettiin."})
 
 (def ^{:doc "Viesti, joka lähetetään onnistuneen ilmoitustoimenpiteen tallennuksen jälkeen." :private true}
-  +onnistunut-viesti+
++onnistunut-viesti+
   {:otsikko nil ;; tämä täydennetään ilmoituksen otsikolla
    :sisalto "Kuittaus käsiteltiin onnistuneesti. Kiitos!"})
 
 (def ^{:doc "Template, jolla muodostetaan URL Google static map kuvalle" :private true :const true}
-  goole-static-map-url-template
+goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
 (defn- otsikko [{:keys [ilmoitus-id urakka-id ilmoitustyyppi] :as ilmoitus}]
@@ -72,27 +72,27 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 
 (defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
   (html
-   [:div
-    [:table
-     (for [[kentta arvo] [["Urakka" (:urakkanimi ilmoitus)]
-                          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
-                          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
-                          ["Otsikko" (:otsikko ilmoitus)]
-                          ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus))]
-                          ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
-                          ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-                          ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]]]
-       [:tr
-        [:td [:b kentta]]                                                 cd
-        [:td arvo]])]
-    [:blockquote (:lisatieto ilmoitus)]
-    (when-let [sijainti (:sijainti ilmoitus)]
-      (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-        [:img {:src (format goole-static-map-url-template
-                            lat lon google-static-maps-key)}]))
-    (for [teksti (map first kuittaustyypit)]
-      [:div {:style "padding-top: 10px;"}
-       (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
+    [:div
+     [:table
+      (for [[kentta arvo] [["Urakka" (:urakkanimi ilmoitus)]
+                           ["Ilmoitettu" (:ilmoitettu ilmoitus)]
+                           ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
+                           ["Otsikko" (:otsikko ilmoitus)]
+                           ["Tierekisteriosoite" (tierekisteri/tierekisteriosoite-tekstina (:sijainti ilmoitus))]
+                           ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+                           ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
+                           ["Ilmoittaja" (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))]]]
+        [:tr
+         [:td [:b kentta]]
+         [:td arvo]])]
+     [:blockquote (:lisatieto ilmoitus)]
+     (when-let [sijainti (:sijainti ilmoitus)]
+       (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
+         [:img {:src (format goole-static-map-url-template
+                             lat lon google-static-maps-key)}]))
+     (for [teksti (map first kuittaustyypit)]
+       [:div {:style "padding-top: 10px;"}
+        (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
 (defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
   (let [otsikko (otsikko ilmoitus)
@@ -126,11 +126,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
       {:virhe "Viestistä ei löytynyt kuittauksen tietoja"})))
 
 (def ^{:doc "Vastaanotetun kuittauksen mäppäys kuittaustyyppi tietokantaenumiksi" :private true}
-  kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
-                        :aloitettu "aloitus"
-                        :lopetettu "lopetus"
-                        :muutettu "muutos"
-                        :vastattu "vastaus"})
+kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
+                      :aloitettu "aloitus"
+                      :lopetettu "lopetus"
+                      :muutettu "muutos"
+                      :vastattu "vastaus"})
 
 (defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id ilmoitus-id kuittaustyyppi kommentti]}]
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))

@@ -18,6 +18,7 @@
   (str "Uusi toimenpidepyyntö %s: %s (id: %s, viestinumero: %s).\n\n"
        "Urakka: %s\n\n"
        "Yhteydenottopyyntö: %s\n\n"
+       "Ilmoittaja: %s\n\n"
        "Paikka: %s\n\n"
        "TR-osoite: %s\n\n"
        "Selitteet: %s.\n\n"
@@ -144,6 +145,7 @@
               viestinumero
               (:urakkanimi ilmoitus)
               (fmt/totuus (:yhteydenottopyynto ilmoitus))
+              (apurit/nayta-henkilon-yhteystiedot (:ilmoittaja ilmoitus))
               paikankuvaus
               tr-osoite
               selitteet
