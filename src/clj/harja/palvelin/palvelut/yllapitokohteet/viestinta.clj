@@ -15,32 +15,39 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn- viesti-kohde-valmis-merkintaan [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
-                                               kohde-valmis-tiemerkintaan-pvm ilmoittaja
+                                               tiemerkintapvm ilmoittaja
                                                tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
      [:p (format "Kohde '%s' on ilmoitettu olevan valmis tiemerkintään %s."
                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                 (fmt/pvm kohde-valmis-tiemerkintaan-pvm))]
+                 (fmt/pvm tiemerkintapvm))]
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
                               ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                              kohde-osoite
                                              {:teksti-tie? false})]
-                              ["Valmis tiemerkintään" (fmt/pvm kohde-valmis-tiemerkintaan-pvm)]
+                              ["Valmis tiemerkintään" (fmt/pvm tiemerkintapvm)]
                               ["Tiemerkinnän suorittaja" tiemerkintaurakka-nimi]
                               ["Ilmoittaja" ilmoittaja]
                               ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
 
-(defn sahkoposti-tiemerkintaurakkaan-kohde-valmis-merkintaan
+(defn sahkoposti-kohde-valmis-merkintaan
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen valmiudesta tiemerkintään."
-  [{:keys [fim email
-           paallystysurakka-nimi kohde-nimi kohde-osoite
-           kohde-valmis-tiemerkintaan-pvm ilmoittaja
-           tiemerkintaurakka-id tiemerkintaurakka-nimi
-           tiemerkintaurakka-sampo-id] :as tiedot}]
+  [db fim email kohde-id tiemerkintapvm ilmoittaja]
   (try+
-    (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
+    (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                  tiemerkintaurakka-sampo-id paallystysurakka-nimi
+                  tiemerkintaurakka-id tiemerkintaurakka-nimi]}
+          (first (q/hae-kohteen-tiedot-sahkopostilahetykseen
+                   db
+                   {:id kohde-id}))
+          kohde-osoite {:tr-numero tr-numero
+                        :tr-alkuosa tr-alkuosa
+                        :tr-alkuetaisyys tr-alkuetaisyys
+                        :tr-loppuosa tr-loppuosa
+                        :tr-loppuetaisyys tr-loppuetaisyys}
+          ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
                                fim
                                tiemerkintaurakka-sampo-id
                                #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
@@ -52,18 +59,18 @@
             (:sahkoposti henkilo)
             (format "Harja: Kohteen '%s' tiemerkinnän voi aloittaa %s"
                     (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                    (fmt/pvm kohde-valmis-tiemerkintaan-pvm))
+                    (fmt/pvm tiemerkintapvm))
             (viesti-kohde-valmis-merkintaan {:paallystysurakka-nimi paallystysurakka-nimi
                                              :kohde-nimi kohde-nimi
                                              :kohde-osoite kohde-osoite
-                                             :kohde-valmis-tiemerkintaan-pvm kohde-valmis-tiemerkintaan-pvm
+                                             :tiemerkintapvm tiemerkintapvm
                                              :ilmoittaja ilmoittaja
                                              :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})))
         (log/warn (format "Tiemerkintäurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa kohteen valmiudesta tiemerkintään."
                           tiemerkintaurakka-id))))
     (catch Object e
-      (log/error (format "Sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: %s %s"
-                         tiemerkintaurakka-id e (.printStackTrace e))))))
+      (log/error (format "Sähköpostia ei voitu lähettää kohteen %s tiemerkitsijälle: %s %s"
+                         kohde-id e (.printStackTrace e))))))
 
 
 (defn- viesti-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
@@ -81,16 +88,23 @@
                               ["Ilmoittaja" ilmoittaja]
                               ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
 
-(defn sahkoposti-paallystysurakkaan-tiemerkinta-valmis
+(defn sahkoposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta."
-  [{:keys [fim email
-           paallystysurakka-nimi kohde-nimi kohde-osoite
-           tiemerkinta-valmis ilmoittaja
-           paallystysurakka-id
-           paallystysurakka-sampo-id] :as tiedot}]
+  [db fim email kohde-id tiemerkinta-valmis-pvm ilmoittaja]
   (try+
-    (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
+    (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                   paallystysurakka-sampo-id paallystysurakka-nimi
+                   paallystysurakka-id]}
+           (first (q/hae-kohteen-tiedot-sahkopostilahetykseen
+                    db
+                    {:id kohde-id}))
+          kohde-osoite {:tr-numero tr-numero
+                        :tr-alkuosa tr-alkuosa
+                        :tr-alkuetaisyys tr-alkuetaisyys
+                        :tr-loppuosa tr-loppuosa
+                        :tr-loppuetaisyys tr-loppuetaisyys}
+          ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
                                fim
                                paallystysurakka-sampo-id
                                #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
@@ -102,14 +116,14 @@
             (:sahkoposti henkilo)
             (format "Harja: Kohteen '%s' tiemerkintä on valmistunut %s"
                     (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
-                    (fmt/pvm tiemerkinta-valmis))
+                    (fmt/pvm tiemerkinta-valmis-pvm))
             (viesti-tiemerkinta-valmis {:paallystysurakka-nimi paallystysurakka-nimi
                                         :kohde-nimi kohde-nimi
                                         :kohde-osoite kohde-osoite
-                                        :tiemerkinta-valmis tiemerkinta-valmis
+                                        :tiemerkinta-valmis tiemerkinta-valmis-pvm
                                         :ilmoittaja ilmoittaja})))
         (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
                           paallystysurakka-id))))
     (catch Object e
-      (log/error (format "Sähköpostia ei voitu lähettää urakan %s päällystäjälle: %s %s"
-                         paallystysurakka-id e (.printStackTrace e))))))
+      (log/error (format "Sähköpostia ei voitu lähettää kohteen %s päällystäjälle: %s %s"
+                         kohde-id e (.printStackTrace e))))))
