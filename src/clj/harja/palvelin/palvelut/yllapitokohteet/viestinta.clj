@@ -20,7 +20,7 @@
                                                tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
-     [:p (format "Kohde '%s' on ilmoitettu olevan valmis tiemerkintään %s."
+     [:p (format "Kohde '%s' on merkitty olevan valmis tiemerkintään %s."
                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                  (fmt/pvm tiemerkintapvm))]
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
@@ -29,10 +29,10 @@
                                              {:teksti-tie? false})]
                               ["Valmis tiemerkintään" (fmt/pvm tiemerkintapvm)]
                               ["Tiemerkinnän suorittaja" tiemerkintaurakka-nimi]
-                              ["Ilmoittaja" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
+                              ["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
                                                  (when-let [puhelin (:puhelin ilmoittaja)]
                                                    (str " (" puhelin ")")))]
-                              ["Ilmoittajan urakka" paallystysurakka-nimi]])]))
+                              ["Merkitsijän urakka" paallystysurakka-nimi]])]))
 
 (defn sahkoposti-kohde-valmis-merkintaan
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
@@ -82,7 +82,7 @@
                                           tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (html
     [:div
-     [:p (format "Kohteen '%s' tiemerkintä on valmistunut %s."
+     [:p (format "Kohteen '%s' tiemerkintä on merkitty valmiiksi %s."
                  (or kohde-nimi (tierekisteri/tierekisteriosoite-tekstina kohde-osoite))
                  (fmt/pvm tiemerkinta-valmis))]
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
@@ -90,10 +90,10 @@
                                              kohde-osoite
                                              {:teksti-tie? false})]
                               ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
-                              ["Ilmoittaja" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
+                              ["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
                                                  (when-let [puhelin (:puhelin ilmoittaja)]
                                                    (str " (" puhelin ")")))]
-                              ["Ilmoittajan urakka" tiemerkintaurakka-nimi]])]))
+                              ["Merkitsijän urakka" tiemerkintaurakka-nimi]])]))
 
 (defn sahkoposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
