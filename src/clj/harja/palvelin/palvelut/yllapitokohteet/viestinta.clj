@@ -36,6 +36,7 @@
   "Lähettää tiemerkintäurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen valmiudesta tiemerkintään."
   [db fim email kohde-id tiemerkintapvm ilmoittaja]
+  (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-id tiemerkintapvm))
   (try+
     (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                   tiemerkintaurakka-sampo-id paallystysurakka-nimi
@@ -93,6 +94,7 @@
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta."
   [db fim email kohde-id tiemerkinta-valmis-pvm ilmoittaja]
+  (log/debug (format "Lähetetään sähköposti: ylläpitokohteen %s tiemerkintä valmis" kohde-id))
   (try+
     (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                    paallystysurakka-sampo-id paallystysurakka-nimi
