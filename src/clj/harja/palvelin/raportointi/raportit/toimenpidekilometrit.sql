@@ -20,8 +20,9 @@ WHERE (:urakka::INTEGER IS NULL OR t.urakka = :urakka)
                                                               WHERE hallintayksikko =
                                                                     :hallintayksikko))
       AND (:urakka::INTEGER IS NOT NULL OR
-           (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
-                                          u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
+           (:urakka::INTEGER IS NULL AND ((:urakkatyyppi :: urakkatyyppi IS NULL OR
+                                          u.tyyppi = :urakkatyyppi :: urakkatyyppi)
+                                          AND urakkanro IS NOT NULL)))
       AND t.alkanut :: DATE BETWEEN :alku AND :loppu
       AND tpk.yksikko = 'tiekm'
 AND t.tyyppi = 'kokonaishintainen'
