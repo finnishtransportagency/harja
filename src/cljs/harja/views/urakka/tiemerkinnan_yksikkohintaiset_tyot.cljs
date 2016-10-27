@@ -28,7 +28,7 @@
     (komp/lippu tiedot/nakymassa?)
     (fn [urakka]
       (let [urakka-id (:id urakka)
-            saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-yksikkohintaisettyot urakka-id)]
+            saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-yksikkohintaisettyot urakka-id)]
         [:div
          [grid/grid
           {:otsikko "Yksikköhintaiset työt"
