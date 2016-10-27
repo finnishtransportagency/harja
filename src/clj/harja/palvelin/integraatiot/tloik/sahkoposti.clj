@@ -8,6 +8,7 @@
             [harja.kyselyt.ilmoitukset :as ilmoitukset]
             [harja.domain.ilmoitukset :as ilm]
             [taoensso.timbre :as log]
+            [harja.tyokalut.html :as html-tyokalut]
             [harja.geo :as geo]
             [harja.fmt :as fmt]))
 
@@ -73,16 +74,14 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html
    [:div
     [:table
-     (for [[kentta arvo] [["Urakka" (:urakkanimi ilmoitus)]
-                          ["Ilmoitettu" (:ilmoitettu ilmoitus)]
-                          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
-                          ["Otsikko" (:otsikko ilmoitus)]
-                          ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
-                          ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
-                          ["Ilmoittaja" (apurit/nayta-henkilo (:ilmoittaja ilmoitus))]]]
-       [:tr
-        [:td [:b kentta]]
-        [:td arvo]])]
+     (html-tyokalut/taulukko
+       [["Urakka" (:urakkanimi ilmoitus)]
+        ["Ilmoitettu" (:ilmoitettu ilmoitus)]
+        ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
+        ["Otsikko" (:otsikko ilmoitus)]
+        ["Paikan kuvaus" (:paikankuvaus ilmoitus)]
+        ["Selitteet" (apurit/parsi-selitteet (mapv keyword (:selitteet ilmoitus)))]
+        ["Ilmoittaja" (apurit/nayta-henkilo (:ilmoittaja ilmoitus))]])]
     [:blockquote (:lisatieto ilmoitus)]
     (when-let [sijainti (:sijainti ilmoitus)]
       (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
