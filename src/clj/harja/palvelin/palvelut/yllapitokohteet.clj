@@ -162,6 +162,10 @@
                                                               :yllapitokohde id})))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
+(defn- laheta-sahkoposti-tiemerkitsijoille [tiemerkintaurakka-id]
+
+  )
+
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
    Palauttaa päivitetyt kohteet aikataulunäkymään"
@@ -169,16 +173,28 @@
    {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
-  (jdbc/with-db-transaction [db db]
-    (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
-      db
-      {:valmis_tiemerkintaan tiemerkintapvm
-       :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
-                                           (c/from-date)
-                                           tm-domain/tiemerkinta-oltava-valmis
-                                           (c/to-date))
-       :id kohde-id
-       :urakka urakka-id})
+  (let [tiemerkintaurakka-id (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                           db
+                                           {:id kohde-id})))]
+    (jdbc/with-db-transaction [db db]
+      (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
+        db
+        {:valmis_tiemerkintaan tiemerkintapvm
+         :aikataulu_tiemerkinta_takaraja (-> tiemerkintapvm
+                                             (c/from-date)
+                                             tm-domain/tiemerkinta-oltava-valmis
+                                             (c/to-date))
+         :id kohde-id
+         :urakka urakka-id}))
+
+    (try
+      (laheta-sahkoposti-tiemerkitsijoille tiemerkintaurakka-id)
+      (catch Exception e
+        (log/error (format "Päällystysurakoitsija merkitsi kohteen %s valmiiksi, mutta sähköpostia ei voitu lähettää urakan %s tiemerkitsijälle: "
+                           kohde-id
+                           tiemerkintaurakka-id
+                           (.getMessage e)))))
+
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id})))
 
