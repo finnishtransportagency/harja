@@ -37,10 +37,7 @@
                                (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm))))
 
 (defn hae-ilmoituksen-saajat [fim sampo-id]
-  (let [urakan-kayttajat (fim/hae-urakan-kayttajat fim sampo-id)
-        ilmoituksen-saajat (fim/suodata-kayttajaroolit urakan-kayttajat
-                                                       #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
-    ilmoituksen-saajat))
+  (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id #{"ely urakanvalvoja" "urakan vastuuhenkilö"}))
 
 (defn- ilmoita-paivystyksettomasta-urakasta [urakka fim email pvm]
   (let [ilmoituksen-saajat (hae-ilmoituksen-saajat fim (:sampoid urakka))]

@@ -96,6 +96,11 @@
         (some? (some pidettavat-roolit kayttajan-roolit))))
     kayttajat))
 
+(defn hae-urakan-kayttajat-jotka-roolissa [this sampo-id roolit-set]
+  (let [urakan-kayttajat (hae-urakan-kayttajat this sampo-id)
+        kayttajat-roolissa (suodata-kayttajaroolit urakan-kayttajat roolit-set)]
+    kayttajat-roolissa))
+
 (defrecord FIM [url]
   component/Lifecycle
   (start [this]

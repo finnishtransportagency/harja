@@ -21,7 +21,10 @@
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paallystys :as paallystys-q]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [harja.fmt :as fmt]))
 
 (defn- tarkista-urakkatyypin-mukainen-kirjoitusoikeus [db user urakka-id]
   (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))]
@@ -162,9 +165,26 @@
                                                               :yllapitokohde id})))
     (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
 
-(defn- laheta-sahkoposti-tiemerkitsijoille [tiemerkintaurakka-id]
-
-  )
+(defn- laheta-sahkoposti-tiemerkitsijoille [{:keys [fim email
+                                            paallystysurakka-nimi kohde-nimi kohde-osoite kohde-valmis-tiemerkintaan-pvm
+                                            tiemerkintaurakka-id tiemerkintaurakka-nimi tiemerkintaurakka-sampo-id] :as tiedot]
+  (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
+                              fim
+                              tiemerkintaurakka-sampo-id
+                              #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
+    (if-not (empty? ilmoituksen-saajat)
+      (doseq [henkilo ilmoituksen-saajat]
+        (sahkoposti/laheta-viesti!
+          email
+          (sahkoposti/vastausosoite email)
+          (:sahkoposti henkilo)
+          (format "Harja: Kohteen '%s' tiemerkinnän voi aloittaa %s"
+                  kohde-nimi
+                  (fmt/pvm kohde-valmis-tiemerkintaan-pvm))
+          (format "Urakan '%s' päällystyskohteelle '%s' (%s) on ilmoitettu päivämäärä %s, jolloin kohde on valmis tiemerkintään. Tiemerkinnän suorittajaksi on merkitty '%s'."
+                  paallystysurakka-nimi kohde-nimi kohde-osoite kohde-valmis-tiemerkintaan-pvm tiemerkintaurakka-nimi)))
+      (log/warn (format "Tiemerkintäurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa kohteen valmiudesta tiemerkintään."
+                        tiemerkintaurakka-id)))))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan
   "Merkitsee kohteen valmiiksi tiemerkintään annettuna päivämääränä.
