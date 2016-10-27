@@ -182,8 +182,8 @@
                  (fmt/pvm kohde-valmis-tiemerkintaan-pvm))]
      (html-tyokalut/taulukko [["Kohde" kohde-nimi]
                               ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                                  {:teksti-tie false}
-                                                  kohde-osoite)]
+                                             kohde-osoite
+                                             {:teksti-tie false})]
                               ["Valmis tiemerkintään" (fmt/pvm kohde-valmis-tiemerkintaan-pvm)]
                               ["Tiemerkinnän suorittaja" tiemerkintaurakka-nimi]
                               ["Ilmoittaja" ilmoittaja]
@@ -222,7 +222,6 @@
   [db fim email user
    {:keys [urakka-id sopimus-id tiemerkintapvm kohde-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
-  (log/debug "User: " (pr-str user))
   (log/debug "Merkitään urakan " urakka-id " kohde " kohde-id " valmiiksi tiemerkintää päivämäärällä " tiemerkintapvm)
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
