@@ -148,6 +148,8 @@ SELECT
   it.vakiofraasi                           AS kuittaus_vakiofraasi,
   it.vapaateksti                           AS kuittaus_vapaateksti,
   it.kuittaustyyppi                        AS kuittaus_kuittaustyyppi,
+  it.kanava                                AS kuittaus_kanava,
+  it.suunta                                AS kuittaus_suunta,
 
   it.kuittaaja_henkilo_etunimi             AS kuittaus_kuittaaja_etunimi,
   it.kuittaaja_henkilo_sukunimi            AS kuittaus_kuittaaja_sukunimi,
@@ -169,7 +171,7 @@ FROM ilmoitus i
   LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
-WHERE i.id = :id AND urakka IN (:urakat);
+WHERE i.id = :id;
 
 -- name: hae-ilmoitukset-idlla
 SELECT
@@ -399,6 +401,9 @@ INSERT INTO ilmoitustoimenpide
  vakiofraasi,
  vapaateksti,
  kuittaustyyppi,
+ suunta,
+ kanava,
+ tila,
  kuittaaja_henkilo_etunimi,
  kuittaaja_henkilo_sukunimi,
  kuittaaja_henkilo_matkapuhelin,
@@ -420,6 +425,9 @@ VALUES
     :vakiofraasi,
     :vapaateksti,
     :kuittaustyyppi :: kuittaustyyppi,
+    :suunta :: viestisuunta,
+    :kanava :: viestikanava,
+    :tila :: lahetyksen_tila,
     :kuittaaja_henkilo_etunimi,
     :kuittaaja_henkilo_sukunimi,
     :kuittaaja_henkilo_matkapuhelin,
@@ -465,7 +473,9 @@ GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
 -- name: hae-lahettamattomat-ilmoitustoimenpiteet
 SELECT id
 FROM ilmoitustoimenpide
-WHERE tila IS NULL OR tila = 'virhe';
+WHERE
+  (tila IS NULL OR tila = 'virhe') AND
+  kuittaustyyppi != 'valitys'::kuittaustyyppi;
 
 -- name: hae-ilmoituksen-tieosoite
 SELECT

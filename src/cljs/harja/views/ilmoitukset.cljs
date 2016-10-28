@@ -77,7 +77,7 @@
          [:br]
          (pvm/pvm-aika kuitattu)
          [:br] (:etunimi kuittaaja) " " (:sukunimi kuittaaja)]])
-     kuittaukset)])
+     (remove domain/valitysviesti? kuittaukset))])
 
 (defn ilmoitusten-hakuehdot [e! {:keys [aikavali urakka valitun-urakan-hoitokaudet] :as valinnat-nyt}]
   [lomake/lomake
