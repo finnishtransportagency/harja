@@ -118,7 +118,7 @@
             maksuera (hae-maksueran-tiedot db numero)
             muodosta-xml #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml maksuera)]
         (try
-          (let [viesti-id (jms-lahettaja muodosta-xml)]
+          (let [viesti-id (jms-lahettaja muodosta-xml nil)]
             (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
             (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero)))
           (catch Exception e

@@ -104,7 +104,7 @@
                            (tarkista-maksueran-tiedot maksuera)
                            (maksuera-sanoma/maksuera-xml maksuera))]
         (try
-          (let [viesti-id (jms-lahettaja muodosta-xml)]
+          (let [viesti-id (jms-lahettaja muodosta-xml nil)]
             (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
             (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero)))
 

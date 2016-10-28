@@ -286,7 +286,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 ;; Kartan popupit käyttää näitä funktioita
 
 (defn avaa-ilmoitus! [ilmoitus]
-  (swap! ilmoitukset assoc :valittu-ilmoitus ilmoitus))
+  ;; Tilannekuvan ilmoitustiedoissa on iso osa ilmoituksen tarkemmista tiedoista.
+  ;; Laitetaan valituksi ilmoitukseksi se mitä ilmoituksesta tiedetään, ja täydennetään popupin tietoja
+  ;; palvelinkutsulla, joka valmistuu jossain vaiheessa.
+  (swap! ilmoitukset assoc :valittu-ilmoitus ilmoitus)
+  (go
+    (let [tulos (<! (k/post! :hae-ilmoitus (:id ilmoitus)))]
+      (swap! ilmoitukset assoc :valittu-ilmoitus tulos))))
 
 (defn sulje-ilmoitus! []
   (swap! ilmoitukset assoc :valittu-ilmoitus nil))
