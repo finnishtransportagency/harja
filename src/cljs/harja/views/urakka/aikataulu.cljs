@@ -15,6 +15,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tiemerkinta :as tiemerkinta]
             [harja.ui.modal :as modal]
+            [harja.ui.yleiset :refer [vihje]]
             [harja.ui.lomake :as lomake]
             [cljs-time.core :as t]
             [harja.ui.napit :as napit]
@@ -33,46 +34,47 @@
                      (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
                      :default nil)}
        [:button.nappi-ensisijainen.nappi-grid
-       {:type "button"
-        :disabled (or (not paallystys-valmis?)
-                      (not suorittava-urakka-annettu?))
-        :on-click
-        (fn []
-          (modal/nayta!
-            {:otsikko "Merkintäänkö kohde valmiiksi tiemerkintään?"
-             :luokka "merkitse-valmiiksi-tiemerkintaan"
-             :sulje-fn #(reset! valmis-tiemerkintaan-lomake nil) ; FIXME ei toimi?
-             :footer [:span
-                      [:button.nappi-toissijainen
-                       {:type "button"
-                        :on-click #(do (.preventDefault %)
-                                       (reset! valmis-tiemerkintaan-lomake nil)
-                                       (modal/piilota!))}
-                       "Peruuta"]
-                      [napit/palvelinkutsu-nappi
-                       "Merkitse"
-                       #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
-                            (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
-                              kohde-id
-                              (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
-                              urakka-id
-                              (first @u/valittu-sopimusnumero)))
-                       {;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
-                        :luokka "nappi-myonteinen"
-                        :kun-onnistuu (fn [vastaus]
-                                        (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
-                                        (reset! tiedot/aikataulurivit vastaus)
-                                        (modal/piilota!))}]]}
-            [:div
-             [:p "Haluatko varmasti merkitä kohteen valmiiksi tiemerkintään? Toimintoa ei voi perua."]
-             [lomake/lomake {:otsikko ""
-                             :muokkaa! (fn [uusi-data]
-                                         (reset! valmis-tiemerkintaan-lomake uusi-data))}
-              [{:otsikko "Tiemerkinnän saa aloittaa"
-                :nimi :valmis-tiemerkintaan
-                :pakollinen? true
-                :tyyppi :pvm}]
-              @valmis-tiemerkintaan-lomake]]))}
+        {:type "button"
+         :disabled (or (not paallystys-valmis?)
+                       (not suorittava-urakka-annettu?))
+         :on-click
+         (fn []
+           (modal/nayta!
+             {:otsikko "Kohteen merkitseminen valmiiksi tiemerkintään"
+              :luokka "merkitse-valmiiksi-tiemerkintaan"
+              :sulje-fn #(reset! valmis-tiemerkintaan-lomake nil) ; FIXME ei toimi?
+              :footer [:div
+                       [:span [:button.nappi-toissijainen
+                               {:type "button"
+                                :on-click #(do (.preventDefault %)
+                                               (reset! valmis-tiemerkintaan-lomake nil)
+                                               (modal/piilota!))}
+                               "Peruuta"]
+                        [napit/palvelinkutsu-nappi
+                         "Merkitse"
+                         #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
+                              (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
+                                kohde-id
+                                (:valmis-tiemerkintaan @valmis-tiemerkintaan-lomake)
+                                urakka-id
+                                (first @u/valittu-sopimusnumero)))
+                         {;:disabled (not @valmis-tallennettavaksi?) ; FIXME Ei päivity
+                          :luokka "nappi-myonteinen"
+                          :kun-onnistuu (fn [vastaus]
+                                          (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
+                                          (reset! tiedot/aikataulurivit vastaus)
+                                          (modal/piilota!))}]]
+                       [vihje "Toimintoa ei voi perua. Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."]]}
+             [:div
+              [:p "Valitse päivämäärä, jolloin tiemerkinnän voi aloittaa."]
+              [lomake/lomake {:otsikko ""
+                              :muokkaa! (fn [uusi-data]
+                                          (reset! valmis-tiemerkintaan-lomake uusi-data))}
+               [{:otsikko "Tiemerkinnän saa aloittaa"
+                 :nimi :valmis-tiemerkintaan
+                 :pakollinen? true
+                 :tyyppi :pvm}]
+               @valmis-tiemerkintaan-lomake]]))}
        "Aseta päivä\u00ADmäärä"]])))
 
 (defn aikataulu

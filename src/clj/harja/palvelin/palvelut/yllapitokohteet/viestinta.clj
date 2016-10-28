@@ -71,11 +71,11 @@
                                              :ilmoittaja ilmoittaja
                                              :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})))
         (log/warn (format "Tiemerkintäurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa kohteen valmiudesta tiemerkintään."
-                          tiemerkintaurakka-id))))
-    (catch Object e
-      (log/error (format "Sähköpostia ei voitu lähettää kohteen %s tiemerkitsijälle: %s %s"
-                         kohde-id e (when (instance? java.lang.Throwable e)
-                                      (.printStackTrace e)))))))
+                          tiemerkintaurakka-id)))
+      (catch Object e
+        (log/error (format "Sähköpostia ei voitu lähettää kohteen %s tiemerkitsijälle: %s %s"
+                           kohde-id e (when (instance? java.lang.Throwable e)
+                                        (.printStackTrace e))))))))
 
 
 (defn- viesti-tiemerkinta-valmis [{:keys [kohde-nimi kohde-osoite
