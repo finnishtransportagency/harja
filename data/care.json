@@ -1,6 +1,12 @@
 [
   {
     "date": "2016-10-28",
+    "title": "Turvallisuuspoikkeamien siirto automaattisesti TURI:n Harjasta 31.10.2016 alkaen",
+    "short": "TURI:n ja Harjan välinen rajapinta otetaan käyttöön.",
+    "body": "31.10.2016 alkaen turvallisuuspoikkeamat siirretään automaattisesti Harjasta TURI järjestelmään."
+  },
+  {
+    "date": "2016-10-28",
     "title": "Uusi rajapinta urakanyhteystietojen haulle Liikenneviraston järjestelmille",
     "short": "Liikenneviraston järjestelmille on tehty Harjan API:n uusi rajapinta urakan yhteystietojen hakemiseksi.",
     "body": "Yhteystiedot haetaan FIM-järjestelmästä sekä Harjaan tallennetuista yhteystiedoista. Rajapinta on tällä hetkellä sallittu vain Liikenneviraston järjestelmille."
