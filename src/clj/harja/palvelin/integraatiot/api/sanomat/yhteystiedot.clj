@@ -11,7 +11,7 @@
     "Tilaajan turvallisuusvastaava"
     "Paivystaja"
     "Laatupaallikko"
-    "Turvallisuusvastaava"
+    "Kelikeskus"
     "Laadunvalvoja"})
 
 (def harja-roolit
