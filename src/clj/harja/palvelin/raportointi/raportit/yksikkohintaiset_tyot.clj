@@ -8,7 +8,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]))
 
-(defn yhdista-suunnittelurivit-hoitokausiksi
+(defn- yhdista-suunnittelurivit-hoitokausiksi
   "Ottaa vectorin hoitokausien syksyn ja kevään osuutta kuvaavia rivejä.
   Yhdistää syksy-kevät parit yhdeksi riviksi, joka kuvaa kokonaista hoitokautta.
   Palauttaa ainoastaan ne rivit, jotka voitiin yhdistää."
@@ -37,7 +37,7 @@
                                          0)))))))
           syksyrivit)))
 
-(defn hae-urakan-hoitokaudet [db urakka-id]
+(defn suunnitellut-tehtavat [db urakka-id]
   (yhdista-suunnittelurivit-hoitokausiksi
     (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 

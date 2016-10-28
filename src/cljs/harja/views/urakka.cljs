@@ -91,11 +91,11 @@
        ^{:key "toteumat"}
        [toteumat/toteumat ur])
 
-     "Toteutus"
-     :toteutus
-     (when (valilehti-mahdollinen? :toteutus ur)
-       ^{:key "toteutus"}
-       [toteutus/toteutus ur])
+     ;"Toteutus"
+     ;:toteutus
+     ;;(when (valilehti-mahdollinen? :toteutus ur)
+     ;  ^{:key "toteutus"}
+     ;  [toteutus/toteutus ur])
 
      "Aikataulu"
      :aikataulu
