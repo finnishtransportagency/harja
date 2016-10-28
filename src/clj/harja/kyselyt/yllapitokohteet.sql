@@ -445,6 +445,7 @@ SELECT
   ypk.tr_alkuetaisyys as "tr-alkuetaisyys",
   ypk.tr_loppuosa as "tr-loppuosa",
   ypk.tr_loppuetaisyys as "tr-loppuetaisyys",
+  ypk.aikataulu_tiemerkinta_loppu as "aikataulu-tiemerkinta-loppu",
   pu.id as "paallystysurakka-id",
   pu.nimi as "paallystysurakka-nimi",
   pu.sampoid as "paallystysurakka-sampo-id",

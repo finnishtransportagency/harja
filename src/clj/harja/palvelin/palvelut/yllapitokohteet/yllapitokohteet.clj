@@ -263,9 +263,7 @@
            :id (:id kohde)
            :urakka paallystysurakka-id}))))
 
-  (doseq [kohde kohteet]
-    (viestinta/sahkoposti-tiemerkinta-valmis db fim email
-                                             (:id kohde) (:aikataulu-tiemerkinta-loppu kohde) user)))
+  (viestinta/sahkoposti-tiemerkinta-valmis db fim email (map :id kohteet) paallystysurakka-id user))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
