@@ -63,10 +63,9 @@
                           :kun-onnistuu (fn [vastaus]
                                           (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
                                           (reset! tiedot/aikataulurivit vastaus)
-                                          (modal/piilota!))}]]
-                       [vihje "Toimintoa ei voi perua. Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."]]}
+                                          (modal/piilota!))}]]]}
              [:div
-              [:p "Valitse päivämäärä, jolloin tiemerkinnän voi aloittaa."]
+              [vihje "Toimintoa ei voi perua. Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle ja vastuuhenkilölle."]
               [lomake/lomake {:otsikko ""
                               :muokkaa! (fn [uusi-data]
                                           (reset! valmis-tiemerkintaan-lomake uusi-data))}
