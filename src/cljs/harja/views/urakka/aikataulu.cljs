@@ -223,4 +223,6 @@
                        "Tiemerkintää ei ole merkitty lopetetuksi."]
                       [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-loppu
                        "Kohde ei voi olla valmis ennen kuin tiemerkintä on valmistunut."]]}]
-          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]]))))
+          (sort-by tr-domain/tiekohteiden-jarjestys @tiedot/aikataulurivit)]
+         (if (= (:nakyma optiot) :tiemerkinta)
+           [vihje "Tiemerkinnän valmistumisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle ja vastuuhenkilölle."])]))))
