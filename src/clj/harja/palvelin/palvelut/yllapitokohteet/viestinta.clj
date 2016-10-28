@@ -162,10 +162,10 @@
     (if-not (empty? ilmoituksen-saajat)
       (doseq [henkilo ilmoituksen-saajat]
         (if (> (count yhden-paallystysurakan-kohde-idt) 1)
-          (sahkoposti-kohteiden-tiemerkinta-valmis db email yhden-paallystysurakan-kohde-idt henkilo ilmoittaja))
-        (sahkoposti-kohteen-tiemerkinta-valmis db email (first yhden-paallystysurakan-kohde-idt) henkilo ilmoittaja)))
-    (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
-                      paallystysurakka-id))))
+          (sahkoposti-kohteiden-tiemerkinta-valmis db email yhden-paallystysurakan-kohde-idt henkilo ilmoittaja)
+          (sahkoposti-kohteen-tiemerkinta-valmis db email (first yhden-paallystysurakan-kohde-idt) henkilo ilmoittaja)))
+      (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
+                        paallystysurakka-id)))))
 
 (defn sahkoposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
