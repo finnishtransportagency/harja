@@ -298,7 +298,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                   submit nappi tms.
 
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
-                  funktiolle annetaan virheet ja varoitukset parametrina
+                  funktiolle annetaan validoitu data parametrina. Parametriin on liitetty
+                  avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
   "

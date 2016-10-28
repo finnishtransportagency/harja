@@ -2,7 +2,7 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, laatupoikkeama, suorasanktio)
+(perintapvm, sakkoryhma, tyyppi, toimenpideinstanssi, maara, indeksi, laatupoikkeama, suorasanktio, luoja, luotu)
 VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
 	  (SELECT t.id -- suoraan annettu tpi
@@ -12,7 +12,7 @@ VALUES (:perintapvm, :ryhma :: sanktiolaji, :tyyppi,
 	     FROM toimenpideinstanssi t -- sanktiotyyppiin linkattu tpi
             JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
            WHERE s.id = :tyyppi AND t.urakka = :urakka)),
-        :summa, :indeksi, :laatupoikkeama, :suorasanktio);
+        :summa, :indeksi, :laatupoikkeama, :suorasanktio, :luoja, NOW());
 
 -- name: paivita-sanktio!
 -- Päivittää olemassaolevan sanktion
@@ -29,7 +29,9 @@ SET perintapvm        = :perintapvm,
   maara               = :summa,
   indeksi             = :indeksi,
   laatupoikkeama            = :laatupoikkeama,
-  suorasanktio        = :suorasanktio
+  suorasanktio        = :suorasanktio,
+  muokkaaja = :muokkaaja,
+  muokattu = NOW()
 WHERE id = :id;
 
 -- name: hae-laatupoikkeaman-sanktiot

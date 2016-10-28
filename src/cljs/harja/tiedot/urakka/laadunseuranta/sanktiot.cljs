@@ -16,6 +16,7 @@
 (def nakymassa? (atom false))
 (defn uusi-sanktio []
   {:suorasanktio true
+   :laji :A
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
                     :paatos {:paatos "sanktio"}
                     :aika (pvm/nyt)}})
@@ -42,11 +43,14 @@
   {:sanktio  (dissoc s :laatupoikkeama)
    :laatupoikkeama (if-not (get-in s [:laatupoikkeama :urakka])
                (:laatupoikkeama (assoc-in s [:laatupoikkeama :urakka] (:id @nav/valittu-urakka)))
-               (:laatupoikkeama s))})
+               (:laatupoikkeama s))
+   :hoitokausi @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio
   [sanktio]
-  (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio)))
+  (go
+    (let [sanktiot-tallennuksen-jalkeen (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio)))]
+     (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]
