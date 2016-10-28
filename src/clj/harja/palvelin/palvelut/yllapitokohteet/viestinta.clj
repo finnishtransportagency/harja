@@ -44,9 +44,9 @@
     (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                   tiemerkintaurakka-sampo-id paallystysurakka-nimi
                   tiemerkintaurakka-id tiemerkintaurakka-nimi]}
-          (first (q/hae-kohteen-tiedot-sahkopostilahetykseen
+          (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                    db
-                   {:id kohde-id}))
+                   {:idt [kohde-id]}))
           kohde-osoite {:tr-numero tr-numero
                         :tr-alkuosa tr-alkuosa
                         :tr-alkuetaisyys tr-alkuetaisyys
@@ -100,9 +100,9 @@
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 aikataulu-tiemerkinta-loppu
                 tiemerkintaurakka-nimi]}
-        (first (q/hae-kohteen-tiedot-sahkopostilahetykseen
+        (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                  db
-                 {:id kohde-id}))
+                 {:idt [kohde-id]}))
         kohde-osoite {:tr-numero tr-numero
                       :tr-alkuosa tr-alkuosa
                       :tr-alkuetaisyys tr-alkuetaisyys
@@ -138,12 +138,9 @@
         [:br]])]))
 
 (defn- sahkoposti-kohteiden-tiemerkinta-valmis [db email kohde-idt henkilo ilmoittaja]
-  (let [kohteiden-tiedot
-        (mapv
-          #(first (q/hae-kohteen-tiedot-sahkopostilahetykseen
-                    db
-                    {:id %}))
-          kohde-idt)]
+  (let [kohteiden-tiedot (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                           db
+                           {:idt kohde-idt})]
     (sahkoposti/laheta-viesti!
       email
       (sahkoposti/vastausosoite email)
@@ -151,23 +148,34 @@
       "Harja: Tiemerkintäkohteita valmistunut"
       (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot ilmoittaja))))
 
+(defn- kasittele-yhden-paallystysurakan-tiemerkityt-kohteet
+  [db fim email paallystysurakka-id yhden-paallystysurakan-kohde-idt ilmoittaja]
+  (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
+                             fim
+                             (urakat-q/hae-urakan-sampo-id db {:urakka paallystysurakka-id})
+                             #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
+    (if-not (empty? ilmoituksen-saajat)
+      (doseq [henkilo ilmoituksen-saajat]
+        (if (> (count yhden-paallystysurakan-kohde-idt) 1)
+          (sahkoposti-kohteiden-tiemerkinta-valmis db email yhden-paallystysurakan-kohde-idt henkilo ilmoittaja))
+        (sahkoposti-kohteen-tiemerkinta-valmis db email (first yhden-paallystysurakan-kohde-idt) henkilo ilmoittaja)))
+    (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
+                      paallystysurakka-id))))
+
 (defn sahkoposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
    ylläpitokohteen tiemerkinnän valmistumisesta."
-  [db fim email kohde-idt paallystysurakka-id ilmoittaja]
-  (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden valmistumisesta."))
+  [db fim email kohde-idt ilmoittaja]
+  (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str kohde-idt)))
   (try+
-    (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
-                               fim
-                               (urakat-q/hae-urakan-sampo-id db {:urakka paallystysurakka-id})
-                               #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
-      (if-not (empty? ilmoituksen-saajat)
-        (doseq [henkilo ilmoituksen-saajat]
-          (if (> (count kohde-idt) 1)
-            (sahkoposti-kohteiden-tiemerkinta-valmis db email kohde-idt henkilo ilmoittaja))
-          (sahkoposti-kohteen-tiemerkinta-valmis db email (first kohde-idt) henkilo ilmoittaja)))
-      (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
-                        paallystysurakka-id)))
+    (let [kohteiden-tiedot
+          (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+            db
+            {:idt kohde-idt})
+          paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)]
+      (doseq [kohteet (vals paallystysurakoiden-kohteet)]
+        (kasittele-yhden-paallystysurakan-tiemerkityt-kohteet
+          db fim email (:paallystysurakka-id (first kohteet)) (map :id kohteet) ilmoittaja)))
   (catch Object e
     (log/error (format "Sähköpostia ei voitu lähettää kohteiden %s päällystäjälle: %s %s"
                        (pr-str kohde-idt) e (when (instance? java.lang.Throwable e)

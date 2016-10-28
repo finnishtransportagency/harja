@@ -427,7 +427,7 @@ UPDATE yllapitokohde
 SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :urakka;
+      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
 
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohde
@@ -436,6 +436,27 @@ SET
   aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
 WHERE id = :id
       AND urakka = :urakka;
+
+-- name: hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+SELECT
+  ypk.id as id,
+  ypk.nimi as "kohde-nimi",
+  ypk.tr_numero as "tr-numero",
+  ypk.tr_alkuosa as "tr-alkuosa",
+  ypk.tr_alkuetaisyys as "tr-alkuetaisyys",
+  ypk.tr_loppuosa as "tr-loppuosa",
+  ypk.tr_loppuetaisyys as "tr-loppuetaisyys",
+  ypk.aikataulu_tiemerkinta_loppu as "aikataulu-tiemerkinta-loppu",
+  pu.id as "paallystysurakka-id",
+  pu.nimi as "paallystysurakka-nimi",
+  pu.sampoid as "paallystysurakka-sampo-id",
+  tu.id as "tiemerkintaurakka-id",
+  tu.nimi as "tiemerkintaurakka-nimi",
+  tu.sampoid as "tiemerkintaurakka-sampo-id"
+FROM yllapitokohde ypk
+  JOIN urakka pu ON ypk.urakka = pu.id
+  JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
+WHERE ypk.id IN :idt;
 
 -- name: hae-kohteen-tiedot-sahkopostilahetykseen
 SELECT
@@ -466,7 +487,7 @@ SET
   aikataulu_muokattu          = NOW(),
   aikataulu_muokkaaja         = :aikataulu_muokkaaja
 WHERE id = :id
-      AND suorittava_tiemerkintaurakka = :urakka;
+      AND suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka;
 
 -- name: yllapitokohteella-paallystysilmoitus
 SELECT EXISTS(SELECT id

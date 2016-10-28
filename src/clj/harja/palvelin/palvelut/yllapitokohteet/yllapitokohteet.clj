@@ -244,9 +244,9 @@
            :id (:id kohde)
            :urakka paallystysurakka-id})))))
 
-(defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet paallystysurakka-id
+(defn- tallenna-tiemerkintakohteiden-aikataulu [{:keys [fim email db user kohteet tiemerkintaurakka-id
                                                         voi-tallentaa-tiemerkinnan-takarajan?] :as tiedot}]
-  (log/debug "Tallennetaan tiemerkintäurakan " paallystysurakka-id " ylläpitokohteiden aikataulutiedot.")
+  (log/debug "Tallennetaan tiemerkintäurakan " tiemerkintaurakka-id " ylläpitokohteiden aikataulutiedot.")
   (doseq [kohde kohteet]
     (jdbc/with-db-transaction [db db]
       (q/tallenna-tiemerkintakohteen-aikataulu!
@@ -255,15 +255,15 @@
          :aikataulu_tiemerkinta_loppu (:aikataulu-tiemerkinta-loppu kohde)
          :aikataulu_muokkaaja (:id user)
          :id (:id kohde)
-         :urakka paallystysurakka-id})
+         :suorittava_tiemerkintaurakka tiemerkintaurakka-id})
       (when voi-tallentaa-tiemerkinnan-takarajan?
         (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
           db
           {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
            :id (:id kohde)
-           :urakka paallystysurakka-id}))))
+           :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))))
 
-  (viestinta/sahkoposti-tiemerkinta-valmis db fim email (map :id kohteet) paallystysurakka-id user))
+  (viestinta/sahkoposti-tiemerkinta-valmis db fim email (map :id kohteet) user))
 
 (defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id kohteet]}]
   (assert (and urakka-id sopimus-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
@@ -287,7 +287,7 @@
       (tallenna-tiemerkintakohteiden-aikataulu
         {:fim fim :email email :db db :user user
          :kohteet kohteet
-         :paallystysurakka-id urakka-id
+         :tiemerkintaurakka-id urakka-id
          :voi-tallentaa-tiemerkinnan-takarajan? voi-tallentaa-tiemerkinnan-takarajan?}))
 
     (log/debug "Aikataulutiedot tallennettu!")
