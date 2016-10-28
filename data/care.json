@@ -1,5 +1,17 @@
 [
   {
+    "date": "2016-10-28",
+    "title": "Uusi rajapinta urakanyhteystietojen haulle Liikenneviraston järjestelmille",
+    "short": "Liikenneviraston järjestelmille on tehty Harjan API:n uusi rajapinta urakan yhteystietojen hakemiseksi.",
+    "body": "Yhteystiedot haetaan FIM-järjestelmästä sekä Harjaan tallennetuista yhteystiedoista. Rajapinta on tällä hetkellä sallittu vain Liikenneviraston järjestelmille."
+  },
+  {
+    "date": "2016-10-28",
+    "title": "Ilmoitusten välitysviestit näkyville",
+    "short": "Ilmoituksista päivystäjille lähetetyistä tekstiviesteistä ja sähköposteista näytetään jatkossa tieto ilmoitusnäkymässä.",
+    "body": "Tieto keille päivystäjille ja mitä kanavaa pitkin voidaan jatkossa nähdä Harjan ilmoitusnäkymästä klikkaamalla \"Näytä välitystiedot\". Välitystiedot näytetään kuittausten perässä."
+  },
+  {
     "date": "2016-10-27",
     "title": "Muutoksia ilmoitusten käsittelyssä",
     "short": "Tekstiviestit vain vastuullisille päivystäjille. Tekstiviestien ja sähköpostien sisältöä laajennettu.",
