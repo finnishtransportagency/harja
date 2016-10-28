@@ -24,8 +24,7 @@
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktiot :as sanktio-domain]
-            [harja.ui.yleiset :as yleiset]
-            [harja.domain.laadunseuranta.sanktiot :as sanktiot-domain])
+            [harja.ui.yleiset :as yleiset])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
