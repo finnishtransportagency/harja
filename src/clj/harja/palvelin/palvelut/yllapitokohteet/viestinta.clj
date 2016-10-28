@@ -1,11 +1,8 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.viestinta
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :refer :all]
             [clojure.core.match :refer [match]]
-            [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.tyokalut.html :as html-tyokalut]
@@ -18,7 +15,7 @@
 
 (defn- viesti-kohde-valmis-merkintaan [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite
                                                tiemerkintapvm ilmoittaja
-                                               tiemerkintaurakka-nimi] :as tiedot}]
+                                               tiemerkintaurakka-nimi]}]
   (html
     [:div
      [:p (format "Kohde '%s' on valmis tiemerkintään %s."
