@@ -131,7 +131,7 @@
                                                                :urakoittain? urakoittain?
                                                                :urakkatyyppi urakkatyyppi})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
-        aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm suunnittelutiedot)
+        aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-hoitokaudella? alkupvm loppupvm suunnittelutiedot)
         listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
                                        (not (t/after?

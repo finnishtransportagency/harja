@@ -73,7 +73,7 @@
           toteuma)))
     toteumat))
 
-(defn aikavali-kasittaa-yhden-hoitokauden? [alkupvm loppupvm hoitokaudet]
+(defn aikavali-hoitokaudella? [alkupvm loppupvm hoitokaudet]
   (some
     (fn [hoitokausi]
       (and (pvm/valissa?
@@ -88,6 +88,6 @@
 
 
 (defn suunnitelutietojen-nayttamisilmoitus [konteksti alkupvm loppupvm hoitokaudet]
-  (when (and (not (aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm hoitokaudet))
+  (when (and (not (aikavali-hoitokaudella? alkupvm loppupvm hoitokaudet))
              (= konteksti :urakka))
     [:teksti "Suunnittelutiedot näytetään vain haettaessa urakan tiedot hoitokaudelta tai sen osalta."]))
