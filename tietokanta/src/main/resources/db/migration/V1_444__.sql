@@ -1,11 +1,3 @@
-UPDATE sanktiotyyppi
-SET sanktiolaji = ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji]
-WHERE nimi = 'Liikenneympäristön hoito';
-
-UPDATE sanktiotyyppi
-SET sanktiolaji = ARRAY['A'::sanktiolaji, 'B'::sanktiolaji, 'muistutus'::sanktiolaji]
-WHERE nimi = 'Sorateiden hoito ja ylläpito';
-
 UPDATE sanktio
 SET sakkoryhma = 'muistutus' :: sanktiolaji
 WHERE maara IS NULL;
