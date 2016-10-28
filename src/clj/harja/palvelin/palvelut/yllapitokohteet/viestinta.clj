@@ -129,7 +129,7 @@
      [:p "Seuraavat tiemerkintäkohteet on merkitty valmiiksi:"]
      (for [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                    aikataulu-tiemerkinta-loppu tiemerkintaurakka-nimi paallystysurakka-nimi] :as kohteet} kohteet]
-       [:div (html-tyokalut/taulukko [["Urakka" paallystysurakka-nimi]
+       [:div (html-tyokalut/taulukko [["Tiemerkintäurakka" paallystysurakka-nimi]
                                       ["Kohde" kohde-nimi]
                                       ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                                      {:tr-numero tr-numero
@@ -155,7 +155,7 @@
       email
       (sahkoposti/vastausosoite email)
       (:sahkoposti henkilo)
-      "Harja: Tiemerkintäkohteita valmistunut"
+      (format "Harja: Urakan '%s' tiemerkintäkohteita valmistunut" (:paallystysurakka-nimi (first kohteiden-tiedot)))
       (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot ilmoittaja))))
 
 (defn- kasittele-yhden-paallystysurakan-tiemerkityt-kohteet
