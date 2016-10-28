@@ -136,11 +136,13 @@
                                                       :tr-loppuetaisyys tr-loppuetaisyys}
                                                      {:teksti-tie? false})]
                                       ["Tiemerkintä valmistunut" (fmt/pvm aikataulu-tiemerkinta-loppu)]
-                                      ["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
-                                                         (when-let [puhelin (:puhelin ilmoittaja)]
-                                                           (str " (" puhelin ")")))]
-                                      ["Merkitsijän urakka" tiemerkintaurakka-nimi]])
-        [:br]])]))
+                                      ["Tiemerkintäurakka" tiemerkintaurakka-nimi]])
+        [:br]])
+     [:div
+      (html-tyokalut/taulukko [["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
+                                                  (when-let [puhelin (:puhelin ilmoittaja)]
+                                                    (str " (" puhelin ")")))]])
+      [:br]]]))
 
 (defn- sahkoposti-kohteiden-tiemerkinta-valmis [db email kohde-idt henkilo ilmoittaja]
   (let [kohteiden-tiedot (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
