@@ -33,12 +33,16 @@
                ilmoitusasetukset klusterin-tapahtumat db ilmoituskuittausjono
                jms-lahettaja))))
 
+(defn hilipati [t]
+  (println "---> " t)
+  (:viesti-id t))
+
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
     (jms/kuittausjonokuuntelija
       (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) toimenpidekuittausjono
       (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
-      :viesti-id
+      (fn [t] (hilipati t))
       (comp not :virhe)
       (fn [_ viesti-id onnistunut]
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
