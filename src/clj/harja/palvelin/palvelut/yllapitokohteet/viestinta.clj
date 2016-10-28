@@ -125,10 +125,15 @@
   (html
     [:div
      [:p "Seuraavat tiemerkintäkohteet on merkitty valmiiksi:"]
-     (for [{:keys [kohde-nimi kohde-osoite aikataulu-tiemerkinta-loppu tiemerkintaurakka-nimi] :as kohteet} kohteet]
+     (for [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                   aikataulu-tiemerkinta-loppu tiemerkintaurakka-nimi] :as kohteet} kohteet]
        [:div (html-tyokalut/taulukko [["Kohde" kohde-nimi]
                                       ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
-                                                     kohde-osoite
+                                                     {:tr-numero tr-numero
+                                                      :tr-alkuosa tr-alkuosa
+                                                      :tr-alkuetaisyys tr-alkuetaisyys
+                                                      :tr-loppuosa tr-loppuosa
+                                                      :tr-loppuetaisyys tr-loppuetaisyys}
                                                      {:teksti-tie? false})]
                                       ["Tiemerkintä valmistunut" (fmt/pvm aikataulu-tiemerkinta-loppu)]
                                       ["Merkitsijä" (str (:etunimi ilmoittaja) " " (:sukunimi ilmoittaja)
