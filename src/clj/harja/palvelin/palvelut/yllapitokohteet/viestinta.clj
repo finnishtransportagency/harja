@@ -120,11 +120,11 @@
                                           :tiemerkinta-valmis aikataulu-tiemerkinta-loppu
                                           :ilmoittaja ilmoittaja}))))
 
-(defn- viesti-kohteiden-tiemerkinta-valmis [kohteet {:keys [ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
+(defn- viesti-kohteiden-tiemerkinta-valmis [kohteet ilmoittaja]
   (html
     [:div
      [:p "Seuraavat tiemerkintäkohteet on merkitty valmiiksi:"]
-     (for [{:keys [kohde-nimi kohde-osoite tiemerkinta-valmis] :as kohteet} kohteet]
+     (for [{:keys [kohde-nimi kohde-osoite tiemerkinta-valmis tiemerkintaurakka-nimi] :as kohteet} kohteet]
        [:div (html-tyokalut/taulukko [["Kohde" kohde-nimi]
                                       ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                                      kohde-osoite
@@ -148,9 +148,7 @@
       (sahkoposti/vastausosoite email)
       (:sahkoposti henkilo)
       "Harja: Tiemerkintäkohteita valmistunut"
-      (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot
-                                           {:tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi (first kohteiden-tiedot))
-                                            :ilmoittaja ilmoittaja}))))
+      (viesti-kohteiden-tiemerkinta-valmis kohteiden-tiedot ilmoittaja))))
 
 (defn sahkoposti-tiemerkinta-valmis
   "Lähettää päällystysurakoitsijalle sähköpostiviestillä ilmoituksen
@@ -166,10 +164,10 @@
         (doseq [henkilo ilmoituksen-saajat]
           (if (> (count kohde-idt) 1)
             (sahkoposti-kohteiden-tiemerkinta-valmis db email kohde-idt henkilo ilmoittaja))
-            (sahkoposti-kohteen-tiemerkinta-valmis db email (first kohde-idt) henkilo ilmoittaja)))
-        (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
-                          paallystysurakka-id))))
-    (catch Object e
-      (log/error (format "Sähköpostia ei voitu lähettää kohteiden %s päällystäjälle: %s %s"
-                         (pr-str kohde-idt) e (when (instance? java.lang.Throwable e)
-                                                (.printStackTrace e)))))))
+          (sahkoposti-kohteen-tiemerkinta-valmis db email (first kohde-idt) henkilo ilmoittaja)))
+      (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
+                        paallystysurakka-id))))
+  (catch Object e
+    (log/error (format "Sähköpostia ei voitu lähettää kohteiden %s päällystäjälle: %s %s"
+                       (pr-str kohde-idt) e (when (instance? java.lang.Throwable e)
+                                              (.printStackTrace e)))))) )
