@@ -7,6 +7,7 @@
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.tyokalut.html :as html-tyokalut]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.kyselyt.yllapitokohteet :as q]
@@ -71,11 +72,11 @@
                                              :ilmoittaja ilmoittaja
                                              :tiemerkintaurakka-nimi tiemerkintaurakka-nimi})))
         (log/warn (format "Tiemerkintäurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa kohteen valmiudesta tiemerkintään."
-                          tiemerkintaurakka-id)))
+                          tiemerkintaurakka-id))))
       (catch Object e
         (log/error (format "Sähköpostia ei voitu lähettää kohteen %s tiemerkitsijälle: %s %s"
                            kohde-id e (when (instance? java.lang.Throwable e)
-                                        (.printStackTrace e))))))))
+                                        (.printStackTrace e)))))))
 
 
 (defn- viesti-kohteen-tiemerkinta-valmis [{:keys [kohde-nimi kohde-osoite
@@ -158,7 +159,7 @@
   (try+
     (let [ilmoituksen-saajat (fim/hae-urakan-kayttajat-jotka-roolissa
                                fim
-                               (q-urakat/hae-urakan-sampo-id db {:urakka paallystysurakka-id})
+                               (urakat-q/hae-urakan-sampo-id db {:urakka paallystysurakka-id})
                                #{"ely urakanvalvoja" "urakan vastuuhenkilö"})]
       (if-not (empty? ilmoituksen-saajat)
         (doseq [henkilo ilmoituksen-saajat]
@@ -166,8 +167,8 @@
             (sahkoposti-kohteiden-tiemerkinta-valmis db email kohde-idt henkilo ilmoittaja))
           (sahkoposti-kohteen-tiemerkinta-valmis db email (first kohde-idt) henkilo ilmoittaja)))
       (log/warn (format "Päällystysurakalle %s ei löydy FIM:stä henkiöä, jolle ilmoittaa tiemerkinnän valmistumisesta."
-                        paallystysurakka-id))))
+                        paallystysurakka-id)))
   (catch Object e
     (log/error (format "Sähköpostia ei voitu lähettää kohteiden %s päällystäjälle: %s %s"
                        (pr-str kohde-idt) e (when (instance? java.lang.Throwable e)
-                                              (.printStackTrace e)))))) )
+                                              (.printStackTrace e)))))))
