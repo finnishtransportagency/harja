@@ -169,9 +169,9 @@
   (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str kohde-idt)))
   (try+
     (let [kohteiden-tiedot
-          (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-            db
-            {:idt kohde-idt})
+          (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
+                     db
+                     {:idt kohde-idt}))
           paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)]
       (doseq [kohteet (vals paallystysurakoiden-kohteet)]
         (kasittele-yhden-paallystysurakan-tiemerkityt-kohteet

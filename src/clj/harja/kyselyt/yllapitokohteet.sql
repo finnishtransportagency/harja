@@ -456,7 +456,7 @@ SELECT
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
   JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
-WHERE ypk.id IN :idt;
+WHERE ypk.id IN (:idt);
 
 -- name: hae-kohteen-tiedot-sahkopostilahetykseen
 SELECT
