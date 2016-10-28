@@ -13,7 +13,7 @@
         data (konversio/alaviiva->rakenne (first (ilmoitukset/hae-ilmoitustoimenpide db id)))
         muodosta-xml #(toimenpide-sanoma/muodosta data viesti-id)]
     (try
-      (jms-lahettaja muodosta-xml)
+      (jms-lahettaja muodosta-xml viesti-id)
       (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db viesti-id id)
       (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id))
       (catch Exception e
