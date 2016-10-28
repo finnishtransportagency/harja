@@ -20,9 +20,9 @@
   (first (q "SELECT id, matkapuhelin FROM yhteyshenkilo WHERE matkapuhelin IS NOT NULL LIMIT 1;")))
 
 (defn sulje-ilmoitus [ilmoitus-id]
-  (u (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu) VALUES
+  (u (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu, suunta) VALUES
   ((SELECT id FROM ilmoitus WHERE ilmoitusid = %s), %s,
-  'lopetus' :: kuittaustyyppi, now());" ilmoitus-id ilmoitus-id)))
+  'lopetus' :: kuittaustyyppi, now(), 'sisaan'::viestisuunta);" ilmoitus-id ilmoitus-id)))
 
 (defn hae-seuraava-viestinumero [puhelinnumero]
   (first (first (q (format "SELECT hae_seuraava_vapaa_viestinumero('%s')" puhelinnumero)))))

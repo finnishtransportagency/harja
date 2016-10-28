@@ -13,7 +13,7 @@
         data (konversio/alaviiva->rakenne (first (ilmoitukset/hae-ilmoitustoimenpide db id)))
         muodosta-xml #(toimenpide-sanoma/muodosta data viesti-id)]
     (try
-      (jms-lahettaja muodosta-xml)
+      (jms-lahettaja muodosta-xml viesti-id)
       (ilmoitukset/merkitse-ilmoitustoimenpide-odottamaan-vastausta! db viesti-id id)
       (log/debug (format "Ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n onnistui." id))
       (catch Exception e
@@ -52,26 +52,30 @@
       (log/error (format "Ilmoitustoimenpide kuitattiin T-LOIK:sta epäonnistuneeksi viesti-id:llä: %s" viesti-id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-lahetysidlla! db viesti-id))))
 
-(defn tallenna-ilmoitustoimenpide [db ilmoitus ilmoitusid vapaateksti toimenpide paivystaja]
+(defn tallenna-ilmoitustoimenpide
+  [db ilmoitus ilmoitusid vapaateksti toimenpide paivystaja suunta kanava]
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
-         {:ilmoitus ilmoitus
-          :ilmoitusid ilmoitusid
-          :kuitattu (pvm/nyt)
-          :vakiofraasi nil
-          :vapaateksti vapaateksti
-          :kuittaustyyppi toimenpide
-          :kuittaaja_henkilo_etunimi (:etunimi paivystaja)
-          :kuittaaja_henkilo_sukunimi (:sukunimi paivystaja)
-          :kuittaaja_henkilo_tyopuhelin (:tyopuhelin paivystaja)
-          :kuittaaja_henkilo_matkapuhelin (:matkapuhelin paivystaja)
-          :kuittaaja_henkilo_sahkoposti (:sahkoposti paivystaja)
-          :kuittaaja_organisaatio_nimi (:nimi paivystaja)
-          :kuittaaja_organisaatio_ytunnus (:ytunnus paivystaja)
-          :kasittelija_henkilo_etunimi nil
-          :kasittelija_henkilo_sukunimi nil
+         {:ilmoitus                         ilmoitus
+          :ilmoitusid                       ilmoitusid
+          :kuitattu                         (pvm/nyt)
+          :vakiofraasi                      nil
+          :vapaateksti                      vapaateksti
+          :tila                             (when (= "valitys" toimenpide) "lahetetty")
+          :kuittaustyyppi                   toimenpide
+          :suunta                           suunta
+          :kanava                           kanava
+          :kuittaaja_henkilo_etunimi        (:etunimi paivystaja)
+          :kuittaaja_henkilo_sukunimi       (:sukunimi paivystaja)
+          :kuittaaja_henkilo_tyopuhelin     (:tyopuhelin paivystaja)
+          :kuittaaja_henkilo_matkapuhelin   (:matkapuhelin paivystaja)
+          :kuittaaja_henkilo_sahkoposti     (:sahkoposti paivystaja)
+          :kuittaaja_organisaatio_nimi      (:nimi paivystaja)
+          :kuittaaja_organisaatio_ytunnus   (:ytunnus paivystaja)
+          :kasittelija_henkilo_etunimi      nil
+          :kasittelija_henkilo_sukunimi     nil
           :kasittelija_henkilo_matkapuhelin nil
-          :kasittelija_henkilo_tyopuhelin nil
-          :kasittelija_henkilo_sahkoposti nil
-          :kasittelija_organisaatio_nimi nil
+          :kasittelija_henkilo_tyopuhelin   nil
+          :kasittelija_henkilo_sahkoposti   nil
+          :kasittelija_organisaatio_nimi    nil
           :kasittelija_organisaatio_ytunnus nil})))

@@ -21,6 +21,8 @@
     (harja.geo/muunna-pg-tulokset :sijainti)
     (map konv/alaviiva->rakenne)
     (map #(konv/string->keyword % :tila))
+    (map #(konv/string->keyword % [:kuittaus :suunta]))
+    (map #(konv/string->keyword % [:kuittaus :kanava]))
     (map #(assoc % :urakkatyyppi (keyword (:urakkatyyppi %))))
     (map #(konv/array->vec % :selitteet))
     (map #(assoc % :selitteet (mapv keyword (:selitteet %))))
@@ -182,14 +184,13 @@
     ilmoitukset)))
 
 (defn hae-ilmoitus [db user id]
-  (let [kayttajan-urakat (urakat/kayttajan-urakka-idt-aikavalilta db user oikeudet/ilmoitukset-ilmoitukset)]
-    (first
-      (konv/sarakkeet-vektoriin
-        (into []
-              ilmoitus-xf
-              (q/hae-ilmoitus db {:id id
-                                  :urakat kayttajan-urakat}))
-        {:kuittaus :kuittaukset}))))
+  (let [tulos (first
+                (konv/sarakkeet-vektoriin
+                  (into []
+                        ilmoitus-xf
+                        (q/hae-ilmoitus db {:id id}))
+                  {:kuittaus :kuittaukset}))]
+    (when (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset (:urakka tulos) user) tulos)))
 
 (defn tallenna-ilmoitustoimenpide [db tloik _
                                    {:keys [ilmoituksen-id
@@ -224,6 +225,9 @@
                                       :vakiofraasi vakiofraasi
                                       :vapaateksti vapaateksti
                                       :kuittaustyyppi tyyppi
+                                      :tila (when (= tyyppi "valitys") "lahetetty")
+                                      :suunta "sisaan"
+                                      :kanava "harja"
                                       :kuittaaja_henkilo_etunimi ilmoittaja-etunimi
                                       :kuittaaja_henkilo_sukunimi ilmoittaja-sukunimi
                                       :kuittaaja_henkilo_matkapuhelin ilmoittaja-matkapuhelin
@@ -240,6 +244,10 @@
                                       :kasittelija_organisaatio_ytunnus kasittelija-ytunnus}))]
 
                       (-> toimenpide
+                          (assoc :tila (keyword (:tila toimenpide)))
+                          (assoc :suunta (keyword (:suunta toimenpide)))
+                          (assoc :kanava (keyword (:kanava toimenpide)))
+                          (assoc :kuittaustyyppi (keyword (:kuittaustyyppi toimenpide)))
                           (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi toimenpide))
                           (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi toimenpide))
                           (assoc-in [:kuittaaja :matkapuhelin] (:kuittaaja_henkilo_matkapuhelin toimenpide))

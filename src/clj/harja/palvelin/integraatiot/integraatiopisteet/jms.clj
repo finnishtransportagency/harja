@@ -30,7 +30,9 @@
             {:koodi :sonja-lahetys-epaonnistui :viesti virheviesti}))))
     viesti))
 
-(defn laheta-jonoon [lokittaja sonja jono viesti]
+(defn laheta-jonoon
+  ([lokittaja sonja jono viesti] (laheta-jonoon lokittaja sonja jono viesti nil))
+  ([lokittaja sonja jono viesti viesti-id]
    (log/debug (format "Lähetetään JMS jonoon: %s viesti: %s." jono viesti))
    (let [tapahtuma-id (lokittaja :alkanut nil nil)
          viesti (muodosta-viesti lokittaja tapahtuma-id viesti)]
@@ -39,18 +41,16 @@
          (do
            (lokittaja :jms-viesti tapahtuma-id jms-viesti-id "ulos" viesti jono)
            jms-viesti-id)
-
          (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti)))
-
        (catch Exception poikkeus
          (let [virheviesti(format "Tapahtui poikkeus lähettäessä JMS jonoon: %s epäonnistui." jono)]
            (log/error poikkeus virheviesti)
-           (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti))))))
+           (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti)))))))
 
 (defn jonolahettaja [lokittaja sonja jono]
-  (fn [viesti]
-    (laheta-jonoon lokittaja sonja jono viesti)))
+  (fn [viesti viesti-id]
+    (laheta-jonoon lokittaja sonja jono viesti viesti-id)))
 
 (defn kuittausjonokuuntelija [lokittaja sonja jono viestiparseri viesti->id onnistunut? kasittelija]
   (log/debug "Käynnistetään JMS viestikuuntelija kuuntelemaan jonoa: " jono)
