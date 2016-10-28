@@ -1,6 +1,9 @@
 (ns harja.domain.laadunseuranta.sanktiot)
 
 (defn sakko? [sanktio]
+  (not= :muistutus (:laji sanktio)))
+
+(defn sakkoryhmasta-sakko? [sanktio]
   (not= :muistutus (:sakkoryhma sanktio)))
 
 (defn paatos-on-sanktio? [sanktio]
