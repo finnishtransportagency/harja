@@ -39,7 +39,7 @@
       (tee-lokittaja this "toimenpiteen-lahetys") (:sonja this) toimenpidekuittausjono
       (fn [kuittaus] (tloik-kuittaus-sanoma/lue-kuittaus kuittaus))
       :viesti-id
-      (comp not :virhe)
+      #(and (not (:virhe %)) (not (= "virhe" (:kuittaustyyppi %))))
       (fn [_ viesti-id onnistunut]
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
