@@ -7,7 +7,6 @@
              [oikeudet :as oikeudet]
              [skeema :refer [Toteuma validoi]]
              [tierekisteri :as tr]]
-            [harja.geo :as geo]
             [harja.kyselyt
              [konversio :as konv]
              [yllapitokohteet :as q]]
@@ -25,7 +24,6 @@
             [harja.palvelin.palvelut.tierek-haku :as tr-haku]
             [clj-time.coerce :as c]
             [clj-time.coerce :as c]
-            [clojure.java.io :as io]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta])
   (:use org.httpkit.fake))
 
