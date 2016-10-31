@@ -44,9 +44,9 @@
                          :tiemerkinta
                          (q-yllapitokohteet/hae-urakkaan-liittyvat-tiemerkintakohteet db {:urakka urakka-id}))]
     (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet [{:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
-                          :viesti "Ylläpitokohde ei kuulu urakkaan."}]}))))
+      (virheet/heita-poikkeus virheet/+viallinen-kutsu+
+                              {:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
+                                                         :viesti "Ylläpitokohde ei kuulu urakkaan."}))))
 
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -112,17 +112,17 @@
     (paivita-paallystyksen-aikataulu db kayttaja kohde-id data)
     :tiemerkinta
     (paivita-tiemerkinnan-aikataulu db kayttaja kohde-id data)
-    (throw+ {:type virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+viallinen-kutsu+
-                        :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
-                                     (name urakan-tyyppi))}]})))
+    (virheet/heita-poikkeus virheet/+viallinen-kutsu+
+                            {:koodi virheet/+viallinen-kutsu+
+                             :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
+                                          (name urakan-tyyppi))})))
 
 (defn- vaadi-urakka-oikeaa-tyyppia [urakka-tyyppi endpoint-urakkatyyppi]
   (when (not= urakka-tyyppi endpoint-urakkatyyppi)
-    (throw+ {:type virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+viallinen-kutsu+
-                        :viesti (format "Yritettiin kirjata aikataulu urakkatyypille %s, mutta urakan tyyppi on
-                                         %s" (name urakka-tyyppi) (name endpoint-urakkatyyppi))}]})))
+    (virheet/heita-poikkeus virheet/+viallinen-kutsu+
+                            {:koodi virheet/+viallinen-kutsu+
+                             :viesti (format "Yritettiin kirjata aikataulu urakkatyypille %s, mutta urakan tyyppi on
+                                         %s" (name urakka-tyyppi) (name endpoint-urakkatyyppi))})))
 
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data endpoint-urakkatyyppi]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) aikataulu käyttäjän: %s toimesta"
