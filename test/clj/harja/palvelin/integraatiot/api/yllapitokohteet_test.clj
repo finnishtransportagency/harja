@@ -288,10 +288,10 @@
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
-                                         kayttaja-tiemerkinta portti
+                                         kayttaja-paallystys portti
                                          (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
 
-    (is (= 500 (:status vastaus)))
+    (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "mutta urakan tyyppi on"))))
 
 (deftest paallystyksen-aikataulun-kirjaus-ei-onnistu-tiemerkintaurakalle
@@ -301,7 +301,7 @@
                                          kayttaja-tiemerkinta portti
                                          (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
 
-    (is (= 500 (:status vastaus)))
+    (is (= 400 (:status vastaus)))
     (is (.contains (:body vastaus) "mutta urakan tyyppi on"))))
 
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
