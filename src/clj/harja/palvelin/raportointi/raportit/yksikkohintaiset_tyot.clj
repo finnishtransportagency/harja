@@ -42,22 +42,27 @@
     (q/listaa-urakan-yksikkohintaiset-tyot db urakka-id)))
 
 (defn liita-toteumiin-suunnittelutiedot
-  "Ottaa hoitokauden alku- ja loppupäivän, urakan toteumat ja suunnittelutiedot.
-  Liittää toteumiin niiden suunnittelutiedot, jos sellainen löytyy suunnittelutiedoista valitulta hoitokaudelta."
+  "Ottaa aikavälin, urakan toteumat ja suunnittelutiedot.
+   Aikavälin tulee olla osa jotain hoitokautta tai kokonainen hoitokausi.
+   Liittää toteumiin niiden suunnittelutiedot aikaväliin osuvalta hoitokaudelta, jos sellainen löytyy."
   [alkupvm loppupvm toteumat hoitokaudet]
   (map
     (fn [toteuma]
       (let [suunnittelutieto (first (filter
                                       (fn [hoitokausi]
-                                        (and (pvm/valissa?
-                                               (c/from-date alkupvm)
-                                               (c/from-sql-date (:alkupvm hoitokausi))
-                                               (c/from-sql-date (:loppupvm hoitokausi)))
-                                             (pvm/valissa?
-                                               (c/from-date loppupvm)
-                                               (c/from-sql-date (:alkupvm hoitokausi))
-                                               (c/from-sql-date (:loppupvm hoitokausi)))
-                                             (= (:tehtava hoitokausi) (:tehtava_id toteuma))))
+                                        (let [alkupvm (pvm/paivan-alussa alkupvm)
+                                              loppupvm (pvm/paivan-alussa loppupvm)
+                                              hoitokausi-alku (pvm/paivan-alussa (:alkupvm hoitokausi))
+                                              hoitokausi-loppu (pvm/paivan-alussa (:loppupvm hoitokausi))]
+                                          (and (pvm/valissa?
+                                                (c/from-date alkupvm)
+                                                (c/from-sql-date hoitokausi-alku)
+                                                (c/from-sql-date hoitokausi-loppu))
+                                              (pvm/valissa?
+                                                (c/from-date loppupvm)
+                                                (c/from-sql-date hoitokausi-alku)
+                                                (c/from-sql-date hoitokausi-loppu))
+                                              (= (:tehtava hoitokausi) (:tehtava_id toteuma)))))
                                       hoitokaudet))]
         (if suunnittelutieto
           (-> toteuma
