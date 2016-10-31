@@ -566,7 +566,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
             (re-matches re t))
     (reset! atomi t)))
 
-(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake? aika-vapaaehtoinen?]} data]
+(defmethod tee-kentta :pvm-aika [{:keys [pvm-tyhjana rivi focus on-focus lomake?]} data]
 
   (let [;; pidetään kirjoituksen aikainen ei validi pvm tallessa
         p @data
@@ -581,7 +581,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         pvm-aika-koskettu (atom [(not
                                    (or (str/blank? @pvm-teksti) (nil? @pvm-teksti)))
                                  (not
-                                  (or aika-vapaaehtoinen? (str/blank? @aika-teksti) (nil? @aika-teksti)))])]
+                                  (or (str/blank? @aika-teksti) (nil? @aika-teksti)))])]
 
     (komp/luo
      (komp/klikattu-ulkopuolelle #(reset! auki false))
@@ -597,9 +597,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
         (let [aseta! (fn []
                        (let [pvm @pvm-teksti
                              aika @aika-teksti
-                             p (if-not aika-vapaaehtoinen?
-                                 (pvm/->pvm-aika (str pvm " " aika))
-                                 (pvm/->pvm-aika-opt (str pvm " " aika)))]
+                             p (pvm/->pvm-aika (str pvm " " aika))]
                          (when-not (some false? @pvm-aika-koskettu)
                            (if p
                              (reset! data p)
@@ -657,8 +655,7 @@ toisen eventin kokonaan (react eventtiä ei laukea)."}
                                                     :pvm     naytettava-pvm}])]
               [:td
                [:input {:class       (str (when lomake? "form-control")
-                                          (when (and (not aika-vapaaehtoinen?)
-                                                     (not (re-matches +aika-regex+ nykyinen-aika-teksti))
+                                          (when (and (not (re-matches +aika-regex+ nykyinen-aika-teksti))
                                                      (pvm/->pvm nykyinen-pvm-teksti))
                                             " puuttuva-arvo"))
                         :placeholder "tt:mm"
