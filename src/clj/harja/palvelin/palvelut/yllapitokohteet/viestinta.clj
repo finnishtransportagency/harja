@@ -1,7 +1,5 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.viestinta
-  (:require [clojure.test :refer :all]
-            [taoensso.timbre :as log]
-            [harja.testi :refer :all]
+  (:require [taoensso.timbre :as log]
             [clojure.core.match :refer [match]]
             [harja.fmt :as fmt]
             [harja.kyselyt.urakat :as urakat-q]
