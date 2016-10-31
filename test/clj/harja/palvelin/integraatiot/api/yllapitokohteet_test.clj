@@ -197,7 +197,7 @@
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+                                         (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))))
@@ -207,7 +207,7 @@
         kohde (hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+                                         (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
@@ -222,7 +222,7 @@
                                                  WHERE id = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-paallystys portti
-                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+                                         (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta"))
@@ -249,7 +249,7 @@
                                                  WHERE id = " kohde)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-tiemerkinta portti
-                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+                                         (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Aikataulu kirjattu onnistuneesti."))
     (is (not (.contains (:body vastaus) "Kohteella ei ole päällystysilmoitusta")))
@@ -271,7 +271,7 @@
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          +kayttaja-tero+ portti
-                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+                                         (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
 
     (is (= 403 (:status vastaus)))))
 
@@ -280,9 +280,29 @@
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          +kayttaja-tero+ portti
-                                         (slurp "test/resurssit/api/aikataulun_kirjaus.json"))]
+                                         (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
 
     (is (= 403 (:status vastaus)))))
+
+(deftest tiemerkinnan-aikataulun-kirjaus-ei-onnistu-paallystysurakalle
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
+                                         kayttaja-tiemerkinta portti
+                                         (slurp "test/resurssit/api/tiemerkinnan_aikataulun_kirjaus.json"))]
+
+    (is (= 500 (:status vastaus)))
+    (is (.contains (:body vastaus) "mutta urakan tyyppi on"))))
+
+(deftest paallystyksen-aikataulun-kirjaus-ei-onnistu-tiemerkintaurakalle
+  (let [urakka (hae-oulun-tiemerkintaurakan-id)
+        kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
+        vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
+                                         kayttaja-tiemerkinta portti
+                                         (slurp "test/resurssit/api/paallystyksen_aikataulun_kirjaus.json"))]
+
+    (is (= 500 (:status vastaus)))
+    (is (.contains (:body vastaus) "mutta urakan tyyppi on"))))
 
 (deftest aikataulun-kirjaaminen-estaa-paivittamasta-urakkaan-kuulumatonta-kohdetta
   (let [urakka (hae-muhoksen-paallystysurakan-id)
