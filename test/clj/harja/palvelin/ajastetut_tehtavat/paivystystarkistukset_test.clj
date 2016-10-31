@@ -4,6 +4,7 @@
             [clj-time.periodic :refer [periodic-seq]]
             [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystajatarkistukset]
             [harja.testi :refer :all]
+            [harja.palvelin.komponentit.fim-test :as fim-test]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [clj-time.core :as t]
@@ -12,8 +13,6 @@
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.palvelut.urakat :as urakat])
   (:use org.httpkit.fake))
-
-(def +testi-fim-+ "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity")
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root
@@ -25,7 +24,7 @@
           :http-palvelin (testi-http-palvelin)
           :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
           :fim (component/using
-                 (fim/->FIM +testi-fim-+)
+                 (fim/->FIM fim-test/+testi-fim-+)
                  [:db :integraatioloki])))))
 
   (testit)
@@ -158,7 +157,7 @@
 (deftest ilmoituksien-saajien-haku-toimii
   (let [vastaus-xml (slurp (io/resource "xsd/fim/esimerkit/hae-urakan-kayttajat.xml"))]
     (with-fake-http
-      [+testi-fim-+ vastaus-xml]
+      [fim-test/+testi-fim-+ vastaus-xml]
       (let [vastaus (paivystajatarkistukset/hae-ilmoituksen-saajat
                       (:fim jarjestelma)
                       "1242141-OULU2")]

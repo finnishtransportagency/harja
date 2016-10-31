@@ -3,7 +3,7 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
+            [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
             [harja.domain.roolit :as roolit])
   (:import (org.postgis PGgeometry)))
 
