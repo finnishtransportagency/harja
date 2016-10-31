@@ -37,13 +37,6 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
-(defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
-  (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-liittyvat-yllapitokohteet db {:urakka urakka-id})]
-    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet [{:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
-                          :viesti "Ylläpitokohde ei kuulu urakkaan"}]}))))
-
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
@@ -91,6 +84,7 @@
     db
     {:tiemerkinta_alku (json/pvm-string->java-sql-date (:tiemerkinta-aloitettu aikataulu))
      :tiemerkinta_loppu (json/pvm-string->java-sql-date (:tiemerkinta-valmis aikataulu))
+     :aikataulu_tiemerkinta_takaraja (json/pvm-string->java-sql-date (:tiemerkinta-takaraja aikataulu))
      :muokkaaja (:id kayttaja)
      :id kohde-id})
   {})
@@ -110,6 +104,13 @@
                :virheet [{:koodi virheet/+viallinen-kutsu+
                           :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
                                        urakan-tyyppi)}]}))))
+
+(defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
+  (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-liittyvat-yllapitokohteet db {:urakka urakka-id})]
+    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
+                          :viesti "Ylläpitokohde ei kuulu urakkaan"}]}))))
 
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) aikataulu käyttäjän: %s toimesta"
@@ -202,31 +203,43 @@
     :polku "/api/urakat/:id/yllapitokohteet"
     :tyyppi :GET
     :vastaus-skeema json-skeemat/urakan-yllapitokohteiden-haku-vastaus
-    :kasittely-fn (fn [parametit _ kayttaja db] (hae-yllapitokohteet db parametit kayttaja))}
+    :kasittely-fn (fn [parametit _ kayttaja db]
+                    (hae-yllapitokohteet db parametit kayttaja))}
    {:palvelu :kirjaa-paallystysilmoitus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
-   {:palvelu :kirjaa-yllapidon-aikataulu
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu"
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
+   {:palvelu :kirjaa-paallystyksen-aikataulu
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu_paallystys"
     :tyyppi :POST
-    :kutsu-skeema json-skeemat/yllapidon-aikataulun-kirjaus
+    :kutsu-skeema json-skeemat/paallystyksen-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-aikataulu db kayttaja parametrit data))}
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-aikataulu db kayttaja parametrit data))}
+   {:palvelu :kirjaa-tiemerkinnan-aikataulu
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu_tiemerkinta"
+    :tyyppi :POST
+    :kutsu-skeema json-skeemat/tiemerkinnan-aikataulun-kirjaus
+    :vastaus-skeema json-skeemat/kirjausvastaus
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-aikataulu db kayttaja parametrit data))}
    {:palvelu :kirjaa-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (kirjaa-suljettu-tieosuus db kayttaja parametrit data))}
    {:palvelu :poista-suljettu-tieosuus
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/suljettu-tieosuus"
     :tyyppi :DELETE
     :kutsu-skeema json-skeemat/suljetun-tieosuuden-poisto
     :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db] (poista-suljettu-tieosuus db kayttaja parametrit data))}])
+    :kasittely-fn (fn [parametrit data kayttaja db]
+                    (poista-suljettu-tieosuus db kayttaja parametrit data))}])
 
 (defrecord Yllapitokohteet []
   component/Lifecycle

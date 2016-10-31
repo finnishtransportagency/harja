@@ -583,6 +583,7 @@ UPDATE yllapitokohde
 SET
   aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
   aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   aikataulu_muokattu = NOW(),
   aikataulu_muokkaaja = :muokkaaja
 WHERE id = :id;
