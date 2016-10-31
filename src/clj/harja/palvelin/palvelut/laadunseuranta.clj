@@ -121,28 +121,26 @@
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio toimenpideinstanssi] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
-  (if (or (nil? id) (neg? id))
-    (let [uusi-sanktio (sanktiot/luo-sanktio<!
-                        db (konv/sql-timestamp perintapvm)
-                        (when laji
-                          (name laji))
-                        (:id tyyppi)
-                        toimenpideinstanssi
-                         urakka
-                         summa indeksi laatupoikkeama (or suorasanktio false))]
-      (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
-      (:id uusi-sanktio))
-
-    (do
-      (sanktiot/paivita-sanktio!
-        db (konv/sql-timestamp perintapvm)
-        (name laji) (:id tyyppi)
-        toimenpideinstanssi
-        urakka
-        summa indeksi laatupoikkeama (or suorasanktio false)
-        id)
-      (sanktiot/merkitse-maksuera-likaiseksi! db id)
-      id)))
+  (let [params {:perintapvm (konv/sql-timestamp perintapvm)
+                :ryhma (when laji (name laji))
+                :tyyppi (:id tyyppi)
+                :tpi_id toimenpideinstanssi
+                :urakka urakka
+                :summa summa
+                :indeksi indeksi
+                :laatupoikkeama laatupoikkeama
+                :suorasanktio (or suorasanktio false)
+                :id id
+                :muokkaaja (:id user)
+                :luoja (:id user)}]
+    (if (or (nil? id) (neg? id))
+     (let [uusi-sanktio (sanktiot/luo-sanktio<! db params)]
+       (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
+       (:id uusi-sanktio))
+     (do
+       (sanktiot/paivita-sanktio! db params)
+       (sanktiot/merkitse-maksuera-likaiseksi! db id)
+       id))))
 
 (defn tallenna-laatupoikkeama [db user {:keys [urakka] :as laatupoikkeama}]
   (log/info "Tuli laatupoikkeama: " laatupoikkeama)
@@ -291,10 +289,10 @@
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
 
-(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka]
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
-  (log/info "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
+  (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama)
             ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
 
@@ -315,10 +313,8 @@
                                             (name kasittelytapa) muukasittelytapa
                                             (:id user)
                                             id))
-
-      ;; Frontilla oletetaan että palvelu palauttaa tallennetun sanktion id:n
-      ;; Jos tämä muuttuu, pitää frontillekin tehdä muutokset.
-      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka))))
+      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
+      (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
   (let [{:keys [vain-laadunalitukset? tienumero alkupvm loppupvm tyyppi urakka-id]}
@@ -397,7 +393,8 @@
       :tallenna-suorasanktio
       (fn [user tiedot]
         (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot)
-                               (get-in tiedot [:laatupoikkeama :urakka])))
+                               (get-in tiedot [:laatupoikkeama :urakka])
+                               (:hoitokausi tiedot)))
 
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
