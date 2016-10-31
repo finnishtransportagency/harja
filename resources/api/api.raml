@@ -510,7 +510,7 @@ documentation:
                    application/json:
                      example: !include examples/virhe-response.json
                      schema: virhe-response
-          /aikataulu_paallystys:
+          /aikataulu-paallystys:
              post:
                is: [secured]
                description: Aikataulutietojen kirjaus päällystysurakan ylläpitokohteelle. Kirjattaessa aikataulutiedot päällystysilmoitukselle kyseisen ilmoituksen tulee olla lisätty Harjaan, muuten tietoja ei päivitetä.
@@ -534,7 +534,7 @@ documentation:
                     application/json:
                       example: !include examples/virhe-response.json
                       schema: virhe-response
-          /aikataulu_tiemerkinta:
+          /aikataulu-tiemerkinta:
              post:
                is: [secured]
                description: Aikataulutietojen kirjaus tiemerkintäurakan ylläpitokohteelle. Päivitettävän ylläpitokohteen täytyy olla merkitty urakkaan suorittavaksi tiemerkintäurakaksi.

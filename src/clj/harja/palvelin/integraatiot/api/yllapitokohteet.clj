@@ -227,14 +227,14 @@
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-paallystysilmoitus db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystyksen-aikataulu
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu_paallystys"
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-paallystys"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/paallystyksen-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (kirjaa-aikataulu db kayttaja parametrit data :paallystys))}
    {:palvelu :kirjaa-tiemerkinnan-aikataulu
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu_tiemerkinta"
+    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-tiemerkinta"
     :tyyppi :POST
     :kutsu-skeema json-skeemat/tiemerkinnan-aikataulun-kirjaus
     :vastaus-skeema json-skeemat/kirjausvastaus
