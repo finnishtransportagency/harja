@@ -37,6 +37,13 @@
                             :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet))))
 
+(defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
+  (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-liittyvat-yllapitokohteet db {:urakka urakka-id})]
+    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
+                          :viesti "Ylläpitokohde ei kuulu urakkaan"}]}))))
+
 (defn kirjaa-paallystysilmoitus [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
                      urakka-id
@@ -104,13 +111,6 @@
                :virheet [{:koodi virheet/+viallinen-kutsu+
                           :viesti (str "Urakka ei ole päällystys- tai tiemerkintäurakka, vaan "
                                        urakan-tyyppi)}]}))))
-
-(defn- vaadi-kohde-kuuluu-urakkaan [db urakka-id kohde-id]
-  (let [urakan-kohteet (q-yllapitokohteet/hae-urakkaan-liittyvat-yllapitokohteet db {:urakka urakka-id})]
-    (when-not (some #(= kohde-id %) (map :id urakan-kohteet))
-      (throw+ {:type virheet/+viallinen-kutsu+
-               :virheet [{:koodi virheet/+urakkaan-kuulumaton-yllapitokohde+
-                          :viesti "Ylläpitokohde ei kuulu urakkaan"}]}))))
 
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) aikataulu käyttäjän: %s toimesta"
