@@ -40,9 +40,9 @@
     [harja.palvelin.palvelut.toteumat :as toteumat]
     [harja.palvelin.palvelut.toimenpidekoodit :as toimenpidekoodit]
     [harja.palvelin.palvelut.yhteyshenkilot]
-    [harja.palvelin.palvelut.paallystys :as paallystys]
-    [harja.palvelin.palvelut.paikkaus :as paikkaus]
-    [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
+    [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys]
+    [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
+    [harja.palvelin.palvelut.yllapitokohteet.yllapitokohteet :as yllapitokohteet]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
@@ -87,6 +87,7 @@
     [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
     [harja.palvelin.integraatiot.api.yllapitokohteet :as api-yllapitokohteet]
     [harja.palvelin.integraatiot.api.ping :as api-ping]
+    [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -256,7 +257,7 @@
                   [:http-palvelin :db])
       :yllapitokohteet (component/using
                          (yllapitokohteet/->Yllapitokohteet)
-                         [:http-palvelin :db])
+                         [:http-palvelin :db :fim :sonja-sahkoposti])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db])
@@ -412,6 +413,10 @@
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db :integraatioloki])
+
+      :api-yhteystiedot (component/using
+                          (api-yhteystiedot/->Yhteystiedot)
+                          [:http-palvelin :db :integraatioloki :fim])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

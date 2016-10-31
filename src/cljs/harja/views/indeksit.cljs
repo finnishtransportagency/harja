@@ -9,7 +9,8 @@
             [harja.loki :refer [log]]
             [harja.ui.grid :as grid]
             [harja.fmt :as fmt]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (declare tallenna-indeksi)
@@ -30,14 +31,14 @@
       :tunniste     :vuosi
       :piilota-toiminnot? true
       :voi-poistaa? #(not (:kannassa? %))}
-     [{:otsikko       "Vuosi" :nimi :vuosi :tyyppi :valinta :leveys "17%"
-       :valinta-arvo  identity
+     [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :valinta :leveys "17%"
+       :valinta-arvo identity
        :valinta-nayta #(if (nil? %) "- valitse -" %)
 
-       :valinnat      (vec (filter #(not (varatut-vuodet %)) (range 2009 (inc (t/year (t/now))))))
+       :valinnat (vec (filter #(not (varatut-vuodet %)) (range 2009 (inc (t/year (pvm/nyt))))))
 
-       :validoi       [[:ei-tyhja "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
-       :muokattava?   #(not (:kannassa? %))}
+       :validoi [[:ei-tyhja "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
+       :muokattava? #(not (:kannassa? %))}
 
       {:otsikko "tammi" :nimi 1 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatter :leveys "7%"}
       {:otsikko "helmi" :nimi 2 :tyyppi :positiivinen-numero :desimaalien-maara 1 :fmt formatter :leveys "7%"}

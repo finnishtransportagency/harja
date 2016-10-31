@@ -38,7 +38,9 @@
          viesti (muodosta-viesti lokittaja tapahtuma-id viesti)]
      (try
        (if-let [jms-viesti-id (sonja/laheta sonja jono viesti)]
-         (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
+         (do
+           (lokittaja :jms-viesti tapahtuma-id jms-viesti-id "ulos" viesti jono)
+           jms-viesti-id)
          (let [virheviesti (format "Lähetys JMS jonoon: %s epäonnistui. Viesti id:tä ei palautunut" jono)]
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id virheviesti)))
        (catch Exception poikkeus

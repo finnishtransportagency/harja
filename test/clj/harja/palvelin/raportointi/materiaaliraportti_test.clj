@@ -57,9 +57,9 @@
                       {:fmt :numero
                        :otsikko "Talvisuolaliuos NaCl (t)"}]
                      [["Oulun alueurakka 2014-2019"
-                       1000M]
+                       2000M]
                        ["Yhteensä"
-                        1000M]]]]))))
+                        2000M]]]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -82,11 +82,11 @@
                       {:fmt :numero
                        :otsikko "Talvisuolaliuos NaCl (t)"}]
                      [["Oulun alueurakka 2014-2019"
-                       1000M]
+                       2000M]
                        ["Kajaanin alueurakka 2014-2019"
-                        1000M]
+                        2000M]
                        ["Yhteensä"
-                        2000M]]]]))))
+                        4000M]]]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -108,8 +108,8 @@
                       {:fmt :numero
                        :otsikko "Talvisuolaliuos NaCl (t)"}]
                      [["Pohjois-Pohjanmaa"
-                       2000M]
+                       4000M]
                        ["Uusimaa"
-                        2000M]
+                        4000M]
                        ["Yhteensä"
-                         4000M]]]]))))
+                         8000M]]]]))))

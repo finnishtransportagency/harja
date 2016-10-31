@@ -20,13 +20,13 @@ WHERE likainen = TRUE;
 -- name: merkitse-kustannussuunnitelma-odottamaan-vastausta!
 -- Merkitsee kustannussuunnitelma lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
 UPDATE kustannussuunnitelma
-SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE
+SET lahetysid = :lahetysid, lukko = NULL, tila = 'odottaa_vastausta', likainen = FALSE, lahetetty = current_timestamp
 WHERE maksuera = :numero;
 
 -- name: merkitse-kustannussuunnitelma-lahetetyksi!
 -- Merkitsee kustannussuunnitelman lähetetyksi, kirjaa lähetyksen id:n ja avaa lukon
 UPDATE kustannussuunnitelma
-SET lahetetty = current_timestamp, tila = 'lahetetty'
+SET tila = 'lahetetty'
 WHERE maksuera = :numero;
 
 -- name: merkitse-kustannussuunnitelmalle-lahetysvirhe!

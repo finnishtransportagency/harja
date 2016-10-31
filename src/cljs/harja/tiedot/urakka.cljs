@@ -67,28 +67,12 @@
       ;; Muiden urakoiden sopimusaika pilkottuna vuosiin
       (pvm/urakan-vuodet alkupvm loppupvm))))
 
-(defn urakoiden-hoitokaudet
-  "Palauttaa urakoiden hoitokaudet aikaisimmasta viimeiseen. Ei kuitenkaan palauta yli N vuotta
-  vanhoja hoitokausia."
-  [urakat n]
-  (let [ensimmainen-vuosi (pvm/vuosi (t/earliest (map :alkupvm urakat)))
-        viimeinen-vuosi (t/year (t/now))
-        ensimmainen-vuosi (if (>= (- (t/year (t/now))
-                                     ensimmainen-vuosi)
-                                  n)
-                            (- (t/year (t/now)) n)
-                            ensimmainen-vuosi)]
-      (mapv (fn [vuosi]
-              [(pvm/hoitokauden-alkupvm vuosi)
-               (pvm/hoitokauden-loppupvm (inc vuosi))])
-            (range ensimmainen-vuosi viimeinen-vuosi))))
-
 (defn edelliset-hoitokaudet
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
   ([n] (edelliset-hoitokaudet n false))
   ([n nykyinenkin?]
-   (let [ensimmainen-vuosi (- (t/year (t/now)) n)
-         viimeinen-vuosi (+ (t/year (t/now))
+   (let [ensimmainen-vuosi (- (t/year (pvm/nyt)) n)
+         viimeinen-vuosi (+ (t/year (pvm/nyt))
                             (if nykyinenkin? 1 0))]
     (mapv (fn [vuosi]
             [(pvm/hoitokauden-alkupvm vuosi)

@@ -25,20 +25,22 @@
                                          (ilmatieteenlaitos/hae-talvikausi url vuosi)))
         hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url)
         hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
-                                               (str/replace url "tieindeksi2" "tieindeksi"))
+                                                (str/replace url "tieindeksi2" "tieindeksi"))
         hoidon-urakka-ja-alueurakkanro-avaimet
-        (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)]
-    (into {}
-          (comp
-           (map (fn [urakka]
-                  (merge urakka
-                         (get hoidon-urakoiden-lampotilat-1981-2010
-                              (:alueurakkanro urakka))
-                         {:pitkakeskilampotila_vanha (:pitkakeskilampotila
-                                                      (get hoidon-urakoiden-lampotilat-1971-2000
-                                                           (:alueurakkanro urakka)))})))
-           (map (juxt :id identity)))
-          hoidon-urakka-ja-alueurakkanro-avaimet)))
+        (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)
+        tulos (into {}
+                    (comp
+                      (map (fn [urakka]
+                             (merge urakka
+                                    (get hoidon-urakoiden-lampotilat-1981-2010
+                                         (:alueurakkanro urakka))
+                                    {:pitkakeskilampotila_vanha (:pitkakeskilampotila
+                                                                  (get hoidon-urakoiden-lampotilat-1971-2000
+                                                                       (:alueurakkanro urakka)))})))
+                      (map (juxt :id identity)))
+                    hoidon-urakka-ja-alueurakkanro-avaimet)]
+    (log/debug "VASTAUS: " (pr-str tulos))
+    tulos))
 
 (defn hae-teiden-hoitourakoiden-lampotilat [db user hoitokausi]
   (log/debug "hae-teiden-hoitourakoiden-lampotilat hoitokaudella: " hoitokausi)

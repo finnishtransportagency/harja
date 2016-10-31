@@ -5,7 +5,7 @@ SELECT -- haetaan käytetyt määrät per materiaali ja kk
          date_trunc('month', t.alkanut) as kk, SUM(tm.maara) as maara
  FROM toteuma t
       JOIN toteuma_materiaali tm ON tm.toteuma=t.id
-      JOIN urakka u ON t.urakka=u.id
+      JOIN urakka u ON t.urakka=u.id AND u.urakkanro IS NOT NULL
       JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
@@ -22,7 +22,7 @@ SELECT -- Haetaan reittipisteiden toteumat hoitoluokittain
        JOIN materiaalikoodi mk ON mk.id = rm.materiaalikoodi
        JOIN reittipiste rp ON rm.reittipiste=rp.id
        JOIN toteuma t ON rp.toteuma=t.id
-       JOIN urakka u ON t.urakka = u.id
+       JOIN urakka u ON t.urakka = u.id AND u.urakkanro IS NOT NULL
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
    AND rp.talvihoitoluokka IS NOT NULL
@@ -39,7 +39,7 @@ SELECT -- Haetaan suunnitelmat materiaaleille
        SUM(s.maara) as maara
   FROM materiaalin_kaytto s
        JOIN materiaalikoodi mk ON s.materiaali = mk.id
-       JOIN urakka u ON s.urakka = u.id
+       JOIN urakka u ON s.urakka = u.id AND u.urakkanro IS NOT NULL
  WHERE s.poistettu IS NOT TRUE
    AND (s.alkupvm BETWEEN :alkupvm AND :loppupvm
         OR
@@ -47,7 +47,7 @@ SELECT -- Haetaan suunnitelmat materiaaleille
    AND (:urakka::integer IS NULL OR s.urakka = :urakka)
    AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
- GROUP BY u.id, u.nimi, mk.id, mk.nimi
+ GROUP BY u.id, u.nimi, mk.id, mk.nimi;
 
 -- name: hae-materiaalit
 -- Hakee materiaali id:t ja nimet
@@ -72,7 +72,7 @@ SELECT *
             (SELECT SUM(tm.maara)
                FROM toteuma_materiaali tm
      	       JOIN toteuma t ON tm.toteuma=t.id
-     	       JOIN urakka u ON t.urakka=u.id
+     	       JOIN urakka u ON t.urakka=u.id AND u.urakkanro IS NOT NULL
               WHERE tm.materiaalikoodi = mk.id
          AND t.poistettu IS NOT TRUE
      	   AND (:urakka_annettu is false OR t.urakka = :urakka)
@@ -88,7 +88,7 @@ SELECT *
                FROM reitti_materiaali rm
      	       JOIN reittipiste rp1 ON rm.reittipiste=rp1.id
      	       JOIN toteuma t1 ON rp1.toteuma=t1.id
-     	       JOIN urakka u1 ON t1.urakka = u1.id
+     	       JOIN urakka u1 ON t1.urakka = u1.id AND u.urakkanro IS NOT NULL
      	 WHERE rm.materiaalikoodi = mk.id
      	   AND t1.poistettu IS NOT TRUE
      	   AND rp1.talvihoitoluokka = hl.column1
@@ -131,6 +131,7 @@ SELECT *
         WHERE (:alkupvm BETWEEN alkupvm AND loppupvm
                OR
      	  :loppupvm BETWEEN alkupvm AND loppupvm)
+       AND u.urakkanro IS NOT NULL
      	 AND (:hal_annettu = false OR hallintayksikko = :hal)
      	 AND (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = :urakkatyyppi::urakkatyyppi)
      ), hoitoluokat AS (

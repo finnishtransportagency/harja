@@ -116,7 +116,7 @@
        (tc/from-sql-time dt))))
 
 (defn nyt
-  "Frontissa palauttaa goog.date.Datetimen
+  "Frontissa palauttaa goog.date.Datetimen (käyttäjän laitteen aika)
   Backendissä palauttaa java.util.Daten"
   []
   #?(:cljs (DateTime.)

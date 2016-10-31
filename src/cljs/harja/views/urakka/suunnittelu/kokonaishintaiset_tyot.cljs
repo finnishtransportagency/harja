@@ -202,7 +202,11 @@
                                                   #(pvm/sama-pvm?
                                                     (:alkupvm %) hk-alku)
                                                   @kaikki-sopimuksen-ja-tpin-rivit))
-                                               :summa))]
+                                               :summa))
+        tarkistettava-oikeus (fn []
+                               (if (= (:tyyppi @urakka) :tiemerkinta)
+                                 oikeudet/urakat-toteutus-kokonaishintaisettyot
+                                 oikeudet/urakat-suunnittelu-kokonaishintaisettyot))]
 
       (hae-urakan-tiedot ur)
 
@@ -236,12 +240,12 @@
              {:otsikko (str "Kokonaishintaiset työt: " (:tpi_nimi @u/valittu-toimenpideinstanssi))
               :piilota-toiminnot? true
               :tyhja (if (nil? @toimenpiteet) [ajax-loader "Kokonaishintaisia töitä haetaan..."] "Ei kokonaishintaisia töitä")
-              :tallenna (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+              :tallenna (if (oikeudet/voi-kirjoittaa? (tarkistettava-oikeus) (:id ur))
                           #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?)
                           :ei-mahdollinen)
               :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
                                                  :kirjoitus
-                                                 oikeudet/urakat-suunnittelu-kokonaishintaisettyot)
+                                                 (tarkistettava-oikeus))
               :tallenna-vain-muokatut false
               :peruuta #(reset! tuleville? false)
               :tunniste #((juxt :vuosi :kuukausi) %)

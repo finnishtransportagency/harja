@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.paikkaus
+(ns harja.palvelin.palvelut.yllapitokohteet.paikkaus
   "Paikkauksen palvelut"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
