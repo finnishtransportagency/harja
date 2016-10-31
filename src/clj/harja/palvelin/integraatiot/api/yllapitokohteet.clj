@@ -131,8 +131,8 @@
                      kayttaja))
   (jdbc/with-db-transaction
     [db db]
-    (let [urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
-          urakka-id (Integer/parseInt urakka-id)
+    (let [urakka-id (Integer/parseInt urakka-id)
+          urakan-tyyppi (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id))))
           kohde-id (Integer/parseInt kohde-id)]
       (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
       (vaadi-urakka-oikeaa-tyyppia urakan-tyyppi endpoint-urakkatyyppi)
