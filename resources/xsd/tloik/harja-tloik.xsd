@@ -4,7 +4,7 @@
     <xs:element name="ilmoitus">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="viestiId" type="guid" minOccurs="1" maxOccurs="1" />
+                <xs:element name="viestiId" type="uuid" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1" />
                 <xs:element name="versionumero" type="xs:int" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitustyyppi" type="ilmoitustyyppi" minOccurs="1" maxOccurs="1" />
@@ -38,7 +38,7 @@
             <xs:sequence>
                 <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
                 <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1" />
-                <xs:element name="viestiId" type="guid" minOccurs="1" />
+                <xs:element name="viestiId" type="uuid" minOccurs="1" />
                 <xs:element name="virhe" minOccurs="0" >
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
@@ -64,7 +64,7 @@
             <xs:sequence>
                 <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
                 <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1" />
-                <xs:element name="viestiId" type="guid" minOccurs="1" />
+                <xs:element name="viestiId" type="uuid" minOccurs="1" />
                 <xs:element name="virhe" type="xs:string" minOccurs="0" />
             </xs:sequence>
         </xs:complexType>
@@ -72,7 +72,7 @@
     <xs:element name="toimenpide">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="viestiId" type="guid" minOccurs="1" />
+                <xs:element name="viestiId" type="uuid" minOccurs="1" />
                 <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" />
                 <xs:element name="tyyppi" type="toimenpidetyyppi" minOccurs="1" />
                 <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
@@ -329,7 +329,7 @@
             <xs:element name="paivystaja" type="henkilo" minOccurs="0" maxOccurs="unbounded" />
         </xs:sequence>
     </xs:complexType>
-    <xs:simpleType name="guid">
+    <xs:simpleType name="uuid">
         <xs:restriction base="xs:string">
             <xs:length value="36" />
         </xs:restriction>
