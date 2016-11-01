@@ -39,7 +39,13 @@
                 <xs:element name="aika" type="xs:dateTime" minOccurs="1" />
                 <xs:element name="kuittaustyyppi" type="kuittaustyyppi" minOccurs="1" />
                 <xs:element name="viestiId" type="guid" minOccurs="1" />
-                <xs:element name="virhe" type="xs:string" minOccurs="0" />
+                <xs:element name="virhe" type="xs:string" minOccurs="0" >
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:maxLength value="255" />
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
                 <xs:element name="valitystiedot" minOccurs="0" maxOccurs="1">
                     <xs:complexType>
                         <xs:sequence>
@@ -259,8 +265,20 @@
     </xs:simpleType>
     <xs:complexType name="organisaatio">
         <xs:sequence>
-            <xs:element name="nimi" type="xs:string" minOccurs="0" />
-            <xs:element name="ytunnus" type="xs:string" minOccurs="0" />
+            <xs:element name="nimi" type="xs:string" minOccurs="0" >
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:maxLength value="128"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="ytunnus" type="xs:string" minOccurs="0" >
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:maxLength value="9"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
         </xs:sequence>
     </xs:complexType>
     <xs:simpleType name="kuittaustyyppi">
