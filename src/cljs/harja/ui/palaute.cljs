@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [reagent.core :refer [atom]]
             [harja.tiedot.istunto :as istunto]
-            [harja.asiakas.tapahtumat :as t]))
+            [harja.asiakas.tapahtumat :as t]
+            [harja.pvm :as pvm]))
 
 (def sahkoposti "harjapalaute@solita.fi")
 
@@ -24,6 +25,7 @@
   (let [enc #(.encodeURIComponent js/window %)]
     (str "\n---\n"
          "Sijainti Harjassa: " (enc url) "\n"
+         "Aika: " (pvm/pvm-aika-opt (pvm/nyt)) "\n"
          "User agent: " (enc user-agent) "\n"
          "Käyttäjä: " (enc (pr-str kayttaja)))))
 

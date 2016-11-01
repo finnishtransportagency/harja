@@ -565,8 +565,7 @@ WHERE
        tpk.emo = (SELECT toimenpide
                   FROM toimenpideinstanssi
                   WHERE id = :toimenpide))
-  AND (:tehtava :: INTEGER IS NULL OR tpk.id = :tehtava)
-  AND t.poistettu IS NOT TRUE;
+  AND (:tehtava :: INTEGER IS NULL OR tpk.id = :tehtava);
 
 -- name: hae-kokonaishintaisten-toiden-reitit
 -- fetch-size: 64
@@ -579,6 +578,7 @@ FROM toteuma_tehtava tt
   JOIN toimenpidekoodi tk ON tt.toimenpidekoodi = tk.id
 WHERE
   t.urakka = :urakka-id
+  AND (:toteuma-id :: INTEGER IS NULL OR t.id = :toteuma-id)
   AND t.sopimus = :sopimus-id
   AND t.alkanut >= :alkupvm
   AND t.alkanut <= :loppupvm
