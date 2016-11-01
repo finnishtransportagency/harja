@@ -24,6 +24,13 @@
 
 (defonce taulukon-virheet (atom nil))
 
+(defn yhdista-lampotilat [vanha uusi]
+  (assoc vanha
+         :keskilampotila (or (:keskilampotila uusi) (:keskilampotila vanha))
+         :pitkakeskilampotila (or (:pitkakeskilampotila uusi) (:pitkakeskilampotila vanha))
+         :pitkakeskilampotila_vanha (or (:pitkakeskilampotila_vanha uusi)
+                                        (:pitkakeskilampotila_vanha vanha))))
+
 (defn lampotilat
   "Lämpötilojen pääkomponentti"
   []
@@ -83,7 +90,7 @@
             :ikoni (ikonit/livicon-download)
             :virheviesti "Lämpötilojen haku epäonnistui. Yritä myöhemmin uudelleen."
             :kun-onnistuu (fn [urakat]
-                            (reset! lampotilarivit (merge-with merge @lampotilarivit urakat))
+                            (reset! lampotilarivit (merge-with yhdista-lampotilat @lampotilarivit urakat))
                             (viesti/nayta! "Lämpötilat haettu ja päivitetty taulukkoon - tarkista tiedot ja tallenna." :success viesti/viestin-nayttoaika-keskipitka))}]
 
           [napit/palvelinkutsu-nappi
