@@ -42,16 +42,18 @@
                   :tunniste :id
                   :tyhja    (if (nil? @tiedot) [ajax-loader "Haetaan tehtävän päiväkohtaisia tietoja..."]
                                                "Tietoja ei löytynyt")}
-       [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 3}
-        {:otsikko "Alkanut" :nimi :alkanut :leveys 2 :fmt pvm/aika}
-        {:otsikko "Päättynyt" :nimi :paattynyt :leveys 2 :fmt pvm/aika}
-        {:otsikko "Pituus" :nimi :pituus :leveys 3 :fmt fmt/pituus-opt :tasaa :oikea}
+       [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 2}
+        {:otsikko "Alkanut" :nimi :alkanut :leveys 1 :fmt pvm/aika}
+        {:otsikko "Päättynyt" :nimi :paattynyt :leveys 1 :fmt pvm/aika}
+        {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 1 :tasaa :oikea
+         :hae     (fn [{:keys [tehtava]}] (->> (fmt/desimaaliluku-opt (:maara tehtava) 1) (fmt/yksikolla (:yksikko tehtava))))}
+        {:otsikko "Pituus" :nimi :pituus :leveys 1 :fmt fmt/pituus-opt :tasaa :oikea}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 3}
         {:otsikko     "Tarkastele koko toteumaa"
          :nimi        :tarkastele-toteumaa
          :muokattava? (constantly false)
          :tyyppi      :komponentti
-         :leveys      2
+         :leveys      1
          :komponentti (fn [rivi]
                         [:div
                          [:button.nappi-toissijainen.nappi-grid
@@ -80,12 +82,13 @@
                                  (fn [{:keys [pvm toimenpidekoodi]}]
                                    [tehtavan-paivakohtaiset-tiedot pvm toimenpidekoodi])))
                            toteumat)}
-      [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys "3%"}
-       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "19%"}
-       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys "38%"}
-       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys "10%" :fmt #(fmt/desimaaliluku-opt % 1) :tasaa :oikea}
-       {:otsikko "Yksikkö" :tyyppi :numero :nimi :yksikko :leveys "10%"}
-       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys "20%"}]
+      [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys 1}
+       {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys 3}
+       {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys 4}
+       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 2 :tasaa :oikea
+        :hae     (fn [rivi] (->> (fmt/desimaaliluku-opt (:maara rivi) 2) (fmt/yksikolla (:yksikko rivi))))}
+       {:otsikko "Pituus" :nimi :pituus :leveys 2 :fmt fmt/pituus-opt :tasaa :oikea}
+       {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys 3}]
       toteumat]]))
 
 (defn tee-valinnat []
