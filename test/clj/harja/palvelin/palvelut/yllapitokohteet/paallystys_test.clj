@@ -1,8 +1,8 @@
-(ns harja.palvelin.palvelut.paallystys-test
+(ns harja.palvelin.palvelut.yllapitokohteet.paallystys-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.paallystys :refer :all]
+            [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
