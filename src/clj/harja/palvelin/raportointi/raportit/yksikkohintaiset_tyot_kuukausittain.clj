@@ -120,7 +120,7 @@
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         suunnittelutiedot (when (= :urakka konteksti)
-                            (yks-hint-tyot/hae-urakan-hoitokaudet db urakka-id))
+                            (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
         kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti konteksti
                                                                :urakka-id urakka-id
                                                                :hallintayksikko-id hallintayksikko-id
@@ -131,7 +131,7 @@
                                                                :urakoittain? urakoittain?
                                                                :urakkatyyppi urakkatyyppi})
         naytettavat-rivit (muodosta-raportin-rivit kuukausittaiset-summat urakoittain?)
-        aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-kasittaa-yhden-hoitokauden? alkupvm loppupvm suunnittelutiedot)
+        aikavali-kasittaa-hoitokauden? (yks-hint-tyot/aikavali-hoitokaudella? alkupvm loppupvm suunnittelutiedot)
         listattavat-pvmt (take-while (fn [pvm]
                                        ;; Nykyisen iteraation kk ei ole myöhempi kuin loppupvm:n kk
                                        (not (t/after?
