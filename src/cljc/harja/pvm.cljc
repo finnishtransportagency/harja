@@ -87,15 +87,19 @@
   (aikana dt 0 0 0 0))
 
 (defn paivan-alussa-opt [dt]
-  (when dt
-    (aikana dt 0 0 0 0)))
+  (when dt (paivan-alussa dt)))
 
 (defn paivan-lopussa [dt]
   (aikana dt 23 59 59 999))
 
 (defn paivan-lopussa-opt [dt]
-  (when dt
-    (aikana dt 23 59 59 999)))
+  (when dt (paivan-lopussa dt)))
+
+(defn keskipaiva [dt]
+  (aikana dt 12 0 0 0))
+
+(defn keskipaiva-opt [dt]
+  (when dt (keskipaiva dt)))
 
 (defn millisekunteina [pvm]
   (tc/to-long pvm))
