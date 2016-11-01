@@ -294,6 +294,7 @@ FROM (SELECT
         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
         LEFT JOIN kayttaja k ON tm.luoja = k.id
       WHERE t.urakka = :urakka
+            AND t.sopimus = :sopimus
             AND tm.poistettu IS NOT TRUE
             AND k.jarjestelma IS NOT TRUE
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
@@ -314,6 +315,7 @@ FROM (SELECT
         JOIN kayttaja k ON tm.luoja = k.id
       WHERE k.jarjestelma = TRUE
             AND t.urakka = :urakka
+            AND t.sopimus = :sopimus
             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
             AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
       GROUP BY mk.id, mk.nimi, date_trunc('day', t.alkanut)) toteumat
