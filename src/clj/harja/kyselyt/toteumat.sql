@@ -619,6 +619,7 @@ SELECT
   tt.toimenpidekoodi      AS toimenpidekoodi,
   tk.nimi                 AS nimi,
   SUM(tt.maara)           AS maara,
+  SUM(ST_Length(t.reitti))AS pituus,
   tk.yksikko              AS yksikko,
   k.jarjestelma           AS jarjestelmanlisaama
 FROM toteuma_tehtava tt
