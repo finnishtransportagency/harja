@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma
   (:require [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml]
+            [harja.tyokalut.merkkijono :as merkkijono]))
 
 (def +xsd-polku+ "xsd/tloik/")
 
@@ -12,21 +13,21 @@
   (when urakka
     [:urakka
      [:id (:id urakka)]
-     [:nimi (:nimi urakka)]
+     (merkkijono/leikkaa 256 [:nimi (:nimi urakka)])
      [:tyyppi (:tyyppi urakka)]]))
 
 (defn rakenna-urakoitsija [urakka]
   (when urakka
     [:urakoitsija
-     [:nimi (:urakoitsija_nimi urakka)]
-     [:ytunnus (:urakoitsija_ytunnus urakka)]]))
+     [:nimi (merkkijono/leikkaa 128 (:urakoitsija_nimi urakka))]
+     [:ytunnus (merkkijono/leikkaa 9 (:urakoitsija_ytunnus urakka))]]))
 
 (defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin tyopuhelin sahkoposti]}]
   [:paivystaja
-   [:etunimi etunimi]
-   [:sukunimi sukunimi]
-   [:matkapuhelin (or matkapuhelin tyopuhelin)]
-   [:sahkoposti sahkoposti]])
+   (merkkijono/leikkaa 32 [:etunimi etunimi])
+   (merkkijono/leikkaa 32 [:sukunimi sukunimi])
+   (merkkijono/leikkaa 32 [:matkapuhelin (or matkapuhelin tyopuhelin)])
+   (merkkijono/leikkaa 64 [:sahkoposti sahkoposti])])
 
 (defn muodosta-viesti [viesti-id ilmoitus-id aika kuittaustyyppi urakka paivystajat virhe]
   [:harja:harja-kuittaus
@@ -35,7 +36,7 @@
    [:kuittaustyyppi kuittaustyyppi]
    [:viestiId viesti-id]
    (when virhe
-     [:virhe virhe])
+     [:virhe (merkkijono/leikkaa 255 virhe)])
    (when ilmoitus-id
      [:valitystiedot
       [:ilmoitusId ilmoitus-id]

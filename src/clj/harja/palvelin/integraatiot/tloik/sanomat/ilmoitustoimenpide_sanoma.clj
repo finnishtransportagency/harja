@@ -2,7 +2,8 @@
   (:require [taoensso.timbre :as log]
             [harja.tyokalut.xml :as xml]
             [hiccup.core :refer [html]]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.tyokalut.merkkijono :as merkkijono])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.text SimpleDateFormat)
            (java.util TimeZone)))
@@ -19,10 +20,10 @@
 (defn muodosta-henkilo [data]
   (when data
     [:henkilo
-     [:etunimi (:etunimi data)]
-     [:sukunimi (:sukunimi data)]
-     [:matkapuhelin (:matkapuhelin data)]
-     [:sahkoposti (:sahkoposti data)]]))
+     [:etunimi (merkkijono/leikkaa 32 (:etunimi data))]
+     [:sukunimi (merkkijono/leikkaa 32 (:sukunimi data))]
+     [:matkapuhelin (merkkijono/leikkaa 32 (:matkapuhelin data))]
+     [:sahkoposti (merkkijono/leikkaa 64 (:sahkoposti data))]]))
 
 (defn muodosta-organisaatio [data]
   (when data
@@ -34,15 +35,15 @@
   (let [vapaateksti (str (when vakiofraasi (str vakiofraasi " ")) vapaateksti)]
     (xml/tee-c-data-elementti-tarvittaessa vapaateksti)))
 
-(defn muodosta-viesti [{:keys [ilmoitusid kuittaustyyppi kuitattu vakiofraasi vapaateksti
-                               kasittelija kuittaaja]} viesti-id]
+(defn muodosta-viesti [{:keys [ilmoitusid kuittaustyyppi kuitattu vakiofraasi vapaateksti kasittelija kuittaaja]}
+                       viesti-id]
   [:harja:toimenpide
    {:xmlns:harja "http://www.liikennevirasto.fi/xsd/harja"}
    [:viestiId viesti-id]
    [:ilmoitusId ilmoitusid]
    [:tyyppi kuittaustyyppi]
    [:aika (formatoi-paivamaara kuitattu)]
-   [:vapaateksti (muodosta-vapaateksti vakiofraasi vapaateksti)]
+   [:vapaateksti (merkkijono/leikkaa 1024 (muodosta-vapaateksti vakiofraasi vapaateksti))]
    [:kasittelija
     (muodosta-henkilo kasittelija)
     (muodosta-organisaatio kasittelija)]
