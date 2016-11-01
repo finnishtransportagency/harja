@@ -192,7 +192,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
          (when auki
            vetolaatikko)]]])))
 
-(defn- muokkaus-rivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
+(defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                               esta-poistaminen-tooltip piilota-toiminnot?
                               fokus aseta-fokus! tulevat-rivit vetolaatikot]}
                       skeema rivi index]
@@ -273,7 +273,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         [:span.rivilla-virheita
          (ikonit/livicon-warning-sign)])])])
 
-(defn- naytto-rivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
+(defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id
                             vetolaatikot tallenna piilota-toiminnot? valittu-rivi
                             mahdollista-rivin-valinta]} skeema rivi index solun-luokka]
   [:tr {:class (str luokka (when (= rivi @valittu-rivi)
@@ -288,52 +288,52 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                             (when rivi-valinta-peruttu
                               (rivi-valinta-peruttu rivi)))
                         (reset! valittu-rivi rivi))))}
-   (map-indexed
-    (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
-                   solu-klikattu solun-luokka huomio
-                   pakota-rivitys? reunus]}]
-      (let [haettu-arvo (if hae
-                          (hae rivi)
-                          (get rivi nimi))]
-        (if (= :vetolaatikon-tila tyyppi)
-          ^{:key (str "vetolaatikontila" id)}
-          [vetolaatikon-tila ohjaus vetolaatikot id]
-          ^{:key (str i nimi)}
-          ;; Solu
-          [:td {:on-click (when solu-klikattu
-                            #(do
-                              (.preventDefault %)
-                              (.stopPropagation %)
-                              (solu-klikattu rivi)))
-                :class (y/luokat
-                         (y/tasaus-luokka tasaa)
-                         (when pakota-rivitys? "grid-pakota-rivitys")
-                         (case reunus
-                           :ei "grid-reunus-ei"
-                           :vasen "grid-reunus-vasen"
-                           :oikea "grid-reunus-oikea"
-                           nil)
-                         (when solun-luokka
-                           (solun-luokka haettu-arvo rivi)))}
-           ;; Solun sisältö
-           [:span
-            (if (= tyyppi :komponentti)
-              (komponentti rivi {:index index
-                                 :muokataan? false})
-              (if fmt
-                (fmt haettu-arvo)
-                [nayta-arvo skeema (vain-luku-atomina haettu-arvo)]))
-            (when huomio
-              (when-let [huomion-tiedot (huomio rivi)]
-                (let [ikoni (case (:tyyppi huomion-tiedot)
-                              :varoitus (ikonit/livicon-warning-sign)
-                              (ikonit/livicon-info))
-                      teksti (:teksti huomion-tiedot)]
-                  [yleiset/tooltip {} [:span {:class (str "grid-huomio-"
-                                                          (name (:tyyppi huomion-tiedot)))}
-                                       ikoni]
-                   teksti])))]])))
-    skeema)
+   (doall (map-indexed
+      (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti
+                     solu-klikattu solun-luokka huomio
+                     pakota-rivitys? reunus]}]
+        (let [haettu-arvo (if hae
+                            (hae rivi)
+                            (get rivi nimi))]
+          (if (= :vetolaatikon-tila tyyppi)
+            ^{:key (str "vetolaatikontila" id)}
+            [vetolaatikon-tila ohjaus vetolaatikot id]
+            ^{:key (str i nimi)}
+            ;; Solu
+            [:td {:on-click (when solu-klikattu
+                              #(do
+                                (.preventDefault %)
+                                (.stopPropagation %)
+                                (solu-klikattu rivi)))
+                  :class (y/luokat
+                           (y/tasaus-luokka tasaa)
+                           (when pakota-rivitys? "grid-pakota-rivitys")
+                           (case reunus
+                             :ei "grid-reunus-ei"
+                             :vasen "grid-reunus-vasen"
+                             :oikea "grid-reunus-oikea"
+                             nil)
+                           (when solun-luokka
+                             (solun-luokka haettu-arvo rivi)))}
+             ;; Solun sisältö
+             [:span
+              (if (= tyyppi :komponentti)
+                (komponentti rivi {:index index
+                                   :muokataan? false})
+                (if fmt
+                  (fmt haettu-arvo)
+                  [nayta-arvo skeema (vain-luku-atomina haettu-arvo)]))
+              (when huomio
+                (when-let [huomion-tiedot (huomio rivi)]
+                  (let [ikoni (case (:tyyppi huomion-tiedot)
+                                :varoitus (ikonit/livicon-warning-sign)
+                                (ikonit/livicon-info))
+                        teksti (:teksti huomion-tiedot)]
+                    [yleiset/tooltip {} [:span {:class (str "grid-huomio-"
+                                                            (name (:tyyppi huomion-tiedot)))}
+                                         ikoni]
+                     teksti])))]])))
+      skeema))
    (when (and (not piilota-toiminnot?)
               tallenna) [:td.toiminnot])])
 
@@ -792,7 +792,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                                                    rivin-huomautukset (get kaikki-huomautukset id)]
                                                (when-not (or (:yhteenveto rivi) (:poistettu rivi))
                                                  [^{:key id}
-                                                 [muokkaus-rivi {:ohjaus ohjaus
+                                                 [muokkausrivi {:ohjaus ohjaus
                                                                  :vetolaatikot vetolaatikot
                                                                  :muokkaa! muokkaa!
                                                                  :luokka (str (if (even? (+ i 1))
@@ -832,7 +832,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
                                         (let [id ((or tunniste :id) rivi)]
                                           [^{:key id}
-                                          [naytto-rivi {:ohjaus ohjaus
+                                          [nayttorivi {:ohjaus ohjaus
                                                         :vetolaatikot vetolaatikot
                                                         :id id
                                                         :tallenna tallenna

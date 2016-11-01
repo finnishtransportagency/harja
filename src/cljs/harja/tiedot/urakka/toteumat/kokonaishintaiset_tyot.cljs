@@ -16,7 +16,7 @@
 
 (def valittu-kokonaishintainen-toteuma (atom nil))
 (defn uusi-kokonaishintainen-toteuma []
-  {:alkanut (pvm/nyt)
+  {:alkanut    (-> (pvm/nyt) (pvm/keskipaiva))
    :suorittaja {:nimi    (:nimi @u/urakan-organisaatio)
                 :ytunnus (:ytunnus @u/urakan-organisaatio)}})
 (def haetut-reitit (atom nil))

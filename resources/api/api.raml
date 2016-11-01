@@ -1,7 +1,7 @@
 #%RAML 0.8
 title: Harja API
 version: 1.0.2
-baseUri: https://harja/api/{version}
+baseUri: https://testioag.liikennevirasto.fi/harja/api (testi) & https://oag.liikennevirasto.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
 
@@ -91,7 +91,7 @@ documentation:
   /{id}:
     get:
       is: [secured]
-      description: Palauttaa id:n mukaisen urakan tiedot sopimuksineen ja tehtävineen. Vastaus kertoo tehtävät, joille voidaan kirjata toteumia. Toteumat kirjataan aina tietyn urakan sopimuksen yksikkö- tai kokonaishintaiselle tehtävälle.
+      description: Palauttaa id:n mukaisen urakan tiedot sopimuksineen ja tehtävineen. Vastaus kertoo tehtävät, joille voidaan kirjata toteumia. Toteumat kirjataan aina tietyn urakan sopimuksen yksikkö- tai kokonaishintaiselle tehtävälle. Toteumat pitää myös kirjata aina tehtävälle palautuvassa yksikössä.
       responses:
         200:
           body:
@@ -112,7 +112,7 @@ documentation:
       /reitti:
         post:
           is: [secured]
-          description: Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat.
+          description: Reittimuotoisten toteumien kirjaaminen urakalle. Yksittäinen reittipiste toteumalle tulisi kirjata aina, kun 1. ajettava tie muuttuu, 2. ajettava tieosa muuttuu, 3. ajettava suunta muuttuu, 4. suoritettava tehtävä muuttuu tai 5. materiaaliannostelijan (esim. suolasirottimen) asetukset muuttuuvat. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkö muunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
           body:
             application/json:
               example: !include examples/reittitoteuman-kirjaus-request.json
@@ -136,7 +136,7 @@ documentation:
       /piste:
         post:
           is: [secured]
-          description: Pistemäisten toteumien kirjaaminen urakalle.
+          description: Pistemäisten toteumien kirjaaminen urakalle. Toteumien tehtävät raportoidaan aina Harjan urakkahaun palauttamassa yksikössä. Harja ei tee yksikkö muunnoksia vaan olettaa, että määrät on annettu halutussa yksikössä. Sama koskee myös raportoituja materiaalien käyttöjä.
           body:
             application/json:
               example: !include examples/pistetoteuman-kirjaus-request.json
