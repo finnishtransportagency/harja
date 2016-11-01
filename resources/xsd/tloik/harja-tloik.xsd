@@ -331,7 +331,7 @@
     </xs:complexType>
     <xs:simpleType name="guid">
         <xs:restriction base="xs:string">
-            <xs:length value="32" />
+            <xs:length value="36" />
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>
