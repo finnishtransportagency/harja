@@ -110,9 +110,10 @@
     (is (= 403 (:status vastaus-lisays)))))
 
 (deftest tarkista-toteuman-tallentaminen-lisaoikeudella
-  (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja) VALUES (" urakka ", " (:id +kayttaja-jvh+) ");")
+  (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja) VALUES (" urakka ", "
+     (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'destia';")) ");")
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] (:kayttajanimi +kayttaja-jvh+) portti
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] "destia" portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
