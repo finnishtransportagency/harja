@@ -157,7 +157,7 @@
   (:toteuma-id toteuma))
 
 (defn luo-toteuma [c user toteuma]
-  (let [toteuman-parametrit (toteuman-parametrit toteuma user)
+  (let [toteuman-parametrit (-> (toteuman-parametrit toteuma user) (assoc :reitti (:reitti toteuma)))
         uusi (q/luo-toteuma<! c toteuman-parametrit)
         id (:id uusi)
         toteumatyyppi (name (:tyyppi toteuma))]
@@ -363,7 +363,7 @@
 (defn luo-muun-tyon-toteuma
   [c user toteuma]
   (log/debug "Luodaan uusi toteuma" toteuma)
-  (let [toteuman-parametrit (toteuman-parametrit toteuma user)
+  (let [toteuman-parametrit (-> (toteuman-parametrit toteuma user) (assoc :reitti (:reitti toteuma)))
         uusi (q/luo-toteuma<! c toteuman-parametrit)
         id (:id uusi)
         toteumatyyppi (name (:tyyppi toteuma))
