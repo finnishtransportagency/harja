@@ -355,7 +355,7 @@
                                :loppuetaisyys (get-in toteuma [:tr :loppuetaisyys])
                                :id            (get-in toteuma [:toteuma :id])
                                :urakka        (:urakka-id toteuma)})
-        (when (:reitti toteuma) (q/tallenna-toteuman-reitti! c {:reitti (geometriaksi (:reitti toteuma))
+        (when (:reitti toteuma) (q/paivita-toteuman-reitti! c {:reitti (geometriaksi (:reitti toteuma))
                                                                 :id (get-in toteuma [:toteuma :id])}))
         (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
                                                    :tehtava-id (get-in toteuma [:tehtava :id]))))))
