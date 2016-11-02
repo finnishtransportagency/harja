@@ -11,6 +11,10 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (into [] (q/hae-jarjestelmatunnuksen-lisaoikeudet db {:kayttaja kayttaja-id})))
 
+(defn hae-urakat-lisaoikeusvalintaan [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (into [] (q/hae-urakat-lisaoikeusvalintaan db)))
+
 (defn hae-jarjestelmatunnukset [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (into []
@@ -33,11 +37,14 @@
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
     (julkaise-palvelu http :hae-jarjestelmatunnukset
-                      (fn [user payload]
+                      (fn [user _]
                         (hae-jarjestelmatunnukset db user)))
     (julkaise-palvelu http :hae-jarjestelmatunnuksen-lisaoikeudet
                       (fn [user payload]
                         (hae-jarjestelmatunnuksen-lisaoikeudet db user payload)))
+    (julkaise-palvelu http :hae-urakat-lisaoikeusvalintaan
+                      (fn [user _]
+                        (hae-urakat-lisaoikeusvalintaan db user)))
     (julkaise-palvelu http :tallenna-jarjestelmatunnukset
                       (fn [user payload]
                         (tallenna-jarjestelmatunnukset db user payload)))
@@ -47,5 +54,6 @@
     (poista-palvelut http
                      :hae-jarjestelmatunnukset
                      :hae-jarjestelmatunnuksen-lisaoikeudet
+                     :hae-urakat-lisaoikeusvalintaan
                      :tallenna-jarjestelmatunnukset)
     this))

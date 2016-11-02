@@ -53,17 +53,22 @@
       [grid/grid
        {:otsikko "Lisäoikeudet urakoihin"
         :tunniste :urakka-id
-        :tallenna nil}
+        :tallenna tiedot/tallenna-jarjestelmatunnuksen-lisaoikeudet}
        [{:otsikko "Urakka"
-         :nimi :urakka-nimi
-         :muokattava (constantly false)
-         :tyyppi :string
+         :nimi :urakka-id
+         :fmt #(:nimi (first (filter
+                               (fn [urakka] (= (:id urakka) %))
+                               @tiedot/urakkavalinnat)))
+         :tyyppi :valinta
+         :valinta-arvo :id
+         :valinnat @tiedot/urakkavalinnat
+         :valinta-nayta #(or (:nimi %) "- Valitse urakka -")
          :leveys 5}
-        {:otsikko "Kuvaus"
+        {:otsikko "Oikeus"
          :nimi :kuvaus
          :hae (fn [] "Täydet oikeudet")
          :tyyppi :string
-         :muokattava (constantly false)
+         :muokattava? (constantly false)
          :leveys 15}]
        @tunnuksen-oikeudet])))
 
@@ -89,10 +94,12 @@
    @jarjestelmatunnukset-atom])
 
 (defn api-jarjestelmatunnukset-paakomponentti []
-
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
     (fn []
-      [:div
-       [api-jarjestelmatunnukset tiedot/jarjestelmatunnukset]
-       [jarjestelmatunnuksien-lisaoikeudet tiedot/jarjestelmatunnukset]])))
+      (let [nakyma-alustettu? (some? @tiedot/urakkavalinnat)]
+        (if nakyma-alustettu?
+          [:div
+           [api-jarjestelmatunnukset tiedot/jarjestelmatunnukset]
+           [jarjestelmatunnuksien-lisaoikeudet tiedot/jarjestelmatunnukset]]
+          [ajax-loader "Ladataan..."])))))

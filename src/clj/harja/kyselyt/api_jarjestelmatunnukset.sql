@@ -21,6 +21,12 @@ FROM kayttajan_lisaoikeudet_urakkaan klu
   JOIN urakka u ON klu.urakka = u.id
 WHERE kayttaja = :kayttaja;
 
+-- name: hae-urakat-lisaoikeusvalintaan
+SELECT
+  u.id,
+  u.nimi
+FROM urakka u;
+
 -- name: poista-jarjestelmatunnus!
 UPDATE kayttaja
    SET poistettu = true
