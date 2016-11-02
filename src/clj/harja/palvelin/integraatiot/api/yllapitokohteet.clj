@@ -121,8 +121,10 @@
   (when (not= urakka-tyyppi endpoint-urakkatyyppi)
     (virheet/heita-poikkeus virheet/+viallinen-kutsu+
                             {:koodi virheet/+viallinen-kutsu+
-                             :viesti (format "Yritettiin kirjata aikataulu urakkatyypille %s, mutta urakan tyyppi on
-                                         %s" (name urakka-tyyppi) (name endpoint-urakkatyyppi))})))
+                             :viesti (format "Yritettiin kirjata aikataulu urakkatyypille %s, mutta urakan tyyppi on %s.
+                             Tiemerkinnän aikataulu voidaan kirjata vain tiemerkintäurakalle ja vastaavasti
+                             päällystyksen aikataulu voidaan kirjata vain päällystysurakalle."
+                                             (name urakka-tyyppi) (name endpoint-urakkatyyppi))})))
 
 (defn kirjaa-aikataulu [db kayttaja {:keys [urakka-id kohde-id]} data endpoint-urakkatyyppi]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) aikataulu käyttäjän: %s toimesta"
