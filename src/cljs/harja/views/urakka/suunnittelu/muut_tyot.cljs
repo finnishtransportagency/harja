@@ -77,9 +77,10 @@
               :valinta-arvo  #(:nimi (nth % 3))
               :valinta-nayta #(if % (:nimi (nth % 3)) "- Valitse tehtävä -")
               :tyyppi        :valinta
-              :valinnat-fn   #(filter (fn [t]
-                                        (not ((disj @jo-valitut-tehtavat (:tehtava %))
-                                               (:id (nth t 3))))) valitun-tpin-tehtavat-tasoineen)
+              :valinnat-fn   #(sort-by (fn [rivi] (:nimi (nth rivi 3)))
+                                       (filter (fn [t]
+                                                 (not ((disj @jo-valitut-tehtavat (:tehtava %))
+                                                        (:id (nth t 3))))) valitun-tpin-tehtavat-tasoineen))
               :muokattava?   #(neg? (:id %))
               :aseta         #(assoc %1 :tehtavanimi %2
                                         :tehtava (:id (urakan-toimenpiteet/tehtava-nimella %2 tehtavat))
