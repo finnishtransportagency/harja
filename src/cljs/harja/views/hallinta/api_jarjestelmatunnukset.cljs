@@ -48,13 +48,14 @@
 
 (defn jarjestelmatunnuksen-lisaoikeudet [kayttaja-id]
   (let [tunnuksen-oikeudet (atom nil)]
+    (tiedot/hae-jarjestelmatunnuksen-lisaoikeudet kayttaja-id tunnuksen-oikeudet)
     (fn []
       [grid/grid
        {:otsikko "Lisäoikeudet urakoihin"
-        :tunniste :id
+        :tunniste :urakka-id
         :tallenna nil}
        [{:otsikko "Urakka"
-         :nimi :urakka
+         :nimi :urakka-nimi
          :muokattava (constantly false)
          :tyyppi :string
          :leveys 5}

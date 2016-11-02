@@ -25,3 +25,7 @@
                                          muuttuneet-tunnukset))]
         (log "SAIN: " (pr-str uudet-tunnukset))
         (reset! jarjestelmatunnukset uudet-tunnukset))))
+
+(defn hae-jarjestelmatunnuksen-lisaoikeudet [kayttaja-id tulos-atom]
+  (go (let [oikeudet (<! (k/post! :hae-jarjestelmatunnuksen-lisaoikeudet {:kayttaja-id kayttaja-id}))]
+        (reset! tulos-atom oikeudet))))
