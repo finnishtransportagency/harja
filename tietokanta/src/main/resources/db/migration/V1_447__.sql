@@ -6,3 +6,5 @@ CREATE TABLE kayttajan_lisaoikeudet_urakkaan (
   urakka      INTEGER REFERENCES urakka (id) NOT NULL
 );
 COMMENT ON TABLE kayttajan_lisaoikeudet_urakkaan IS 'Rivi tässä taulussa antaa järjestelmäkäyttäjälle oikeudet urakkaan.';
+
+ALTER TABLE kayttajan_lisaoikeudet_urakkaan ADD CONSTRAINT uniikki_lisaoikeus UNIQUE (urakka, kayttaja);
