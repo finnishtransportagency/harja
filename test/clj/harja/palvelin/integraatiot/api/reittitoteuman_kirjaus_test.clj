@@ -117,6 +117,5 @@
                                                     slurp
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
-    (println (:body vastaus-lisays))
-    (is (= 200 (:status vastaus-lisays)))
-    (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")))
+    (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")
+    (is (= 200 (:status vastaus-lisays)))))
