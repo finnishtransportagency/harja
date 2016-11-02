@@ -147,7 +147,6 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
   (let [kaynnissaolevan-hoitokauden-alkupvm (c/from-date (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))
         paivystajat (into []
-                          ;; munklaukset tässä
                           (map #(if-let [org-id (:organisaatio %)]
                                  (assoc % :organisaatio {:tyyppi (keyword (str (:urakoitsija_tyyppi %)))
                                                          :id org-id
