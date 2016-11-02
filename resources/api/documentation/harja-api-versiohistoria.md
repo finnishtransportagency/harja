@@ -1,9 +1,9 @@
 <b>Nykyinen versio: 1.0.3</b>
-<b>Julkaistu: 31.10.2016</b>
+<b>Julkaistu: 2.11.2016</b>
 
 <b>Versiohistoria:</b>
 
-- Versionumero: 1.0.2 Julkaistu: 11.10.2016:
+- Versionumero: 1.0.3 Julkaistu: 2.11.2016:
     - Päällystys-/tiemerkintäurakan aikataulun kirjaus jaettu kahteen eri urakkatyypin mukaiseen endpointtiin (ks. API-dokumentaatio).
 - Versionumero: 1.0.2 Julkaistu: 11.10.2016:
     - Päällystys-/tiemerkintäurakan aikataulun kirjaukseen lisätty uusi kenttä: tiemerkinta-takaraja. Aiemmin tämä laskettin automaattisesti kahden viikon päähän siitä hetkestä kun tiemerkinnän saa aloittaa, nyt syötetään käsin.
