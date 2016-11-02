@@ -44,5 +44,8 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-jarjestelmatunnukset)
+    (poista-palvelut http
+                     :hae-jarjestelmatunnukset
+                     :hae-jarjestelmatunnuksen-lisaoikeudet
+                     :tallenna-jarjestelmatunnukset)
     this))
