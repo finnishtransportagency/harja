@@ -196,11 +196,14 @@
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
-(defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
+(defn hae-suolatoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
         (map konv/alaviiva->rakenne)
-        (q/hae-suolatoteumat db urakka-id alkupvm loppupvm)))
+        (q/hae-suolatoteumat db {:urakka urakka-id
+                                 :sopimus sopimus-id
+                                 :alkupvm alkupvm
+                                 :loppupvm loppupvm})))
 
 (defn hae-suolamateriaalit [db user]
   (into []
