@@ -14,6 +14,7 @@ SELECT k.id, k.kayttajanimi, k.kuvaus, k.luotu,
 
 -- name: hae-jarjestelmatunnuksen-lisaoikeudet
 SELECT
+  klu.id,
   u.id as "urakka-id",
   u.nimi AS "urakka-nimi",
   kayttaja
@@ -33,10 +34,14 @@ UPDATE kayttaja
  WHERE id = :id AND
        jarjestelma = true;
 
+-- name: paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan!
+UPDATE kayttajan_lisaoikeudet_urakkaan SET
+  urakka = :urakka
+WHERE id = :id;
+
 -- name: poista-jarjestelmatunnuksen-lisaoikeus-urakkaan!
 DELETE FROM kayttajan_lisaoikeudet_urakkaan WHERE
-urakka = :urakka
-AND kayttaja :kayttaja;
+id = :id;
 
 -- name: luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<!
 INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja)

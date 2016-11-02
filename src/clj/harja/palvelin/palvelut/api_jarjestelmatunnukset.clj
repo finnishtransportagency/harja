@@ -36,13 +36,15 @@
 (defn tallenna-jarjestelmatunnuksen-lisaoikeudet [db user {:keys [oikeudet kayttaja-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
   (jdbc/with-db-transaction [c db]
-    (doseq [{:keys [urakka-id poistettu]} oikeudet]
+    (doseq [{:keys [id urakka-id poistettu]} oikeudet]
       (if poistettu
-        (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:kayttaja kayttaja-id
-                                                               :urakka urakka-id})
-        (q/luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<! c {:kayttaja kayttaja-id
-                                                               :urakka urakka-id}))))
-  (hae-jarjestelmatunnuksen-lisaoikeudet db user kayttaja-id))
+        (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:d id})
+        (if (neg? id)
+          (q/luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<! c {:kayttaja kayttaja-id
+                                                                 :urakka urakka-id})
+          (q/paivita-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:urakka urakka-id
+                                                                  :id id})))))
+  (hae-jarjestelmatunnuksen-lisaoikeudet db user {:kayttaja-id kayttaja-id}))
 
 (defrecord APIJarjestelmatunnukset []
   component/Lifecycle
