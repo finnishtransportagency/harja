@@ -32,9 +32,10 @@
                                          muuttuneet-tunnukset))]
         (reset! jarjestelmatunnukset uudet-tunnukset))))
 
-(defn- tallenna-jarjestelmatunnuksen-lisaoikeudet [muuttuneet-oikeudet tulos-atom]
+(defn- tallenna-jarjestelmatunnuksen-lisaoikeudet [muuttuneet-oikeudet kayttaja-id tulos-atom]
   (go (let [uudet-oikeudet (<! (k/post! :tallenna-jarjestelmatunnuksen-lisaoikeudet
-                                        muuttuneet-oikeudet))]
+                                        {:oikeudet muuttuneet-oikeudet
+                                         :kayttaja-id kayttaja-id}))]
         (reset! tulos-atom uudet-oikeudet))))
 
 (defn hae-jarjestelmatunnuksen-lisaoikeudet [kayttaja-id tulos-atom]

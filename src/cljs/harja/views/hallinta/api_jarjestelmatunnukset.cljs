@@ -53,7 +53,7 @@
       [grid/grid
        {:otsikko "Lisäoikeudet urakoihin"
         :tunniste :urakka-id
-        :tallenna tiedot/tallenna-jarjestelmatunnuksen-lisaoikeudet}
+        :tallenna #(tiedot/tallenna-jarjestelmatunnuksen-lisaoikeudet % kayttaja-id tunnuksen-oikeudet)}
        [{:otsikko "Urakka"
          :nimi :urakka-id
          :fmt #(:nimi (first (filter

@@ -33,6 +33,17 @@
                                       :organisaatio (:id organisaatio)}))))
   (hae-jarjestelmatunnukset db user))
 
+(defn tallenna-jarjestelmatunnuksen-lisaoikeudet [db user {:keys [oikeudet kayttaja-id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-api-jarjestelmatunnukset user)
+  (jdbc/with-db-transaction [c db]
+    (doseq [{:keys [urakka-id poistettu]} oikeudet]
+      (if poistettu
+        (q/poista-jarjestelmatunnuksen-lisaoikeus-urakkaan! c {:kayttaja kayttaja-id
+                                                               :urakka urakka-id})
+        (q/luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<! c {:kayttaja kayttaja-id
+                                                               :urakka urakka-id}))))
+  (hae-jarjestelmatunnuksen-lisaoikeudet db user kayttaja-id))
+
 (defrecord APIJarjestelmatunnukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
@@ -48,6 +59,9 @@
     (julkaise-palvelu http :tallenna-jarjestelmatunnukset
                       (fn [user payload]
                         (tallenna-jarjestelmatunnukset db user payload)))
+    (julkaise-palvelu http :tallenna-jarjestelmatunnuksen-lisaoikeudet
+                      (fn [user payload]
+                        (tallenna-jarjestelmatunnuksen-lisaoikeudet db user payload)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -55,5 +69,6 @@
                      :hae-jarjestelmatunnukset
                      :hae-jarjestelmatunnuksen-lisaoikeudet
                      :hae-urakat-lisaoikeusvalintaan
-                     :tallenna-jarjestelmatunnukset)
+                     :tallenna-jarjestelmatunnukset
+                     :tallenna-jarjestelmatunnuksen-lisaoikeudet)
     this))

@@ -33,6 +33,15 @@ UPDATE kayttaja
  WHERE id = :id AND
        jarjestelma = true;
 
+-- name: poista-jarjestelmatunnuksen-lisaoikeus-urakkaan!
+DELETE FROM kayttajan_lisaoikeudet_urakkaan WHERE
+urakka = :urakka
+AND kayttaja :kayttaja;
+
+-- name: luo-jarjestelmatunnukselle-lisaoikeus-urakkaan<!
+INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja)
+    VALUES (:urakka, :kayttaja);
+
 -- name: luo-jarjestelmatunnus<!
 INSERT
    INTO kayttaja (kayttajanimi, kuvaus, organisaatio, luotu, jarjestelma, poistettu)
