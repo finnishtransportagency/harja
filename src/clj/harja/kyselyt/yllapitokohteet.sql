@@ -114,16 +114,21 @@ WHERE
   (ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
 
--- name: hae-urakkaan-liittyvat-yllapitokohteet
--- Hakee urakkaan suoraan kuuluvat ylläpitokohteet sekä ne, joihin on merkitty suorittajaksi kyseinen urakka
-SELECT
-  ypk.id
+-- name: hae-urakkaan-liittyvat-paallystyskohteet
+-- Hakee ylläpitokohteet, jotka ovat kyseisen urakan päällystyskohteita
+SELECT ypk.id
 FROM yllapitokohde ypk
 WHERE
-  (ypk.urakka = :urakka
-   OR ypk.suorittava_tiemerkintaurakka = :urakka)
+  ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-urakkaan-liittyvat-tiemerkintakohteet
+-- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
+SELECT ypk.id
+FROM yllapitokohde ypk
+WHERE
+  ypk.suorittava_tiemerkintaurakka = :urakka
+  AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-sopimuksen-yllapitokohteet
 -- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
@@ -624,6 +629,7 @@ UPDATE yllapitokohde
 SET
   aikataulu_tiemerkinta_alku = :tiemerkinta_alku,
   aikataulu_tiemerkinta_loppu = :tiemerkinta_loppu,
+  aikataulu_tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
   aikataulu_muokattu = NOW(),
   aikataulu_muokkaaja = :muokkaaja
 WHERE id = :id;
