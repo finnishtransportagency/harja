@@ -111,7 +111,7 @@
                         :paallystyspalvelusopimusten-alk-osoite   "https://harja-test.solitaservices.fi/harja/integraatiotesti/alk/PTV_tl151.shz"
                         :paallystyspalvelusopimusten-alk-tuontikohde "./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
 
-                        :tekniset-laitteet-urakat-shapefile      "file://shp/Tekniset laitteet urakat/tekniset_laitteet_urakat.shp"
+                        :tekniset-laitteet-urakat-shapefile      "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
                         }
 
  :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"

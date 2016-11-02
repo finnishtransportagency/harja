@@ -6,10 +6,9 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
 
 (defn vie-urakka-entry [db urakka]
-  (println "----> " urakka)
-  #_(if (:the_geom urakka)
+  (if (:the_geom urakka)
     ()
-    (log/warn "Talvihoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error urakka))))
+    (log/warn "Tekniset laitteet urakkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error urakka))))
 
 (defn vie-tekniset-laitteet-urakat-kantaan [db shapefile]
   (if shapefile

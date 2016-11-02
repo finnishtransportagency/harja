@@ -573,3 +573,15 @@ WHERE urakkanro = :urakkanro AND
 SELECT exists(SELECT id
               FROM urakka
               WHERE urakkanro = :urakkanro);
+
+-- name: tuhoa-tekniset-laitteet-urakkadata!
+DELETE FROM tekniset_laitteet_urakka;
+
+-- name: hae-tekniset-laitteet-urakan-urakkanumero-sijainnilla
+SELECT urakkanro
+FROM tekniset_laitteet_urakka
+WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
+
+-- name: luo-tekniset-laitteet-urakka<!
+INSERT INTO tekniset_laitteet_urakka (urakkanro, alue)
+VALUES (:urakkanro, ST_GeomFromText(:alue) :: GEOMETRY);
