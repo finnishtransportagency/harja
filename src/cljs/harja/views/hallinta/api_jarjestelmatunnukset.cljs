@@ -4,36 +4,18 @@
             [harja.pvm :as pvm]
             [reagent.core :refer [atom]]
             [harja.ui.komponentti :as komp]
-            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.hallinta.api-jarjestelmatunnukset :as tiedot]
             [harja.ui.yleiset :refer [ajax-loader]]
             [clojure.string :as str]
-            [harja.loki :refer [log tarkkaile!]]
-            [harja.tiedot.urakoitsijat :refer [urakoitsijat]]
             [cljs.core.async :refer [<!]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defonce nakymassa? (atom false))
-
-(defonce jarjestelmatunnukset
-  (reaction<! [nakymassa? @nakymassa?]
-              (when nakymassa?
-                (k/post! :hae-jarjestelmatunnukset nil))))
-
-(defn- urakoitsijavalinnat []
-  (distinct (map #(select-keys % [:id :nimi]) @urakoitsijat)))
-
-(defn- tallenna [muuttuneet-tunnukset]
-  (go (let [uudet-tunnukset (<! (k/post! :tallenna-jarjestelmatunnukset
-                                         muuttuneet-tunnukset))]
-        (log "SAIN: " (pr-str uudet-tunnukset))
-        (reset! jarjestelmatunnukset uudet-tunnukset))))
-
 (defn- api-jarjestelmatunnukset [jarjestelmatunnukset-atom]
   (let [ei-muokattava (constantly false)]
     [grid/grid {:otsikko "API järjestelmätunnukset"
-                :tallenna tallenna
+                :tallenna tiedot/tallenna-jarjestelmatunnukset
                 :tyhja (if (nil? @jarjestelmatunnukset-atom)
                          [ajax-loader "Haetaan järjestelmätunnuksia..."]
                          "Järjestelmätunnuksia ei löytynyt")}
@@ -45,7 +27,7 @@
        :nimi :organisaatio
        :fmt :nimi
        :tyyppi :valinta
-       :valinnat (urakoitsijavalinnat)
+       :valinnat (tiedot/urakoitsijavalinnat)
        :valinta-nayta :nimi
        :leveys 5}
       {:otsikko "Käynnissä olevat urakat"
@@ -108,8 +90,8 @@
 (defn api-jarjestelmatunnukset-paakomponentti []
 
   (komp/luo
-    (komp/lippu nakymassa?)
+    (komp/lippu tiedot/nakymassa?)
     (fn []
       [:div
-       [api-jarjestelmatunnukset jarjestelmatunnukset]
-       [jarjestelmatunnuksien-lisaoikeudet jarjestelmatunnukset]])))
+       [api-jarjestelmatunnukset tiedot/jarjestelmatunnukset]
+       [jarjestelmatunnuksien-lisaoikeudet tiedot/jarjestelmatunnukset]])))
