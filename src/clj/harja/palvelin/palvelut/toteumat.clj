@@ -38,22 +38,20 @@
 (def tyhja-tr-osoite {:numero nil :alkuosa nil :alkuetaisyys nil :loppuosa nil :loppuetaisyys nil})
 
 (defn toteuman-parametrit [toteuma kayttaja]
-  (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} (:tr toteuma)]
-    (merge tyhja-tr-osoite
-           (:tr toteuma)
-           {:urakka (:urakka-id toteuma)
-            :sopimus (:sopimus-id toteuma)
-            :alkanut (konv/sql-timestamp (:alkanut toteuma))
-            :paattynyt (konv/sql-timestamp (or (:paattynyt toteuma)
+  (merge tyhja-tr-osoite
+         (:tr toteuma)
+         {:urakka      (:urakka-id toteuma)
+          :sopimus     (:sopimus-id toteuma)
+          :alkanut     (konv/sql-timestamp (:alkanut toteuma))
+          :paattynyt   (konv/sql-timestamp (or (:paattynyt toteuma)
                                                (:alkanut toteuma)))
-            :tyyppi (name (:tyyppi toteuma))
-            :kayttaja (:id kayttaja)
-            :suorittaja (:suorittajan-nimi toteuma)
-            :ytunnus (:suorittajan-ytunnus toteuma)
-            :lisatieto (:lisatieto toteuma)
-            :ulkoinen_id nil
-            :reitti (geometriaksi (:reitti toteuma))
-            :lahde "harja-ui"})))
+          :tyyppi      (name (:tyyppi toteuma))
+          :kayttaja    (:id kayttaja)
+          :suorittaja  (:suorittajan-nimi toteuma)
+          :ytunnus     (:suorittajan-ytunnus toteuma)
+          :lisatieto   (:lisatieto toteuma)
+          :ulkoinen_id nil
+          :lahde       "harja-ui"}))
 
 (defn toteumatehtavan-parametrit [toteuma kayttaja]
   [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
@@ -153,6 +151,8 @@
 (defn paivita-toteuma [c user toteuma]
   (q/paivita-toteuma! c (assoc (toteuman-parametrit toteuma user)
                                :id (:toteuma-id toteuma)))
+  (when (:reitti toteuma) (q/paivita-toteuman-reitti! c {:id     (:id (:toteuma-id toteuma))
+                                                         :reitti (geometriaksi (:reitti toteuma))}))
   (kasittele-toteuman-tehtavat c user toteuma)
   (:toteuma-id toteuma))
 
@@ -341,12 +341,22 @@
       (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
       (apply q/poista-toteuman-tehtavat! params)
       (apply q/poista-toteuma! params))
-    (do (q/paivita-toteuma! c (konv/sql-date (:alkanut toteuma)) (konv/sql-date (:paattynyt toteuma)) (name (:tyyppi toteuma)) (:id user)
-                            (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma) (:lisatieto toteuma) (:reitti toteuma)
-                            (get-in toteuma [:tr :numero]) (get-in toteuma [:tr :alkuosa])
-                            (get-in toteuma [:tr :alkuetaisyys]) (get-in toteuma [:tr :loppuosa])
-                            (get-in toteuma [:tr :loppuetaisyys])
-                            (get-in toteuma [:toteuma :id]) (:urakka-id toteuma))
+    (do (q/paivita-toteuma! c {:alkanut       (konv/sql-date (:alkanut toteuma))
+                               :paattynyt     (konv/sql-date (:paattynyt toteuma))
+                               :tyyppi        (name (:tyyppi toteuma))
+                               :kayttaja      (:id user)
+                               :suorittaja    (:suorittajan-nimi toteuma)
+                               :ytunnus       (:suorittajan-ytunnus toteuma)
+                               :lisatieto     (:lisatieto toteuma)
+                               :numero        (get-in toteuma [:tr :numero])
+                               :alkuosa       (get-in toteuma [:tr :alkuosa])
+                               :alkuetaisyys  (get-in toteuma [:tr :alkuetaisyys])
+                               :loppuosa      (get-in toteuma [:tr :loppuosa])
+                               :loppuetaisyys (get-in toteuma [:tr :loppuetaisyys])
+                               :id            (get-in toteuma [:toteuma :id])
+                               :urakka        (:urakka-id toteuma)})
+        (when (:reitti toteuma) (q/tallenna-toteuman-reitti! c {:reitti (geometriaksi (:reitti toteuma))
+                                                                :id (get-in toteuma [:toteuma :id])}))
         (kasittele-toteumatehtava c user toteuma (assoc (:tehtava toteuma)
                                                    :tehtava-id (get-in toteuma [:tehtava :id]))))))
 
@@ -413,11 +423,20 @@
                         t)
                       (do
                         (log/debug "Pävitetään toteumaa " (:id t))
-                        (q/paivita-toteuma! c (konv/sql-date (:alkanut t)) (konv/sql-date (:paattynyt t))
-                                            (:tyyppi t) (:id user)
-                                            (:suorittajan-nimi t) (:suorittajan-ytunnus t) (:lisatieto t) nil
-                                            nil nil nil nil nil
-                                            (:id t) (:urakka t))
+                        (q/paivita-toteuma! c {:alkanut       (konv/sql-date (:alkanut t))
+                                               :paattynyt     (konv/sql-date (:paattynyt t))
+                                               :tyyppi        (:tyyppi t)
+                                               :kayttaja      (:id user)
+                                               :suorittaja    (:suorittajan-nimi t)
+                                               :ytunnus       (:suorittajan-ytunnus t)
+                                               :lisatieto     (:lisatieto t)
+                                               :numero        nil
+                                               :alkuosa       nil
+                                               :alkuetaisyys  nil
+                                               :loppuosa      nil
+                                               :loppuetaisyys nil
+                                               :id            (:id t)
+                                               :urakka        (:urakka t)})
                         t))
                     ;; Jos id:tä ei ole tai se on negatiivinen, halutaan luoda uusi toteuma
                     ;; Tässä tapauksessa palautetaan kyselyn luoma toteuma

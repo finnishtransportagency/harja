@@ -9,7 +9,8 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.materiaalit :as materiaalit]))
+            [harja.kyselyt.materiaalit :as materiaalit]
+            [harja.geo :as geo]))
 
 (defn hae-materiaalikoodit [db]
   (into []
@@ -233,15 +234,23 @@
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
               (toteumat/paivita-toteuma! db
-                                         (:alkanut toteuma) (or (:paattynyt toteuma) (:alkanut toteuma))
-                                         "kokonaishintainen"
-                                         (:id user)
-                                         (:suorittajan-nimi toteuma) (:suorittajan-ytunnus toteuma)
-                                         (:lisatieto toteuma)
-                                         (:reitti toteuma)
-                                         nil nil nil nil nil
-                                         (:tid toteuma)
-                                         urakka-id)
+                                         {:alkanut (:alkanut toteuma)
+                                          :paattynyt (or (:paattynyt toteuma) (:alkanut toteuma))
+                                          :tyyppi "kokonaishintainen"
+                                          :kayttaja (:id user)
+                                          :suorittaja (:suorittajan-nimi toteuma)
+                                          :ytunnus (:suorittajan-ytunnus toteuma)
+                                          :lisatieto (:lisatieto toteuma)
+                                          :numero nil
+                                          :alkuosa nil
+                                          :alkuetaisyys nil
+                                          :loppuosa nil
+                                          :loppuetaisyys nil
+                                          :id (:tid toteuma)
+                                          :urakka urakka-id})
+              (when (:reitti toteuma) (toteumat/paivita-toteuman-reitti! db
+                                                                         {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
+                                                                          :id     (:tid toteuma)}))
               (toteumat/paivita-toteuma-materiaali!
                db (:id (:materiaali toteuma))
                (:maara toteuma) (:id user)
