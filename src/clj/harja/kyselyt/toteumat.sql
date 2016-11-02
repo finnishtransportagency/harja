@@ -272,7 +272,6 @@ SET alkanut           = :alkanut,
   suorittajan_ytunnus = :ytunnus,
   lisatieto           = :lisatieto,
   tyyppi              = :tyyppi :: toteumatyyppi,
-  reitti              = :reitti,
   sopimus             = :sopimus
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 

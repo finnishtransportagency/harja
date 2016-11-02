@@ -37,17 +37,16 @@
   (let [sopimus-id (hae-sopimus-id db urakka-id toteuma)]
     (:id (toteumat/paivita-toteuma-ulkoisella-idlla<!
            db
-           (aika-string->java-sql-date (:alkanut toteuma))
-           (aika-string->java-sql-date (:paattynyt toteuma))
-           (:id kirjaaja)
-           (get-in toteuma [:suorittaja :nimi])
-           (get-in toteuma [:suorittaja :ytunnus])
-           ""
-           (:toteumatyyppi toteuma)
-           (:reitti toteuma)
-           sopimus-id
-           (get-in toteuma [:tunniste :id])
-           urakka-id))))
+           {:alkanut (aika-string->java-sql-date (:alkanut toteuma))
+            :paattynyt (aika-string->java-sql-date (:paattynyt toteuma))
+            :kayttaja (:id kirjaaja)
+            :suorittajan_nimi (get-in toteuma [:suorittaja :nimi])
+            :ytunnus (get-in toteuma [:suorittaja :ytunnus])
+            :lisatieto ""
+            :tyyppi (:toteumatyyppi toteuma)
+            :sopimus sopimus-id
+            :id (get-in toteuma [:tunniste :id])
+            :urakka urakka-id}))))
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")
