@@ -92,3 +92,51 @@
                     muutoksen-jalkeen))
         "Ei koskettu muihin käyttäjätunnuksiin")
     (u "DELETE FROM kayttaja WHERE kayttajanimi = 'juha88';")))
+
+(deftest jarjestelmatunnusten-tallennus-ei-toimi-ilman-oikeuksia
+  (let [ennen-muutosta (q "SELECT id, kayttajanimi, kuvaus, organisaatio FROM kayttaja;")]
+    (try+
+      (let [testitunnukset [{:id -1, :kayttajanimi "juha88",
+                             :kuvaus "noni",
+                             :organisaatio {:nimi "Liikennevirasto", :id 1}}
+                            {:id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'destia'")),
+                             :kayttajanimi "destia",
+                             :kuvaus "testissä muutettu",
+                             :organisaatio {:nimi "Liikennevirasto", :id 1}}]
+            _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-jarjestelmatunnukset +kayttaja-tero+ testitunnukset)]
+        (is false "Nyt on joku paha oikeusongelma"))
+      (catch EiOikeutta e
+        (is e)))
+    (let [muutoksen-jalkeen (q "SELECT id, kayttajanimi, kuvaus, organisaatio FROM kayttaja;")]
+      (is (= ennen-muutosta muutoksen-jalkeen)))))
+
+(deftest jarjestelmatunnuksen-lisaoikeudet-toimii
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        kayttaja-id (:id +kayttaja-tero+)
+        testioikeudet {:oikeudet [{:id -1
+                                   :urakka-id urakka-id
+                                   :kayttaja kayttaja-id}]
+                       :kayttaja-id kayttaja-id}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-jvh+ testioikeudet)]
+
+    (is (integer? (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
+                             " AND urakka = " urakka-id ";"))))
+
+    (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")))
+
+(deftest jarjestelmatunnuksen-lisaoikeudet-ei-toimi-ilman-oikeuksia
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        kayttaja-id (:id +kayttaja-tero+)
+        testioikeudet [{:id -1
+                        :urakka-id urakka-id
+                        :kayttaja kayttaja-id}]]
+    (try+
+      (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :tallenna-jarjestelmatunnuksen-lisaoikeudet +kayttaja-tero+ testioikeudet)
+      (is false "Nyt on joku paha oikeusongelma")
+      (catch EiOikeutta e
+        (is e)))
+    (is (nil? (ffirst (q "SELECT id FROM kayttajan_lisaoikeudet_urakkaan WHERE kayttaja = " kayttaja-id
+                         " AND urakka = " urakka-id ";"))))))
