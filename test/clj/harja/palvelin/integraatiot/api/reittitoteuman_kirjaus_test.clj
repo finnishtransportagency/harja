@@ -99,3 +99,24 @@
           reittipiste-idt (into [] (flatten (q (str "SELECT id FROM reittipiste WHERE toteuma = " toteuma-id))))]
       (is (= 5 sopimus-id) "Toteuma kirjattiin pääsopimukselle")
       (poista-reittitoteuma toteuma-id ulkoinen-id reittipiste-idt))))
+
+(deftest tarkista-toteuman-tallentaminen-ilman-oikeuksia
+  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] (:kayttajanimi +kayttaja-tero+) portti
+                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+    (is (= 403 (:status vastaus-lisays)))))
+
+(deftest tarkista-toteuman-tallentaminen-lisaoikeudella
+  (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja) VALUES (" urakka ", " (:id +kayttaja-jvh+) ");")
+  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] (:kayttajanimi +kayttaja-jvh+) portti
+                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                    slurp
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+    (println (:body vastaus-lisays))
+    (is (= 200 (:status vastaus-lisays)))
+    (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")))
