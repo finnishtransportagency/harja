@@ -55,5 +55,19 @@
     (catch EiOikeutta e
       (is e))))
 
+(deftest urakoiden-haku-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakat-lisaoikeusvalintaan +kayttaja-jvh+ nil)]
+    (is (vector? vastaus))
+    (is (= (count vastaus) 23))))
+
+(deftest urakoiden-haku-ei-toimi-ilman-oikeuksia
+  (try+
+    (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :hae-urakat-lisaoikeusvalintaan +kayttaja-tero+ nil)])
+    (is false "Nyt on joku paha oikeusongelma")
+    (catch EiOikeutta e
+      (is e))))
+
 
 
