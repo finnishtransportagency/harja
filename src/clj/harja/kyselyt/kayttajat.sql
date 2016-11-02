@@ -339,6 +339,14 @@ SELECT exists(
     WHERE u.id = :urakka_id AND
           k.id = :kayttaja_id);
 
+-- name: onko-kayttajalla-lisaoikeus-urakkaan
+-- Tarkistaa onko käyttäjälle annettu lisäoikeudet urakkaan
+SELECT exists(
+    SELECT id
+    FROM kayttajan_lisaoikeudet_urakkaan
+    WHERE urakka = :urakka
+          AND kayttaja = :kayttaja);
+
 -- name: onko-kayttaja-organisaatiossa
 -- Tarkistaa onko käyttäjä organisaatiossa
 SELECT exists(
